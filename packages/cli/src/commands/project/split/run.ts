@@ -7,6 +7,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import { confirmAction } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { generateStateDashboard } from '@commands/state/generate';
 import { readOatLocalConfig } from '@config/oat-config';
@@ -16,7 +17,12 @@ import { Command } from 'commander';
 import type { SplitPlanDocument } from '../../../projects/split/child-plan';
 import { validateSplitPlanDocumentShape } from '../../../projects/split/document-validation';
 import { finalizeSplit } from '../../../projects/split/finalize';
-import { resumeSplit, SplitResumeError } from '../../../projects/split/resume';
+import {
+  continueSplitResume,
+  detectPartialSplit,
+  type PartialSplit,
+  SplitResumeError,
+} from '../../../projects/split/resume';
 import { seedChildren } from '../../../projects/split/seed-children';
 import { validateChildPlan } from '../../../projects/split/validation';
 import { writeCoordinationParent } from '../../../projects/split/write-parent';
@@ -24,6 +30,7 @@ import { writeCoordinationParent } from '../../../projects/split/write-parent';
 interface RunSplitOptions {
   planFile: string;
   nonInteractive?: boolean;
+  resume?: boolean;
 }
 
 interface RunSplitDependencies {
@@ -38,6 +45,7 @@ interface RunSplitDependencies {
   stat: typeof stat;
   appendFile: typeof appendFile;
   refreshDashboard: (options: { repoRoot: string }) => Promise<void>;
+  confirmAction: typeof confirmAction;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -52,6 +60,7 @@ const DEFAULT_DEPENDENCIES: RunSplitDependencies = {
   refreshDashboard: async (options) => {
     await generateStateDashboard(options);
   },
+  confirmAction,
   processEnv: process.env,
 };
 
@@ -132,6 +141,25 @@ function isEffectivelyNonInteractive(
   );
 }
 
+function formatResumePreview(partial: PartialSplit): string[] {
+  return [
+    'Recovered partial split plan:',
+    `Parent: ${partial.parentProjectPath}`,
+    `Children: ${partial.plan.children.map((child) => child.slug).join(', ')}`,
+    `Missing children: ${partial.missingChildren.length > 0 ? partial.missingChildren.join(', ') : 'none'}`,
+    `Dependencies: ${partial.plan.children
+      .map((child) => {
+        const dependencies =
+          child.knownDependencies.length > 0
+            ? child.knownDependencies.join(', ')
+            : 'none';
+        return `${child.slug} -> ${dependencies}`;
+      })
+      .join('; ')}`,
+    `Active child: ${partial.plan.initialActiveChild}`,
+  ];
+}
+
 export function createProjectSplitRunCommand(
   overrides: Partial<RunSplitDependencies> = {},
 ): Command {
@@ -143,6 +171,10 @@ export function createProjectSplitRunCommand(
     .option(
       '--non-interactive',
       'Fail fast for detected split origins instead of writing projects',
+    )
+    .option(
+      '--resume',
+      'Confirm resuming an existing partial split without prompting',
     )
     .action(async (options: RunSplitOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
@@ -191,7 +223,33 @@ export function createProjectSplitRunCommand(
           ? parentPath
           : join(repoRoot, parentPath);
         if (await exists(absoluteParentPath, dependencies)) {
-          await resumeSplit(parentPath, { repoRoot, projectsRoot });
+          const partial = await detectPartialSplit(parentPath, {
+            repoRoot,
+            projectsRoot,
+          });
+          for (const line of formatResumePreview(partial)) {
+            context.logger.info(line);
+          }
+          const effectiveNonInteractive = isEffectivelyNonInteractive(
+            options,
+            context,
+            dependencies.processEnv,
+          );
+          if (!options.resume) {
+            if (effectiveNonInteractive) {
+              throw new SplitResumeError(
+                'Partial split detected. Re-run with --resume to confirm resuming without an interactive prompt.',
+              );
+            }
+            const confirmed = await dependencies.confirmAction(
+              'Resume this split from the recovered plan?',
+              { interactive: context.interactive },
+            );
+            if (!confirmed) {
+              throw new SplitResumeError('Split resume cancelled.');
+            }
+          }
+          await continueSplitResume(partial, { repoRoot, projectsRoot });
         } else {
           const slugs = await existingProjectSlugs(
             repoRoot,

@@ -129,13 +129,24 @@ describe('split resume', () => {
     ).toEqual(['b']);
   });
 
-  it('resumes missing children and finalizes the parent', async () => {
+  it('requires explicit confirmation before resuming writes', async () => {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-resume-'));
     tempDirs.push(repoRoot);
     await seedTemplates(repoRoot);
     const parentRoot = await seedPartialParent(repoRoot);
 
-    await resumeSplit(parentRoot, { repoRoot });
+    await expect(resumeSplit(parentRoot, { repoRoot })).rejects.toThrow(
+      /explicit confirmation/,
+    );
+  });
+
+  it('resumes missing children and finalizes the parent after confirmation', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-resume-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const parentRoot = await seedPartialParent(repoRoot);
+
+    await resumeSplit(parentRoot, { repoRoot }, { confirmed: true });
 
     const childDiscovery = await readFile(
       join(repoRoot, '.oat', 'projects', 'shared', 'c', 'discovery.md'),

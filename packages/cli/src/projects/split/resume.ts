@@ -26,6 +26,10 @@ export interface PartialSplit {
   projectsRoot: string;
 }
 
+export interface ResumeSplitOptions {
+  confirmed?: boolean;
+}
+
 function readObjectFrontmatter(
   content: string,
   filePath: string,
@@ -139,8 +143,21 @@ export async function detectPartialSplit(
 export async function resumeSplit(
   parentPath: string,
   context: SplitProjectContext,
+  options: ResumeSplitOptions = {},
 ): Promise<PartialSplit> {
   const partial = await detectPartialSplit(parentPath, context);
+  if (options.confirmed !== true) {
+    throw new SplitResumeError(
+      'Split resume requires explicit confirmation before writing missing children.',
+    );
+  }
+  return continueSplitResume(partial, context);
+}
+
+export async function continueSplitResume(
+  partial: PartialSplit,
+  context: SplitProjectContext,
+): Promise<PartialSplit> {
   if (partial.missingChildren.length > 0) {
     await seedChildren(
       partial.plan,

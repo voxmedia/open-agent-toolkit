@@ -15,7 +15,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { Command } from 'commander';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SplitPlanDocument } from '../../../../projects/split/child-plan';
 import { createProjectSplitRunCommand } from '../run';
@@ -90,12 +90,16 @@ function createHarness(
   overrides: {
     interactive?: boolean;
     processEnv?: NodeJS.ProcessEnv;
+    confirmResponses?: boolean[];
   } = {},
 ): {
   capture: LoggerCapture;
   command: Command;
+  confirmAction: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const confirmResponses = [...(overrides.confirmResponses ?? [])];
+  const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
   const command = createProjectSplitRunCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
@@ -110,9 +114,10 @@ function createHarness(
     resolveProjectRoot: async () => repoRoot,
     resolveProjectsRoot: async () => '.oat/projects/shared',
     refreshDashboard: async () => {},
+    confirmAction,
     processEnv: overrides.processEnv ?? {},
   });
-  return { capture, command };
+  return { capture, command, confirmAction };
 }
 
 async function runCommand(command: Command, args: string[]): Promise<void> {
@@ -297,15 +302,15 @@ describe('oat project split run', () => {
     ).resolves.toBe(false);
   });
 
-  it('persists split-plan.json and resumes partial prior runs', async () => {
+  it('previews partial prior runs and requires confirmation before resume writes', async () => {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
     tempDirs.push(repoRoot);
     await seedTemplates(repoRoot);
     const splitDocument = document();
     const planFile = await writePlanFile(repoRoot, splitDocument);
-    const { command } = createHarness(repoRoot);
+    const { command: initialCommand } = createHarness(repoRoot);
 
-    await runCommand(command, ['--plan-file', planFile]);
+    await runCommand(initialCommand, ['--plan-file', planFile]);
     const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
     await expect(
       readFile(join(parentRoot, 'references', 'split-plan.json'), 'utf8'),
@@ -326,8 +331,100 @@ describe('oat project split run', () => {
       'utf8',
     );
 
+    const { capture, command } = createHarness(repoRoot);
     await runCommand(command, ['--plan-file', planFile]);
 
+    expect(process.exitCode).toBe(1);
+    expect(capture.info.join('\n')).toContain(
+      'Parent: .oat/projects/shared/umbrella',
+    );
+    expect(capture.info.join('\n')).toContain('Children: foundation, docs');
+    expect(capture.info.join('\n')).toContain('Missing children: docs');
+    expect(capture.info.join('\n')).toContain('docs -> foundation');
+    expect(capture.info.join('\n')).toContain('Active child: foundation');
+    await expect(
+      exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
+    ).resolves.toBe(false);
+  });
+
+  it('resumes partial prior runs after interactive confirmation', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const splitDocument = document();
+    const planFile = await writePlanFile(repoRoot, splitDocument);
+    const { command: initialCommand } = createHarness(repoRoot);
+
+    await runCommand(initialCommand, ['--plan-file', planFile]);
+    const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
+    await rm(join(repoRoot, '.oat', 'projects', 'shared', 'docs'), {
+      recursive: true,
+      force: true,
+    });
+    const statePath = join(parentRoot, 'state.md');
+    const state = await readFile(statePath, 'utf8');
+    await writeFile(
+      statePath,
+      state.replace(
+        'oat_phase_status: complete',
+        'oat_phase_status: in_progress',
+      ),
+      'utf8',
+    );
+
+    const { command } = createHarness(repoRoot, {
+      confirmResponses: [true],
+    });
+    await runCommand(command, ['--plan-file', planFile]);
+
+    await expect(
+      exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
+    ).resolves.toBe(true);
+  });
+
+  it('aborts non-interactive partial resume unless --resume confirms it', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const splitDocument = document();
+    const planFile = await writePlanFile(repoRoot, splitDocument);
+    const { command: initialCommand } = createHarness(repoRoot);
+
+    await runCommand(initialCommand, ['--plan-file', planFile]);
+    const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
+    await rm(join(repoRoot, '.oat', 'projects', 'shared', 'docs'), {
+      recursive: true,
+      force: true,
+    });
+    const statePath = join(parentRoot, 'state.md');
+    const state = await readFile(statePath, 'utf8');
+    await writeFile(
+      statePath,
+      state.replace(
+        'oat_phase_status: complete',
+        'oat_phase_status: in_progress',
+      ),
+      'utf8',
+    );
+
+    const { command } = createHarness(repoRoot, {
+      interactive: false,
+      processEnv: { OAT_NON_INTERACTIVE: '1' },
+    });
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(process.exitCode).toBe(1);
+    await expect(
+      exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
+    ).resolves.toBe(false);
+
+    const { command: resumeCommand } = createHarness(repoRoot, {
+      interactive: false,
+      processEnv: { OAT_NON_INTERACTIVE: '1' },
+    });
+    await runCommand(resumeCommand, ['--plan-file', planFile, '--resume']);
+
+    expect(process.exitCode).toBe(0);
     await expect(
       exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
     ).resolves.toBe(true);
