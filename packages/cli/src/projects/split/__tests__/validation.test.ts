@@ -36,6 +36,18 @@ describe('validateChildPlan', () => {
     ]);
   });
 
+  it('detects parent slug collisions against existing projects', () => {
+    const result = validateChildPlan(validPlan(), new Set(['umbrella']));
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({
+        code: 'slug-collision-existing',
+        slug: 'umbrella',
+      }),
+    ]);
+  });
+
   it('detects parent-slug collision with a child slug', () => {
     const result = validateChildPlan(
       validPlan({

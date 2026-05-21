@@ -1,11 +1,17 @@
-import { readFile as defaultReadFile } from 'node:fs/promises';
+import {
+  readdir as defaultReaddir,
+  readFile as defaultReadFile,
+} from 'node:fs/promises';
+import { isAbsolute, join } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import type {
@@ -33,12 +39,23 @@ interface DocumentValidationError {
 
 interface ValidatePlanDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
+  resolveProjectRoot: (cwd: string) => Promise<string>;
+  resolveProjectsRoot: (
+    repoRoot: string,
+    env: NodeJS.ProcessEnv,
+  ) => Promise<string>;
   readFile: typeof defaultReadFile;
+  readdir: typeof defaultReaddir;
+  processEnv: NodeJS.ProcessEnv;
 }
 
 const DEFAULT_DEPENDENCIES: ValidatePlanDependencies = {
   buildCommandContext,
+  resolveProjectRoot,
+  resolveProjectsRoot,
   readFile: defaultReadFile,
+  readdir: defaultReaddir,
+  processEnv: process.env,
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -122,6 +139,27 @@ function normalizePlanForValidation(plan: ChildPlan): ChildPlan {
   };
 }
 
+async function readExistingProjectSlugs(
+  context: CommandContext,
+  dependencies: ValidatePlanDependencies,
+): Promise<Set<string>> {
+  const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+  const projectsRoot = await dependencies.resolveProjectsRoot(
+    repoRoot,
+    dependencies.processEnv,
+  );
+  const absoluteProjectsRoot = isAbsolute(projectsRoot)
+    ? projectsRoot
+    : join(repoRoot, projectsRoot);
+  const entries = await dependencies.readdir(absoluteProjectsRoot, {
+    withFileTypes: true,
+  });
+
+  return new Set(
+    entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name),
+  );
+}
+
 export function createValidateSplitPlanCommand(
   overrides: Partial<ValidatePlanDependencies> = {},
 ): Command {
@@ -148,9 +186,13 @@ export function createValidateSplitPlanCommand(
           return;
         }
 
+        const existingSlugs = await readExistingProjectSlugs(
+          context,
+          dependencies,
+        );
         const result = validateChildPlan(
           normalizePlanForValidation(shape.document.plan),
-          new Set(),
+          existingSlugs,
         );
         context.logger.json(result);
         process.exitCode = result.ok ? 0 : 1;

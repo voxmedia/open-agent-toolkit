@@ -71,6 +71,14 @@ export function validateChildPlan(
   const seenChildSlugs = new Set<string>();
   const childSlugs = new Set(plan.children.map((child) => child.slug));
 
+  if (existingSlugs.has(plan.parentSlug)) {
+    errors.push({
+      code: 'slug-collision-existing',
+      message: `Parent slug already exists: ${plan.parentSlug}`,
+      slug: plan.parentSlug,
+    });
+  }
+
   for (const child of plan.children) {
     if (existingSlugs.has(child.slug)) {
       errors.push({

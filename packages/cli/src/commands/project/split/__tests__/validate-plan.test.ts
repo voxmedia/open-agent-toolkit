@@ -42,7 +42,9 @@ function document(
   };
 }
 
-function createHarness(): {
+function createHarness(
+  options: { existingSlugs?: string[]; cwd?: string } = {},
+): {
   capture: LoggerCapture;
   command: Command;
 } {
@@ -53,11 +55,19 @@ function createHarness(): {
       dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
-      cwd: globalOptions.cwd ?? '/repo',
+      cwd: globalOptions.cwd ?? options.cwd ?? '/repo',
       home: '/tmp/home',
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
+    resolveProjectRoot: async () => '/repo',
+    resolveProjectsRoot: async () => '.oat/projects/shared',
+    readdir: async () =>
+      (options.existingSlugs ?? []).map((name) => ({
+        name,
+        isDirectory: () => true,
+      })),
+    processEnv: {},
   });
 
   return { capture, command };
@@ -157,6 +167,46 @@ describe('oat project split validate-plan', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       ok: false,
       errors: [expect.objectContaining({ code: 'dependency-cycle' })],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('returns errors[] when a child slug already exists', async () => {
+    const planFile = await writePlanFile(document());
+    const { command, capture } = createHarness({
+      existingSlugs: ['feature'],
+    });
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      ok: false,
+      errors: [
+        expect.objectContaining({
+          code: 'slug-collision-existing',
+          slug: 'feature',
+        }),
+      ],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('returns errors[] when the parent slug already exists', async () => {
+    const planFile = await writePlanFile(document());
+    const { command, capture } = createHarness({
+      existingSlugs: ['umbrella'],
+    });
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      ok: false,
+      errors: [
+        expect.objectContaining({
+          code: 'slug-collision-existing',
+          slug: 'umbrella',
+        }),
+      ],
     });
     expect(process.exitCode).toBe(1);
   });
