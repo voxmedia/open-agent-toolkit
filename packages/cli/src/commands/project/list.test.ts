@@ -16,6 +16,10 @@ interface HarnessOptions {
   env?: NodeJS.ProcessEnv;
   projects?: ProjectSummary[];
   projectsRoot?: string;
+  projectMetadata?: Record<
+    string,
+    { kind: string; phase: string; phaseStatus: string }
+  >;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -42,6 +46,16 @@ function createHarness(options: HarnessOptions): {
       async () => options.projectsRoot ?? '.oat/projects/shared',
     ),
     listProjects,
+    readProjectMetadata: vi.fn(async (projectPath: string) => {
+      const projectName = projectPath.split('/').at(-1) ?? projectPath;
+      return (
+        options.projectMetadata?.[projectName] ?? {
+          kind: 'implementation',
+          phase: 'discovery',
+          phaseStatus: 'in_progress',
+        }
+      );
+    }),
     processEnv: options.env ?? {},
   });
 
@@ -171,4 +185,87 @@ describe('oat project list', () => {
     expect(capture.info.join('\n')).toContain('oat-project-implement');
     expect(process.exitCode).toBe(0);
   });
+
+  it('hides coordination parents in decomposition+complete state by default', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      projects: [
+        projectSummary('coordination-parent'),
+        projectSummary('child-project'),
+      ],
+      projectMetadata: {
+        'coordination-parent': {
+          kind: 'coordination',
+          phase: 'decomposition',
+          phaseStatus: 'complete',
+        },
+        'child-project': {
+          kind: 'implementation',
+          phase: 'plan',
+          phaseStatus: 'complete',
+        },
+      },
+    });
+
+    await runCommand(command, []);
+
+    const output = capture.info.join('\n');
+    expect(output).not.toContain('coordination-parent');
+    expect(output).toContain('child-project');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('shows coordination parents when --include-coordination is passed', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      projects: [projectSummary('coordination-parent')],
+      projectMetadata: {
+        'coordination-parent': {
+          kind: 'coordination',
+          phase: 'decomposition',
+          phaseStatus: 'complete',
+        },
+      },
+    });
+
+    await runCommand(command, ['--include-coordination']);
+
+    expect(capture.info.join('\n')).toContain('coordination-parent');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('shows coordination parents still in decomposition+in_progress state by default', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      projects: [projectSummary('coordination-parent')],
+      projectMetadata: {
+        'coordination-parent': {
+          kind: 'coordination',
+          phase: 'decomposition',
+          phaseStatus: 'in_progress',
+        },
+      },
+    });
+
+    await runCommand(command, []);
+
+    expect(capture.info.join('\n')).toContain('coordination-parent');
+    expect(process.exitCode).toBe(0);
+  });
 });
+
+function projectSummary(name: string): ProjectSummary {
+  return {
+    name,
+    path: `.oat/projects/shared/${name}`,
+    phase: 'discovery',
+    phaseStatus: 'in_progress',
+    workflowMode: 'quick',
+    lifecycle: 'active',
+    progress: { completed: 0, total: 0 },
+    recommendation: {
+      skill: 'oat-project-progress',
+      reason: 'Check current progress.',
+    },
+  };
+}
