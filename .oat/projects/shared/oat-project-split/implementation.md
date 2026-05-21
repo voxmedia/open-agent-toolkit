@@ -738,7 +738,7 @@ Track test execution during implementation.
 **Verification performed:**
 
 - Phase-scoped vitest suites for split primitives, split run, project list/status/dashboard behavior, and skill hook simulations.
-- `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm format`, and `pnpm release:validate` across the implementation run, with final verification pending before final review.
+- Final verification passed: `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`, and `pnpm release:validate`.
 - Live dogfood documented in `.oat/projects/shared/oat-project-split/dogfood/`.
 
 **Design deltas (if any):**
