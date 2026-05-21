@@ -179,6 +179,13 @@ describe('frontmatter', () => {
   describe('project state recognition', () => {
     it('recognizes the coordination kind field and values', () => {
       expect(isProjectStateFrontmatterField('oat_kind')).toBe(true);
+      expect(isProjectStateFrontmatterField('oat_parent')).toBe(true);
+      expect(isProjectStateFrontmatterField('oat_siblings')).toBe(true);
+      expect(isProjectStateFrontmatterField('oat_depends_on')).toBe(true);
+      expect(isProjectStateFrontmatterField('oat_children')).toBe(true);
+      expect(
+        isProjectStateFrontmatterField('oat_inherited_context_revalidated'),
+      ).toBe(true);
       expect(isProjectStateKind('implementation')).toBe(true);
       expect(isProjectStateKind('coordination')).toBe(true);
       expect(isProjectStateKind('other')).toBe(false);

@@ -78,3 +78,107 @@ describe('validateProjectState - coordination additions', () => {
     ).toThrow(/oat_phase: decomposition requires oat_kind: coordination/);
   });
 });
+
+describe('child linkage validation', () => {
+  it('rejects oat_parent pointing to a non-coordination project', () => {
+    const result = validateProjectState({
+      slug: 'child-a',
+      frontmatter: {
+        oat_parent: 'parent',
+        oat_siblings: ['child-b'],
+        oat_depends_on: [],
+      },
+      relatedProjects: [
+        {
+          slug: 'parent',
+          frontmatter: {
+            oat_kind: 'implementation',
+            oat_phase: 'discovery',
+          },
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({ code: 'parent-not-coordination' }),
+    ]);
+  });
+
+  it('rejects oat_depends_on slugs not in oat_siblings', () => {
+    const result = validateProjectState({
+      slug: 'child-a',
+      frontmatter: {
+        oat_parent: 'parent',
+        oat_siblings: ['child-b'],
+        oat_depends_on: ['missing-child'],
+      },
+      relatedProjects: [
+        { slug: 'parent', frontmatter: { oat_kind: 'coordination' } },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({ code: 'depends-on-non-sibling' }),
+    ]);
+  });
+
+  it('rejects cycles across siblings depends_on', () => {
+    const result = validateProjectState({
+      slug: 'child-a',
+      frontmatter: {
+        oat_parent: 'parent',
+        oat_siblings: ['child-b'],
+        oat_depends_on: ['child-b'],
+      },
+      relatedProjects: [
+        { slug: 'parent', frontmatter: { oat_kind: 'coordination' } },
+        {
+          slug: 'child-b',
+          frontmatter: {
+            oat_parent: 'parent',
+            oat_siblings: ['child-a'],
+            oat_depends_on: ['child-a'],
+          },
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({ code: 'sibling-dependency-cycle' }),
+    ]);
+  });
+
+  it('rejects child discovery oat_status: complete while oat_inherited_context_revalidated is false', () => {
+    const result = validateProjectState({
+      frontmatter: {
+        oat_parent: 'parent',
+        oat_status: 'complete',
+        oat_inherited_context_revalidated: false,
+      },
+      relatedProjects: [
+        { slug: 'parent', frontmatter: { oat_kind: 'coordination' } },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toEqual([
+      expect.objectContaining({
+        code: 'inherited-context-revalidation-required',
+      }),
+    ]);
+  });
+
+  it('does NOT enforce the revalidated flag when oat_parent is absent (ordinary discovery untouched)', () => {
+    const result = validateProjectState({
+      frontmatter: {
+        oat_status: 'complete',
+        oat_inherited_context_revalidated: false,
+      },
+    });
+
+    expect(result).toMatchObject({ ok: true });
+  });
+});

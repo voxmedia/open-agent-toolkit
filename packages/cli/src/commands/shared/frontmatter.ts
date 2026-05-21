@@ -14,8 +14,14 @@ export const PROJECT_STATE_PHASES = [
 
 export const PROJECT_STATE_FRONTMATTER_FIELDS = [
   'oat_kind',
+  'oat_parent',
+  'oat_siblings',
+  'oat_depends_on',
+  'oat_children',
+  'oat_inherited_context_revalidated',
   'oat_phase',
   'oat_phase_status',
+  'oat_status',
   'oat_workflow_mode',
   'oat_lifecycle',
   'oat_current_task',
