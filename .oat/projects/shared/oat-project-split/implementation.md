@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-20
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase                                   | Status  | Tasks | Completed |
 | --------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Schema & pure-logic foundation | pending | 6     | 0/6       |
+| Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
 | Phase 2: oat-project-split skill        | pending | 7     | 0/7       |
 | Phase 3: Listings & dashboard filter    | pending | 3     | 0/3       |
 | Phase 4: Integration hooks              | pending | 4     | 0/4       |
 | Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
 
-**Total:** 0/25 tasks completed
+**Total:** 6/25 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -130,75 +130,147 @@ oat_generated: false
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Schema & pure-logic foundation
 
-**Status:** in_progress
+**Status:** passed
 **Started:** 2026-05-18
+**Completed:** 2026-05-20
+**Review:** `reviews/p01-review-2026-05-21-v3.md` (passed with 0 Critical, 0 Important)
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added coordination-project state fields and validation for `oat_kind`, `decomposition`, parent/sibling/dependency linkage, and inherited-context revalidation.
+- Added the split pure-logic foundation: signal evaluation, split payload normalization, child-plan DAG checks, and slug-collision detection.
+- Added the first `oat project split` CLI surface for `evaluate-signals` and `validate-plan`.
+- Added a validated discovery-completion boundary plus filesystem-aware state validation at project state write boundaries.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/validation/project-state.ts` - state/linkage validation rules.
+- `packages/cli/src/projects/split/` - split signal, plan, and validation primitives.
+- `packages/cli/src/commands/project/split/` - `evaluate-signals` and `validate-plan` CLI adapters.
+- `packages/cli/src/commands/project/complete-discovery/` - child inherited-context revalidation boundary.
+- `.oat/templates/state.md` - default state template fields.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/ src/commands/project/ src/projects/split/`
+- Result: pass, 21 files / 197 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit --pretty false`
+- Result: pass.
+- Run: `pnpm lint && pnpm type-check`
+- Result: pass on reviewer standalone rerun; one earlier parallel run hit a transient asset-copy failure.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The actual discovery-completion boundary is now a CLI command so skill prose can delegate validation instead of mutating `discovery.md` directly.
+- Minor non-blocking review finding remains: duplicate signal inputs can still count twice in `evaluateSignals`.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add `oat_kind` + `decomposition` phase to OAT state schema
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** `dbb26788`
 
-**Outcome (required when completed):**
+**Outcome:**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- OAT state now recognizes implementation vs coordination projects and enforces decomposition-phase rules.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.oat/templates/state.md` - added default state fields.
+- `packages/cli/src/commands/shared/frontmatter.ts` - recognized new frontmatter fields.
+- `packages/cli/src/validation/project-state.ts` - added validation entrypoint.
+- `packages/cli/src/commands/project/{new,complete-state,open,pause}/` - added write-boundary validation.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/ src/commands/project/ src/projects/split/`
+- Result: pass.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Validation lives in `packages/cli/src/validation/project-state.ts`; frontmatter parsing stays shape-only.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add parent/sibling/depends-on + inherited-revalidated fields
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `13e6f5b3`, fixes `b15a39b6`, `52287006`, `25a78110`, `2fd92666`
+
+**Outcome:**
+
+- Child linkage and inherited-context rules are recognized and enforced, including the planned split-child shape where `state.md` owns `oat_parent` and seeded `discovery.md` owns `oat_inherited_context_revalidated`.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/ src/commands/project/ src/projects/split/`
+- Result: pass.
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Phase review required two fix iterations before p01 passed.
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Signal evaluator module + unit tests
+
+**Status:** completed
+**Commit:** `7e1f0ada`
+
+**Outcome:**
+
+- Added signal evaluation and confidence tiers for split detection.
+
+---
+
+### Task p01-t04: `SplitPlanDocument` normalization module + unit tests
+
+**Status:** completed
+**Commit:** `60d0e496`
+
+**Outcome:**
+
+- Added normalized `SplitPlanDocument` carrying origin, interactivity, and child plan data.
+
+---
+
+### Task p01-t05: DAG validator + slug-collision detector + unit tests
+
+**Status:** completed
+**Commit:** `dc17e4fd`, fix `34e9aec4`
+
+**Outcome:**
+
+- Added child-plan DAG validation and parent/child slug collision detection against existing project slugs.
+
+---
+
+### Task p01-t06: Expose `evaluate-signals` + `validate-plan` via `oat project split` CLI subcommands
+
+**Status:** completed
+**Commit:** `325d1bd1`, fix `34e9aec4`
+
+**Outcome:**
+
+- Registered `oat project split evaluate-signals` and `oat project split validate-plan` for downstream skill hooks and Phase 2 orchestration.
+
+---
+
+## Phase 2: oat-project-split skill
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Create `oat-project-split` SKILL.md skeleton
 
 **Status:** pending
 **Commit:** -
@@ -217,6 +289,27 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-05-20 21:19
+
+**Branch:** chore/orient-subproject-split-backlog
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p01   | DONE_WITH_CONCERNS | pass   | 2/2            | completed   |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Outstanding Items
+
+- Minor review finding remains: duplicate fired signals can still falsely cross the split threshold.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -229,26 +322,31 @@ Chronological log of implementation progress.
 
 **Session Start:** {time}
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Add `oat_kind` + `decomposition` phase to OAT state schema - `dbb26788`
+- [x] p01-t02: Add parent/sibling/depends-on + inherited-revalidated fields - `13e6f5b3`, fixes `b15a39b6`, `52287006`, `25a78110`, `2fd92666`
+- [x] p01-t03: Signal evaluator module + unit tests - `7e1f0ada`
+- [x] p01-t04: `SplitPlanDocument` normalization module + unit tests - `60d0e496`
+- [x] p01-t05: DAG validator + slug-collision detector + unit tests - `dc17e4fd`, fix `34e9aec4`
+- [x] p01-t06: Expose `evaluate-signals` + `validate-plan` via `oat project split` CLI subcommands - `325d1bd1`
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Phase 1 foundation is implemented and passed code review after two fix iterations.
+- The next implementation target is the p02/p03 parallel group.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Root validation commands may hit transient bundle asset-copy races when run in parallel; standalone reviewer reruns passed.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Consider deduping duplicate fired signals in a later fix; current review rates it Minor.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
+**Session End:** 21:19
 
 ---
 
