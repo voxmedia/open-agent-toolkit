@@ -4,7 +4,7 @@ version: 2.0.2
 description: Use when starting a project or when requirements are still unclear. Runs structured discovery to gather requirements, constraints, and context.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
 ---
 
 # Discovery Phase
@@ -366,7 +366,14 @@ Update discovery.md sections:
 
 ### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)
 
-Before the HiLL gate or discovery completion, run the same split signal evaluation one final time and show an always-visible scope-check confirmation. The prompt is required even when no mid-stream offer fired:
+Before the HiLL gate or discovery completion, run the same split signal evaluation one final time.
+
+**Non-interactive convergence branch:** if `OAT_NON_INTERACTIVE=1`, do not show the scope-check prompt and do not silently choose. Parse the final `oat project split evaluate-signals --fired "<comma-list>"` result:
+
+- `high` or `soft` — append the same section to `"$PROJECT_PATH/discovery.md"` as the Step 9 non-interactive branch, using the final fired signal list and confidence, then exit non-zero.
+- `below` — proceed as one cohesive project without prompting.
+
+For interactive runs, show an always-visible scope-check confirmation. The prompt is required even when no mid-stream offer fired:
 
 > "This reads as one cohesive project — proceed, or split into multiple?"
 

@@ -45,7 +45,50 @@ function simulateDiscoverDetection(
   };
 }
 
+function simulateDiscoverConvergence(
+  fired: Signal[],
+  options: { nonInteractive?: boolean } = {},
+): {
+  prompt: string | null;
+  writesRecommendation: boolean;
+  proceedsAsOneProject: boolean;
+  exitCode: number;
+} {
+  const evaluation = evaluateSignals({ fired });
+
+  if (options.nonInteractive) {
+    return evaluation.triggered
+      ? {
+          prompt: null,
+          writesRecommendation: true,
+          proceedsAsOneProject: false,
+          exitCode: 1,
+        }
+      : {
+          prompt: null,
+          writesRecommendation: false,
+          proceedsAsOneProject: true,
+          exitCode: 0,
+        };
+  }
+
+  return {
+    prompt:
+      'This reads as one cohesive project — proceed, or split into multiple?',
+    writesRecommendation: false,
+    proceedsAsOneProject: evaluation.confidence === 'below',
+    exitCode: 0,
+  };
+}
+
 describe('oat-project-discover split detection hook', () => {
+  it('allows the documented pnpm local-development fallback', () => {
+    expect(readDiscoverSkill()).toContain('Bash(pnpm:*)');
+    expect(readDiscoverSkill()).toContain(
+      'pnpm run cli -- project split evaluate-signals',
+    );
+  });
+
   it('surfaces high-confidence wording when load-bearing signals 1 and 2 fire', () => {
     const outcome = simulateDiscoverDetection([
       'independently-shippable',
@@ -93,6 +136,22 @@ describe('oat-project-discover split detection hook', () => {
     expect(outcome.exitCode).toBe(1);
     expect(readDiscoverSkill()).toContain('## Detected Split Recommendation');
     expect(readDiscoverSkill()).toContain('exit 1');
+  });
+
+  it('fails fast for non-interactive convergence detection before prompting', () => {
+    const outcome = simulateDiscoverConvergence(
+      ['expect-separate-prs', 'distinct-subsystems'],
+      { nonInteractive: true },
+    );
+
+    expect(outcome.prompt).toBeNull();
+    expect(outcome.writesRecommendation).toBe(true);
+    expect(outcome.proceedsAsOneProject).toBe(false);
+    expect(outcome.exitCode).toBe(1);
+    expect(readDiscoverSkill()).toContain('Non-interactive convergence branch');
+    expect(readDiscoverSkill()).toContain(
+      'proceed as one cohesive project without prompting',
+    );
   });
 
   it('can hand a detected mid-stream transcript to the split plan normalizer', () => {
