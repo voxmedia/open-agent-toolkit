@@ -118,6 +118,63 @@ function renderParentDiscovery(document: SplitPlanDocument): string {
   ].join('\n');
 }
 
+function renderParentStateBody(document: SplitPlanDocument): string {
+  const childList = document.plan.children
+    .slice()
+    .sort((left, right) => left.order - right.order)
+    .map((child) => `- ${child.slug}`)
+    .join('\n');
+
+  return [
+    `# Project State: ${document.plan.parentSlug}`,
+    '',
+    '**Status:** Coordination',
+    '',
+    '## Current Phase',
+    '',
+    'Decomposition coordination - split children are tracked as implementation projects.',
+    '',
+    '## Artifacts',
+    '',
+    '- **Discovery:** `discovery.md` (coordination summary)',
+    '- **Split Plan:** `references/split-plan.json` (persisted resume source)',
+    '- **Spec:** N/A (coordination parent)',
+    '- **Design:** N/A (coordination parent)',
+    '- **Plan:** N/A (coordination parent)',
+    '- **Implementation:** N/A (coordination parent)',
+    '',
+    '## Children',
+    '',
+    childList || '- None.',
+    '',
+    '## Progress',
+    '',
+    '- Split plan persisted',
+    '- Child projects selected for implementation tracking',
+    '',
+    '## Blockers',
+    '',
+    'None',
+    '',
+    '## Next Milestone',
+    '',
+    `Continue through active child \`${document.plan.initialActiveChild}\`.`,
+    '',
+  ].join('\n');
+}
+
+async function replaceMarkdownBody(
+  filePath: string,
+  body: string,
+): Promise<void> {
+  const content = await readFile(filePath, 'utf8');
+  const frontmatter = getFrontmatterBlock(content);
+  if (!frontmatter) {
+    throw new Error(`${filePath} is missing frontmatter`);
+  }
+  await writeFile(filePath, `---\n${frontmatter}\n---\n\n${body}`, 'utf8');
+}
+
 export interface WriteCoordinationParentResult {
   parentProjectPath: string;
   scaffold: ScaffoldProjectResult;
@@ -145,11 +202,13 @@ export async function writeCoordinationParent(
   await writeObjectFrontmatter(statePath, (frontmatter) => {
     frontmatter['oat_kind'] = 'coordination';
     frontmatter['oat_workflow_mode'] = 'quick';
+    frontmatter['oat_hill_checkpoints'] = [];
     frontmatter['oat_children'] = document.plan.children
       .slice()
       .sort((left, right) => left.order - right.order)
       .map((child) => child.slug);
   });
+  await replaceMarkdownBody(statePath, renderParentStateBody(document));
 
   await mkdir(join(parentRoot, 'references'), { recursive: true });
   await writeFile(

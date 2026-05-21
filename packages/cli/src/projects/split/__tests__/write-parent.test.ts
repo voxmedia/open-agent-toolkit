@@ -112,7 +112,15 @@ describe('writeCoordinationParent', () => {
       await readFile(join(parentRoot, 'state.md'), 'utf8'),
     );
     expect(state['oat_kind']).toBe('coordination');
+    expect(state['oat_hill_checkpoints']).toEqual([]);
     expect(state['oat_children']).toEqual(['foundation', 'docs']);
+    const stateBody = await readFile(join(parentRoot, 'state.md'), 'utf8');
+    expect(stateBody).toContain('**Status:** Coordination');
+    expect(stateBody).toContain('- **Plan:** N/A (coordination parent)');
+    expect(stateBody).toContain(
+      '- **Implementation:** N/A (coordination parent)',
+    );
+    expect(stateBody).not.toContain('scaffolded template');
 
     const discovery = await readFile(join(parentRoot, 'discovery.md'), 'utf8');
     expect(discovery).toContain('## Split Rationale');

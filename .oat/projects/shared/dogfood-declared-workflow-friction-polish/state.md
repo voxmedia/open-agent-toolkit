@@ -11,8 +11,7 @@ oat_children:
   - dogfood-config-unset
   - dogfood-quick-routing
   - dogfood-staleness-threshold
-oat_hill_checkpoints:
-  OAT_HILL_CHECKPOINTS: null
+oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: decomposition
@@ -30,27 +29,33 @@ oat_generated: false
 
 # Project State: dogfood-declared-workflow-friction-polish
 
-**Status:** Discovery
+**Status:** Coordination
 **Started:** 2026-05-21
 **Last Updated:** 2026-05-21
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Decomposition coordination - split children are tracked as implementation projects.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
-- **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Discovery:** `discovery.md` (coordination summary)
+- **Split Plan:** `references/split-plan.json` (persisted resume source)
+- **Spec:** N/A (coordination parent)
+- **Design:** N/A (coordination parent)
+- **Plan:** N/A (coordination parent)
+- **Implementation:** N/A (coordination parent)
+
+## Children
+
+- dogfood-config-unset
+- dogfood-quick-routing
+- dogfood-staleness-threshold
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- Split plan persisted
+- Child projects selected for implementation tracking
 
 ## Blockers
 
@@ -58,4 +63,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Continue through active child `dogfood-config-unset`.
