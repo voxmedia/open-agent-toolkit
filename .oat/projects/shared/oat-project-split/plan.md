@@ -840,16 +840,24 @@ Sequential, final phase. Dogfood scenarios validate the lived experience; `bl-3a
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                               |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed          | 2026-05-21 | reviews/p01-review-2026-05-21-v3.md                    |
-| p02    | code     | passed          | 2026-05-21 | reviews/p02-review-2026-05-21-v3.md                    |
-| p03    | code     | passed          | 2026-05-21 | reviews/p03-review-2026-05-21.md                       |
-| p04    | code     | passed          | 2026-05-21 | reviews/p04-review-2026-05-21-v2.md                    |
-| p05    | code     | passed          | 2026-05-21 | reviews/p05-review-2026-05-21-v4.md                    |
-| final  | code     | passed          | 2026-05-21 | reviews/final-code-review-2026-05-21-v2.md             |
-| plan   | artifact | fixes_completed | 2026-05-20 | reviews/archived/artifact-plan-review-2026-05-20-v3.md |
-| design | artifact | pending         | -          | -                                                      |
+| Scope    | Type     | Status          | Date       | Artifact                                               |
+| -------- | -------- | --------------- | ---------- | ------------------------------------------------------ |
+| p01      | code     | passed          | 2026-05-21 | reviews/p01-review-2026-05-21-v3.md                    |
+| p02      | code     | passed          | 2026-05-21 | reviews/p02-review-2026-05-21-v3.md                    |
+| p03      | code     | passed          | 2026-05-21 | reviews/p03-review-2026-05-21.md                       |
+| p04      | code     | passed          | 2026-05-21 | reviews/p04-review-2026-05-21-v2.md                    |
+| p05      | code     | passed          | 2026-05-21 | reviews/p05-review-2026-05-21-v4.md                    |
+| final    | code     | passed          | 2026-05-21 | reviews/final-code-review-2026-05-21-v2.md             |
+| p01-r1   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21.md                       |
+| p01-r2   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21-v2.md                    |
+| p02-r1   | code     | fixes_completed | 2026-05-21 | reviews/p02-review-2026-05-21.md                       |
+| p02-r2   | code     | fixes_completed | 2026-05-21 | reviews/p02-review-2026-05-21-v2.md                    |
+| p04-r1   | code     | fixes_completed | 2026-05-21 | reviews/p04-review-2026-05-21.md                       |
+| p05-r1   | code     | fixes_completed | 2026-05-21 | reviews/p05-review-2026-05-21.md                       |
+| p05-r2   | code     | fixes_completed | 2026-05-21 | reviews/p05-review-2026-05-21-v2.md                    |
+| p05-r3   | code     | fixes_completed | 2026-05-21 | reviews/p05-review-2026-05-21-v3.md                    |
+| final-r1 | code     | fixes_completed | 2026-05-21 | reviews/final-code-review-2026-05-21.md                |
+| plan     | artifact | fixes_completed | 2026-05-20 | reviews/archived/artifact-plan-review-2026-05-20-v3.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
