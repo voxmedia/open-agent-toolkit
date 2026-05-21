@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-20
-oat_current_task_id: p05-t01
+oat_last_updated: 2026-05-21
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                   | Status  | Tasks | Completed |
-| --------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
-| Phase 2: oat-project-split skill        | passed  | 7     | 7/7       |
-| Phase 3: Listings & dashboard filter    | passed  | 3     | 3/3       |
-| Phase 4: Integration hooks              | passed  | 4     | 4/4       |
-| Phase 5: Reconcile + dogfood + ship     | pending | 5     | 0/5       |
+| Phase                                   | Status | Tasks | Completed |
+| --------------------------------------- | ------ | ----- | --------- |
+| Phase 1: Schema & pure-logic foundation | passed | 6     | 6/6       |
+| Phase 2: oat-project-split skill        | passed | 7     | 7/7       |
+| Phase 3: Listings & dashboard filter    | passed | 3     | 3/3       |
+| Phase 4: Integration hooks              | passed | 4     | 4/4       |
+| Phase 5: Reconcile + dogfood + ship     | passed | 5     | 5/5       |
 
-**Total:** 20/25 tasks completed
+**Total:** 25/25 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -431,13 +431,100 @@ oat_generated: false
 
 ## Phase 5: Reconcile + dogfood + ship
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-05-21
+**Completed:** 2026-05-21
+**Review:** `reviews/p05-review-2026-05-21-v4.md` (passed with 0 Critical, 0 Important)
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Reconciled backlog item `bl-3a4a` with the settled coordination-parent design.
+- Dogfooded declared, detected mid-stream, detected convergence, and resume split paths with file-backed evidence.
+- Fixed p05 dogfood findings: quick-routing state for split children, coordination-parent state prose, detected active-parent conversion, and coordination status/list rendering.
+- Bumped touched skill versions and lockstep public package versions.
+
+**Key files touched:**
+
+- `.oat/repo/reference/backlog/items/sub-project-split-escape-hatch.md` - reconciled backlog traceability.
+- `.oat/projects/shared/oat-project-split/dogfood/` - declared, detected, and resume dogfood evidence.
+- `packages/cli/src/commands/project/split/run.ts` - detected active-parent conversion path.
+- `packages/control-plane/src/` - preserved decomposition coordination status and inert recommendations.
+- `.agents/skills/oat-project-split/SKILL.md`, `.agents/skills/oat-project-discover/SKILL.md`, `.agents/skills/oat-brainstorm/SKILL.md` - skill version bumps.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/__tests__/run.test.ts src/commands/project/status.test.ts src/commands/project/list.test.ts src/commands/project/list.integration.test.ts`
+- Result: pass, 4 files / 33 tests.
+- Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/parser.test.ts src/recommender/router.test.ts src/project.test.ts`
+- Result: pass, 3 files / 25 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass.
+- Run: `pnpm --filter @open-agent-toolkit/control-plane type-check`
+- Result: pass.
+- Run: `pnpm format`
+- Result: pass.
+- Run: `pnpm release:validate`
+- Result: pass in p05 review v4.
+
+**Notes / Decisions:**
+
+- The p05 review loop required live dogfood beyond the initial command-boundary fixtures. The release-blocking issues found by dogfood were fixed before p05 was marked passed.
+- `project split validate-plan` still rejects plans whose detected parent slug already exists before run; `project split run` intentionally supports the active detected parent conversion path. This is recorded as dogfood friction, not a release blocker.
 
 ### Task p05-t01: Reconcile `bl-3a4a` backlog item
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `99c2d6d8`
+
+**Outcome:**
+
+- Backlog item `bl-3a4a` now reflects the shipped coordination-parent model and trigger surfaces.
+
+---
+
+### Task p05-t02: Dogfood declared path
+
+**Status:** completed
+**Commit:** `370cbcc9`, fixes `6ad278fe`, `3f3b94f0`, live evidence `e9815dbd`
+
+**Outcome:**
+
+- Declared multi-project entry dogfood produced a coordination parent and child project tree, with captured prompts and rough edges.
+
+---
+
+### Task p05-t03: Dogfood detected path
+
+**Status:** completed
+**Commit:** `b2d4f2ef`, fixes `edd96f40`, `931f5f16`, `e9f873bf`, `601fda7a`, `39d55bb5`
+
+**Outcome:**
+
+- Detected mid-stream and convergence dogfood captured actual prompts, split documents, resulting trees, and the active-parent conversion behavior.
+
+---
+
+### Task p05-t04: Dogfood resume
+
+**Status:** completed
+**Commit:** `89a28fca`
+
+**Outcome:**
+
+- Resume dogfood exercised persisted split-plan recovery and missing-child completion.
+
+---
+
+### Task p05-t05: SKILL versions + lockstep public package bumps
+
+**Status:** completed
+**Commit:** `9359273b`
+
+**Outcome:**
+
+- Touched OAT skills carry version bumps and the five public packages were bumped in lockstep.
 
 ---
 
@@ -538,6 +625,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Medium p04 review finding remains: hook tests do not use full transcript/AskUserQuestion fixtures.
 
+### Run 5 — 2026-05-21 04:45
+
+**Branch:** chore/orient-subproject-split-backlog
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p05   | DONE_WITH_CONCERNS | pass   | 2/2            | completed   |
+
+#### Parallel Groups
+
+- p05: sequential
+
+#### Outstanding Items
+
+- `project split validate-plan` reports slug collisions for detected active-parent conversion plans before run, while `project split run` succeeds by design.
+- Installed `oat` command lagged the local CLI during dogfood; dogfood used the local `pnpm exec tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts` path.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -598,33 +707,43 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                          | Passed | Failed | Coverage                                       |
+| ----- | -------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------- |
+| 1     | -                                                                                                  | -      | -      | -                                              |
+| 2     | -                                                                                                  | -      | -      | -                                              |
+| 5     | Focused CLI/control-plane split/status/list tests; format; package type-checks; release validation | yes    | 0      | p05 review-fix and dogfood regression coverage |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Standalone `oat-project-split` mechanics for coordination parents, child scaffolding/seeding, resume, and activation.
+- Detection/handoff hooks from `oat-project-discover` and `oat-brainstorm`.
+- Project list/dashboard/status behavior for completed coordination parents.
+- Dogfood evidence for declared, detected mid-stream, detected convergence, and resume paths.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- OAT can decompose a broad discovery or brainstorm into a coordination parent plus focused child implementation projects, then activate the first child.
+- Completed coordination parents are hidden from default project lists and shown as inert decomposition records when explicitly included.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/projects/split/` - split model, validation, parent/child writers, resume, and finalization.
+- `packages/cli/src/commands/project/split/` - CLI adapters for split evaluation, validation, and run.
+- `.agents/skills/oat-project-split/SKILL.md` - standalone split workflow skill.
+- `.agents/skills/oat-project-discover/SKILL.md` and `.agents/skills/oat-brainstorm/SKILL.md` - split handoff integration hooks.
+- `packages/control-plane/src/` - coordination status/list recommendation handling.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Phase-scoped vitest suites for split primitives, split run, project list/status/dashboard behavior, and skill hook simulations.
+- `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm format`, and `pnpm release:validate` across the implementation run, with final verification pending before final review.
+- Live dogfood documented in `.oat/projects/shared/oat-project-split/dogfood/`.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Detected split run now explicitly supports converting the active discovery project into the coordination parent when the detected parent slug already exists.
 
 ## References
 
