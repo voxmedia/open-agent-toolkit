@@ -215,7 +215,7 @@ slug-collision-existing: Child slug already exists: live-dogfood-declared-stalen
 - `live-dogfood-declared-quick-routing/state.md` records `oat_depends_on: live-dogfood-declared-config-unset`.
 - Child `discovery.md` files include `oat_inherited_context_revalidated: false`.
 - `pnpm run cli -- project list` omits the completed coordination parent by default.
-- `pnpm run cli -- project list --include-coordination` includes `live-dogfood-declared-workflow-friction-polish`, but displays it as `discovery (complete)` with recommendation `oat-project-plan` even though its `state.md` correctly records `decomposition`/`coordination`; this is a display/routing limitation worth follow-up.
+- `pnpm run cli -- project list --include-coordination` included `live-dogfood-declared-workflow-friction-polish` during this dogfood pass, but displayed it as `discovery (complete)` with recommendation `oat-project-plan` even though its `state.md` correctly recorded `decomposition`/`coordination`. This was fixed after the live dogfood run; current behavior displays coordination parents as `decomposition (complete)` with recommendation `none`.
 
 ### Limitations
 
