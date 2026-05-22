@@ -17,7 +17,7 @@ oat_generated_at: 2026-05-22
 | ------------ | ---------- |
 | Mode         | quick      |
 | Phase        | implement  |
-| Status       | complete   |
+| Status       | pr_open    |
 | HiLL Gate    | n/a        |
 | Current Task | -          |
 | Docs Updated | ✓ complete |
@@ -30,12 +30,12 @@ Details: `.oat/projects/shared/oat-project-split/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 50 days    |
-| Files Changed | 552        |
+| Files Changed | 555        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-pr-final** - Generate final PR description (final review passed)
+**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
 
 ## Quick Commands
 
