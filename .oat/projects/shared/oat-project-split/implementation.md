@@ -136,7 +136,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-05-18
 **Completed:** 2026-05-20
-**Review:** `reviews/p01-review-2026-05-21-v3.md` (passed with 0 Critical, 0 Important)
+**Review:** `reviews/archived/p01-review-2026-05-21-v3.md` (passed with 0 Critical, 0 Important)
 
 ### Phase Summary
 
@@ -271,7 +271,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-05-20
 **Completed:** 2026-05-20
-**Review:** `reviews/p02-review-2026-05-21-v3.md` (passed with 0 Critical, 0 Important)
+**Review:** `reviews/archived/p02-review-2026-05-21-v3.md` (passed with 0 Critical, 0 Important)
 
 ### Task p02-t01: Create `oat-project-split` SKILL.md skeleton
 
@@ -435,7 +435,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-05-21
 **Completed:** 2026-05-21
-**Review:** `reviews/p05-review-2026-05-21-v4.md` (passed with 0 Critical, 0 Important)
+**Review:** `reviews/archived/p05-review-2026-05-21-v4.md` (passed with 0 Critical, 0 Important)
 
 ### Phase Summary
 
@@ -650,7 +650,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### Final Review — 2026-05-21
 
-**Review:** `reviews/final-code-review-2026-05-21-v2.md` (passed with 0 Critical, 0 Important)
+**Review:** `reviews/archived/final-code-review-2026-05-21-v2.md` (passed with 0 Critical, 0 Important)
 
 **Fix summary:**
 
@@ -707,11 +707,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Review Artifact
 
-- `reviews/p-rev1-review-2026-05-22.md`
+- `reviews/archived/p-rev1-review-2026-05-22.md`
 
 ### Final Review Passed: final (2026-05-22)
 
-**Review artifact:** `reviews/final-review-2026-05-22.md`
+**Review artifact:** `reviews/archived/final-review-2026-05-22.md`
 **Verdict:** pass for merge readiness
 **Findings:** 0 Critical, 0 Important, 2 Minor
 
@@ -731,7 +731,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Status:** passed
 **Started:** 2026-05-22
 **Completed:** 2026-05-22
-**Review:** `reviews/p-rev1-review-2026-05-22.md` (passed with 0 Critical, 0 Important, 0 Minor)
+**Review:** `reviews/archived/p-rev1-review-2026-05-22.md` (passed with 0 Critical, 0 Important, 0 Minor)
 
 ### Task p-rev1-t01: Annotate fixed coordination list display dogfood note
 
