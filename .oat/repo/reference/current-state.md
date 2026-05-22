@@ -2,13 +2,14 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-05-18 (runtime dispatch selection landed: two-axis `model_axis`/`effort_axis` logging in structured `OAT Dispatch` blocks, Codex effort-specific implementer role variants, host-conditional review dispatch, and `oat status`/`oat init` recognition of generated Codex roles as managed)
+**Last Updated:** 2026-05-22 (`oat-project-split` shipped as a standalone workflow skill with discover/brainstorm integration hooks, coordination-only decomposition parents, flat child project scaffolding/seeding, persisted split-plan resume, coordination-aware list/dashboard behavior, and lockstep public packages bumped to 0.1.6. Recent runtime dispatch selection also landed: two-axis `model_axis`/`effort_axis` logging in structured `OAT Dispatch` blocks, Codex effort-specific implementer role variants, host-conditional review dispatch, and `oat status`/`oat init` recognition of generated Codex roles as managed. Final split review passed with only two deferred Minor follow-ups: post-run `validate-plan` semantics and active detected-parent conversion logging.)
 
 ## Canonical References
 
 - Workflow lifecycle: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
 - Implementation execution: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
 - Provider manifest and drift: `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`
+- Workflow project splitting: `apps/oat-docs/docs/workflows/projects/splitting.md`
 - Workflow reviews: `apps/oat-docs/docs/workflows/projects/reviews.md`
 - Workflow PR flow: `apps/oat-docs/docs/workflows/projects/pr-flow.md`
 - Roadmap: `.oat/repo/reference/roadmap.md`
@@ -37,6 +38,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat-project-import-plan` (import lane: provider plan -> canonical `plan.md`)
   - Project entry skills (`oat-project-new`, `oat-project-quick-start`, and `oat-project-import-plan`) now preflight inherited git state before scaffolding. Dirty worktrees surface a Commit now / Proceed anyway / Abort choice, with sync-managed paths called out as typical `oat sync` output.
   - `oat-project-promote-spec-driven` (in-place promotion from quick/import to spec-driven lifecycle)
+  - `oat-project-split` (split a broad discovery or brainstorm into a durable coordination parent plus flat sibling child projects; invoked from `oat-project-discover` and `oat-brainstorm`)
   - `oat-project-discover` -> `oat-project-spec` -> `oat-project-design` -> `oat-project-plan` -> `oat-project-implement`
   - `oat-project-design` v2.1.0 supports three full-design modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative prints a Section Review Plan, silently drafts routine sections, presents high-risk/uncertain sections for live review, and recaps silently drafted sections at the user-review gate.
   - Quick-start lightweight design intentionally remains a two-mode surface (collaborative or draft-and-review). If a quick project promotes to spec-driven, selective collaborative becomes available in full design.
@@ -48,6 +50,13 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - Bundled visual companion (`scripts/{server.cjs, start-server.sh, stop-server.sh, frame-template.html, helper.js}` + `references/visual-companion.md`) — port of MIT-licensed `superpowers:brainstorming@5.0.7` with OAT-aligned persistence-path resolution. Attribution in `NOTICES.md`.
   - Active-project routing has 3 sub-options (related → fold-back, independent → other terminal states, supplementary → reference file); fold-back enforces a commit safety contract (preflight `git status --porcelain`, scoped `git add --`, three-option dirty-tree picker, conditional handoff prompt).
   - Default-scope mechanism (`PACK_METADATA[name]?.defaultScope`, see ADR-017) drives both the interactive picker and the non-interactive resolver; `brainstorm` is the first user-default-scope pack, with `core` as a future consolidation candidate.
+- Project splitting:
+  - `oat-project-discover` now has codified split detection surfaces: mid-stream signal evaluation during solution-space exploration and an always-visible end-of-discovery scope check.
+  - `oat-brainstorm` can hand off declared multi-project intent directly to `oat-project-split` and expose split as a conditional terminal destination when accumulated scope is large.
+  - A coordination parent is marked `oat_kind: coordination`, `oat_phase: decomposition`, and `oat_phase_status: complete` in place; it records broad context, split rationale, child registry, sibling links, shared constraints, and an integration sketch.
+  - Coordination parents do not keep executable phase artifacts (`spec.md`, `design.md`, `plan.md`, or `implementation.md`). Resume reads `references/split-plan.json`.
+  - Child projects are flat siblings with parent/sibling metadata, seeded seven-section discovery context, and `oat_inherited_context_revalidated: false` until inherited assumptions are checked.
+  - `oat project list` hides completed coordination parents by default; `--include-coordination` shows them as `decomposition (complete)` with recommendation `none`. `oat state refresh` groups them under decompositions.
 - Review loop:
   - `oat-review-provide` (ad-hoc/non-project review)
   - `oat-review-receive` (ad-hoc local review receive: parse findings, triage, generate standalone tasks)

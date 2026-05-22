@@ -29,10 +29,27 @@ Mode-sensitive notes:
 - `reviews/*.md`: phase/final review files
 - `pr/*.md`: generated PR descriptions
 - `references/imported-plan.md`: preserved source plan for import mode
+- `references/split-plan.json`: persisted split plan for a coordination parent, used as the durable resume source when `oat-project-split` is interrupted
 
 ## Contract
 
 Artifacts are the project system of record; automation and routing should derive from these files, not memory.
+
+## Coordination parents
+
+Project splitting introduces a coordination-only parent artifact. It records shared context and child relationships, but it is not an executable lifecycle project.
+
+A coordination parent uses:
+
+- `oat_kind: coordination`
+- `oat_phase: decomposition`
+- `oat_phase_status: complete`
+
+Coordination parents do not contain executable phase files. `spec.md`, `design.md`, `plan.md`, and `implementation.md` are removed from the parent and represented in state prose as not applicable.
+
+The parent still keeps `state.md`, `discovery.md`, and `references/split-plan.json`. Child projects are flat siblings and link back to the parent through state metadata. Each child starts from a distilled discovery seed and must revalidate inherited context before moving beyond discovery/design.
+
+See [Project Splitting](splitting.md) for the full parent/child model.
 
 ### plan.md frontmatter
 

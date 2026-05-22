@@ -57,6 +57,7 @@
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
     - [Repository Analysis](workflows/projects/repo-analysis.md) — Repository-level analysis commands for collecting and triaging PR review comments.
     - [Reviews](workflows/projects/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.
+    - [Project Splitting](workflows/projects/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
   - Skills
     - [Skills](workflows/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.

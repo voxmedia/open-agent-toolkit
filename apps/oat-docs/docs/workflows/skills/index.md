@@ -18,6 +18,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Resume an existing project: `oat-project-open` and `oat-project-progress`
 - Execute a ready plan: `oat-project-implement`
 - Import an existing plan: `oat-project-import-plan`
+- Split a broad discovery or brainstorm into child projects: `oat-project-split`
 - Retroactively capture existing work: `oat-project-capture`
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
 - Capture a scoped, shippable backlog item: `oat-pjm-add-backlog-item` directly when the work is already scoped, or `oat-brainstorm` when the thought hasn't converged yet — the brainstorm dispatcher's "scoped backlog item" destination pre-fills the title / description / acceptance criteria / scope estimate / priority from the conversation and then runs `oat-pjm-add-backlog-item` with confirmed inputs
@@ -53,6 +54,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-design`
     - `oat-project-plan`
     - `oat-project-plan-writing`
+    - `oat-project-split`
     - `oat-project-implement`
     - `oat-project-progress`
     - `oat-project-next`
