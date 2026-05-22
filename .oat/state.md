@@ -13,14 +13,14 @@ oat_generated_at: 2026-05-22
 
 ## Active Project Summary
 
-| Field        | Value         |
-| ------------ | ------------- |
-| Mode         | quick         |
-| Phase        | implement     |
-| Status       | complete      |
-| HiLL Gate    | n/a           |
-| Current Task | -             |
-| Docs Updated | ⚠ not yet run |
+| Field        | Value      |
+| ------------ | ---------- |
+| Mode         | quick      |
+| Phase        | implement  |
+| Status       | complete   |
+| HiLL Gate    | n/a        |
+| Current Task | -          |
+| Docs Updated | ✓ complete |
 
 Details: `.oat/projects/shared/oat-project-split/state.md`
 
@@ -30,12 +30,12 @@ Details: `.oat/projects/shared/oat-project-split/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 50 days    |
-| Files Changed | 549        |
+| Files Changed | 552        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-document** - Sync documentation before generating PR
+**oat-project-pr-final** - Generate final PR description (final review passed)
 
 ## Quick Commands
 
