@@ -910,7 +910,7 @@ git commit -m "fix(p-rev1-t02): annotate coordination state dogfood note"
 | p04      | code     | passed          | 2026-05-21 | reviews/p04-review-2026-05-21-v2.md                    |
 | p05      | code     | passed          | 2026-05-21 | reviews/p05-review-2026-05-21-v4.md                    |
 | p-rev1   | code     | passed          | 2026-05-22 | reviews/p-rev1-review-2026-05-22.md                    |
-| final    | code     | fixes_added     | 2026-05-21 | reviews/archived/final-code-review-2026-05-21-v3.md    |
+| final    | code     | passed          | 2026-05-22 | reviews/final-review-2026-05-22.md                     |
 | p01-r1   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21.md                       |
 | p01-r2   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21-v2.md                    |
 | p02-r1   | code     | fixes_completed | 2026-05-21 | reviews/p02-review-2026-05-21.md                       |
@@ -920,6 +920,7 @@ git commit -m "fix(p-rev1-t02): annotate coordination state dogfood note"
 | p05-r2   | code     | fixes_completed | 2026-05-21 | reviews/p05-review-2026-05-21-v2.md                    |
 | p05-r3   | code     | fixes_completed | 2026-05-21 | reviews/p05-review-2026-05-21-v3.md                    |
 | final-r1 | code     | fixes_completed | 2026-05-21 | reviews/final-code-review-2026-05-21.md                |
+| final-r2 | code     | passed          | 2026-05-21 | reviews/final-code-review-2026-05-21-v2.md             |
 | plan     | artifact | fixes_completed | 2026-05-20 | reviews/archived/artifact-plan-review-2026-05-20-v3.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`

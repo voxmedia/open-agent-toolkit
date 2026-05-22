@@ -709,6 +709,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - `reviews/p-rev1-review-2026-05-22.md`
 
+### Final Review Passed: final (2026-05-22)
+
+**Review artifact:** `reviews/final-review-2026-05-22.md`
+**Verdict:** pass for merge readiness
+**Findings:** 0 Critical, 0 Important, 2 Minor
+
+**Disposition:**
+
+- `m1` — deferred Minor follow-up for post-run `validate-plan` semantics (`--for-resume` / `--allow-existing` or pre-run-only docs).
+- `m3` — deferred Minor follow-up for active detected-parent conversion CLI logging.
+
+**Next:** Final review gate is closed; continue with configured post-implementation sequence (`docs-pr`).
+
 <!-- orchestration-runs-end -->
 
 ---

@@ -17,7 +17,7 @@ oat_generated_at: 2026-05-22
 | ------------ | ------------- |
 | Mode         | quick         |
 | Phase        | implement     |
-| Status       | in_progress   |
+| Status       | complete      |
 | HiLL Gate    | n/a           |
 | Current Task | -             |
 | Docs Updated | ⚠ not yet run |
@@ -30,12 +30,12 @@ Details: `.oat/projects/shared/oat-project-split/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 50 days    |
-| Files Changed | 547        |
+| Files Changed | 549        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-implement** - Continue implementation
+**oat-project-document** - Sync documentation before generating PR
 
 ## Quick Commands
 
