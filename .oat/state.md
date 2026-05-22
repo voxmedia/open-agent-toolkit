@@ -9,20 +9,7 @@ oat_generated_at: 2026-05-22
 
 ## Active Project
 
-**oat-project-split** (`.oat/projects/shared/oat-project-split`)
-
-## Active Project Summary
-
-| Field        | Value      |
-| ------------ | ---------- |
-| Mode         | quick      |
-| Phase        | implement  |
-| Status       | pr_open    |
-| HiLL Gate    | n/a        |
-| Current Task | -          |
-| Docs Updated | ✓ complete |
-
-Details: `.oat/projects/shared/oat-project-split/state.md`
+_(not set)_
 
 ## Knowledge Status
 
@@ -30,12 +17,12 @@ Details: `.oat/projects/shared/oat-project-split/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-04-02 |
 | Age           | 50 days    |
-| Files Changed | 555        |
+| Files Changed | 495        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
+**oat-project-open** - Select an existing project to continue work
 
 ## Quick Commands
 
@@ -51,7 +38,6 @@ Details: `.oat/projects/shared/oat-project-split/state.md`
 ## Available Projects
 
 - **docs-readability-reorg** - implement
-- **oat-project-split** - implement
 - **remote-project-management** - discovery
 
 ## Decompositions
