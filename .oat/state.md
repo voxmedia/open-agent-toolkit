@@ -51,24 +51,9 @@ Details: `.oat/projects/shared/oat-project-split/state.md`
 ## Available Projects
 
 - **docs-readability-reorg** - implement
-- **dogfood-config-unset** - discovery
-- **dogfood-quick-routing** - discovery
-- **dogfood-staleness-threshold** - discovery
-- **live-dogfood-convergence-config-unset** - discovery
-- **live-dogfood-convergence-quick-routing** - discovery
-- **live-dogfood-convergence-staleness-threshold** - discovery
-- **live-dogfood-declared-config-unset** - discovery
-- **live-dogfood-declared-quick-routing** - discovery
-- **live-dogfood-declared-staleness-threshold** - discovery
-- **live-dogfood-detected-config-unset** - discovery
-- **live-dogfood-detected-quick-routing** - discovery
-- **live-dogfood-detected-staleness-threshold** - discovery
 - **oat-project-split** - implement
 - **remote-project-management** - discovery
 
 ## Decompositions
 
-- **dogfood-declared-workflow-friction-polish** - decomposition
-- **live-dogfood-convergence-workflow-friction** - decomposition
-- **live-dogfood-declared-workflow-friction-polish** - decomposition
-- **live-dogfood-detected-workflow-friction** - decomposition
+_(No decompositions found)_
