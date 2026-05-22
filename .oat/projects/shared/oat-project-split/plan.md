@@ -909,6 +909,7 @@ git commit -m "fix(p-rev1-t02): annotate coordination state dogfood note"
 | p03      | code     | passed          | 2026-05-21 | reviews/p03-review-2026-05-21.md                       |
 | p04      | code     | passed          | 2026-05-21 | reviews/p04-review-2026-05-21-v2.md                    |
 | p05      | code     | passed          | 2026-05-21 | reviews/p05-review-2026-05-21-v4.md                    |
+| p-rev1   | code     | passed          | 2026-05-22 | reviews/p-rev1-review-2026-05-22.md                    |
 | final    | code     | fixes_added     | 2026-05-21 | reviews/archived/final-code-review-2026-05-21-v3.md    |
 | p01-r1   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21.md                       |
 | p01-r2   | code     | fixes_completed | 2026-05-21 | reviews/p01-review-2026-05-21-v2.md                    |

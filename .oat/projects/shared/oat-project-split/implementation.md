@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-21
-oat_current_task_id: p-rev1-t01
+oat_last_updated: 2026-05-22
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                   | Status  | Tasks | Completed |
-| --------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Schema & pure-logic foundation | passed  | 6     | 6/6       |
-| Phase 2: oat-project-split skill        | passed  | 7     | 7/7       |
-| Phase 3: Listings & dashboard filter    | passed  | 3     | 3/3       |
-| Phase 4: Integration hooks              | passed  | 4     | 4/4       |
-| Phase 5: Reconcile + dogfood + ship     | passed  | 5     | 5/5       |
-| Review Fixes: Final review polish       | pending | 2     | 0/2       |
+| Phase                                   | Status | Tasks | Completed |
+| --------------------------------------- | ------ | ----- | --------- |
+| Phase 1: Schema & pure-logic foundation | passed | 6     | 6/6       |
+| Phase 2: oat-project-split skill        | passed | 7     | 7/7       |
+| Phase 3: Listings & dashboard filter    | passed | 3     | 3/3       |
+| Phase 4: Integration hooks              | passed | 4     | 4/4       |
+| Phase 5: Reconcile + dogfood + ship     | passed | 5     | 5/5       |
+| Review Fixes: Final review polish       | passed | 2     | 2/2       |
 
-**Total:** 25/27 tasks completed
+**Total:** 27/27 tasks completed
 **Parallel groups:** `[['p02', 'p03']]` (after p01 completes)
 
 ---
@@ -682,9 +682,65 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `m1` — `validate-plan` rejects persisted split plans after run. Deferred because it is a moderate CLI semantics/API change (`--for-resume` / `--allow-existing`) rather than a small polish edit, and current `run` behavior is correct.
 - `m3` — active detected-parent conversion UX logging. Deferred because it is non-blocking command UX polish and should be handled with a focused follow-up test rather than blocking final closeout.
 
-**Next:** Execute review-fix tasks via the `oat-project-implement` skill, then mark final review fixes completed and re-review if needed.
+**Next:** Review-fix tasks completed in `p-rev1`; final re-review/receive remains the next lifecycle gate if needed before PR closeout.
+
+### Run 4 — 2026-05-22 14:38
+
+**Branch:** chore/orient-subproject-split-backlog
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase  | Implementer | Review | Fix Iterations | Disposition |
+| ------ | ----------- | ------ | -------------- | ----------- |
+| p-rev1 | DONE        | pass   | 0/2            | committed   |
+
+#### Parallel Groups
+
+- `p-rev1`: sequential revision phase
+
+#### Outstanding Items
+
+- None
+
+#### Review Artifact
+
+- `reviews/p-rev1-review-2026-05-22.md`
 
 <!-- orchestration-runs-end -->
+
+---
+
+## Revision Phase 1: Final review polish
+
+**Status:** passed
+**Started:** 2026-05-22
+**Completed:** 2026-05-22
+**Review:** `reviews/p-rev1-review-2026-05-22.md` (passed with 0 Critical, 0 Important, 0 Minor)
+
+### Task p-rev1-t01: Annotate fixed coordination list display dogfood note
+
+**Status:** completed
+**Commit:** `e6c018a8`
+
+**Verification:**
+
+- Run: `pnpm run cli -- project list --include-coordination`
+- Result: pass
+
+---
+
+### Task p-rev1-t02: Annotate fixed coordination parent state-body dogfood note
+
+**Status:** completed
+**Commit:** `aa3e17a3`
+
+**Verification:**
+
+- Run: `rg -n "N/A \\(coordination parent\\)|project list --include-coordination" .oat/projects/shared/oat-project-split/dogfood/declared.md`
+- Result: pass
 
 ---
 
@@ -744,12 +800,13 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                          | Passed | Failed | Coverage                                       |
-| ----- | -------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------- |
-| 1     | -                                                                                                  | -      | -      | -                                              |
-| 2     | -                                                                                                  | -      | -      | -                                              |
-| 5     | Focused CLI/control-plane split/status/list tests; format; package type-checks; release validation | yes    | 0      | p05 review-fix and dogfood regression coverage |
-| final | Review receive converted selected Minor findings to dogfood annotation tasks                       | n/a    | n/a    | bookkeeping only                               |
+| Phase  | Tests Run                                                                                          | Passed | Failed | Coverage                                       |
+| ------ | -------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------- |
+| 1      | -                                                                                                  | -      | -      | -                                              |
+| 2      | -                                                                                                  | -      | -      | -                                              |
+| 5      | Focused CLI/control-plane split/status/list tests; format; package type-checks; release validation | yes    | 0      | p05 review-fix and dogfood regression coverage |
+| final  | Review receive converted selected Minor findings to dogfood annotation tasks                       | n/a    | n/a    | bookkeeping only                               |
+| p-rev1 | Task-level dogfood checks plus subagent code review                                                | yes    | 0      | Dogfood evidence annotations                   |
 
 ## Final Summary (for PR/docs)
 
@@ -778,6 +835,7 @@ Track test execution during implementation.
 - Phase-scoped vitest suites for split primitives, split run, project list/status/dashboard behavior, and skill hook simulations.
 - Final verification passed: `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`, and `pnpm release:validate`.
 - Live dogfood documented in `.oat/projects/shared/oat-project-split/dogfood/`.
+- Final review polish verification passed for dogfood evidence annotations in `p-rev1`.
 
 **Design deltas (if any):**
 
