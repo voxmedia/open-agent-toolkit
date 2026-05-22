@@ -51,7 +51,7 @@ No live umbrella-framing prompt, boundary question, or brainstorm confirmation f
 
 ## Followups / Rough Edges
 
-- Parent `state.md` body still says the parent has scaffolded `plan.md` and `implementation.md` artifacts even though the file invariant correctly removes them. The frontmatter and filesystem are correct; the human-readable template body is stale for coordination parents.
+- Parent `state.md` body said the parent had scaffolded `plan.md` and `implementation.md` artifacts during this dogfood pass, even though the file invariant correctly removed them. This symptom was fixed by the coordination-parent state-body update; current generated parent state bodies list spec, design, plan, and implementation as `N/A (coordination parent)`.
 - Child routing bug found during this dogfood pass was fixed in `fix(p05-t02)`: split-seeded children now write scalar `oat_phase: discovery`, scalar `oat_workflow_mode: quick`, scalar `oat_plan_source: quick`, and `project status --project-path .oat/projects/shared/dogfood-config-unset --json` reports `workflowMode: "quick"` with quick-mode routing.
 - Live declared entry-path coverage remains a release follow-up: `.oat/repo/reference/backlog/items/live-dogfood-oat-project-split-entry-paths.md` (`bl-074b`).
 
