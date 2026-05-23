@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -18,19 +18,36 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 2/3       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | completed   | 3     | 3/3       |
+| Phase 2 | in_progress | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 2/10 tasks completed
+**Total:** 3/10 tasks completed
 
 ---
 
 ## Phase 1: Provider-aware dispatch ceiling config
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-05-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Added provider-aware dispatch ceiling config schema and effective resolution.
+- Exposed Codex and Claude ceiling keys through `oat config get/set/describe`.
+- Added docs for the new workflow preference keys.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
+- Result: passed, 49 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts`
+- Result: passed, 24 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+- Result: passed, 73 tests.
 
 ### Task p01-t01: Add workflow dispatch ceiling config schema
 
@@ -64,15 +81,26 @@ oat_generated: false
 
 ### Task p01-t03: Expose dispatch ceiling through oat config
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3c452138
+
+**Outcome:**
+
+- Added `workflow.dispatchCeiling.codex` and `workflow.dispatchCeiling.claude` to the config command surface.
+- Added provider-specific enum validation and catalog descriptions.
+- Documented the keys in config reference docs.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+- Result: passed, 73 tests.
 
 ---
 
 ## Phase 2: Deterministic Codex role variants
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-05-23
 
 ### Task p02-t01: Generate Codex implementer xhigh and reviewer effort variants
 

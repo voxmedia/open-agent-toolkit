@@ -30,7 +30,7 @@ Details: `.oat/projects/shared/dispatch-ceiling/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-05-17 |
 | Age           | 6 days     |
-| Files Changed | 146        |
+| Files Changed | 150        |
 | Status        | stale      |
 
 ## Recommended Next Step
