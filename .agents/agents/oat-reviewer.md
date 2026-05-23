@@ -47,12 +47,19 @@ You will be given a "Review Scope" block including:
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 - **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
-- **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
+- **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `provider-default`, `inherited`, `not-applicable`, or `host-auto`)
+- **dispatch_ceiling**: Optional resolved provider ceiling that capped/selected this review dispatch
+- **ceiling_source**: Optional source for the resolved ceiling (`repo config`, `project state`, or `preflight prompt`)
+- **provider_default_effort**: Optional Codex provider default effort, used only to explain base/unpinned fallback dispatches
 - **dispatch_rationale**: Optional short rationale for the model/effort axis choices
 
 ## Dispatch Control
 
-Reviews, re-reviews, and review-fix evaluation inherit the parent session's model and effort axes unless the user explicitly requested a review override. In Codex, the orchestrator should omit `model` and `reasoning_effort` overrides when spawning this reviewer; in Claude Code, it should not pass a per-review model override. The review scope should record `model_axis=inherited` and `effort_axis=inherited` on hosts that expose an effort axis (such as Codex), or `effort_axis=not-applicable` on hosts that do not (such as Claude Code). Do not read `plan.md` Dispatch Profile rows to self-select a tier; the orchestrator owns dispatch control.
+The orchestrator owns dispatch control. Do not read `plan.md` Dispatch Profile rows to self-select a tier.
+
+For Codex, normal deterministic review dispatch uses pinned reviewer variants (`oat-reviewer-low`, `oat-reviewer-medium`, `oat-reviewer-high`, or `oat-reviewer-xhigh`) selected by the resolved OAT dispatch ceiling. The base `oat-reviewer` role is a provider-default/unpinned fallback; if you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as an OAT ceiling.
+
+For Claude Code, review dispatch is model-axis based and the effort axis is `not-applicable`.
 
 ## Mode Contract
 
