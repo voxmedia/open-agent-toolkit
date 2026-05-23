@@ -487,16 +487,65 @@ git commit -m "chore(p04-t02): validate dispatch ceiling release"
 
 ---
 
+### Task p04-t03: (review) Add CLI dispatch ceiling resolver
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/index.ts`
+- Modify: `packages/cli/src/commands/project/status.ts` or add adjacent project command module as appropriate
+- Modify: `packages/cli/src/commands/project/*.test.ts`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Implementation preflight currently documents dispatch ceiling resolution in skill text, but there is no compiled CLI helper that resolves the effective ceiling, source, provider default, and unresolved/non-interactive block state for orchestrators.
+
+Location: `.agents/skills/oat-project-implement/SKILL.md:162`
+
+**Step 2: Implement fix**
+
+Add a project-scoped CLI helper for dispatch ceiling resolution, using the existing config resolver and project `state.md` frontmatter:
+
+- expose a command such as `oat project dispatch-ceiling resolve --provider codex --json`
+- resolve repo config first, then `oat_dispatch_ceiling` project state/frontmatter
+- report `{ provider, value, source, unresolved, providerDefaultEffort }` for Codex, using `unknown` when the provider default cannot be read
+- support a non-interactive/preflight mode that exits non-zero with the documented `BLOCKED:` guidance when unresolved
+- keep dry-run/read-only behavior from mutating project state
+- update implementation skill/docs to call the CLI helper instead of requiring orchestrators to duplicate resolution rules
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run cli -- project dispatch-ceiling resolve --provider codex --json
+```
+
+Expected: project command tests pass, skill validation passes, and the resolver prints source-backed JSON for configured/resolved ceilings or the documented unresolved state.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project .agents/skills/oat-project-implement/SKILL.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/cli-utilities/configuration.md
+git commit -m "fix(p04-t03): add dispatch ceiling resolver command"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                           |
-| ------ | -------- | -------- | ---------- | ---------------------------------- |
-| p01    | code     | pending  | -          | -                                  |
-| p02    | code     | pending  | -          | -                                  |
-| p03    | code     | pending  | -          | -                                  |
-| p04    | code     | pending  | -          | -                                  |
-| final  | code     | received | 2026-05-23 | reviews/final-review-2026-05-23.md |
-| design | artifact | pending  | -          | -                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| p03    | code     | pending     | -          | -                                           |
+| p04    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-05-23 | reviews/archived/final-review-2026-05-23.md |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -509,11 +558,11 @@ git commit -m "chore(p04-t02): validate dispatch ceiling release"
 - Phase 1: 3 tasks - config schema, resolution, and CLI exposure
 - Phase 2: 2 tasks - Codex generated variants and stray/init test coverage
 - Phase 3: 3 tasks - planning, implementation, and agent dispatch contract updates
-- Phase 4: 2 tasks - docs/generated views/versioning/validation
+- Phase 4: 3 tasks - docs/generated views/versioning/validation and CLI resolver review fix
 
-**Total: 10 tasks**
+**Total: 11 tasks**
 
-Ready for implementation.
+Ready for review-fix implementation.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
-oat_status: completed
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 3     | 3/3       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 3     | 3/3       |
-| Phase 4 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 3     | 3/3       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 3     | 3/3       |
+| Phase 4 | in_progress | 3     | 2/3       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -220,7 +220,7 @@ oat_generated: false
 
 ## Phase 4: Docs, generated assets, versions, and validation
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-05-23
 
 ### Task p04-t01: Update docs and generated Codex views
@@ -267,6 +267,43 @@ oat_generated: false
 - Result: no changes to apply.
 - Run: `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
 - Result: passed, 4 changed canonical skill version bump checks.
+
+### Task p04-t03: (review) Add CLI dispatch ceiling resolver
+
+**Status:** pending
+**Commit:** -
+
+**Outcome:**
+
+- Pending. Added from final review receive after confirming the intended scope includes compiled CLI tooling for ceiling resolution, not only `oat config` get/set/describe plus skill guidance.
+
+---
+
+### Review Received: final
+
+**Date:** 2026-05-23
+**Review artifact:** reviews/archived/final-review-2026-05-23.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**Disposition:**
+
+- `I1` converted to `p04-t03`: Add compiled CLI dispatch ceiling resolver/preflight helper.
+- `m1` resolved by receive-review bookkeeping: final review table row updated from active `received` to archived `fixes_added`.
+
+**New tasks added:** p04-t03
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
 
 ---
 
