@@ -489,14 +489,14 @@ git commit -m "chore(p04-t02): validate dispatch ceiling release"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                           |
+| ------ | -------- | -------- | ---------- | ---------------------------------- |
+| p01    | code     | pending  | -          | -                                  |
+| p02    | code     | pending  | -          | -                                  |
+| p03    | code     | pending  | -          | -                                  |
+| p04    | code     | pending  | -          | -                                  |
+| final  | code     | received | 2026-05-23 | reviews/final-review-2026-05-23.md |
+| design | artifact | pending  | -          | -                                  |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
