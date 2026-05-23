@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -18,12 +18,12 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 1 | in_progress | 3     | 1/3       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 0/10 tasks completed
+**Total:** 1/10 tasks completed
 
 ---
 
@@ -34,8 +34,18 @@ oat_generated: false
 
 ### Task p01-t01: Add workflow dispatch ceiling config schema
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2c708ed8
+
+**Outcome:**
+
+- Added provider-specific workflow dispatch ceiling types and config normalization for Codex and Claude.
+- Added normalization and round-trip tests for shared, local, and user config.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
+- Result: passed, 49 tests.
 
 ### Task p01-t02: Resolve dispatch ceiling precedence
 
