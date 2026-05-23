@@ -46,7 +46,11 @@ interface DesiredCodexRole {
   content: string;
 }
 
-const PHASE_IMPLEMENTER_EFFORT_VARIANTS = ['low', 'medium', 'high'] as const;
+const CODEX_EFFORT_VARIANTS = ['low', 'medium', 'high', 'xhigh'] as const;
+const CODEX_EFFORT_VARIANT_BASE_ROLES = new Set([
+  'oat-phase-implementer',
+  'oat-reviewer',
+]);
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex');
@@ -109,29 +113,37 @@ function codexEffortVariantContent(
     );
 }
 
-function codexEffortVariantDescription(effort: string): string {
+function codexEffortVariantDescription(
+  baseRoleName: string,
+  effort: string,
+): string {
+  const roleLabel =
+    baseRoleName === 'oat-reviewer' ? 'reviewer' : 'phase implementer';
   if (effort === 'low') {
-    return 'OAT phase implementer pinned to low reasoning effort for narrow mechanical implementation or fix phases.';
+    return `OAT ${roleLabel} pinned to low reasoning effort for narrow mechanical implementation, fix, or review phases.`;
   }
   if (effort === 'medium') {
-    return 'OAT phase implementer pinned to medium reasoning effort for normal multi-file implementation or fix phases.';
+    return `OAT ${roleLabel} pinned to medium reasoning effort for normal multi-file implementation, fix, or review phases.`;
   }
-  return 'OAT phase implementer pinned to high reasoning effort for broad, subtle, or higher-risk implementation or fix phases.';
+  if (effort === 'high') {
+    return `OAT ${roleLabel} pinned to high reasoning effort for broad, subtle, or higher-risk implementation, fix, or review phases.`;
+  }
+  return `OAT ${roleLabel} pinned to xhigh reasoning effort for the highest configured Codex dispatch ceiling.`;
 }
 
 function codexEffortVariantsFromBase(
   exported: DesiredCodexRole,
 ): DesiredCodexRole[] {
-  if (exported.roleName !== 'oat-phase-implementer') {
+  if (!CODEX_EFFORT_VARIANT_BASE_ROLES.has(exported.roleName)) {
     return [];
   }
 
-  return PHASE_IMPLEMENTER_EFFORT_VARIANTS.map((effort) => {
+  return CODEX_EFFORT_VARIANTS.map((effort) => {
     const variantRoleName = `${exported.roleName}-${effort}`;
     const configFile = `agents/${variantRoleName}.toml`;
     return {
       roleName: variantRoleName,
-      description: codexEffortVariantDescription(effort),
+      description: codexEffortVariantDescription(exported.roleName, effort),
       configFile,
       rolePath: join(dirname(exported.rolePath), `${variantRoleName}.toml`),
       content: codexEffortVariantContent(

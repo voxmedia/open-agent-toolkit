@@ -110,11 +110,15 @@ describe('codex sync extension', () => {
     expect(rolePaths).toContain(
       '.codex/agents/oat-phase-implementer-high.toml',
     );
+    expect(rolePaths).toContain(
+      '.codex/agents/oat-phase-implementer-xhigh.toml',
+    );
     expect(plan.managedRoles).toEqual([
       'oat-phase-implementer',
       'oat-phase-implementer-high',
       'oat-phase-implementer-low',
       'oat-phase-implementer-medium',
+      'oat-phase-implementer-xhigh',
     ]);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
@@ -132,6 +136,69 @@ describe('codex sync extension', () => {
     expect(lowRole).toContain('# oat-role: oat-phase-implementer-low');
     expect(lowRole).toContain('model_reasoning_effort = "low"');
     expect(configFile).toContain('[agents.oat-phase-implementer-low]');
+    expect(configFile).toContain('[agents.oat-phase-implementer-xhigh]');
+  });
+
+  it('generates effort-specific codex variants for oat-reviewer', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalFile, canonicalAgentFileContent('oat-reviewer'));
+
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath: canonicalFile,
+        isFile: true,
+      },
+    ];
+
+    const plan = await computeCodexProjectExtensionPlan(root, canonicalEntries);
+    const rolePaths = plan.operations
+      .filter((op) => op.target === 'role')
+      .map((op) => op.path);
+
+    expect(rolePaths).toContain('.codex/agents/oat-reviewer.toml');
+    expect(rolePaths).toContain('.codex/agents/oat-reviewer-low.toml');
+    expect(rolePaths).toContain('.codex/agents/oat-reviewer-medium.toml');
+    expect(rolePaths).toContain('.codex/agents/oat-reviewer-high.toml');
+    expect(rolePaths).toContain('.codex/agents/oat-reviewer-xhigh.toml');
+    expect(plan.managedRoles).toEqual([
+      'oat-reviewer',
+      'oat-reviewer-high',
+      'oat-reviewer-low',
+      'oat-reviewer-medium',
+      'oat-reviewer-xhigh',
+    ]);
+
+    const applyResult = await applyCodexProjectExtensionPlan(root, plan);
+    expect(applyResult.failed).toBe(0);
+
+    const highRole = await readFile(
+      join(root, '.codex', 'agents', 'oat-reviewer-high.toml'),
+      'utf8',
+    );
+    const configFile = await readFile(
+      join(root, '.codex', 'config.toml'),
+      'utf8',
+    );
+
+    expect(highRole).toContain('# oat-role: oat-reviewer-high');
+    expect(highRole).toContain('model_reasoning_effort = "high"');
+    expect(configFile).toContain('[agents.oat-reviewer-high]');
+    expect(configFile).toContain('[agents.oat-reviewer-xhigh]');
+
+    const secondPlan = await computeCodexProjectExtensionPlan(
+      root,
+      canonicalEntries,
+    );
+    expect(secondPlan.operations.every((op) => op.action === 'skip')).toBe(
+      true,
+    );
   });
 
   it('does not remove unrelated managed roles during partial install-triggered sync', async () => {
