@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -18,12 +18,12 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 1/3       |
+| Phase 1 | in_progress | 3     | 2/3       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 1/10 tasks completed
+**Total:** 2/10 tasks completed
 
 ---
 
@@ -49,8 +49,18 @@ oat_generated: false
 
 ### Task p01-t02: Resolve dispatch ceiling precedence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 95c82872
+
+**Outcome:**
+
+- Added effective config defaults for `workflow.dispatchCeiling.codex` and `workflow.dispatchCeiling.claude`.
+- Added local/shared/user precedence tests for provider dispatch ceilings.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts`
+- Result: passed, 24 tests.
 
 ### Task p01-t03: Expose dispatch ceiling through oat config
 
