@@ -90,6 +90,10 @@ const DEFAULT_WORKFLOW_CONFIG = {
     autoReviewAtHillCheckpoints: null,
     autoNarrowReReviewScope: null,
     designMode: null,
+    dispatchCeiling: {
+      codex: null,
+      claude: null,
+    },
   },
 } satisfies Record<string, unknown>;
 

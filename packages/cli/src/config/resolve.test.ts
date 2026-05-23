@@ -274,6 +274,14 @@ describe('resolveEffectiveConfig', () => {
         value: null,
         source: 'default',
       });
+      expect(result.resolved['workflow.dispatchCeiling.codex']).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(result.resolved['workflow.dispatchCeiling.claude']).toEqual({
+        value: null,
+        source: 'default',
+      });
     });
 
     it('resolves workflow key from user when set only at user level', async () => {
@@ -527,6 +535,116 @@ describe('resolveEffectiveConfig', () => {
       expect(result.resolved['workflow.designMode']).toEqual({
         value: 'selective',
         source: 'shared',
+      });
+    });
+
+    it('resolves workflow.dispatchCeiling.codex with local > shared > user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { codex: 'high' } },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { codex: 'medium' } },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { codex: 'xhigh' } },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.dispatchCeiling.codex']).toEqual({
+        value: 'medium',
+        source: 'local',
+      });
+    });
+
+    it('resolves workflow.dispatchCeiling.claude with local > shared > user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { claude: 'opus' } },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { claude: 'sonnet' } },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { claude: 'haiku' } },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.dispatchCeiling.claude']).toEqual({
+        value: 'sonnet',
+        source: 'local',
+      });
+    });
+
+    it('resolves workflow.dispatchCeiling from shared when local unset', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { codex: 'high' } },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { codex: 'low' } },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.dispatchCeiling.codex']).toEqual({
+        value: 'high',
+        source: 'shared',
+      });
+    });
+
+    it('resolves workflow.dispatchCeiling from user when no other surface set', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { dispatchCeiling: { claude: 'sonnet' } },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.dispatchCeiling.claude']).toEqual({
+        value: 'sonnet',
+        source: 'user',
       });
     });
   });
