@@ -16,8 +16,8 @@ oat_phase_status: complete
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
-oat_pr_status: pending
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/89
 oat_project_created: '2026-05-23T14:49:20.584Z'
 oat_project_completed: null
 oat_project_state_updated: '2026-05-23T16:00:00Z'
@@ -49,7 +49,7 @@ Implementation complete - ready for pull request.
 - [x] Lightweight design drafted
 - [x] Implementation plan generated
 - [x] Implementation completed
-- [ ] Pull request opened
+- [x] Pull request opened
 
 ## Blockers
 
@@ -57,4 +57,4 @@ None
 
 ## Next Milestone
 
-Open the implementation pull request.
+Review and merge PR #89.

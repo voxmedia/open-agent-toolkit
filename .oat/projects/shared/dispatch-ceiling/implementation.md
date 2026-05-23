@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: completed
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
