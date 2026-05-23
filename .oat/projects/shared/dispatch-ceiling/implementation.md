@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p04-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 3     | 3/3       |
+| Phase 4 | completed | 2     | 2/2       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -220,7 +220,7 @@ oat_generated: false
 
 ## Phase 4: Docs, generated assets, versions, and validation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-05-23
 
 ### Task p04-t01: Update docs and generated Codex views
@@ -242,8 +242,31 @@ oat_generated: false
 
 ### Task p04-t02: Bump versions and run release validation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 22371ccd
+
+**Outcome:**
+
+- Bumped the lockstep public package set to `0.1.7`.
+- Validated the generated Codex views remained in sync after docs and package updates.
+- Completed full workspace, focused, docs, release, and skill-version validation.
+
+**Verification:**
+
+- Run: `pnpm check`
+- Result: passed, 9 tasks.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts src/commands/shared/codex-strays.test.ts src/commands/init/index.test.ts src/validation/skills.test.ts`
+- Result: passed, 7 test files and 232 tests.
+- Run: `pnpm test`
+- Result: passed, 180 test files and 1583 tests.
+- Run: `pnpm build:docs`
+- Result: passed.
+- Run: `pnpm release:validate`
+- Result: passed for 5 public packages.
+- Run: `pnpm run cli -- sync --scope project --dry-run`
+- Result: no changes to apply.
+- Run: `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
+- Result: passed, 4 changed canonical skill version bump checks.
 
 ---
 
@@ -265,7 +288,10 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - [x] Quick workflow selected with lightweight design.
 - [x] Discovery, design, plan, and implementation tracker initialized.
-- [ ] Implementation not yet started.
+- [x] Provider-aware dispatch ceiling config implemented.
+- [x] Deterministic Codex role variants implemented.
+- [x] Lifecycle dispatch contract updates implemented.
+- [x] Docs, generated assets, version bumps, and validation completed.
 
 **Decisions:**
 
