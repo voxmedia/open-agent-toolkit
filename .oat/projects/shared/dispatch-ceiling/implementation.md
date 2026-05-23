@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p02-t02
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -19,11 +19,11 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 2     | 1/2       |
-| Phase 3 | pending     | 3     | 0/3       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | in_progress | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 4/10 tasks completed
+**Total:** 5/10 tasks completed
 
 ---
 
@@ -99,8 +99,23 @@ oat_generated: false
 
 ## Phase 2: Deterministic Codex role variants
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-05-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Generated deterministic Codex effort variants for implementer and reviewer roles.
+- Included `xhigh` as a pinned variant that OAT can choose only when allowed by the resolved ceiling.
+- Extended stray/init tests so generated variants are managed, not adoptable strays.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`
+- Result: passed, 6 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/codex-strays.test.ts src/commands/init/index.test.ts`
+- Result: passed, 52 tests.
 
 ### Task p02-t01: Generate Codex implementer xhigh and reviewer effort variants
 
@@ -119,15 +134,25 @@ oat_generated: false
 
 ### Task p02-t02: Keep generated Codex variants out of stray detection
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 955eba33
+
+**Outcome:**
+
+- Extended managed-role coverage for implementer xhigh and reviewer low/medium/high/xhigh variants.
+- Updated init adoption tests to ensure generated variants are not offered as strays.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/codex-strays.test.ts src/commands/init/index.test.ts`
+- Result: passed, 52 tests.
 
 ---
 
 ## Phase 3: Lifecycle dispatch contract updates
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-05-23
 
 ### Task p03-t01: Add planning-time dispatch ceiling capture
 
