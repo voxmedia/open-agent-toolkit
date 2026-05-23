@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ oat_generated: false
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 2     | 0/2       |
+| Phase 4 | in_progress | 2     | 1/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
@@ -225,8 +225,20 @@ oat_generated: false
 
 ### Task p04-t01: Update docs and generated Codex views
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8b8b785d
+
+**Outcome:**
+
+- Updated implementation/lifecycle/provider-sync docs for dispatch ceiling preflight, provider-default visibility, and pinned Codex variants.
+- Regenerated Codex project views with implementer xhigh and reviewer low/medium/high/xhigh roles.
+
+**Verification:**
+
+- Run: `pnpm run cli -- sync --scope project`
+- Result: applied generated Codex role/config updates.
+- Run: `pnpm run cli -- sync --scope project --dry-run`
+- Result: no changes to apply.
 
 ### Task p04-t02: Bump versions and run release validation
 
