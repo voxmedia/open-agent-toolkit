@@ -37,6 +37,13 @@ export type WorkflowReviewExecutionModel =
   | 'inline'
   | 'fresh-session';
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
+export type WorkflowCodexDispatchCeiling = 'low' | 'medium' | 'high' | 'xhigh';
+export type WorkflowClaudeDispatchCeiling = 'haiku' | 'sonnet' | 'opus';
+
+export interface WorkflowDispatchCeiling {
+  codex?: WorkflowCodexDispatchCeiling;
+  claude?: WorkflowClaudeDispatchCeiling;
+}
 
 export interface OatWorkflowConfig {
   hillCheckpointDefault?: WorkflowHillCheckpointDefault;
@@ -47,6 +54,7 @@ export interface OatWorkflowConfig {
   autoReviewAtHillCheckpoints?: boolean;
   autoNarrowReReviewScope?: boolean;
   designMode?: WorkflowDesignMode;
+  dispatchCeiling?: WorkflowDispatchCeiling;
 }
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
@@ -63,6 +71,14 @@ const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'selective',
   'draft',
 ];
+const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] = [
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+];
+const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
+  ['haiku', 'sonnet', 'opus'];
 
 function normalizeWorkflowConfig(
   parsed: unknown,
@@ -124,6 +140,31 @@ function normalizeWorkflowConfig(
     (VALID_DESIGN_MODES as readonly string[]).includes(parsed.designMode)
   ) {
     next.designMode = parsed.designMode as WorkflowDesignMode;
+  }
+
+  if (isRecord(parsed.dispatchCeiling)) {
+    const dispatchCeiling: WorkflowDispatchCeiling = {};
+    if (
+      typeof parsed.dispatchCeiling.codex === 'string' &&
+      (VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(
+        parsed.dispatchCeiling.codex,
+      )
+    ) {
+      dispatchCeiling.codex = parsed.dispatchCeiling
+        .codex as WorkflowCodexDispatchCeiling;
+    }
+    if (
+      typeof parsed.dispatchCeiling.claude === 'string' &&
+      (VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(
+        parsed.dispatchCeiling.claude,
+      )
+    ) {
+      dispatchCeiling.claude = parsed.dispatchCeiling
+        .claude as WorkflowClaudeDispatchCeiling;
+    }
+    if (Object.keys(dispatchCeiling).length > 0) {
+      next.dispatchCeiling = dispatchCeiling;
+    }
   }
 
   return Object.keys(next).length > 0 ? next : undefined;
