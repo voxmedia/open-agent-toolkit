@@ -875,6 +875,76 @@ describe('oat config', () => {
       });
     });
 
+    it('sets workflow.dispatchCeiling.codex at shared level', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.codex',
+        'high',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { dispatchCeiling: { codex: 'high' } },
+      });
+
+      const { command: getCmd, capture: getCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(
+        getCmd,
+        ['get', 'workflow.dispatchCeiling.codex'],
+        ['--json'],
+      );
+      expect(getCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.dispatchCeiling.codex',
+        value: 'high',
+        source: 'shared',
+      });
+    });
+
+    it('sets workflow.dispatchCeiling.claude at local level by default', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.claude',
+        'sonnet',
+      ]);
+
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { dispatchCeiling: { claude: 'sonnet' } },
+      });
+    });
+
+    it('set workflow.dispatchCeiling validates provider-specific enums', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.codex',
+        'opus',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('workflow.dispatchCeiling.codex');
+      expect(capture.error[0]).toContain('low | medium | high | xhigh');
+    });
+
     it('workflow.autoReviewAtHillCheckpoints overrides legacy autoReviewAtCheckpoints', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -964,7 +1034,7 @@ describe('oat config', () => {
   });
 
   describe('workflow preference catalog', () => {
-    it('describe lists all eight workflow preference keys under Workflow Preferences group', async () => {
+    it('describe lists all workflow preference keys under Workflow Preferences group', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
@@ -979,6 +1049,8 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.autoReviewAtHillCheckpoints');
       expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
       expect(capture.info[0]).toContain('workflow.designMode');
+      expect(capture.info[0]).toContain('workflow.dispatchCeiling.codex');
+      expect(capture.info[0]).toContain('workflow.dispatchCeiling.claude');
       expect(process.exitCode).toBe(0);
     });
 
@@ -1017,6 +1089,18 @@ describe('oat config', () => {
 
       expect(capture.info[0]).toContain('Key: workflow.postImplementSequence');
       expect(capture.info[0]).toContain('wait | summary | pr | docs-pr');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.dispatchCeiling.codex shows effort enum metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.dispatchCeiling.codex']);
+
+      expect(capture.info[0]).toContain('Key: workflow.dispatchCeiling.codex');
+      expect(capture.info[0]).toContain('low | medium | high | xhigh');
+      expect(capture.info[0]).toContain('Default: unset');
       expect(process.exitCode).toBe(0);
     });
 
