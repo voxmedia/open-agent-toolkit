@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.3
+version: 1.2.4
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -48,6 +48,10 @@ Runtime routing note:
 
 - Keep `oat_ready_for` canonical as `oat-project-implement`.
 - Declare parallelism via `oat_plan_parallel_groups` in plan.md frontmatter (empty = sequential; nested arrays of phase IDs = parallel groups). `oat-project-implement` reads this field to choose sequential vs worktree-isolated parallel execution.
+- Dispatch ceilings are not stored in `plan.md`. Plan-producing skills resolve
+  them from `workflow.dispatchCeiling.<provider>` or project `state.md`
+  frontmatter, then persist interactive answers back to `state.md` as
+  `oat_dispatch_ceiling`.
 
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
 
@@ -71,7 +75,7 @@ Validation rules for explicit rows:
 
 - `Phase` must match a real `pNN` phase in the plan.
 - `Claude model` must be `haiku`, `sonnet`, `opus`, `auto`, or blank.
-- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank. In Codex, `low`, `medium`, and `high` map to effort-specific implementer roles. Codex xhigh is inherited-only; `xhigh` can be honored only by inheriting an already-xhigh parent/orchestrator session, not by selecting an `xhigh` implementer variant.
+- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank. In Codex, explicit effort values are preferred controls that `oat-project-implement` caps against the resolved OAT dispatch ceiling and maps to pinned implementer variants when selected. Provider default effort is informational for base/unpinned roles and is not an OAT ceiling.
 - Blank or `auto` means no explicit constraint for that provider.
 - `Rationale` is recommended and should explain why runtime selection should not decide on its own.
 

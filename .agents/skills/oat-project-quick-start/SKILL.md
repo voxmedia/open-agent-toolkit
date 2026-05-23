@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.1
+version: 2.1.2
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -455,6 +455,62 @@ Required parallelism pass before finalizing the plan:
 - Add a short `## Parallelism` section to `plan.md` explaining the dependency and write-set reasoning, including why groups were declared or why the plan remains sequential.
 - Quick mode is not "sequential by default." A quick-start plan is sequential only when the dependency and write-set analysis says it should be.
 - When a task claims scoped verification, prefer the exact runner invocation that truly scopes to the intended file, test, or target instead of package-level shortcuts that may execute the full suite.
+
+### Step 3.5: Resolve Dispatch Ceiling Before Implementation Readiness
+
+Before moving the quick project to ready-for-implementation, resolve the
+dispatch ceiling for the current provider.
+
+Resolution order:
+
+1. Repo/user/local config key `workflow.dispatchCeiling.<provider>` via `oat config get`
+2. Project `state.md` frontmatter key `oat_dispatch_ceiling`
+3. Interactive quick-planning prompt
+4. Leave unresolved for implementation preflight when non-interactive
+
+Provider values:
+
+- Codex: `low`, `medium`, `high`, `xhigh`
+- Claude: `haiku`, `sonnet`, `opus`
+
+If no ceiling resolves for the current provider and the session is interactive,
+ask once before finalizing `plan.md`:
+
+```text
+No Codex dispatch ceiling is configured for this project.
+
+Choose the maximum Codex reasoning effort OAT may dispatch during implementation:
+low | medium | high | xhigh
+
+This controls implementer/reviewer subagent variants. It does not change your Codex config.
+```
+
+Adapt the wording for Claude:
+
+```text
+No Claude dispatch ceiling is configured for this project.
+
+Choose the maximum Claude model tier OAT may dispatch during implementation:
+haiku | sonnet | opus
+
+This controls provider-native subagent model selection. It does not change your Claude config.
+```
+
+Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter:
+
+```yaml
+oat_dispatch_ceiling:
+  provider: codex
+  value: high
+  source: project-state
+```
+
+Do not prompt when `OAT_NON_INTERACTIVE=1` or when no user-response channel
+exists. In that case, leave the value unresolved. `oat-project-implement`
+must block before work starts if it still cannot resolve a ceiling.
+
+Do not treat Codex provider default effort as the OAT dispatch ceiling. Provider
+default is informational for base/unpinned roles only.
 
 ### Step 4: Sync Project State
 
