@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p03-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -20,10 +20,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 3     | 2/3       |
-| Phase 4 | pending     | 2     | 0/2       |
+| Phase 3 | completed   | 3     | 3/3       |
+| Phase 4 | in_progress | 2     | 0/2       |
 
-**Total:** 7/10 tasks completed
+**Total:** 8/10 tasks completed
 
 ---
 
@@ -151,8 +151,23 @@ oat_generated: false
 
 ## Phase 3: Lifecycle dispatch contract updates
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-05-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Planning workflows now capture unresolved dispatch ceilings before implementation readiness.
+- Implementation preflight now resolves, prints, prompts, or blocks on dispatch ceiling before work starts.
+- Canonical agents now accept and report dispatch ceiling/provider-default context.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- Result: passed, 28 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/frontmatter.test.ts`
+- Result: passed, 22 tests.
 
 ### Task p03-t01: Add planning-time dispatch ceiling capture
 
@@ -188,15 +203,25 @@ oat_generated: false
 
 ### Task p03-t03: Align phase implementer and reviewer prompts
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 020d2cdd
+
+**Outcome:**
+
+- Added dispatch ceiling, source, and provider default context to agent scope/reporting guidance.
+- Updated reviewer guidance so Codex deterministic review uses pinned variants and base reviewer means provider-default fallback.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/frontmatter.test.ts`
+- Result: passed, 22 tests.
 
 ---
 
 ## Phase 4: Docs, generated assets, versions, and validation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-05-23
 
 ### Task p04-t01: Update docs and generated Codex views
 
