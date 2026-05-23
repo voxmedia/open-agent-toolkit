@@ -136,6 +136,8 @@ flowchart LR
 
 During the Design step, `oat-project-design` asks how to work through the document unless a mode was selected by argument, environment, or `workflow.designMode`. The three full-design choices are collaborative, selective collaborative, and draft-and-review.
 
+Before a plan is marked ready for implementation, planning resolves the current provider's dispatch ceiling from `workflow.dispatchCeiling.<provider>` or project `state.md` frontmatter. If no ceiling is configured and the session is interactive, planning asks once and stores the answer as `oat_dispatch_ceiling`; non-interactive planning leaves it unresolved so implementation preflight can fail before work starts with setup instructions.
+
 ### Quick lane
 
 ```mermaid
@@ -149,6 +151,8 @@ flowchart LR
 ```
 
 Quick lane lightweight design intentionally keeps a smaller collaborative/draft choice. Selective collaborative becomes available only after promotion into the full spec-driven design lane.
+
+Quick-start follows the same dispatch ceiling rule at the plan boundary: capture it when interactive, persist it to project state, and avoid any mid-implementation ceiling prompt.
 
 ### Import lane
 
