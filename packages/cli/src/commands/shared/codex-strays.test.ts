@@ -90,10 +90,16 @@ describe('detectCodexRoleStrays', () => {
     tempDirs.push(root);
 
     await mkdir(join(root, '.codex', 'agents'), { recursive: true });
-    // Effort variants — no canonical .md counterpart, but listed in managedRoles
-    for (const variant of ['low', 'medium', 'high']) {
+    // Effort variants have no canonical .md counterpart, but are listed in
+    // managedRoles after the Codex extension derives them from base roles.
+    for (const variant of ['low', 'medium', 'high', 'xhigh']) {
       await writeFile(
         join(root, '.codex', 'agents', `oat-phase-implementer-${variant}.toml`),
+        `model_reasoning_effort = "${variant}"`,
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.codex', 'agents', `oat-reviewer-${variant}.toml`),
         `model_reasoning_effort = "${variant}"`,
         'utf8',
       );
@@ -103,6 +109,11 @@ describe('detectCodexRoleStrays', () => {
       'oat-phase-implementer-low',
       'oat-phase-implementer-medium',
       'oat-phase-implementer-high',
+      'oat-phase-implementer-xhigh',
+      'oat-reviewer-low',
+      'oat-reviewer-medium',
+      'oat-reviewer-high',
+      'oat-reviewer-xhigh',
     ]);
 
     const strays = await detectCodexRoleStrays(root, [], managedRoleNames);
