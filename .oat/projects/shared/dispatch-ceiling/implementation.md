@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -19,11 +19,11 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 2 | in_progress | 2     | 1/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 3/10 tasks completed
+**Total:** 4/10 tasks completed
 
 ---
 
@@ -104,8 +104,18 @@ oat_generated: false
 
 ### Task p02-t01: Generate Codex implementer xhigh and reviewer effort variants
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ce70c268
+
+**Outcome:**
+
+- Generalized Codex effort variant generation for `oat-phase-implementer` and `oat-reviewer`.
+- Added `xhigh` variant generation and idempotence coverage.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts`
+- Result: passed, 6 tests.
 
 ### Task p02-t02: Keep generated Codex variants out of stray detection
 
