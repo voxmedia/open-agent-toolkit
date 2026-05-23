@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-23
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -20,10 +20,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 3     | 0/3       |
+| Phase 3 | in_progress | 3     | 1/3       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 5/10 tasks completed
+**Total:** 6/10 tasks completed
 
 ---
 
@@ -156,8 +156,19 @@ oat_generated: false
 
 ### Task p03-t01: Add planning-time dispatch ceiling capture
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 81867af1
+
+**Outcome:**
+
+- Added planning-boundary dispatch ceiling resolution and prompt guidance to spec-driven and quick workflows.
+- Added project-state frontmatter shape for `oat_dispatch_ceiling`.
+- Removed the old template wording that treated Codex xhigh as inherited-only.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- Result: passed, 28 tests.
 
 ### Task p03-t02: Update implementation preflight and dispatch logs
 
