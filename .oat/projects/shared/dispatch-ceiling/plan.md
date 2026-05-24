@@ -536,16 +536,63 @@ git commit -m "fix(p04-t03): add dispatch ceiling resolver command"
 
 ---
 
+### Task p04-t04: (review) Fix unresolved JSON preflight behavior
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` if command guidance needs wording updates
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md` if docs guidance needs wording updates
+
+**Step 1: Understand the issue**
+
+Review finding: The documented implementation preflight command `oat project dispatch-ceiling resolve --provider <provider> --preflight --json` currently blocks unresolved runs before an interactive orchestrator can prompt, because JSON output is treated as non-interactive.
+
+Location: `packages/cli/src/commands/project/dispatch-ceiling/index.ts:341`
+
+**Step 2: Implement fix**
+
+Separate JSON output format from unresolved/non-interactive block intent:
+
+- keep `--preflight --non-interactive` as the explicit blocking path for unresolved ceilings
+- make unresolved `--preflight --json` return `status: "unresolved"` and exit successfully when `--non-interactive` is not present and no true non-interactive signal requires blocking
+- keep `--preflight --non-interactive --json` returning `status: "blocked"` and a non-zero exit
+- preserve read-only behavior and existing resolved-ceiling output
+- update skill/docs wording only if the command behavior or recommended invocation changes
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run cli -- project dispatch-ceiling resolve --provider codex --preflight --json
+pnpm run cli -- project validate-plan --project-path .oat/projects/shared/dispatch-ceiling
+```
+
+Expected: unresolved `--preflight --json` can report `unresolved` without blocking interactive-capable callers, while explicit non-interactive preflight still blocks before work starts.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/dispatch-ceiling .agents/skills/oat-project-implement/SKILL.md apps/oat-docs/docs/workflows/projects/implementation-execution.md .oat/projects/shared/dispatch-ceiling/implementation.md .oat/projects/shared/dispatch-ceiling/state.md .oat/state.md
+git commit -m "fix(p04-t04): allow unresolved json preflight"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                    |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending         | -          | -                                           |
-| p02    | code     | pending         | -          | -                                           |
-| p03    | code     | pending         | -          | -                                           |
-| p04    | code     | pending         | -          | -                                           |
-| final  | code     | fixes_completed | 2026-05-24 | reviews/archived/final-review-2026-05-23.md |
-| design | artifact | pending         | -          | -                                           |
+| Scope  | Type     | Status      | Date       | Artifact                                    |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending     | -          | -                                           |
+| p02    | code     | pending     | -          | -                                           |
+| p03    | code     | pending     | -          | -                                           |
+| p04    | code     | pending     | -          | -                                           |
+| final  | code     | fixes_added | 2026-05-24 | reviews/archived/final-review-2026-05-24.md |
+| design | artifact | pending     | -          | -                                           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -558,11 +605,11 @@ git commit -m "fix(p04-t03): add dispatch ceiling resolver command"
 - Phase 1: 3 tasks - config schema, resolution, and CLI exposure
 - Phase 2: 2 tasks - Codex generated variants and stray/init test coverage
 - Phase 3: 3 tasks - planning, implementation, and agent dispatch contract updates
-- Phase 4: 3 tasks - docs/generated views/versioning/validation and CLI resolver review fix
+- Phase 4: 4 tasks - docs/generated views/versioning/validation and CLI resolver review fixes
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
-Ready for final re-review.
+Review fix p04-t04 is queued before final re-review can pass.
 
 ---
 

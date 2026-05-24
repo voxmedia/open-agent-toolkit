@@ -19,7 +19,7 @@ oat_generated_at: 2026-05-24
 | Phase        | implement     |
 | Status       | in_progress   |
 | HiLL Gate    | n/a           |
-| Current Task | -             |
+| Current Task | p04-t04       |
 | Docs Updated | ⚠ not yet run |
 
 Details: `.oat/projects/shared/dispatch-ceiling/state.md`
@@ -30,7 +30,7 @@ Details: `.oat/projects/shared/dispatch-ceiling/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-05-17 |
 | Age           | 7 days     |
-| Files Changed | 160        |
+| Files Changed | 161        |
 | Status        | stale      |
 
 ## Recommended Next Step
