@@ -588,6 +588,7 @@ describe('help output snapshots', () => {
         archive                                      Manage archived project data
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
+        dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project

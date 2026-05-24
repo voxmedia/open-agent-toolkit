@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.17
+version: 2.0.18
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -167,9 +167,21 @@ Forbidden: Selected: Tier 2 — Inline because the user did not separately menti
 Before any phase work, resolve and print the OAT dispatch ceiling for the
 current provider. This is a preflight gate, not a mid-run question.
 
+Use the CLI helper as the source of truth for resolution:
+
+```bash
+oat project dispatch-ceiling resolve --provider <codex|claude> --preflight --json
+```
+
+If `oat` is not in PATH, use:
+
+```bash
+pnpm run cli -- project dispatch-ceiling resolve --provider <codex|claude> --preflight --json
+```
+
 Resolution order:
 
-1. Repo/user/local config key `workflow.dispatchCeiling.<provider>` via `oat config get`
+1. Effective config key `workflow.dispatchCeiling.<provider>` via the resolver CLI
 2. Project `state.md` frontmatter key `oat_dispatch_ceiling`
 3. Interactive implementation preflight prompt
 4. Non-interactive unresolved: block before work starts
@@ -182,6 +194,8 @@ Provider values:
 For Codex, also resolve the provider default effort when possible by reading
 Codex configuration (for example `.codex/config.toml`). If it cannot be found,
 display `unknown`. Do not treat provider default as the OAT ceiling.
+The resolver prints this as `providerDefaultEffort` in JSON and includes it in
+human-readable output.
 
 Print this before phase work:
 
@@ -203,7 +217,12 @@ oat_dispatch_ceiling:
 ```
 
 If no ceiling resolves and `OAT_NON_INTERACTIVE=1` or no user-response channel
-exists, stop before work starts:
+exists, rerun the resolver with non-interactive behavior and stop before work
+starts if it blocks:
+
+```bash
+oat project dispatch-ceiling resolve --provider <codex|claude> --preflight --non-interactive
+```
 
 ```text
 BLOCKED: Codex dispatch ceiling is unresolved in non-interactive mode.

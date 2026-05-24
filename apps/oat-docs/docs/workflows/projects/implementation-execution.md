@@ -39,6 +39,12 @@ The selected tier is reported to the user and locked for the remainder of the ru
 
 Before phase work starts, `oat-project-implement` resolves and prints the dispatch ceiling for the current provider.
 
+The compiled resolver is the source of truth:
+
+```bash
+oat project dispatch-ceiling resolve --provider codex --preflight --json
+```
+
 Resolution order:
 
 1. `workflow.dispatchCeiling.<provider>` from effective config

@@ -158,13 +158,38 @@ oat config get lastPausedProject
 oat config describe activeIdea
 ```
 
+## Dispatch ceiling resolution
+
+`oat config get workflow.dispatchCeiling.<provider>` shows only the effective
+config value. Implementation workflows should use the project-aware resolver
+instead:
+
+```bash
+oat project dispatch-ceiling resolve --provider codex --json
+oat project dispatch-ceiling resolve --provider claude --json
+```
+
+The resolver checks effective config first, then project `state.md`
+`oat_dispatch_ceiling` frontmatter. For Codex it also reports
+`providerDefaultEffort`, which is informational for base/unpinned roles and is
+not treated as the OAT ceiling.
+
+For non-interactive preflight checks, use:
+
+```bash
+oat project dispatch-ceiling resolve --provider codex --preflight --non-interactive
+```
+
+If unresolved, the command exits non-zero with the same `BLOCKED:` guidance used
+by `oat-project-implement`.
+
 ## Workflow preferences (`workflow.*`)
 
 Workflow preferences let power users answer repetitive confirmation prompts once and have OAT workflow skills respect those answers automatically. They are the highest-value escape hatch from interactive friction when you always make the same choices.
 
 ### Preference keys
 
-All eight workflow preference keys live under the `workflow.*` namespace:
+Workflow preference keys live under the `workflow.*` namespace:
 
 - `workflow.designMode` — `collaborative`, `selective`, or `draft`. Default design interaction mode. `selective` applies only to full `oat-project-design`; quick-start lightweight design treats it as collaborative because quick-start keeps the smaller collaborative/draft choice.
 - `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
