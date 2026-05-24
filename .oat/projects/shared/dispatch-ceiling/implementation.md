@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-24
-oat_current_task_id: p04-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 4     | 3/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 3     | 3/3       |
+| Phase 4 | completed | 4     | 4/4       |
 
-**Total:** 11/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
@@ -220,7 +220,7 @@ oat_generated: false
 
 ## Phase 4: Docs, generated assets, versions, and validation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-05-23
 
 ### Task p04-t01: Update docs and generated Codex views
@@ -304,16 +304,27 @@ oat_generated: false
 
 ### Task p04-t04: (review) Fix unresolved JSON preflight behavior
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1d22e2bc
 
 **Outcome:**
 
-- Pending.
+- Fixed the resolver so JSON output no longer forces unresolved preflight into the non-interactive block path by itself.
+- Preserved explicit `--non-interactive` blocking and added `OAT_NON_INTERACTIVE=1` coverage.
+- Added regression tests for unresolved JSON preflight and non-interactive environment behavior.
 
 **Verification:**
 
-- Pending.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+- Result: passed, 9 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- Result: passed, 28 tests.
+- Run: `pnpm run cli -- project dispatch-ceiling resolve --provider codex --preflight --json`
+- Result: resolved `xhigh` from project state and reported Codex provider default `high`.
+- Run: `pnpm run cli -- project validate-plan --project-path .oat/projects/shared/dispatch-ceiling`
+- Result: passed. A concurrent first attempt hit the known CLI asset bundling race; the serial rerun passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
 
 ---
 
@@ -336,7 +347,7 @@ oat_generated: false
 
 **New tasks added:** p04-t04
 
-**Next:** Run `oat-project-implement` for p04-t04, then re-run final review.
+**Next:** Re-run `oat-project-review-provide code final`, then `oat-project-review-receive` to reach `passed`.
 
 ---
 
@@ -373,7 +384,8 @@ After the fix tasks are complete:
 - Added provider-aware dispatch ceiling config, deterministic Codex implementer/reviewer variants, and lifecycle skill/docs guidance for ceiling-capped dispatch.
 - Added the review-fix CLI resolver command `oat project dispatch-ceiling resolve`, including JSON output, non-interactive preflight block behavior, project-state fallback, and Codex provider default effort reporting.
 - Updated canonical implementation guidance and docs so dispatch ceiling resolution uses compiled CLI behavior instead of prompt-only rule duplication.
-- Final re-review received one Medium follow-up; p04-t04 is queued before the final review can pass.
+- Fixed the final re-review Medium by separating JSON output from non-interactive block intent for unresolved dispatch-ceiling preflight.
+- Verified with focused resolver tests, skill validation, type-check, live resolver output, and plan validation.
 
 ---
 
@@ -400,7 +412,28 @@ After the fix tasks are complete:
 
 #### Outstanding Items
 
-- Review fix p04-t04 is queued from the 2026-05-24 final re-review.
+- None; final re-review is required.
+
+### Run 2 — 2026-05-24 23:30
+
+**Branch:** feat/dispatch-ceiling
+**Tier:** 2
+**Policy:** sequential-inline, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | n/a    | 0/2            | completed   |
+
+#### Dispatch Notes
+
+- Dispatch: p04-t04 executed inline because the user explicitly declined subagents for this single-task run. Dispatch ceiling resolved to `xhigh` from project state; Codex provider default effort was `high`.
+
+#### Outstanding Items
+
+- Final re-review is required; current final review row is `fixes_completed`.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 

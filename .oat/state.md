@@ -19,7 +19,7 @@ oat_generated_at: 2026-05-24
 | Phase        | implement     |
 | Status       | in_progress   |
 | HiLL Gate    | n/a           |
-| Current Task | p04-t04       |
+| Current Task | -             |
 | Docs Updated | ⚠ not yet run |
 
 Details: `.oat/projects/shared/dispatch-ceiling/state.md`
