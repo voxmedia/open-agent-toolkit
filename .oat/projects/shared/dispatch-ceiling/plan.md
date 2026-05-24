@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-05-23
+oat_last_updated: 2026-05-24
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p04']
@@ -538,14 +538,14 @@ git commit -m "fix(p04-t03): add dispatch ceiling resolver command"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                    |
-| ------ | -------- | ----------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending     | -          | -                                           |
-| p02    | code     | pending     | -          | -                                           |
-| p03    | code     | pending     | -          | -                                           |
-| p04    | code     | pending     | -          | -                                           |
-| final  | code     | fixes_added | 2026-05-23 | reviews/archived/final-review-2026-05-23.md |
-| design | artifact | pending     | -          | -                                           |
+| Scope  | Type     | Status          | Date       | Artifact                                    |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------- |
+| p01    | code     | pending         | -          | -                                           |
+| p02    | code     | pending         | -          | -                                           |
+| p03    | code     | pending         | -          | -                                           |
+| p04    | code     | pending         | -          | -                                           |
+| final  | code     | fixes_completed | 2026-05-24 | reviews/archived/final-review-2026-05-23.md |
+| design | artifact | pending         | -          | -                                           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -562,7 +562,7 @@ git commit -m "fix(p04-t03): add dispatch ceiling resolver command"
 
 **Total: 11 tasks**
 
-Ready for review-fix implementation.
+Ready for final re-review.
 
 ---
 

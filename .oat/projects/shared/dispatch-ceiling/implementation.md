@@ -1,29 +1,29 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-23
-oat_current_task_id: p04-t03
+oat_last_updated: 2026-05-24
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: dispatch-ceiling
 
 **Started:** 2026-05-23
-**Last Updated:** 2026-05-23
+**Last Updated:** 2026-05-24
 
 > This document is used to resume interrupted implementation sessions.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 3     | 2/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 3     | 3/3       |
+| Phase 4 | completed | 3     | 3/3       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -220,7 +220,7 @@ oat_generated: false
 
 ## Phase 4: Docs, generated assets, versions, and validation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-05-23
 
 ### Task p04-t01: Update docs and generated Codex views
@@ -270,12 +270,37 @@ oat_generated: false
 
 ### Task p04-t03: (review) Add CLI dispatch ceiling resolver
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2dc9a42e
 
 **Outcome:**
 
-- Pending. Added from final review receive after confirming the intended scope includes compiled CLI tooling for ceiling resolution, not only `oat config` get/set/describe plus skill guidance.
+- Added `oat project dispatch-ceiling resolve` with provider-aware config/project-state resolution.
+- Added non-interactive preflight block behavior and Codex provider default effort reporting.
+- Updated implementation skill/docs to use the compiled resolver instead of duplicating resolution rules in prose.
+
+**Verification:**
+
+- Run: `pnpm run cli -- project validate-plan --project-path .oat/projects/shared/dispatch-ceiling`
+- Result: passed.
+- Run: `pnpm run cli -- project dispatch-ceiling resolve --provider codex --json`
+- Result: resolved `xhigh` from project state and reported Codex provider default `high`.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+- Run: `pnpm check`
+- Result: passed, 9 tasks.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/help-snapshots.test.ts src/commands/index.test.ts src/validation/skills.test.ts`
+- Result: passed, 23 test files and 251 tests.
+- Run: `pnpm build:docs`
+- Result: passed.
+- Run: `pnpm release:validate`
+- Result: passed for 5 public packages.
+- Run: `pnpm run cli -- sync --scope project`
+- Result: no changes required.
+- Run: `pnpm run cli -- sync --scope project --dry-run`
+- Result: no changes to apply.
+- Run: `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
+- Result: passed, 4 changed canonical skill version bump checks.
 
 ---
 
@@ -298,18 +323,48 @@ oat_generated: false
 
 **New tasks added:** p04-t03
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Next:** Re-run `oat-project-review-provide code final`, then `oat-project-review-receive` to reach `passed`.
 
 After the fix tasks are complete:
 
-- Update the review row status to `fixes_completed`
+- Review row status updated to `fixes_completed`
 - Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
+---
+
+## Final Summary (for PR/docs)
+
+- Added provider-aware dispatch ceiling config, deterministic Codex implementer/reviewer variants, and lifecycle skill/docs guidance for ceiling-capped dispatch.
+- Added the review-fix CLI resolver command `oat project dispatch-ceiling resolve`, including JSON output, non-interactive preflight block behavior, project-state fallback, and Codex provider default effort reporting.
+- Updated canonical implementation guidance and docs so dispatch ceiling resolution uses compiled CLI behavior instead of prompt-only rule duplication.
+- Verified with focused project command tests, skill validation, type-check, workspace check, docs build, release validation, and provider sync dry-run.
 
 ---
 
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
+
+### Run 1 — 2026-05-24 22:10
+
+**Branch:** feat/dispatch-ceiling
+**Tier:** 2
+**Policy:** sequential-inline, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | n/a    | 0/2            | completed   |
+
+#### Dispatch Notes
+
+- Dispatch: p04 review-fix executed inline because required Codex reviewer variants were not exposed by the current spawn tool metadata. Dispatch ceiling resolved to `xhigh` from project state; Codex provider default effort was `high`.
+
+#### Outstanding Items
+
+- Final re-review still required; current final review row is `fixes_completed`.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
