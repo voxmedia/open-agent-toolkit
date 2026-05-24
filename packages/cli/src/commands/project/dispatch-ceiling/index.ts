@@ -286,6 +286,10 @@ function blockMessage(provider: DispatchCeilingProvider): string {
   return `BLOCKED: ${label} dispatch ceiling is unresolved in non-interactive mode.\nSet workflow.dispatchCeiling.${provider} in .oat/config.json or oat_dispatch_ceiling in project state.`;
 }
 
+function isNonInteractiveEnv(env: NodeJS.ProcessEnv): boolean {
+  return env['OAT_NON_INTERACTIVE'] === '1';
+}
+
 async function resolveDispatchCeiling(
   context: CommandContext,
   dependencies: DispatchCeilingDependencies,
@@ -340,7 +344,8 @@ async function resolveDispatchCeiling(
 
   const shouldBlock =
     options.nonInteractive === true ||
-    (options.preflight === true && !context.interactive);
+    isNonInteractiveEnv(dependencies.processEnv) ||
+    (options.preflight === true && !context.interactive && !context.json);
   const message = shouldBlock ? blockMessage(provider) : undefined;
   return {
     status: shouldBlock ? 'blocked' : 'unresolved',

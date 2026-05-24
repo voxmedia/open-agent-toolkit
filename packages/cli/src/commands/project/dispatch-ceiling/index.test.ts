@@ -17,6 +17,7 @@ interface HarnessOptions {
   cwd: string;
   home: string;
   activeProjectPath?: string | null;
+  processEnv?: NodeJS.ProcessEnv;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -45,7 +46,7 @@ function createHarness(options: HarnessOptions): {
       path: activeProjectPath,
       status: activeProjectPath ? 'active' : 'unset',
     })),
-    processEnv: {},
+    processEnv: options.processEnv ?? {},
   });
 
   return { capture, command };
@@ -208,6 +209,48 @@ describe('oat project dispatch-ceiling resolve', () => {
       '--non-interactive',
       '--json',
     ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      provider: 'codex',
+      value: null,
+      source: null,
+      unresolved: true,
+    });
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'BLOCKED: Codex dispatch ceiling is unresolved',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports unresolved json preflight without blocking interactive-capable callers', async () => {
+    const { root, home } = await setup();
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--preflight', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'unresolved',
+      provider: 'codex',
+      value: null,
+      source: null,
+      unresolved: true,
+    });
+    expect(
+      (capture.jsonPayloads[0] as { message?: string }).message,
+    ).toBeUndefined();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('blocks unresolved preflight when OAT_NON_INTERACTIVE is set', async () => {
+    const { root, home } = await setup();
+
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      processEnv: { OAT_NON_INTERACTIVE: '1' },
+    });
+    await runCommand(command, ['--provider', 'codex', '--preflight', '--json']);
 
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
