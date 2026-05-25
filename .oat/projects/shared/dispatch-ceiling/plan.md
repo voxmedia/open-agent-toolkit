@@ -585,14 +585,14 @@ git commit -m "fix(p04-t04): allow unresolved json preflight"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                    |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending         | -          | -                                           |
-| p02    | code     | pending         | -          | -                                           |
-| p03    | code     | pending         | -          | -                                           |
-| p04    | code     | pending         | -          | -                                           |
-| final  | code     | fixes_completed | 2026-05-24 | reviews/archived/final-review-2026-05-24.md |
-| design | artifact | pending         | -          | -                                           |
+| Scope  | Type     | Status   | Date       | Artifact                              |
+| ------ | -------- | -------- | ---------- | ------------------------------------- |
+| p01    | code     | pending  | -          | -                                     |
+| p02    | code     | pending  | -          | -                                     |
+| p03    | code     | pending  | -          | -                                     |
+| p04    | code     | pending  | -          | -                                     |
+| final  | code     | received | 2026-05-24 | reviews/final-review-2026-05-24-v2.md |
+| design | artifact | pending  | -          | -                                     |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
