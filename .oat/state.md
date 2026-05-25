@@ -17,7 +17,7 @@ oat_generated_at: 2026-05-25
 | ------------ | ---------- |
 | Mode         | quick      |
 | Phase        | implement  |
-| Status       | complete   |
+| Status       | pr_open    |
 | HiLL Gate    | n/a        |
 | Current Task | -          |
 | Docs Updated | ✓ complete |
@@ -30,12 +30,12 @@ Details: `.oat/projects/shared/dispatch-ceiling/state.md`
 | ------------- | ---------- |
 | Generated     | 2026-05-17 |
 | Age           | 8 days     |
-| Files Changed | 162        |
+| Files Changed | 163        |
 | Status        | stale      |
 
 ## Recommended Next Step
 
-**oat-project-pr-final** - Generate final PR description (final review passed)
+**oat-project-revise** - PR open — run oat-project-revise for feedback or oat-project-complete when approved
 
 ## Quick Commands
 
