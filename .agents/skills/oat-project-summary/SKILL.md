@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.1.1
+version: 1.1.2
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -149,6 +149,8 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 
 **Grounding rule:** Prefer implementation.md outcomes over design.md plans. If the implementation diverged from the design, reflect what actually happened.
 
+**Design delta rule:** Populate `Design Deltas` from both direct implementation deviations and review-received design drift decisions recorded in `implementation.md`. A review finding may decide that shipped implementation is defensible and the artifact is stale; when `implementation.md` records that acceptance, carry it forward as a design delta with the rationale and follow-up artifact disposition.
+
 **Section omission rule:** If a section would have no meaningful content, omit it entirely (remove the heading). Do not leave empty sections or "N/A" placeholders.
 
 **Conciseness constraint (NFR3):** Target under 200 lines total. If a draft exceeds this, trim narrative sections (What Was Implemented, Notable Challenges) to essential points. Revision History entries: 2-3 sentences per round max.
@@ -157,18 +159,18 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 
 **Section sources:**
 
-| Section              | Primary Sources                                             |
-| -------------------- | ----------------------------------------------------------- |
-| Overview             | discovery.md initial request, spec.md problem statement     |
-| What Was Implemented | implementation.md task outcomes, plan.md phase structure    |
-| Key Decisions        | design.md decisions, implementation.md notes/decisions      |
-| Design Deltas        | implementation.md deviations table                          |
-| Notable Challenges   | implementation.md issues/blockers in task notes             |
-| Tradeoffs Made       | implementation.md decisions, design.md tradeoff sections    |
-| Integration Notes    | implementation.md notes about cross-cutting concerns        |
-| Revision History     | plan.md p-revN phases, implementation.md revision notes     |
-| Follow-up Items      | implementation.md deferred findings, plan.md deferred items |
-| Associated Issues    | state.md `associated_issues` field                          |
+| Section              | Primary Sources                                                        |
+| -------------------- | ---------------------------------------------------------------------- |
+| Overview             | discovery.md initial request, spec.md problem statement                |
+| What Was Implemented | implementation.md task outcomes, plan.md phase structure               |
+| Key Decisions        | design.md decisions, implementation.md notes/decisions                 |
+| Design Deltas        | implementation.md deviations table; review-received design drift notes |
+| Notable Challenges   | implementation.md issues/blockers in task notes                        |
+| Tradeoffs Made       | implementation.md decisions, design.md tradeoff sections               |
+| Integration Notes    | implementation.md notes about cross-cutting concerns                   |
+| Revision History     | plan.md p-revN phases, implementation.md revision notes                |
+| Follow-up Items      | implementation.md deferred findings, plan.md deferred items            |
+| Associated Issues    | state.md `associated_issues` field                                     |
 
 **For incremental updates (re-run):**
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.16
+version: 2.0.17
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -27,6 +27,9 @@ After every code commit and after every phase/review-fix completion, you MUST co
 
 **CRITICAL — Review boundaries require a committed artifact baseline.**
 Do not enter checkpoint review, final review, revise, or PR-final handoff with dirty core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`, plus `.oat/state.md` when refreshed). If one of those boundaries is next and artifact bookkeeping is still uncommitted, stop and create the bookkeeping commit first.
+
+**CRITICAL — Intentional artifact divergence must be recorded.**
+If implementation intentionally diverges from `spec.md`, `design.md`, or `plan.md`, record the delta in `implementation.md` before the next phase/review boundary. Include what diverged, why it diverged, whether the implementation or original artifact is now source of truth, and any follow-up artifact updates or explicit deferral. Do not leave accepted design drift only in chat, a review artifact, or code comments; final summary generation depends on `implementation.md` preserving the delta.
 
 ## Progress Indicators (User-Facing)
 
@@ -557,6 +560,7 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
      spec: {PROJECT_PATH}/spec.md
      implementation: {PROJECT_PATH}/implementation.md
      discovery: {PROJECT_PATH}/discovery.md
+   delta_recording: record any intentional divergence from spec/design/plan in implementation.md with rationale, source of truth, and follow-up artifact disposition
    commit_convention: {from plan.md header}
    workflow_mode: {from state.md or plan.md frontmatter}
    model_axis: {selected:<value> | inherited | not-applicable | host-auto; omit if unknown}
@@ -793,6 +797,14 @@ Append a new entry to the `## Orchestration Runs` section between the `<!-- orch
 #### Outstanding Items
 
 - {None | list of excluded phases with review paths and worktree paths}
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. The durable record is `## Deviations from Plan / Design`; consolidate any non-`None` entries there at the next phase boundary.
+
+| Task / Review                 | Source Artifact                     | Planned / Documented            | Actual / Accepted                      | Reason                       | Source of Truth           | Follow-up                                   |
+| ----------------------------- | ----------------------------------- | ------------------------------- | -------------------------------------- | ---------------------------- | ------------------------- | ------------------------------------------- |
+| {task_id/review_id or `None`} | {spec.md/design.md/plan.md section} | {planned behavior/taxonomy/API} | {actual shipped behavior/taxonomy/API} | {why divergence is accepted} | {implementation/artifact} | {artifact update task or explicit deferral} |
 ```
 
 Append only — never overwrite prior run entries.
@@ -886,6 +898,14 @@ When pausing:
   - Key files touched (paths)
   - Verification run
   - Notable decisions/deviations
+
+**Design/artifact deltas (required when present):**
+
+- If a completed task intentionally diverged from `spec.md`, `design.md`, or `plan.md`, update the `## Deviations from Plan / Design` table in `implementation.md`.
+- For existing project artifacts, treat any `## Deviations...` heading as the deviations section; migrate to the preferred `## Deviations from Plan / Design` heading and table shape when already touching the section.
+- Each delta must include: the affected source artifact/section, the planned/documented expectation, the actual shipped implementation, the reason the divergence is accepted, the current source of truth, and any follow-up artifact update task or explicit deferral.
+- If the implementation is now source of truth and the design/spec/plan is stale, write that directly. Do not treat the stale artifact as a no-op just because code is correct.
+- If no deltas exist for the phase, do not invent one; leave the table unchanged.
 
 **Bookkeeping commit (required):**
 

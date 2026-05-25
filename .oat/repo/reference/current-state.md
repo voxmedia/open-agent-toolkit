@@ -2,7 +2,7 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
-**Last Updated:** 2026-05-22 (`oat-project-split` shipped as a standalone workflow skill with discover/brainstorm integration hooks, coordination-only decomposition parents, flat child project scaffolding/seeding, persisted split-plan resume, coordination-aware list/dashboard behavior, and lockstep public packages bumped to 0.1.6. Recent runtime dispatch selection also landed: two-axis `model_axis`/`effort_axis` logging in structured `OAT Dispatch` blocks, Codex effort-specific implementer role variants, host-conditional review dispatch, and `oat status`/`oat init` recognition of generated Codex roles as managed. Final split review passed with only two deferred Minor follow-ups: post-run `validate-plan` semantics and active detected-parent conversion logging.)
+**Last Updated:** 2026-05-24 (Lifecycle skill guidance now preserves accepted design drift explicitly: `oat-project-implement` records intentional spec/design/plan deltas in `implementation.md`, `oat-project-review-receive` converts defensible implementation vs stale artifact findings into artifact-alignment tasks or explicit deferrals, and `oat-project-summary` carries those review-received decisions into Design Deltas. The implementation and summary templates now include structured plan/design delta guidance, review-provide/reviewer guidance frames defensible implementation drift as artifact alignment, and lockstep public packages are bumped to 0.1.7. Previous 2026-05-22 updates shipped `oat-project-split`, runtime dispatch selection, generated Codex role recognition, and final split-review closeout.)
 
 ## Canonical References
 

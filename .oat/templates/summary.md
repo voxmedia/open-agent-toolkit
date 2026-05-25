@@ -37,7 +37,8 @@ where decisions were made or changed during implementation.}
 <!-- Omit this section if there were no deviations from the original design. -->
 
 {Where the final result diverged from the original design and why.
-Pull from implementation.md deviations table.}
+Pull from implementation.md deviations table and review-received design drift notes.
+Include accepted cases where shipped implementation became source of truth and a stale lifecycle artifact needs alignment or was explicitly deferred.}
 
 ## Notable Challenges
 

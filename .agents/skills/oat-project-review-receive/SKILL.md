@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.4.1
+version: 1.4.2
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -52,6 +52,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - No re-reviewing
 - For `artifact` reviews: no converting findings into plan tasks
 - For `artifact` reviews: no deferring findings by default
+- No treating accepted design/code drift as a no-op; accepted drift must be converted to an artifact-alignment task or explicitly deferred, with an `implementation.md` note
 
 **ALLOWED Activities:**
 
@@ -167,6 +168,10 @@ For each finding, build a structured register entry:
 - Agent analysis (agree/disagree + why)
 - Recommendation (convert to task now vs defer with rationale)
 - Task Scope (`Large` | `Moderate` | `Minor` | `Negligible`)
+- Drift disposition, when applicable:
+  - `code_fix_required` — implementation should change
+  - `artifact_alignment_required` — shipped implementation is defensible; design/docs/plan should be aligned
+  - `explicit_deferral` — drift is accepted for now with a concrete rationale and follow-up trigger
 - For `artifact` reviews, use dispositions:
   - `resolve_in_artifact`
   - `rejected_with_rationale` (invalid/not applicable)
@@ -386,6 +391,10 @@ Add a note to implementation.md:
 
 **New tasks added:** {task_ids}
 
+**Design drift / artifact alignment notes:**
+
+- {finding_id}: {review found stale design/spec/plan relative to shipped implementation; why the implementation is accepted; source of truth; artifact-alignment task ID or explicit deferral}
+
 **Next:** Execute fix tasks via the `oat-project-implement` skill.
 
 After the fix tasks are complete:
@@ -399,6 +408,10 @@ After the fix tasks are complete:
 - If `{PROJECT_PATH}/implementation.md` exists, ensure it will resume correctly after this skill:
   - If `oat_current_task_id` is `null` (or points at already-completed work), set it to the **first newly-added review-fix task ID** (or the next incomplete task in plan order).
   - Update the Progress Overview table totals (tasks + completed) if they are present and depend on task counts.
+  - If any finding is resolved by accepting the shipped implementation and aligning stale artifacts instead of changing code, add an explicit review note under the current "Review Received" section and update `## Deviations from Plan / Design` when that table exists.
+    - For existing project artifacts, treat any `## Deviations...` heading as the deviations section; migrate to the preferred `## Deviations from Plan / Design` heading and table shape when already touching the section.
+    - The note must say the review found design/spec/plan drift, why the shipped implementation is accepted, which source is now authoritative, and which artifact-alignment task will update the stale artifact.
+    - If the artifact update is intentionally deferred, record the deferral rationale and follow-up trigger in `implementation.md`.
   - Update `{PROJECT_PATH}/state.md` frontmatter so routing/UI is accurate:
     - `oat_phase: implement`
     - `oat_phase_status: in_progress`
@@ -502,6 +515,13 @@ If any Medium is proposed for deferral:
 - Ask user explicitly for approval per finding.
 - If user declines deferral, convert that Medium to a fix task now.
 - If user approves deferral, record rationale in `implementation.md` under "Deferred Findings (Medium)".
+
+Design drift handling applies before Medium/Minor convenience deferrals:
+
+- If a review finding reveals that the design artifact is stale relative to a defensible implementation, do not treat this as a no-op.
+- Either convert the finding to an artifact-alignment task or record an explicit deferral.
+- In both cases, add an `implementation.md` review note so final summary generation can preserve the design delta.
+- The note must include what drift was found, why the implementation is accepted, whether implementation or artifact is source of truth, and the artifact task or deferral that will align the lifecycle record.
 
 Minor findings handling is scope-aware:
 

@@ -165,13 +165,13 @@ Chronological log of implementation progress.
 
 ---
 
-## Deviations from Plan
+## Deviations from Plan / Design
 
-Document any deviations from the original plan.
+Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task | Planned | Actual | Reason |
-| ---- | ------- | ------ | ------ |
-| -    | -       | -      | -      |
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| -             | -               | -                    | -                 | -      | -               | -         |
 
 ## Test Results
 
