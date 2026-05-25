@@ -328,6 +328,31 @@ oat_generated: false
 
 ---
 
+### Review Received: final (re-review v2)
+
+**Date:** 2026-05-24
+**Review artifact:** reviews/archived/final-review-2026-05-24-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**Disposition:**
+
+- Prior deferred Medium M1 (JSON preflight): **fixed** in p04-t04 — confirmed in re-review.
+- `m1` (repo dashboard stale next-step): **fixed** — regenerated `.oat/state.md` after marking final review passed and setting `oat_phase_status: complete`.
+
+**New tasks added:** none
+
+**Final review status:** passed
+
+**Next:** Merge PR #89.
+
+---
+
 ### Review Received: final
 
 **Date:** 2026-05-24
