@@ -25,7 +25,7 @@ The project lifecycle skills were updated around the new contract. Planning guid
 
 The CLI now exposes `oat project dispatch-ceiling resolve`, a compiled project-aware resolver that checks effective config first, then project state. It reports source-backed JSON, Codex provider default effort, and non-interactive blocking status. The final review fix separated JSON output from non-interactive block intent: unresolved `--preflight --json` can return `status: "unresolved"` for an interactive-capable orchestrator, while explicit `--non-interactive` or `OAT_NON_INTERACTIVE=1` still blocks before implementation work starts.
 
-Documentation and repo reference surfaces were updated to describe the authoritative OAT ceiling model, Codex provider-default visibility, non-interactive behavior, and deterministic pinned variants. Lockstep public package versions were bumped to `0.1.7`.
+Documentation and repo reference surfaces were updated to describe the authoritative OAT ceiling model, Codex provider-default visibility, non-interactive behavior, and deterministic pinned variants. Lockstep public package versions were bumped to `0.1.8`.
 
 ## Key Decisions
 
