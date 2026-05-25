@@ -165,6 +165,7 @@ describe('createToolsUpdateCommand config writes', () => {
       applyOatCoreGitignore: vi.fn(async () => ({
         action: 'updated' as const,
         entries: ['.oat/state.md'],
+        stateDashboardIndexAction: 'not-tracked' as const,
       })),
     };
 
@@ -198,6 +199,7 @@ describe('createToolsUpdateCommand config writes', () => {
     const applyOatCoreGitignore = vi.fn(async () => ({
       action: 'updated' as const,
       entries: ['.oat/state.md'],
+      stateDashboardIndexAction: 'untracked' as const,
     }));
     const dependencies: UpdateToolsDependencies = {
       scanTools: vi.fn(async (options) =>
@@ -234,13 +236,17 @@ describe('createToolsUpdateCommand config writes', () => {
     expect(loggerCapture.info).toContain(
       'Updated .gitignore OAT core section (1 entries).',
     );
+    expect(loggerCapture.info).toContain(
+      'Untracked generated dashboard from git index: .oat/state.md.',
+    );
     expect(process.exitCode).toBeUndefined();
   });
 
-  it('does not log gitignore backfill when the OAT core section is already current', async () => {
+  it('still checks tracking when the OAT core section is already current', async () => {
     const applyOatCoreGitignore = vi.fn(async () => ({
       action: 'no-change' as const,
       entries: ['.oat/state.md'],
+      stateDashboardIndexAction: 'not-tracked' as const,
     }));
     const dependencies: UpdateToolsDependencies = {
       scanTools: vi.fn(async (options) =>
@@ -277,6 +283,9 @@ describe('createToolsUpdateCommand config writes', () => {
     expect(loggerCapture.info).not.toContain(
       'Updated .gitignore OAT core section (1 entries).',
     );
+    expect(loggerCapture.info).not.toContain(
+      'Untracked generated dashboard from git index: .oat/state.md.',
+    );
     expect(process.exitCode).toBeUndefined();
   });
 
@@ -284,6 +293,7 @@ describe('createToolsUpdateCommand config writes', () => {
     const applyOatCoreGitignore = vi.fn(async () => ({
       action: 'updated' as const,
       entries: ['.oat/state.md'],
+      stateDashboardIndexAction: 'untracked' as const,
     }));
     const dependencies: UpdateToolsDependencies = {
       scanTools: vi.fn(async (options) =>

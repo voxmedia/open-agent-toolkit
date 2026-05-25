@@ -1,6 +1,6 @@
 ---
 name: oat-project-new
-version: 1.3.0
+version: 1.3.1
 description: Use when starting a spec-driven OAT project from scratch. Scaffolds a new project under PROJECTS_ROOT and sets it active.
 argument-hint: '<project-name> [--force]'
 disable-model-invocation: true
@@ -77,7 +77,7 @@ Confirm to the user:
 
 - Project path created: `{PROJECTS_ROOT}/{project-name}`
 - Active project set in local config: `.oat/config.local.json` (`activeProject`)
-- Repo State Dashboard refreshed: `.oat/state.md` (if enabled)
+- Repo State Dashboard refreshed locally: `.oat/state.md` (if enabled; generated and normally gitignored)
 
 Then explicitly instruct the user to run discovery next:
 
@@ -88,4 +88,4 @@ Then explicitly instruct the user to run discovery next:
 - ✅ `{PROJECTS_ROOT}/{project-name}/` exists
 - ✅ Standard artifacts exist in the project dir (copied from `.oat/templates/*.md`)
 - ✅ `activeProject` in `.oat/config.local.json` points at the project path
-- ✅ `.oat/state.md` is refreshed (unless disabled)
+- ✅ `.oat/state.md` is refreshed locally unless disabled; it is not staged or committed.

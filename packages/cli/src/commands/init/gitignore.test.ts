@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -56,6 +58,34 @@ describe('applyOatCoreGitignore', () => {
     const result = await applyOatCoreGitignore(root);
 
     expect(result.action).toBe('no-change');
+  });
+
+  it('untracks generated dashboard when repairing gitignore in a git repo', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    mkdirSync(join(root, '.oat'), { recursive: true });
+    await writeFile(join(root, '.oat', 'state.md'), '# dashboard\n', 'utf8');
+    execFileSync('git', ['add', '.oat/state.md'], { cwd: root });
+
+    const result = await applyOatCoreGitignore(root);
+
+    expect(result.stateDashboardIndexAction).toBe('untracked');
+    expect(existsSync(join(root, '.oat', 'state.md'))).toBe(true);
+    expect(
+      execFileSync('git', ['ls-files', '.oat/state.md'], {
+        cwd: root,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+  });
+
+  it('reports not-tracked when generated dashboard is already outside the index', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+
+    const result = await applyOatCoreGitignore(root);
+
+    expect(result.stateDashboardIndexAction).toBe('not-tracked');
   });
 
   it('updates existing section when entries differ', async () => {

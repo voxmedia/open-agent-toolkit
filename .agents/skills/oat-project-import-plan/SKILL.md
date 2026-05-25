@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.3.1
+version: 1.3.2
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 disable-model-invocation: true
@@ -250,4 +250,4 @@ Report:
 - ✅ `oat_plan_hill_phases` left unset in frontmatter (deferred to `oat-project-implement` Step 2.5).
 - ✅ `## Planning Checklist` items left unchecked (HiLL configuration deferred to implementation).
 - ✅ `activeProject` in `.oat/config.local.json` points to the imported project.
-- ✅ `.oat/state.md` has been refreshed after pointer update.
+- ✅ `.oat/state.md` has been refreshed locally after pointer update; it is not staged or committed.

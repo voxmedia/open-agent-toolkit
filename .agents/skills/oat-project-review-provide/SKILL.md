@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.4
+version: 1.3.5
 description: Use when completed work in an active OAT project needs a quality gate before merge. Performs a lifecycle-scoped review after a task, phase, or full implementation, unlike oat-review-provide.
 disable-model-invocation: true
 user-invocable: true
@@ -234,7 +234,7 @@ Before gathering review context, inspect the core project artifacts:
 - `"$PROJECT_PATH/plan.md"`
 - `"$PROJECT_PATH/implementation.md"`
 - `"$PROJECT_PATH/state.md"`
-- `.oat/state.md` (when it exists and was refreshed as part of the project workflow)
+- `.oat/state.md` is generated dashboard state; ignore it for committed artifact baseline checks.
 
 If any of those files are untracked or modified only because the previous workflow step did not finish its bookkeeping commit:
 

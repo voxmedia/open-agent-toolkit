@@ -233,6 +233,7 @@ function createHarness(options: HarnessOptions = {}): {
     applyOatCoreGitignore: vi.fn(async () => ({
       action: 'no-change' as const,
       entries: [],
+      stateDashboardIndexAction: 'not-tracked' as const,
     })),
     dirExists: dirExistsFn,
     runToolPacks,
@@ -714,6 +715,7 @@ config_file = "agents/reviewer.toml"
       applyOatCoreGitignore: vi.fn(async () => ({
         action: 'no-change' as const,
         entries: [],
+        stateDashboardIndexAction: 'not-tracked' as const,
       })),
       dirExists: vi.fn(async () => true),
       confirmAction: vi.fn(async () => false),

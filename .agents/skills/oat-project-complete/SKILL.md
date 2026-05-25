@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.7
+version: 1.4.8
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -519,7 +519,7 @@ Expected changes may include:
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
 - `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
-- `.oat/state.md` (dashboard regenerated in Step 9)
+- `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
 

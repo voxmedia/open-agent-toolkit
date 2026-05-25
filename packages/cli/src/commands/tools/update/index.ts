@@ -142,6 +142,11 @@ export function createToolsUpdateCommand(
             `${verb} .gitignore OAT core section (${gitignoreResult.entries.length} entries).`,
           );
         }
+        if (gitignoreResult.stateDashboardIndexAction === 'untracked') {
+          logger.info(
+            'Untracked generated dashboard from git index: .oat/state.md.',
+          );
+        }
       }
 
       // Refresh ~/.oat/docs/ when the core pack is explicitly updated or

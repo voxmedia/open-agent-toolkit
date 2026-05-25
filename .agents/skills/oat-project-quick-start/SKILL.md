@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.2
+version: 2.1.3
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 disable-model-invocation: true
@@ -70,7 +70,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 - After any write to `discovery.md`, `design.md`, `plan.md`, `implementation.md`, or project `state.md`, ensure the artifact is saved immediately and remains tracked in git.
 - If the skill is about to pause for user input or stop after mutating artifacts, commit the changed artifacts before waiting. Do not leave discovery/design updates only in the working tree.
-- Quick-start handoff is not complete until the changed project artifacts and regenerated `.oat/state.md` dashboard have been committed.
+- Quick-start handoff is not complete until the changed project artifacts have been committed. Refresh `.oat/state.md` when available, but do not stage it; the repo dashboard is generated and normally gitignored.
 - This applies to downstream lifecycle boundaries too: implementation, review, revise, and PR skills must inherit a committed artifact baseline, not an untracked project tree.
 
 ## Process
@@ -226,7 +226,7 @@ oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
 - Commit the promoted discovery/state artifacts before stopping:
 
 ```bash
-git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md" ".oat/state.md"
+git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
 git diff --cached --quiet || git commit -m "chore(oat): promote quick-start discovery for {project-name}"
 ```
 
@@ -552,8 +552,7 @@ for path in \
   "$PROJECT_PATH/design.md" \
   "$PROJECT_PATH/plan.md" \
   "$PROJECT_PATH/implementation.md" \
-  "$PROJECT_PATH/state.md" \
-  ".oat/state.md"; do
+  "$PROJECT_PATH/state.md"; do
   [ -e "$path" ] && git add "$path"
 done
 git diff --cached --quiet || git commit -m "chore(oat): update quick-start artifacts for {project-name}"
@@ -569,7 +568,7 @@ Report:
 - execution shape summary (sequential or declared parallel groups)
 - next options:
   - `oat-project-implement`
-- dashboard location: `.oat/state.md` (confirm it was regenerated)
+- dashboard location: `.oat/state.md` (confirm it was regenerated locally)
 
 ## Success Criteria
 
@@ -578,4 +577,4 @@ Report:
 - ✅ `discovery.md` contains synthesized or backfilled quick discovery decisions from the session context.
 - ✅ `plan.md` is complete and executable (`oat_ready_for: oat-project-implement`).
 - ✅ `implementation.md` is initialized for resumable execution.
-- ✅ Changed quick-start artifacts and refreshed `.oat/state.md` are committed before handoff or pause.
+- ✅ Changed quick-start artifacts are committed before handoff or pause; `.oat/state.md` is refreshed locally when available.

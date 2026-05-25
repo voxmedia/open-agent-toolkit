@@ -101,7 +101,7 @@ For the full state model, repair semantics, and examples, see [Instruction Sync]
 
 ## Repo state helpers
 
-- `oat state refresh` - rebuild the `.oat/state.md` dashboard for the repo
+- `oat state refresh` - rebuild the generated, gitignored `.oat/state.md` dashboard for the repo
 - `oat index init` - generate a lightweight `project-index.md` for orientation
 
 ## Internal helpers and diagnostics

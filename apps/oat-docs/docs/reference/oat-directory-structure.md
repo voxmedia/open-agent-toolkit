@@ -45,6 +45,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
 | ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
 | `.oat/config.json`       | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`, `archive.*`, and `documentation.*`     |
 | `.oat/config.local.json` | Local per-developer runtime state                | Gitignored; includes `activeProject`, `lastPausedProject`, `activeIdea`                                 |
+| `.oat/state.md`          | Generated repo state dashboard                   | Gitignored; rebuilt with `oat state refresh` from config, project artifacts, and knowledge metadata     |
 | `.oat/projects/`         | OAT project artifacts                            | `shared`, `local`, `archived` scopes                                                                    |
 | `.oat/ideas/`            | Project-level ideas store                        | Often gitignored                                                                                        |
 | `.oat/sync/`             | Interop sync state/config                        | See details below                                                                                       |

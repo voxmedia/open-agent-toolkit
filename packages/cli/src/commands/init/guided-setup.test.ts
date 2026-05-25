@@ -109,6 +109,7 @@ function createGuidedSetupHarness(options: {
     applyOatCoreGitignore: vi.fn(async () => ({
       action: 'no-change' as const,
       entries: [],
+      stateDashboardIndexAction: 'not-tracked' as const,
     })),
     dirExists: vi.fn(async () => options.oatDirExists ?? true),
     readOatConfig: vi.fn(async () => ({
