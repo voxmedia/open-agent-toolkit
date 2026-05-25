@@ -51,6 +51,8 @@ Rendered rule files participate in the same drift states as other managed copies
 
 `oat init` and `oat status` can offer adoption of unmanaged provider entries into canonical `.agents`.
 
+Provider files ignored by Git are treated as intentionally local runtime files and are not reported as strays. This includes files covered by tracked `.gitignore`, repo-local `.git/info/exclude`, or other standard Git exclude mechanisms.
+
 For rules, adoption maps provider-native files back into `.agents/rules/*.md`:
 
 - Claude: `.claude/rules/*.md`

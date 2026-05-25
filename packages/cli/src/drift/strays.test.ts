@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
@@ -24,6 +25,10 @@ async function seedProviderFile(
 ): Promise<void> {
   await mkdir(providerDir, { recursive: true });
   await writeFile(join(providerDir, name), content, 'utf8');
+}
+
+function initGitRepo(root: string): void {
+  execFileSync('git', ['init', '-q'], { cwd: root });
 }
 
 function createRuleMapping(
@@ -247,6 +252,76 @@ describe('detectStrays', () => {
       canonical: null,
       provider: 'cursor',
       providerPath: '.cursor/rules/stray-rule.mdc',
+      state: { status: 'stray' },
+    });
+  });
+
+  it('does not flag unmanaged provider files ignored by git info exclude', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    initGitRepo(root);
+    await writeFile(
+      join(root, '.git', 'info', 'exclude'),
+      '.cursor/rules/superconductor-managed.mdc\n',
+      'utf8',
+    );
+    const providerDir = join(root, '.cursor', 'rules');
+    await seedProviderFile(providerDir, 'superconductor-managed.mdc');
+
+    const reports = await detectStrays(
+      'cursor',
+      providerDir,
+      createEmptyManifest(),
+      [],
+      createRuleMapping('.cursor/rules', '.mdc'),
+    );
+
+    expect(reports).toEqual([]);
+  });
+
+  it('does not flag unmanaged provider files ignored by tracked gitignore', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    initGitRepo(root);
+    await writeFile(
+      join(root, '.gitignore'),
+      '.cursor/rules/local-only.mdc\n',
+      'utf8',
+    );
+    const providerDir = join(root, '.cursor', 'rules');
+    await seedProviderFile(providerDir, 'local-only.mdc');
+
+    const reports = await detectStrays(
+      'cursor',
+      providerDir,
+      createEmptyManifest(),
+      [],
+      createRuleMapping('.cursor/rules', '.mdc'),
+    );
+
+    expect(reports).toEqual([]);
+  });
+
+  it('reports non-ignored unmanaged provider files in a git repo', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-strays-'));
+    tempDirs.push(root);
+    initGitRepo(root);
+    const providerDir = join(root, '.cursor', 'rules');
+    await seedProviderFile(providerDir, 'local-rule.mdc');
+
+    const reports = await detectStrays(
+      'cursor',
+      providerDir,
+      createEmptyManifest(),
+      [],
+      createRuleMapping('.cursor/rules', '.mdc'),
+    );
+
+    expect(reports).toHaveLength(1);
+    expect(reports[0]).toMatchObject({
+      canonical: null,
+      provider: 'cursor',
+      providerPath: '.cursor/rules/local-rule.mdc',
       state: { status: 'stray' },
     });
   });

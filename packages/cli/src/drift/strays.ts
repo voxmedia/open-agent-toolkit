@@ -1,5 +1,7 @@
+import { execFile as execFileCallback } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
+import { promisify } from 'node:util';
 
 import { OAT_MARKER_PREFIX } from '@engine/markers';
 import type { CanonicalEntry } from '@engine/scanner';
@@ -10,6 +12,8 @@ import type { PathMapping } from '@providers/shared/adapter.types';
 import { canonicalRuleNameForProviderEntry } from '@rules/canonical';
 
 import type { DriftReport } from './drift.types';
+
+const execFile = promisify(execFileCallback);
 
 function inferContentType(providerDir: string): CanonicalEntry['type'] | null {
   const dirName = basename(toPosixPath(providerDir));
@@ -161,6 +165,36 @@ async function readProviderEntries(resolvedProviderDir: string) {
   }
 }
 
+function isGitExitCode(error: unknown, code: number): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    Number(error.code) === code
+  );
+}
+
+async function isGitIgnored(
+  pathRelative: string,
+  scopeRoot: string,
+): Promise<boolean> {
+  try {
+    await execFile(
+      'git',
+      ['check-ignore', '--quiet', '--no-index', '--', pathRelative],
+      { cwd: scopeRoot },
+    );
+    return true;
+  } catch (error) {
+    // Outside a Git repository, preserve the pre-existing behavior: files that
+    // are not manifest, canonical, or generated entries are still strays.
+    if (isGitExitCode(error, 1) || isGitExitCode(error, 128)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 export async function detectStrays(
   provider: string,
   providerDir: string,
@@ -190,6 +224,10 @@ export async function detectStrays(
     const providerPath = join(resolvedProviderDir, entry.name);
     const providerPathRelative = toScopeRelative(providerPath, scopeRoot);
     if (isManifestTracked(providerPathRelative, manifest)) {
+      continue;
+    }
+
+    if (await isGitIgnored(providerPathRelative, scopeRoot)) {
       continue;
     }
 
