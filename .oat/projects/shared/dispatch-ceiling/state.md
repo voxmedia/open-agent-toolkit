@@ -15,12 +15,12 @@ oat_phase: implement
 oat_phase_status: complete
 oat_workflow_mode: quick
 oat_workflow_origin: native
-oat_docs_updated: null
+oat_docs_updated: complete
 oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/89
 oat_project_created: '2026-05-23T14:49:20.584Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-05-24T23:59:00Z'
+oat_project_state_updated: '2026-05-25T01:44:43Z'
 oat_dispatch_ceiling:
   provider: codex
   value: xhigh

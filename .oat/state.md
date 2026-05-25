@@ -13,14 +13,14 @@ oat_generated_at: 2026-05-25
 
 ## Active Project Summary
 
-| Field        | Value         |
-| ------------ | ------------- |
-| Mode         | quick         |
-| Phase        | implement     |
-| Status       | complete      |
-| HiLL Gate    | n/a           |
-| Current Task | -             |
-| Docs Updated | ⚠ not yet run |
+| Field        | Value      |
+| ------------ | ---------- |
+| Mode         | quick      |
+| Phase        | implement  |
+| Status       | complete   |
+| HiLL Gate    | n/a        |
+| Current Task | -          |
+| Docs Updated | ✓ complete |
 
 Details: `.oat/projects/shared/dispatch-ceiling/state.md`
 
@@ -35,7 +35,7 @@ Details: `.oat/projects/shared/dispatch-ceiling/state.md`
 
 ## Recommended Next Step
 
-**oat-project-document** - Sync documentation before generating PR
+**oat-project-pr-final** - Generate final PR description (final review passed)
 
 ## Quick Commands
 
