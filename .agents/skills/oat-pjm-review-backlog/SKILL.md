@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.1.0
+version: 1.2.0
 description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, and execution recommendations.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
@@ -48,11 +48,12 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print short step indicators, e.g.:
-  - `[1/5] Resolving backlog inputs…`
-  - `[2/5] Cataloging backlog items…`
-  - `[3/5] Reading codebase context…`
-  - `[4/5] Writing review document…`
-  - `[5/5] Summarizing recommendations…`
+  - `[1/6] Resolving backlog inputs…`
+  - `[2/6] Cataloging backlog items…`
+  - `[3/6] Reading codebase context…`
+  - `[4/6] Writing review document…`
+  - `[5/6] Summarizing recommendations…`
+  - `[6/6] (Optional) Priority-alignment walkthrough…` — only print after the operator accepts the offer in Step 9
 
 ## Arguments
 
@@ -60,7 +61,8 @@ Parse from `$ARGUMENTS`:
 
 - **backlog-root**: (optional) Path to the backlog root directory. Defaults to `.oat/repo/reference/backlog/`.
 - **--roadmap=\<path\>**: (optional) Path to a roadmap document for alignment analysis.
-- **--output=\<path\>**: (optional) Where to write the review. Defaults to `.oat/repo/reviews/backlog-and-roadmap-review.md`.
+- **--output=\<path\>**: (optional) Where to write the living review. Defaults to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md`.
+- **--archive-dated**: (optional) Also write a dated snapshot alongside the living review at `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md`. Default: off.
 
 ## Process
 
@@ -85,7 +87,12 @@ Parse from `$ARGUMENTS`:
 **Output path:**
 
 1. If `--output` is provided, use it directly.
-2. Otherwise, default to `.oat/repo/reviews/backlog-and-roadmap-review.md`.
+2. Otherwise, default to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md` (the living, single-file review co-located with the backlog).
+3. If the `backlog/reviews/` directory does not exist yet, create it before writing. Do not fall back to `.oat/repo/reviews/` — backlog review artifacts now live under the file-backed backlog, not the repo-wide reviews directory.
+
+**Dated snapshot (optional):**
+
+If `--archive-dated` is passed, also write a copy to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md` in the **same directory** as the living review. Do not write dated snapshots to `.oat/repo/reviews/`.
 
 ### Step 2: Read and Catalog Backlog Items
 
@@ -165,6 +172,8 @@ If a roadmap was provided:
 
 Use the template at `.agents/skills/oat-pjm-review-backlog/references/backlog-review-template.md`.
 
+Write the **living** review to the resolved output path (default `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md`). If `--archive-dated` was passed, also write a dated snapshot alongside it (`backlog-and-roadmap-review-YYYY-MM-DD.md` in the same directory). Never split living and dated outputs across different directories — they must live together under `backlog/reviews/`.
+
 Ensure:
 
 - Every active backlog item file appears in the item catalog
@@ -183,6 +192,39 @@ After writing the review, provide:
 
 When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `bl-XXXX` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
 
+### Step 9: Offer Priority Alignment Walkthrough (Optional, Collaborative)
+
+The full review answers "what's in the backlog and how is each item rated." Operators still have to mentally extract "what should I actually do next, and in what order, with what parallelism." `priority-alignment.md` is the one-page execution companion that makes that extraction explicit.
+
+This step is **optional** and **collaborative** — it requires operator context (recent ships, capacity, calendar, ongoing initiatives) that the skill alone does not have. Do not produce or refresh `priority-alignment.md` without operator participation.
+
+**Decision: should we run the walkthrough?**
+
+After the summary, ask the operator:
+
+> Want to walk through the review together and produce a one-page execution view at `backlog/reviews/priority-alignment.md`? It captures phased order, parallelism, and a recommended kickoff stack — a faster reference than the full review.
+
+If `.oat/repo/reference/backlog/reviews/priority-alignment.md` already exists, frame it as an **update** to the existing document rather than a fresh create. Read the existing file first so the walkthrough builds on it.
+
+If the operator declines, stop after the summary. Do not silently write or modify `priority-alignment.md`.
+
+**If the operator accepts, run the walkthrough:**
+
+1. **Propose a phase breakdown** based on the review's quadrants and dependency graph:
+   - "Finishing / in flight" — items already started or in code review
+   - One or more execution phases that group items by initiative, parallel lane, or sequencing constraint
+   - Surface the natural parallelism boundaries from Step 5 as parallel tracks within a phase
+2. **Solicit operator context** that the review alone cannot capture:
+   - What just shipped or changed since the last alignment? (Goes in the **Status** line and **Changelog**.)
+   - What's the operator's capacity / appetite for parallel work this cycle?
+   - Are there calendar constraints (freezes, releases, time off) that affect ordering?
+   - Does the operator want an optional axis like "planning investment" or "design effort" as a column? (Some repos find this useful; many don't. Default: omit unless operator opts in.)
+3. **Iterate on phase names, ordering, and the kickoff stack** until the operator is satisfied. Phase names should reflect the repo's actual initiatives, not generic placeholders.
+4. **Write or update** `.oat/repo/reference/backlog/reviews/priority-alignment.md` using the template at `.agents/skills/oat-pjm-review-backlog/references/priority-alignment-template.md`. Add a new Changelog entry summarizing what shifted in this pass.
+5. **Confirm the result** with the operator: file path, top-of-doc Status line, and the kickoff stack.
+
+When referencing backlog items inside the priority-alignment doc, the **Reference Format Convention** still applies — link to the item file and pair the ID with a human-readable title.
+
 ## Success Criteria
 
 - Every active backlog item file has a value-effort rating with rationale
@@ -190,4 +232,6 @@ When listing specific items in this summary, follow the **Reference Format Conve
 - Parallel lanes and execution waves are actionable
 - Roadmap alignment gaps are surfaced when roadmap input is present
 - Output document follows the review template structure
+- Living review is written to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md` (unless `--output` is explicitly overridden); dated snapshots, when emitted, live in the same `backlog/reviews/` directory and never under `.oat/repo/reviews/`
+- The operator is offered (but never forced into) a collaborative walkthrough that produces or updates `backlog/reviews/priority-alignment.md`; if the operator accepts, the file is written using the priority-alignment template and includes a Changelog entry for this pass; if the operator declines, no file is created or modified
 - Every user-facing reference to a backlog item pairs the ID with a human-readable title (per the Reference Format Convention)

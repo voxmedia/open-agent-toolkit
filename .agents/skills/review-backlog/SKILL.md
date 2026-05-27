@@ -1,6 +1,6 @@
 ---
 name: review-backlog
-version: 1.2.0
+version: 1.2.1
 description: Use when prioritizing backlog work or evaluating a roadmap. Produces value-effort ratings, dependency mapping, and execution recommendations.
 argument-hint: '[backlog-path] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
@@ -55,8 +55,9 @@ Parse from `$ARGUMENTS`:
 **Output path:**
 
 1. If `--output` is provided, use it directly.
-2. Otherwise, default to a `reviews/` directory alongside the backlog:
-   - If backlog is at `.oat/repo/reference/backlog.md`, output to `.oat/repo/reviews/backlog-and-roadmap-review.md`
+2. Otherwise, default to a `reviews/` directory co-located with the backlog:
+   - If backlog is at `.oat/repo/reference/backlog.md` or under `.oat/repo/reference/backlog/`, output to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md`.
+   - Do not fall back to `.oat/repo/reviews/` — backlog review artifacts live under the file-backed backlog.
    - Create the `reviews/` directory if it doesn't exist.
 
 ### Step 2: Read and Catalog Backlog Items
