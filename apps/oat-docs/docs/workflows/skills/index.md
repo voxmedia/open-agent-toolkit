@@ -61,6 +61,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-capture`
     - `oat-project-reconcile`
     - `oat-project-review-provide`
+    - `oat-project-review-provide-remote`
     - `oat-project-review-receive`
     - `oat-project-review-receive-remote`
     - `oat-project-pr-progress`
@@ -91,6 +92,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 === "Review, backlog, and maintenance"
 
     - `oat-review-provide`
+    - `oat-review-provide-remote`
     - `oat-review-receive`
     - `oat-review-receive-remote`
     - `oat-repo-knowledge-index`

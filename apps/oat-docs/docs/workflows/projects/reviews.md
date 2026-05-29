@@ -31,6 +31,8 @@ The commit is scoped and explicit — it stages only the project's tracking file
 
 - `oat-project-review-provide` is project-scoped and requires active project state (resolved via `oat config get activeProject` / `.oat/config.local.json`) plus project `state.md`.
 - `oat-review-provide` is for non-project commit-range reviews (ad-hoc, no project state required).
+- `oat-project-review-provide-remote` reviews a GitHub PR from a different machine within project context and posts the review back to GitHub (see [Remote provide](#remote-provide)).
+- `oat-review-provide-remote` reviews a GitHub PR from a different machine in ad-hoc mode and posts the review back to GitHub.
 
 **Receive** (process review findings):
 
@@ -38,6 +40,20 @@ The commit is scoped and explicit — it stages only the project's tracking file
 - `oat-project-review-receive-remote` processes GitHub PR comment feedback within a project context (converts findings to plan tasks with stable `pNN-tNN` IDs).
 - `oat-review-receive` processes local review artifacts in ad-hoc mode (standalone task-list output, no project state mutation).
 - `oat-review-receive-remote` processes GitHub PR comment feedback in ad-hoc mode (standalone task-list output, optional reply posting).
+
+The `*-provide-remote` and `*-receive-remote` skills are the two halves of the cross-machine loop: one agent posts a review to a PR; an agent on the PR's own machine receives it and turns it into fix tasks.
+
+## Remote provide
+
+`oat-review-provide-remote` (ad-hoc) and `oat-project-review-provide-remote` (project-scoped) let an agent on one machine review a GitHub PR opened from another machine and post the review back to GitHub. They mirror the existing `*-receive-remote` skills, closing the local-vs-remote × provide-vs-receive matrix.
+
+- **GitHub is the source of truth.** No local review artifact is written on the reviewing machine, and the project rail makes no `plan.md`/bookkeeping mutations there — the originating machine's `*-receive-remote` owns those. The posted PR review carries metadata markers (`oat_provide_remote`, `oat_review_head_sha`, and on the project rail `oat_project` + `oat_review_scope`) so a subsequent provide-remote pass can find the prior review for re-review narrowing.
+- **Hybrid read strategy.** The skill checks the PR out into an ephemeral worktree for full-context review by default, and falls back to diff-only mode (`gh pr diff`, or when `--no-checkout` is set / checkout fails) with a degraded-context warning.
+- **Single posted review.** Findings are posted as one PR review via `gh api` with inline `comments[]`; the verdict is `REQUEST_CHANGES` when any Critical/Important finding exists, otherwise `COMMENT` (including clean reviews — never an automatic `APPROVE`). Findings whose line is outside the PR diff are downgraded into the top-level review body rather than dropped.
+- **Project rail is project-aware but read-only.** It resolves the project by scanning the PR diff for `.oat/projects/*/*/state.md` (with a `--project <path>` override), reads project artifacts to drive mode-aware review quality, and uses Tier 1/2/3 dispatch (`oat-reviewer` structured-output mode → fresh session → inline). The ad-hoc rail runs inline only.
+- **Re-review narrowing** scopes a follow-up pass to commits since the prior matching review, guarded against a stale/force-pushed prior SHA (existence + ancestry checks; falls back to full scope when the prior SHA is unreachable). Project-rail narrowing matches on the `(project, scope)` tuple so a `p02` re-review never narrows against a prior `final` review.
+
+> The posting backend is `gh api` directly: the bundled `agent-reviews` CLI is read/reply-only and has no review-posting flow, so the skills probe for a posting capability (forward-compatible) and fall through to `gh api`.
 
 ## Status model
 
@@ -53,8 +69,9 @@ Status progression in `plan.md` Reviews table:
 
 - Critical/Important: address before pass.
 - Medium: address by default; defer only with explicit approval and recorded rationale/disposition.
-- Minor (non-final scopes): do not auto-defer by default. Convert when likely future cleanup or when the fix is trivial; defer only with recorded rationale.
-- Minor (final scope): not auto-deferred; require explicit user disposition (defer vs convert), and recommend convert when likely future cleanup or trivial to fix.
+- Minor: **default to `convert`** (fix inline). Small non-blocking findings are usually cheaper to fix than to track as backlog items, so the receive skills convert them by default rather than deferring.
+- Deferring (or dismissing) a finding **at any severity, including minor**, requires a concrete recorded rationale (duplicate, blocked dependency, explicit out-of-scope follow-up, or disproportionate churn now). This brings the manual receive path in line with the auto-review path, which already converts minors.
+- Minor (final scope): still require explicit per-finding user disposition after a plain-language explanation, with `convert` as the recommended default.
 
 ## Auto-review at HiLL checkpoints
 
@@ -117,8 +134,10 @@ Final review `passed` gate requires:
 - `.oat/projects/local/orphan-reviews/` (default local-only storage for ad-hoc review artifacts)
 - `.oat/repo/reviews/` (tracked storage convention when explicitly desired)
 - `.agents/skills/oat-review-provide/SKILL.md`
+- `.agents/skills/oat-review-provide-remote/SKILL.md`
 - `.agents/skills/oat-review-receive/SKILL.md`
 - `.agents/skills/oat-review-receive-remote/SKILL.md`
 - `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-provide-remote/SKILL.md`
 - `.agents/skills/oat-project-review-receive/SKILL.md`
 - `.agents/skills/oat-project-review-receive-remote/SKILL.md`
