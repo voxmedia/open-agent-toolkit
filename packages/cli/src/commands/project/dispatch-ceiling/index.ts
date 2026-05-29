@@ -30,7 +30,11 @@ import {
 import { Command } from 'commander';
 import YAML from 'yaml';
 
-type DispatchCeilingProvider = 'codex' | 'claude';
+// Provider-neutral: accept arbitrary provider names. Codex/Claude get concrete
+// enforcement; every other provider routes through the fallback advisory adapter
+// (mode: unsupported) rather than erroring. Typed concrete-value validation is
+// applied only for the providers that have a value enum.
+type DispatchCeilingProvider = 'codex' | 'claude' | (string & {});
 type DispatchCeilingValue =
   | WorkflowCodexDispatchCeiling
   | WorkflowClaudeDispatchCeiling;
@@ -119,26 +123,34 @@ const DEFAULT_DEPENDENCIES: DispatchCeilingDependencies = {
 };
 
 function normalizeProvider(value: string | undefined): DispatchCeilingProvider {
-  if (value === 'codex' || value === 'claude') {
-    return value;
+  // Provider-neutral: accept any provider name. Unknown providers do not throw;
+  // they resolve through the fallback advisory adapter as `mode: unsupported`.
+  const normalized = value?.trim();
+  if (!normalized) {
+    throw new Error('Provider is required.');
   }
-  throw new Error('Invalid provider. Expected one of: codex, claude.');
+  return normalized;
 }
 
 function isValidProviderValue(
   provider: DispatchCeilingProvider,
   value: unknown,
 ): value is DispatchCeilingValue {
+  // Typed concrete-value validation only applies to providers with a value
+  // enum. Unknown providers have no concrete ceiling value (always advisory).
   if (provider === 'codex') {
     return (
       typeof value === 'string' &&
       CODEX_VALUES.includes(value as WorkflowCodexDispatchCeiling)
     );
   }
-  return (
-    typeof value === 'string' &&
-    CLAUDE_VALUES.includes(value as WorkflowClaudeDispatchCeiling)
-  );
+  if (provider === 'claude') {
+    return (
+      typeof value === 'string' &&
+      CLAUDE_VALUES.includes(value as WorkflowClaudeDispatchCeiling)
+    );
+  }
+  return false;
 }
 
 function configSourceToCeilingSource(
@@ -177,7 +189,14 @@ function sourceLabel(source: DispatchCeilingSource | null): string {
 }
 
 function providerLabel(provider: DispatchCeilingProvider): string {
-  return provider === 'codex' ? 'Codex' : 'Claude';
+  if (provider === 'codex') {
+    return 'Codex';
+  }
+  if (provider === 'claude') {
+    return 'Claude';
+  }
+  // Unknown providers: title-case the raw name for human-readable output.
+  return provider.charAt(0).toUpperCase() + provider.slice(1);
 }
 
 function resolveTargetProjectPath(
@@ -575,7 +594,10 @@ export function createProjectDispatchCeilingCommand(
   command.addCommand(
     new Command('resolve')
       .description('Resolve dispatch ceiling for a provider')
-      .requiredOption('--provider <provider>', 'Provider: codex or claude')
+      .requiredOption(
+        '--provider <provider>',
+        'Provider name: codex or claude are enforced; any other provider resolves as advisory (unsupported)',
+      )
       .option(
         '--role <role>',
         'Dispatch role for variant compilation: implementer (default) or reviewer',

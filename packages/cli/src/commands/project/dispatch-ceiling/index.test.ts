@@ -298,17 +298,32 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('rejects invalid providers', async () => {
+  it('resolves unknown providers as advisory/unsupported instead of erroring', async () => {
     const { root, home } = await setup();
 
     const { command, capture } = createHarness({ cwd: root, home });
-    await runCommand(command, ['--provider', 'gemini', '--json']);
+    await runCommand(command, ['--provider', 'cursor', '--json']);
 
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'error',
-      message: 'Invalid provider. Expected one of: codex, claude.',
-    });
-    expect(process.exitCode).toBe(1);
+    const payload = capture.jsonPayloads[0] as {
+      status: string;
+      provider: string;
+      providers: Record<
+        string,
+        { value: string | null; mode: string; dispatchArgs: unknown }
+      >;
+    };
+
+    // Provider-neutral design: an unknown provider must NOT produce a command
+    // error. It flows through the fallback no-op adapter and resolves advisory.
+    expect(payload.status).not.toBe('error');
+    expect(payload.provider).toBe('cursor');
+    expect(payload.providers.cursor.mode).toBe('unsupported');
+    expect(payload.providers.cursor.value).toBeNull();
+    expect(payload.providers.cursor.dispatchArgs).toBeNull();
+    // Unknown providers never have concrete config/state values, so they are
+    // unresolved (advisory) rather than blocked or errored.
+    expect(payload.status).toBe('unresolved');
+    expect(process.exitCode).toBe(0);
   });
 
   it('supports explicit project paths without active project lookup', async () => {
