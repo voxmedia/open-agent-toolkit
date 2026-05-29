@@ -605,7 +605,7 @@ code rows as needed; do not delete the `design`/`plan` artifact rows.
 
 **Total: 10 tasks**
 
-Phase 6 fixes implemented; run final re-review before merge.
+Final review passed; prepare the final PR.
 
 ---
 
