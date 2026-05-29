@@ -144,7 +144,10 @@ _No implementation sessions yet. The first `oat-project-implement` run will appe
 
 - None. No shipped implementation exists yet (pre-implementation artifact review); all findings were plan/design/tracker corrections, not accepted code drift.
 
-**Next:** Re-run `oat-project-review-provide artifact plan` to confirm the plan reaches a clean pass, then proceed to `oat-project-implement` starting at `p01-t01`.
+**Re-review artifact:** reviews/archived/artifact-plan-review-2026-05-29-v2.md
+**Re-review result:** passed (0 Critical, 0 Important, 0 Medium, 0 Minor)
+
+**Next:** Proceed to `oat-project-implement` starting at `p01-t01`.
 
 ---
 

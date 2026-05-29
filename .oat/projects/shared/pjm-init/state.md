@@ -15,8 +15,8 @@ oat_phase: plan # Current phase: discovery | spec | design | plan | implement | 
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings
-  provider: claude # codex | claude
-  value: opus # codex: low|medium|high|xhigh; claude: haiku|sonnet|opus
+  provider: codex # codex | claude
+  value: xhigh # codex: low|medium|high|xhigh; claude: haiku|sonnet|opus
   source: project-state
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -25,7 +25,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T17:44:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T19:16:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +51,7 @@ Plan complete (quick mode + lightweight design). Ready for `oat-project-implemen
 
 - ✓ Discovery captured and committed
 - ✓ Lightweight design captured and committed (documentation promoted to first-class)
-- ✓ Plan generated (sequential; HiLL pause after p02; dispatch ceiling claude=opus)
+- ✓ Plan generated (sequential; HiLL pause after p02; dispatch ceiling codex=xhigh)
 - ⧗ Awaiting implementation
 
 ## Blockers
