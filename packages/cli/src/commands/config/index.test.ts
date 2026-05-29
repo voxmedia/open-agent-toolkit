@@ -875,14 +875,14 @@ describe('oat config', () => {
       });
     });
 
-    it('sets workflow.dispatchCeiling.codex at shared level', async () => {
+    it('sets workflow.dispatchCeiling.providers.codex at shared level (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
       const { command } = createHarness({ cwd: root, home });
 
       await runCommand(command, [
         'set',
-        'workflow.dispatchCeiling.codex',
+        'workflow.dispatchCeiling.providers.codex',
         'high',
         '--shared',
       ]);
@@ -890,7 +890,7 @@ describe('oat config', () => {
       const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
       expect(JSON.parse(raw)).toMatchObject({
         version: 1,
-        workflow: { dispatchCeiling: { codex: 'high' } },
+        workflow: { dispatchCeiling: { providers: { codex: 'high' } } },
       });
 
       const { command: getCmd, capture: getCap } = createHarness({
@@ -899,24 +899,24 @@ describe('oat config', () => {
       });
       await runCommand(
         getCmd,
-        ['get', 'workflow.dispatchCeiling.codex'],
+        ['get', 'workflow.dispatchCeiling.providers.codex'],
         ['--json'],
       );
       expect(getCap.jsonPayloads[0]).toMatchObject({
         status: 'ok',
-        key: 'workflow.dispatchCeiling.codex',
+        key: 'workflow.dispatchCeiling.providers.codex',
         value: 'high',
         source: 'shared',
       });
     });
 
-    it('sets workflow.dispatchCeiling.claude at local level by default', async () => {
+    it('sets workflow.dispatchCeiling.providers.claude at local level by default (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const { command } = createHarness({ cwd: root });
 
       await runCommand(command, [
         'set',
-        'workflow.dispatchCeiling.claude',
+        'workflow.dispatchCeiling.providers.claude',
         'sonnet',
       ]);
 
@@ -926,22 +926,24 @@ describe('oat config', () => {
       );
       expect(JSON.parse(raw)).toMatchObject({
         version: 1,
-        workflow: { dispatchCeiling: { claude: 'sonnet' } },
+        workflow: { dispatchCeiling: { providers: { claude: 'sonnet' } } },
       });
     });
 
-    it('set workflow.dispatchCeiling validates provider-specific enums', async () => {
+    it('set workflow.dispatchCeiling.providers.codex validates provider-specific enums (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
       await runCommand(command, [
         'set',
-        'workflow.dispatchCeiling.codex',
+        'workflow.dispatchCeiling.providers.codex',
         'opus',
       ]);
 
       expect(process.exitCode).toBe(1);
-      expect(capture.error[0]).toContain('workflow.dispatchCeiling.codex');
+      expect(capture.error[0]).toContain(
+        'workflow.dispatchCeiling.providers.codex',
+      );
       expect(capture.error[0]).toContain('low | medium | high | xhigh');
     });
 
@@ -1049,8 +1051,13 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.autoReviewAtHillCheckpoints');
       expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
       expect(capture.info[0]).toContain('workflow.designMode');
-      expect(capture.info[0]).toContain('workflow.dispatchCeiling.codex');
-      expect(capture.info[0]).toContain('workflow.dispatchCeiling.claude');
+      expect(capture.info[0]).toContain('workflow.dispatchCeiling.preset');
+      expect(capture.info[0]).toContain(
+        'workflow.dispatchCeiling.providers.codex',
+      );
+      expect(capture.info[0]).toContain(
+        'workflow.dispatchCeiling.providers.claude',
+      );
       expect(process.exitCode).toBe(0);
     });
 
@@ -1092,15 +1099,36 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('describe workflow.dispatchCeiling.codex shows effort enum metadata', async () => {
+    it('describe workflow.dispatchCeiling.providers.codex shows effort enum metadata', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
 
-      await runCommand(command, ['describe', 'workflow.dispatchCeiling.codex']);
+      await runCommand(command, [
+        'describe',
+        'workflow.dispatchCeiling.providers.codex',
+      ]);
 
-      expect(capture.info[0]).toContain('Key: workflow.dispatchCeiling.codex');
+      expect(capture.info[0]).toContain(
+        'Key: workflow.dispatchCeiling.providers.codex',
+      );
       expect(capture.info[0]).toContain('low | medium | high | xhigh');
       expect(capture.info[0]).toContain('Default: unset');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe lists new dispatchCeiling keys under Workflow Preferences group', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe']);
+
+      expect(capture.info[0]).toContain('workflow.dispatchCeiling.preset');
+      expect(capture.info[0]).toContain(
+        'workflow.dispatchCeiling.providers.codex',
+      );
+      expect(capture.info[0]).toContain(
+        'workflow.dispatchCeiling.providers.claude',
+      );
       expect(process.exitCode).toBe(0);
     });
 

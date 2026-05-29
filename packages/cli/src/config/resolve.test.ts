@@ -274,11 +274,19 @@ describe('resolveEffectiveConfig', () => {
         value: null,
         source: 'default',
       });
-      expect(result.resolved['workflow.dispatchCeiling.codex']).toEqual({
+      expect(result.resolved['workflow.dispatchCeiling.preset']).toEqual({
         value: null,
         source: 'default',
       });
-      expect(result.resolved['workflow.dispatchCeiling.claude']).toEqual({
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.codex'],
+      ).toEqual({
+        value: null,
+        source: 'default',
+      });
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.claude'],
+      ).toEqual({
         value: null,
         source: 'default',
       });
@@ -538,7 +546,7 @@ describe('resolveEffectiveConfig', () => {
       });
     });
 
-    it('resolves workflow.dispatchCeiling.codex with local > shared > user precedence', async () => {
+    it('resolves workflow.dispatchCeiling.providers.codex with local > shared > user precedence', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',
         '/tmp/user',
@@ -547,28 +555,36 @@ describe('resolveEffectiveConfig', () => {
           readOatConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { codex: 'high' } },
+              workflow: {
+                dispatchCeiling: { providers: { codex: 'high' } },
+              },
             }) satisfies OatConfig,
           readOatLocalConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { codex: 'medium' } },
+              workflow: {
+                dispatchCeiling: { providers: { codex: 'medium' } },
+              },
             }) satisfies OatLocalConfig,
           readUserConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { codex: 'xhigh' } },
+              workflow: {
+                dispatchCeiling: { providers: { codex: 'xhigh' } },
+              },
             }) satisfies UserConfig,
         },
       );
 
-      expect(result.resolved['workflow.dispatchCeiling.codex']).toEqual({
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.codex'],
+      ).toEqual({
         value: 'medium',
         source: 'local',
       });
     });
 
-    it('resolves workflow.dispatchCeiling.claude with local > shared > user precedence', async () => {
+    it('resolves workflow.dispatchCeiling.providers.claude with local > shared > user precedence', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',
         '/tmp/user',
@@ -577,28 +593,36 @@ describe('resolveEffectiveConfig', () => {
           readOatConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { claude: 'opus' } },
+              workflow: {
+                dispatchCeiling: { providers: { claude: 'opus' } },
+              },
             }) satisfies OatConfig,
           readOatLocalConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { claude: 'sonnet' } },
+              workflow: {
+                dispatchCeiling: { providers: { claude: 'sonnet' } },
+              },
             }) satisfies OatLocalConfig,
           readUserConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { claude: 'haiku' } },
+              workflow: {
+                dispatchCeiling: { providers: { claude: 'haiku' } },
+              },
             }) satisfies UserConfig,
         },
       );
 
-      expect(result.resolved['workflow.dispatchCeiling.claude']).toEqual({
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.claude'],
+      ).toEqual({
         value: 'sonnet',
         source: 'local',
       });
     });
 
-    it('resolves workflow.dispatchCeiling from shared when local unset', async () => {
+    it('resolves workflow.dispatchCeiling.providers.codex from shared when local unset', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',
         '/tmp/user',
@@ -607,25 +631,31 @@ describe('resolveEffectiveConfig', () => {
           readOatConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { codex: 'high' } },
+              workflow: {
+                dispatchCeiling: { providers: { codex: 'high' } },
+              },
             }) satisfies OatConfig,
           readOatLocalConfig: async () =>
             ({ version: 1 }) satisfies OatLocalConfig,
           readUserConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { codex: 'low' } },
+              workflow: {
+                dispatchCeiling: { providers: { codex: 'low' } },
+              },
             }) satisfies UserConfig,
         },
       );
 
-      expect(result.resolved['workflow.dispatchCeiling.codex']).toEqual({
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.codex'],
+      ).toEqual({
         value: 'high',
         source: 'shared',
       });
     });
 
-    it('resolves workflow.dispatchCeiling from user when no other surface set', async () => {
+    it('resolves workflow.dispatchCeiling.providers.claude from user when no other surface set', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',
         '/tmp/user',
@@ -637,14 +667,98 @@ describe('resolveEffectiveConfig', () => {
           readUserConfig: async () =>
             ({
               version: 1,
-              workflow: { dispatchCeiling: { claude: 'sonnet' } },
+              workflow: {
+                dispatchCeiling: { providers: { claude: 'sonnet' } },
+              },
             }) satisfies UserConfig,
         },
       );
 
-      expect(result.resolved['workflow.dispatchCeiling.claude']).toEqual({
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.claude'],
+      ).toEqual({
         value: 'sonnet',
         source: 'user',
+      });
+    });
+
+    it('resolves workflow.dispatchCeiling.preset with local > shared > user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: { preset: 'maximum' },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: { preset: 'balanced' },
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: { preset: 'cost-conscious' },
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.dispatchCeiling.preset']).toEqual({
+        value: 'balanced',
+        source: 'local',
+      });
+    });
+
+    it('flattens dispatchCeiling.providers.* and resolves local > shared > user', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  preset: 'balanced',
+                  providers: { codex: 'high', claude: 'sonnet' },
+                },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: { codex: 'medium' },
+                },
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+        },
+      );
+
+      // local providers.codex wins over shared
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.codex'],
+      ).toEqual({ value: 'medium', source: 'local' });
+      // shared providers.claude wins when local unset
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.claude'],
+      ).toEqual({ value: 'sonnet', source: 'shared' });
+      // shared preset available
+      expect(result.resolved['workflow.dispatchCeiling.preset']).toEqual({
+        value: 'balanced',
+        source: 'shared',
       });
     });
   });

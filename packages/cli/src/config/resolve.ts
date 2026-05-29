@@ -91,8 +91,11 @@ const DEFAULT_WORKFLOW_CONFIG = {
     autoNarrowReReviewScope: null,
     designMode: null,
     dispatchCeiling: {
-      codex: null,
-      claude: null,
+      preset: null,
+      providers: {
+        codex: null,
+        claude: null,
+      },
     },
   },
 } satisfies Record<string, unknown>;

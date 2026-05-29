@@ -56,8 +56,9 @@ type ConfigKey =
   | 'workflow.autoReviewAtHillCheckpoints'
   | 'workflow.createPrOnComplete'
   | 'workflow.designMode'
-  | 'workflow.dispatchCeiling.claude'
-  | 'workflow.dispatchCeiling.codex'
+  | 'workflow.dispatchCeiling.preset'
+  | 'workflow.dispatchCeiling.providers.claude'
+  | 'workflow.dispatchCeiling.providers.codex'
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
   | 'workflow.reviewExecutionModel'
@@ -142,8 +143,9 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.autoReviewAtHillCheckpoints',
   'workflow.autoNarrowReReviewScope',
   'workflow.designMode',
-  'workflow.dispatchCeiling.codex',
-  'workflow.dispatchCeiling.claude',
+  'workflow.dispatchCeiling.preset',
+  'workflow.dispatchCeiling.providers.codex',
+  'workflow.dispatchCeiling.providers.claude',
   'worktrees.root',
 ];
 
@@ -549,28 +551,42 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Persisted preference for oat-project-design: "collaborative" runs every section section-by-section, "selective" drafts routine sections silently and live-reviews high-risk sections, and "draft" drafts the full design up front for holistic review. Quick-start lightweight design supports collaborative/draft only and treats selective as collaborative when encountered. When unset, the skill prompts. Runtime signals (OAT_NON_INTERACTIVE=1, no TTY) always outrank this preference. Resolution: arg > env > non-interactive context > local > shared > user > default.',
   },
   {
-    key: 'workflow.dispatchCeiling.codex',
+    key: 'workflow.dispatchCeiling.preset',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'balanced | maximum | cost-conscious',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.dispatchCeiling.preset <value>',
+    description:
+      'Provider-neutral ceiling preset that compiles to concrete per-provider values at write time. balanced → Codex: high, Claude: sonnet; maximum → Codex: xhigh, Claude: opus; cost-conscious → Codex: medium, Claude: sonnet. Preset provenance only; runtime dispatch reads concrete providers values. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.dispatchCeiling.providers.codex',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'low | medium | high | xhigh',
     defaultValue: 'unset',
     mutability: 'read/write',
-    owningCommand: 'oat config set workflow.dispatchCeiling.codex <value>',
+    owningCommand:
+      'oat config set workflow.dispatchCeiling.providers.codex <value>',
     description:
-      'Maximum Codex reasoning effort OAT may select for deterministic implementation and review subagent variants. Provider defaults remain informational for base/unpinned roles and are not treated as this ceiling. Resolution: local > shared > user > default.',
+      'Explicit Codex ceiling value (advanced/manual). Wins over any preset. Maximum Codex reasoning effort OAT may select for deterministic implementation and review subagent variants. Resolution: local > shared > user > default.',
   },
   {
-    key: 'workflow.dispatchCeiling.claude',
+    key: 'workflow.dispatchCeiling.providers.claude',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'haiku | sonnet | opus',
     defaultValue: 'unset',
     mutability: 'read/write',
-    owningCommand: 'oat config set workflow.dispatchCeiling.claude <value>',
+    owningCommand:
+      'oat config set workflow.dispatchCeiling.providers.claude <value>',
     description:
-      'Maximum Claude model tier OAT may select for provider-native subagent dispatch. Claude has no separate per-dispatch effort axis, so the effort axis remains not-applicable. Resolution: local > shared > user > default.',
+      'Explicit Claude ceiling value (advanced/manual). Wins over any preset. Maximum Claude model tier OAT may select for provider-native subagent dispatch. Resolution: local > shared > user > default.',
   },
   {
     key: 'sync.defaultStrategy',
@@ -640,8 +656,14 @@ const WORKFLOW_ENUM_VALUES = {
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
   'workflow.designMode': ['collaborative', 'selective', 'draft'],
-  'workflow.dispatchCeiling.codex': ['low', 'medium', 'high', 'xhigh'],
-  'workflow.dispatchCeiling.claude': ['haiku', 'sonnet', 'opus'],
+  'workflow.dispatchCeiling.preset': ['balanced', 'maximum', 'cost-conscious'],
+  'workflow.dispatchCeiling.providers.codex': [
+    'low',
+    'medium',
+    'high',
+    'xhigh',
+  ],
+  'workflow.dispatchCeiling.providers.claude': ['haiku', 'sonnet', 'opus'],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
@@ -764,13 +786,27 @@ function applyWorkflowValue(
   value: boolean | string,
 ): OatWorkflowConfig {
   const subKey = key.slice('workflow.'.length);
-  if (subKey.startsWith('dispatchCeiling.')) {
-    const providerKey = subKey.slice('dispatchCeiling.'.length);
+
+  if (subKey === 'dispatchCeiling.preset') {
     return {
       ...workflow,
       dispatchCeiling: {
         ...workflow.dispatchCeiling,
-        [providerKey]: value,
+        preset: value as string,
+      },
+    } as OatWorkflowConfig;
+  }
+
+  if (subKey.startsWith('dispatchCeiling.providers.')) {
+    const providerKey = subKey.slice('dispatchCeiling.providers.'.length);
+    return {
+      ...workflow,
+      dispatchCeiling: {
+        ...workflow.dispatchCeiling,
+        providers: {
+          ...workflow.dispatchCeiling?.providers,
+          [providerKey]: value,
+        },
       },
     } as OatWorkflowConfig;
   }
