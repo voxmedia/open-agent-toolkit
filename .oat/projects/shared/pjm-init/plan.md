@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-05-29
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p04'] # pause AFTER final phase for human review
+oat_plan_hill_phases: ['p05'] # pause AFTER final review-fix phase for human review
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # fully sequential — dependency chain + final release gate
 oat_plan_source: quick # spec-driven | quick | imported
@@ -36,7 +36,7 @@ existing `initializeBacklog()` for the backlog tree.
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (pause after final phase p04)
+- [x] Confirmed HiLL checkpoints with user (pause after final phase; updated to p05 after final review fixes were added)
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
@@ -361,20 +361,129 @@ git commit -m "chore(p04-t01): bump public packages to 0.1.12 for pjm init"
 
 ---
 
+## Phase 5: Final review fixes
+
+### Task p05-t01: (review) Restore dispatch-ceiling mainline contract
+
+**Files:**
+
+- Modify/restore: `packages/cli/src/commands/project/dispatch-ceiling/**`
+- Modify/restore: `packages/cli/src/config/oat-config.ts`
+- Modify/restore: `packages/cli/src/commands/config/index.ts`
+- Modify/restore: `packages/cli/src/config/resolve.ts`
+- Modify/restore: `packages/cli/src/providers/ceiling/**`
+- Modify/restore: `apps/oat-docs/docs/workflows/projects/**`
+- Modify/restore: `.oat/repo/reference/**` dispatch-ceiling reference artifacts affected by the branch rollback
+
+**Step 1: Understand the issue**
+
+Review finding `C1`: the final branch regresses the dispatch-ceiling CLI/config contract from
+`main`. Direct repros fail because unsupported providers such as `cursor` now return an
+invalid-provider error, and `workflow.dispatchCeiling.preset` is no longer a known config key.
+The branch must preserve the provider-neutral preset/provider config, preset compilation,
+provider adapter registry, unsupported-provider advisory behavior, docs/navigation, and repo
+reference materials already present on `main`.
+
+Location: `packages/cli/src/commands/project/dispatch-ceiling/index.ts:101`
+
+**Step 2: Implement fix**
+
+Restore the dispatch-ceiling implementation from `origin/main`/target `main` for the affected
+files, keeping the PJM feature changes on top. Use a path-scoped restore or equivalent
+file-by-file edits; do not reset the branch or overwrite PJM files. In particular, preserve:
+
+- `workflow.dispatchCeiling.preset`
+- `workflow.dispatchCeiling.providers.{codex,claude}`
+- preset compilation and resolver output metadata (`preset`, `providers`, `dispatchArgs`,
+  `mode`, `mechanism`, `verifyOnDispatch`)
+- unsupported-provider advisory behavior for providers such as `cursor`
+- dispatch-ceiling docs/navigation and repo-reference artifacts from `main`
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling src/config src/providers/ceiling`
+Expected: dispatch-ceiling, config, and provider-ceiling tests pass.
+
+Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json project dispatch-ceiling resolve --provider cursor --preflight`
+Expected: unsupported/advisory metadata is returned instead of an invalid-provider error.
+
+Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.preset`
+Expected: the config key is recognized.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/dispatch-ceiling \
+        packages/cli/src/config \
+        packages/cli/src/commands/config/index.ts \
+        packages/cli/src/providers/ceiling \
+        apps/oat-docs/docs/workflows/projects \
+        .oat/repo/reference
+git commit -m "fix(p05-t01): restore dispatch-ceiling mainline contract"
+```
+
+---
+
+### Task p05-t02: (review) Restore canonical OAT skill versions from main
+
+**Files:**
+
+- Modify/restore: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify/restore: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify/restore: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Regenerate if needed: provider-linked skill views from `oat sync --scope all`
+
+**Step 1: Understand the issue**
+
+Review finding `I1`: the branch changes canonical skills with downgraded versions relative to
+`main` (`oat-project-implement` 2.0.19 vs 2.0.20, `oat-project-plan` 1.3.3 vs 1.3.4,
+`oat-project-quick-start` 2.1.3 vs 2.1.4). This violates the repo policy that changed
+canonical skills must increase versions in the final PR diff, and the content appears to be
+part of the dispatch-ceiling rollback rather than an intentional PJM change.
+
+Location: `.agents/skills/oat-project-implement/SKILL.md:3`
+
+**Step 2: Implement fix**
+
+Restore the three canonical skill files to the target `main` versions/content unless there is
+a clearly intentional PJM-specific edit to preserve. If provider-linked skill views drift after
+the restore, refresh them with `oat sync --scope all` and include only the generated changes
+that belong to the restored canonical skills.
+
+**Step 3: Verify**
+
+Run: `git diff --name-status origin/main..HEAD -- .agents/skills .claude .cursor`
+Expected: no accidental downgrade of the three canonical skill files remains; any remaining
+skill/view diff is intentional and version-policy compliant.
+
+Run: `pnpm release:validate`
+Expected: release validation passes, including skill version bump policy.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md \
+        .agents/skills/oat-project-plan/SKILL.md \
+        .agents/skills/oat-project-quick-start/SKILL.md
+git commit -m "fix(p05-t02): restore canonical OAT skill versions from main"
+```
+
+---
+
 ## Reviews
 
 Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
 code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-| Scope  | Type     | Status  | Date       | Artifact                                               |
-| ------ | -------- | ------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed  | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
-| p02    | code     | passed  | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
-| p03    | code     | passed  | 2026-05-29 | reviews/p03-review-2026-05-29.md                       |
-| p04    | code     | passed  | 2026-05-29 | reviews/p04-review-2026-05-29.md                       |
-| final  | code     | pending | -          | -                                                      |
-| design | artifact | pending | -          | -                                                      |
-| plan   | artifact | passed  | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
+| Scope  | Type     | Status      | Date       | Artifact                                               |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | passed      | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
+| p02    | code     | passed      | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
+| p03    | code     | passed      | 2026-05-29 | reviews/p03-review-2026-05-29.md                       |
+| p04    | code     | passed      | 2026-05-29 | reviews/p04-review-2026-05-29.md                       |
+| final  | code     | fixes_added | 2026-05-29 | reviews/archived/final-review-2026-05-29.md            |
+| design | artifact | pending     | -          | -                                                      |
+| plan   | artifact | passed      | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -395,10 +504,11 @@ code rows as needed; do not delete the `design`/`plan` artifact rows.
 - Phase 2: 2 tasks — `initializeRepoReference` scaffolder (reuses `initializeBacklog`); `oat pjm init` command + registration.
 - Phase 3: 1 task — document install-vs-initialize lifecycle and the command; regenerate docs index.
 - Phase 4: 1 task — lockstep `0.1.11 → 0.1.12` bump + `release:validate`.
+- Phase 5: 2 review-fix tasks — restore dispatch-ceiling mainline contract and canonical skill versions from `main`.
 
-**Total: 6 tasks**
+**Total: 8 tasks**
 
-Ready for code review and merge.
+Final review findings converted to fix tasks; execute Phase 5 and re-run final review before merge.
 
 ---
 

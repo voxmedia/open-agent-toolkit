@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status | Tasks | Completed |
-| ------------------------------------- | ------ | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
-| Phase 3: Documentation                | passed | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
+| Phase                                 | Status  | Tasks | Completed |
+| ------------------------------------- | ------- | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
+| Phase 3: Documentation                | passed  | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed  | 1     | 1/1       |
+| Phase 5: Final review fixes           | pending | 2     | 0/2       |
 
-**Total:** 6/6 tasks completed
+**Total:** 6/8 tasks completed
 
-**Next task:** null — implementation tasks complete; awaiting final review.
+**Next task:** `p05-t01`
 
 ---
 
@@ -206,6 +207,23 @@ oat_generated: false
 
 ---
 
+## Phase 5: Final review fixes
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: (review) Restore dispatch-ceiling mainline contract
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: (review) Restore canonical OAT skill versions from main
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -369,6 +387,8 @@ Chronological log of implementation progress.
 - [x] p03-t01: Document install-vs-initialize lifecycle and `oat pjm init` - 8b449397
 - [x] p04-t01: Lockstep version bump and release validation - 795e9409
 - [x] p04 validation fix: Update CLI help snapshot for `pjm` - 30191c10
+- [ ] p05-t01: (review) Restore dispatch-ceiling mainline contract
+- [ ] p05-t02: (review) Restore canonical OAT skill versions from main
 
 **What changed (high level):**
 
@@ -385,7 +405,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Final review required before PR handoff.
+- Execute final review fix tasks starting with `p05-t01`.
 
 **Blockers:**
 
@@ -425,6 +445,39 @@ Chronological log of implementation progress.
 
 ---
 
+## Review Received: final (code)
+
+**Date:** 2026-05-29
+**Review artifact:** reviews/archived/final-review-2026-05-29.md
+**Review type:** code (scope `final`) — auto-review at final HiLL checkpoint.
+
+**Findings:**
+
+- Critical: 1
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p05-t01`, `p05-t02`
+
+**Findings converted:**
+
+- `C1` Branch rolls back the dispatch-ceiling CLI/config contract from `main` → `p05-t01`
+- `I1` Canonical skill files are changed with downgraded versions → `p05-t02`
+
+**Design drift / artifact alignment notes:**
+
+- None. Findings are regressions against target `main`, not accepted PJM design drift.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill, then re-run final review.
+
+After the fix tasks are complete:
+
+- Update the final review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
@@ -446,7 +499,7 @@ Track test execution during implementation.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**What shipped so far:**
 
 - `current-state.md` and `decision-record.md` are first-class project-management template sources and bundled CLI assets.
 - `initializeRepoReference()` scaffolds the complete PJM repo-reference surface under `.oat/repo/reference/`.
@@ -459,6 +512,7 @@ Track test execution during implementation.
 - `oat init tools project-management` continues to install skills and template sources.
 - `oat pjm init` now creates `current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/` in the repo reference area without overwriting existing files.
 - `oat pjm init --json` emits structured success and error payloads; failures preserve exit code 1 for user-actionable scaffolding errors.
+- Final review found target-branch regressions unrelated to PJM; Phase 5 fix tasks are queued before merge.
 
 **Key files / modules:**
 

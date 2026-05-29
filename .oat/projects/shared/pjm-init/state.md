@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p05-t01
 oat_last_commit: 30191c10
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -25,27 +25,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T20:12:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T20:23:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: pjm-init
 
-**Status:** Tasks complete; awaiting final review
+**Status:** Final review fixes queued
 **Started:** 2026-05-29
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Implementation tasks complete; awaiting final review.
+Final review received Critical/Important findings; fix tasks are queued starting at `p05-t01`.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
-- **Plan:** `plan.md` (complete — 4 phases, 6 tasks, sequential)
-- **Implementation:** `implementation.md` (complete; awaiting final review)
+- **Plan:** `plan.md` (complete — 5 phases, 8 tasks, sequential)
+- **Implementation:** `implementation.md` (in progress; next task `p05-t01`)
 
 ## Progress
 
@@ -56,7 +56,7 @@ Implementation tasks complete; awaiting final review.
 - ✓ Phase 2 implemented, review-fixed, and re-reviewed
 - ✓ Phase 3 implemented and reviewed
 - ✓ Phase 4 implemented, validation-fixed, and reviewed
-- ⧗ Awaiting final review
+- ⧗ Final review fixes queued
 
 ## Blockers
 
@@ -64,4 +64,4 @@ None
 
 ## Next Milestone
 
-Run final code review for `pjm-init`.
+Execute final review fix task `p05-t01`.
