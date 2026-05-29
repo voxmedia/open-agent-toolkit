@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 6ade5178
+oat_current_task: p03-t01
+oat_last_commit: 0c795dd9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -25,7 +25,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T00:14:51.321Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T13:22:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T14:25:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -56,8 +56,9 @@ Dispatch ceiling pinned to Claude opus.
 - ✓ Lightweight design complete
 - ✓ Artifact-review feedback applied
 - ✓ Plan generated (18 tasks across 6 phases)
-- ✓ Phase 1 complete (5/5 tasks; gate review passed)
-- ⧗ Implementation in progress (parallel group p02/p03/p05 next)
+- ✓ Phase 1 complete (5/5; gate review passed)
+- ✓ Phase 2 complete (3/3; gate FAIL→fix→PASS)
+- ⧗ Implementation in progress (p03 next, then p05, p04, p06)
 
 ## Blockers
 
@@ -65,5 +66,5 @@ None
 
 ## Next Milestone
 
-Dispatch the `[p02, p03, p05]` parallel group in isolated worktrees,
-then merge back and run p04 → p06.
+Complete p03 (`oat-reviewer` structured-output mode), then p05
+(receive-skill flip), p04 (project rail), and p06 (release prep).

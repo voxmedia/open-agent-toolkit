@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase                                         | Status   | Tasks | Completed |
 | --------------------------------------------- | -------- | ----- | --------- |
 | Phase 1 — Shared infrastructure helpers       | complete | 5     | 5/5       |
-| Phase 2 — `oat-review-provide-remote`         | pending  | 3     | 0/3       |
+| Phase 2 — `oat-review-provide-remote`         | complete | 3     | 3/3       |
 | Phase 3 — `oat-reviewer` extension            | pending  | 1     | 0/1       |
 | Phase 4 — `oat-project-review-provide-remote` | pending  | 2     | 0/2       |
 | Phase 5 — Receive-skill minor-default flip    | pending  | 4     | 0/4       |
 | Phase 6 — Backlog update + release prep       | pending  | 3     | 0/3       |
 
-**Total:** 5/18 tasks completed
+**Total:** 8/18 tasks completed
 
 ---
 
@@ -104,23 +104,51 @@ oat_generated: false
 
 ## Phase 2: `oat-review-provide-remote` (ad-hoc rail)
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Shipped the ad-hoc remote-review skill `oat-review-provide-remote` plus two supporting helpers under `packages/cli/src/review-remote/`.
+- `capability-probe`: injectable probe + opt-in cache; empirically resolved the design Open Question — `agent-reviews@1.0.2` has NO review-posting flow (read/reply only), so `gh api` is the posting path. Forward-compat flag recognition ships so a future `agent-reviews` posting flow is picked up without a code change.
+- `worktree`: `acquireWorktree`/`runInWorktree`/`releaseWorktree` — repo-scoped `git -C "$repo_root" worktree add --detach`, ephemeral path outside repo root, leak-proof idempotent teardown (prune + rm) in a `finally`, caller cwd untouched.
+- `SKILL.md`: PR resolution → hybrid read (worktree mechanics) → marker-based re-review narrowing → inline review → body-builder → posting via `gh api --input -` JSON payload (after the review fix) → cleanup.
+
+**Key files touched:**
+
+- `packages/cli/src/review-remote/capability-probe.{ts,test.ts}`
+- `packages/cli/src/review-remote/worktree.{ts,test.ts}`
+- `packages/cli/src/review-remote/__integration__/ad-hoc/round-trip.test.ts`
+- `.agents/skills/oat-review-provide-remote/SKILL.md` (version 1.0.1)
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/` → 76 tests pass (8 files)
+- `pnpm lint` 0/0; `pnpm type-check` clean; `pnpm oat:validate-skills` OK (50 skills)
+- Reviewer (p02 gate): FAIL → fix iteration 1 → PASS. Final: 0 critical, 0 important, 1 minor (non-blocking).
+
+**Notes / Decisions:**
+
+- Posting payload fix (review-driven): documented command builds the full JSON review payload (`event` + `body` + `comments[]` of `{path, line, side, body}`) via `jq -n` piped through `gh api ... --input -`. `--field` cannot express nested object arrays. `event` = REQUEST_CHANGES if any critical/important else COMMENT; out-of-diff findings downgrade to the top-level body (not dropped); body-only review uses `comments: []`.
+- `acquireWorktree` now cleans up (prune + rm) on `git worktree add` failure before rethrowing.
+- Empirical capability finding recorded under Deviations (design Open Question resolved).
 
 ### Task p02-t01: Probe and capability matrix for `agent-reviews`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bb7b1d76 (+ fix 0c795dd9)
 
 ### Task p02-t02: Worktree lifecycle helper
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 80334504 (+ fix bb77bfa1)
 
 ### Task p02-t03: Author `oat-review-provide-remote` SKILL.md and wire process
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e329def4 (+ fix c8f4ee1c)
 
 ---
 
@@ -219,31 +247,34 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** feat/remote-review-provide-skills
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped (run in progress)
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review | Fix Iterations | Disposition                                  |
-| ----- | ----------- | ------ | -------------- | -------------------------------------------- |
-| p01   | DONE        | pass   | 0/2            | merged (sequential, on orchestration branch) |
+| Phase | Implementer | Review    | Fix Iterations | Disposition                                  |
+| ----- | ----------- | --------- | -------------- | -------------------------------------------- |
+| p01   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
+| p02   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
 
 #### Parallel Groups
 
-- p01: sequential (runs before the `[p02, p03, p05]` group)
+- Plan declared `[p02, p03, p05]` as a parallel group. User elected sequential execution on the orchestration branch (file-disjoint → identical result; avoids 3× worktree bootstrap cost in this nested-worktree env + fan-in merge risk). Each phase still runs its own implementer + reviewer gate.
+- p01: sequential.
 
 #### Dispatch Notes
 
-- Dispatch: p01 implementation + review via Claude Code Tier 1, model_axis=selected:opus, effort_axis=not-applicable, ceiling=opus (project state). No escalation needed.
+- Dispatch: all phases via Claude Code Tier 1, model_axis=selected:opus, effort_axis=not-applicable, ceiling=opus (project state). No escalation needed.
+- p02 required one fix iteration (reviewer FAIL on the posting-command Important finding → fixed → PASS).
 
 #### Outstanding Items
 
-- None.
+- Provider views out of sync after new/changed skills (`oat sync` warning). Deferred to a single consolidated `oat sync --scope all` before p06 release validation, since p03/p04/p05 also change skill/agent files.
 
 #### Artifact / Design Deltas
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| None          | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                             | Planned / Documented                                          | Actual / Accepted                                                                                               | Reason                                        | Source of Truth                | Follow-up                                                       |
+| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
+| p02-t01       | design.md Open Questions (agent-reviews posting capability) | "Does `npx agent-reviews` expose a post-review command?" open | `agent-reviews@1.0.2` has NO posting flow (read/reply only); `gh api` is the posting path; probe forward-compat | Empirically probed `npx agent-reviews --help` | implementation (probe + skill) | None — design Open Question resolved; gh api path authoritative |
 
 <!-- orchestration-runs-end -->
 
@@ -302,9 +333,9 @@ Chronological log of implementation progress. Append per session.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                             | Planned / Documented                                          | Actual / Accepted                                                                                               | Reason                                        | Source of Truth                | Follow-up                                                       |
+| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
+| p02-t01       | design.md Open Questions (agent-reviews posting capability) | "Does `npx agent-reviews` expose a post-review command?" open | `agent-reviews@1.0.2` has NO posting flow (read/reply only); `gh api` is the posting path; probe forward-compat | Empirically probed `npx agent-reviews --help` | implementation (probe + skill) | None — design Open Question resolved; gh api path authoritative |
 
 ## Test Results
 
