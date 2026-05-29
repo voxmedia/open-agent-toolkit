@@ -1,6 +1,6 @@
 ---
 name: oat-review-provide-remote
-version: 1.0.0
+version: 1.0.1
 description: Use when reviewing a GitHub PR opened on another machine and posting findings back as a single PR review, outside any OAT project context. Fetches the PR via gh, reviews it, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -122,7 +122,7 @@ PR_HEAD_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
 
 ### Step 2: Check Out the PR (Hybrid Read)
 
-Acquire an ephemeral worktree FIRST, then run `gh pr checkout` inside it so the caller's working tree is never mutated. Use repo-scoped git commands so the skill works regardless of the caller's CWD (design.md → Data Flow step 2):
+Acquire an ephemeral worktree FIRST, then run `gh pr checkout` inside it so the caller's working tree is never mutated. Use repo-scoped git commands so the skill works regardless of the caller's CWD (design.md → Data Flow step 2). This shell flow parallels the tested TypeScript helper at `packages/cli/src/review-remote/worktree.ts` (`acquireWorktree` / `runInWorktree` / `releaseWorktree`) — keep the two in sync if you change either:
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -199,13 +199,28 @@ Probe `agent-reviews` for a posting flow with a non-mutating check (`npx agent-r
 - If a posting flow is supported -> prefer `agent-reviews` for tooling symmetry.
 - Otherwise (or if the probe is inconclusive) -> post via `gh api`. As of the current `agent-reviews` release there is no review-posting flow, so `gh api` is the expected path.
 
-Present the body + verdict + inline-comment count to the user and get explicit confirmation, then post a single review:
+Present the body + verdict + inline-comment count to the user and get explicit confirmation, then post a single review.
+
+`gh api --field`/`-f`/`-F` only set top-level scalar values; they CANNOT build the nested `comments[]` array of objects the reviews endpoint requires for inline comments. Construct the complete review payload as JSON and pipe it through `--input -` instead (a heredoc or a temp JSON file both work). Each in-diff finding (from Step 5) becomes one `comments[]` entry `{ path, line, side, body }`; out-of-diff findings are NOT added here — they were already downgraded into `$REVIEW_BODY` in Step 5. `event` is the Step 6 verdict (`REQUEST_CHANGES` when any critical/important finding exists, else `COMMENT`). A body-only review (zero in-diff findings) uses an empty `comments` array or omits the key:
 
 ```bash
-gh api --method POST "/repos/{owner}/{repo}/pulls/$PR/reviews" \
-  --field event="$VERDICT" \
-  --field body="$REVIEW_BODY" \
-  # plus comments[] entries: { path, line, side, body } per in-diff finding
+# Build the payload as JSON. `comments` is the in-diff findings array; jq
+# assembles it safely (escaping body text, numbers as numbers). For a
+# body-only review, COMMENTS_JSON is `[]`.
+jq -n \
+  --arg event "$VERDICT" \
+  --arg body "$REVIEW_BODY" \
+  --argjson comments "$COMMENTS_JSON" \
+  '{event: $event, body: $body, comments: $comments}' \
+| gh api --method POST "/repos/{owner}/{repo}/pulls/$PR/reviews" --input -
+
+# COMMENTS_JSON is a JSON array, one object per in-diff finding, e.g.:
+#   [
+#     { "path": "src/foo.ts", "line": 42, "side": "RIGHT", "body": "..." },
+#     { "path": "src/bar.ts", "line": 17, "side": "LEFT",  "body": "..." }
+#   ]
+# `side` is RIGHT for additions/context, LEFT only for explicit removed-code
+# findings (Step 5). Use `[]` when there are no in-diff findings.
 ```
 
 Posting failure handling (design.md → Error Handling → Posting failures): on auth failure, surface `gh auth status` and stop (findings kept in memory). On PR closed/merged, surface a clear message and present findings inline. On inline-comment rejection, re-map against the current file list and retry once; if still rejected, downgrade the offending finding(s) and retry. On rate limit, surface the window and stop. NEVER silently drop a finding.
