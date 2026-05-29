@@ -37,7 +37,7 @@ The selected tier is reported to the user and locked for the remainder of the ru
 
 ### Dispatch ceiling preflight
 
-Before phase work starts, `oat-project-implement` resolves and prints the dispatch ceiling for the current provider.
+Before phase work starts, `oat-project-implement` resolves and prints the dispatch ceiling for the current provider. For the conceptual model and per-provider enforcement (Codex vs Claude vs unsupported), see [Dispatch Ceiling](dispatch-ceiling.md).
 
 The compiled resolver is the source of truth:
 

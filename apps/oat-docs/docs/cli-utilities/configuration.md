@@ -164,6 +164,10 @@ The dispatch ceiling is set as a **provider-neutral preset** (or per-provider
 advanced values) and compiled at write time into concrete per-provider values.
 Runtime dispatch reads only the concrete values — never the preset label.
 
+For the full conceptual model — presets, the compile/resolve flow, and how
+enforcement differs for Codex, Claude, and unsupported providers — see
+[Dispatch Ceiling](../workflows/projects/dispatch-ceiling.md).
+
 ### Config keys
 
 Three keys control the ceiling, all under `workflow.dispatchCeiling`:
