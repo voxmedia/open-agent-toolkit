@@ -54,6 +54,7 @@ describe('help output snapshots', () => {
         docs              OAT documentation bootstrap and maintenance commands
         instructions      Manage AGENTS.md and CLAUDE.md instruction file integrity
         index             OAT index generation commands
+        pjm               Manage project-management repo reference docs
         project           Manage OAT project workflows
         state             OAT repo state commands
         tools             Manage OAT tool packs (install, update, remove, list)
