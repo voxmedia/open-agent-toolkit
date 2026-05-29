@@ -133,8 +133,7 @@ Expected: passes (GREEN).
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run -t "bundle"` (or the
-`bundle-consistency.test.ts` path) then `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: bundle-consistency (manifest ↔ bundle-assets.sh) passes; lint + type-check clean.
 
 **Step 4: Commit**
@@ -180,10 +179,24 @@ Expected: fails (RED) — module not implemented.
 
 Implement `initializeRepoReference(options)` plus the template-source resolver and
 frontmatter-strip helper per design. Reuse `initializeBacklog` from
-`@commands/backlog/init` for the `backlog/` tree. Use `writeFileIfMissing` semantics for
-non-destructive writes; return `{ referenceRoot, created[], skipped[] }`. Before adding a new
-frontmatter stripper, check `commands/project/new/scaffold.ts` for an exportable transform and
-reuse it if present.
+`@commands/backlog/init` for the `backlog/` tree **as-is** — do not refactor it. Use
+`writeFileIfMissing` semantics for non-destructive writes; return
+`{ referenceRoot, created[], skipped[] }`. Before adding a new frontmatter stripper, check
+`commands/project/new/scaffold.ts` for an exportable transform and reuse it if present.
+
+**Backlog status reporting (resolves the `initializeBacklog` void-return gap):**
+`initializeBacklog(backlogRoot)` returns `Promise<void>` and only writes missing files, so it
+cannot tell `initializeRepoReference` what it created vs skipped. Do **not** refactor it.
+Instead, `initializeRepoReference` pre-detects the known backlog paths before delegating:
+
+- Define the known relative backlog paths the scaffolder reports on:
+  `backlog/index.md`, `backlog/completed.md`, `backlog/items/.gitkeep`,
+  `backlog/archived/.gitkeep`.
+- Record which of those already exist (via `access`) **before** calling `initializeBacklog`.
+- Call `initializeBacklog(join(referenceRoot, 'backlog'))`.
+- Report each pre-existing path under `skipped` and each previously-absent path under
+  `created`. This yields deterministic, idempotent backlog reporting (second run → all
+  `skipped`) without reimplementing backlog file contents or changing `initializeBacklog`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/init.test.ts`
 Expected: passes (GREEN).
@@ -282,8 +295,12 @@ Read `apps/oat-docs/AGENTS.md` for docs authoring conventions before editing.
 
 **Step 3: Regenerate index**
 
-Run: `oat docs generate-index`
+Run: `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
 Expected: `apps/oat-docs/index.md` regenerated with no unexpected drift (only the intended new entries).
+
+Note: the bare `oat docs generate-index` defaults to `--docs-dir docs --output index.md`, which
+targets the wrong directory from the repo root. Always pass the explicit docs-app paths above
+(this is the same invocation the docs app's `prebuild`/`predev` scripts use).
 
 **Step 4: Verify**
 
@@ -345,19 +362,18 @@ git commit -m "chore(p04-t01): bump public packages to 0.1.12 for pjm init"
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
+code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| p04    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-05-29 | reviews/artifact-plan-review-2026-05-29.md |
+| Scope  | Type     | Status          | Date       | Artifact                                            |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                   |
+| p02    | code     | pending         | -          | -                                                   |
+| p03    | code     | pending         | -          | -                                                   |
+| p04    | code     | pending         | -          | -                                                   |
+| final  | code     | pending         | -          | -                                                   |
+| design | artifact | pending         | -          | -                                                   |
+| plan   | artifact | fixes_completed | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -366,7 +382,7 @@ git commit -m "chore(p04-t01): bump public packages to 0.1.12 for pjm init"
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+- `passed`: re-review run and recorded as passing (no unresolved Critical, Important, or Medium findings)
 
 ---
 

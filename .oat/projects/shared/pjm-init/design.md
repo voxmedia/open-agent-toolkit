@@ -137,7 +137,14 @@ export async function initializeRepoReference(
 
 **Design Decisions:**
 
-- **Reuse `initializeBacklog`** for `backlog/`; do not re-implement backlog scaffolding.
+- **Reuse `initializeBacklog`** for `backlog/`; do not re-implement or refactor it.
+- **Backlog status reporting:** `initializeBacklog(backlogRoot)` returns `Promise<void>` and
+  only writes missing files, so it cannot report created/skipped itself. Rather than refactor
+  it (explicitly out of scope), `initializeRepoReference` **pre-detects** the known backlog
+  paths (`backlog/index.md`, `backlog/completed.md`, `backlog/items/.gitkeep`,
+  `backlog/archived/.gitkeep`) with `access` before delegating, then reports pre-existing paths
+  as `skipped` and previously-absent paths as `created`. Deterministic + idempotent without
+  changing `initializeBacklog`.
 - **Non-destructive write** via the same `writeFileIfMissing` semantics used by backlog
   init; re-running is a no-op for present files → idempotent.
 - **Template-source precedence:** repo-local `.oat/templates/<name>` first (lets a repo
@@ -197,8 +204,10 @@ project-management` / `oat init tools project-management`) copies skills + templ
   `current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/` are all shown as the
   canonical PJM repo-reference surface.
 
-**Generated index:** after edits, run `oat docs generate-index` to refresh
-`apps/oat-docs/index.md`. **Never hand-edit** the generated index (`apps/oat-docs/AGENTS.md`).
+**Generated index:** after edits, regenerate with the explicit docs-app paths —
+`pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+(the bare command defaults to `--docs-dir docs --output index.md` and would target the wrong
+directory). **Never hand-edit** the generated index (`apps/oat-docs/AGENTS.md`).
 
 **Design decision:** Extend existing owning pages rather than create a new page — lower drift
 risk and better discoverability, with `tool-packs.md` as the single narrative home for the
@@ -248,8 +257,8 @@ archived/.gitkeep}` all exist after one run.
 
 - `pnpm --filter @open-agent-toolkit/cli test`, `lint`, `type-check`, and
   `pnpm release:validate` (after the lockstep `0.1.11 → 0.1.12` bump) all pass.
-- **Docs:** `oat docs generate-index` produces no unexpected drift and `pnpm build:docs`
-  succeeds with the new/edited pages.
+- **Docs:** `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+  produces no unexpected drift and `pnpm build:docs` succeeds with the new/edited pages.
 
 ## Open Questions
 

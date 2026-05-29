@@ -33,77 +33,62 @@ oat_generated: false
 
 **Total:** 0/6 tasks completed
 
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-05-29
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Next task:** `p01-t01`
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: PM-pack templates and bundling
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Add current-state and decision-record starter templates
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t02: Register new templates in PM-pack manifest and bundle script
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Scaffolder and `oat pjm init` command
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Implement initializeRepoReference scaffolder
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Add and register the `oat pjm init` command
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Documentation
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Document install-vs-initialize lifecycle and `oat pjm init`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Release lockstep bump and validation
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Lockstep version bump and release validation
 
 **Status:** pending
 **Commit:** -
@@ -130,38 +115,36 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-05-29
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
+_No implementation sessions yet. The first `oat-project-implement` run will append entries here._
 
 ---
 
-### 2026-05-29
+## Review Received: plan (artifact)
 
-**Session Start:** {time}
+**Date:** 2026-05-29
+**Review artifact:** reviews/archived/artifact-plan-review-2026-05-29.md
+**Review type:** artifact (scope `plan`) — findings resolved directly in artifacts; no plan tasks created.
 
-{Continue log...}
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 1
+- Minor: 1
+
+**Disposition (all `resolve_in_artifact`):**
+
+- `I1` initializeRepoReference/initializeBacklog contract mismatch → `plan.md` p02-t01 + `design.md`: specified the **pre-detect backlog paths** strategy so created/skipped is reported deterministically without refactoring `initializeBacklog` (keeps the discovery "reuse as-is" constraint).
+- `I2` docs index command wrote wrong target → `plan.md` p03-t01 + `design.md`: replaced bare `oat docs generate-index` with `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+- `I3` implementation.md scaffold drift → this file rewritten to match the six-task plan (all phases pending, 0/6, next `p01-t01`, no placeholder completed-log entries).
+- `M1` ambiguous bundle-consistency verification command → `plan.md` p01-t02: replaced with the exact path `src/commands/init/tools/shared/bundle-consistency.test.ts`.
+- `m1` Reviews section template prose + stale `passed` definition → `plan.md`: trimmed placeholder lines; `passed` now requires no unresolved Critical/Important/Medium.
+
+**Design drift / artifact alignment notes:**
+
+- None. No shipped implementation exists yet (pre-implementation artifact review); all findings were plan/design/tracker corrections, not accepted code drift.
+
+**Next:** Re-run `oat-project-review-provide artifact plan` to confirm the plan reaches a clean pass, then proceed to `oat-project-implement` starting at `p01-t01`.
 
 ---
 
@@ -181,6 +164,8 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -209,4 +194,4 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick mode)
