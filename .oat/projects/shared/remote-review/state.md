@@ -25,7 +25,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T00:14:51.321Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T17:20:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T17:32:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -63,7 +63,8 @@ Dispatch ceiling: Claude opus.
 - ✓ Phase 4 complete (2/2; gate passed)
 - ✓ Phase 6 complete (3/3; release:validate + full test sweep pass)
 - ✓ All 18 plan tasks complete
-- ✓ Final review passed (0 critical / 0 important; 2 advisory minors fixed)
+- ✓ Final review passed (v3, after an independent re-pass surfaced + resolved 1 Important ledger-drift + 1 Medium body-builder gap)
+- ✓ Review ledger reconciled (status clean)
 
 ## Blockers
 

@@ -822,17 +822,17 @@ No commit (validation only). If any validate step requires a fix-up commit (e.g.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | passed   | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md             |
-| p02    | code     | passed   | 2026-05-29 | reviews/archived/p02-review-2026-05-29-v2.md          |
-| p03    | code     | passed   | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md             |
-| p04    | code     | passed   | 2026-05-29 | reviews/archived/p04-review-2026-05-29.md             |
-| p05    | code     | passed   | 2026-05-29 | reviews/archived/p05-review-2026-05-29-v2.md          |
-| p06    | code     | passed   | 2026-05-29 | covered by final review                               |
-| final  | code     | received | 2026-05-29 | reviews/archived/final-review-2026-05-29-v2.md        |
-| design | artifact | passed   | 2026-05-29 | reviews/archived/artifact-design-review-2026-05-29.md |
-| plan   | artifact | passed   | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29.md   |
+| Scope  | Type     | Status | Date       | Artifact                                              |
+| ------ | -------- | ------ | ---------- | ----------------------------------------------------- |
+| p01    | code     | passed | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md             |
+| p02    | code     | passed | 2026-05-29 | reviews/archived/p02-review-2026-05-29-v2.md          |
+| p03    | code     | passed | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md             |
+| p04    | code     | passed | 2026-05-29 | reviews/archived/p04-review-2026-05-29.md             |
+| p05    | code     | passed | 2026-05-29 | reviews/archived/p05-review-2026-05-29-v2.md          |
+| p06    | code     | passed | 2026-05-29 | covered by final review                               |
+| final  | code     | passed | 2026-05-29 | reviews/archived/final-review-2026-05-29-v3.md        |
+| design | artifact | passed | 2026-05-29 | reviews/archived/artifact-design-review-2026-05-29.md |
+| plan   | artifact | passed | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
