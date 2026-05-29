@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-29
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p06'] # phases to pause AFTER completing (final phase only, from workflow.hillCheckpointDefault)
+oat_auto_review_at_hill_checkpoints: true # auto-run lifecycle review at HiLL checkpoints (from workflow.autoReviewAtHillCheckpoints)
 oat_plan_parallel_groups: [['p02', 'p03', 'p05']] # phases that execute concurrently in isolated worktrees
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
