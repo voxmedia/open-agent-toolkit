@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings (existing shape; this project ships the redesign)
   provider: claude # codex | claude
@@ -21,23 +21,23 @@ oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings (e
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/97' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-28T23:46:01.014Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T05:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T05:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: dispatch-ceiling-ux
 
-**Status:** Implementation complete — final re-review passed (after p05 fixes)
+**Status:** PR open — awaiting human review (PR #97)
 **Started:** 2026-05-28
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Implementation - All 11 tasks complete. Final review v2 reopened 2 Important gaps → fixed in p05 → final re-review passed. Awaiting final PR.
+Implementation — PR open, awaiting human review. https://github.com/voxmedia/open-agent-toolkit/pull/97
 
 ## Artifacts
 
@@ -56,7 +56,8 @@ Implementation - All 11 tasks complete. Final review v2 reopened 2 Important gap
 - ✓ Docs synced (oat-project-document)
 - ✓ Final review v2 found 2 Important gaps → fixed in p05 → final re-review passed
 - ✓ release:validate re-run green at 0.1.12
-- ⧗ Next: final PR (oat-project-pr-final)
+- ✓ PR created (#97)
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -64,4 +65,7 @@ None
 
 ## Next Milestone
 
-Open the final PR (oat-project-pr-final). All 11 tasks complete, final re-review passed, lockstep packages at 0.1.12.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
