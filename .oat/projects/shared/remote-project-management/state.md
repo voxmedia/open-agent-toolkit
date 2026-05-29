@@ -13,19 +13,19 @@ oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-28T00:00:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** Discovery
+**Status:** On hold (discovery paused)
 **Started:** 2026-03-15
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-05-28
 
 ## Current Phase
 
-Discovery - Gathering requirements and understanding the problem space
+Discovery — paused. Reference handover captured in `reference/linear-integration-discovery-handover.md`; resume when prioritized.
 
 ## Artifacts
 
@@ -38,12 +38,13 @@ Discovery - Gathering requirements and understanding the problem space
 ## Progress
 
 - ✓ Discovery started
-- ⧗ Awaiting user input
+- ✓ Linear integration handover reference added (`reference/linear-integration-discovery-handover.md`)
+- ⧗ On hold — summary/revision prerequisites shipped on `main`
 
 ## Blockers
 
-None
+None (intentionally paused)
 
 ## Next Milestone
 
-Complete discovery and move to specification phase
+Resume discovery using the handover reference; complete open questions and move to specification phase
