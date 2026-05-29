@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
 oat_current_task_id: null
@@ -454,23 +454,37 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {filled when project is complete}
+- Two new skills closing the "provide remote review" gap: `oat-review-provide-remote` (ad-hoc rail) and `oat-project-review-provide-remote` (project rail). An agent on machine B can fetch a GitHub PR opened by machine A, review it, and post findings back as a single GitHub PR review.
+- Eight shared TS helper modules under `packages/cli/src/review-remote/`: marker parser, posted-review-body builder + verdict mapper, inline-comment line mapper, re-review narrowing (with stale-SHA guard), project resolver, agent-reviews capability probe, ephemeral worktree lifecycle, and the oat-reviewer Tier-1 dispatch wrapper.
+- `oat-reviewer` agent gains a `oat_output_mode: structured` mode (returns `StructuredFindings`, writes no artifact) for the project rail's Tier-1 dispatch.
+- Disposition policy change across all four receive skills: MINOR findings now default to `convert` (fix inline) instead of `defer`, and `defer`/`dismiss` at any severity requires explicit rationale — bringing manual receive in line with the auto-review path.
+- `bl-9fb8` updated to record provide-remote shipped; respond-remote + summarize-remote remain open.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- New `oat-review-provide-remote` / `oat-project-review-provide-remote` skills available for cross-machine PR review.
+- Receiving a review now fixes minor findings inline by default rather than deferring them to the backlog (deferral requires a stated reason).
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/review-remote/*` — shared helpers (8 modules + tests + integration tests)
+- `.agents/skills/oat-review-provide-remote/SKILL.md`, `.agents/skills/oat-project-review-provide-remote/SKILL.md` — new skills
+- `.agents/agents/oat-reviewer.md` — structured-output mode
+- `.agents/skills/oat-{,project-}review-receive{,-remote}/SKILL.md` — minor-default flip
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`, `packages/cli/scripts/bundle-assets.sh` — new-skill registration
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm test` — full workspace suite passes (CLI 1694/191 files, control-plane 43, docs-transforms 31, docs-config 11)
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/` — 97 review-remote tests pass (10 files)
+- `pnpm lint` 0/0; `pnpm type-check` 10/10; `pnpm oat:validate-skills` OK (51 skills); `pnpm release:validate` passes (5 public packages at 0.1.12)
+- Per-phase Tier-1 reviewer gates (p01-p06) + final review (scope `final`): all PASS (0 Critical / 0 Important)
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Posting backend: design left it open; empirically `agent-reviews@1.0.2` has no review-posting flow, so `gh api --input -` is the posting path (probe ships forward-compat). See Deviations table.
+- New-skill registration in install manifest + bundle script was completed during p06 (release-blocking gap caught by `bundle-consistency.test.ts`). See Deviations table.
+- `receive-remote` marker parsing is out of scope: markers are embedded as forward-compat metadata; `receive-remote` was not modified beyond the minor-default flip.
 
 ## References
 

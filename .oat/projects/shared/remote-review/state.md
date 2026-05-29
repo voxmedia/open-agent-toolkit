@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: eb89ef88
+oat_last_commit: 8a87e41b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling:
   provider: claude
@@ -25,22 +25,22 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T00:14:51.321Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T15:05:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T15:13:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-review
 
-**Status:** Implement (in progress)
+**Status:** Implement (complete) — awaiting PR
 **Started:** 2026-05-29
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Implement - In progress. Tier 1 subagent execution. Schedule:
-`[p01]` → `[p02, p03, p05]` (parallel worktrees) → `[p04]` → `[p06]`.
-HiLL checkpoint: p06 (final) only; auto-review enabled at checkpoints.
-Dispatch ceiling pinned to Claude opus.
+Implement - Complete. All 18 tasks across 6 phases done; final review
+(scope `final`) PASSED (0 critical / 0 important). Tier 1 subagent
+execution; group `[p02, p03, p05]` run sequentially per user choice.
+Dispatch ceiling: Claude opus.
 
 ## Artifacts
 
@@ -63,7 +63,7 @@ Dispatch ceiling pinned to Claude opus.
 - ✓ Phase 4 complete (2/2; gate passed)
 - ✓ Phase 6 complete (3/3; release:validate + full test sweep pass)
 - ✓ All 18 plan tasks complete
-- ⧗ Awaiting final review (scope `final`)
+- ✓ Final review passed (0 critical / 0 important; 2 advisory minors fixed)
 
 ## Blockers
 
@@ -71,5 +71,4 @@ None
 
 ## Next Milestone
 
-Final review (scope `final`) at the p06 HiLL checkpoint, then PR via
-`oat-project-pr-final`.
+Generate summary + open the PR via `oat-project-pr-final`.
