@@ -10,6 +10,7 @@ import { createInitCommand } from './init';
 import { createInstructionsCommand } from './instructions';
 import { createInternalCommand } from './internal';
 import { createLocalCommand } from './local';
+import { createPjmCommand } from './pjm';
 import { createProjectCommand } from './project';
 import { createProvidersCommand } from './providers';
 import { createRemoveCommand } from './remove';
@@ -34,6 +35,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createDocsCommand());
   program.addCommand(createInstructionsCommand());
   program.addCommand(createIndexCommand());
+  program.addCommand(createPjmCommand());
   program.addCommand(createProjectCommand());
   program.addCommand(createStateCommand());
   program.addCommand(createToolsCommand());
