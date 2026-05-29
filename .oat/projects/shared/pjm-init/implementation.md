@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status    | Tasks | Completed |
-| ------------------------------------- | --------- | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed    | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed    | 2     | 2/2       |
-| Phase 3: Documentation                | passed    | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | passed    | 1     | 1/1       |
-| Phase 5: Final review fixes           | passed    | 2     | 2/2       |
-| Phase 6: Final re-review fixes        | completed | 2     | 2/2       |
+| Phase                                 | Status | Tasks | Completed |
+| ------------------------------------- | ------ | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
+| Phase 3: Documentation                | passed | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
+| Phase 5: Final review fixes           | passed | 2     | 2/2       |
+| Phase 6: Final re-review fixes        | passed | 2     | 2/2       |
 
 **Total:** 10/10 tasks completed
 
-**Next task:** none — final re-review pending.
+**Next task:** none — final review passed.
 
 ---
 
@@ -268,7 +268,7 @@ oat_generated: false
 
 ## Phase 6: Final re-review fixes
 
-**Status:** completed
+**Status:** passed
 **Started:** 2026-05-29
 
 ### Phase Summary
@@ -628,6 +628,33 @@ Chronological log of implementation progress.
 
 ---
 
+## Review Received: final (code re-review v3)
+
+**Date:** 2026-05-29
+**Review artifact:** reviews/final-review-2026-05-29-v3.md
+**Review type:** code (scope `final`) — auto-review at final HiLL checkpoint.
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Result:** passed
+
+**New tasks added:** none
+
+**Findings converted:** none
+
+**Design drift / artifact alignment notes:**
+
+- None.
+
+**Next:** Prepare final PR.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
@@ -660,6 +687,7 @@ Track test execution during implementation.
 - The public package lockstep is bumped to `0.1.14`.
 - Final review fixes restore dispatch-ceiling mainline behavior and canonical OAT skill versions from `main`.
 - Final re-review fixes restore provider-neutral dispatch-ceiling config docs/schema.
+- Final review passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
 
 **Behavioral changes (user-facing):**
 

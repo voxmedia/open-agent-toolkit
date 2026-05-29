@@ -569,17 +569,17 @@ git commit -m "fix(p06-t02): restore dispatch-ceiling config docs"
 Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
 code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-| Scope  | Type     | Status          | Date       | Artifact                                               |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed          | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
-| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
-| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md                       |
-| p04    | code     | passed          | 2026-05-29 | reviews/p04-review-2026-05-29.md                       |
-| p05    | code     | passed          | 2026-05-29 | reviews/p05-review-2026-05-29-v2.md                    |
-| p06    | code     | passed          | 2026-05-29 | reviews/p06-review-2026-05-29.md                       |
-| final  | code     | fixes_completed | 2026-05-29 | reviews/archived/final-review-2026-05-29-v2.md         |
-| design | artifact | pending         | -          | -                                                      |
-| plan   | artifact | passed          | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
+| Scope  | Type     | Status  | Date       | Artifact                                               |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | passed  | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
+| p02    | code     | passed  | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
+| p03    | code     | passed  | 2026-05-29 | reviews/p03-review-2026-05-29.md                       |
+| p04    | code     | passed  | 2026-05-29 | reviews/p04-review-2026-05-29.md                       |
+| p05    | code     | passed  | 2026-05-29 | reviews/p05-review-2026-05-29-v2.md                    |
+| p06    | code     | passed  | 2026-05-29 | reviews/p06-review-2026-05-29.md                       |
+| final  | code     | passed  | 2026-05-29 | reviews/final-review-2026-05-29-v3.md                  |
+| design | artifact | pending | -          | -                                                      |
+| plan   | artifact | passed  | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
