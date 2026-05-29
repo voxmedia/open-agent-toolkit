@@ -6,6 +6,8 @@ import { createProgram } from '@app/create-program';
 import { registerCommands } from '@commands/index';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { createPjmCommand } from './index';
+
 interface CliResult {
   stdout: string;
   stderr: string;
@@ -28,9 +30,15 @@ async function createWorkspace(): Promise<string> {
   return root;
 }
 
-async function runCli(root: string, args: string[]): Promise<CliResult> {
+async function runCli(
+  root: string,
+  args: string[],
+  register: (
+    program: ReturnType<typeof createProgram>,
+  ) => void = registerCommands,
+): Promise<CliResult> {
   const program = createProgram();
-  registerCommands(program);
+  register(program);
 
   const stdoutChunks: string[] = [];
   const stderrChunks: string[] = [];
@@ -125,5 +133,29 @@ describe('oat pjm init', () => {
     await expect(
       access(join(referenceRoot, 'current-state.md')),
     ).resolves.toBeUndefined();
+  });
+
+  it('preserves JSON error output and exit code 1 when templates are missing', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const message =
+      'Template current-state.md was not found in repo-local templates or bundled assets.';
+
+    const result = await runCli(root, ['--json', 'pjm', 'init'], (program) => {
+      program.addCommand(
+        createPjmCommand({
+          initializeRepoReference: async () => {
+            throw new Error(message);
+          },
+        }),
+      );
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toBe('');
+    expect(JSON.parse(result.stdout)).toEqual({
+      status: 'error',
+      message,
+    });
   });
 });

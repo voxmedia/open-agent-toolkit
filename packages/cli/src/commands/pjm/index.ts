@@ -61,33 +61,45 @@ export function createPjmCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
-      const referenceRoot = await resolveReferenceRoot(
-        context,
-        projectRoot,
-        options.referenceRoot,
-      );
-      const assetsRoot = await dependencies.resolveAssetsRoot();
-      const result = await dependencies.initializeRepoReference({
-        referenceRoot,
-        assetsRoot,
-        templatesRoot: resolve(projectRoot, '.oat', 'templates'),
-      });
-
-      if (context.json) {
-        context.logger.json({ status: 'ok', ...result });
-      } else {
-        context.logger.info(
-          `Initialized PJM repo reference scaffold at ${result.referenceRoot}`,
+      try {
+        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const referenceRoot = await resolveReferenceRoot(
+          context,
+          projectRoot,
+          options.referenceRoot,
         );
-        if (result.created.length > 0) {
-          context.logger.info(`Created: ${result.created.join(', ')}`);
+        const assetsRoot = await dependencies.resolveAssetsRoot();
+        const result = await dependencies.initializeRepoReference({
+          referenceRoot,
+          assetsRoot,
+          templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+        });
+
+        if (context.json) {
+          context.logger.json({ status: 'ok', ...result });
+        } else {
+          context.logger.info(
+            `Initialized PJM repo reference scaffold at ${result.referenceRoot}`,
+          );
+          if (result.created.length > 0) {
+            context.logger.info(`Created: ${result.created.join(', ')}`);
+          }
+          if (result.skipped.length > 0) {
+            context.logger.info(
+              `Skipped existing: ${result.skipped.join(', ')}`,
+            );
+          }
         }
-        if (result.skipped.length > 0) {
-          context.logger.info(`Skipped existing: ${result.skipped.join(', ')}`);
+        process.exitCode = 0;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (context.json) {
+          context.logger.json({ status: 'error', message });
+        } else {
+          context.logger.error(message);
         }
+        process.exitCode = 1;
       }
-      process.exitCode = 0;
     });
 
   return cmd;
