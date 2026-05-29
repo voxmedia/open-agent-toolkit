@@ -507,7 +507,7 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 | p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)         |
 | p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review) |
 | p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)          |
-| final  | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (fail→fix 31564a01→re-review pass)       |
+| final  | code     | received        | 2026-05-29 | reviews/final-review-2026-05-29-v2.md (2 Important findings)                |
 | spec   | artifact | pending         | -          | -                                                                           |
 | design | artifact | pending         | -          | -                                                                           |
 
