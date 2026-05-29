@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.4.3
+version: 1.5.0
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -249,7 +249,7 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
 - If `oat_review_type == code` AND `oat_review_invocation == auto`:
   - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. Apply relaxed disposition defaults:
     - Critical/Important/Medium: convert to fix tasks (same as manual mode)
-    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). In manual mode, minors are auto-deferred for non-final scopes — in auto mode, the goal is to fix everything while context is fresh.
+    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
     - **No user prompts for disposition decisions.** The auto-review path runs fully autonomously.
     - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
@@ -526,11 +526,8 @@ Design drift handling applies before Medium/Minor convenience deferrals:
 Minor findings handling is scope-aware:
 
 - If `scope != final`:
-  - Minor findings are not auto-deferred just because they are non-functional.
-  - Default to converting a Minor finding to a task when either of these is true:
-    - it is likely future cleanup (better than even chance that the team will need to address it later), or
-    - the fix scope is `Negligible` or `Minor`.
-  - Only propose deferral when the finding is genuinely low-probability cleanup, blocked by another change, duplicated elsewhere, explicitly out of scope, or fixing now would create disproportionate churn/risk.
+  - Minor findings default to `convert`, not `defer`. Small findings are usually cheaper to fix inline than to track as backlog items, so converting is the baseline disposition for every Minor.
+  - `defer` (and `dismiss`) at Minor severity requires explicit, concrete rationale — the same gate that applies to Medium and above. Only propose deferral when the finding is genuinely low-probability cleanup, blocked by another change, duplicated elsewhere, explicitly out of scope, or fixing now would create disproportionate churn/risk.
   - If deferred, record rationale in implementation.md under "Deferred Findings".
   - Do not block review completion on minor disposition once each finding has been converted or explicitly deferred with rationale.
 
@@ -541,8 +538,8 @@ Minor findings handling is scope-aware:
     - potential user/maintainer impact,
     - why fixing now vs deferring is reasonable.
   - Recommendation default:
-    - recommend `convert` when the finding is likely future cleanup or the fix scope is `Negligible`/`Minor`;
-    - recommend `defer` only when the finding is unlikely to matter soon, blocked, duplicated, or high-churn to address now.
+    - default to recommending `convert` — fixing a non-blocking minor inline is usually cheaper than tracking it as a backlog item, and this is especially true for `Negligible`/`Minor`-scope fixes;
+    - recommend `defer` only when the finding is unlikely to matter soon, blocked, duplicated, or high-churn to address now, and capture that concrete rationale.
   - Keep explanations concise (1-3 sentences per minor) and include file/line when available.
   - Ask user explicitly:
 
