@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 8b449397
+oat_current_task: null
+oat_last_commit: 30191c10
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -25,19 +25,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T19:59:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T20:12:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: pjm-init
 
-**Status:** Implementation in progress
+**Status:** Tasks complete; awaiting final review
 **Started:** 2026-05-29
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Implementation in progress. Phase 3 passed; next task is `p04-t01`.
+Implementation tasks complete; awaiting final review.
 
 ## Artifacts
 
@@ -45,7 +45,7 @@ Implementation in progress. Phase 3 passed; next task is `p04-t01`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
 - **Plan:** `plan.md` (complete — 4 phases, 6 tasks, sequential)
-- **Implementation:** `implementation.md` (in progress; next task `p04-t01`)
+- **Implementation:** `implementation.md` (complete; awaiting final review)
 
 ## Progress
 
@@ -55,7 +55,8 @@ Implementation in progress. Phase 3 passed; next task is `p04-t01`.
 - ✓ Phase 1 implemented and reviewed
 - ✓ Phase 2 implemented, review-fixed, and re-reviewed
 - ✓ Phase 3 implemented and reviewed
-- ⧗ Phase 4 ready to start
+- ✓ Phase 4 implemented, validation-fixed, and reviewed
+- ⧗ Awaiting final review
 
 ## Blockers
 
@@ -63,4 +64,4 @@ None
 
 ## Next Milestone
 
-Continue `oat-project-implement` at task `p04-t01`.
+Run final code review for `pjm-init`.

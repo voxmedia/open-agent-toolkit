@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status  | Tasks | Completed |
-| ------------------------------------- | ------- | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
-| Phase 3: Documentation                | passed  | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | pending | 1     | 0/1       |
+| Phase                                 | Status | Tasks | Completed |
+| ------------------------------------- | ------ | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
+| Phase 3: Documentation                | passed | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
 
-**Total:** 5/6 tasks completed
+**Total:** 6/6 tasks completed
 
-**Next task:** `p04-t01`
+**Next task:** null — implementation tasks complete; awaiting final review.
 
 ---
 
@@ -165,13 +165,44 @@ oat_generated: false
 
 ## Phase 4: Release lockstep bump and validation
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Bumped the five public packages in the lockstep release set from `0.1.11` to `0.1.12`.
+- Ran the repository build and release validation gate.
+- Updated the root CLI help snapshot to include the new `pjm` command after the final gate exposed that missing test contract.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - public package version.
+- `packages/control-plane/package.json` - public package version.
+- `packages/docs-config/package.json` - public package version.
+- `packages/docs-theme/package.json` - public package version.
+- `packages/docs-transforms/package.json` - public package version.
+- `packages/cli/src/commands/help-snapshots.test.ts` - root help snapshot entry for `pjm`.
+
+**Verification:**
+
+- Run: `pnpm build`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm release:validate`
+- Result: pass.
+
+**Review:** `reviews/p04-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p04-t01: Lockstep version bump and release validation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 795e9409
+
+### Validation fix: Update CLI help snapshot for `pjm`
+
+**Status:** completed
+**Commit:** 30191c10
 
 ---
 
@@ -283,6 +314,39 @@ _- Outstanding Items_
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 4 — 2026-05-29 20:12
+
+**Branch:** feat/pjm-init
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer                | Review | Fix Iterations | Disposition |
+| ----- | -------------------------- | ------ | -------------- | ----------- |
+| p04   | DONE_WITH_CONCERNS → fixed | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p04: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p04 implementation used `oat-phase-implementer-high` with `effort_axis=selected:high`, capped by project-state Codex ceiling `xhigh`; the phase touched the public package lockstep and release-validation path.
+- Dispatch: p04 validation fix used `oat-phase-implementer-low` with `effort_axis=selected:low`; the fix was limited to the root CLI help snapshot missing the new `pjm` command.
+- Dispatch: p04 review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh` for deterministic quality gate behavior.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
@@ -303,6 +367,8 @@ Chronological log of implementation progress.
 - [x] p02-t02: Add and register the `oat pjm init` command - 0b79fc32
 - [x] p02 review fix: Preserve `pjm init` JSON error contract - 4a60c52d
 - [x] p03-t01: Document install-vs-initialize lifecycle and `oat pjm init` - 8b449397
+- [x] p04-t01: Lockstep version bump and release validation - 795e9409
+- [x] p04 validation fix: Update CLI help snapshot for `pjm` - 30191c10
 
 **What changed (high level):**
 
@@ -311,6 +377,7 @@ Chronological log of implementation progress.
 - Added the PJM repo-reference initializer and `oat pjm init` command.
 - Preserved structured JSON error output for scaffolding failures.
 - Documented the install-vs-initialize lifecycle and canonical repo-reference surface.
+- Bumped the public package lockstep to `0.1.12` and passed the release validation gate.
 
 **Decisions:**
 
@@ -318,7 +385,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p04-t01.
+- Final review required before PR handoff.
 
 **Blockers:**
 
@@ -373,32 +440,50 @@ Track test execution during implementation.
 | Phase | Tests Run                                                                                        | Passed | Failed | Coverage |
 | ----- | ------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
 | 1     | install-project-management.test.ts; bundle-consistency.test.ts; cli lint; cli type-check; format | yes    | 0      | focused  |
-| 2     | -                                                                                                | -      | -      | -        |
-| 3     | -                                                                                                | -      | -      | -        |
-| 4     | -                                                                                                | -      | -      | -        |
+| 2     | pjm tests; commands.integration.test.ts; cli lint; cli type-check                                | yes    | 0      | focused  |
+| 3     | docs generate-index; build:docs                                                                  | yes    | 0      | docs     |
+| 4     | help-snapshots.test.ts; cli test; lint; type-check; build; release:validate                      | yes    | 0      | release  |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- `current-state.md` and `decision-record.md` are first-class project-management template sources and bundled CLI assets.
+- `initializeRepoReference()` scaffolds the complete PJM repo-reference surface under `.oat/repo/reference/`.
+- `oat pjm init` instantiates repo reference docs and delegates backlog scaffolding to `initializeBacklog()`.
+- Docs describe the install-vs-initialize lifecycle, command surface, and canonical repo-reference layout.
+- The public package lockstep is bumped to `0.1.12`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat init tools project-management` continues to install skills and template sources.
+- `oat pjm init` now creates `current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/` in the repo reference area without overwriting existing files.
+- `oat pjm init --json` emits structured success and error payloads; failures preserve exit code 1 for user-actionable scaffolding errors.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.oat/templates/current-state.md` - starter template for current-state reference docs.
+- `.oat/templates/decision-record.md` - starter template for decision records.
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` - PM-pack template manifest.
+- `packages/cli/src/commands/pjm/init.ts` - repo-reference scaffolder.
+- `packages/cli/src/commands/pjm/index.ts` - `oat pjm init` command.
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md` - lifecycle documentation owner.
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` - canonical repo-reference layout.
+- `packages/cli/src/commands/help-snapshots.test.ts` - root CLI help snapshot including `pjm`.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/project-management/install-project-management.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/commands.integration.test.ts`
+- `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+- `pnpm build:docs`
+- `pnpm build`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm release:validate`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None.
 
 ## References
 
