@@ -1,6 +1,6 @@
 ---
 name: oat-review-receive
-version: 1.3.0
+version: 1.4.0
 description: Use when processing review findings outside project context. Converts local review artifacts into actionable task lists.
 disable-model-invocation: true
 user-invocable: true
@@ -41,8 +41,8 @@ If you catch yourself:
 
 - Editing project lifecycle docs in ad-hoc mode -> STOP and revert to task-list output only.
 - Triaging without presenting a findings overview first -> STOP and show overview before disposition prompts.
-- Skipping Medium finding rationale when proposing deferral -> STOP and collect explicit rationale.
-- Auto-deferring Minor findings without checking future cleanup likelihood or fix cost -> STOP and re-evaluate the recommendation.
+- Skipping rationale when proposing deferral at any severity (including Minor) -> STOP and collect explicit rationale.
+- Defaulting a Minor finding to `defer` instead of `convert` -> STOP; the Minor default is `convert` (fix inline), and `defer` requires concrete rationale.
 
 **Recovery:**
 
@@ -182,12 +182,12 @@ Default suggestions:
 - Critical -> `convert`
 - Important -> `convert`
 - Medium -> `convert` (propose `defer` only with concrete rationale)
-- Minor -> `convert` when future cleanup is likely or the fix is trivial; otherwise `defer` with concrete rationale
+- Minor -> `convert` (propose `defer` only with concrete rationale)
 
 Rules:
 
-- Require explicit rationale for `defer` or `dismiss`.
-- Do not recommend `defer` for a Minor finding solely because it does not impact current functionality. If there is a better-than-even chance the team will need to clean it up later, or the fix is `Negligible`/`Minor`, recommend `convert`.
+- Require explicit rationale for `defer` or `dismiss` at any severity, including Minor. Small findings are cheap to fix inline, so deferring a Minor into a backlog item must be justified just like any other deferral.
+- Do not recommend `defer` for a Minor finding solely because it does not impact current functionality — fixing inline is usually cheaper than tracking it. Reserve `defer` for the genuine cases (low-probability cleanup, blocked dependency, duplicated elsewhere, explicitly out of scope, or disproportionate churn now).
 - Do not silently skip findings.
 
 ### Step 5: Generate Task List Output
