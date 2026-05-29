@@ -1,6 +1,6 @@
 ---
 name: oat-review-receive-remote
-version: 1.2.0
+version: 1.3.0
 description: Use when processing GitHub PR review comments outside project context. Fetches PR comments via agent-reviews and converts them into actionable task lists.
 disable-model-invocation: true
 user-invocable: true
@@ -145,14 +145,14 @@ Before triage prompts, output:
 
 Disposition options per finding:
 
-- `convert` (default for critical/important/medium)
-- `defer` (default for minor)
+- `convert` (default for critical/important/medium/minor)
+- `defer`
 - `dismiss`
 
 Rules:
 
-- Require rationale for `defer`/`dismiss`.
-- For medium deferral, require concrete rationale (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
+- Require concrete rationale for `defer`/`dismiss` at any severity, including minor. Small findings are usually cheaper to fix inline than to track as backlog items, so a minor `defer` must be justified just like any other deferral.
+- For any deferral (minor included), require a concrete reason (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
 
 ### Step 5: Generate Standalone Task List
 
