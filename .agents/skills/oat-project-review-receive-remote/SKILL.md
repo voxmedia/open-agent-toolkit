@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.3.0
+version: 1.4.0
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true
@@ -139,11 +139,11 @@ Before prompting dispositions, print:
 
 Disposition options:
 
-- `convert` (default for critical/important/medium)
-- `defer` (default for minor)
+- `convert` (default for critical/important/medium/minor)
+- `defer`
 - `dismiss`
 
-Require rationale for `defer`/`dismiss`.
+Require concrete rationale for `defer`/`dismiss` at any severity, including minor. Small findings are usually cheaper to fix inline than to track as backlog items, so a minor `defer` must be justified just like any other deferral.
 
 ### Step 5: Convert Findings to Plan Tasks
 
