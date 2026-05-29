@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.0.1
+version: 1.0.2
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -246,7 +246,10 @@ For each finding with non-null `file` + `line`, classify it against the PR diff 
 - Rich-context mode: parse hunk ranges from `gh api /repos/{owner}/{repo}/pulls/$PR/files` (per-file `patch` field).
 - Diff-only mode: parse hunk headers (`@@ -a,b +c,d @@`) from the `gh pr diff` output.
 - `side: RIGHT` for additions/context; `side: LEFT` only when the finding is explicitly about removed code.
+- **Renamed files:** a `gh api .../files` entry carries the pre-rename path in a sibling `previous_filename` field (not in `patch`). When a finding references the pre-rename path, remap it to the entry's post-rename `filename` before classifying, or it will be treated as out-of-diff.
 - If `line` falls outside the diff: downgrade the finding to a top-level "Findings outside the PR diff" subsection with its `file:line` reference. NEVER silently drop it and NEVER shift the line to the nearest in-diff line.
+
+> **Reference implementation:** the canonical, tested logic for this step lives in `packages/cli/src/review-remote/line-mapper.ts` (`parsePullFilesPatch` / `parseUnifiedDiff` / `classifyFinding`). The bash/`jq` flow here mirrors it — keep the two in sync. See `packages/cli/src/review-remote/README.md`; `bl-a7cd` tracks wiring this skill to call the helpers directly. The same applies to the marker block (`marker-parser.ts`), body/verdict (`body-builder.ts`), re-review narrowing (`narrowing.ts`), project resolution (`project-resolver.ts`), and the `oat-reviewer` dispatch (`reviewer-dispatch.ts`) used elsewhere in this skill.
 
 ### Step 7: Build the Review Body + Verdict
 

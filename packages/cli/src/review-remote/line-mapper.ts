@@ -74,6 +74,16 @@ function parseHunkHeader(line: string): HunkRange | null {
  * Parse the `patch` field of a single `gh api .../pulls/<N>/files` entry into
  * its hunk ranges. Returns `[]` for an empty patch (e.g., a binary file, whose
  * entry has no `patch`).
+ *
+ * Caller contract for renamed files: a `gh api .../files` entry carries the
+ * pre-rename path in a sibling `previous_filename` field, NOT in `patch`. This
+ * parser only sees `patch`, so it cannot populate `HunkRange.previousFilename`
+ * in rich-context (gh api) mode. When a finding is reported against the
+ * pre-rename path, the caller must remap it to the entry's post-rename
+ * `filename` (using the JSON `previous_filename`) before calling
+ * `classifyFinding` — otherwise the finding is treated as out-of-diff. (The
+ * `gh pr diff` path handles this internally: `parseUnifiedDiff` records
+ * `previousFilename` from the `rename from` header.)
  */
 export function parsePullFilesPatch(patch: string): HunkRange[] {
   if (!patch) {

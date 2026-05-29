@@ -38,6 +38,7 @@
 | bl-53f0 | Project-independent brainstorming mode                                               | closed      | medium   | feature    | L        |
 | bl-f19a | Strict-YAML validation in `oat:validate-skills`                                      | open        | medium   | task       | S        |
 | bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads                        | open        | medium   | feature    | M        |
+| bl-a7cd | Wire provide-remote skills to the review-remote helper layer via a CLI command       | open        | medium   | feature    | L        |
 | bl-3327 | Add dependency intelligence skill family                                             | open        | low      | feature    | L        |
 | bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                        | open        | low      | feature    | L        |
 | bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                              | open        | low      | feature    | M        |
