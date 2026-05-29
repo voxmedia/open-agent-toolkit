@@ -126,7 +126,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
       version: 1,
-      workflow: { dispatchCeiling: { codex: 'high' } },
+      workflow: { dispatchCeiling: { providers: { codex: 'high' } } },
     });
     await writeFile(
       join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
@@ -134,8 +134,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         '---',
         'oat_phase: implement',
         'oat_dispatch_ceiling:',
-        '  provider: codex',
-        '  value: xhigh',
+        '  providers:',
+        '    codex: xhigh',
         '  source: project-state',
         '---',
         '',
@@ -155,6 +155,14 @@ describe('oat project dispatch-ceiling resolve', () => {
       source: 'repo-config',
       unresolved: false,
       providerDefaultEffort: 'unknown',
+      providers: {
+        codex: {
+          value: 'high',
+          mode: 'enforced',
+          mechanism: 'pinned-variant',
+          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -173,8 +181,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         '---',
         'oat_phase: implement',
         'oat_dispatch_ceiling:',
-        '  provider: codex',
-        '  value: xhigh',
+        '  providers:',
+        '    codex: xhigh',
         '  source: project-state',
         '---',
         '',
@@ -194,6 +202,14 @@ describe('oat project dispatch-ceiling resolve', () => {
       source: 'project-state',
       unresolved: false,
       providerDefaultEffort: 'high',
+      providers: {
+        codex: {
+          value: 'xhigh',
+          mode: 'enforced',
+          mechanism: 'pinned-variant',
+          dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -269,7 +285,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
       version: 1,
-      workflow: { dispatchCeiling: { claude: 'sonnet' } },
+      workflow: { dispatchCeiling: { providers: { claude: 'sonnet' } } },
     });
 
     const { command, capture } = createHarness({ cwd: root, home });
@@ -277,6 +293,7 @@ describe('oat project dispatch-ceiling resolve', () => {
 
     expect(capture.info).toContain('Claude dispatch ceiling: sonnet');
     expect(capture.info).toContain('Source: repo config');
+    expect(capture.info).toContain('Mode: enforced (model-arg)');
     expect(capture.info).toContain('Effort axis: not-applicable');
     expect(process.exitCode).toBe(0);
   });
@@ -309,8 +326,8 @@ describe('oat project dispatch-ceiling resolve', () => {
       [
         '---',
         'oat_dispatch_ceiling:',
-        '  provider: codex',
-        '  value: medium',
+        '  providers:',
+        '    codex: medium',
         '  source: project-state',
         '---',
         '',
@@ -356,5 +373,148 @@ describe('oat project dispatch-ceiling resolve', () => {
     await runCommand(command, ['--provider', 'codex', '--json']);
 
     await expect(readFile(statePath, 'utf8')).resolves.toBe(before);
+  });
+
+  describe('adapter-aware resolution', () => {
+    it('reads concrete providers and never the preset label for dispatch', async () => {
+      const { root, home } = await setup();
+      // Preset persisted as provenance only; concrete providers must drive dispatch.
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_ceiling:',
+          '  preset: balanced',
+          '  providers:',
+          '    codex: high',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, ['--provider', 'codex', '--json']);
+
+      const payload = capture.jsonPayloads[0] as {
+        value: string;
+        preset: string | null;
+        providers: Record<string, { value: string | null }>;
+      };
+      // Resolved value is the concrete provider value, not the preset label.
+      expect(payload.value).toBe('high');
+      expect(payload.providers.codex.value).toBe('high');
+      expect(payload.preset).toBe('balanced');
+    });
+
+    it('computes mode from the adapter registry, never from persisted state', async () => {
+      const { root, home } = await setup();
+      // Even if state carries a bogus mode-like field, the resolver ignores it
+      // and computes mode fresh from the adapter.
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_ceiling:',
+          '  providers:',
+          '    claude: sonnet',
+          '  mode: unsupported',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, ['--provider', 'claude', '--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        providers: {
+          claude: {
+            value: 'sonnet',
+            mode: 'enforced',
+            mechanism: 'model-arg',
+            dispatchArgs: { model: 'sonnet' },
+          },
+        },
+      });
+    });
+
+    it('does not set verifyOnDispatch for a cap-down request', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { claude: 'sonnet' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--orchestrator-tier',
+        'opus',
+        '--json',
+      ]);
+
+      const payload = capture.jsonPayloads[0] as {
+        providers: Record<string, { verifyOnDispatch?: boolean }>;
+      };
+      expect(payload.providers.claude.verifyOnDispatch).toBe(false);
+    });
+
+    it('sets verifyOnDispatch for an above-orchestrator upgrade request', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { claude: 'opus' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--orchestrator-tier',
+        'sonnet',
+        '--json',
+      ]);
+
+      const payload = capture.jsonPayloads[0] as {
+        providers: Record<string, { verifyOnDispatch?: boolean }>;
+      };
+      expect(payload.providers.claude.verifyOnDispatch).toBe(true);
+    });
+
+    it('reports the reviewer variant when role is reviewer', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'high' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-reviewer-high' },
+          },
+        },
+      });
+    });
   });
 });

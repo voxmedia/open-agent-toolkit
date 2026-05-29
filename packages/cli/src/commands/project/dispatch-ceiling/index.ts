@@ -21,6 +21,12 @@ import {
 } from '@config/resolve';
 import { resolveProjectRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
+import {
+  getCeilingAdapter,
+  type CeilingDispatchArgs,
+  type CeilingRole,
+  type EnforcementMechanism,
+} from '@providers/ceiling/registry';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -34,6 +40,16 @@ type DispatchCeilingSource =
   | 'user-config'
   | 'env'
   | 'project-state';
+
+type DispatchCeilingMode = 'enforced' | 'advisory' | 'unsupported';
+
+interface ProviderResolution {
+  value: DispatchCeilingValue | null;
+  mode: DispatchCeilingMode;
+  mechanism: EnforcementMechanism;
+  dispatchArgs: CeilingDispatchArgs;
+  verifyOnDispatch: boolean;
+}
 
 interface DispatchCeilingDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -51,6 +67,8 @@ interface DispatchCeilingDependencies {
 
 interface DispatchCeilingResolveOptions {
   provider?: string;
+  role?: string;
+  orchestratorTier?: string;
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
@@ -62,9 +80,11 @@ interface DispatchCeilingResolution {
   provider: DispatchCeilingProvider;
   value: DispatchCeilingValue | null;
   source: DispatchCeilingSource | null;
+  preset: string | null;
   unresolved: boolean;
   projectPath: string | null;
   providerDefaultEffort: string;
+  providers: Record<string, ProviderResolution>;
   message?: string;
 }
 
@@ -167,10 +187,15 @@ function resolveTargetProjectPath(
   return isAbsolute(projectPath) ? projectPath : join(repoRoot, projectPath);
 }
 
+interface ProjectStateCeiling {
+  value: DispatchCeilingValue;
+  preset: string | null;
+}
+
 function readProjectDispatchCeiling(
   provider: DispatchCeilingProvider,
   content: string,
-): DispatchCeilingValue | null {
+): ProjectStateCeiling | null {
   const frontmatter = getFrontmatterBlock(content);
   if (!frontmatter) {
     return null;
@@ -187,19 +212,30 @@ function readProjectDispatchCeiling(
   }
 
   const ceilingRecord = ceiling as Record<string, unknown>;
-  if (ceilingRecord['provider'] !== provider) {
+  // Clean break: read concrete per-provider values only. The preset label is
+  // provenance and is never used to drive dispatch.
+  const providers = ceilingRecord['providers'];
+  if (!providers || typeof providers !== 'object' || Array.isArray(providers)) {
     return null;
   }
 
-  const value = ceilingRecord['value'];
-  return isValidProviderValue(provider, value) ? value : null;
+  const value = (providers as Record<string, unknown>)[provider];
+  if (!isValidProviderValue(provider, value)) {
+    return null;
+  }
+
+  const presetValue = ceilingRecord['preset'];
+  return {
+    value,
+    preset: typeof presetValue === 'string' ? presetValue : null,
+  };
 }
 
 async function resolveProjectStateCeiling(
   provider: DispatchCeilingProvider,
   projectPath: string | null,
   dependencies: DispatchCeilingDependencies,
-): Promise<DispatchCeilingValue | null> {
+): Promise<ProjectStateCeiling | null> {
   if (!projectPath) {
     return null;
   }
@@ -232,7 +268,11 @@ function readResolvedConfigCeiling(
   provider: DispatchCeilingProvider,
   resolvedConfig: ResolvedConfig,
 ): { value: DispatchCeilingValue; source: DispatchCeilingSource } | null {
-  const entry = resolvedConfig.resolved[`workflow.dispatchCeiling.${provider}`];
+  // Read the concrete per-provider value from the nested key. The flat
+  // `workflow.dispatchCeiling.<provider>` shape was removed in p01; never read
+  // the preset label for dispatch.
+  const entry =
+    resolvedConfig.resolved[`workflow.dispatchCeiling.providers.${provider}`];
   const source = entry ? configSourceToCeilingSource(entry.source) : null;
   if (!entry || !source || !isValidProviderValue(provider, entry.value)) {
     return null;
@@ -241,6 +281,55 @@ function readResolvedConfigCeiling(
   return {
     value: entry.value,
     source,
+  };
+}
+
+function normalizeRole(value: string | undefined): CeilingRole {
+  return value === 'reviewer' ? 'reviewer' : 'implementer';
+}
+
+/**
+ * Join a resolved ceiling value with the active provider's adapter to compute
+ * the enforcement mode, mechanism, dispatch args, and verify-on-upgrade flag.
+ * Mode is computed here at call time — it is never read from persisted state.
+ */
+function buildProviderResolution(
+  provider: DispatchCeilingProvider,
+  value: DispatchCeilingValue | null,
+  role: CeilingRole,
+  orchestratorTier: string | undefined,
+): ProviderResolution {
+  const adapter = getCeilingAdapter(provider);
+
+  if (value === null) {
+    return {
+      value: null,
+      mode: adapter.supportsCeiling ? 'advisory' : 'unsupported',
+      mechanism: adapter.mechanism,
+      dispatchArgs: null,
+      verifyOnDispatch: false,
+    };
+  }
+
+  const dispatchArgs = adapter.compileToDispatchArgs(value, role, {
+    orchestratorTier,
+  });
+
+  let mode: DispatchCeilingMode;
+  if (!adapter.supportsCeiling) {
+    mode = 'unsupported';
+  } else if (dispatchArgs) {
+    mode = 'enforced';
+  } else {
+    mode = 'advisory';
+  }
+
+  return {
+    value,
+    mode,
+    mechanism: adapter.mechanism,
+    dispatchArgs,
+    verifyOnDispatch: adapter.verifyOnDispatch(value, { orchestratorTier }),
   };
 }
 
@@ -283,7 +372,7 @@ async function resolveCodexProviderDefaultEffort(
 
 function blockMessage(provider: DispatchCeilingProvider): string {
   const label = providerLabel(provider);
-  return `BLOCKED: ${label} dispatch ceiling is unresolved in non-interactive mode.\nSet workflow.dispatchCeiling.${provider} in .oat/config.json or oat_dispatch_ceiling in project state.`;
+  return `BLOCKED: ${label} dispatch ceiling is unresolved in non-interactive mode.\nSet workflow.dispatchCeiling.providers.${provider} in .oat/config.json or oat_dispatch_ceiling in project state.`;
 }
 
 function isNonInteractiveEnv(env: NodeJS.ProcessEnv): boolean {
@@ -296,6 +385,8 @@ async function resolveDispatchCeiling(
   options: DispatchCeilingResolveOptions,
 ): Promise<DispatchCeilingResolution> {
   const provider = normalizeProvider(options.provider);
+  const role = normalizeRole(options.role);
+  const orchestratorTier = options.orchestratorTier;
   const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
   const userConfigDir = join(context.home, '.oat');
   const [resolvedConfig, projectPath] = await Promise.all([
@@ -312,33 +403,34 @@ async function resolveDispatchCeiling(
       ? await resolveCodexProviderDefaultEffort(repoRoot, context, dependencies)
       : 'not-applicable';
 
-  const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
-  if (configCeiling) {
-    return {
-      status: 'resolved',
-      provider,
-      value: configCeiling.value,
-      source: configCeiling.source,
-      unresolved: false,
-      projectPath,
-      providerDefaultEffort,
-    };
-  }
-
-  const projectCeiling = await resolveProjectStateCeiling(
+  const resolvedValue = await resolveCeilingValue(
     provider,
+    resolvedConfig,
     projectPath,
     dependencies,
   );
-  if (projectCeiling) {
+
+  const providerResolution = buildProviderResolution(
+    provider,
+    resolvedValue?.value ?? null,
+    role,
+    orchestratorTier,
+  );
+  const providers: Record<string, ProviderResolution> = {
+    [provider]: providerResolution,
+  };
+
+  if (resolvedValue) {
     return {
       status: 'resolved',
       provider,
-      value: projectCeiling,
-      source: 'project-state',
+      value: resolvedValue.value,
+      source: resolvedValue.source,
+      preset: resolvedValue.preset,
       unresolved: false,
       projectPath,
       providerDefaultEffort,
+      providers,
     };
   }
 
@@ -352,11 +444,56 @@ async function resolveDispatchCeiling(
     provider,
     value: null,
     source: null,
+    preset: null,
     unresolved: true,
     projectPath,
     providerDefaultEffort,
+    providers,
     message,
   };
+}
+
+interface ResolvedCeilingValue {
+  value: DispatchCeilingValue;
+  source: DispatchCeilingSource;
+  preset: string | null;
+}
+
+/**
+ * Resolve the concrete per-provider ceiling value, applying config precedence
+ * (local > shared > user, via `resolveEffectiveConfig`) before project state.
+ * Never reads the preset label for dispatch — the preset is surfaced as
+ * provenance only.
+ */
+async function resolveCeilingValue(
+  provider: DispatchCeilingProvider,
+  resolvedConfig: ResolvedConfig,
+  projectPath: string | null,
+  dependencies: DispatchCeilingDependencies,
+): Promise<ResolvedCeilingValue | null> {
+  const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
+  if (configCeiling) {
+    return {
+      value: configCeiling.value,
+      source: configCeiling.source,
+      preset: null,
+    };
+  }
+
+  const projectCeiling = await resolveProjectStateCeiling(
+    provider,
+    projectPath,
+    dependencies,
+  );
+  if (projectCeiling) {
+    return {
+      value: projectCeiling.value,
+      source: 'project-state',
+      preset: projectCeiling.preset,
+    };
+  }
+
+  return null;
 }
 
 function writeHumanResolution(
@@ -373,6 +510,13 @@ function writeHumanResolution(
     `${label} dispatch ceiling: ${resolution.value ?? 'unresolved'}`,
   );
   context.logger.info(`Source: ${sourceLabel(resolution.source)}`);
+
+  const providerResolution = resolution.providers[resolution.provider];
+  if (providerResolution) {
+    context.logger.info(
+      `Mode: ${providerResolution.mode} (${providerResolution.mechanism})`,
+    );
+  }
 
   if (resolution.provider === 'codex') {
     context.logger.info(
@@ -432,6 +576,14 @@ export function createProjectDispatchCeilingCommand(
     new Command('resolve')
       .description('Resolve dispatch ceiling for a provider')
       .requiredOption('--provider <provider>', 'Provider: codex or claude')
+      .option(
+        '--role <role>',
+        'Dispatch role for variant compilation: implementer (default) or reviewer',
+      )
+      .option(
+        '--orchestrator-tier <tier>',
+        'Orchestrator tier, used to flag verify-on-upgrade for above-orchestrator requests',
+      )
       .option(
         '--project-path <path>',
         'Read project-state ceiling from an explicit project path',
