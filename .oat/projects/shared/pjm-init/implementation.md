@@ -616,6 +616,11 @@ Track test execution during implementation.
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling src/config src/providers/ceiling`
 - `pnpm release:validate`
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/validation/skills.test.ts`
+- Final verification before final re-review: `pnpm test`
+- Final verification before final re-review: `pnpm lint`
+- Final verification before final re-review: `pnpm type-check`
+- Final verification before final re-review: `pnpm build`
+- Final verification before final re-review: `pnpm release:validate`
 
 **Design deltas (if any):**
 
