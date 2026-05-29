@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 0c795dd9
+oat_current_task: p05-t01
+oat_last_commit: 360d2026
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -25,7 +25,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T00:14:51.321Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T14:25:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T14:33:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -58,7 +58,8 @@ Dispatch ceiling pinned to Claude opus.
 - ✓ Plan generated (18 tasks across 6 phases)
 - ✓ Phase 1 complete (5/5; gate review passed)
 - ✓ Phase 2 complete (3/3; gate FAIL→fix→PASS)
-- ⧗ Implementation in progress (p03 next, then p05, p04, p06)
+- ✓ Phase 3 complete (1/1; gate passed)
+- ⧗ Implementation in progress (p05 next, then p04, p06)
 
 ## Blockers
 
@@ -66,5 +67,5 @@ None
 
 ## Next Milestone
 
-Complete p03 (`oat-reviewer` structured-output mode), then p05
-(receive-skill flip), p04 (project rail), and p06 (release prep).
+Complete p05 (receive-skill minor-default flip ×4), then p04
+(project rail), and p06 (release prep).

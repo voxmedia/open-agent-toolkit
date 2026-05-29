@@ -826,7 +826,7 @@ No commit (validation only). If any validate step requires a fix-up commit (e.g.
 | ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
 | p01    | code     | passed   | 2026-05-29 | reviews/p01-review-2026-05-29.md                      |
 | p02    | code     | passed   | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                   |
-| p03    | code     | pending  | -          | -                                                     |
+| p03    | code     | passed   | 2026-05-29 | reviews/p03-review-2026-05-29.md                      |
 | p04    | code     | pending  | -          | -                                                     |
 | p05    | code     | pending  | -          | -                                                     |
 | p06    | code     | pending  | -          | -                                                     |

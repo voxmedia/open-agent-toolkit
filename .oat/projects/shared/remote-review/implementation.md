@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p03-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | --------------------------------------------- | -------- | ----- | --------- |
 | Phase 1 — Shared infrastructure helpers       | complete | 5     | 5/5       |
 | Phase 2 — `oat-review-provide-remote`         | complete | 3     | 3/3       |
-| Phase 3 — `oat-reviewer` extension            | pending  | 1     | 0/1       |
+| Phase 3 — `oat-reviewer` extension            | complete | 1     | 1/1       |
 | Phase 4 — `oat-project-review-provide-remote` | pending  | 2     | 0/2       |
 | Phase 5 — Receive-skill minor-default flip    | pending  | 4     | 0/4       |
 | Phase 6 — Backlog update + release prep       | pending  | 3     | 0/3       |
 
-**Total:** 8/18 tasks completed
+**Total:** 9/18 tasks completed
 
 ---
 
@@ -154,13 +154,34 @@ oat_generated: false
 
 ## Phase 3: `oat-reviewer` subagent contract extension
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added a `## Structured-Output Mode` section to `.agents/agents/oat-reviewer.md`: when dispatched with `oat_output_mode: structured`, the reviewer returns a `StructuredFindings` object (matching design Data Models) instead of writing a review artifact, and MUST NOT write under `reviews/`. Review logic (checklist, severity model, alignment checks) is unchanged; only the output sink branches.
+- Default (flag-absent) path is byte-for-byte unchanged — confirmed by review diff — so the orchestrator's per-phase-gate dispatches are unaffected.
+- `version:` bumped 1.0.2 → 1.1.0 (additive, backward-compatible).
+
+**Key files touched:**
+
+- `.agents/agents/oat-reviewer.md` (version 1.1.0)
+
+**Verification:**
+
+- `pnpm oat:validate-skills` OK (50 skills); `pnpm lint` 0/0
+- Reviewer (p03 gate): PASS — 0 critical, 0 important, 2 minor (advisory)
+
+**Notes / Decisions:**
+
+- Flag name `oat_output_mode: structured` chosen — plan-recommended, parallels existing `oat_review_invocation` naming, and reuses an established repo key name. p04's Tier-1 dispatch wrapper consumes this contract.
 
 ### Task p03-t01: Extend `oat-reviewer` with structured-output mode
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 360d2026
 
 ---
 
@@ -247,7 +268,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** feat/remote-review-provide-skills
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped (run in progress)
+**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped (run in progress)
 
 #### Phase Outcomes
 
@@ -255,6 +276,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ----- | ----------- | --------- | -------------- | -------------------------------------------- |
 | p01   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
 | p02   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
+| p03   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
 
 #### Parallel Groups
 
