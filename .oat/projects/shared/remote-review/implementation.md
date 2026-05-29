@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3 — `oat-reviewer` extension            | complete | 1     | 1/1       |
 | Phase 4 — `oat-project-review-provide-remote` | complete | 2     | 2/2       |
 | Phase 5 — Receive-skill minor-default flip    | complete | 4     | 4/4       |
-| Phase 6 — Backlog update + release prep       | pending  | 3     | 0/3       |
+| Phase 6 — Backlog update + release prep       | complete | 3     | 3/3       |
 
-**Total:** 15/18 tasks completed
+**Total:** 18/18 tasks completed
 
 ---
 
@@ -279,23 +279,49 @@ oat_generated: false
 
 ## Phase 6: Backlog update + lockstep release prep
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- `bl-9fb8` updated: provide-remote (both rails) recorded as SHIPPED under this project; respond-remote + summarize-remote (both rails) remain OPEN; acceptance criteria re-scoped to the four remaining skills. Backlog index regenerated.
+- Lockstep version bump: all five public packages (cli, control-plane, docs-config, docs-theme, docs-transforms) → `0.1.12` (patch, matching the repo's per-PR lockstep cadence).
+- **Cross-cutting fix-up (release-blocking gap caught at the `pnpm test` gate):** the new `oat-project-review-provide-remote` skill was missing from the install manifest (`WORKFLOW_SKILLS`) and `bundle-assets.sh` — it would not have been bundled or installed by `oat init`. Both new provide-remote skills were registered following the provide/receive pairing precedent (`oat-project-review-provide-remote` → `WORKFLOW_SKILLS`; `oat-review-provide-remote` → `UTILITY_SKILLS`; both added to the bundle `SKILLS` array). Arguably a p04 responsibility; surfaced during p06's release sweep.
+
+**Key files touched:**
+
+- `.oat/repo/reference/backlog/items/pr-review-skill-set.md` + backlog index
+- `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (all → 0.1.12)
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` + `packages/cli/scripts/bundle-assets.sh` (fix-up: register both new skills)
+
+**Verification (full sweep, all PASS):**
+
+- `pnpm release:validate` — 5 public packages at 0.1.12
+- `pnpm oat:validate-skills` — 51 skills
+- `pnpm lint` — 0/0; `pnpm type-check` — 10/10
+- `pnpm test` — CLI 1694 / 191 files, control-plane 43, docs-transforms 31, docs-config 11 — all pass
+
+**Notes / Decisions:**
+
+- `oat backlog list --json` (plan Step 4) does not exist in this CLI version; verification used `regenerate-index` exit code + index grep.
+- `pnpm install --lockfile-only` produced no lockfile diff (workspace-internal deps use `workspace:*`/`link:`), so p06-t02 commit is the 5 package.json files only.
 
 ### Task p06-t01: Update `bl-9fb8` backlog item
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 11aa92df
 
 ### Task p06-t02: Lockstep public-package version bump
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0a772d11
 
 ### Task p06-t03: Final `release:validate` + handoff
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** eb89ef88 (release-validation fix-up)
 
 ---
 
@@ -316,17 +342,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** feat/remote-review-provide-skills
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 5 executed, 5 passed, 0 failed, 0 stopped (run in progress)
+**Phases:** 6 executed, 6 passed, 0 failed, 0 stopped (all plan tasks complete; final review pending)
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review    | Fix Iterations | Disposition                                  |
-| ----- | ----------- | --------- | -------------- | -------------------------------------------- |
-| p01   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
-| p02   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
-| p03   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
-| p05   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
-| p04   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
+| Phase | Implementer | Review                          | Fix Iterations | Disposition                                  |
+| ----- | ----------- | ------------------------------- | -------------- | -------------------------------------------- |
+| p01   | DONE        | pass                            | 0/2            | merged (sequential, on orchestration branch) |
+| p02   | DONE        | fail→pass                       | 1/2            | merged (sequential, on orchestration branch) |
+| p03   | DONE        | pass                            | 0/2            | merged (sequential, on orchestration branch) |
+| p05   | DONE        | fail→pass                       | 1/2            | merged (sequential, on orchestration branch) |
+| p04   | DONE        | pass                            | 0/2            | merged (sequential, on orchestration branch) |
+| p06   | DONE        | (final review covers p06 scope) | 0/2            | merged (sequential, on orchestration branch) |
 
 #### Parallel Groups
 
@@ -405,9 +432,10 @@ Chronological log of implementation progress. Append per session.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                                             | Planned / Documented                                          | Actual / Accepted                                                                                               | Reason                                        | Source of Truth                | Follow-up                                                       |
-| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
-| p02-t01       | design.md Open Questions (agent-reviews posting capability) | "Does `npx agent-reviews` expose a post-review command?" open | `agent-reviews@1.0.2` has NO posting flow (read/reply only); `gh api` is the posting path; probe forward-compat | Empirically probed `npx agent-reviews --help` | implementation (probe + skill) | None — design Open Question resolved; gh api path authoritative |
+| Task / Review | Source Artifact                                             | Planned / Documented                                                                                      | Actual / Accepted                                                                                                                                                          | Reason                                                  | Source of Truth                | Follow-up                                                                          |
+| ------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| p02-t01       | design.md Open Questions (agent-reviews posting capability) | "Does `npx agent-reviews` expose a post-review command?" open                                             | `agent-reviews@1.0.2` has NO posting flow (read/reply only); `gh api` is the posting path; probe forward-compat                                                            | Empirically probed `npx agent-reviews --help`           | implementation (probe + skill) | None — design Open Question resolved; gh api path authoritative                    |
+| p06-t03       | plan.md (p04 scope) — skill registration                    | p04 ships the new skills; install-manifest + bundle-script registration was implied, not an explicit task | Both new provide-remote skills registered in `WORKFLOW_SKILLS`/`UTILITY_SKILLS` + `bundle-assets.sh` during the p06 release sweep (caught by `bundle-consistency.test.ts`) | New skills must be bundled/installed or they don't ship | implementation                 | None — registration complete; future skill-adding phases register in the same task |
 
 ## Test Results
 
