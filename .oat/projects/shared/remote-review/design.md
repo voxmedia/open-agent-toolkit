@@ -136,16 +136,34 @@ The cross-machine flow runs in three phases:
    use `--project <path>` override to identify the target OAT project.
 2. **Check out + review** (machine B): Acquire an ephemeral worktree
    first, then run `gh pr checkout` _inside_ that worktree so the user's
-   current working tree is never mutated. The mechanics:
-   1. Create the worktree via `git worktree add --detach <ephemeral-path>`
-      from a temporary directory (preferred: reuse
-      `oat-worktree-bootstrap-auto` if its API can accept a PR target —
-      noted as Open Question).
-   2. From inside the ephemeral worktree, run `gh pr checkout <N>` so the
-      PR branch lands there, not in the caller's worktree.
-   3. After review and posting, remove the worktree via
-      `git worktree remove --force <ephemeral-path>` and clean up the
-      temporary directory.
+   current working tree is never mutated. The mechanics use repo-scoped
+   git commands explicitly so they remain runnable regardless of the
+   caller's working directory:
+   1. Resolve `repo_root` from the caller's working directory:
+      `repo_root=$(git rev-parse --show-toplevel)`. Choose
+      `ephemeral_path` under a system temp directory (e.g.,
+      `mktemp -d`-derived path) — placed _outside_ `repo_root` to
+      avoid path collisions and accidental nested-worktree issues.
+   2. Create the worktree with the repository context explicit:
+      `git -C "$repo_root" worktree add --detach "$ephemeral_path" HEAD`.
+      The `-C "$repo_root"` flag is load-bearing — without it the
+      command fails when the caller's CWD is not inside the repository
+      (e.g., a thin remote-review machine invoking the skill from a
+      home directory). `HEAD` is a placeholder ref overwritten by the
+      `gh pr checkout` in the next step.
+   3. From inside the ephemeral worktree, run
+      `gh pr checkout <N>` (i.e., `cd "$ephemeral_path" && gh pr checkout <N>`)
+      so the PR branch lands there, not in the caller's worktree.
+   4. After review and posting, remove the worktree via
+      `git -C "$repo_root" worktree remove --force "$ephemeral_path"`
+      and clean up the temp directory.
+
+   If `oat-worktree-bootstrap-auto` reuse is chosen (still an Open
+   Question), the plan must verify its invocation contract supports
+   "check out PR N into an ephemeral worktree" with the same
+   caller-tree safety guarantees (repo-scoped git invocation,
+   ephemeral path outside the repo root, force-removal teardown).
+   Otherwise we hand-roll the mechanics above.
 
    If checkout succeeds, the reviewer has full-tree context (project rail
    also reads `state.md` / `spec.md` / `design.md` / `plan.md` /
@@ -186,12 +204,18 @@ routing findings into plan tasks.
 - Detect prior provide-remote runs on the PR: list PR reviews via
   `gh api /repos/.../pulls/<N>/reviews`, parse each body's marker block,
   filter to reviews where `oat_provide_remote: true` AND
-  `oat_review_scope == "ad-hoc"`. Take the most recent matching review;
-  narrow to `<that_review.oat_review_head_sha>..<HEAD>`. Honors
+  `oat_review_scope == "ad-hoc"`. Take the most recent matching review
+  and validate its SHA before narrowing — see **Error Handling →
+  Stale prior-review SHA** below for the exact guard. If the guard
+  passes, narrow to `<prior_sha>..<HEAD>`. If the guard fails (rebase,
+  force-push, shallow clone, or diff-only mode where the prior SHA
+  isn't fetched), fall back to full PR scope and warn the user that
+  the prior review SHA is no longer reachable. Honors
   `workflow.autoNarrowReReviewScope` (no prompt when `true`; confirm
   prompt otherwise). If no matching prior review exists, use full PR
-  diff. Project-rail markers (`oat_project`, scope tokens like `pNN`) are
-  ignored by this filter — only ad-hoc reviews narrow against each other.
+  diff. Project-rail markers (`oat_project`, scope tokens like `pNN`)
+  are ignored by this filter — only ad-hoc reviews narrow against
+  each other.
 - Run the review inline (no tier model) using the existing ad-hoc review
   checklist + severity model.
 - Build the posted-review-body payload (summary, severity counts,
@@ -250,8 +274,11 @@ file outputs on machine B.
   reviews where `oat_provide_remote: true` AND
   `oat_project == <resolved-project-path>` AND
   `oat_review_scope == <current-scope-token>`. Take the most recent
-  matching review and narrow accordingly. Different-scope or
-  different-project prior reviews do not narrow the current one.
+  matching review and validate its SHA before narrowing per the
+  guard in **Error Handling → Stale prior-review SHA**. If the guard
+  passes, narrow accordingly; otherwise fall back to full PR scope
+  with a warning. Different-scope or different-project prior reviews
+  do not narrow the current one.
 - Dispatch via Tier 1/2/3:
   - **Tier 1:** spawn `oat-reviewer` subagent with the project context +
     posted-review-body schema + structured-output flag in the prompt,
@@ -554,6 +581,49 @@ supports posting, prefer it (tooling symmetry). If it does not, fall
 through to `gh api`. Never fail the skill because the probe is
 inconclusive — `gh api` is the safe path.
 
+### Stale prior-review SHA (re-review narrowing guard)
+
+When a matching prior provide-remote review is found, validate its
+`oat_review_head_sha` before using it for narrowing. PR force-pushes,
+rebases, and shallow clones can render a previously-recorded SHA
+unreachable from the current PR HEAD. Narrowing against an unreachable
+SHA either errors out at `git rev-list` time or — worse — produces a
+misleading partial range.
+
+The guard is two checks against the ephemeral worktree (rich-context
+mode) or against `git ls-remote`/`git fetch` results plus diff metadata
+(diff-only mode):
+
+1. **Existence check** — `git -C "$ephemeral_path" cat-file -e <prior_sha>`.
+   Confirms the object exists locally. In diff-only mode, fetch the
+   single ref `git fetch origin <prior_sha>:refs/oat-prior-review`
+   first and re-check; skip the second check if that fetch fails.
+2. **Ancestry check** — `git -C "$ephemeral_path" merge-base --is-ancestor <prior_sha> <pr_head_sha>`.
+   Confirms `<prior_sha>` is reachable from current PR HEAD (i.e., not
+   orphaned by a force-push).
+
+If both checks pass: narrow to `<prior_sha>..<pr_head_sha>` as
+designed.
+
+If either check fails: fall back to the full PR scope (merge-base
+between PR base and HEAD). Emit a warning the user can see:
+
+> "Prior provide-remote review for this scope referenced SHA
+> `<prior_sha>`, but it's no longer reachable from PR HEAD (likely
+> rebase or force-push). Reviewing the full PR diff instead."
+
+Override behavior:
+
+- If the user passed `--narrow` explicitly, the guard failure becomes
+  a hard error (the user asked for narrowing; refusing to narrow
+  silently would violate that intent). Surface the unreachability and
+  stop; the user can re-invoke without `--narrow` to proceed with
+  full-scope review.
+- If `workflow.autoNarrowReReviewScope == true`, the guard failure
+  still falls back to full scope automatically and the warning is
+  surfaced as the auto-fallback notice. Auto-narrow is opportunistic,
+  not a hard constraint.
+
 ## Testing Strategy
 
 Quick mode — key test levels and scenarios per component. No requirement-to-test mapping (lightweight design doesn't carry a `spec.md` Requirement Index).
@@ -631,7 +701,12 @@ A real `gh`-against-GitHub run is the only way to verify the full posted-review 
 - **`oat-project-review-provide-remote`**
   - On a test PR that includes `state.md` mods for a known project, run with no `--project` arg.
   - Confirm project was auto-resolved; review body includes `oat_project` + `oat_review_scope` markers; mode-aware review (e.g., flagged spec-design drift) is visible in findings.
-  - Re-run with `--project <wrong-path>` to verify override path works.
+  - Re-run with `--project <valid-but-different-project-path>` (a
+    project other than the diff-scanned default) to verify the
+    override takes precedence over diff-scan resolution.
+  - Re-run with `--project <wrong-path>` (a non-existent or
+    non-OAT-project path) to verify the validation error is clear and
+    the skill stops without posting.
 
 - **Re-review narrowing**
   - Run provide-remote, push a fix commit, re-run; confirm the second run prompts (or auto-narrows under config) to the `<first_review_head_sha>..<HEAD>` range and that the findings are scoped accordingly.
