@@ -506,8 +506,8 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 | p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green) |
 | p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)         |
 | p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review) |
-| p04    | code     | pending         | -          | -                                                                           |
-| final  | code     | pending         | -          | -                                                                           |
+| p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)          |
+| final  | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (fail→fix 31564a01→re-review pass)       |
 | spec   | artifact | pending         | -          | -                                                                           |
 | design | artifact | pending         | -          | -                                                                           |
 
@@ -524,7 +524,7 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 - Phase 3: 2 tasks — neutral preset prompt, dispatch + enforcement logs
 - Phase 4: 2 tasks — docs, lockstep version bump + release validation
 
-**Total: 9 tasks**
+**Total: 9 tasks** (+ p04-t00 fold-in: closed 3 p03 review nits; + 1 final-review docs-drift fix). All phase reviews + final review passed. Lockstep packages at 0.1.12.
 
 Ready for code review and merge.
 
