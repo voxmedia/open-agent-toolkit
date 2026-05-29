@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2 — `oat-review-provide-remote`         | complete | 3     | 3/3       |
 | Phase 3 — `oat-reviewer` extension            | complete | 1     | 1/1       |
 | Phase 4 — `oat-project-review-provide-remote` | pending  | 2     | 0/2       |
-| Phase 5 — Receive-skill minor-default flip    | pending  | 4     | 0/4       |
+| Phase 5 — Receive-skill minor-default flip    | complete | 4     | 4/4       |
 | Phase 6 — Backlog update + release prep       | pending  | 3     | 0/3       |
 
-**Total:** 9/18 tasks completed
+**Total:** 13/18 tasks completed
 
 ---
 
@@ -204,28 +204,53 @@ oat_generated: false
 
 ## Phase 5: Receive-skill minor-default flip
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Flipped the default disposition for MINOR findings from `defer` to `convert` (fix inline) across all four receive skills, and extended the "defer requires rationale" gate to ALL severities (defer/dismiss at any severity, minor included, now requires concrete rationale). This brings the manual receive path in line with the auto-spawned-review path, which already converts minors.
+- Auto-disposition branch (`oat_review_invocation: auto` in `oat-project-review-receive`) preserved byte-for-byte; only the stale parenthetical describing manual mode was corrected.
+- Final-scope explicit per-finding minor disposition + hard `passed` guard preserved; only the recommended default leans `convert`.
+- Stale output-summary line corrected (review-driven fix) so closeout prose matches the new policy.
+
+**Key files touched:**
+
+- `.agents/skills/oat-review-receive/SKILL.md` (v1.4.0)
+- `.agents/skills/oat-review-receive-remote/SKILL.md` (v1.3.0)
+- `.agents/skills/oat-project-review-receive/SKILL.md` (v1.5.1)
+- `.agents/skills/oat-project-review-receive-remote/SKILL.md` (v1.4.0)
+
+**Verification:**
+
+- `pnpm oat:validate-skills` OK (50 skills); `pnpm lint` 0/0
+- Reviewer (p05 gate): FAIL (1 important — stale summary line) → fix iteration 1 → PASS. Final: 0 critical, 0 important, 0 minor.
+
+**Notes / Decisions:**
+
+- Per-file wording adapted to each skill's idiom (some had explicit `defer (default for minor)`, others a conditional phrasing) but the resulting behavior is uniform across the rail.
 
 ### Task p05-t01: Flip minor default in `oat-review-receive`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** df44c77a
 
 ### Task p05-t02: Flip minor default in `oat-review-receive-remote`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bdbe283b
 
 ### Task p05-t03: Flip minor default in `oat-project-review-receive`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 383f5b04 (+ fix c313c3b3)
 
 ### Task p05-t04: Flip minor default in `oat-project-review-receive-remote`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9a4a7013
 
 ---
 
@@ -268,7 +293,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** feat/remote-review-provide-skills
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped (run in progress)
+**Phases:** 4 executed, 4 passed, 0 failed, 0 stopped (run in progress)
 
 #### Phase Outcomes
 
@@ -277,6 +302,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p01   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
 | p02   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
 | p03   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
+| p05   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
 
 #### Parallel Groups
 
