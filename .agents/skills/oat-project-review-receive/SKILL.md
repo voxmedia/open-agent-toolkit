@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.0
+version: 1.5.1
 description: Use when review findings from oat-project-review-provide need closure. Converts review artifacts into actionable plan tasks.
 disable-model-invocation: true
 user-invocable: true
@@ -630,7 +630,7 @@ Actions taken:
 - Updated implementation.md with review notes
 - Archived review artifact to `reviews/archived/{filename}.md`
 - Deferred/accepted Medium findings: {N}
-- Deferred {N} minor findings (auto for non-final, explicit decision for final)
+- Minor findings dispositioned: {N} converted (default), {N} deferred-with-rationale (explicit user decision required for final scope)
 - Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
 
 Review cycle: {N} of 3
