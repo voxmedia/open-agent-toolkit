@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
@@ -553,3 +553,196 @@ Cache the result for the duration of the run. If `agent-reviews`
 supports posting, prefer it (tooling symmetry). If it does not, fall
 through to `gh api`. Never fail the skill because the probe is
 inconclusive — `gh api` is the safe path.
+
+## Testing Strategy
+
+Quick mode — key test levels and scenarios per component. No requirement-to-test mapping (lightweight design doesn't carry a `spec.md` Requirement Index).
+
+### Unit Tests
+
+Scope: pure-logic components shipped under `packages/cli` (or equivalent) that back the new skills' decision points. These are language-level tests with no GitHub or git side effects.
+
+- **Marker block parser**
+  - Parses a well-formed HTML-comment marker block into a typed object.
+  - Returns `null` when the marker block is absent (not present on non-OAT reviews).
+  - Tolerates extra whitespace, mixed casing in marker keys, and unknown extra keys (forward-compat).
+  - Rejects markers where `oat_review_head_sha` is not a 40-char hex SHA.
+  - Treats `oat_project: <value>` and key-omitted differently (project rail vs ad-hoc rail discrimination).
+
+- **Inline-comment line-mapping validator**
+  - Given hunk ranges + a finding's `file` + `line`, classifies as in-diff or out-of-diff with the correct side (`RIGHT` for additions/context, `LEFT` for explicit removed-code findings).
+  - Returns out-of-diff status without mutating the finding.
+  - Handles renamed files (path before vs after rename) per `gh api /pulls/<N>/files`.
+  - Handles binary files (no inline comments possible — always out-of-diff).
+
+- **Re-review narrowing filter**
+  - Given a list of reviews + `(rail, project, scope)` tuple, returns the most recent matching review or `null`.
+  - `(ad-hoc, null, "ad-hoc")` matches only reviews with `oat_review_scope == "ad-hoc"` AND no `oat_project` key.
+  - `(project, "<path>", "p02")` matches only reviews with matching project AND scope; rejects same project / different scope; rejects same scope / different project.
+  - Sort order is by review submitted timestamp, descending — newest matching review wins.
+  - When `workflow.autoNarrowReReviewScope == true`, no prompt; otherwise prompt-confirm.
+
+- **Project resolution (project rail)**
+  - Given a list of changed files from a PR diff, finds `.oat/projects/*/*/state.md` entries.
+  - Returns single project path when exactly one matches.
+  - Returns error with candidate list when multiple match.
+  - Returns error when zero match.
+  - `--project <path>` override takes precedence over diff scan.
+
+- **Posted-review-body builder**
+  - Produces a body matching the schema for ad-hoc (no `oat_project` key) and project rail (with `oat_project`, `oat_review_scope` keys).
+  - Severity counts match the input findings.
+  - Minor-fix nudge is included when minor findings are present; the "Notes" section is omitted when severity counts are all zero.
+  - Marker block is the first element of the body.
+  - Verdict mapping: `event: REQUEST_CHANGES` when any C or I finding is present; `event: COMMENT` otherwise (including zero findings).
+
+### Integration Tests
+
+Scope: components that touch git, GitHub (via stub/fixture), or the local filesystem.
+
+- **Worktree lifecycle**
+  - `git worktree add --detach` + `gh pr checkout <N>` (stubbed) + `git worktree remove --force` against a test repository.
+  - Cleanup runs even when review-phase fails (try/finally semantic).
+  - Verify caller's working tree is unchanged before and after.
+
+- **`gh api` capability probe + fallback flow**
+  - With `agent-reviews` posting capability stub returning "supported": skill prefers `agent-reviews`.
+  - With stub returning "not supported": skill falls through to `gh api`.
+  - With stub erroring on probe: skill falls through to `gh api` (no failure).
+
+- **`gh pr diff` fallback parsing**
+  - Synthetic diff with multiple files, multi-hunk files, rename, binary file — line mapping returns expected classifications.
+
+- **Round-trip marker fidelity**
+  - Build posted-review-body for a known finding set; pass the produced body string back through the marker parser; verify the parsed object equals the input markers.
+
+- **Receive-skill minor-default flip**
+  - Synthetic review with minor findings; run each receive skill's triage flow with no user input; verify default disposition is `convert`, not `defer`.
+  - Verify a user-supplied `defer` choice at minor severity triggers the rationale-required gate.
+
+### End-to-End / Manual Verification
+
+A real `gh`-against-GitHub run is the only way to verify the full posted-review shape and `gh api`'s rejection behavior on out-of-diff inline comments. CI does not exercise GitHub interaction in this project. Manual verification per shipped skill:
+
+- **`oat-review-provide-remote`**
+  - On a test PR with known content, invoke the skill (default flags).
+  - Confirm: ephemeral worktree was created and removed; PR review posted with expected severity counts; inline comments appear at the right file/line; marker block is present in the body and renders as nothing in GitHub's UI; verdict matches the C/I rule.
+
+- **`oat-project-review-provide-remote`**
+  - On a test PR that includes `state.md` mods for a known project, run with no `--project` arg.
+  - Confirm project was auto-resolved; review body includes `oat_project` + `oat_review_scope` markers; mode-aware review (e.g., flagged spec-design drift) is visible in findings.
+  - Re-run with `--project <wrong-path>` to verify override path works.
+
+- **Re-review narrowing**
+  - Run provide-remote, push a fix commit, re-run; confirm the second run prompts (or auto-narrows under config) to the `<first_review_head_sha>..<HEAD>` range and that the findings are scoped accordingly.
+
+- **Receive-side default flip**
+  - After provide-remote posts findings (mixed severities), run the corresponding `*-receive-remote` skill on machine A.
+  - Confirm minor findings default to `convert` and trigger the rationale prompt on explicit `defer`.
+
+### Test Locations
+
+- Unit tests: alongside the implementation under `packages/cli/src/.../*.test.ts` (or equivalent), following existing project conventions.
+- Integration tests: under the same package but in a separate `__integration__/` directory or marked with the existing project's integration-test flag.
+- Manual verification: documented in the project's `implementation.md` "Manual Verification" section per task that ships behavior visible at the GitHub API boundary.
+
+## Open Questions
+
+- **`agent-reviews` posting capability surface:** Does the bundled `npx agent-reviews` expose a "post review" command (or analogous), and if so what flags? Resolve via empirical probe at the top of plan authoring; if absent, plan goes straight to `gh api` and the capability-probe step still ships (forward-compat for when `agent-reviews` gains the capability).
+- **`oat-reviewer` subagent prompt-flag name and dispatch payload shape:** What exact key signals structured-output mode (`oat_output_mode`, `output: structured`, or a sibling agent definition)? Decide during plan authoring after reading the existing `oat-reviewer` agent file.
+- **`oat-worktree-bootstrap-auto` reuse:** Can the existing bootstrap accept a "check out PR N" target, or do we hand-roll the ephemeral worktree flow inside the new skills? Read its surface during plan authoring.
+- **Multi-line review comments:** GitHub's `POST .../reviews` `comments[]` supports `start_line` + `line` for multi-line ranges. Do we use that for findings spanning multiple lines (e.g., "this whole function is suspicious")? Default for v1: single-line only, with multi-line as a follow-up. Captured as a deferred idea, not a v1 blocker.
+- **Marker block on supersedes:** If a human reviewer (not the skill) posts a review on the same PR between two provide-remote runs, the most-recent matching review query still narrows correctly (it only filters in OAT-marker reviews). But if the human edits or dismisses a prior OAT review, do we want to detect that and refuse to narrow? Default for v1: trust the markers; the dismiss/edit case is rare. Document as a known sharp edge.
+
+## Implementation Phases
+
+Phase ordering is provisional — final task structure lives in `plan.md`. Phases reflect dependency ordering so each phase can verify cleanly before the next builds on it.
+
+### Phase 1: Shared infrastructure
+
+**Goal:** Land the pure-logic primitives both new skills depend on, with full unit-test coverage.
+
+**Tasks (provisional):**
+
+- Marker block parser + Posted-review-body builder under `packages/cli` (or equivalent shared location).
+- Inline-comment line-mapping validator (works against both `gh api files` JSON and parsed `gh pr diff` output).
+- Re-review narrowing filter.
+- Project resolution helper (diff-list → project path).
+
+**Verification:** Unit test suite for the four components above passes; lint/format/type-check green.
+
+### Phase 2: `oat-review-provide-remote` (ad-hoc rail)
+
+**Goal:** Ship the ad-hoc skill end-to-end, callable via `npx`/skill invocation.
+
+**Tasks (provisional):**
+
+- Author `SKILL.md` (mode assertion, process steps, success criteria, frontmatter with `version: 1.0.0` and allowed-tools).
+- Wire skill process: PR resolution → hybrid read → re-review narrowing prompt → inline review → posted-body build → `gh api` POST (with `agent-reviews` capability-probe).
+- Integration tests: worktree lifecycle, capability probe, round-trip marker fidelity.
+- Manual verification against a test PR.
+
+**Verification:** Skill validates under `pnpm oat:validate-skills`; integration suite green; manual verification recorded in `implementation.md`.
+
+### Phase 3: `oat-reviewer` subagent contract extension
+
+**Goal:** Add structured-output mode so project-rail Tier 1 can dispatch the reviewer without an artifact write.
+
+**Tasks (provisional):**
+
+- Read existing `oat-reviewer` agent file; decide flag name + dispatch payload shape.
+- Add structured-output mode (prompt-level flag); return `StructuredFindings`.
+- Bump agent file `version:` per the per-shipped-content rule.
+
+**Verification:** Tier 1 dispatch in the next phase exercises the structured-output path; manual verification confirms findings come back as the expected shape.
+
+### Phase 4: `oat-project-review-provide-remote` (project rail)
+
+**Goal:** Ship the project-aware skill.
+
+**Tasks (provisional):**
+
+- Author `SKILL.md` (mirroring `oat-project-review-provide` structure, adapted for remote rail + read-only project context).
+- Wire skill process: PR resolution → project resolution → hybrid read → re-review narrowing (project + scope filter) → Tier 1/2/3 dispatch → posted-body build with project markers → `gh api` POST.
+- Integration tests for project-resolution + project-scoped re-review narrowing.
+- Manual verification against a test PR with a known project's `state.md` mods.
+
+**Verification:** Skill validates; integration green; manual verification recorded.
+
+### Phase 5: Receive-skill minor-default flip
+
+**Goal:** Apply the disposition default change across all four receive skills.
+
+**Tasks (provisional):**
+
+- Edit `oat-review-receive` SKILL.md disposition defaults + rationale-gate language.
+- Edit `oat-review-receive-remote` similarly.
+- Edit `oat-project-review-receive` similarly.
+- Edit `oat-project-review-receive-remote` similarly.
+- Bump each SKILL.md `version:` per the per-shipped-content rule.
+- Update receive-skill integration tests to cover the new default + rationale gate.
+
+**Verification:** `pnpm oat:validate-skills` green; integration tests for default flip pass; sample run on a synthetic minor-finding set yields `convert` default.
+
+### Phase 6: Backlog item + release prep
+
+**Goal:** Record the scope split in `bl-9fb8` and verify the lockstep release contract is satisfied.
+
+**Tasks (provisional):**
+
+- Update `bl-9fb8` (description, acceptance criteria, dates).
+- Bump lockstep public package versions across the five publishable packages.
+- Run `pnpm release:validate` and resolve any blockers.
+
+**Verification:** `pnpm release:validate` exits clean; lockstep versions match across the five packages; backlog index regenerated if applicable.
+
+### Parallelism
+
+Phase 1 must complete before Phases 2 and 4 (both depend on the shared primitives). Phase 3 (subagent contract) must complete before Phase 4 (project rail Tier 1 dispatch needs it). Phase 5 (receive-skill flip) is independent of Phases 2-4 and could run concurrently in a separate worktree — its write set (`.agents/skills/oat-(project-)review-receive(-remote)/SKILL.md`) does not overlap with Phases 2-4's writes (new skills + agent file). Phase 6 must come last (it ships the lockstep version bump and runs `release:validate` against the full diff).
+
+Provisional `oat_plan_parallel_groups`:
+
+- Sequential: `[1]`
+- Parallel candidate: `[2, 3, 4]` chain on one side, `[5]` on the other side, joining at `[6]`.
+
+Final declaration lives in `plan.md` after dependency + write-set re-validation during plan generation.
