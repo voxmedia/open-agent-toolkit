@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase                                 | Status  | Tasks | Completed |
 | ------------------------------------- | ------- | ----- | --------- |
 | Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | pending | 2     | 0/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
 | Phase 3: Documentation                | pending | 1     | 0/1       |
 | Phase 4: Release lockstep & validate  | pending | 1     | 0/1       |
 
-**Total:** 2/6 tasks completed
+**Total:** 4/6 tasks completed
 
-**Next task:** `p02-t01`
+**Next task:** `p03-t01`
 
 ---
 
@@ -82,18 +82,48 @@ oat_generated: false
 
 ## Phase 2: Scaffolder and `oat pjm init` command
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added `initializeRepoReference()` to instantiate `current-state.md`, `roadmap.md`, `decision-record.md`, and the delegated backlog tree under `.oat/repo/reference/`.
+- Added and registered the `oat pjm init` command with default reference-root resolution, `--reference-root`, text output, JSON success output, and JSON error output.
+- Fixed the p02 review finding by preserving `{ status: 'error', message }` plus exit code 1 when command-local scaffolding fails under `--json`.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/pjm/init.ts` - repo-reference scaffolder and template resolver.
+- `packages/cli/src/commands/pjm/init.test.ts` - scaffolder coverage for creation, idempotency, template precedence, frontmatter stripping, and missing templates.
+- `packages/cli/src/commands/pjm/index.ts` - `oat pjm init` command and output/error handling.
+- `packages/cli/src/commands/pjm/index.test.ts` - command coverage for registration, JSON success, custom reference root, and JSON error contract.
+- `packages/cli/src/commands/index.ts` - command registration.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/commands.integration.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass.
+
+**Review:** `reviews/p02-review-2026-05-29.md` found 1 Important issue; `reviews/p02-review-2026-05-29-v2.md` passed after the fix with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p02-t01: Implement initializeRepoReference scaffolder
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e376d70e
 
 ### Task p02-t02: Add and register the `oat pjm init` command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0b79fc32
+
+### Review fix: Preserve `pjm init` JSON error contract
+
+**Status:** completed
+**Commit:** 4a60c52d
 
 ---
 
@@ -163,6 +193,40 @@ _- Outstanding Items_
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 2 — 2026-05-29 19:47
+
+**Branch:** feat/pjm-init
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review                | Fix Iterations | Disposition |
+| ----- | ----------- | --------------------- | -------------- | ----------- |
+| p02   | DONE        | fail-important → pass | 1/2            | passed      |
+
+#### Parallel Groups
+
+- p02: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p02 implementation used `oat-phase-implementer-high` with `effort_axis=selected:high`, capped by project-state Codex ceiling `xhigh`; the phase introduced a multi-file CLI command and scaffolder.
+- Dispatch: p02 review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh` for deterministic quality gate behavior.
+- Dispatch: p02 fix used `oat-phase-implementer-medium` with `effort_axis=selected:medium`; the fix was limited to command-local error handling and focused tests.
+- Dispatch: p02 re-review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh`; the re-review passed.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
@@ -179,11 +243,16 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Add current-state and decision-record starter templates - c7a989c9
 - [x] p01-t02: Register new templates in PM-pack manifest and bundle script - c160b53c
+- [x] p02-t01: Implement initializeRepoReference scaffolder - e376d70e
+- [x] p02-t02: Add and register the `oat pjm init` command - 0b79fc32
+- [x] p02 review fix: Preserve `pjm init` JSON error contract - 4a60c52d
 
 **What changed (high level):**
 
 - Added first-class PM-pack template sources for current-state and decision-record reference docs.
 - Registered the expanded template set in install/bundle plumbing and tests.
+- Added the PJM repo-reference initializer and `oat pjm init` command.
+- Preserved structured JSON error output for scaffolding failures.
 
 **Decisions:**
 
@@ -191,7 +260,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p02-t01.
+- Continue with p03-t01.
 
 **Blockers:**
 

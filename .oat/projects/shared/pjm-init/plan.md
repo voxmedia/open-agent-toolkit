@@ -36,7 +36,7 @@ existing `initializeBacklog()` for the backlog tree.
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (quick-mode default: pause after core code phase p02)
+- [x] Confirmed HiLL checkpoints with user (pause after final phase p04)
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
@@ -369,7 +369,7 @@ code rows as needed; do not delete the `design`/`plan` artifact rows.
 | Scope  | Type     | Status  | Date       | Artifact                                               |
 | ------ | -------- | ------- | ---------- | ------------------------------------------------------ |
 | p01    | code     | passed  | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
-| p02    | code     | pending | -          | -                                                      |
+| p02    | code     | passed  | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
 | p03    | code     | pending | -          | -                                                      |
 | p04    | code     | pending | -          | -                                                      |
 | final  | code     | pending | -          | -                                                      |
