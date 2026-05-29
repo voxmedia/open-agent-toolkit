@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-05-29
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p05'] # pause AFTER final review-fix phase for human review
+oat_plan_hill_phases: ['p06'] # pause AFTER final review-fix phase for human review
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # fully sequential — dependency chain + final release gate
 oat_plan_source: quick # spec-driven | quick | imported
@@ -36,7 +36,7 @@ existing `initializeBacklog()` for the backlog tree.
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (pause after final phase; updated to p05 after final review fixes were added)
+- [x] Confirmed HiLL checkpoints with user (pause after final phase; updated to p06 after final re-review fixes were added)
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
@@ -470,21 +470,115 @@ git commit -m "fix(p05-t02): restore canonical OAT skill versions from main"
 
 ---
 
+## Phase 6: Final re-review fixes
+
+### Task p06-t01: (review) Bump public packages forward from target branch
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Step 1: Understand the issue**
+
+Review finding `I1`: `origin/main` is already at public package version `0.1.13`, while this
+branch currently sets the five public packages to `0.1.12`. The branch is internally lockstep,
+but it now downgrades the target branch version and would violate the release/version intent if
+merged as-is.
+
+Location: `packages/cli/package.json:3`
+
+**Step 2: Implement fix**
+
+Update all five public package versions from `0.1.12` to the next forward lockstep version from
+the current target branch, `0.1.14`.
+
+**Step 3: Verify**
+
+Run: `pnpm release:validate`
+Expected: release validation passes for all five public packages at `0.1.14`.
+
+Run: `pnpm release:check-versions`
+Expected: version bump policy passes against the current target branch.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json \
+        packages/docs-config/package.json packages/docs-theme/package.json \
+        packages/docs-transforms/package.json
+git commit -m "fix(p06-t01): bump public packages forward from target"
+```
+
+---
+
+### Task p06-t02: (review) Restore dispatch-ceiling config docs schema
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- Regenerate if needed: `apps/oat-docs/index.md`
+
+**Step 1: Understand the issue**
+
+Review finding `I2`: two shipped docs pages still advertise removed flat config keys
+(`workflow.dispatchCeiling.codex` and `workflow.dispatchCeiling.claude`) even though the
+restored runtime accepts `workflow.dispatchCeiling.preset` and
+`workflow.dispatchCeiling.providers.{codex,claude}`. This leaves the dispatch-ceiling final
+review finding partially closed.
+
+Location: `apps/oat-docs/docs/cli-utilities/configuration.md:163`
+
+**Step 2: Implement fix**
+
+Restore the provider-neutral dispatch-ceiling documentation from `origin/main` in
+`configuration.md` and the config schema section of `oat-directory-structure.md`, preserving the
+PJM repo-reference additions in `oat-directory-structure.md`.
+
+**Step 3: Verify**
+
+Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.preset`
+Expected: the config key is recognized.
+
+Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.providers.codex`
+Expected: the config key is recognized.
+
+Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.codex`
+Expected: the stale flat key is rejected as unknown, matching the restored docs.
+
+Run: `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+Expected: generated docs index is current.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/cli-utilities/configuration.md \
+        apps/oat-docs/docs/reference/oat-directory-structure.md \
+        apps/oat-docs/index.md
+git commit -m "fix(p06-t02): restore dispatch-ceiling config docs"
+```
+
+---
+
 ## Reviews
 
 Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
 code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-| Scope  | Type     | Status          | Date       | Artifact                                               |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed          | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
-| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
-| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md                       |
-| p04    | code     | passed          | 2026-05-29 | reviews/p04-review-2026-05-29.md                       |
-| p05    | code     | passed          | 2026-05-29 | reviews/p05-review-2026-05-29-v2.md                    |
-| final  | code     | fixes_completed | 2026-05-29 | reviews/archived/final-review-2026-05-29.md            |
-| design | artifact | pending         | -          | -                                                      |
-| plan   | artifact | passed          | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
+| Scope  | Type     | Status      | Date       | Artifact                                               |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | passed      | 2026-05-29 | reviews/p01-review-2026-05-29.md                       |
+| p02    | code     | passed      | 2026-05-29 | reviews/p02-review-2026-05-29-v2.md                    |
+| p03    | code     | passed      | 2026-05-29 | reviews/p03-review-2026-05-29.md                       |
+| p04    | code     | passed      | 2026-05-29 | reviews/p04-review-2026-05-29.md                       |
+| p05    | code     | passed      | 2026-05-29 | reviews/p05-review-2026-05-29-v2.md                    |
+| final  | code     | fixes_added | 2026-05-29 | reviews/archived/final-review-2026-05-29-v2.md         |
+| design | artifact | pending     | -          | -                                                      |
+| plan   | artifact | passed      | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -506,10 +600,11 @@ code rows as needed; do not delete the `design`/`plan` artifact rows.
 - Phase 3: 1 task — document install-vs-initialize lifecycle and the command; regenerate docs index.
 - Phase 4: 1 task — lockstep `0.1.11 → 0.1.12` bump + `release:validate`.
 - Phase 5: 2 review-fix tasks — restore dispatch-ceiling mainline contract and canonical skill versions from `main`.
+- Phase 6: 2 review-fix tasks — bump public packages forward from current `main` and restore dispatch-ceiling config docs.
 
-**Total: 8 tasks**
+**Total: 10 tasks**
 
-Final review findings converted to fix tasks; execute Phase 5 and re-run final review before merge.
+Final re-review findings converted to fix tasks; execute Phase 6 and re-run final review before merge.
 
 ---
 

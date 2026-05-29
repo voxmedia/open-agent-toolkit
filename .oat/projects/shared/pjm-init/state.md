@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t01
 oat_last_commit: 6e7687e4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -25,27 +25,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T20:51:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T21:05:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: pjm-init
 
-**Status:** Final review fixes complete; awaiting final re-review
+**Status:** Final re-review findings received; Phase 6 fix tasks queued
 **Started:** 2026-05-29
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Final review fixes are complete; awaiting final re-review.
+Final re-review findings were converted to Phase 6 fix tasks; implementation resumes at `p06-t01`.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
-- **Plan:** `plan.md` (complete — 5 phases, 8 tasks, sequential)
-- **Implementation:** `implementation.md` (complete; awaiting final re-review)
+- **Plan:** `plan.md` (complete — 6 phases, 10 tasks, sequential)
+- **Implementation:** `implementation.md` (in progress; final re-review fixes queued)
 
 ## Progress
 
@@ -57,7 +57,7 @@ Final review fixes are complete; awaiting final re-review.
 - ✓ Phase 3 implemented and reviewed
 - ✓ Phase 4 implemented, validation-fixed, and reviewed
 - ✓ Phase 5 final review fixes implemented and reviewed
-- ⧗ Awaiting final re-review
+- ⧗ Phase 6 final re-review fixes queued
 
 ## Blockers
 
@@ -65,4 +65,4 @@ None
 
 ## Next Milestone
 
-Re-run final code review for `pjm-init`.
+Execute Phase 6 starting at `p06-t01`, then re-run final code review for `pjm-init`.

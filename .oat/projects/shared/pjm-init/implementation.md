@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -31,10 +31,11 @@ oat_generated: false
 | Phase 3: Documentation                | passed | 1     | 1/1       |
 | Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
 | Phase 5: Final review fixes           | passed | 2     | 2/2       |
+| Phase 6: Final re-review fixes        | queued | 2     | 0/2       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/10 tasks completed
 
-**Next task:** null — review fix tasks complete; awaiting final re-review.
+**Next task:** `p06-t01` — bump public packages forward from the current target branch.
 
 ---
 
@@ -265,6 +266,39 @@ oat_generated: false
 
 ---
 
+## Phase 6: Final re-review fixes
+
+**Status:** queued
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Pending. Final re-review findings were converted to fix tasks.
+
+**Key files touched:**
+
+- Pending.
+
+**Verification:**
+
+- Pending.
+
+**Review:** pending after fixes complete.
+
+### Task p06-t01: (review) Bump public packages forward from target branch
+
+**Status:** pending
+**Commit:** pending
+
+### Task p06-t02: (review) Restore dispatch-ceiling config docs schema
+
+**Status:** pending
+**Commit:** pending
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -479,7 +513,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Final review fixes complete; re-run final review.
+- Final re-review fixes queued; execute Phase 6 and re-run final review.
 
 **Blockers:**
 
@@ -546,6 +580,34 @@ Chronological log of implementation progress.
 - None. Findings are regressions against target `main`, not accepted PJM design drift.
 
 **Next:** Re-run final review.
+
+---
+
+## Review Received: final (code re-review)
+
+**Date:** 2026-05-29
+**Review artifact:** reviews/archived/final-review-2026-05-29-v2.md
+**Review type:** code (scope `final`) — auto-review at final HiLL checkpoint.
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p06-t01`, `p06-t02`
+
+**Findings converted:**
+
+- `I1` Public package versions downgrade current `origin/main` → `p06-t01`
+- `I2` Dispatch-ceiling docs still advertise removed flat config keys → `p06-t02`
+
+**Design drift / artifact alignment notes:**
+
+- None. Findings are target-branch drift and documentation/runtime mismatch to fix before merge.
+
+**Next:** Execute Phase 6 and re-run final review.
 
 ---
 
