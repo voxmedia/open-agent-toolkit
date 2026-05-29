@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status  | Tasks | Completed |
-| ------------------------------------- | ------- | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
-| Phase 3: Documentation                | passed  | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | passed  | 1     | 1/1       |
-| Phase 5: Final review fixes           | pending | 2     | 0/2       |
+| Phase                                 | Status | Tasks | Completed |
+| ------------------------------------- | ------ | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
+| Phase 3: Documentation                | passed | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
+| Phase 5: Final review fixes           | passed | 2     | 2/2       |
 
-**Total:** 6/8 tasks completed
+**Total:** 8/8 tasks completed
 
-**Next task:** `p05-t01`
+**Next task:** null — review fix tasks complete; awaiting final re-review.
 
 ---
 
@@ -209,18 +209,49 @@ oat_generated: false
 
 ## Phase 5: Final review fixes
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Restored dispatch-ceiling provider-neutral mainline behavior, preset/provider config, preset compilation, unsupported-provider advisory handling, docs, and repo-reference artifacts from `origin/main`.
+- Restored canonical OAT skill files to the target-branch versions/content.
+- Restored `jsonc-parser` package metadata required by the restored JSONC config helper.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - provider-neutral dispatch-ceiling resolver behavior.
+- `packages/cli/src/config/dispatch-ceiling-preset.ts` - preset compiler.
+- `packages/cli/src/providers/ceiling/registry.ts` - provider adapter registry and unsupported-provider metadata.
+- `packages/cli/src/config/json.ts` - JSONC config helper restored from main.
+- `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md` - dispatch-ceiling documentation restored.
+- `.agents/skills/oat-project-implement/SKILL.md` - restored canonical skill version/content.
+- `.agents/skills/oat-project-plan/SKILL.md` - restored canonical skill version/content.
+- `.agents/skills/oat-project-quick-start/SKILL.md` - restored canonical skill version/content.
+- `packages/cli/package.json` and `pnpm-lock.yaml` - restored `jsonc-parser` dependency metadata.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling src/config src/providers/ceiling`
+- Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json project dispatch-ceiling resolve --provider cursor --preflight`
+- Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.preset`
+- Run: `git diff --name-status origin/main..HEAD -- .agents/skills .claude .cursor`
+- Run: `pnpm release:validate`
+- Result: pass.
+
+**Review:** `reviews/p05-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p05-t01: (review) Restore dispatch-ceiling mainline contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1f9a3317
 
 ### Task p05-t02: (review) Restore canonical OAT skill versions from main
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1d10d49d
 
 ---
 
@@ -365,6 +396,38 @@ _- Outstanding Items_
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 5 — 2026-05-29 20:40
+
+**Branch:** feat/pjm-init
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p05   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p05: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p05 implementation used `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state Codex ceiling `xhigh`; the phase restored cross-cutting target-branch dispatch-ceiling and canonical skill behavior.
+- Dispatch: p05 review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh` for deterministic quality gate behavior.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
@@ -387,8 +450,8 @@ Chronological log of implementation progress.
 - [x] p03-t01: Document install-vs-initialize lifecycle and `oat pjm init` - 8b449397
 - [x] p04-t01: Lockstep version bump and release validation - 795e9409
 - [x] p04 validation fix: Update CLI help snapshot for `pjm` - 30191c10
-- [ ] p05-t01: (review) Restore dispatch-ceiling mainline contract
-- [ ] p05-t02: (review) Restore canonical OAT skill versions from main
+- [x] p05-t01: (review) Restore dispatch-ceiling mainline contract - 1f9a3317
+- [x] p05-t02: (review) Restore canonical OAT skill versions from main - 1d10d49d
 
 **What changed (high level):**
 
@@ -405,7 +468,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Execute final review fix tasks starting with `p05-t01`.
+- Final review fixes complete; re-run final review.
 
 **Blockers:**
 
@@ -460,6 +523,8 @@ Chronological log of implementation progress.
 
 **New tasks added:** `p05-t01`, `p05-t02`
 
+**Fix tasks completed:** `p05-t01`, `p05-t02`
+
 **Findings converted:**
 
 - `C1` Branch rolls back the dispatch-ceiling CLI/config contract from `main` → `p05-t01`
@@ -469,12 +534,7 @@ Chronological log of implementation progress.
 
 - None. Findings are regressions against target `main`, not accepted PJM design drift.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill, then re-run final review.
-
-After the fix tasks are complete:
-
-- Update the final review row status to `fixes_completed`
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`
+**Next:** Re-run final review.
 
 ---
 
@@ -496,6 +556,7 @@ Track test execution during implementation.
 | 2     | pjm tests; commands.integration.test.ts; cli lint; cli type-check                                | yes    | 0      | focused  |
 | 3     | docs generate-index; build:docs                                                                  | yes    | 0      | docs     |
 | 4     | help-snapshots.test.ts; cli test; lint; type-check; build; release:validate                      | yes    | 0      | release  |
+| 5     | dispatch-ceiling/config/provider-ceiling tests; cursor/config repros; release:validate           | yes    | 0      | review   |
 
 ## Final Summary (for PR/docs)
 
@@ -506,13 +567,14 @@ Track test execution during implementation.
 - `oat pjm init` instantiates repo reference docs and delegates backlog scaffolding to `initializeBacklog()`.
 - Docs describe the install-vs-initialize lifecycle, command surface, and canonical repo-reference layout.
 - The public package lockstep is bumped to `0.1.12`.
+- Final review fixes restore dispatch-ceiling mainline behavior and canonical OAT skill versions from `main`.
 
 **Behavioral changes (user-facing):**
 
 - `oat init tools project-management` continues to install skills and template sources.
 - `oat pjm init` now creates `current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/` in the repo reference area without overwriting existing files.
 - `oat pjm init --json` emits structured success and error payloads; failures preserve exit code 1 for user-actionable scaffolding errors.
-- Final review found target-branch regressions unrelated to PJM; Phase 5 fix tasks are queued before merge.
+- Final review found target-branch regressions unrelated to PJM; Phase 5 restored those target-branch behaviors before final re-review.
 
 **Key files / modules:**
 
@@ -524,6 +586,8 @@ Track test execution during implementation.
 - `apps/oat-docs/docs/cli-utilities/tool-packs.md` - lifecycle documentation owner.
 - `apps/oat-docs/docs/reference/oat-directory-structure.md` - canonical repo-reference layout.
 - `packages/cli/src/commands/help-snapshots.test.ts` - root CLI help snapshot including `pjm`.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - restored provider-neutral dispatch-ceiling contract.
+- `.agents/skills/oat-project-implement/SKILL.md` - restored target-branch canonical skill.
 
 **Verification performed:**
 
@@ -538,6 +602,8 @@ Track test execution during implementation.
 - Final verification before final review: `pnpm lint`
 - Final verification before final review: `pnpm type-check`
 - Final verification before final review: `pnpm build`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling src/config src/providers/ceiling`
+- `pnpm release:validate`
 
 **Design deltas (if any):**
 
