@@ -66,15 +66,30 @@ export async function acquireWorktree(
   // the placeholder mkdtemp directory and let git create it fresh.
   rmSync(worktreePath, { recursive: true, force: true });
 
-  await execFile('git', [
-    '-C',
-    repoRoot,
-    'worktree',
-    'add',
-    '--detach',
-    worktreePath,
-    'HEAD',
-  ]);
+  try {
+    await execFile('git', [
+      '-C',
+      repoRoot,
+      'worktree',
+      'add',
+      '--detach',
+      worktreePath,
+      'HEAD',
+    ]);
+  } catch (error) {
+    // `git worktree add` can fail after partially creating the target dir
+    // and/or registering `.git/worktrees/<name>` metadata. Because we throw
+    // without returning a handle, the caller's `finally { releaseWorktree }`
+    // never runs — so clean up the partial worktree here before rethrowing.
+    // Best-effort: prune dangling worktree metadata, then remove the temp dir.
+    try {
+      await execFile('git', ['-C', repoRoot, 'worktree', 'prune']);
+    } catch {
+      // Best-effort; ignore (e.g. repoRoot is not a git repo).
+    }
+    rmSync(worktreePath, { recursive: true, force: true });
+    throw error;
+  }
 
   return { repoRoot, worktreePath, released: false };
 }

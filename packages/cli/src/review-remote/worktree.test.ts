@@ -1,5 +1,11 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import {
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+  existsSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -32,6 +38,13 @@ async function listWorktrees(repoRoot: string): Promise<string> {
     '--porcelain',
   ]);
   return stdout;
+}
+
+/** Count `oat-review-wt-*` ephemeral worktree dirs currently in the temp dir. */
+function countEphemeralWorktreeDirs(): number {
+  return readdirSync(tmpdir()).filter((name) =>
+    name.startsWith('oat-review-wt-'),
+  ).length;
 }
 
 describe('worktree lifecycle', () => {
@@ -124,5 +137,20 @@ describe('worktree lifecycle', () => {
     await releaseWorktree(handle);
     // A second release must not throw.
     await expect(releaseWorktree(handle)).resolves.toBeUndefined();
+  });
+
+  it('cleans up the temp dir when `git worktree add` fails (no handle to release)', async () => {
+    // Point acquire at a non-repo directory so `git worktree add` rejects.
+    // The caller gets no handle back, so the failure-path cleanup inside
+    // acquireWorktree is the only thing that can prevent a leak.
+    const nonRepo = mkdtempSync(join(tmpdir(), 'oat-wt-nonrepo-'));
+    const before = countEphemeralWorktreeDirs();
+    try {
+      await expect(acquireWorktree({ repoRoot: nonRepo })).rejects.toThrow();
+      // No `oat-review-wt-*` dir should survive the failed acquire.
+      expect(countEphemeralWorktreeDirs()).toBe(before);
+    } finally {
+      rmSync(nonRepo, { recursive: true, force: true });
+    }
   });
 });
