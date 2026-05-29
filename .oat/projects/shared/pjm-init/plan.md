@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-29
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p02'] # pause AFTER core implementation phase for human review
+oat_plan_hill_phases: ['p04'] # pause AFTER final phase for human review
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # fully sequential — dependency chain + final release gate
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null

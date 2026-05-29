@@ -51,7 +51,7 @@ Plan complete (quick mode + lightweight design). Ready for `oat-project-implemen
 
 - ✓ Discovery captured and committed
 - ✓ Lightweight design captured and committed (documentation promoted to first-class)
-- ✓ Plan generated (sequential; HiLL pause after p02; dispatch ceiling codex=xhigh)
+- ✓ Plan generated (sequential; HiLL pause after p04; auto-review enabled; dispatch ceiling codex=xhigh)
 - ⧗ Awaiting implementation
 
 ## Blockers
