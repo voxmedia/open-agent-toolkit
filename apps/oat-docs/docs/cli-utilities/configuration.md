@@ -160,13 +160,65 @@ oat config describe activeIdea
 
 ## Dispatch ceiling resolution
 
-`oat config get workflow.dispatchCeiling.<provider>` shows only the effective
-config value. Implementation workflows should use the project-aware resolver
-instead:
+The dispatch ceiling is set as a **provider-neutral preset** (or per-provider
+advanced values) and compiled at write time into concrete per-provider values.
+Runtime dispatch reads only the concrete values — never the preset label.
+
+### Config keys
+
+Three keys control the ceiling, all under `workflow.dispatchCeiling`:
+
+| Key                                         | Values                                  | Purpose                                             |
+| ------------------------------------------- | --------------------------------------- | --------------------------------------------------- |
+| `workflow.dispatchCeiling.preset`           | `balanced`, `maximum`, `cost-conscious` | Convenience preset; compiles to concrete values     |
+| `workflow.dispatchCeiling.providers.codex`  | `low`, `medium`, `high`, `xhigh`        | Concrete Codex ceiling (set by preset or Advanced)  |
+| `workflow.dispatchCeiling.providers.claude` | `haiku`, `sonnet`, `opus`               | Concrete Claude ceiling (set by preset or Advanced) |
+
+**Presets compile to:**
+
+| Preset           | Codex    | Claude   |
+| ---------------- | -------- | -------- |
+| `balanced`       | `high`   | `sonnet` |
+| `maximum`        | `xhigh`  | `opus`   |
+| `cost-conscious` | `medium` | `sonnet` |
+
+**Advanced (no preset):** set `providers.codex` and/or `providers.claude`
+individually. No `preset` key is stored.
+
+**No ceiling:** leave `oat_dispatch_ceiling` unset; implementer subagents run at
+provider defaults.
+
+### How enforcement works
+
+OAT applies the ceiling where the provider exposes a reliable mechanism. Other
+providers receive it as advisory.
+
+| Provider | Mechanism                 | Enforcement mode           |
+| -------- | ------------------------- | -------------------------- |
+| Codex    | Pinned role variants      | `enforced`                 |
+| Claude   | Task `model` parameter    | `enforced`                 |
+| Others   | None (informational only) | `advisory` / `unsupported` |
+
+**Verify-on-upgrade:** when the requested tier exceeds the current orchestrator
+tier (an upgrade request), the resolver sets `verifyOnDispatch: true`. The skill
+confirms the actual model used after dispatch. If the provider did not honor the
+upgrade, the enforcement log reads `advisory — provider did not honor upgrade;
+ran <tier>` instead of `enforced`.
+
+### Clean break
+
+The previous flat keys (`workflow.dispatchCeiling.codex` and
+`workflow.dispatchCeiling.claude`) are removed. There is no migration path — set
+the new keys.
+
+### Using the resolver
+
+Implementation workflows should use the project-aware resolver rather than
+reading config keys directly:
 
 ```bash
 oat project dispatch-ceiling resolve --provider codex --json
-oat project dispatch-ceiling resolve --provider claude --json
+oat project dispatch-ceiling resolve --provider claude --orchestrator-tier sonnet --json
 ```
 
 The resolver checks effective config first, then project `state.md`
@@ -199,8 +251,9 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
 - `workflow.autoReviewAtHillCheckpoints` — boolean. Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase `oat-reviewer` gates, which run after each phase in Tier 1 regardless of this setting. When unset, the skill prompts.
 - `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
-- `workflow.dispatchCeiling.codex` — `low`, `medium`, `high`, or `xhigh`. Maximum Codex reasoning effort OAT may select through deterministic pinned implementer/reviewer variants. Provider default effort is informational for base/unpinned roles and is not treated as this ceiling.
-- `workflow.dispatchCeiling.claude` — `haiku`, `sonnet`, or `opus`. Maximum Claude model tier OAT may select for provider-native subagent dispatch. Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
+- `workflow.dispatchCeiling.preset` — `balanced`, `maximum`, or `cost-conscious`. Convenience preset that compiles to per-provider values at write time. Setting this key is the recommended way to configure the ceiling.
+- `workflow.dispatchCeiling.providers.codex` — `low`, `medium`, `high`, or `xhigh`. Concrete Codex ceiling. Set automatically when a preset is selected; also settable directly for Advanced (no preset) configurations. Provider default effort is informational for base/unpinned roles and is not treated as this ceiling.
+- `workflow.dispatchCeiling.providers.claude` — `haiku`, `sonnet`, or `opus`. Concrete Claude ceiling. Set automatically when a preset is selected; also settable directly for Advanced configurations. Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
 
 ### Three-layer resolution
 
@@ -224,19 +277,17 @@ oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.autoNarrowReReviewScope true --user
 oat config set workflow.designMode selective --user
-oat config set workflow.dispatchCeiling.codex high --user
-oat config set workflow.dispatchCeiling.claude sonnet --user
+oat config set workflow.dispatchCeiling.preset balanced --user
 
 # Shared repo: team decision for this repo
 oat config set workflow.createPrOnComplete false --shared
 oat config set workflow.designMode collaborative --shared
-oat config set workflow.dispatchCeiling.codex high --shared
-oat config set workflow.dispatchCeiling.claude sonnet --shared
+oat config set workflow.dispatchCeiling.preset balanced --shared
 
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every
 oat config set workflow.designMode draft
-oat config set workflow.dispatchCeiling.codex medium
+oat config set workflow.dispatchCeiling.providers.codex medium  # Advanced: per-provider override
 ```
 
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
