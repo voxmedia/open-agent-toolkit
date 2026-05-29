@@ -190,6 +190,7 @@ Resolution order:
 
 ```json
 {
+  "status": "resolved",
   "provider": "codex",
   "value": "high",
   "source": "project-state",
@@ -319,7 +320,7 @@ Claude rules:
 - Claude ceiling is model-based: `haiku < sonnet < opus`.
 - Implementer dispatch: select the lowest sufficient model capped by the resolved Claude ceiling (`min(preferred, ceiling)`).
 - Review dispatch: target the resolved Claude ceiling directly.
-- Call `oat project dispatch-ceiling resolve --provider claude --role implementer` (or `--role reviewer`); read `providers.claude.dispatchArgs.model` for the model string to pass.
+- Call `oat project dispatch-ceiling resolve --provider claude --role implementer --orchestrator-tier <current-orchestrator-tier>` (or `--role reviewer`); read `providers.claude.dispatchArgs.model` for the model string to pass. Pass `--orchestrator-tier` so the resolver can flag above-orchestrator upgrade requests and set `verifyOnDispatch` correctly.
 - Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
 - Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
 
@@ -427,7 +428,7 @@ Dispatch ceiling: high (codex, enforced — variant oat-reviewer-high)
 Dispatch ceiling: sonnet (claude, enforced — Task model arg)
 Dispatch ceiling: opus (claude, enforced — Task model arg)
 Dispatch ceiling: high (cursor, unsupported — no adapter; informational)
-Dispatch ceiling: high (codex, advisory — ceiling set but no value resolved)
+Dispatch ceiling: unresolved (codex, advisory — ceiling set but no value resolved)
 ```
 
 **Verify-on-upgrade (`verifyOnDispatch: true`):**
