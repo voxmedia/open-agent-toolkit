@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.19
+version: 2.0.20
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -164,55 +164,100 @@ Forbidden: Selected: Tier 2 — Inline because the user did not separately menti
 
 ### Dispatch Ceiling Preflight
 
-Before any phase work, resolve and print the OAT dispatch ceiling for the
-current provider. This is a preflight gate, not a mid-run question.
+Before any phase work, resolve and print the OAT dispatch ceiling. This is a
+preflight gate, not a mid-run question.
 
-Use the CLI helper as the source of truth for resolution:
+Use the CLI resolver as the source of truth:
 
 ```bash
-oat project dispatch-ceiling resolve --provider <codex|claude> --preflight --json
+oat project dispatch-ceiling resolve --provider <active-provider> --preflight --json
 ```
 
 If `oat` is not in PATH, use:
 
 ```bash
-pnpm run cli -- project dispatch-ceiling resolve --provider <codex|claude> --preflight --json
+pnpm run cli -- project dispatch-ceiling resolve --provider <active-provider> --preflight --json
 ```
 
 Resolution order:
 
-1. Effective config key `workflow.dispatchCeiling.<provider>` via the resolver CLI
+1. Config keys `workflow.dispatchCeiling.providers.<provider>` (local > shared > user)
 2. Project `state.md` frontmatter key `oat_dispatch_ceiling`
-3. Interactive implementation preflight prompt
+3. Interactive implementation preflight prompt (below)
 4. Non-interactive unresolved: block before work starts
 
-Provider values:
+**JSON response shape** (from `--json`):
 
-- Codex: `low`, `medium`, `high`, `xhigh`
-- Claude: `haiku`, `sonnet`, `opus`
+```json
+{
+  "provider": "codex",
+  "value": "high",
+  "source": "project-state",
+  "preset": "balanced",
+  "unresolved": false,
+  "providerDefaultEffort": "medium",
+  "providers": {
+    "codex": {
+      "value": "high",
+      "mode": "enforced",
+      "mechanism": "pinned-variant",
+      "dispatchArgs": { "variant": "oat-phase-implementer-high" },
+      "verifyOnDispatch": false
+    }
+  }
+}
+```
 
-For Codex, also resolve the provider default effort when possible by reading
-Codex configuration (for example `.codex/config.toml`). If it cannot be found,
-display `unknown`. Do not treat provider default as the OAT ceiling.
-The resolver prints this as `providerDefaultEffort` in JSON and includes it in
-human-readable output.
+Read `providers.<active-provider>` for the concrete dispatch controls. The
+`dispatchArgs` field carries the provider-specific argument to pass through
+(Codex: `variant` name; Claude: `model` string). Never re-derive these from the
+preset label — the resolver is the single compilation/join point.
 
-Print this before phase work:
+Print before phase work:
 
 ```text
-Codex dispatch ceiling: high
-Source: project state
-Codex provider default effort: medium
+Dispatch ceiling: high (codex, enforced — pinned-variant)
+Source: project state  |  Preset: balanced
+Provider default effort: medium
 Note: OAT will use pinned subagent variants up to high. Base/unpinned roles resolve through the provider default.
 ```
 
-If no ceiling resolves and the session is interactive, ask before starting
-implementation and persist the answer in project `state.md` frontmatter:
+If no ceiling resolves and the session is interactive, present the preset
+prompt once before starting work:
+
+```text
+No dispatch ceiling is configured for this project.
+
+Set the dispatch ceiling — the maximum subagent tier OAT may use.
+
+  1. Balanced (recommended) — Codex: high · Claude: sonnet
+  2. Maximum                — Codex: xhigh · Claude: opus  (reviews always run at this tier)
+  3. Cost-conscious         — Codex: medium · Claude: sonnet
+  4. Advanced — set per provider
+  5. No ceiling
+
+OAT applies this where the provider exposes a reliable mechanism (Codex: pinned
+variants; Claude: Task model parameter). Other providers may treat it as advisory.
+```
+
+**Preset selection** persists `preset` + compiled per-provider values. On
+selection, print the exact compiled result (e.g., "Ceiling set: balanced →
+Codex: high · Claude: sonnet") before proceeding.
+
+**Advanced (option 4)** prompts for each provider's value individually, then
+persists `providers` + `source` only — no `preset` key.
+
+**No ceiling (option 5)** leaves `oat_dispatch_ceiling` unset; implementer
+subagents run at provider defaults.
+
+Persist in project `state.md` frontmatter using the normalized shape:
 
 ```yaml
 oat_dispatch_ceiling:
-  provider: codex
-  value: high
+  preset: balanced # omit when Advanced was chosen
+  providers:
+    codex: high
+    claude: sonnet
   source: project-state
 ```
 
@@ -221,12 +266,12 @@ exists, rerun the resolver with non-interactive behavior and stop before work
 starts if it blocks:
 
 ```bash
-oat project dispatch-ceiling resolve --provider <codex|claude> --preflight --non-interactive
+oat project dispatch-ceiling resolve --provider <active-provider> --preflight --non-interactive
 ```
 
 ```text
 BLOCKED: Codex dispatch ceiling is unresolved in non-interactive mode.
-Set workflow.dispatchCeiling.codex in .oat/config.json or oat_dispatch_ceiling in project state.
+Set workflow.dispatchCeiling.providers.codex in .oat/config.json or oat_dispatch_ceiling in project state.
 ```
 
 Dry-run mode must report the unresolved ceiling and planned behavior without

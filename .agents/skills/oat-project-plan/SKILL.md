@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.3
+version: 1.3.4
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 disable-model-invocation: true
 user-invocable: true
@@ -314,50 +314,50 @@ If `## Planning Checklist` is missing (older plans), add it before finalizing wi
 
 ### Step 11.5: Resolve Dispatch Ceiling Before Implementation Readiness
 
-Before marking the plan ready for implementation, resolve the dispatch ceiling
-for the current provider.
+Before marking the plan ready for implementation, resolve the dispatch ceiling.
 
 Resolution order:
 
-1. Repo/user/local config key `workflow.dispatchCeiling.<provider>` via `oat config get`
+1. Config keys `workflow.dispatchCeiling.providers.<provider>` via the resolver CLI
 2. Project `state.md` frontmatter key `oat_dispatch_ceiling`
-3. Interactive planning prompt
+3. Interactive planning prompt (below)
 4. Leave unresolved for implementation preflight when non-interactive
 
-Provider values:
-
-- Codex: `low`, `medium`, `high`, `xhigh`
-- Claude: `haiku`, `sonnet`, `opus`
-
-If no ceiling resolves for the current provider and the session is interactive,
-ask once before final plan review:
+If no ceiling resolves and the session is interactive, present the preset
+prompt once before final plan review:
 
 ```text
-No Codex dispatch ceiling is configured for this project.
+Set the dispatch ceiling — the maximum subagent tier OAT may use.
 
-Choose the maximum Codex reasoning effort OAT may dispatch during implementation:
-low | medium | high | xhigh
+  1. Balanced (recommended) — Codex: high · Claude: sonnet
+  2. Maximum                — Codex: xhigh · Claude: opus  (reviews always run at this tier)
+  3. Cost-conscious         — Codex: medium · Claude: sonnet
+  4. Advanced — set per provider
+  5. No ceiling
 
-This controls implementer/reviewer subagent variants. It does not change your Codex config.
+OAT applies this where the provider exposes a reliable mechanism (Codex: pinned
+variants; Claude: Task model parameter). Other providers may treat it as advisory.
 ```
 
-Adapt the wording for Claude:
+**Preset selection** persists `preset` + compiled per-provider values. On
+selection, print the exact compiled result (e.g., "Ceiling set: balanced →
+Codex: high · Claude: sonnet") before proceeding.
 
-```text
-No Claude dispatch ceiling is configured for this project.
+**Advanced (option 4)** prompts for each provider's value individually, then
+persists `providers` + `source` only — no `preset` key.
 
-Choose the maximum Claude model tier OAT may dispatch during implementation:
-haiku | sonnet | opus
+**No ceiling (option 5)** leaves `oat_dispatch_ceiling` unset; implementer
+subagents run at provider defaults.
 
-This controls provider-native subagent model selection. It does not change your Claude config.
-```
-
-Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter:
+Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter using the
+normalized shape:
 
 ```yaml
 oat_dispatch_ceiling:
-  provider: codex
-  value: high
+  preset: balanced          # omit when Advanced was chosen
+  providers:
+    codex: high
+    claude: sonnet
   source: project-state
 ```
 
@@ -365,7 +365,7 @@ Do not prompt when `OAT_NON_INTERACTIVE=1` or when no user-response channel
 exists. In that case, leave the value unresolved. `oat-project-implement`
 must block before work starts if it still cannot resolve a ceiling.
 
-Do not treat Codex provider default effort as the OAT dispatch ceiling. Provider
+Do not treat provider default effort as the OAT dispatch ceiling. Provider
 default is informational for base/unpinned roles only.
 
 ### Step 12: Review Plan with User
