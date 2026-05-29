@@ -210,12 +210,22 @@ Not all workflow modes require every artifact:
 
 ## `.oat/repo/` structure
 
-| Path                   | Purpose                                                   |
-| ---------------------- | --------------------------------------------------------- |
-| `.oat/repo/knowledge/` | Generated codebase knowledge indexes                      |
-| `.oat/repo/reference/` | Repo-level reference docs (backlog, external plans, etc.) |
-| `.oat/repo/reviews/`   | Repo-scoped review artifacts (ad-hoc/non-project)         |
-| `.oat/repo/archive/`   | Archived repo-level artifacts                             |
+| Path                   | Purpose                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `.oat/repo/knowledge/` | Generated codebase knowledge indexes                                                                                                    |
+| `.oat/repo/reference/` | Repo-level reference docs, including the canonical PJM surface (`current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/`) |
+| `.oat/repo/reviews/`   | Repo-scoped review artifacts (ad-hoc/non-project)                                                                                       |
+| `.oat/repo/archive/`   | Archived repo-level artifacts                                                                                                           |
+
+Canonical project-management repo-reference surface:
+
+```text
+.oat/repo/reference/
+  current-state.md
+  roadmap.md
+  decision-record.md
+  backlog/
+```
 
 ## User scope (`~/.oat/`)
 

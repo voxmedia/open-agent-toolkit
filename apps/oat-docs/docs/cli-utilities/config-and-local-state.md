@@ -20,6 +20,8 @@ Use the `oat backlog` group when you want direct CLI support for the file-backed
 
 Run `oat backlog init` first when the local backlog scaffold does not exist yet in a fresh repo. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
 
+For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds `current-state.md`, `roadmap.md`, `decision-record.md`, and delegates the backlog sub-surface to `oat backlog init`.
+
 ## `oat local ...`
 
 `oat local` manages local-only, gitignored paths that still need to follow you between the main repo and worktrees.
