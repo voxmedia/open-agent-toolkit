@@ -58,7 +58,7 @@ primary, `gh pr diff` fallback for thin envs), runs the review, posts a
 single GitHub PR review with inline comments via `gh api` (or `agent-reviews`
 if it exposes a posting flow). No local artifact, no `plan.md` updates, no
 bookkeeping commits on machine B. Project-rail variant locates the project
-in the PR's checkout (diff scan for `.oat/projects/*/state.md` mods, with
+in the PR's checkout (diff scan for `.oat/projects/*/*/state.md` mods, with
 `--project <path>` override) and uses its artifacts to drive mode-aware
 review quality — but doesn't mutate them. Machine A's existing
 `receive-remote` already owns `plan.md` updates and turns the posted review
@@ -164,7 +164,7 @@ the durable record.
 ### Option D: Project resolution on machine B — Diff scan + `--project` override
 
 **Description:** Locate the project by scanning the PR diff for
-`.oat/projects/*/state.md` modifications (high signal — the project flow
+`.oat/projects/*/*/state.md` modifications (high signal — the project flow
 commits state.md on the PR branch). Fall back to explicit `--project <path>`
 arg when the scan is ambiguous or absent.
 
@@ -304,7 +304,7 @@ X", it's "return findings as structured output for the caller to post."
    mode-aware review, but does not mutate them. Machine A's
    `receive-remote` owns `plan.md` updates when it processes the posted
    review.
-7. **Project resolution:** Scan the PR diff for `.oat/projects/*/state.md`
+7. **Project resolution:** Scan the PR diff for `.oat/projects/*/*/state.md`
    mods; that's the project. Explicit `--project <path>` arg overrides
    when ambiguous or missing.
 8. **Review-body markers:** Posted review body frontmatter / preamble
