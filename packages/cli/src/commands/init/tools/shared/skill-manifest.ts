@@ -60,6 +60,7 @@ export const WORKFLOW_SKILLS = [
   'oat-project-reconcile',
   'oat-project-revise',
   'oat-project-review-provide',
+  'oat-project-review-provide-remote',
   'oat-project-review-receive',
   'oat-project-review-receive-remote',
   'oat-project-spec',
@@ -124,6 +125,7 @@ export const UTILITY_SKILLS = [
   'create-agnostic-skill',
   'oat-repo-maintainability-review',
   'oat-review-provide',
+  'oat-review-provide-remote',
   'oat-review-receive',
   'oat-review-receive-remote',
 ] as const;

@@ -47,6 +47,7 @@ SKILLS=(
   oat-project-reconcile
   oat-project-revise
   oat-project-review-provide
+  oat-project-review-provide-remote
   oat-project-review-receive
   oat-project-review-receive-remote
   oat-project-spec
@@ -54,6 +55,7 @@ SKILLS=(
   oat-project-summary
   oat-repo-knowledge-index
   oat-review-provide
+  oat-review-provide-remote
   oat-review-receive
   oat-review-receive-remote
   oat-worktree-bootstrap
