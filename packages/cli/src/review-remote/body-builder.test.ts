@@ -166,6 +166,127 @@ describe('buildReviewBody', () => {
     expect(parsed?.oat_provide_remote).toBe(true);
   });
 
+  it('renders a Findings outside the PR diff subsection with file:line and body', () => {
+    const { body } = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'ad-hoc',
+      invocation: 'manual',
+      summary: 'Has an out-of-diff finding.',
+      findings: [finding('important')],
+      outOfDiffFindings: [
+        {
+          file: 'packages/cli/src/legacy/untouched.ts',
+          line: 42,
+          severity: 'important',
+          title: 'Legacy guard missing',
+          body: 'This guard is required but the line is not in the PR diff.',
+        },
+      ],
+    });
+
+    expect(body).toContain('## Findings outside the PR diff');
+    expect(body).toContain('packages/cli/src/legacy/untouched.ts:42');
+    expect(body).toContain(
+      'This guard is required but the line is not in the PR diff.',
+    );
+  });
+
+  it('renders a null-line out-of-diff finding without a trailing :line', () => {
+    const { body } = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'ad-hoc',
+      invocation: 'manual',
+      summary: 'File-level out-of-diff finding.',
+      findings: [finding('medium')],
+      outOfDiffFindings: [
+        {
+          file: 'packages/cli/src/legacy/whole-file.ts',
+          line: null,
+          severity: 'medium',
+          body: 'Whole-file concern with no specific line.',
+        },
+      ],
+    });
+
+    expect(body).toContain('## Findings outside the PR diff');
+    expect(body).toContain('packages/cli/src/legacy/whole-file.ts');
+    expect(body).not.toContain('whole-file.ts:');
+    expect(body).toContain('Whole-file concern with no specific line.');
+  });
+
+  it('omits the Findings outside the PR diff subsection when none are provided', () => {
+    const omitted = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'ad-hoc',
+      invocation: 'manual',
+      summary: 'No out-of-diff findings.',
+      findings: [finding('critical')],
+    }).body;
+    const empty = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'ad-hoc',
+      invocation: 'manual',
+      summary: 'No out-of-diff findings.',
+      findings: [finding('critical')],
+      outOfDiffFindings: [],
+    }).body;
+
+    expect(omitted).not.toContain('## Findings outside the PR diff');
+    // Empty array is byte-identical to omitting the field (no empty heading).
+    expect(empty).toBe(omitted);
+  });
+
+  it('keeps severity counts reflecting ALL findings, including out-of-diff ones', () => {
+    // Contract: out-of-diff findings are still passed in `findings` so the
+    // counts stay complete. `outOfDiffFindings` only controls body rendering,
+    // never the count math — the builder does not re-derive counts from it.
+    const { body } = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'ad-hoc',
+      invocation: 'manual',
+      summary: 'Counts include the downgraded finding.',
+      findings: [finding('critical'), finding('important')],
+      outOfDiffFindings: [
+        {
+          file: 'packages/cli/src/legacy/untouched.ts',
+          line: 7,
+          severity: 'important',
+          body: 'Downgraded into the body but still counted.',
+        },
+      ],
+    });
+
+    // The important out-of-diff finding is present in `findings`, so the count
+    // is 1 — the out-of-diff section does not add a second tally.
+    expect(body).toMatch(/- Critical: 1/);
+    expect(body).toMatch(/- Important: 1/);
+  });
+
+  it('places the Findings outside the PR diff subsection after Severity Counts', () => {
+    const { body } = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'ad-hoc',
+      invocation: 'manual',
+      summary: 'Ordering check.',
+      findings: [finding('minor')],
+      outOfDiffFindings: [
+        {
+          file: 'a/b/c.ts',
+          line: 3,
+          severity: 'minor',
+          body: 'Out-of-diff minor.',
+        },
+      ],
+    });
+
+    const countsIdx = body.indexOf('## Severity Counts');
+    const outOfDiffIdx = body.indexOf('## Findings outside the PR diff');
+    const notesIdx = body.indexOf('## Notes');
+    expect(countsIdx).toBeGreaterThan(-1);
+    expect(outOfDiffIdx).toBeGreaterThan(countsIdx);
+    expect(notesIdx).toBeGreaterThan(outOfDiffIdx);
+  });
+
   it('includes a Verification section only when verification commands are provided', () => {
     const withCommands = buildReviewBody({
       headSha: FULL_SHA,

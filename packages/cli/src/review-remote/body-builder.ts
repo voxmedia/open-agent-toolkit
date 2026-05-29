@@ -20,6 +20,30 @@ export interface BuilderFinding {
   severity: FindingSeverity;
 }
 
+/**
+ * A finding whose `file:line` is NOT present in the PR diff and therefore
+ * cannot be posted as a GitHub inline comment (see design.md → Error Handling →
+ * Inline-comment line mapping). Such findings must NOT be dropped — they are
+ * downgraded into the top-level body via a "Findings outside the PR diff"
+ * subsection carrying the original `file:line` reference and finding body.
+ *
+ * Field names mirror the `StructuredFindings` finding shape (design.md → Data
+ * Models → StructuredFindings) so callers can pass entries through unchanged;
+ * `line` is `number | null` because a reviewer-level finding may be file-scoped
+ * with no specific line.
+ */
+export interface OutOfDiffFinding {
+  /** Repo-relative path the original finding referenced. */
+  file: string;
+  /** 1-based line the original finding referenced, or `null` if file-scoped. */
+  line: number | null;
+  severity: FindingSeverity;
+  /** Optional short title carried from the structured finding. */
+  title?: string;
+  /** Finding description / rationale — preserved verbatim, never dropped. */
+  body: string;
+}
+
 export interface BuildInput {
   /** Full 40-char hex SHA of the reviewed PR HEAD. */
   headSha: string;
@@ -32,6 +56,16 @@ export interface BuildInput {
   /** 2-3 sentence human-readable summary. */
   summary: string;
   findings: BuilderFinding[];
+  /**
+   * Findings whose `file:line` is not in the PR diff, downgraded into the body
+   * instead of posted inline. Omitted/empty renders no subsection (the body is
+   * byte-identical to a build without the field).
+   *
+   * Count contract: these findings MUST also appear in {@link BuildInput.findings}
+   * so the severity counts stay complete. This field only drives body rendering
+   * — the builder never re-derives severity counts from it.
+   */
+  outOfDiffFindings?: OutOfDiffFinding[];
   /** Commands the user can run to verify fixes; omitted when absent/empty. */
   verificationCommands?: string[];
 }
@@ -86,6 +120,27 @@ function buildMarkerBlock(input: BuildInput): string {
   return `<!-- ${MARKER_BLOCK_OPEN}\n${lines.join('\n')}\n-->`;
 }
 
+/**
+ * Render the "Findings outside the PR diff" subsection (design.md → Error
+ * Handling → Inline-comment line mapping). Each entry shows its original
+ * `file:line` reference followed by the preserved finding body. A `null` line
+ * renders the bare file path (file-scoped finding). Returns `null` when there
+ * are no out-of-diff findings so no empty heading is emitted.
+ */
+function buildOutOfDiffSection(
+  findings: OutOfDiffFinding[] | undefined,
+): string | null {
+  if (!findings || findings.length === 0) {
+    return null;
+  }
+  const entries = findings.map((f) => {
+    const reference = f.line === null ? f.file : `${f.file}:${f.line}`;
+    const heading = f.title ? `${reference} — ${f.title}` : reference;
+    return `- **${heading}**\n\n  ${f.body}`;
+  });
+  return ['## Findings outside the PR diff', '', ...entries].join('\n');
+}
+
 const MINOR_FIX_NUDGE =
   'Minor findings are included inline. We recommend fixing minors during ' +
   'this cycle rather than tracking them as backlog items — they are usually ' +
@@ -113,6 +168,11 @@ export function buildReviewBody(input: BuildInput): {
       `- Minor: ${counts.minor}`,
     ].join('\n'),
   ];
+
+  const outOfDiffSection = buildOutOfDiffSection(input.outOfDiffFindings);
+  if (outOfDiffSection !== null) {
+    sections.push(outOfDiffSection);
+  }
 
   if (counts.minor > 0) {
     sections.push(`## Notes\n\n${MINOR_FIX_NUDGE}`);
