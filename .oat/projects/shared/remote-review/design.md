@@ -182,11 +182,18 @@ The cross-machine flow runs in three phases:
    (otherwise). Capability-probe `agent-reviews` for an equivalent posting
    flow first; use it for tooling symmetry when available.
 
-The roundtrip back via `*-receive-remote` on machine A is unchanged — that
-skill already fetches reviews from GitHub by PR number; the only addition
-is that it learns to recognize the `oat_provide_remote` markers and (for
-the project rail) the `oat_project` + `oat_review_scope` markers when
-routing findings into plan tasks.
+The roundtrip back via `*-receive-remote` on machine A works through that
+skill's existing flow unchanged — it already fetches unresolved PR review
+comments from GitHub by PR number and triages them into tasks. The marker
+block (`oat_provide_remote`, `oat_review_head_sha`, and on the project rail
+`oat_project` + `oat_review_scope`) is embedded in the posted review body
+as forward-compatible routing metadata: it enables subsequent
+provide-remote passes to find the prior review (re-review narrowing) and is
+available for a future `*-receive-remote` enhancement to auto-route by
+project/scope. Teaching `receive-remote` to parse those markers is **out of
+scope** for this project (it is not modified here beyond the minor-default
+flip); the markers render as nothing in GitHub's UI and do not disrupt the
+current receive flow.
 
 ## Component Design
 

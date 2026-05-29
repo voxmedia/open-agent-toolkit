@@ -1,6 +1,6 @@
 ---
 name: oat-review-provide-remote
-version: 1.0.1
+version: 1.0.2
 description: Use when reviewing a GitHub PR opened on another machine and posting findings back as a single PR review, outside any OAT project context. Fetches the PR via gh, reviews it, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -151,8 +151,10 @@ gh api "/repos/{owner}/{repo}/pulls/$PR/reviews"
 
 Take the most recent matching review (by submitted timestamp). Before narrowing to `<prior_sha>..<HEAD>`, run the stale-SHA guard (design.md → Error Handling → Stale prior-review SHA):
 
-1. **Existence:** `git -C "$EPHEMERAL_PATH" cat-file -e <prior_sha>` (diff-only mode: `git fetch origin <prior_sha>:refs/oat-prior-review` first, then re-check).
-2. **Ancestry:** `git -C "$EPHEMERAL_PATH" merge-base --is-ancestor <prior_sha> "$PR_HEAD_SHA"`.
+Run the guard in the available git context `$GIT_CTX` — `$EPHEMERAL_PATH` in rich-context (checkout) mode, or `$REPO_ROOT` in diff-only mode (where no worktree exists):
+
+1. **Existence:** `git -C "$GIT_CTX" cat-file -e <prior_sha>` (diff-only mode: `git -C "$REPO_ROOT" fetch origin <prior_sha>:refs/oat-prior-review` first, then re-check; if that fetch fails, fall back to full PR scope).
+2. **Ancestry:** `git -C "$GIT_CTX" merge-base --is-ancestor <prior_sha> "$PR_HEAD_SHA"`.
 
 Guard outcomes:
 
