@@ -308,16 +308,18 @@ Codex rules:
    - `medium`: normal multi-file implementation and moderate integration risk
    - `high`: broad architecture, security/auth/redaction boundaries, subtle state behavior, or repeated substantive review failures
    - `xhigh`: highest-risk work that requires the configured ceiling to allow xhigh
-3. Selected effort is `min(preferred, resolved_ceiling)`.
-4. Dispatch implementer/fix work through `oat-phase-implementer-<selected>`.
-5. Dispatch review work through `oat-reviewer-<resolved_ceiling>` for deterministic quality gate behavior.
+3. Selected effort is `min(preferred, resolved_ceiling)` for implementer/fix work.
+4. For implementer/fix dispatch: call `oat project dispatch-ceiling resolve --provider codex --role implementer`; read `providers.codex.dispatchArgs.variant` for the role name (e.g., `oat-phase-implementer-high`). Pass that variant name directly — do not re-derive it from the ceiling value.
+5. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer`; read `providers.codex.dispatchArgs.variant` for the reviewer role name (e.g., `oat-reviewer-high`). Reviewer always targets the ceiling for deterministic quality gate behavior.
 6. Use base/unpinned Codex roles only as a fallback or explicit provider-default choice. Log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as parent-ceiling inheritance.
 7. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
 
 Claude rules:
 
 - Claude ceiling is model-based: `haiku < sonnet < opus`.
-- Select the lowest sufficient model capped by `workflow.dispatchCeiling.claude` or project `oat_dispatch_ceiling`.
+- Implementer dispatch: select the lowest sufficient model capped by the resolved Claude ceiling (`min(preferred, ceiling)`).
+- Review dispatch: target the resolved Claude ceiling directly.
+- Call `oat project dispatch-ceiling resolve --provider claude --role implementer` (or `--role reviewer`); read `providers.claude.dispatchArgs.model` for the model string to pass.
 - Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
 - Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
 
@@ -404,6 +406,52 @@ ceiling_source: { repo config | project state | preflight prompt }
 provider_default_effort: { value | unknown | not-applicable }
 dispatch_rationale: { short rationale }
 ```
+
+### Dispatch Ceiling Enforcement Log
+
+After each phase dispatch (implementation, fix, or review), append one enforcement
+log line. The log reflects the `mode` and `mechanism` returned by
+`oat project dispatch-ceiling resolve` — do not compute these yourself.
+
+**Three-state log format:**
+
+```text
+Dispatch ceiling: {value} ({provider}, {mode} — {mechanism detail})
+```
+
+**Log examples (matching resolver output):**
+
+```text
+Dispatch ceiling: high (codex, enforced — variant oat-phase-implementer-high)
+Dispatch ceiling: high (codex, enforced — variant oat-reviewer-high)
+Dispatch ceiling: sonnet (claude, enforced — Task model arg)
+Dispatch ceiling: opus (claude, enforced — Task model arg)
+Dispatch ceiling: high (cursor, unsupported — no adapter; informational)
+Dispatch ceiling: high (codex, advisory — ceiling set but no value resolved)
+```
+
+**Verify-on-upgrade (`verifyOnDispatch: true`):**
+
+When the resolver returns `providers.<provider>.verifyOnDispatch: true`, the
+requested tier is above the orchestrator tier (an upgrade request). Before
+logging `enforced`, confirm the actual model/tier used by the dispatched agent.
+If the provider honored the request, log `enforced`. If it did not:
+
+```text
+Dispatch ceiling: opus (claude, advisory — provider did not honor upgrade; ran sonnet)
+```
+
+**`enforced`** — the adapter compiled concrete dispatch args and the provider
+accepted them. Log value + provider + mechanism detail (variant name or "Task
+model arg").
+
+**`advisory`** — the adapter supports the ceiling but no concrete value resolved,
+or the provider is known but could not be verified. Log with note "ceiling set
+but no value resolved" or "provider did not honor upgrade; ran \<tier\>".
+
+**`unsupported`** — the provider has no registered adapter. Log with note "no
+adapter; informational". Never block on unsupported — dispatch follows provider
+defaults.
 
 ### Dry-Run Mode
 
