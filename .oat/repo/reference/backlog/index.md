@@ -44,6 +44,7 @@
 | bl-f9bd | Deeper staleness detection and strict-mode enforcement                               | open        | low      | feature    | L        |
 | bl-71a1 | Memory system + provider enhancements                                                | open        | low      | initiative | XL       |
 | bl-931d | Optimize control-plane `listProjects()` summary path                                 | open        | low      | task       | M        |
+| bl-c3d8 | Third-provider dispatch-ceiling adapter (e.g. Cursor)                                | open        | low      | feature    | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 
