@@ -6,7 +6,7 @@ description = "Explores codebase and writes structured analysis documents. Spawn
 config_file = "agents/oat-codebase-mapper.toml"
 
 [agents.oat-reviewer]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes review artifact to disk."
+description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
 config_file = "agents/oat-reviewer.toml"
 
 [agents.skeptical-evaluator]
