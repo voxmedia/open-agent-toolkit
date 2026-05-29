@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete | 2     | 2/2       |
 | Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | pending  | 2     | 0/2       |
+| Phase 5 | complete | 2     | 2/2       |
 
-**Total:** 9/11 tasks completed (reopened by final review v2)
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -177,7 +177,7 @@ A second, manual final review run after implementation completed (`97c54a06..0e8
 
 **Process note:** the run's per-phase + auto-final reviews were less rigorous than this manual review (which executed the `--provider cursor` repro). Reinforces the [[verify-provider-capability-at-dispatch]] principle — verification has to actually exercise the documented paths, not just the happy path.
 
-**Next:** Execute p05 via `oat-project-implement`, then re-review final scope (`oat-project-review-provide code final` → `oat-project-review-receive`) to reach `passed` before PR.
+**Resolution:** p05 shipped both fixes (model=opus) — `p05-t01` (`432ff1e9`) compiles the preset at config-set time; `p05-t02` (`a5193b35`) routes unknown providers through the fallback advisory adapter. Closure was verified by **running the documented commands** (config-set preset → resolver returns concrete `high`/`sonnet` enforced; `--provider cursor` → advisory/unsupported, exit 0) in a disposable temp repo. Final re-review (`reviews/final-rereview-2026-05-29.md`) **passed** with 0 findings; suite 1635 green; `release:validate` re-run green at 0.1.12.
 
 ---
 
@@ -266,7 +266,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- `pnpm check`, `pnpm test` (1632/1632), `pnpm lint`, `pnpm type-check`, `pnpm build:docs`, `oat sync --scope project --dry-run` (clean), `validate-skill-version-bumps` (3 skills), `pnpm release:validate` (5 packages @ 0.1.12). Final review passed after one docs-drift fix.
+- `pnpm check`, `pnpm test` (1635/1635), `pnpm lint`, `pnpm type-check`, `pnpm build:docs`, `oat sync --scope project --dry-run` (clean), `validate-skill-version-bumps` (3 skills), `pnpm release:validate` (5 packages @ 0.1.12, re-run after p05). Final review history: auto final passed → one docs-drift fix → a manual v2 review found 2 Important gaps (preset config-set didn't compile; unknown-provider resolve threw) → fixed in p05 → final re-review passed (documented command paths verified, not just unit tests).
 
 **Design deltas (if any):**
 

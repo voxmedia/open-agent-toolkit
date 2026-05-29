@@ -563,16 +563,16 @@ git commit -m "fix(p05-t02): resolve unknown providers as advisory instead of er
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                     |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------------------------------- |
-| p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green)  |
-| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)          |
-| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review)  |
-| p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)           |
-| final  | code     | fixes_added     | 2026-05-29 | reviews/archived/final-review-2026-05-29-v2.md (2 Important → p05 fix tasks) |
-| p05    | code     | pending         | -          | -                                                                            |
-| spec   | artifact | pending         | -          | -                                                                            |
-| design | artifact | pending         | -          | -                                                                            |
+| Scope  | Type     | Status          | Date       | Artifact                                                                       |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------ |
+| p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green)    |
+| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)            |
+| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review)    |
+| p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)             |
+| final  | code     | passed          | 2026-05-29 | reviews/final-rereview-2026-05-29.md (v2 reopen → p05 fixes → re-review pass)  |
+| p05    | code     | passed          | 2026-05-29 | reviews/final-rereview-2026-05-29.md (I1+I2 closed; documented paths verified) |
+| spec   | artifact | pending         | -          | -                                                                              |
+| design | artifact | pending         | -          | -                                                                              |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -588,9 +588,9 @@ git commit -m "fix(p05-t02): resolve unknown providers as advisory instead of er
 - Phase 4: 2 tasks — docs, lockstep version bump + release validation
 - Phase 5: 2 tasks — review fixes from final review v2 (preset compile-at-config-set; unknown-provider advisory resolve)
 
-**Total: 11 tasks** (+ p04-t00 fold-in: closed 3 p03 review nits; + 1 final-review docs-drift fix). A second manual final review (v2) found 2 Important gaps → reopened as p05. Re-review final scope after p05 lands. Lockstep packages at 0.1.12 (re-validate after p05).
+**Total: 11 tasks** (+ p04-t00 fold-in: closed 3 p03 review nits; + 1 final-review docs-drift fix). A second manual final review (v2) found 2 Important gaps → fixed in p05; final re-review **passed** (documented paths verified). Lockstep packages at 0.1.12; `release:validate` re-run green after p05.
 
-Ready for code review and merge after p05 + re-review.
+Ready for code review and merge.
 
 ---
 
