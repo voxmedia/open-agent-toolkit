@@ -349,14 +349,15 @@ git commit -m "chore(p04-t01): bump public packages to 0.1.12 for pjm init"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------ |
+| p01    | code     | pending  | -          | -                                          |
+| p02    | code     | pending  | -          | -                                          |
+| p03    | code     | pending  | -          | -                                          |
+| p04    | code     | pending  | -          | -                                          |
+| final  | code     | pending  | -          | -                                          |
+| design | artifact | pending  | -          | -                                          |
+| plan   | artifact | received | 2026-05-29 | reviews/artifact-plan-review-2026-05-29.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
