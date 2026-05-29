@@ -830,7 +830,7 @@ No commit (validation only). If any validate step requires a fix-up commit (e.g.
 | p04    | code     | passed   | 2026-05-29 | reviews/p04-review-2026-05-29.md                      |
 | p05    | code     | passed   | 2026-05-29 | reviews/p05-review-2026-05-29-v2.md                   |
 | p06    | code     | pending  | -          | -                                                     |
-| final  | code     | passed   | 2026-05-29 | reviews/final-review-2026-05-29.md                    |
+| final  | code     | received | 2026-05-29 | reviews/final-review-2026-05-29-v2.md                 |
 | design | artifact | passed   | 2026-05-29 | reviews/archived/artifact-design-review-2026-05-29.md |
 | plan   | artifact | received | 2026-05-29 | reviews/artifact-plan-review-2026-05-29.md            |
 
