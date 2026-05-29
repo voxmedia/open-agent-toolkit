@@ -365,15 +365,15 @@ git commit -m "chore(p04-t01): bump public packages to 0.1.12 for pjm init"
 Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
 code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-| Scope  | Type     | Status          | Date       | Artifact                                            |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                   |
-| p02    | code     | pending         | -          | -                                                   |
-| p03    | code     | pending         | -          | -                                                   |
-| p04    | code     | pending         | -          | -                                                   |
-| final  | code     | pending         | -          | -                                                   |
-| design | artifact | pending         | -          | -                                                   |
-| plan   | artifact | fixes_completed | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29.md |
+| Scope  | Type     | Status   | Date       | Artifact                                      |
+| ------ | -------- | -------- | ---------- | --------------------------------------------- |
+| p01    | code     | pending  | -          | -                                             |
+| p02    | code     | pending  | -          | -                                             |
+| p03    | code     | pending  | -          | -                                             |
+| p04    | code     | pending  | -          | -                                             |
+| final  | code     | pending  | -          | -                                             |
+| design | artifact | pending  | -          | -                                             |
+| plan   | artifact | received | 2026-05-29 | reviews/artifact-plan-review-2026-05-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
