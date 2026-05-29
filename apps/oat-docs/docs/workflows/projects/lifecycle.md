@@ -136,7 +136,7 @@ flowchart LR
 
 During the Design step, `oat-project-design` asks how to work through the document unless a mode was selected by argument, environment, or `workflow.designMode`. The three full-design choices are collaborative, selective collaborative, and draft-and-review.
 
-Before a plan is marked ready for implementation, planning resolves the current provider's dispatch ceiling from `workflow.dispatchCeiling.<provider>` or project `state.md` frontmatter. If no ceiling is configured and the session is interactive, planning asks once and stores the answer as `oat_dispatch_ceiling`; non-interactive planning leaves it unresolved so implementation preflight can fail before work starts with setup instructions.
+Before a plan is marked ready for implementation, planning resolves the current provider's dispatch ceiling from `workflow.dispatchCeiling.providers.<provider>` (compiled from a preset or set directly) or project `state.md` frontmatter. If no ceiling is configured and the session is interactive, planning asks once and stores the answer as `oat_dispatch_ceiling`; non-interactive planning leaves it unresolved so implementation preflight can fail before work starts with setup instructions.
 
 ### Quick lane
 
