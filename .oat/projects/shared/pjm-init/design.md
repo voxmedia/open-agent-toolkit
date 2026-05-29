@@ -25,6 +25,10 @@ duplicated. Two new templates — `current-state.md` and `decision-record.md` �
 the template source (`.oat/templates/`), the bundled assets, and the PM-pack manifest so they
 are first-class alongside `roadmap.md` and `backlog-item.md`.
 
+Because this is a fundamental new user-facing command, **documentation is a first-class part
+of this design** (see Component Design → Documentation), not a follow-up: the install-vs-init
+lifecycle and the command surface ship as docs in the same PR.
+
 Key decisions: (1) a dedicated top-level `oat pjm` namespace (the taxonomy has no clear
 existing home, and `pjm` is already a first-class product concept via the pack and
 `oat-pjm-*` skills); (2) template content is resolved from repo-local `.oat/templates/` when
@@ -58,6 +62,9 @@ oat pjm init                           (INSTANTIATE — NEW)
   bundled fallback) and strips the template-marker frontmatter on instantiation.
 - **New template assets** — `current-state.md` and `decision-record.md` added to
   `.oat/templates/`, `bundle-assets.sh`, and `PROJECT_MANAGEMENT_TEMPLATES`.
+- **User-facing documentation** — first-class deliverable for this feature: the
+  install-vs-initialize lifecycle, the `oat pjm init` command, and the repo-reference
+  surface are documented in `apps/oat-docs/docs`, with the generated index regenerated.
 
 ### Data Flow
 
@@ -161,6 +168,43 @@ export async function initializeRepoReference(
 - Add both to `packages/cli/scripts/bundle-assets.sh` template loop and to
   `PROJECT_MANAGEMENT_TEMPLATES` in `skill-manifest.ts` (single source of truth).
 
+### Documentation (first-class deliverable)
+
+**Purpose:** Make the install-vs-initialize lifecycle explicit and discoverable for users of
+a brand-new user-facing command. Docs ship in the same PR (and reinforce the lockstep bump —
+`apps/oat-docs/docs` is in the version-policy root set).
+
+**Doc changes (grounded in the current docs surface):**
+
+- **`apps/oat-docs/docs/cli-utilities/tool-packs.md` (primary owner):**
+  - Update the `project-management` pack line — it currently reads "file-backed
+    backlog/reference skills plus backlog and roadmap templates"; extend it to include the
+    `current-state` and `decision-record` templates.
+  - Add an **"Install vs. initialize"** section: pack **install** (`oat tools install
+project-management` / `oat init tools project-management`) copies skills + template
+    _sources_ into `.agents/skills/` and `.oat/templates/`; **`oat pjm init`** then
+    _instantiates_ the working repo-reference surface under `.oat/repo/reference/`. Document
+    the command (purpose, what it scaffolds, idempotent + non-destructive, `--reference-root`,
+    `--json`) and state that backlog scaffolding is delegated to the lower-level
+    `oat backlog init` (`initializeBacklog`).
+- **`apps/oat-docs/docs/reference/cli-reference.md`:** add an `oat pjm ...` row to the command
+  family table, pointing to the tool-packs lifecycle section as the owning section.
+- **`apps/oat-docs/docs/cli-utilities/config-and-local-state.md` (owns `oat backlog`):**
+  cross-link `oat backlog init` as the lower-level helper that `oat pjm init` delegates to, so
+  the relationship reads in both directions.
+- **Repo-reference layout (`apps/oat-docs/docs/reference/oat-directory-structure.md` and/or
+  `file-locations.md`):** confirm/extend the `.oat/repo/reference/` listing so
+  `current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/` are all shown as the
+  canonical PJM repo-reference surface.
+
+**Generated index:** after edits, run `oat docs generate-index` to refresh
+`apps/oat-docs/index.md`. **Never hand-edit** the generated index (`apps/oat-docs/AGENTS.md`).
+
+**Design decision:** Extend existing owning pages rather than create a new page — lower drift
+risk and better discoverability, with `tool-packs.md` as the single narrative home for the
+lifecycle. The implementer should read `apps/oat-docs/AGENTS.md` for authoring conventions
+before editing.
+
 ## Error Handling
 
 - **Template missing in repo-local AND bundled assets:** fail with an actionable message
@@ -204,6 +248,8 @@ archived/.gitkeep}` all exist after one run.
 
 - `pnpm --filter @open-agent-toolkit/cli test`, `lint`, `type-check`, and
   `pnpm release:validate` (after the lockstep `0.1.11 → 0.1.12` bump) all pass.
+- **Docs:** `oat docs generate-index` produces no unexpected drift and `pnpm build:docs`
+  succeeds with the new/edited pages.
 
 ## Open Questions
 
