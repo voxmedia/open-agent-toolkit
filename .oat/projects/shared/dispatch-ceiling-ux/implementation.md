@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 3     | 3/3       |
 | Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | pending  | 2     | 0/2       |
+| Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 5/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
@@ -125,7 +125,7 @@ _- Outstanding Items_
 **Branch:** feat/dispatch-ceiling
 **Tier:** 1 (Claude Code subagents)
 **Policy:** merge-strategy=sequential, retry-limit=2, dispatch-ceiling=opus (project state)
-**Phases:** 2 executed, 1 passed-clean, 0 failed-terminal, 0 stopped (p01 fixes resolved by p02-t02; full suite green)
+**Phases:** 3 executed, 2 passed-clean, 0 failed-terminal, 0 stopped (p01 fixes resolved by p02-t02; full suite green)
 
 #### Phase Outcomes
 
@@ -133,6 +133,7 @@ _- Outstanding Items_
 | ----- | ------------------- | ------------------ | ------------------------------ | ----------------------------------------------------- |
 | p01   | DONE (model=sonnet) | fail (1 Important) | 0/2 — dispositioned to p02-t02 | committed; review fixes_completed (closed by p02-t02) |
 | p02   | DONE (model=opus)   | pass (2 Minor)     | n/a                            | committed; review passed; closed p01 regression       |
+| p03   | DONE (model=sonnet) | pass (1 Med/2 Min) | n/a                            | committed; review passed; nits → final auto-review    |
 
 #### Parallel Groups
 
@@ -142,11 +143,13 @@ _- Outstanding Items_
 
 - Dispatch: p01 implementation model_axis=selected:sonnet, effort_axis=not-applicable; reviewer model_axis=selected:opus (ceiling). Commit range 97c54a06..5da1cb42.
 - Dispatch: p02 implementation model_axis=selected:opus (core adapter/resolver correctness); reviewer model_axis=selected:opus (ceiling). Commit range d39da22f..80d9a154. Full CLI suite green 1632/1632.
+- Dispatch: p03 implementation model_axis=selected:sonnet (skill markdown copy); reviewer model_axis=selected:opus (ceiling). Commit range a52840bc..4a8d3969. Skills bumped: quick-start 2.1.4, implement 2.0.20, plan 1.3.4. validate-skill-version-bumps OK.
 
 #### Outstanding Items
 
 - p01 review Important finding: **CLOSED** by p02-t02 (resolver reads `providers.*`; blockMessage copy fixed; 2 tests rewritten). Re-verified in the p02 review — full CLI suite green 1632/1632. Review artifacts: `reviews/p01-review-2026-05-29.md`, `reviews/p02-review-2026-05-29.md`.
 - p02 review: 2 Minor non-blocking findings (unreachable `unsupported`/`advisory` resolver branches — forward-looking for a future third adapter; defensive, not bugs). No fix task.
+- p03 review: pass with 1 Medium + 2 Minor, all in `oat-project-implement/SKILL.md` copy, deferred to the final auto-review for disposition: (Medium) codex _advisory_ log example shows a concrete value (`high`) but advisory only occurs at null value → should render `unresolved`; (Minor) the Claude `dispatch-ceiling resolve` call in the runtime-dispatch section omits `--orchestrator-tier`, so the verify-on-upgrade flag never fires for Claude as written — wire the orchestrator's current model tier into that call; (Minor) a JSON example omits the top-level `status` field. Artifact: `reviews/p03-review-2026-05-29.md`.
 
 <!-- orchestration-runs-end -->
 
