@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: c313c3b3
+oat_current_task: p06-t01
+oat_last_commit: e0e63f18
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -25,7 +25,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T00:14:51.321Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T14:44:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T14:55:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -60,7 +60,8 @@ Dispatch ceiling pinned to Claude opus.
 - ✓ Phase 2 complete (3/3; gate FAIL→fix→PASS)
 - ✓ Phase 3 complete (1/1; gate passed)
 - ✓ Phase 5 complete (4/4; gate FAIL→fix→PASS)
-- ⧗ Implementation in progress (p04 next, then p06)
+- ✓ Phase 4 complete (2/2; gate passed)
+- ⧗ Implementation in progress (p06 last — HiLL checkpoint + auto final-review)
 
 ## Blockers
 
@@ -68,5 +69,5 @@ None
 
 ## Next Milestone
 
-Complete p04 (project rail: Tier-1 dispatch wrapper + project skill),
-then p06 (backlog + lockstep release prep). p06 is the HiLL checkpoint.
+Consolidated `oat sync` → p06 (backlog update + lockstep version bump +
+`pnpm release:validate`) → auto final-review at the p06 HiLL checkpoint.

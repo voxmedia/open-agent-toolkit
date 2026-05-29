@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p04-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 — Shared infrastructure helpers       | complete | 5     | 5/5       |
 | Phase 2 — `oat-review-provide-remote`         | complete | 3     | 3/3       |
 | Phase 3 — `oat-reviewer` extension            | complete | 1     | 1/1       |
-| Phase 4 — `oat-project-review-provide-remote` | pending  | 2     | 0/2       |
+| Phase 4 — `oat-project-review-provide-remote` | complete | 2     | 2/2       |
 | Phase 5 — Receive-skill minor-default flip    | complete | 4     | 4/4       |
 | Phase 6 — Backlog update + release prep       | pending  | 3     | 0/3       |
 
-**Total:** 13/18 tasks completed
+**Total:** 15/18 tasks completed
 
 ---
 
@@ -187,18 +187,41 @@ oat_generated: false
 
 ## Phase 4: `oat-project-review-provide-remote` (project rail)
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- `reviewer-dispatch.ts`: Tier-1 dispatch wrapper that builds the `oat_output_mode: structured` payload (verified against the p03 oat-reviewer contract), validates the full `StructuredFindings` shape (severity enum; file+line both-or-neither-null; verification_commands string array) raising a typed `StructuredFindingsError`, and surfaces dispatcher errors without retry (Tier 2/3 fallback is the skill's responsibility). Hand-rolled validator (no new dep).
+- `oat-project-review-provide-remote/SKILL.md` (new, project rail): project resolution (diff scan `.oat/projects/*/*/state.md` + `--project` override) → hybrid read (worktree) → re-review narrowing scoped by `(project, scope)` with stale-SHA guard → Tier 1/2/3 dispatch (Tier 1 via reviewer-dispatch structured output) → body-builder with project markers → posting via `jq`-built JSON through `gh api --input -`. Read-only contract (no plan.md updates / no commits / no pushes from machine B) enforced in Mode Assertion, Self-Correction, and Success Criteria.
+
+**Key files touched:**
+
+- `packages/cli/src/review-remote/reviewer-dispatch.{ts,test.ts}`
+- `packages/cli/src/review-remote/__integration__/project/project-rail.test.ts`
+- `.agents/skills/oat-project-review-provide-remote/SKILL.md` (version 1.0.0)
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/` → 97 tests pass (10 files; +21 from p02 end, no regression)
+- `pnpm lint` 0/0; `pnpm type-check` clean; `pnpm oat:validate-skills` OK (51 skills)
+- Reviewer (p04 gate): PASS — 0 critical, 0 important, 2 minor (advisory)
+
+**Notes / Decisions:**
+
+- Hand-rolled `StructuredFindings` validator chosen over zod (zod is a dep, but the p01/p02 helpers are zero-runtime-dep; kept the typed-error contract explicit and module-cohesive).
 
 ### Task p04-t01: Tier-1 dispatch wrapper for `oat-reviewer` structured-output mode
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8bf7737a
 
 ### Task p04-t02: Author `oat-project-review-provide-remote` SKILL.md and wire process
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e0e63f18
 
 ---
 
@@ -293,7 +316,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** feat/remote-review-provide-skills
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 4 executed, 4 passed, 0 failed, 0 stopped (run in progress)
+**Phases:** 5 executed, 5 passed, 0 failed, 0 stopped (run in progress)
 
 #### Phase Outcomes
 
@@ -303,6 +326,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p02   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
 | p03   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
 | p05   | DONE        | fail→pass | 1/2            | merged (sequential, on orchestration branch) |
+| p04   | DONE        | pass      | 0/2            | merged (sequential, on orchestration branch) |
 
 #### Parallel Groups
 
