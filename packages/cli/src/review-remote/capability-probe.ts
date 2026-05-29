@@ -60,6 +60,15 @@ export interface ProbeCache {
  * Candidate flag tokens that, if present in the help text, indicate a
  * full-review posting flow. Reply-to-comment flags (`--reply`) are deliberately
  * excluded — replying to an existing comment is not posting a review.
+ *
+ * The intent-specific tokens (`--post-review`, `--submit-review`) come first;
+ * the generic `--review`/`--post` are kept as broad fallbacks. The generic
+ * tokens carry a small forward-compat false-positive risk: a future
+ * `agent-reviews` could add `--review` with an unrelated meaning (e.g.
+ * "show a review"), which the probe would report as `supported`. That risk is
+ * accepted here because `gh api` remains the safe posting path even when the
+ * probe mis-detects an `agent-reviews` posting flow — a false positive degrades
+ * to the same fallback as `unknown`, it never drops or corrupts a review.
  */
 const POSTING_FLAG_CANDIDATES = [
   '--post-review',
