@@ -814,16 +814,17 @@ No commit (validation only). If any validate step requires a fix-up commit (e.g.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                              |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                     |
-| p02    | code     | pending | -          | -                                                     |
-| p03    | code     | pending | -          | -                                                     |
-| p04    | code     | pending | -          | -                                                     |
-| p05    | code     | pending | -          | -                                                     |
-| p06    | code     | pending | -          | -                                                     |
-| final  | code     | pending | -          | -                                                     |
-| design | artifact | passed  | 2026-05-29 | reviews/archived/artifact-design-review-2026-05-29.md |
+| Scope  | Type     | Status   | Date       | Artifact                                              |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                     |
+| p02    | code     | pending  | -          | -                                                     |
+| p03    | code     | pending  | -          | -                                                     |
+| p04    | code     | pending  | -          | -                                                     |
+| p05    | code     | pending  | -          | -                                                     |
+| p06    | code     | pending  | -          | -                                                     |
+| final  | code     | pending  | -          | -                                                     |
+| design | artifact | passed   | 2026-05-29 | reviews/archived/artifact-design-review-2026-05-29.md |
+| plan   | artifact | received | 2026-05-29 | reviews/artifact-plan-review-2026-05-29.md            |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
