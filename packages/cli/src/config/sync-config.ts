@@ -5,6 +5,8 @@ import { atomicWriteJson } from '@fs/io';
 import { SyncStrategySchema } from '@shared/types';
 import { z } from 'zod';
 
+import { parseJsonConfig } from './json';
+
 const ProviderConfigSchema = z.object({
   strategy: SyncStrategySchema.optional(),
   enabled: z.boolean().optional(),
@@ -61,7 +63,7 @@ function parseSyncConfig(
 ): z.infer<typeof SyncConfigSchema> {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = parseJsonConfig(raw, configPath);
   } catch {
     throw new CliError(
       `Sync config at ${configPath} is not valid JSON. Fix the file and retry.`,

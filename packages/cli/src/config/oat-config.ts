@@ -5,6 +5,8 @@ import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath } from '@fs/paths';
 
+import { parseJsonConfig } from './json';
+
 export interface OatDocumentationConfig {
   root?: string;
   tooling?: string;
@@ -521,7 +523,7 @@ export async function readOatConfig(repoRoot: string): Promise<OatConfig> {
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatConfig(JSON.parse(raw));
+    return normalizeOatConfig(parseJsonConfig(raw, configPath));
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_CONFIG };
@@ -538,7 +540,7 @@ export async function readOatLocalConfig(
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatLocalConfig(repoRoot, JSON.parse(raw));
+    return normalizeOatLocalConfig(repoRoot, parseJsonConfig(raw, configPath));
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_LOCAL_CONFIG };
@@ -655,7 +657,7 @@ export async function readUserConfig(
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeUserConfig(JSON.parse(raw));
+    return normalizeUserConfig(parseJsonConfig(raw, configPath));
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_USER_CONFIG };

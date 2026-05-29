@@ -78,6 +78,57 @@ describe('oat-config', () => {
     });
   });
 
+  it('accepts trailing commas in shared, local, and user config files', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+    tempDirs.push(userConfigDir);
+
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `{
+  "version": 1,
+  "worktrees": { "root": ".worktrees", },
+  "localPaths": [".env",],
+}
+`,
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `{
+  "version": 1,
+  "activeIdea": "repo-idea",
+  "workflow": { "designMode": "draft", },
+}
+`,
+      'utf8',
+    );
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      `{
+  "version": 1,
+  "activeIdea": "user-idea",
+}
+`,
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      worktrees: { root: '.worktrees' },
+      localPaths: ['.env'],
+    });
+    await expect(readOatLocalConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      activeIdea: 'repo-idea',
+      workflow: { designMode: 'draft' },
+    });
+    await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+      version: 1,
+      activeIdea: 'user-idea',
+    });
+  });
+
   it('normalizes archive.awsProfile and archive.awsRegion (trim, drop empty, ignore non-string)', async () => {
     const repoRoot = await createRepoRoot();
     const configPath = join(repoRoot, '.oat', 'config.json');

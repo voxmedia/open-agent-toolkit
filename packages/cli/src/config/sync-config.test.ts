@@ -60,6 +60,30 @@ describe('loadSyncConfig', () => {
     });
   });
 
+  it('loads config with trailing commas', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      configPath,
+      `{
+  "version": 1,
+  "defaultStrategy": "copy",
+  "providers": {
+    "cursor": { "enabled": true, },
+  },
+}
+`,
+      'utf8',
+    );
+
+    const config = await loadSyncConfig(configPath);
+
+    expect(config.defaultStrategy).toBe('copy');
+    expect(config.providers.cursor).toEqual({ enabled: true });
+  });
+
   it('merges per-provider overrides', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
     tempDirs.push(root);
