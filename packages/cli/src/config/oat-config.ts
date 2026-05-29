@@ -39,10 +39,17 @@ export type WorkflowReviewExecutionModel =
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
 export type WorkflowCodexDispatchCeiling = 'low' | 'medium' | 'high' | 'xhigh';
 export type WorkflowClaudeDispatchCeiling = 'haiku' | 'sonnet' | 'opus';
+export type WorkflowDispatchCeilingPreset =
+  | 'balanced'
+  | 'maximum'
+  | 'cost-conscious';
 
 export interface WorkflowDispatchCeiling {
-  codex?: WorkflowCodexDispatchCeiling;
-  claude?: WorkflowClaudeDispatchCeiling;
+  preset?: WorkflowDispatchCeilingPreset;
+  providers?: {
+    codex?: WorkflowCodexDispatchCeiling;
+    claude?: WorkflowClaudeDispatchCeiling;
+  };
 }
 
 export interface OatWorkflowConfig {
@@ -71,14 +78,12 @@ const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'selective',
   'draft',
 ];
-const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] = [
-  'low',
-  'medium',
-  'high',
-  'xhigh',
-];
-const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
+export const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] =
+  ['low', 'medium', 'high', 'xhigh'];
+export const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
   ['haiku', 'sonnet', 'opus'];
+export const VALID_DISPATCH_CEILING_PRESETS: readonly WorkflowDispatchCeilingPreset[] =
+  ['balanced', 'maximum', 'cost-conscious'];
 
 function normalizeWorkflowConfig(
   parsed: unknown,
@@ -144,24 +149,42 @@ function normalizeWorkflowConfig(
 
   if (isRecord(parsed.dispatchCeiling)) {
     const dispatchCeiling: WorkflowDispatchCeiling = {};
+
     if (
-      typeof parsed.dispatchCeiling.codex === 'string' &&
-      (VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(
-        parsed.dispatchCeiling.codex,
+      typeof parsed.dispatchCeiling.preset === 'string' &&
+      (VALID_DISPATCH_CEILING_PRESETS as readonly string[]).includes(
+        parsed.dispatchCeiling.preset,
       )
     ) {
-      dispatchCeiling.codex = parsed.dispatchCeiling
-        .codex as WorkflowCodexDispatchCeiling;
+      dispatchCeiling.preset = parsed.dispatchCeiling
+        .preset as WorkflowDispatchCeilingPreset;
     }
-    if (
-      typeof parsed.dispatchCeiling.claude === 'string' &&
-      (VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(
-        parsed.dispatchCeiling.claude,
-      )
-    ) {
-      dispatchCeiling.claude = parsed.dispatchCeiling
-        .claude as WorkflowClaudeDispatchCeiling;
+
+    if (isRecord(parsed.dispatchCeiling.providers)) {
+      const providers: WorkflowDispatchCeiling['providers'] = {};
+      if (
+        typeof parsed.dispatchCeiling.providers.codex === 'string' &&
+        (VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(
+          parsed.dispatchCeiling.providers.codex,
+        )
+      ) {
+        providers.codex = parsed.dispatchCeiling.providers
+          .codex as WorkflowCodexDispatchCeiling;
+      }
+      if (
+        typeof parsed.dispatchCeiling.providers.claude === 'string' &&
+        (VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(
+          parsed.dispatchCeiling.providers.claude,
+        )
+      ) {
+        providers.claude = parsed.dispatchCeiling.providers
+          .claude as WorkflowClaudeDispatchCeiling;
+      }
+      if (Object.keys(providers).length > 0) {
+        dispatchCeiling.providers = providers;
+      }
     }
+
     if (Object.keys(dispatchCeiling).length > 0) {
       next.dispatchCeiling = dispatchCeiling;
     }

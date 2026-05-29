@@ -816,114 +816,166 @@ describe('oat-config', () => {
       expect(userConfig.workflow).toEqual({ designMode: 'draft' });
     });
 
-    it('accepts workflow.dispatchCeiling provider values', async () => {
-      const repoRoot = await createRepoRoot();
-      const configPath = join(repoRoot, '.oat', 'config.json');
-      await writeFile(
-        configPath,
-        JSON.stringify({
-          version: 1,
-          workflow: {
-            dispatchCeiling: {
-              codex: 'xhigh',
-              claude: 'opus',
+    describe('normalizeWorkflowConfig dispatchCeiling (new shape)', () => {
+      it('accepts preset + providers and preserves both', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                preset: 'balanced',
+                providers: { codex: 'high', claude: 'sonnet' },
+              },
             },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow).toEqual({
+          dispatchCeiling: {
+            preset: 'balanced',
+            providers: { codex: 'high', claude: 'sonnet' },
           },
-        }),
-        'utf8',
-      );
-
-      const config = await readOatConfig(repoRoot);
-      expect(config.workflow).toEqual({
-        dispatchCeiling: {
-          codex: 'xhigh',
-          claude: 'opus',
-        },
+        });
       });
-    });
 
-    it('drops invalid workflow.dispatchCeiling values silently', async () => {
-      const repoRoot = await createRepoRoot();
-      const configPath = join(repoRoot, '.oat', 'config.json');
-      await writeFile(
-        configPath,
-        JSON.stringify({
-          version: 1,
-          workflow: {
-            dispatchCeiling: {
-              codex: 'ultra',
-              claude: 'high',
+      it('accepts providers-only (advanced/manual) with no preset', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: { codex: 'medium' },
+              },
             },
-            archiveOnComplete: true,
-          },
-        }),
-        'utf8',
-      );
+          }),
+          'utf8',
+        );
 
-      const config = await readOatConfig(repoRoot);
-      expect(config.workflow).toEqual({ archiveOnComplete: true });
-    });
-
-    it('round-trips workflow.dispatchCeiling in shared config', async () => {
-      const repoRoot = await createRepoRoot();
-
-      await writeOatConfig(repoRoot, {
-        version: 1,
-        workflow: {
-          dispatchCeiling: {
-            codex: 'high',
-            claude: 'sonnet',
-          },
-        },
-      });
-
-      const config = await readOatConfig(repoRoot);
-      expect(config.workflow).toEqual({
-        dispatchCeiling: {
-          codex: 'high',
-          claude: 'sonnet',
-        },
-      });
-    });
-
-    it('round-trips workflow.dispatchCeiling in local config', async () => {
-      const repoRoot = await createRepoRoot();
-
-      await writeOatLocalConfig(repoRoot, {
-        version: 1,
-        workflow: {
-          dispatchCeiling: {
-            codex: 'medium',
-          },
-        },
-      });
-
-      const config = await readOatLocalConfig(repoRoot);
-      expect(config.workflow).toEqual({
-        dispatchCeiling: {
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.preset).toBeUndefined();
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           codex: 'medium',
-        },
+        });
       });
-    });
 
-    it('round-trips workflow.dispatchCeiling in user config', async () => {
-      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-ceil-'));
-      tempDirs.push(userConfigDir);
+      it('drops invalid preset values silently', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                preset: 'turbo',
+                providers: { codex: 'high' },
+              },
+              archiveOnComplete: true,
+            },
+          }),
+          'utf8',
+        );
 
-      await writeUserConfig(userConfigDir, {
-        version: 1,
-        workflow: {
-          dispatchCeiling: {
-            claude: 'haiku',
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.preset).toBeUndefined();
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          codex: 'high',
+        });
+      });
+
+      it('drops invalid provider enum values silently', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: { codex: 'ultra', claude: 'high' },
+              },
+              archiveOnComplete: true,
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling).toBeUndefined();
+        expect(config.workflow).toEqual({ archiveOnComplete: true });
+      });
+
+      it('round-trips preset + providers in shared config', async () => {
+        const repoRoot = await createRepoRoot();
+
+        await writeOatConfig(repoRoot, {
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              preset: 'maximum',
+              providers: { codex: 'xhigh', claude: 'opus' },
+            },
           },
-        },
+        });
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow).toEqual({
+          dispatchCeiling: {
+            preset: 'maximum',
+            providers: { codex: 'xhigh', claude: 'opus' },
+          },
+        });
       });
 
-      const userConfig = await readUserConfig(userConfigDir);
-      expect(userConfig.workflow).toEqual({
-        dispatchCeiling: {
-          claude: 'haiku',
-        },
+      it('round-trips providers-only in local config', async () => {
+        const repoRoot = await createRepoRoot();
+
+        await writeOatLocalConfig(repoRoot, {
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: { codex: 'medium' },
+            },
+          },
+        });
+
+        const config = await readOatLocalConfig(repoRoot);
+        expect(config.workflow).toEqual({
+          dispatchCeiling: {
+            providers: { codex: 'medium' },
+          },
+        });
+      });
+
+      it('round-trips dispatchCeiling in user config', async () => {
+        const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-ceil-'));
+        tempDirs.push(userConfigDir);
+
+        await writeUserConfig(userConfigDir, {
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              preset: 'cost-conscious',
+              providers: { claude: 'sonnet' },
+            },
+          },
+        });
+
+        const userConfig = await readUserConfig(userConfigDir);
+        expect(userConfig.workflow).toEqual({
+          dispatchCeiling: {
+            preset: 'cost-conscious',
+            providers: { claude: 'sonnet' },
+          },
+        });
       });
     });
   });
