@@ -480,6 +480,10 @@ Track test execution during implementation.
 - `pnpm build`
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
 - `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm release:validate`
+- Final verification before final review: `pnpm test`
+- Final verification before final review: `pnpm lint`
+- Final verification before final review: `pnpm type-check`
+- Final verification before final review: `pnpm build`
 
 **Design deltas (if any):**
 
