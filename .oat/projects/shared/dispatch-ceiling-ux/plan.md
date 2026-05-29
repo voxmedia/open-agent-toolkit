@@ -324,6 +324,10 @@ Expected: RED
 // mode: 'enforced' | 'advisory' | 'unsupported' (computed here)
 // verifyOnDispatch flag surfaced for above-orchestrator (upgrade) requests
 // Keep resolveCodexProviderDefaultEffort as informational only.
+// REGRESSION from p01 review (must close here): readResolvedConfigCeiling must read
+// workflow.dispatchCeiling.providers.<provider> (the flat key was removed in p01-t01);
+// fix blockMessage copy to reference providers.<provider>; update the two now-red
+// resolver tests (index.test.ts repo-config JSON shape + Claude human-readable output).
 ```
 
 Run: same. Expected: GREEN
@@ -497,15 +501,15 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status      | Date       | Artifact                                                                                              |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------- |
+| p01    | code     | fixes_added | 2026-05-29 | reviews/p01-review-2026-05-29.md (1 Important: resolver reads removed flat key → resolved by p02-t02) |
+| p02    | code     | pending     | -          | -                                                                                                     |
+| p03    | code     | pending     | -          | -                                                                                                     |
+| p04    | code     | pending     | -          | -                                                                                                     |
+| final  | code     | pending     | -          | -                                                                                                     |
+| spec   | artifact | pending     | -          | -                                                                                                     |
+| design | artifact | pending     | -          | -                                                                                                     |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

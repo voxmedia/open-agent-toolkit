@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-28
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-05-29
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,12 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | pending  | 2     | 0/2       |
+| Phase 3 | pending  | 2     | 0/2       |
+| Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 3/9 tasks completed
 
 ---
 
@@ -118,7 +120,30 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-05-29
+
+**Branch:** feat/dispatch-ceiling
+**Tier:** 1 (Claude Code subagents)
+**Policy:** merge-strategy=sequential, retry-limit=2, dispatch-ceiling=opus (project state)
+**Phases:** 1 executed, 0 passed-clean, 0 failed-terminal, 0 stopped (p01 review fixes_added → p02-t02)
+
+#### Phase Outcomes
+
+| Phase | Implementer         | Review             | Fix Iterations                 | Disposition                   |
+| ----- | ------------------- | ------------------ | ------------------------------ | ----------------------------- |
+| p01   | DONE (model=sonnet) | fail (1 Important) | 0/2 — dispositioned to p02-t02 | committed; review fixes_added |
+
+#### Parallel Groups
+
+- None. Sequential (p01 singleton).
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation model_axis=selected:sonnet, effort_axis=not-applicable; reviewer model_axis=selected:opus (ceiling). Commit range 97c54a06..5da1cb42.
+
+#### Outstanding Items
+
+- p01 review Important finding (resolver reads removed flat config key; 2 resolver tests red at p01 HEAD) is sequenced into **p02-t02**, which rewrites `resolveDispatchCeiling`/`readResolvedConfigCeiling` to read `providers.*`. Transient red boundary, closed within Run 1. Review artifact: `reviews/p01-review-2026-05-29.md`.
 
 <!-- orchestration-runs-end -->
 
@@ -167,9 +192,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact  | Planned / Documented                                     | Actual / Accepted                                                                                                                                                            | Reason                                                                                                     | Source of Truth                         | Follow-up                                                                                                                       |
+| ------------- | ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| p01 review    | plan.md p01 gate | p01 verification gate declared `lint && type-check` only | Clean-break removal of the flat `dispatchCeiling.<provider>` key left the old resolver (`dispatch-ceiling/index.ts`) reading the dead key → 2 resolver tests red at p01 HEAD | Resolver rework is explicitly p02-t02 work; a minimal p01 fix would be discarded by p02-t02's full rewrite | implementation (p02-t02 restores green) | Closed by p02-t02 (readResolvedConfigCeiling → providers.\*, blockMessage copy, 2 tests). Then flip p01 review fixes_completed. |
 
 ## Test Results
 
