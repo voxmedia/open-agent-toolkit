@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-28
@@ -121,6 +121,8 @@ while keeping the resolver as the single source of truth that skills call.
 
 - Config may carry `preset` (convenience) or `providers` (explicit; wins over preset).
 - Project state is always normalized to the compiled shape (concrete `providers`).
+- `preset` is persisted **only** when a preset was selected. Advanced/manual
+  per-provider selection stores only `providers` + `source` (no `preset` key).
 - Clean break: no legacy `{provider, value, source}` read path.
 
 ### Preset Compiler
@@ -252,6 +254,8 @@ oat_dispatch_ceiling:
 - Drop invalid provider values during normalization; config command rejects invalid
   enum values with a helpful list.
 - Compile preset → `providers` at write time; persist concrete values.
+- Persist `preset` only when a preset was chosen; advanced/manual selection omits
+  `preset` and stores `providers` + `source` only.
 - No enforcement `mode` field persisted anywhere.
 
 **Storage:** project `state.md` frontmatter; config under `.oat/config*.json` + user config.
@@ -333,8 +337,8 @@ interface ResolveResult {
 - **Plan entitlement (deferred, handled defensively):** whether a constrained plan
   errors vs silently downgrades on above-orchestrator requests. Verify-on-upgrade covers
   both without needing the answer.
-- **Advanced mode shape:** preset + per-provider overrides, or per-provider replaces
-  preset entirely. Lean: advanced sets per-provider values directly (no preset stored).
+- **Advanced mode shape (RESOLVED):** advanced/manual per-provider selection stores
+  only `providers` + `source`; `preset` is persisted only when a preset was selected.
 
 ## References
 
