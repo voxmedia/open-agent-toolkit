@@ -3,12 +3,14 @@ import { join } from 'node:path';
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { compileDispatchCeilingPreset } from '@config/dispatch-ceiling-preset';
 import {
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
   type OatWorkflowConfig,
   type UserConfig,
+  type WorkflowDispatchCeilingPreset,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -788,11 +790,22 @@ function applyWorkflowValue(
   const subKey = key.slice('workflow.'.length);
 
   if (subKey === 'dispatchCeiling.preset') {
+    // Presets compile to concrete per-provider values at write time so the
+    // resolver (which reads only providers.*) gets a usable ceiling. The preset
+    // label is persisted as provenance alongside the compiled providers.
+    const compiled = compileDispatchCeilingPreset(
+      value as WorkflowDispatchCeilingPreset,
+    );
     return {
       ...workflow,
       dispatchCeiling: {
         ...workflow.dispatchCeiling,
-        preset: value as string,
+        preset: compiled.preset,
+        providers: {
+          ...workflow.dispatchCeiling?.providers,
+          codex: compiled.providers.codex,
+          claude: compiled.providers.claude,
+        },
       },
     } as OatWorkflowConfig;
   }

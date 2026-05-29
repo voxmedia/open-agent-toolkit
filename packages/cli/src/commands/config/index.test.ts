@@ -947,6 +947,108 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('low | medium | high | xhigh');
     });
 
+    it('set workflow.dispatchCeiling.preset balanced compiles to concrete providers', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.preset',
+        'balanced',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            preset: 'balanced',
+            providers: { codex: 'high', claude: 'sonnet' },
+          },
+        },
+      });
+
+      const { command: getCodex, capture: codexCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(
+        getCodex,
+        ['get', 'workflow.dispatchCeiling.providers.codex'],
+        ['--json'],
+      );
+      expect(codexCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.dispatchCeiling.providers.codex',
+        value: 'high',
+        source: 'shared',
+      });
+
+      const { command: getClaude, capture: claudeCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(
+        getClaude,
+        ['get', 'workflow.dispatchCeiling.providers.claude'],
+        ['--json'],
+      );
+      expect(claudeCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.dispatchCeiling.providers.claude',
+        value: 'sonnet',
+        source: 'shared',
+      });
+    });
+
+    it('set workflow.dispatchCeiling.preset cost-conscious compiles to medium/sonnet', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.preset',
+        'cost-conscious',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            preset: 'cost-conscious',
+            providers: { codex: 'medium', claude: 'sonnet' },
+          },
+        },
+      });
+    });
+
+    it('set workflow.dispatchCeiling.preset maximum compiles to xhigh/opus', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.preset',
+        'maximum',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            preset: 'maximum',
+            providers: { codex: 'xhigh', claude: 'opus' },
+          },
+        },
+      });
+    });
+
     it('workflow.autoReviewAtHillCheckpoints overrides legacy autoReviewAtCheckpoints', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
