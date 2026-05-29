@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: c160b53c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings
   provider: codex # codex | claude
@@ -25,19 +25,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T19:16:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T19:26:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: pjm-init
 
-**Status:** Plan complete — ready for implementation
+**Status:** Implementation in progress
 **Started:** 2026-05-29
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Plan complete (quick mode + lightweight design). Ready for `oat-project-implement`.
+Implementation in progress. Phase 1 passed; next task is `p02-t01`.
 
 ## Artifacts
 
@@ -45,14 +45,15 @@ Plan complete (quick mode + lightweight design). Ready for `oat-project-implemen
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
 - **Plan:** `plan.md` (complete — 4 phases, 6 tasks, sequential)
-- **Implementation:** `implementation.md` (ready; first task `p01-t01`)
+- **Implementation:** `implementation.md` (in progress; next task `p02-t01`)
 
 ## Progress
 
 - ✓ Discovery captured and committed
 - ✓ Lightweight design captured and committed (documentation promoted to first-class)
 - ✓ Plan generated (sequential; HiLL pause after p04; auto-review enabled; dispatch ceiling codex=xhigh)
-- ⧗ Awaiting implementation
+- ✓ Phase 1 implemented and reviewed
+- ⧗ Phase 2 ready to start
 
 ## Blockers
 
@@ -60,4 +61,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` starting at task `p01-t01`.
+Continue `oat-project-implement` at task `p02-t01`.

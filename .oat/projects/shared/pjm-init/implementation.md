@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,31 +26,57 @@ oat_generated: false
 
 | Phase                                 | Status  | Tasks | Completed |
 | ------------------------------------- | ------- | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | pending | 2     | 0/2       |
+| Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
 | Phase 2: Scaffolder & `oat pjm init`  | pending | 2     | 0/2       |
 | Phase 3: Documentation                | pending | 1     | 0/1       |
 | Phase 4: Release lockstep & validate  | pending | 1     | 0/1       |
 
-**Total:** 0/6 tasks completed
+**Total:** 2/6 tasks completed
 
-**Next task:** `p01-t01`
+**Next task:** `p02-t01`
 
 ---
 
 ## Phase 1: PM-pack templates and bundling
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added `current-state.md` and `decision-record.md` as first-class PM-pack template sources.
+- Registered both templates in the PM-pack manifest and CLI bundle script.
+- Updated project-management installer tests to cover copied, skipped, and force-updated behavior for all four PM templates.
+
+**Key files touched:**
+
+- `.oat/templates/current-state.md` - new starter template for repo current-state docs.
+- `.oat/templates/decision-record.md` - new starter template for decision records.
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` - project-management template manifest.
+- `packages/cli/scripts/bundle-assets.sh` - generated CLI asset bundle source list.
+- `packages/cli/src/commands/init/tools/project-management/install-project-management.test.ts` - installer coverage for the expanded template set.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/project-management/install-project-management.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Run: `pnpm format`
+- Result: pass.
+
+**Review:** `reviews/p01-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p01-t01: Add current-state and decision-record starter templates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c7a989c9
 
 ### Task p01-t02: Register new templates in PM-pack manifest and bundle script
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c160b53c
 
 ---
 
@@ -105,6 +131,38 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
+### Run 1 — 2026-05-29 19:26
+
+**Branch:** feat/pjm-init
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation used `oat-phase-implementer-low` with `effort_axis=selected:low`, capped by project-state Codex ceiling `xhigh`; the phase was narrow template/manifest/bundle setup.
+- Dispatch: p01 review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh` for deterministic quality gate behavior.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
@@ -115,7 +173,29 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-_No implementation sessions yet. The first `oat-project-implement` run will append entries here._
+### 2026-05-29
+
+**Session Start:** 19:26 UTC
+
+- [x] p01-t01: Add current-state and decision-record starter templates - c7a989c9
+- [x] p01-t02: Register new templates in PM-pack manifest and bundle script - c160b53c
+
+**What changed (high level):**
+
+- Added first-class PM-pack template sources for current-state and decision-record reference docs.
+- Registered the expanded template set in install/bundle plumbing and tests.
+
+**Decisions:**
+
+- No deviations from plan/design.
+
+**Follow-ups / TODO:**
+
+- Continue with p02-t01.
+
+**Blockers:**
+
+- None.
 
 ---
 
@@ -163,12 +243,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                        | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
+| 1     | install-project-management.test.ts; bundle-consistency.test.ts; cli lint; cli type-check; format | yes    | 0      | focused  |
+| 2     | -                                                                                                | -      | -      | -        |
+| 3     | -                                                                                                | -      | -      | -        |
+| 4     | -                                                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
