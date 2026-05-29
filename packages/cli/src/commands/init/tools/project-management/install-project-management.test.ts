@@ -39,6 +39,16 @@ async function seedAssets(assetsRoot: string): Promise<void> {
     '# roadmap\n',
     'utf8',
   );
+  await writeFile(
+    join(assetsRoot, 'templates', 'current-state.md'),
+    '# current state\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'templates', 'decision-record.md'),
+    '# decision record\n',
+    'utf8',
+  );
 }
 
 describe('installProjectManagement', () => {
@@ -62,7 +72,12 @@ describe('installProjectManagement', () => {
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);
-    expect(result.copiedTemplates).toEqual(['backlog-item.md', 'roadmap.md']);
+    expect(result.copiedTemplates).toEqual([
+      'backlog-item.md',
+      'roadmap.md',
+      'current-state.md',
+      'decision-record.md',
+    ]);
     expect(result.outdatedSkills).toEqual([]);
     await expect(
       readFile(
@@ -102,7 +117,12 @@ describe('installProjectManagement', () => {
     ]);
     expect(result.copiedTemplates).toEqual([]);
     expect(result.updatedTemplates).toEqual([]);
-    expect(result.skippedTemplates).toEqual(['backlog-item.md', 'roadmap.md']);
+    expect(result.skippedTemplates).toEqual([
+      'backlog-item.md',
+      'roadmap.md',
+      'current-state.md',
+      'decision-record.md',
+    ]);
   });
 
   it('overwrites existing assets when force=true', async () => {
@@ -140,7 +160,12 @@ describe('installProjectManagement', () => {
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);
-    expect(result.updatedTemplates).toEqual(['backlog-item.md', 'roadmap.md']);
+    expect(result.updatedTemplates).toEqual([
+      'backlog-item.md',
+      'roadmap.md',
+      'current-state.md',
+      'decision-record.md',
+    ]);
     await expect(
       readFile(
         join(

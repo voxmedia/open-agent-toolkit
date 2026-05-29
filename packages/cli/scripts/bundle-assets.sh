@@ -77,7 +77,7 @@ for agent in oat-codebase-mapper.md oat-phase-implementer.md oat-reviewer.md ske
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 
-for template in backlog-item.md roadmap.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md; do
+for template in backlog-item.md roadmap.md current-state.md decision-record.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md; do
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"

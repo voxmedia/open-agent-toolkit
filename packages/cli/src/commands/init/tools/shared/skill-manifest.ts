@@ -141,6 +141,8 @@ export const PROJECT_MANAGEMENT_SKILLS = [
 export const PROJECT_MANAGEMENT_TEMPLATES = [
   'backlog-item.md',
   'roadmap.md',
+  'current-state.md',
+  'decision-record.md',
 ] as const;
 
 export const PROJECT_MANAGEMENT_SCRIPTS = [] as const;
