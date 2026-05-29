@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-28
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p02'] # pause after the adapter/resolver core before UX/skill wiring
+oat_plan_hill_phases: ['p04'] # final-phase checkpoint only (from workflow.hillCheckpointDefault: final)
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
 oat_plan_parallel_groups: [] # sequential — see Parallelism
 oat_plan_source: quick
 oat_import_reference: null
