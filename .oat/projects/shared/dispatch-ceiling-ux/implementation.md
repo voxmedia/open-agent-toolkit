@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -30,8 +30,9 @@ oat_generated: false
 | Phase 2 | complete | 2     | 2/2       |
 | Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | pending  | 2     | 0/2       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/11 tasks completed (reopened by final review v2)
 
 ---
 
@@ -155,6 +156,28 @@ _- Outstanding Items_
 - **FINAL REVIEW (scope=final): PASS** after one bounded fix. Initial verdict failed on 1 Important docs-drift finding (`reference/oat-directory-structure.md` listed removed flat keys) + 2 Minor docs items + stray root `index.md`; fixed in `31564a01`; re-review passed (0 Crit/Imp/Med). Lone remaining: 1 deferred Minor (imprecise advisory gloss in `oat-project-implement/SKILL.md` — optional polish, non-blocking). All gates green; 5 lockstep packages at 0.1.12. Artifact: `reviews/final-review-2026-05-29.md`.
 
 <!-- orchestration-runs-end -->
+
+---
+
+### Review Received: final (v2)
+
+**Date:** 2026-05-29
+**Review artifact:** `reviews/archived/final-review-2026-05-29-v2.md` (manual, final scope)
+
+A second, manual final review run after implementation completed (`97c54a06..0e80aa55`) found **2 Important findings the run's own reviews missed** — including one my opus final review passed over and one the p02 review under-rated as Minor. Both block the feature's core claims, so the project was reopened with a `p05` Review Fixes phase.
+
+**Findings:**
+
+- Critical: 0 · Important: 2 · Medium: 0 · Minor: 0
+
+**New tasks added:** p05-t01, p05-t02
+
+- `I1` → **p05-t01**: `applyWorkflowValue()` stores `workflow.dispatchCeiling.preset` raw and never calls `compileDispatchCeilingPreset()`, so the documented recommended preset config path resolves no concrete ceiling. Compile at config-set time.
+- `I2` → **p05-t02**: `normalizeProvider()` throws for non-codex/claude, so `resolve --provider cursor` errors before the registry's fallback adapter runs — violates the provider-neutral "advisory, never block" design. Route unknown providers through the fallback adapter.
+
+**Process note:** the run's per-phase + auto-final reviews were less rigorous than this manual review (which executed the `--provider cursor` repro). Reinforces the [[verify-provider-capability-at-dispatch]] principle — verification has to actually exercise the documented paths, not just the happy path.
+
+**Next:** Execute p05 via `oat-project-implement`, then re-review final scope (`oat-project-review-provide code final` → `oat-project-review-receive`) to reach `passed` before PR.
 
 ---
 

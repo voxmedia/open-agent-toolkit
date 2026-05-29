@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-05-28
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p04'] # final-phase checkpoint only (from workflow.hillCheckpointDefault: final)
+oat_plan_hill_phases: ['p05'] # final-phase checkpoint only (from workflow.hillCheckpointDefault: final); p05 added by review-receive
 oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
 oat_plan_parallel_groups: [] # sequential — see Parallelism
 oat_plan_source: quick
@@ -499,17 +499,80 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 
 ---
 
+## Phase 5: Review Fixes (final review v2)
+
+> Added by `oat-project-review-receive` from `reviews/archived/final-review-2026-05-29-v2.md` — two Important findings the run's reviews missed.
+
+### Task p05-t01: (review) Compile dispatch-ceiling preset at config-set time
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts` (`applyWorkflowValue` — `workflow.dispatchCeiling.preset` branch)
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+`applyWorkflowValue()` stores `dispatchCeiling.preset` raw and leaves `providers` empty; the resolver reads only `providers.*`, so `oat config set workflow.dispatchCeiling.preset balanced` resolves no ceiling. Design requires presets to compile to concrete per-provider values **at write time**.
+
+**Step 2: Implement fix**
+
+In the `workflow.dispatchCeiling.preset` set branch, call `compileDispatchCeilingPreset()` and persist both the `preset` (provenance) and the compiled `providers.codex`/`.claude`. Keep advanced/manual per-provider sets unchanged (no preset key). Mirror the same compile path used by the project-state prompt so config-set and prompt agree.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+Expected: GREEN — new test asserts `oat config set workflow.dispatchCeiling.preset balanced` yields `providers.codex=high` and `providers.claude=sonnet` (and that the resolver then returns a concrete ceiling for both providers).
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
+git commit -m "fix(p05-t01): compile dispatch-ceiling preset at config-set time"
+```
+
+---
+
+### Task p05-t02: (review) Resolve unknown providers via fallback adapter instead of erroring
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts` (provider type at ~`:33`, `normalizeProvider` at ~`:121`)
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Step 1: Understand the issue**
+
+`normalizeProvider()` throws for any provider other than codex/claude, so `oat project dispatch-ceiling resolve --provider cursor` errors before reaching the registry's fallback no-op adapter. This violates the provider-neutral "advisory, never block" design.
+
+**Step 2: Implement fix**
+
+Widen the resolver to accept arbitrary provider names; apply codex/claude enum validation only when reading typed concrete values; route unknown providers through `getCeilingAdapter(provider)` so they resolve to `mode: unsupported`/`advisory` with `dispatchArgs: null`. Unknown-provider resolve must not throw or block; it returns a normal `resolved`/`unresolved` payload.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+Expected: GREEN — new test asserts `resolve --provider cursor --json` returns a non-error payload with the provider entry `mode: unsupported` (advisory), not `status: error`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts
+git commit -m "fix(p05-t02): resolve unknown providers as advisory instead of erroring"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                    |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------------------- |
-| p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green) |
-| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)         |
-| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review) |
-| p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)          |
-| final  | code     | received        | 2026-05-29 | reviews/final-review-2026-05-29-v2.md (2 Important findings)                |
-| spec   | artifact | pending         | -          | -                                                                           |
-| design | artifact | pending         | -          | -                                                                           |
+| Scope  | Type     | Status          | Date       | Artifact                                                                     |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green)  |
+| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)          |
+| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review)  |
+| p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)           |
+| final  | code     | fixes_added     | 2026-05-29 | reviews/archived/final-review-2026-05-29-v2.md (2 Important → p05 fix tasks) |
+| p05    | code     | pending         | -          | -                                                                            |
+| spec   | artifact | pending         | -          | -                                                                            |
+| design | artifact | pending         | -          | -                                                                            |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -523,10 +586,11 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 - Phase 2: 2 tasks — adapter registry, adapter-aware resolver
 - Phase 3: 2 tasks — neutral preset prompt, dispatch + enforcement logs
 - Phase 4: 2 tasks — docs, lockstep version bump + release validation
+- Phase 5: 2 tasks — review fixes from final review v2 (preset compile-at-config-set; unknown-provider advisory resolve)
 
-**Total: 9 tasks** (+ p04-t00 fold-in: closed 3 p03 review nits; + 1 final-review docs-drift fix). All phase reviews + final review passed. Lockstep packages at 0.1.12.
+**Total: 11 tasks** (+ p04-t00 fold-in: closed 3 p03 review nits; + 1 final-review docs-drift fix). A second manual final review (v2) found 2 Important gaps → reopened as p05. Re-review final scope after p05 lands. Lockstep packages at 0.1.12 (re-validate after p05).
 
-Ready for code review and merge.
+Ready for code review and merge after p05 + re-review.
 
 ---
 
