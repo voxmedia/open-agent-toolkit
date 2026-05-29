@@ -219,6 +219,7 @@ oat_generated: false
 - Restored dispatch-ceiling provider-neutral mainline behavior, preset/provider config, preset compilation, unsupported-provider advisory handling, docs, and repo-reference artifacts from `origin/main`.
 - Restored canonical OAT skill files to the target-branch versions/content.
 - Restored `jsonc-parser` package metadata required by the restored JSONC config helper.
+- Restored stale validation tests and regenerated the docs index for the restored dispatch-ceiling docs page.
 
 **Key files touched:**
 
@@ -231,6 +232,9 @@ oat_generated: false
 - `.agents/skills/oat-project-plan/SKILL.md` - restored canonical skill version/content.
 - `.agents/skills/oat-project-quick-start/SKILL.md` - restored canonical skill version/content.
 - `packages/cli/package.json` and `pnpm-lock.yaml` - restored `jsonc-parser` dependency metadata.
+- `packages/cli/src/commands/config/index.test.ts` - restored dispatch-ceiling provider/preset config tests.
+- `packages/cli/src/validation/skills.test.ts` - restored quick-start skill version expectation.
+- `apps/oat-docs/index.md` - regenerated docs index including dispatch-ceiling docs.
 
 **Verification:**
 
@@ -239,9 +243,10 @@ oat_generated: false
 - Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.preset`
 - Run: `git diff --name-status origin/main..HEAD -- .agents/skills .claude .cursor`
 - Run: `pnpm release:validate`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/validation/skills.test.ts`
 - Result: pass.
 
-**Review:** `reviews/p05-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/p05-review-2026-05-29.md` passed; after validation-test/index follow-up, `reviews/p05-review-2026-05-29-v2.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p05-t01: (review) Restore dispatch-ceiling mainline contract
 
@@ -252,6 +257,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 1d10d49d
+
+### Validation fix: Restore tests for dispatch ceiling and skill versions
+
+**Status:** completed
+**Commit:** 6e7687e4
 
 ---
 
@@ -452,6 +462,7 @@ Chronological log of implementation progress.
 - [x] p04 validation fix: Update CLI help snapshot for `pjm` - 30191c10
 - [x] p05-t01: (review) Restore dispatch-ceiling mainline contract - 1f9a3317
 - [x] p05-t02: (review) Restore canonical OAT skill versions from main - 1d10d49d
+- [x] p05 validation fix: Restore tests for dispatch ceiling and skill versions - 6e7687e4
 
 **What changed (high level):**
 
@@ -604,6 +615,7 @@ Track test execution during implementation.
 - Final verification before final review: `pnpm build`
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling src/config src/providers/ceiling`
 - `pnpm release:validate`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/validation/skills.test.ts`
 
 **Design deltas (if any):**
 
