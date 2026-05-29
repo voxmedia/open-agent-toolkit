@@ -299,7 +299,7 @@ oat_generated: false
 - Run: focused docs check for stale flat-key examples/schema rows in the two edited docs pages.
 - Result: pass.
 
-**Review:** pending final re-review.
+**Review:** `reviews/p06-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p06-t01: (review) Bump public packages forward from target branch
 

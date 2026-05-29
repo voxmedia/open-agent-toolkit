@@ -25,19 +25,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-29T21:12:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-05-29T21:25:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: pjm-init
 
-**Status:** Phase 6 final re-review fixes completed; awaiting final re-review
+**Status:** Phase 6 reviewed and passed; awaiting final re-review
 **Started:** 2026-05-29
 **Last Updated:** 2026-05-29
 
 ## Current Phase
 
-Phase 6 final re-review fixes are implemented. Final re-review remains pending.
+Phase 6 final re-review fixes are implemented and reviewed. Final re-review remains pending.
 
 ## Artifacts
 
@@ -45,7 +45,7 @@ Phase 6 final re-review fixes are implemented. Final re-review remains pending.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
 - **Plan:** `plan.md` (complete — 6 phases, 10 tasks, sequential)
-- **Implementation:** `implementation.md` (complete through Phase 6; final re-review pending)
+- **Implementation:** `implementation.md` (complete and reviewed through Phase 6; final re-review pending)
 
 ## Progress
 
@@ -57,7 +57,7 @@ Phase 6 final re-review fixes are implemented. Final re-review remains pending.
 - ✓ Phase 3 implemented and reviewed
 - ✓ Phase 4 implemented, validation-fixed, and reviewed
 - ✓ Phase 5 final review fixes implemented and reviewed
-- ✓ Phase 6 final re-review fixes implemented
+- ✓ Phase 6 final re-review fixes implemented and reviewed
 
 ## Blockers
 
