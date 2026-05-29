@@ -426,6 +426,27 @@ Chronological log of implementation progress. Append per session.
 - `m1` `discovery.md` frontmatter still `in_progress` → resolved by flipping to `complete` + `oat_ready_for: oat-project-quick-start`.
 - `m2` "Ready for code review and merge" wording → resolved by future-tensing in `plan.md` Implementation Complete.
 
+### Review Received: final (independent re-pass)
+
+**Date:** 2026-05-29
+**Review artifact:** `reviews/archived/final-review-2026-05-29-v2.md`
+
+An independent manual `code final` review ran after the first (auto) final pass and caught two real issues the auto pass missed.
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Disposition:**
+
+- `I1` Lifecycle review-ledger drift (`oat project status` routed back to `oat-project-review-receive`) → resolved as bookkeeping: archived all consumed top-level review artifacts (phase gates + superseded first-pass + both finals) to `reviews/archived/`; repointed `pNN` Reviews rows to archived paths; set `p06` row to `passed` (covered by final review); set the `plan` artifact row to `passed` at its archived path.
+- `M1` `buildReviewBody` had no structured path for out-of-diff findings (the "never drop" downgrade guarantee was unimplementable through the helper) → fixed in code: added `BuildInput.outOfDiffFindings` + `OutOfDiffFinding`, render a `## Findings outside the PR diff` subsection, with tests (commit `13c1e07`). Severity counts still derive only from `findings`; out-of-diff entries must also appear there so counts stay complete.
+
+A fresh `code final` re-review was then run on the reconciled + fixed state to confirm `passed`.
+
 ---
 
 ## Deviations from Plan / Design
