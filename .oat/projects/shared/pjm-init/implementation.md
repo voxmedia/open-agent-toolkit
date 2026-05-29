@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------------------------------------- | ------- | ----- | --------- |
 | Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
 | Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
-| Phase 3: Documentation                | pending | 1     | 0/1       |
+| Phase 3: Documentation                | passed  | 1     | 1/1       |
 | Phase 4: Release lockstep & validate  | pending | 1     | 0/1       |
 
-**Total:** 4/6 tasks completed
+**Total:** 5/6 tasks completed
 
-**Next task:** `p03-t01`
+**Next task:** `p04-t01`
 
 ---
 
@@ -129,13 +129,37 @@ oat_generated: false
 
 ## Phase 3: Documentation
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-05-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Documented the project-management install-vs-initialize lifecycle and `oat pjm init`.
+- Added CLI reference coverage for the `oat pjm ...` command family.
+- Cross-linked `oat backlog init` as the lower-level helper delegated to by `oat pjm init`.
+- Updated the repo-reference directory layout docs to list the canonical PJM reference surface.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md` - lifecycle narrative and command behavior.
+- `apps/oat-docs/docs/reference/cli-reference.md` - command-family table entry.
+- `apps/oat-docs/docs/cli-utilities/config-and-local-state.md` - backlog helper relationship.
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` - repo-reference layout.
+
+**Verification:**
+
+- Run: `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+- Run: `pnpm build:docs`
+- Result: pass; generated docs index had no tracked drift.
+
+**Review:** `reviews/p03-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p03-t01: Document install-vs-initialize lifecycle and `oat pjm init`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8b449397
 
 ---
 
@@ -227,6 +251,38 @@ _- Outstanding Items_
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 3 — 2026-05-29 19:59
+
+**Branch:** feat/pjm-init
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p03   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p03: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p03 implementation used `oat-phase-implementer-medium` with `effort_axis=selected:medium`, capped by project-state Codex ceiling `xhigh`; the phase edited several docs pages and regenerated the docs index.
+- Dispatch: p03 review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh` for deterministic quality gate behavior.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
@@ -246,6 +302,7 @@ Chronological log of implementation progress.
 - [x] p02-t01: Implement initializeRepoReference scaffolder - e376d70e
 - [x] p02-t02: Add and register the `oat pjm init` command - 0b79fc32
 - [x] p02 review fix: Preserve `pjm init` JSON error contract - 4a60c52d
+- [x] p03-t01: Document install-vs-initialize lifecycle and `oat pjm init` - 8b449397
 
 **What changed (high level):**
 
@@ -253,6 +310,7 @@ Chronological log of implementation progress.
 - Registered the expanded template set in install/bundle plumbing and tests.
 - Added the PJM repo-reference initializer and `oat pjm init` command.
 - Preserved structured JSON error output for scaffolding failures.
+- Documented the install-vs-initialize lifecycle and canonical repo-reference surface.
 
 **Decisions:**
 
@@ -260,7 +318,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p03-t01.
+- Continue with p04-t01.
 
 **Blockers:**
 
