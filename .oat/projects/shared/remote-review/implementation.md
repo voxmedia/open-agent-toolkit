@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,29 +24,34 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                         | Status      | Tasks | Completed |
-| --------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1 — Shared infrastructure helpers       | in_progress | 5     | 0/5       |
-| Phase 2 — `oat-review-provide-remote`         | pending     | 3     | 0/3       |
-| Phase 3 — `oat-reviewer` extension            | pending     | 1     | 0/1       |
-| Phase 4 — `oat-project-review-provide-remote` | pending     | 2     | 0/2       |
-| Phase 5 — Receive-skill minor-default flip    | pending     | 4     | 0/4       |
-| Phase 6 — Backlog update + release prep       | pending     | 3     | 0/3       |
+| Phase                                         | Status   | Tasks | Completed |
+| --------------------------------------------- | -------- | ----- | --------- |
+| Phase 1 — Shared infrastructure helpers       | complete | 5     | 5/5       |
+| Phase 2 — `oat-review-provide-remote`         | pending  | 3     | 0/3       |
+| Phase 3 — `oat-reviewer` extension            | pending  | 1     | 0/1       |
+| Phase 4 — `oat-project-review-provide-remote` | pending  | 2     | 0/2       |
+| Phase 5 — Receive-skill minor-default flip    | pending  | 4     | 0/4       |
+| Phase 6 — Backlog update + release prep       | pending  | 3     | 0/3       |
 
-**Total:** 0/18 tasks completed
+**Total:** 5/18 tasks completed
 
 ---
 
 ## Phase 1: Shared infrastructure helpers
 
-**Status:** in_progress
-**Started:** -
+**Status:** complete
+**Started:** 2026-05-29
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {bullets describing helpers shipped under `packages/cli/src/review-remote/`}
+- Shipped five pure-logic helper modules under `packages/cli/src/review-remote/` that both provide-remote skills (p02/p04) will import. No GitHub or git side effects in this layer.
+- `marker-parser`: tolerant single-line scalar parser for the HTML-comment marker block (no YAML dep); invalid 40-char head-SHA → `null`.
+- `body-builder` + `mapVerdict`: builds the posted-review body and maps verdict (REQUEST_CHANGES if any critical/important, else COMMENT); round-trips through the parser.
+- `line-mapper`: `parsePullFilesPatch` + `parseUnifiedDiff` + `classifyFinding` over a shared `HunkRange` shape (in-diff RIGHT/LEFT vs out-of-diff).
+- `narrowing`: `pickNarrowingTarget` discriminated union with stale-SHA existence+ancestry guard via injected `GitInvoker`.
+- `project-resolver`: two-level `.oat/projects/*/*/state.md` glob with `--project` override.
 
 **Key files touched:**
 
@@ -58,37 +63,42 @@ oat_generated: false
 
 **Verification:**
 
-- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/`
-- Result: -
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/` → 59 tests pass (5 files)
+- `pnpm lint` → 0 warnings / 0 errors; `pnpm type-check` → clean
+- Reviewer (p01 gate): PASS — 0 critical, 0 important, 3 minor (advisory)
 
 **Notes / Decisions:**
 
-- -
+- Delegated head-SHA contract: invalid SHA → `parseMarkerBlock` returns `null` (routes to full-scope review) rather than a distinct error type.
+- Omitted `oat_review_invocation` defaults to `manual`; unknown marker keys preserved on an `extras` bag (forward-compat).
+- `narrowing` result carries `prompted: boolean` so the skill layer knows whether a confirm prompt is still owed; auto-narrow + stale-SHA fallback both set `prompted: false`.
+- `project-resolver` `--project` accepts a dir or a `state.md` path with trailing-slash tolerance, validating existence before use.
+- Reviewer minors (non-blocking, noted for p02/p04): (1) `parsePullFilesPatch` doesn't surface `previous_filename` rename field — caller threads it in; worth a code comment; (2) LEFT-side classification not directly asserted against `parsePullFilesPatch` (shared-shape test de-risks it).
 
 ### Task p01-t01: Add review-marker parser
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4f7932c4
 
 ### Task p01-t02: Add posted-review-body builder + verdict mapper
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ba9a268e
 
 ### Task p01-t03: Add inline-comment line-mapping validator
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** debad68a
 
 ### Task p01-t04: Add re-review narrowing filter + stale-SHA guard
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 41269f85
 
 ### Task p01-t05: Add project resolution helper
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6ade5178
 
 ---
 
@@ -203,6 +213,37 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 — 2026-05-29
+
+**Branch:** feat/remote-review-provide-skills
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition                                  |
+| ----- | ----------- | ------ | -------------- | -------------------------------------------- |
+| p01   | DONE        | pass   | 0/2            | merged (sequential, on orchestration branch) |
+
+#### Parallel Groups
+
+- p01: sequential (runs before the `[p02, p03, p05]` group)
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation + review via Claude Code Tier 1, model_axis=selected:opus, effort_axis=not-applicable, ceiling=opus (project state). No escalation needed.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
 
 <!-- orchestration-runs-end -->
 
