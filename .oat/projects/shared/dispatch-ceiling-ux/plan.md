@@ -563,16 +563,16 @@ git commit -m "fix(p05-t02): resolve unknown providers as advisory instead of er
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                       |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------ |
-| p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green)    |
-| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)            |
-| p03    | code     | passed          | 2026-05-29 | reviews/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review)    |
-| p04    | code     | passed          | 2026-05-29 | reviews/final-review-2026-05-29.md (covered by final-scope review)             |
-| final  | code     | passed          | 2026-05-29 | reviews/final-rereview-2026-05-29.md (v2 reopen → p05 fixes → re-review pass)  |
-| p05    | code     | passed          | 2026-05-29 | reviews/final-rereview-2026-05-29.md (I1+I2 closed; documented paths verified) |
-| spec   | artifact | pending         | -          | -                                                                              |
-| design | artifact | pending         | -          | -                                                                              |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md (Important closed by p02-t02; suite green)    |
+| p02    | code     | passed          | 2026-05-29 | reviews/archived/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)            |
+| p03    | code     | passed          | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md (0 Crit/Imp; 1 Med + 2 Min → final review)    |
+| p04    | code     | passed          | 2026-05-29 | reviews/archived/final-review-2026-05-29.md (covered by final-scope review)             |
+| final  | code     | passed          | 2026-05-29 | reviews/archived/final-rereview-2026-05-29.md (v2 reopen → p05 fixes → re-review pass)  |
+| p05    | code     | passed          | 2026-05-29 | reviews/archived/final-rereview-2026-05-29.md (I1+I2 closed; documented paths verified) |
+| spec   | artifact | pending         | -          | -                                                                                       |
+| design | artifact | pending         | -          | -                                                                                       |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
