@@ -501,15 +501,15 @@ git commit -m "chore(p04-t02): bump public packages and validate release"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                                                              |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------- |
-| p01    | code     | fixes_added | 2026-05-29 | reviews/p01-review-2026-05-29.md (1 Important: resolver reads removed flat key → resolved by p02-t02) |
-| p02    | code     | pending     | -          | -                                                                                                     |
-| p03    | code     | pending     | -          | -                                                                                                     |
-| p04    | code     | pending     | -          | -                                                                                                     |
-| final  | code     | pending     | -          | -                                                                                                     |
-| spec   | artifact | pending     | -          | -                                                                                                     |
-| design | artifact | pending     | -          | -                                                                                                     |
+| Scope  | Type     | Status          | Date       | Artifact                                                                    |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-05-29 | reviews/p01-review-2026-05-29.md (Important closed by p02-t02; suite green) |
+| p02    | code     | passed          | 2026-05-29 | reviews/p02-review-2026-05-29.md (0 Crit/Imp; 2 Minor non-blocking)         |
+| p03    | code     | pending         | -          | -                                                                           |
+| p04    | code     | pending         | -          | -                                                                           |
+| final  | code     | pending         | -          | -                                                                           |
+| spec   | artifact | pending         | -          | -                                                                           |
+| design | artifact | pending         | -          | -                                                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
