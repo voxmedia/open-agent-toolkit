@@ -24,84 +24,168 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                         | Status      | Tasks | Completed |
+| --------------------------------------------- | ----------- | ----- | --------- |
+| Phase 1 — Shared infrastructure helpers       | in_progress | 5     | 0/5       |
+| Phase 2 — `oat-review-provide-remote`         | pending     | 3     | 0/3       |
+| Phase 3 — `oat-reviewer` extension            | pending     | 1     | 0/1       |
+| Phase 4 — `oat-project-review-provide-remote` | pending     | 2     | 0/2       |
+| Phase 5 — Receive-skill minor-default flip    | pending     | 4     | 0/4       |
+| Phase 6 — Backlog update + release prep       | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/18 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Shared infrastructure helpers
 
 **Status:** in_progress
-**Started:** 2026-05-29
+**Started:** -
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- {bullets describing helpers shipped under `packages/cli/src/review-remote/`}
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/review-remote/marker-parser.{ts,test.ts}`
+- `packages/cli/src/review-remote/body-builder.{ts,test.ts}`
+- `packages/cli/src/review-remote/line-mapper.{ts,test.ts}`
+- `packages/cli/src/review-remote/narrowing.{ts,test.ts}`
+- `packages/cli/src/review-remote/project-resolver.{ts,test.ts}`
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/`
+- Result: -
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- -
 
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Add review-marker parser
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t02: Add posted-review-body builder + verdict mapper
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Add inline-comment line-mapping validator
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Add re-review narrowing filter + stale-SHA guard
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: Add project resolution helper
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: `oat-review-provide-remote` (ad-hoc rail)
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Probe and capability matrix for `agent-reviews`
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Worktree lifecycle helper
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Author `oat-review-provide-remote` SKILL.md and wire process
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: `oat-reviewer` subagent contract extension
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Extend `oat-reviewer` with structured-output mode
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: `oat-project-review-provide-remote` (project rail)
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Tier-1 dispatch wrapper for `oat-reviewer` structured-output mode
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Author `oat-project-review-provide-remote` SKILL.md and wire process
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Receive-skill minor-default flip
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Flip minor default in `oat-review-receive`
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Flip minor default in `oat-review-receive-remote`
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t03: Flip minor default in `oat-project-review-receive`
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t04: Flip minor default in `oat-project-review-receive-remote`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Backlog update + lockstep release prep
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Update `bl-9fb8` backlog item
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Lockstep public-package version bump
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: Final `release:validate` + handoff
 
 **Status:** pending
 **Commit:** -
@@ -126,40 +210,50 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
-### 2026-05-29
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
+Chronological log of implementation progress. Append per session.
 
 ---
 
-### 2026-05-29
+## Reviews Received
 
-**Session Start:** {time}
+### Review Received: design
 
-{Continue log...}
+**Date:** 2026-05-29
+**Review artifact:** `reviews/archived/artifact-design-review-2026-05-29.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 2
+
+**Disposition:** All 4 findings resolved in artifact (no plan tasks created):
+
+- `I1` worktree creation precision → resolved in `design.md` Data Flow step 2.
+- `M1` stale-SHA / force-push guard for re-review narrowing → resolved in `design.md` Component Design (both rails) + new Error Handling subsection.
+- `m1` manual-verification wrong-path split → resolved in `design.md` Testing Strategy → Manual Verification.
+- `m2` state.md body prose stale → resolved in `state.md` body.
+
+### Review Received: plan
+
+**Date:** 2026-05-29
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-05-29.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 2
+
+**Disposition:** All 5 findings resolved in artifact (no plan tasks created):
+
+- `I1` filtered vitest commands used repo-root paths → resolved in `plan.md` (30 occurrences fixed to package-relative `src/...` paths).
+- `I2` implementation tracker was scaffold despite plan being ready for implementation → resolved by populating this file with the actual 6-phase / 18-task structure.
+- `M1` p02 write-set proof inaccurate → resolved in `plan.md` Parallelism section (enumerated p02 helper files; restated parallel-group disjointness).
+- `m1` `discovery.md` frontmatter still `in_progress` → resolved by flipping to `complete` + `oat_ready_for: oat-project-quick-start`.
+- `m2` "Ready for code review and merge" wording → resolved by future-tensing in `plan.md` Implementation Complete.
 
 ---
 
@@ -179,13 +273,16 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
+| 5     | -         | -      | -      | -        |
+| 6     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- {filled when project is complete}
 
 **Behavioral changes (user-facing):**
 
@@ -207,4 +304,4 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`

@@ -40,7 +40,14 @@ oat_generated: false
 Dependency + write-set analysis:
 
 - **p01 (shared infrastructure)** must complete first — p02 and p04 import the helpers it ships; p03 and p05 do not depend on p01.
-- **p02 (ad-hoc rail skill)** depends on p01 helpers (marker parser, posted-body builder, line-mapping validator, narrowing filter, project resolution helper is irrelevant for ad-hoc but in same package). Touches `.agents/skills/oat-review-provide-remote/SKILL.md` (new) + integration tests under `packages/cli/src/review-remote/__integration__/ad-hoc/`.
+- **p02 (ad-hoc rail skill)** depends on p01 helpers (marker parser, posted-body builder, line-mapping validator, narrowing filter, project resolution helper is irrelevant for ad-hoc but in same package). Writes:
+  - `.agents/skills/oat-review-provide-remote/SKILL.md` (new)
+  - `packages/cli/src/review-remote/capability-probe.ts` + `.test.ts` (new, p02-t01)
+  - `packages/cli/src/review-remote/worktree.ts` + `.test.ts` (new, p02-t02)
+  - Integration tests under `packages/cli/src/review-remote/__integration__/ad-hoc/` (p02-t03)
+
+  `packages/cli/src/review-remote/` is shared with p01 and p04 in terms of directory, but the file sets are disjoint — p01 owns parser/builder/line-mapper/narrowing/project-resolver; p02 owns capability-probe/worktree; p04 owns reviewer-dispatch + `__integration__/project/`. No file in `packages/cli/src/review-remote/` is written by more than one phase.
+
 - **p03 (`oat-reviewer` extension)** touches `.agents/agents/oat-reviewer.md` only. Independent of p01.
 - **p04 (project rail skill)** depends on p01 helpers AND p03's structured-output mode. Touches `.agents/skills/oat-project-review-provide-remote/SKILL.md` (new) + integration tests under `packages/cli/src/review-remote/__integration__/project/`. Different test subfolder from p02 → no test-file conflict with p02.
 - **p05 (receive-skill minor-default flip)** touches only `.agents/skills/oat-(project-)review-receive(-remote)/SKILL.md` — write set fully disjoint from p01-p04.
@@ -55,10 +62,10 @@ Parallel group declared: `[['p02', 'p03', 'p05']]`.
 
 Why these phases are safely parallel:
 
-- p02 only writes to `.agents/skills/oat-review-provide-remote/SKILL.md` + new test files under a phase-specific subdirectory.
+- p02 writes the new ad-hoc `SKILL.md`, two new helper modules (`capability-probe`, `worktree`) under `packages/cli/src/review-remote/`, and integration tests under a phase-specific `__integration__/ad-hoc/` subdirectory.
 - p03 only writes to `.agents/agents/oat-reviewer.md` (and bumps its `version:`).
 - p05 only writes to four existing receive `SKILL.md` files plus their test fixtures.
-- No shared mutable file is touched by more than one of {p02, p03, p05}.
+- No shared mutable file is touched by more than one of {p02, p03, p05}. In particular, `packages/cli/src/review-remote/` is touched only by p02 within this parallel group (p03 and p05 stay in `.agents/`).
 - No phase in the group depends on another's runtime output for its tests (p02 stubs the reviewer; p05 tests the receive defaults independently).
 
 Why p04 is not in the parallel group:
@@ -100,14 +107,14 @@ Author tests covering the validation rules from `design.md` → Data Models → 
 - Rejects markers where `oat_review_head_sha` is not a 40-char hex SHA (returns parse error or null per chosen contract — document the choice in the test).
 - Treats `oat_project: <value>` (present) and key-omitted differently (project rail vs ad-hoc rail discrimination).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/marker-parser.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/marker-parser.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement `parseMarkerBlock(body: string): MarkerBlock | null` returning the typed shape from `design.md` (Posted-review-body Data Models). Use a tolerant HTML-comment + YAML-ish parser; do NOT bring in a full YAML dependency for this — single-line scalar parsing is sufficient.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/marker-parser.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/marker-parser.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -116,7 +123,7 @@ Extract any shared regex constants. Confirm typed shape mirrors design Data Mode
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/marker-parser.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/marker-parser.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -144,14 +151,14 @@ git commit -m "feat(p01-t01): add review-marker parser"
 - Verdict mapping (separate exported function `mapVerdict(findings)`): `REQUEST_CHANGES` when any critical or important finding is present; `COMMENT` otherwise (including zero findings).
 - `oat_review_invocation` value is round-trippable via the parser (cross-link test exercises the parser too).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/body-builder.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/body-builder.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement `buildReviewBody(input: BuildInput): { body: string; verdict: ReviewVerdict }` (or two exports — `buildReviewBody` + `mapVerdict`).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/body-builder.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/body-builder.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -160,7 +167,7 @@ Pull the marker block emission into a small helper that mirrors the parser's exp
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/body-builder.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/body-builder.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -189,7 +196,7 @@ Test the validator against fixtures derived from real `gh api /pulls/<N>/files` 
 - Handles binary files (no inline comments possible — always out-of-diff).
 - Out-of-diff findings carry the original `file:line` reference into the returned classification (so the caller can downgrade them to a top-level "Findings outside the PR diff" subsection per design Error Handling).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/line-mapper.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/line-mapper.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
@@ -200,7 +207,7 @@ Two parsers + one validator:
 - `parseUnifiedDiff(diff: string): Record<string, HunkRange[]>` for the `gh pr diff` fallback case (hunk headers `@@ -a,b +c,d @@`).
 - `classifyFinding(finding, ranges): InDiffClassification | OutOfDiffClassification`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/line-mapper.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/line-mapper.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -209,7 +216,7 @@ Confirm a single shared `HunkRange` shape for both parsers so `classifyFinding` 
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/line-mapper.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/line-mapper.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -242,14 +249,14 @@ git commit -m "feat(p01-t03): add inline-comment line-mapping validator"
   - `workflow.autoNarrowReReviewScope == true` → no prompt regardless of outcome.
 - Diff-only mode (no ephemeral worktree available) → existence check goes through the stub's "fetch single ref" path; if fetch fails, fall back as for unreachable.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/narrowing.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement `pickNarrowingTarget(...)` returning a discriminated-union result (`narrow-range` | `full-scope-fallback` | `hard-error`). Take a `GitInvoker` interface as a parameter so callers can pass either a worktree-bound invoker or a stub.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/narrowing.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -258,7 +265,7 @@ Keep the `GitInvoker` interface narrow (existence check, ancestry check, optiona
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/narrowing.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -286,14 +293,14 @@ git commit -m "feat(p01-t04): add re-review narrowing filter + stale-SHA guard"
 - `--project <path>` override takes precedence over diff scan.
 - Override validates that the path resolves to a directory containing `state.md`; returns clear error otherwise (covers the m1 review fix in design Manual Verification).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/project-resolver.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/project-resolver.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement `resolveProject(diffFiles: string[], options: { overridePath?: string; pathExists?: (p: string) => boolean }): ResolveResult`. Pass `pathExists` so tests don't touch the real filesystem.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/project-resolver.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/project-resolver.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -302,7 +309,7 @@ Confirm `ResolveResult` is a discriminated union mirroring narrowing's pattern.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/project-resolver.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/project-resolver.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -333,14 +340,14 @@ git commit -m "feat(p01-t05): add project resolution helper"
 - With stub returning unrelated help text → `{ posting: "not-supported" }`.
 - With stub erroring on probe → `{ posting: "unknown" }` (caller falls back to `gh api`).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/capability-probe.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/capability-probe.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Empirically probe `npx agent-reviews --help` once during this task — record the canonical flag (if any) and the exact text pattern in the test fixture. If no posting capability exists today, ship the probe + fallback wiring with `"not-supported"` as the expected current-state result; the probe is forward-compat for when `agent-reviews` gains the capability.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/capability-probe.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/capability-probe.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -349,7 +356,7 @@ Cache the probe result on the invoker context so subsequent calls within a run d
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/capability-probe.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/capability-probe.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -379,14 +386,14 @@ Integration-style test against a temp git repo (use `mktemp -d` + `git init` in 
 - Release runs in a `finally` even when the inner callback throws.
 - If `oat-worktree-bootstrap-auto` reuse is chosen, document the chosen contract in a code comment and gate the helper behind it — otherwise hand-roll per design.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/worktree.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/worktree.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement the three exports above. Use the repo-scoped commands exactly as in design Data Flow step 2 (`git -C "$repo_root" …`).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/worktree.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/worktree.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -395,7 +402,7 @@ Keep the helper agnostic to PR-checkout — `gh pr checkout` lives in the skill,
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/worktree.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/worktree.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -424,7 +431,7 @@ Integration test exercising the round-trip:
 - Assert the verdict (`REQUEST_CHANGES` vs `COMMENT`) matches design rules.
 - Assert minor-fix "Notes" subsection presence matches design rules.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/__integration__/ad-hoc/round-trip.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/ad-hoc/round-trip.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
@@ -437,7 +444,7 @@ Author `SKILL.md`:
 - Process steps mirroring design Component Design + Data Flow + Error Handling: PR resolution → hybrid read (worktree mechanics from design) → marker-based re-review narrowing → inline review → `body-builder` → posting (`agent-reviews` if probed supported, else `gh api`) → cleanup.
 - Output contract + success criteria.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/__integration__/ad-hoc/round-trip.test.ts && pnpm oat:validate-skills`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/ad-hoc/round-trip.test.ts && pnpm oat:validate-skills`
 Expected: Tests pass; skill validates clean.
 
 **Step 3: Refactor**
@@ -446,7 +453,7 @@ Confirm `SKILL.md` matches the style + section ordering of `oat-review-receive-r
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/__integration__/ad-hoc/ && pnpm oat:validate-skills && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/ad-hoc/ && pnpm oat:validate-skills && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -527,14 +534,14 @@ git commit -m "feat(p03-t01): add structured-output mode to oat-reviewer"
 - On dispatcher error, wrapper surfaces error to caller without retry (Tier 2/3 fallback decision lives in the skill).
 - Schema validation: malformed `StructuredFindings` from dispatcher → wrapper raises typed error.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/reviewer-dispatch.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/reviewer-dispatch.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement the wrapper. Use `zod` (if already a dep) or a hand-rolled validator for `StructuredFindings`. Reference the agent-prompt flag name from p03.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/reviewer-dispatch.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/reviewer-dispatch.test.ts`
 Expected: Test passes (GREEN).
 
 **Step 3: Refactor**
@@ -543,7 +550,7 @@ Keep the dispatcher interface narrow (`spawn(payload): Promise<RawAgentResponse>
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/reviewer-dispatch.test.ts && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/reviewer-dispatch.test.ts && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -571,7 +578,7 @@ Integration test:
 - Marker filter scoped to `(project=.oat/projects/foo/bar, scope=p02)` rejects markers for the same project with `scope=p03` and for different projects with `scope=p02`.
 - End-to-end round-trip: build body with project markers via `body-builder`; parse via `marker-parser`; assert markers match including `oat_project` + `oat_review_scope`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/__integration__/project/project-rail.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/project-rail.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
@@ -585,7 +592,7 @@ Author `SKILL.md`:
 - Output contract + success criteria.
 - Read-only contract explicit: no `plan.md` updates, no commits, no pushes from this skill.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/__integration__/project/ && pnpm oat:validate-skills`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/ && pnpm oat:validate-skills`
 Expected: Tests pass; skill validates clean.
 
 **Step 3: Refactor**
@@ -594,7 +601,7 @@ Cross-check the skill's process step naming against `oat-project-review-provide`
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/review-remote/__integration__/project/ && pnpm oat:validate-skills && pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/ && pnpm oat:validate-skills && pnpm lint && pnpm type-check`
 Expected: No errors.
 
 **Step 5: Commit**
@@ -843,7 +850,7 @@ No commit (validation only). If any validate step requires a fix-up commit (e.g.
 
 **Total: 18 tasks**
 
-Ready for code review and merge.
+After these tasks complete, the project will be ready for code review and merge.
 
 ---
 
