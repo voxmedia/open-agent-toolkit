@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-29
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status | Tasks | Completed |
-| ------------------------------------- | ------ | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
-| Phase 3: Documentation                | passed | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
-| Phase 5: Final review fixes           | passed | 2     | 2/2       |
-| Phase 6: Final re-review fixes        | queued | 2     | 0/2       |
+| Phase                                 | Status    | Tasks | Completed |
+| ------------------------------------- | --------- | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed    | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed    | 2     | 2/2       |
+| Phase 3: Documentation                | passed    | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed    | 1     | 1/1       |
+| Phase 5: Final review fixes           | passed    | 2     | 2/2       |
+| Phase 6: Final re-review fixes        | completed | 2     | 2/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 10/10 tasks completed
 
-**Next task:** `p06-t01` — bump public packages forward from the current target branch.
+**Next task:** none — final re-review pending.
 
 ---
 
@@ -268,34 +268,48 @@ oat_generated: false
 
 ## Phase 6: Final re-review fixes
 
-**Status:** queued
+**Status:** completed
 **Started:** 2026-05-29
 
 ### Phase Summary
 
 **Outcome (what changed):**
 
-- Pending. Final re-review findings were converted to fix tasks.
+- Bumped the five public packages from `0.1.12` to `0.1.14`, moving forward from current target branch `0.1.13`.
+- Restored provider-neutral dispatch-ceiling config docs and schema coverage while preserving PJM repo-reference additions.
 
 **Key files touched:**
 
-- Pending.
+- `packages/cli/package.json` - public package version.
+- `packages/control-plane/package.json` - public package version.
+- `packages/docs-config/package.json` - public package version.
+- `packages/docs-theme/package.json` - public package version.
+- `packages/docs-transforms/package.json` - public package version.
+- `apps/oat-docs/docs/cli-utilities/configuration.md` - provider-neutral dispatch-ceiling config docs restored.
+- `apps/oat-docs/docs/reference/oat-directory-structure.md` - config schema restored with PJM repo-reference additions preserved.
 
 **Verification:**
 
-- Pending.
+- Run: `pnpm release:validate`
+- Run: `pnpm release:check-versions`
+- Run: `pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+- Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.preset`
+- Run: `ROOT=$PWD; pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.providers.codex`
+- Run: `ROOT=$PWD; if pnpm --filter @open-agent-toolkit/cli exec tsx --tsconfig tsconfig.json src/index.ts -- --cwd "$ROOT" --json config get workflow.dispatchCeiling.codex >/tmp/oat-p06-stale-key.out 2>&1; then cat /tmp/oat-p06-stale-key.out; echo "unexpected stale key success"; exit 1; else cat /tmp/oat-p06-stale-key.out; echo "stale flat key rejected"; fi`
+- Run: focused docs check for stale flat-key examples/schema rows in the two edited docs pages.
+- Result: pass.
 
-**Review:** pending after fixes complete.
+**Review:** pending final re-review.
 
 ### Task p06-t01: (review) Bump public packages forward from target branch
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 312ce833
 
 ### Task p06-t02: (review) Restore dispatch-ceiling config docs schema
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 6aee1cfa
 
 ---
 
@@ -497,6 +511,8 @@ Chronological log of implementation progress.
 - [x] p05-t01: (review) Restore dispatch-ceiling mainline contract - 1f9a3317
 - [x] p05-t02: (review) Restore canonical OAT skill versions from main - 1d10d49d
 - [x] p05 validation fix: Restore tests for dispatch ceiling and skill versions - 6e7687e4
+- [x] p06-t01: (review) Bump public packages forward from target branch - 312ce833
+- [x] p06-t02: (review) Restore dispatch-ceiling config docs schema - 6aee1cfa
 
 **What changed (high level):**
 
@@ -506,6 +522,7 @@ Chronological log of implementation progress.
 - Preserved structured JSON error output for scaffolding failures.
 - Documented the install-vs-initialize lifecycle and canonical repo-reference surface.
 - Bumped the public package lockstep to `0.1.12` and passed the release validation gate.
+- Bumped the public package lockstep to `0.1.14` and restored provider-neutral dispatch-ceiling config docs/schema.
 
 **Decisions:**
 
@@ -513,7 +530,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Final re-review fixes queued; execute Phase 6 and re-run final review.
+- Final re-review pending.
 
 **Blockers:**
 
@@ -607,7 +624,7 @@ Chronological log of implementation progress.
 
 - None. Findings are target-branch drift and documentation/runtime mismatch to fix before merge.
 
-**Next:** Execute Phase 6 and re-run final review.
+**Next:** Run final re-review.
 
 ---
 
@@ -630,6 +647,7 @@ Track test execution during implementation.
 | 3     | docs generate-index; build:docs                                                                  | yes    | 0      | docs     |
 | 4     | help-snapshots.test.ts; cli test; lint; type-check; build; release:validate                      | yes    | 0      | release  |
 | 5     | dispatch-ceiling/config/provider-ceiling tests; cursor/config repros; release:validate           | yes    | 0      | review   |
+| 6     | release:validate; release:check-versions; config key probes; docs index/content check            | yes    | 0      | review   |
 
 ## Final Summary (for PR/docs)
 
@@ -639,8 +657,9 @@ Track test execution during implementation.
 - `initializeRepoReference()` scaffolds the complete PJM repo-reference surface under `.oat/repo/reference/`.
 - `oat pjm init` instantiates repo reference docs and delegates backlog scaffolding to `initializeBacklog()`.
 - Docs describe the install-vs-initialize lifecycle, command surface, and canonical repo-reference layout.
-- The public package lockstep is bumped to `0.1.12`.
+- The public package lockstep is bumped to `0.1.14`.
 - Final review fixes restore dispatch-ceiling mainline behavior and canonical OAT skill versions from `main`.
+- Final re-review fixes restore provider-neutral dispatch-ceiling config docs/schema.
 
 **Behavioral changes (user-facing):**
 
