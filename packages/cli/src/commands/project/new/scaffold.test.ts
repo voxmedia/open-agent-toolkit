@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -5,6 +6,15 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { scaffoldProject } from './scaffold';
+
+function initGitRepo(root: string): void {
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  execFileSync('git', ['config', 'user.email', 'scaffold@example.com'], {
+    cwd: root,
+  });
+  execFileSync('git', ['config', 'user.name', 'scaffolder'], { cwd: root });
+  execFileSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: root });
+}
 
 async function seedTemplates(repoRoot: string): Promise<void> {
   const templatesDir = join(repoRoot, '.oat', 'templates');
@@ -621,5 +631,256 @@ describe('scaffoldProject', () => {
 
     expect(stateTemplate).toContain('oat_pr_status: null');
     expect(stateTemplate).toContain('oat_pr_url: null');
+  });
+
+  it('does not commit by default', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'no-commit-default',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    expect(result.committed).toBe(false);
+    expect(result.commitSha).toBeUndefined();
+    expect(result.commitStatus).toBe('skipped_disabled');
+
+    // No commit was created, so HEAD does not resolve. Capture stderr so the
+    // expected `git fatal:` probe output does not leak to the test terminal.
+    expect(() =>
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: repoRoot,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    ).toThrow();
+  });
+
+  it('commits only the scaffolded directory when commit:true (scoped staging)', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+
+    // An unrelated untracked file elsewhere in the repo must remain untracked.
+    await writeFile(join(repoRoot, 'unrelated.txt'), 'do not stage me', 'utf8');
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'commit-demo',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      today: '2026-02-16',
+    });
+
+    expect(result.committed).toBe(true);
+    expect(result.commitStatus).toBe('committed');
+    expect(result.commitSha).toMatch(/^[0-9a-f]{40}$/);
+
+    // The scaffolded artifacts are tracked at HEAD.
+    const tracked = execFileSync(
+      'git',
+      ['ls-tree', '-r', '--name-only', 'HEAD'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    expect(tracked).toContain('.oat/projects/shared/commit-demo/state.md');
+    expect(tracked).toContain('.oat/projects/shared/commit-demo/plan.md');
+
+    // The unrelated file was NOT swept into the scaffold commit.
+    expect(tracked).not.toContain('unrelated.txt');
+    const status = execFileSync(
+      'git',
+      ['status', '--porcelain', '--', 'unrelated.txt'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    expect(status).toContain('?? unrelated.txt');
+  });
+
+  it('skips commit safely when not inside a git work tree', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'no-git',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      today: '2026-02-16',
+    });
+
+    expect(result.committed).toBe(false);
+    expect(result.commitStatus).toBe('skipped_no_worktree');
+    expect(result.commitSha).toBeUndefined();
+
+    // Files were still scaffolded despite the skipped commit.
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'shared', 'no-git', 'state.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('# Project State: no-git');
+  });
+
+  it('skips committing without error when there is nothing new to create', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+
+    // First run scaffolds and commits the project.
+    await scaffoldProject({
+      repoRoot,
+      projectName: 'idempotent-demo',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      today: '2026-02-16',
+    });
+
+    // A second run creates nothing (all files already exist), so there is
+    // nothing for the scoped commit to do.
+    const second = await scaffoldProject({
+      repoRoot,
+      projectName: 'idempotent-demo',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      today: '2026-02-16',
+    });
+
+    expect(second.createdFiles).toHaveLength(0);
+    expect(second.committed).toBe(false);
+    expect(second.commitStatus).toBe('skipped_nothing');
+    expect(second.commitSha).toBeUndefined();
+  });
+
+  it('classifies a genuine commit failure and captures git stderr without leaking it', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    // Init a work tree but deliberately omit user identity so `git commit`
+    // fails with a fatal error. The helper must classify this as `failed` and
+    // capture the stderr instead of letting `git fatal:` leak to the terminal.
+    execFileSync('git', ['init', '-q'], { cwd: repoRoot });
+    execFileSync('git', ['config', 'commit.gpgsign', 'false'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', ''], { cwd: repoRoot });
+    execFileSync('git', ['config', 'user.name', ''], { cwd: repoRoot });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'commit-fail',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      env: {
+        // Strip any ambient git identity so the commit truly cannot resolve one.
+        GIT_AUTHOR_NAME: '',
+        GIT_AUTHOR_EMAIL: '',
+        GIT_COMMITTER_NAME: '',
+        GIT_COMMITTER_EMAIL: '',
+      },
+      today: '2026-02-16',
+    });
+
+    expect(result.committed).toBe(false);
+    expect(result.commitStatus).toBe('failed');
+    expect(result.commitError).toBeTruthy();
+
+    // The scaffold itself still succeeded.
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'shared', 'commit-fail', 'state.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('# Project State: commit-fail');
+  });
+
+  it('does not sweep pre-existing dirty edits inside the project dir on a re-run', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+
+    // First run scaffolds and commits the project baseline.
+    const first = await scaffoldProject({
+      repoRoot,
+      projectName: 'dirty-rerun',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      today: '2026-02-16',
+    });
+    expect(first.committed).toBe(true);
+
+    const projectDir = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'dirty-rerun',
+    );
+
+    // Introduce unrelated working-tree changes INSIDE the project directory:
+    // (a) a dirty edit to an already-committed file, and
+    // (b) a brand-new untracked file this re-run will NOT create.
+    const planPath = join(projectDir, 'plan.md');
+    await writeFile(planPath, 'manual unrelated edit to plan', 'utf8');
+    const notesPath = join(projectDir, 'unrelated-notes.md');
+    await writeFile(notesPath, 'untracked notes do not commit me', 'utf8');
+
+    // Re-run with commit:true. Since every template already exists, this run
+    // creates nothing, so the scoped commit must touch nothing.
+    const second = await scaffoldProject({
+      repoRoot,
+      projectName: 'dirty-rerun',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      commit: true,
+      today: '2026-02-16',
+    });
+
+    expect(second.createdFiles).toHaveLength(0);
+    expect(second.committed).toBe(false);
+    expect(second.commitStatus).toBe('skipped_nothing');
+
+    // The unrelated edits remain in the working tree, uncommitted.
+    const status = execFileSync('git', ['status', '--porcelain'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
+    expect(status).toContain('.oat/projects/shared/dirty-rerun/plan.md');
+    expect(status).toContain(
+      '?? .oat/projects/shared/dirty-rerun/unrelated-notes.md',
+    );
+
+    // And they were NOT included in HEAD.
+    const headFiles = execFileSync(
+      'git',
+      ['ls-tree', '-r', '--name-only', 'HEAD'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    expect(headFiles).not.toContain(
+      '.oat/projects/shared/dirty-rerun/unrelated-notes.md',
+    );
+    // plan.md is tracked (committed by the first run), but HEAD must still hold
+    // the original scaffolded content, not the manual edit.
+    const headPlan = execFileSync(
+      'git',
+      ['show', 'HEAD:.oat/projects/shared/dirty-rerun/plan.md'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    expect(headPlan).not.toContain('manual unrelated edit to plan');
   });
 });

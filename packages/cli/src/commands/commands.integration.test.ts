@@ -374,6 +374,7 @@ describe('CLI command integration', () => {
       '--mode',
       'quick',
       '--no-dashboard',
+      '--no-commit',
     ]);
 
     expect(result.exitCode).toBe(0);

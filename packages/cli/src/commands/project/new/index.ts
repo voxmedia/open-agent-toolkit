@@ -12,11 +12,18 @@ import {
   type ScaffoldProjectResult,
 } from './scaffold';
 
+const COMMIT_STATUS_MESSAGES = {
+  skipped_disabled: 'Scaffold commit: skipped (--no-commit)',
+  skipped_no_worktree: 'Scaffold commit: skipped (not a git work tree)',
+  skipped_nothing: 'Scaffold commit: skipped (nothing to commit)',
+} as const;
+
 interface ProjectNewCommandOptions {
   mode: ProjectScaffoldMode;
   force: boolean;
   setActive: boolean;
   dashboard: boolean;
+  commit: boolean;
 }
 
 interface ProjectNewDependencies {
@@ -28,6 +35,7 @@ interface ProjectNewDependencies {
     force: boolean;
     setActive: boolean;
     refreshDashboard: boolean;
+    commit: boolean;
   }) => Promise<ScaffoldProjectResult>;
 }
 
@@ -52,6 +60,10 @@ function reportSuccess(
       skippedFiles: result.skippedFiles,
       activePointerUpdated: result.activePointerUpdated,
       dashboardRefreshed: result.dashboardRefreshed,
+      committed: result.committed,
+      commitSha: result.commitSha,
+      commitStatus: result.commitStatus,
+      commitError: result.commitError,
     });
     return;
   }
@@ -62,6 +74,20 @@ function reportSuccess(
     context.logger.info(
       'Active project updated in local config: .oat/config.local.json',
     );
+  }
+  if (result.commitStatus === 'committed') {
+    context.logger.info(
+      `Scaffold commit: ${result.commitSha?.slice(0, 7) ?? 'committed'}`,
+    );
+  } else if (result.commitStatus === 'failed') {
+    // The scaffold itself succeeded, so this is a warning, not an error: do not
+    // change the process exit code. Make clear the baseline was NOT committed.
+    const detail = result.commitError ? `: ${result.commitError}` : '';
+    context.logger.warn(
+      `Warning: scaffold commit failed${detail}. The scaffolded files were written but NOT committed.`,
+    );
+  } else {
+    context.logger.info(COMMIT_STATUS_MESSAGES[result.commitStatus]);
   }
 }
 
@@ -79,6 +105,7 @@ async function runProjectNew(
       force: options.force,
       setActive: options.setActive,
       refreshDashboard: options.dashboard,
+      commit: options.commit,
     });
 
     reportSuccess(context, projectName, result);
@@ -113,6 +140,7 @@ export function createProjectNewCommand(
     .option('--force', 'Non-destructive scaffold; create missing files only')
     .option('--no-set-active', 'Do not update active project in local config')
     .option('--no-dashboard', 'Do not refresh .oat/state.md after scaffold')
+    .option('--no-commit', 'Do not git-commit the scaffolded project directory')
     .action(
       async (
         name: string,

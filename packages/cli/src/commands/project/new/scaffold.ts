@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -16,11 +17,30 @@ export interface ScaffoldProjectOptions {
   force?: boolean;
   setActive?: boolean;
   refreshDashboard?: boolean;
+  /**
+   * Commit the freshly scaffolded project directory so the artifact baseline is
+   * git-tracked from t=0. Opt-in (default false) so library callers that manage
+   * their own commits (e.g. the project-split flow) are unaffected; only the
+   * `oat project new` command enables it by default.
+   */
+  commit?: boolean;
   env?: NodeJS.ProcessEnv;
   today?: string;
   nowUtc?: string;
   refreshDashboardCallback?: (repoRoot: string) => void | Promise<void>;
 }
+
+/**
+ * Classified outcome of the scoped scaffold commit. Distinguishing the skip
+ * reasons (and `failed`) lets the CLI surface accurate, distinct messaging
+ * instead of collapsing every non-commit into a single benign "skipped" line.
+ */
+export type CommitScaffoldStatus =
+  | 'committed'
+  | 'skipped_disabled'
+  | 'skipped_no_worktree'
+  | 'skipped_nothing'
+  | 'failed';
 
 export interface ScaffoldProjectResult {
   mode: ProjectScaffoldMode;
@@ -30,6 +50,10 @@ export interface ScaffoldProjectResult {
   skippedFiles: string[];
   activePointerUpdated: boolean;
   dashboardRefreshed: boolean;
+  committed: boolean;
+  commitSha?: string;
+  commitStatus: CommitScaffoldStatus;
+  commitError?: string;
 }
 
 const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
@@ -171,6 +195,82 @@ async function defaultRefreshDashboard(repoRoot: string): Promise<void> {
   await generateStateDashboard({ repoRoot });
 }
 
+interface CommitScaffoldResult {
+  status: CommitScaffoldStatus;
+  committed: boolean;
+  commitSha?: string;
+  error?: string;
+}
+
+/**
+ * Scoped, fail-safe commit of just the files this run created.
+ *
+ * Stages and commits only the pathspecs derived from `createdFiles` (under
+ * `projectPath`) so unrelated working-tree changes — including pre-existing
+ * dirty edits inside the same project directory on a re-run, and the
+ * `.oat/state.md` dashboard outside it — are never swept in. The returned
+ * status distinguishes a clean commit from each skip reason and from a genuine
+ * git failure; on failure the captured git stderr is surfaced via `error`. This
+ * never throws: any git error is classified as `failed`, not propagated.
+ */
+function commitScaffold(
+  cwd: string,
+  projectPath: string,
+  projectName: string,
+  createdFiles: string[],
+): CommitScaffoldResult {
+  const run = (args: string[]): string =>
+    execFileSync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      // Capture stderr instead of inheriting it so deliberate skip/failure
+      // probes (e.g. tests) do not leak raw `git fatal:` lines to the terminal.
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+
+  try {
+    run(['rev-parse', '--is-inside-work-tree']);
+  } catch {
+    return { status: 'skipped_no_worktree', committed: false };
+  }
+
+  // Only commit files this run created. Nothing created => nothing to commit,
+  // which guarantees a re-run never touches unrelated working-tree edits.
+  if (createdFiles.length === 0) {
+    return { status: 'skipped_nothing', committed: false };
+  }
+  const pathspecs = createdFiles.map((file) => join(projectPath, file));
+
+  try {
+    run(['add', '--', ...pathspecs]);
+
+    const staged = run(['diff', '--cached', '--name-only', '--', ...pathspecs]);
+    if (staged.length === 0) {
+      return { status: 'skipped_nothing', committed: false };
+    }
+
+    run([
+      'commit',
+      '-m',
+      `chore(oat): scaffold ${projectName}`,
+      '--',
+      ...pathspecs,
+    ]);
+
+    const commitSha = run(['rev-parse', 'HEAD']);
+    return { status: 'committed', committed: true, commitSha };
+  } catch (error) {
+    const stderr =
+      error && typeof error === 'object' && 'stderr' in error
+        ? (error as { stderr?: Buffer | string }).stderr
+        : undefined;
+    const message =
+      (stderr != null ? stderr.toString().trim() : '') ||
+      (error instanceof Error ? error.message : String(error));
+    return { status: 'failed', committed: false, error: message };
+  }
+}
+
 async function scaffoldModeTemplates(
   repoRoot: string,
   projectPath: string,
@@ -276,6 +376,25 @@ export async function scaffoldProject(
     }
   }
 
+  let committed = false;
+  let commitSha: string | undefined;
+  let commitStatus: CommitScaffoldStatus = 'skipped_disabled';
+  let commitError: string | undefined;
+  if (options.commit) {
+    // `projectPath` is relative to `repoRoot`, so git must run there for the
+    // pathspecs to resolve to the scaffolded files.
+    const commitResult = commitScaffold(
+      options.repoRoot,
+      projectPath,
+      options.projectName,
+      createdFiles,
+    );
+    committed = commitResult.committed;
+    commitSha = commitResult.commitSha;
+    commitStatus = commitResult.status;
+    commitError = commitResult.error;
+  }
+
   return {
     mode,
     projectsRoot,
@@ -284,5 +403,9 @@ export async function scaffoldProject(
     skippedFiles,
     activePointerUpdated: setActive,
     dashboardRefreshed,
+    committed,
+    commitSha,
+    commitStatus,
+    commitError,
   };
 }

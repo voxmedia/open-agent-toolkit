@@ -666,6 +666,7 @@ describe('help output snapshots', () => {
         --force          Non-destructive scaffold; create missing files only
         --no-set-active  Do not update active project in local config
         --no-dashboard   Do not refresh .oat/state.md after scaffold
+        --no-commit      Do not git-commit the scaffolded project directory
         -h, --help       display help for command
       "
     `);

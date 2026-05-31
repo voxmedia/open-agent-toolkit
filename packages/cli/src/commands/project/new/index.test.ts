@@ -8,6 +8,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectNewCommand } from './index';
 
+type CommitScaffoldStatus =
+  | 'committed'
+  | 'skipped_disabled'
+  | 'skipped_no_worktree'
+  | 'skipped_nothing'
+  | 'failed';
+
 interface HarnessOptions {
   result?: {
     mode: 'spec-driven' | 'quick' | 'import';
@@ -17,6 +24,10 @@ interface HarnessOptions {
     skippedFiles: string[];
     activePointerUpdated: boolean;
     dashboardRefreshed: boolean;
+    committed: boolean;
+    commitSha?: string;
+    commitStatus: CommitScaffoldStatus;
+    commitError?: string;
   };
   throwError?: boolean;
 }
@@ -40,6 +51,8 @@ function createHarness(options: HarnessOptions = {}): {
         skippedFiles: [],
         activePointerUpdated: true,
         dashboardRefreshed: true,
+        committed: false,
+        commitStatus: 'skipped_disabled',
       }
     );
   });
@@ -114,6 +127,20 @@ describe('createProjectNewCommand', () => {
         force: true,
         setActive: false,
         refreshDashboard: false,
+        commit: true,
+      }),
+    );
+  });
+
+  it('forwards commit: false when --no-commit is passed', async () => {
+    const { command, scaffoldProject } = createHarness();
+
+    await runCommand(command, ['demo', '--no-commit']);
+
+    expect(scaffoldProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectName: 'demo',
+        commit: false,
       }),
     );
   });
@@ -128,6 +155,9 @@ describe('createProjectNewCommand', () => {
         skippedFiles: [],
         activePointerUpdated: true,
         dashboardRefreshed: true,
+        committed: true,
+        commitSha: 'abcdef1234567890',
+        commitStatus: 'committed',
       },
     });
 
@@ -140,6 +170,112 @@ describe('createProjectNewCommand', () => {
     expect(capture.info[2]).toContain(
       'Active project updated in local config: .oat/config.local.json',
     );
+    expect(capture.info[3]).toContain('Scaffold commit: abcdef1');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports skipped commit when --no-commit is passed', async () => {
+    const { command, capture } = createHarness({
+      result: {
+        mode: 'spec-driven',
+        projectPath: '.oat/projects/shared/demo',
+        projectsRoot: '.oat/projects/shared',
+        createdFiles: ['state.md'],
+        skippedFiles: [],
+        activePointerUpdated: true,
+        dashboardRefreshed: true,
+        committed: false,
+        commitStatus: 'skipped_disabled',
+      },
+    });
+
+    await runCommand(command, ['demo', '--no-commit']);
+
+    expect(
+      capture.info.some((line) =>
+        line.includes('Scaffold commit: skipped (--no-commit)'),
+      ),
+    ).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a distinct message when the work tree is missing', async () => {
+    const { command, capture } = createHarness({
+      result: {
+        mode: 'quick',
+        projectPath: '.oat/projects/shared/demo',
+        projectsRoot: '.oat/projects/shared',
+        createdFiles: ['state.md'],
+        skippedFiles: [],
+        activePointerUpdated: true,
+        dashboardRefreshed: true,
+        committed: false,
+        commitStatus: 'skipped_no_worktree',
+      },
+    });
+
+    await runCommand(command, ['demo']);
+
+    expect(
+      capture.info.some((line) =>
+        line.includes('Scaffold commit: skipped (not a git work tree)'),
+      ),
+    ).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a distinct message when there is nothing to commit', async () => {
+    const { command, capture } = createHarness({
+      result: {
+        mode: 'quick',
+        projectPath: '.oat/projects/shared/demo',
+        projectsRoot: '.oat/projects/shared',
+        createdFiles: [],
+        skippedFiles: ['state.md'],
+        activePointerUpdated: true,
+        dashboardRefreshed: true,
+        committed: false,
+        commitStatus: 'skipped_nothing',
+      },
+    });
+
+    await runCommand(command, ['demo']);
+
+    expect(
+      capture.info.some((line) =>
+        line.includes('Scaffold commit: skipped (nothing to commit)'),
+      ),
+    ).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns on commit failure without changing the exit code', async () => {
+    const { command, capture } = createHarness({
+      result: {
+        mode: 'quick',
+        projectPath: '.oat/projects/shared/demo',
+        projectsRoot: '.oat/projects/shared',
+        createdFiles: ['state.md'],
+        skippedFiles: [],
+        activePointerUpdated: true,
+        dashboardRefreshed: true,
+        committed: false,
+        commitStatus: 'failed',
+        commitError: 'fatal: empty ident name not allowed',
+      },
+    });
+
+    await runCommand(command, ['demo']);
+
+    expect(
+      capture.warn.some(
+        (line) =>
+          line.includes('scaffold commit failed') &&
+          line.includes('fatal: empty ident name not allowed') &&
+          line.includes('NOT committed'),
+      ),
+    ).toBe(true);
+    // The scaffold succeeded, so a commit failure must not fail the command.
     expect(process.exitCode).toBe(0);
   });
 
@@ -153,6 +289,8 @@ describe('createProjectNewCommand', () => {
         skippedFiles: ['plan.md'],
         activePointerUpdated: false,
         dashboardRefreshed: false,
+        committed: false,
+        commitStatus: 'skipped_no_worktree',
       },
     });
 
@@ -165,6 +303,35 @@ describe('createProjectNewCommand', () => {
       projectPath: '.oat/projects/shared/demo',
       activePointerUpdated: false,
       dashboardRefreshed: false,
+      committed: false,
+      commitStatus: 'skipped_no_worktree',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('includes commitStatus and commitError in json on commit failure', async () => {
+    const { command, capture } = createHarness({
+      result: {
+        mode: 'quick',
+        projectPath: '.oat/projects/shared/demo',
+        projectsRoot: '.oat/projects/shared',
+        createdFiles: ['state.md'],
+        skippedFiles: [],
+        activePointerUpdated: true,
+        dashboardRefreshed: true,
+        committed: false,
+        commitStatus: 'failed',
+        commitError: 'fatal: empty ident name not allowed',
+      },
+    });
+
+    await runCommand(command, ['demo'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      committed: false,
+      commitStatus: 'failed',
+      commitError: 'fatal: empty ident name not allowed',
     });
     expect(process.exitCode).toBe(0);
   });
