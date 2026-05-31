@@ -1,6 +1,6 @@
 ---
 name: oat-review-provide
-version: 1.2.0
+version: 1.2.1
 description: Use when you need an ad-hoc review outside an active OAT project lifecycle. Reviews code or artifacts without project phase state, unlike oat-project-review-provide.
 argument-hint: '[unstaged|staged|base_branch=<branch>|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]'
 disable-model-invocation: true
@@ -137,7 +137,7 @@ bash .agents/skills/oat-review-provide/scripts/resolve-review-output.sh --mode a
 
 Policy:
 
-- If `.oat/repo/reviews` exists and is not gitignored, assume user wants tracked active artifacts there.
+- If `.oat/repo/reviews` exists and new review artifacts under it are not gitignored, assume user wants tracked active artifacts there.
 - Otherwise default to active local `.oat/projects/local/orphan-reviews`.
 - Do **not** write new review artifacts directly into any `archived/` directory; those are historical locations used after `oat-review-receive` processes a review.
 - If user preference is unclear, ask and recommend local-only.

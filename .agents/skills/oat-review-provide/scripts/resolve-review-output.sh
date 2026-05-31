@@ -18,7 +18,7 @@ Policy:
 - If --output is provided, use it directly.
 - If mode=inline, no artifact file is written.
 - In auto mode:
-  - If .oat/repo/reviews exists and is NOT gitignored, use it (tracked convention).
+  - If .oat/repo/reviews exists and new review artifacts under it are NOT gitignored, use it (tracked convention).
   - Otherwise, use .oat/projects/local/orphan-reviews (local-only default).
 USAGE
 }
@@ -67,12 +67,22 @@ is_gitignored() {
   fi
 }
 
+artifact_probe_path() {
+  local output_dir="$1"
+  printf '%s/%s\n' "${output_dir%/}" "ad-hoc-review-gitignore-probe.md"
+}
+
+is_output_gitignored() {
+  local output_dir="$1"
+  is_gitignored "$(artifact_probe_path "$output_dir")"
+}
+
 # Resolve explicit output first
 if [[ -n "$OUTPUT" ]]; then
   echo "review_mode=file"
   echo "output_dir=$OUTPUT"
   echo "output_kind=custom"
-  echo "output_gitignored=$(is_gitignored "$OUTPUT")"
+  echo "output_gitignored=$(is_output_gitignored "$OUTPUT")"
   echo "reason=explicit_output"
   exit 0
 fi
@@ -93,7 +103,7 @@ if [[ "$MODE" == "tracked" ]]; then
   echo "review_mode=file"
   echo "output_dir=$TRACKED_DIR"
   echo "output_kind=tracked"
-  echo "output_gitignored=$(is_gitignored "$TRACKED_DIR")"
+  echo "output_gitignored=$(is_output_gitignored "$TRACKED_DIR")"
   echo "reason=forced_tracked"
   exit 0
 fi
@@ -102,13 +112,13 @@ if [[ "$MODE" == "local" ]]; then
   echo "review_mode=file"
   echo "output_dir=$LOCAL_DIR"
   echo "output_kind=local"
-  echo "output_gitignored=$(is_gitignored "$LOCAL_DIR")"
+  echo "output_gitignored=$(is_output_gitignored "$LOCAL_DIR")"
   echo "reason=forced_local"
   exit 0
 fi
 
 # auto mode
-if [[ -d "$TRACKED_DIR" ]] && [[ "$(is_gitignored "$TRACKED_DIR")" == "false" ]]; then
+if [[ -d "$TRACKED_DIR" ]] && [[ "$(is_output_gitignored "$TRACKED_DIR")" == "false" ]]; then
   echo "review_mode=file"
   echo "output_dir=$TRACKED_DIR"
   echo "output_kind=tracked"
@@ -120,5 +130,5 @@ fi
 echo "review_mode=file"
 echo "output_dir=$LOCAL_DIR"
 echo "output_kind=local"
-echo "output_gitignored=$(is_gitignored "$LOCAL_DIR")"
+echo "output_gitignored=$(is_output_gitignored "$LOCAL_DIR")"
 echo "reason=default_local_only"
