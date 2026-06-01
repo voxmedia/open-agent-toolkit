@@ -112,7 +112,7 @@ With those values configured:
 - `oat-project-complete` still archives locally into `.oat/projects/archived/<project>/`
 - completion also attempts an S3 upload when AWS CLI is available and configured, storing dated snapshots such as `<archive.s3Uri>/<repo-slug>/projects/20260401-my-project/`
 - completion also copies `summary.md` into `<archive.summaryExportPath>/20260401-my-project.md`
-- `oat project archive sync` can later pull archive data back down from S3 and materialize the latest snapshot into the local bare archive path `.oat/projects/archived/<project>/`
+- `oat repo archive sync` can later pull archive data back down from S3 and materialize the latest snapshot into the local bare archive path `.oat/projects/archived/<project>/`
 - `oat-wrap-up` can write tracked reports into `<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md`; if the key is unset, the skill uses `.oat/repo/reference/wrap-ups/`
 - every `aws` spawn (preflight `aws sts get-caller-identity`, `aws s3 ls`, `aws s3 sync`) runs with `AWS_PROFILE` / `AWS_REGION` set from `archive.awsProfile` / `archive.awsRegion` when configured, overriding any value already in the parent shell
 
@@ -120,7 +120,7 @@ With those values configured:
 
 Profile and region resolve with the following precedence per `aws` invocation, highest first:
 
-1. CLI flag passed to `oat project archive sync` (`--profile <profile>`, `--region <region>`)
+1. CLI flag passed to `oat repo archive sync` (`--profile <profile>`, `--region <region>`)
 2. The repo's shared `archive.awsProfile` / `archive.awsRegion` config
 3. The parent shell's existing `AWS_PROFILE` / `AWS_REGION` env vars
 
@@ -128,15 +128,15 @@ If none of the three are present for a given var, OAT does not inject it — the
 
 `archive.awsProfile` is treated as deliberate, OAT-archive-scoped intent: if the repo declares the identity it wants to archive under, that value wins over whatever profile happens to be in the calling shell. Use `--profile` for one-off overrides; clear `archive.awsProfile` (set it to an empty string) to fall back to shell `AWS_PROFILE`.
 
-The `oat project archive sync` flags only override for that single invocation:
+The `oat repo archive sync` flags only override for that single invocation:
 
 ```bash
-oat project archive sync --profile work-sso --region us-east-1
+oat repo archive sync --profile work-sso --region us-east-1
 ```
 
 `oat-project-complete` does not accept per-invocation flags. Set the shared config (or your shell env) ahead of time if completion needs a specific profile.
 
-Raw access keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and friends) remain a shell-environment concern. OAT does not expose config keys for them — set them in your shell before running `oat-project-complete` or `oat project archive sync` and they are inherited by the spawned `aws` process unchanged.
+Raw access keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and friends) remain a shell-environment concern. OAT does not expose config keys for them — set them in your shell before running `oat-project-complete` or `oat repo archive sync` and they are inherited by the spawned `aws` process unchanged.
 
 ## Repo-local and user state
 

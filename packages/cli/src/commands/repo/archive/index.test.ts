@@ -223,7 +223,7 @@ describe('oat repo archive sync', () => {
     expect(removeDirectory).not.toHaveBeenCalled();
     expect(execFile).not.toHaveBeenCalled();
     expect(capture.error[0]).toBe(
-      '`--force` requires a project name for `oat project archive sync`.',
+      '`--force` requires a project name for `oat repo archive sync`.',
     );
     expect(process.exitCode).toBe(1);
   });

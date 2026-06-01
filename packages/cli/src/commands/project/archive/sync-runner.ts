@@ -282,11 +282,12 @@ export async function runArchiveSyncCommand(
   projectName: string | undefined,
   options: ArchiveSyncOptions,
   context: CommandContext,
+  commandLabel = 'oat repo archive sync',
 ): Promise<void> {
   try {
     if (options.force && !projectName) {
       throw new CliError(
-        '`--force` requires a project name for `oat project archive sync`.',
+        `\`--force\` requires a project name for \`${commandLabel}\`.`,
       );
     }
 

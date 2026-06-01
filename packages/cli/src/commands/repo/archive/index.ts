@@ -45,6 +45,7 @@ export function createRepoArchiveCommand(
               projectName,
               options,
               context,
+              'oat repo archive sync',
             );
           },
         ),

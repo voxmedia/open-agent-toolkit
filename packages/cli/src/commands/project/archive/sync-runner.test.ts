@@ -305,7 +305,7 @@ describe('archive sync runner', () => {
     expect(harness.removeDirectory).not.toHaveBeenCalled();
     expect(harness.execFile).not.toHaveBeenCalled();
     expect(harness.capture.error[0]).toBe(
-      '`--force` requires a project name for `oat project archive sync`.',
+      '`--force` requires a project name for `oat repo archive sync`.',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -347,7 +347,7 @@ describe('archive sync runner', () => {
   it('sets an error exit code when the AWS preflight fails', async () => {
     const harness = createHarness({
       preflightError: new CliError(
-        'AWS CLI is required for `oat project archive sync`, but it was not found on PATH. Install `aws` and retry.',
+        'AWS CLI is required for `oat repo archive sync`, but it was not found on PATH. Install `aws` and retry.',
       ),
     });
 
@@ -355,7 +355,7 @@ describe('archive sync runner', () => {
 
     expect(harness.execFile).not.toHaveBeenCalled();
     expect(harness.capture.error[0]).toBe(
-      'AWS CLI is required for `oat project archive sync`, but it was not found on PATH. Install `aws` and retry.',
+      'AWS CLI is required for `oat repo archive sync`, but it was not found on PATH. Install `aws` and retry.',
     );
     expect(process.exitCode).toBe(1);
   });

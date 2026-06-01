@@ -99,6 +99,7 @@ export function createProjectArchiveCommand(
               projectName,
               syncOptions,
               context,
+              'oat project archive sync',
             );
           },
         ),

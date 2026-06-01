@@ -544,7 +544,7 @@ describe('oat project archive sync', () => {
   it('fails when AWS CLI is missing', async () => {
     const { command, capture, execFile } = createHarness({
       preflightError: new CliError(
-        'AWS CLI is required for `oat project archive sync`, but it was not found on PATH. Install `aws` and retry.',
+        'AWS CLI is required for `oat repo archive sync`, but it was not found on PATH. Install `aws` and retry.',
       ),
     });
 
@@ -552,7 +552,7 @@ describe('oat project archive sync', () => {
 
     expect(execFile).not.toHaveBeenCalled();
     expect(capture.error[0]).toBe(
-      'AWS CLI is required for `oat project archive sync`, but it was not found on PATH. Install `aws` and retry.',
+      'AWS CLI is required for `oat repo archive sync`, but it was not found on PATH. Install `aws` and retry.',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -560,7 +560,7 @@ describe('oat project archive sync', () => {
   it('fails when AWS CLI credentials are unusable', async () => {
     const { command, capture, execFile } = createHarness({
       preflightError: new CliError(
-        'AWS CLI is required for `oat project archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
+        'AWS CLI is required for `oat repo archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
       ),
     });
 
@@ -568,7 +568,7 @@ describe('oat project archive sync', () => {
 
     expect(execFile).not.toHaveBeenCalled();
     expect(capture.error[0]).toBe(
-      'AWS CLI is required for `oat project archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
+      'AWS CLI is required for `oat repo archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
     );
     expect(process.exitCode).toBe(1);
   });

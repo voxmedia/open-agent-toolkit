@@ -62,7 +62,7 @@ Archive lifecycle settings live here as shared repo config:
 - `archive.awsProfile`
 - `archive.awsRegion`
 
-`archive.awsProfile` and `archive.awsRegion` are forwarded as `AWS_PROFILE` / `AWS_REGION` env vars into every `aws` spawn that runs during `oat-project-complete` and `oat project archive sync`, and they override any values already set in the parent shell — the repo's archive-scoped declaration wins so users don't have to remember to unset `AWS_PROFILE` per shell. The per-invocation `oat project archive sync --profile <profile>` and `--region <region>` flags then override the config for a single run, giving precedence `flag > config > shell env`. When neither flag nor config is set, the parent shell's `AWS_PROFILE` / `AWS_REGION` pass through unchanged. Raw access keys (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) remain a shell-environment concern — there is no config plumbing for them.
+`archive.awsProfile` and `archive.awsRegion` are forwarded as `AWS_PROFILE` / `AWS_REGION` env vars into every `aws` spawn that runs during `oat-project-complete` and `oat repo archive sync`, and they override any values already set in the parent shell — the repo's archive-scoped declaration wins so users don't have to remember to unset `AWS_PROFILE` per shell. The per-invocation `oat repo archive sync --profile <profile>` and `--region <region>` flags then override the config for a single run, giving precedence `flag > config > shell env`. When neither flag nor config is set, the parent shell's `AWS_PROFILE` / `AWS_REGION` pass through unchanged. Raw access keys (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) remain a shell-environment concern — there is no config plumbing for them.
 
 Tool-pack installation state also lives here as shared repo config:
 

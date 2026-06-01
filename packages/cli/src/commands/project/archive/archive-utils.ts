@@ -664,7 +664,7 @@ export async function ensureS3ArchiveAccess(
         );
       }
       throw buildSyncError(
-        'AWS CLI is required for `oat project archive sync`, but it was not found on PATH. Install `aws` and retry.',
+        'AWS CLI is required for `oat repo archive sync`, but it was not found on PATH. Install `aws` and retry.',
       );
     }
     throw error;
@@ -680,7 +680,7 @@ export async function ensureS3ArchiveAccess(
       );
     }
     throw buildSyncError(
-      'AWS CLI is required for `oat project archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
+      'AWS CLI is required for `oat repo archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
     );
   }
 }

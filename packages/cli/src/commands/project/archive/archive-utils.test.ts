@@ -796,7 +796,7 @@ describe('archive utils', () => {
       ),
     ).rejects.toEqual(
       new CliError(
-        'AWS CLI is required for `oat project archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
+        'AWS CLI is required for `oat repo archive sync`, but it is not configured for access to `archive.s3Uri`. Configure AWS credentials or profile settings and retry.',
       ),
     );
   });

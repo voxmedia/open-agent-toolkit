@@ -112,7 +112,7 @@ Current schema keys:
 | `archive.s3SyncOnComplete`                  | `boolean`  | `false`                  | When `true`, `oat-project-complete` uploads the archived project to the configured S3 archive after local archive succeeds                                                                                                                                                                                                    |
 | `archive.summaryExportPath`                 | `string`   | -                        | Repo-relative directory where completion exports `summary.md` as a dated snapshot like `20260401-<project-name>.md` for durable tracked reference                                                                                                                                                                             |
 | `archive.wrapUpExportPath`                  | `string`   | -                        | Repo-relative directory where `oat-wrap-up` writes dated reports like `20260413-wrap-up-past-week.md`; when unset, the skill falls back to `.oat/repo/reference/wrap-ups/`                                                                                                                                                    |
-| `archive.awsProfile`                        | `string`   | -                        | Optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows (`oat-project-complete` S3 sync, `oat project archive sync`). Overrides ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` when set.                                                                                        |
+| `archive.awsProfile`                        | `string`   | -                        | Optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows (`oat-project-complete` S3 sync, `oat repo archive sync`). Overrides ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` when set.                                                                                           |
 | `archive.awsRegion`                         | `string`   | -                        | Optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows. Overrides ambient shell `AWS_REGION` / `AWS_DEFAULT_REGION` when set.                                                                                                                                                               |
 
 All `documentation.*` keys are managed via `oat config get/set` and are set automatically by `oat docs init`.
@@ -166,8 +166,8 @@ Archive sync behavior:
 
 - `oat-project-complete` always archives locally into `.oat/projects/archived/<project>/`.
 - If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
-- `oat project archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
-- `oat project archive sync <project-name>` syncs the latest dated remote snapshot for a single project into `.oat/projects/archived/<project-name>/`.
+- `oat repo archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
+- `oat repo archive sync <project-name>` syncs the latest dated remote snapshot for a single project into `.oat/projects/archived/<project-name>/`.
 - Default archive sync is non-destructive toward unrelated local-only archive data, but it does replace a local project archive when a newer dated remote snapshot is selected for that same project.
 
 Typical contents:
