@@ -31,6 +31,7 @@ Additional useful entry points:
 - `oat instructions validate --strategy pointer`
 - `oat instructions sync --dry-run --strategy symlink`
 - `oat docs init --app-name my-docs`
+- `oat pjm init` - initialize the project-management repo-reference surface after installing the pack
 - `oat config dump --json`
 - `oat project status --json`
 - `oat project list --json`
