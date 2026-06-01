@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-06-01
+oat_last_updated: 2026-05-31
 oat_phase: plan
-oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_phase_status: complete
+oat_plan_hill_phases: ['p03'] # pause after CLI commands exist, before skill/docs/version work
+oat_plan_parallel_groups: [] # fully sequential — see ## Parallelism
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
 ---
 
@@ -18,143 +18,334 @@ oat_generated: false
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Split the archive command surface so the pull lives at `oat repo archive sync` and the push becomes a real `oat project archive` command backed by the already-tested `archiveProjectOnCompletion()`, keep `oat project archive sync` as a deprecated shim, and rewrite `oat-project-complete` Step 8 to call the new command instead of ~150 lines of inline bash.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Thin commander command handlers delegate to a shared sync runner module (extracted from today's `project/archive/index.ts`) and to the existing `archive-utils.ts` push helper. New `oat repo archive` namespace under the existing `oat repo` command; `oat project archive` gains a bare push action plus a deprecated `sync` alias.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript ESM, commander, vitest. CLI package `@open-agent-toolkit/cli`.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `{type}(p{NN}-t{NN}): {description}` — e.g. `refactor(p01-t01): extract archive sync runner`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Confirmed HiLL checkpoints with user (pause after p03)
+- [x] Set `oat_plan_hill_phases` in frontmatter
+- [x] Evaluated phases for parallelism opportunities
+- [x] Set `oat_plan_parallel_groups` in frontmatter
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+The plan is **fully sequential** (`oat_plan_parallel_groups: []`). Reasoning:
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+- **Shared write set.** Phases 1–3 all edit `packages/cli/src/commands/project/archive/index.ts` and its sibling modules; concurrent worktrees would conflict on the same files.
+- **Behavioral dependency.** Phase 2 (`oat project archive` push) and Phase 3 (deprecated `sync` shim) depend on the shared sync runner extracted in Phase 1. Phase 5 (skill Step 8 rewrite) depends on the `oat project archive` command existing (Phase 2). Phase 4 (error strings/docs) and Phase 6 (version bumps) depend on the final command names being settled.
+- No phase is file-disjoint with independent verification, so declaring parallel groups would only create merge conflicts.
 
 ---
 
 ## Dispatch Profile
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
+_No explicit per-phase provider constraints. Runtime selection chooses the tier within the resolved dispatch ceiling._
 
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model              | Codex effort                   | Rationale                     |
-| ----- | ------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them against the resolved OAT dispatch ceiling and maps selected efforts to pinned implementer variants. Codex provider default effort is informational for base/unpinned roles and is not an OAT ceiling.
+| Phase | Claude model | Codex effort | Rationale         |
+| ----- | ------------ | ------------ | ----------------- |
+| —     | auto         | auto         | runtime selection |
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Shared sync runner + `oat repo archive sync`
 
-### Task p01-t01: {Task Name}
+Relocate the pull to its scope-correct home without changing behavior. Extract the sync engine so both the new `repo archive sync` and the later deprecated `project archive sync` shim share one implementation.
+
+### Task p01-t01: Extract archive sync runner into a shared module
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Create: `packages/cli/src/commands/project/archive/sync-runner.ts`
+- Create: `packages/cli/src/commands/project/archive/sync-runner.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.ts` (import the extracted runner instead of inline definitions)
+
+Extract the sync internals currently inline in `index.ts` — `ArchiveSyncOptions`, `resolveSyncAwsEnv`, `buildArchiveSyncArgs`, `runArchiveSync`, `ArchiveSnapshotEntry`, `listArchiveSnapshots`, `compareSnapshotEntries`, `selectLatestSnapshots`, `readLocalSnapshotName`, `syncArchiveSnapshot`, `resolveLocalArchiveRoot`, and a single `runArchiveSyncCommand(deps, projectName, options, context)` orchestrator that holds the current `.action()` body (config read, `s3Uri` guard, access preflight, target selection, JSON/text output, exit codes). Keep the `ProjectArchiveCommandDependencies` shape exported for reuse.
 
 **Step 1: Write test (RED)**
 
 ```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
+// sync-runner.test.ts — assert the orchestrator behavior currently covered by index.test.ts
+// moves intact: latest-per-project selection, --force requires project name, missing s3Uri error,
+// dry-run output, skip-when-current, JSON contract shape, exit codes.
 ```
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/sync-runner.test.ts`
+Expected: Test fails (RED) — module/exports not present yet.
 
 **Step 2: Implement (GREEN)**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+Move the logic out of `index.ts` into `sync-runner.ts`; have `index.ts` import and call `runArchiveSyncCommand`. No behavior change.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/sync-runner.test.ts packages/cli/src/commands/project/archive/index.test.ts`
+Expected: Both pass (GREEN) — existing `index.test.ts` still green against the delegating command.
 
 **Step 3: Refactor**
 
-{Any cleanup or improvements while tests stay green}
+Ensure imports follow `./` + alias policy (no `../`, `src/`, `@/*`). Keep handler thin.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+git add packages/cli/src/commands/project/archive/
+git commit -m "refactor(p01-t01): extract archive sync runner into shared module"
 ```
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add `oat repo archive sync` command
 
 **Files:**
 
-- {File list}
+- Create: `packages/cli/src/commands/repo/archive/index.ts`
+- Create: `packages/cli/src/commands/repo/archive/index.test.ts`
+- Modify: `packages/cli/src/commands/repo/index.ts` (register `createRepoArchiveCommand()`)
+
+Build `createRepoArchiveCommand()` returning an `archive` namespace with a `sync [project-name]` subcommand whose `.action()` delegates to `runArchiveSyncCommand` from `project/archive/sync-runner.ts`. Carry over every option: `--dry-run`, `--force`, `--profile`, `--region`, and the same JSON/text output + exit semantics.
 
 **Step 1: Write test (RED)**
 
-{Test code}
+```typescript
+// index.test.ts — `oat repo archive sync` parses options, forwards to the runner,
+// emits the same JSON contract, and enforces `--force requires project name`.
+```
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/repo/archive/index.test.ts`
+Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
-{Implementation code or signatures}
+Implement the command + register it in `repo/index.ts`.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/repo/archive/index.test.ts`
+Expected: Pass (GREEN).
 
 **Step 3: Refactor**
 
-{Optional cleanup}
+Confirm `oat repo --help` lists `archive` and `oat repo archive --help` lists `sync`.
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors; full CLI suite green.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+git add packages/cli/src/commands/repo/
+git commit -m "feat(p01-t02): add oat repo archive sync command"
 ```
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: `oat project archive` push command
 
-### Task p02-t01: {Task Name}
+Give the orphaned `archiveProjectOnCompletion()` its first real caller.
 
-{Continue TDD pattern...}
+### Task p02-t01: Add `oat project archive` push action
+
+**Files:**
+
+- Create: `packages/cli/src/commands/project/archive/push-runner.ts`
+- Create: `packages/cli/src/commands/project/archive/push-runner.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.ts` (attach a bare `.action()` push to the `archive` command)
+
+Add a bare action on `oat project archive [project-path]` that:
+
+- Resolves the target project path from the arg, falling back to `activeProject` config when omitted.
+- Reads `archive.*` config and builds `ArchiveProjectOnCompletionOptions` (s3Uri, s3SyncOnComplete, summaryExportPath, awsProfile/awsRegion, projectsRoot, projectName).
+- Calls `archiveProjectOnCompletion()` and reports `archivePath`, `s3Path`, `summaryExportFile`, and warnings (text + JSON contract).
+- Supports `--dry-run` (preview the resolved archive target + S3 destination without copying/removing/syncing — guard the mutating calls).
+- **No `--yes`.** Preserves the worktree-durability behavior already inside `archiveProjectOnCompletion` (`resolveArchiveRepoRoot`/`resolvePrimaryRepoRoot`); surfaces the local-only warning when the primary-repo archive path is unavailable.
+- Honors `archive.s3SyncOnComplete` exactly as today (no S3 push unless configured).
+
+**Step 1: Write test (RED)**
+
+```typescript
+// push-runner.test.ts — injected deps: archive runs, reports archivePath; --dry-run mutates nothing;
+// S3 push skipped when s3SyncOnComplete=false; project-path arg vs activeProject fallback; JSON contract.
+```
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/push-runner.test.ts`
+Expected: Test fails (RED).
+
+**Step 2: Implement (GREEN)**
+
+Implement `push-runner.ts` and wire the bare action in `index.ts`.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/`
+Expected: Pass (GREEN).
+
+**Step 3: Refactor**
+
+Keep the handler thin; all logic in `push-runner.ts` + `archive-utils.ts`.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/
+git commit -m "feat(p02-t01): add oat project archive push command"
+```
+
+---
+
+## Phase 3: Deprecated `oat project archive sync` shim
+
+### Task p03-t01: Deprecated `sync` alias + help pointer
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/index.ts`
+- Modify: `packages/cli/src/commands/project/archive/index.test.ts`
+
+Re-add a `sync` subcommand under `oat project archive` that: prints a deprecation notice to stderr (`oat project archive sync is deprecated; use oat repo archive sync`), then delegates to the same `runArchiveSyncCommand` so behavior is identical. Add `addHelpText('after', …)` on the `archive` command noting the relocated pull. The notice must not corrupt the `--json` contract (route the warning so JSON stdout stays parseable).
+
+**Step 1: Write test (RED)**
+
+```typescript
+// index.test.ts — `oat project archive sync` still forwards correctly AND emits the deprecation notice;
+// --json stdout remains valid JSON (notice on stderr).
+```
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/index.test.ts`
+Expected: New assertions fail (RED).
+
+**Step 2: Implement (GREEN)**
+
+Add the deprecated subcommand + help text.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/index.test.ts`
+Expected: Pass (GREEN).
+
+**Step 3: Refactor**
+
+Manually confirm: `oat project archive` (push), `oat project archive sync` (deprecated→forwards), `oat repo archive sync` (canonical) all behave.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Full CLI suite green.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/
+git commit -m "feat(p03-t01): add deprecated oat project archive sync shim"
+```
+
+> **HiLL checkpoint:** pause after Phase 3 for review — all three command surfaces now exist before touching skill/docs/versions.
+
+---
+
+## Phase 4: Error strings + docs alignment
+
+### Task p04-t01: Update error strings and docs references
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (sync error strings at the AWS-CLI-missing / not-configured branches — currently reference `oat project archive sync`)
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts` (if it asserts those strings)
+- Modify: docs under `apps/oat-docs/docs/**` that reference `oat project archive sync`
+- Regenerate: `apps/oat-docs/index.md` via `oat docs generate-index` (do not hand-edit)
+
+Update the two sync-mode error messages to reference `oat repo archive sync`. Grep docs for `oat project archive` and update pull references to the new command (note the deprecated alias where helpful).
+
+**Step 1: Locate references**
+
+Run: `grep -rn "oat project archive sync" packages/cli/src apps/oat-docs/docs`
+Expected: Enumerated hit list to update.
+
+**Step 2: Implement**
+
+Update strings + docs; then:
+
+Run: `pnpm run cli -- docs generate-index`
+Expected: `apps/oat-docs/index.md` regenerated.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts apps/oat-docs
+git commit -m "docs(p04-t01): point archive pull references at oat repo archive sync"
+```
+
+---
+
+## Phase 5: Rewrite `oat-project-complete` Step 8 + skill version bump
+
+### Task p05-t01: Replace inline archive bash with `oat project archive`
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (Step 8 body + `version:` frontmatter bump from 1.4.8)
+
+Replace the ~150-line inline archive bash (the `ARCHIVED_ROOT`/`git check-ignore`/`mv`/manual `aws s3 sync` block and the "Canonical helper behaviors" / "AWS credential handling" / "Worktree durability guard" prose that duplicate `archive-utils.ts`) with a single `oat project archive "$PROJECT_PATH"` invocation. Keep the skill-level concerns the command does **not** own: ordering (archive after PR-description generation, before commit+push), `IS_SHARED_PROJECT`/`SHOULD_ARCHIVE` gating, the post-archive `PROJECT_PATH` reassignment for Step 10/11.5, and surfacing the command's reported S3 profile/region in the Step 12 summary. Bump `version:`.
+
+**Step 1: Edit skill**
+
+Rewrite Step 8; update step-indicator counts only if they change; bump `version:`.
+
+**Step 2: Verify**
+
+Run: `pnpm run cli -- sync --scope all` (refresh provider skill views) then `grep -n "oat project archive" .agents/skills/oat-project-complete/SKILL.md`
+Expected: Step 8 invokes the command; no leftover inline `aws s3 sync`/`mv "$PROJECT_PATH"` archive block; `version:` incremented.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-complete/SKILL.md .claude .cursor .codex .oat/sync 2>/dev/null
+git commit -m "feat(p05-t01): rewrite oat-project-complete Step 8 to call oat project archive"
+```
+
+---
+
+## Phase 6: Lockstep version bumps + release validation
+
+### Task p06-t01: Bump public packages and validate release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
+
+Bump all five public package versions together (same semver step) per the AGENTS.md lockstep guardrail — required because shipped CLI functionality and bundled skill/docs assets changed.
+
+**Step 1: Bump versions**
+
+Apply the matching version bump across the five `package.json` files.
+
+**Step 2: Verify (full gates)**
+
+Run: `pnpm build && pnpm test && pnpm lint && pnpm type-check && pnpm release:validate`
+Expected: All pass. `release:validate` is the definition-of-done gate for publishable-package changes.
+
+**Step 3: Commit**
+
+```bash
+git add packages/*/package.json
+git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
+```
 
 ---
 
@@ -162,24 +353,18 @@ git commit -m "feat(p01-t02): {description}"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
 | Scope  | Type     | Status  | Date | Artifact |
 | ------ | -------- | ------- | ---- | -------- |
 | p01    | code     | pending | -    | -        |
 | p02    | code     | pending | -    | -        |
+| p03    | code     | pending | -    | -        |
+| p04    | code     | pending | -    | -        |
+| p05    | code     | pending | -    | -        |
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
 
 ---
 
@@ -187,10 +372,14 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 2 tasks — extract sync runner + `oat repo archive sync`
+- Phase 2: 1 task — `oat project archive` push command
+- Phase 3: 1 task — deprecated `oat project archive sync` shim
+- Phase 4: 1 task — error strings + docs alignment
+- Phase 5: 1 task — rewrite completion Step 8 + skill version bump
+- Phase 6: 1 task — lockstep version bump + release validation
 
-**Total: {N} tasks**
+**Total: 7 tasks**
 
 Ready for code review and merge.
 
@@ -198,7 +387,9 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
+- Design: N/A (quick mode — architecture captured in `discovery.md`)
+- Spec: N/A (quick mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Key code: `packages/cli/src/commands/project/archive/index.ts`, `…/archive/archive-utils.ts`, `packages/cli/src/commands/repo/index.ts`
+- Skill: `.agents/skills/oat-project-complete/SKILL.md` (Step 8)
+  </content>
