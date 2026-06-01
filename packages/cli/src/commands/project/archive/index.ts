@@ -26,6 +26,9 @@ export type {
 type ProjectArchiveDependencies = ProjectArchiveCommandDependencies &
   ProjectArchivePushCommandDependencies;
 
+const PROJECT_ARCHIVE_SYNC_DEPRECATION_NOTICE =
+  'oat project archive sync is deprecated; use oat repo archive sync';
+
 export function createProjectArchiveCommand(
   overrides: Partial<ProjectArchiveDependencies> = {},
 ): Command {
@@ -39,6 +42,10 @@ export function createProjectArchiveCommand(
     .description('Manage archived project data')
     .argument('[project-path]', 'Project path to archive')
     .option('--dry-run', 'Preview archive without moving files or syncing S3')
+    .addHelpText(
+      'afterAll',
+      '\nPull archived project data with `oat repo archive sync [project-name]`; `oat project archive sync` is deprecated.',
+    )
     .action(
       async (
         projectPath: string | undefined,
@@ -60,7 +67,7 @@ export function createProjectArchiveCommand(
     .addCommand(
       new Command('sync')
         .description(
-          'Sync archived project data from S3 into the local archive',
+          '[deprecated] Sync archived project data from S3 into the local archive',
         )
         .argument('[project-name]', 'Archived project name to sync')
         .option('--dry-run', 'Preview archive sync without downloading')
@@ -76,6 +83,9 @@ export function createProjectArchiveCommand(
             options: ArchiveSyncOptions,
             command: Command,
           ) => {
+            process.stderr.write(
+              `${PROJECT_ARCHIVE_SYNC_DEPRECATION_NOTICE}\n`,
+            );
             const context = dependencies.buildCommandContext(
               readGlobalOptions(command),
             );
