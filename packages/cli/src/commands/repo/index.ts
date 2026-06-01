@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 
+import { createRepoArchiveCommand } from './archive';
 import { createPrCommentsCommand } from './pr-comments';
 
 export function createRepoCommand(): Command {
@@ -7,6 +8,7 @@ export function createRepoCommand(): Command {
     'Repository-level analysis and insight tools',
   );
 
+  cmd.addCommand(createRepoArchiveCommand());
   cmd.addCommand(createPrCommentsCommand());
 
   return cmd;
