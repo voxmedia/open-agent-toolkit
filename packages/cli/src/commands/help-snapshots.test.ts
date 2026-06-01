@@ -586,7 +586,7 @@ describe('help output snapshots', () => {
         -h, --help                                   display help for command
 
       Commands:
-        archive                                      Manage archived project data
+        archive [options] [project-path]             Manage archived project data
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
