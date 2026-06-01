@@ -13,10 +13,12 @@ import { resolveProjectRoot } from '@fs/paths';
 
 import {
   archiveProjectOnCompletion,
+  assertDurableArchiveProjectTarget,
   buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
-  resolveLocalArchiveProjectPath,
+  resolveArchiveProjectTarget,
   resolvePrimaryRepoRoot,
+  type ArchiveProjectTarget,
   type ArchiveProjectOnCompletionOptions,
   type ArchiveProjectOnCompletionResult,
 } from './archive-utils';
@@ -37,6 +39,7 @@ export interface ProjectArchivePushCommandDependencies {
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
   resolvePrimaryRepoRoot: typeof resolvePrimaryRepoRoot;
+  resolveArchiveProjectTarget: typeof resolveArchiveProjectTarget;
   archiveProjectOnCompletion: (
     options: ArchiveProjectOnCompletionOptions,
   ) => Promise<ArchiveProjectOnCompletionResult>;
@@ -68,6 +71,7 @@ export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePu
     readOatLocalConfig,
     resolveProjectsRoot,
     resolvePrimaryRepoRoot,
+    resolveArchiveProjectTarget,
     archiveProjectOnCompletion,
     processEnv: process.env,
     timestamp: () => new Date().toISOString(),
@@ -133,16 +137,12 @@ async function buildDryRunReport(
   dependencies: ProjectArchivePushCommandDependencies,
   repoRoot: string,
   config: OatConfig,
-  projectsRoot: string,
   target: ResolvedArchiveTarget,
+  archiveTarget: ArchiveProjectTarget,
 ): Promise<ArchivePushReport> {
   const snapshotName = buildArchiveSnapshotName(
     target.projectName,
     dependencies.timestamp(),
-  );
-  const archivePath = join(
-    repoRoot,
-    resolveLocalArchiveProjectPath(projectsRoot, target.projectName),
   );
   const remoteRepoRoot = await dependencies.resolvePrimaryRepoRoot(repoRoot);
   const s3Path =
@@ -162,7 +162,7 @@ async function buildDryRunReport(
     mode: 'dry-run',
     projectName: target.projectName,
     projectPath: target.projectPath,
-    archivePath,
+    archivePath: archiveTarget.archivePath,
     s3Path,
     summaryExportFile,
     warnings: [],
@@ -233,6 +233,18 @@ export async function runArchivePushCommand(
       repoRoot,
       projectPathArg,
     );
+    const archiveTarget = await dependencies.resolveArchiveProjectTarget(
+      {
+        repoRoot,
+        projectsRoot,
+        projectName: target.projectName,
+      },
+      {
+        env: dependencies.processEnv,
+        timestamp: dependencies.timestamp,
+      },
+    );
+    assertDurableArchiveProjectTarget(archiveTarget);
     const dryRun = options.dryRun === true || context.dryRun;
 
     if (dryRun) {
@@ -240,8 +252,8 @@ export async function runArchivePushCommand(
         dependencies,
         repoRoot,
         config,
-        projectsRoot,
         target,
+        archiveTarget,
       );
       emitArchivePushReport(report, config.archive?.summaryExportPath, context);
       process.exitCode = 0;

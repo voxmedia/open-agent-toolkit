@@ -83,6 +83,26 @@ export interface ResolvePrimaryRepoRootDependencies {
   env?: NodeJS.ProcessEnv;
 }
 
+export interface ResolveArchiveProjectTargetOptions {
+  repoRoot: string;
+  projectsRoot: string;
+  projectName: string;
+}
+
+export interface ResolveArchiveProjectTargetDependencies extends ResolvePrimaryRepoRootDependencies {
+  timestamp?: () => string;
+}
+
+export interface ArchiveProjectTarget {
+  archiveProjectPath: string;
+  archiveRepoRoot: string;
+  archivePath: string;
+  archivePathIsGitignored: boolean;
+  primaryRepoRoot: string | null;
+  primaryRepoRootAvailable: boolean;
+  localOnlyWarning: string | null;
+}
+
 interface ArchiveProjectOnCompletionDependencies
   extends
     EnsureS3ArchiveAccessDependencies,
@@ -292,6 +312,11 @@ function isExitCode(error: unknown, code: number): boolean {
   );
 }
 
+interface PrimaryRepoRootResolution {
+  repoRoot: string;
+  available: boolean;
+}
+
 // archiveProjectPath must be the contents-level probe path
 // (.oat/projects/archived/<projectName>), not the archive directory itself
 // (.oat/projects/archived). A `.oat/projects/archived/**` gitignore pattern
@@ -324,10 +349,10 @@ async function isGitignoredArchivePath(
   }
 }
 
-export async function resolvePrimaryRepoRoot(
+async function resolvePrimaryRepoRootResolution(
   repoRoot: string,
   dependencies: ResolvePrimaryRepoRootDependencies = {},
-): Promise<string> {
+): Promise<PrimaryRepoRootResolution> {
   const execFile = dependencies.gitExecFile ?? execFileAsync;
 
   try {
@@ -346,40 +371,30 @@ export async function resolvePrimaryRepoRoot(
     const resolvedGitDir = resolveGitPath(repoRoot, gitDir);
 
     if (resolvedCommonDir === resolvedGitDir) {
-      return repoRoot;
+      return { repoRoot, available: true };
     }
 
     const primaryRepoRoot = dirname(resolvedCommonDir);
     const directoryExists = dependencies.dirExists ?? dirExists;
     if (await directoryExists(primaryRepoRoot)) {
-      return primaryRepoRoot;
+      return { repoRoot: primaryRepoRoot, available: true };
     }
-  } catch {
-    return repoRoot;
-  }
 
-  return repoRoot;
+    return { repoRoot: primaryRepoRoot, available: false };
+  } catch {
+    return { repoRoot, available: false };
+  }
 }
 
-async function resolveArchiveRepoRoot(
+export async function resolvePrimaryRepoRoot(
   repoRoot: string,
-  archiveProjectPath: string,
-  dependencies: ArchiveProjectOnCompletionDependencies,
+  dependencies: ResolvePrimaryRepoRootDependencies = {},
 ): Promise<string> {
-  try {
-    const archivePathIsGitignored = await isGitignoredArchivePath(
-      repoRoot,
-      archiveProjectPath,
-      dependencies,
-    );
-    if (!archivePathIsGitignored) {
-      return repoRoot;
-    }
-  } catch {
-    return repoRoot;
-  }
-
-  return resolvePrimaryRepoRoot(repoRoot, dependencies);
+  const resolution = await resolvePrimaryRepoRootResolution(
+    repoRoot,
+    dependencies,
+  );
+  return resolution.available ? resolution.repoRoot : repoRoot;
 }
 
 async function resolveUniqueArchivePath(
@@ -394,6 +409,89 @@ async function resolveUniqueArchivePath(
   const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
   const suffix = timestamp.replace(/[-:TZ.]/g, '').slice(0, 15);
   return `${archivePath}-${suffix}`;
+}
+
+function buildLocalOnlyArchiveWarning(
+  projectName: string,
+  archiveProjectPath: string,
+  primaryRepoRoot: string | null,
+): string {
+  const primaryMessage = primaryRepoRoot
+    ? `the primary checkout \`${primaryRepoRoot}\` is unavailable`
+    : 'the primary checkout could not be resolved';
+  return `Refusing to archive project \`${projectName}\` because \`${archiveProjectPath}\` is gitignored in this worktree and ${primaryMessage}. Run \`oat project archive\` from the primary checkout or restore that checkout before retrying.`;
+}
+
+export async function resolveArchiveProjectTarget(
+  options: ResolveArchiveProjectTargetOptions,
+  dependencies: ResolveArchiveProjectTargetDependencies = {},
+): Promise<ArchiveProjectTarget> {
+  const archiveProjectPath = resolveLocalArchiveProjectPath(
+    options.projectsRoot,
+    options.projectName,
+  );
+  let archivePathIsGitignored = false;
+  let archiveRepoRoot = options.repoRoot;
+  let primaryRepoRoot: string | null = null;
+  let primaryRepoRootAvailable = true;
+  let localOnlyWarning: string | null = null;
+
+  try {
+    archivePathIsGitignored = await isGitignoredArchivePath(
+      options.repoRoot,
+      archiveProjectPath,
+      dependencies,
+    );
+  } catch {
+    archivePathIsGitignored = false;
+  }
+
+  if (archivePathIsGitignored) {
+    const primaryResolution = await resolvePrimaryRepoRootResolution(
+      options.repoRoot,
+      dependencies,
+    );
+    primaryRepoRoot = primaryResolution.repoRoot;
+    primaryRepoRootAvailable = primaryResolution.available;
+
+    if (primaryResolution.available) {
+      archiveRepoRoot = primaryResolution.repoRoot;
+    } else {
+      localOnlyWarning = buildLocalOnlyArchiveWarning(
+        options.projectName,
+        archiveProjectPath,
+        primaryRepoRoot,
+      );
+    }
+  }
+
+  const archiveBasePath = resolveCompletionArchivePath(
+    archiveRepoRoot,
+    options.projectsRoot,
+    options.projectName,
+  );
+  const archivePath = await resolveUniqueArchivePath(archiveBasePath, {
+    dirExists: dependencies.dirExists,
+    timestamp: dependencies.timestamp,
+  });
+
+  return {
+    archiveProjectPath,
+    archiveRepoRoot,
+    archivePath,
+    archivePathIsGitignored,
+    primaryRepoRoot,
+    primaryRepoRootAvailable,
+    localOnlyWarning,
+  };
+}
+
+export function assertDurableArchiveProjectTarget(
+  target: ArchiveProjectTarget,
+): void {
+  if (target.localOnlyWarning) {
+    throw new CliError(target.localOnlyWarning);
+  }
 }
 
 async function writeArchiveSnapshotMetadata(
@@ -440,24 +538,16 @@ export async function archiveProjectOnCompletion(
   const execFile = dependencies.execFile ?? execFileAsync;
   const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
   const snapshotName = buildArchiveSnapshotName(options.projectName, timestamp);
-  const archiveProjectPath = resolveLocalArchiveProjectPath(
-    options.projectsRoot,
-    options.projectName,
-  );
-  const archiveRepoRoot = await resolveArchiveRepoRoot(
-    options.repoRoot,
-    archiveProjectPath,
+  const archiveTarget = await resolveArchiveProjectTarget(
+    {
+      repoRoot: options.repoRoot,
+      projectsRoot: options.projectsRoot,
+      projectName: options.projectName,
+    },
     dependencies,
   );
-  const archiveBasePath = resolveCompletionArchivePath(
-    archiveRepoRoot,
-    options.projectsRoot,
-    options.projectName,
-  );
-  const archivePath = await resolveUniqueArchivePath(
-    archiveBasePath,
-    dependencies,
-  );
+  assertDurableArchiveProjectTarget(archiveTarget);
+  const archivePath = archiveTarget.archivePath;
 
   await makeDir(dirname(archivePath));
   await copyProjectDirectory(options.projectPath, archivePath);

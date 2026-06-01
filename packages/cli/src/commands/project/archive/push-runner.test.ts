@@ -9,6 +9,7 @@ import type { OatConfig, OatLocalConfig } from '@config/oat-config';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ArchiveProjectTarget } from './archive-utils';
 import { createProjectArchiveCommand } from './index';
 import {
   runArchivePushCommand,
@@ -22,6 +23,7 @@ interface HarnessOptions {
     summaryExportFile: string | null;
     warnings: string[];
   };
+  archiveTarget?: ArchiveProjectTarget;
   config?: OatConfig;
   cwd?: string;
   json?: boolean;
@@ -70,6 +72,15 @@ function createHarness(options: HarnessOptions = {}): {
     ),
     warnings: ['Archive completed locally; S3 sync skipped.'],
   };
+  const archiveTarget: ArchiveProjectTarget = options.archiveTarget ?? {
+    archiveProjectPath: '.oat/projects/archived/demo-project',
+    archiveRepoRoot: cwd,
+    archivePath: join(cwd, '.oat', 'projects', 'archived', 'demo-project'),
+    archivePathIsGitignored: false,
+    primaryRepoRoot: null,
+    primaryRepoRootAvailable: true,
+    localOnlyWarning: null,
+  };
 
   const context: CommandContext = {
     scope: 'project',
@@ -95,6 +106,7 @@ function createHarness(options: HarnessOptions = {}): {
     readOatLocalConfig: vi.fn(async () => localConfig),
     resolveProjectsRoot: vi.fn(async () => projectsRoot),
     resolvePrimaryRepoRoot: vi.fn(async () => cwd),
+    resolveArchiveProjectTarget: vi.fn(async () => archiveTarget),
     archiveProjectOnCompletion,
     processEnv,
     timestamp: () => options.timestamp ?? '2026-04-01T12:34:56Z',
@@ -262,6 +274,71 @@ describe('oat project archive push', () => {
       'Summary export path: .oat/repo/reference/project-summaries',
     ]);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('previews the resolved primary-checkout archive target during --dry-run', async () => {
+    const { archiveProjectOnCompletion, capture, context, dependencies } =
+      createHarness({
+        cwd: '/tmp/worktrees/sc-pinned-cryostat-af7a',
+        archiveTarget: {
+          archiveProjectPath: '.oat/projects/archived/demo-project',
+          archiveRepoRoot: '/tmp/workspace/open-agent-toolkit',
+          archivePath:
+            '/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project-20260401123456',
+          archivePathIsGitignored: true,
+          primaryRepoRoot: '/tmp/workspace/open-agent-toolkit',
+          primaryRepoRootAvailable: true,
+          localOnlyWarning: null,
+        },
+      });
+
+    await runArchivePushCommand(
+      dependencies,
+      undefined,
+      { dryRun: true },
+      context,
+    );
+
+    expect(dependencies.resolveArchiveProjectTarget).toHaveBeenCalledWith(
+      {
+        repoRoot: '/tmp/worktrees/sc-pinned-cryostat-af7a',
+        projectsRoot: '.oat/projects/shared',
+        projectName: 'demo-project',
+      },
+      expect.objectContaining({
+        env: { PATH: '/usr/bin' },
+      }),
+    );
+    expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+    expect(capture.info[0]).toBe(
+      'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project-20260401123456`.',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('fails before mutation when the resolved archive target would be local-only', async () => {
+    const localOnlyWarning =
+      'Refusing to archive project `demo-project` because `.oat/projects/archived/demo-project` is gitignored in this worktree and the primary checkout `/tmp/workspace/open-agent-toolkit` is unavailable. Run `oat project archive` from the primary checkout or restore that checkout before retrying.';
+    const { archiveProjectOnCompletion, capture, context, dependencies } =
+      createHarness({
+        cwd: '/tmp/worktrees/sc-pinned-cryostat-af7a',
+        archiveTarget: {
+          archiveProjectPath: '.oat/projects/archived/demo-project',
+          archiveRepoRoot: '/tmp/worktrees/sc-pinned-cryostat-af7a',
+          archivePath:
+            '/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/archived/demo-project',
+          archivePathIsGitignored: true,
+          primaryRepoRoot: '/tmp/workspace/open-agent-toolkit',
+          primaryRepoRootAvailable: false,
+          localOnlyWarning,
+        },
+      });
+
+    await runArchivePushCommand(dependencies, undefined, {}, context);
+
+    expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+    expect(capture.error[0]).toBe(localOnlyWarning);
+    expect(process.exitCode).toBe(1);
   });
 
   it('emits the JSON contract for archive push results', async () => {

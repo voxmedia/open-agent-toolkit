@@ -11,6 +11,7 @@ import {
   buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
   ensureS3ArchiveAccess,
+  resolveArchiveProjectTarget,
   resolveLocalArchiveProjectPath,
   resolvePrimaryRepoRoot,
 } from './archive-utils';
@@ -354,6 +355,162 @@ describe('archive utils', () => {
     await expect(
       readFile(join(result.archivePath, 'summary.md'), 'utf8'),
     ).resolves.toBe('# summary\n');
+  });
+
+  it('resolves a unique primary-checkout archive target from a linked worktree', async () => {
+    const tempRoot = await createRepoRoot();
+    const mainRepoRoot = join(tempRoot, 'main-repo');
+    const worktreeRoot = join(tempRoot, 'feature-worktree');
+
+    await mkdir(join(mainRepoRoot, '.git'), { recursive: true });
+    await mkdir(join(mainRepoRoot, '.oat', 'projects', 'archived', 'demo'), {
+      recursive: true,
+    });
+    await mkdir(worktreeRoot, { recursive: true });
+
+    const gitExecFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'check-ignore' &&
+        args[1] === '--quiet' &&
+        args[2] === '--no-index' &&
+        args[3] === '.oat/projects/archived/demo'
+      ) {
+        return {
+          stdout: '',
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git', 'worktrees', 'feature-worktree'),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+
+    const target = await resolveArchiveProjectTarget(
+      {
+        repoRoot: worktreeRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: 'demo',
+      },
+      {
+        gitExecFile,
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
+    );
+
+    expect(target.archivePath).toBe(
+      join(mainRepoRoot, '.oat', 'projects', 'archived', 'demo-20260401123456'),
+    );
+    expect(target.archivePathIsGitignored).toBe(true);
+    expect(target.primaryRepoRoot).toBe(mainRepoRoot);
+    expect(target.primaryRepoRootAvailable).toBe(true);
+    expect(target.localOnlyWarning).toBeNull();
+  });
+
+  it('fails before mutating when an ignored worktree archive has no primary checkout', async () => {
+    const tempRoot = await createRepoRoot();
+    const missingMainRepoRoot = join(tempRoot, 'missing-main-repo');
+    const worktreeRoot = join(tempRoot, 'feature-worktree');
+    const projectPath = join(
+      worktreeRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'demo',
+    );
+
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+
+    const gitExecFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'check-ignore' &&
+        args[1] === '--quiet' &&
+        args[2] === '--no-index' &&
+        args[3] === '.oat/projects/archived/demo'
+      ) {
+        return {
+          stdout: '',
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(missingMainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(
+            missingMainRepoRoot,
+            '.git',
+            'worktrees',
+            'feature-worktree',
+          ),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+    const copyDirectory = vi.fn(async () => undefined);
+    const removePath = vi.fn(async () => undefined);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot: worktreeRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          gitExecFile,
+          copyDirectory,
+          removePath,
+        },
+      ),
+    ).rejects.toThrow(
+      'Refusing to archive project `demo` because `.oat/projects/archived/demo` is gitignored in this worktree',
+    );
+
+    expect(copyDirectory).not.toHaveBeenCalled();
+    expect(removePath).not.toHaveBeenCalled();
+    expect(gitExecFile).toHaveBeenCalledWith(
+      'git',
+      ['check-ignore', '--quiet', '--no-index', '.oat/projects/archived/demo'],
+      expect.objectContaining({ cwd: worktreeRoot }),
+    );
   });
 
   it('uploads completion archives under the primary repo root slug from a linked worktree', async () => {
