@@ -110,4 +110,53 @@ describe('seedChildren', () => {
       previousIndex = index;
     }
   });
+
+  it('routes every child to discovery with inherited context awaiting revalidation', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-resume-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+
+    await seedChildren(plan, {
+      repoRoot,
+      today: '2026-05-20',
+      nowUtc: '2026-05-20T12:00:00.000Z',
+    });
+
+    for (const child of plan.children) {
+      const childRoot = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        child.slug,
+      );
+
+      // state.md routes resume/progress/quick-start back to discovery.
+      const state = readFrontmatter(
+        await readFile(join(childRoot, 'state.md'), 'utf8'),
+      );
+      expect(state['oat_phase']).toBe('discovery');
+      expect(state['oat_phase_status']).toBe('in_progress');
+      expect(state['oat_workflow_mode']).toBe('quick');
+
+      // discovery.md is in progress with an explicit, unmet revalidation gate.
+      const discovery = await readFile(join(childRoot, 'discovery.md'), 'utf8');
+      const discoveryFrontmatter = readFrontmatter(discovery);
+      expect(discoveryFrontmatter['oat_status']).toBe('in_progress');
+      expect(discoveryFrontmatter['oat_inherited_context_revalidated']).toBe(
+        false,
+      );
+      expect(discovery).toContain('## Inherited Context Revalidation Gate');
+      expect(discovery).toContain('resumes at **discovery**');
+      expect(discovery).toContain('starting point, not a final scope decision');
+
+      // plan.md is a not-started template placeholder, never plan-ready.
+      const planFrontmatter = readFrontmatter(
+        await readFile(join(childRoot, 'plan.md'), 'utf8'),
+      );
+      expect(planFrontmatter['oat_template']).toBe(true);
+      expect(planFrontmatter['oat_plan_source']).toBe('quick');
+      expect(planFrontmatter['oat_status']).not.toBe('complete');
+    }
+  });
 });

@@ -12,6 +12,7 @@ import type { SplitProjectContext } from './write-parent';
 const SEEDED_SECTIONS = [
   'Origin',
   'Inherited Context',
+  'Inherited Context Revalidation Gate',
   'Child Scope',
   'Known Dependencies',
   'Assumptions To Revalidate',
@@ -71,16 +72,38 @@ function renderSeededDiscovery(
     .map((candidate) => candidate.slug)
     .filter((slug) => slug !== child.slug);
   const sections = [
-    ['Origin', `Split from coordination parent \`${plan.parentSlug}\`.`],
+    [
+      'Origin',
+      `Split from coordination parent \`${plan.parentSlug}\`. This child was seeded by \`oat-project-split\`; it is **not** discovered, planned, or implementation-ready yet and resumes at discovery.`,
+    ],
     [
       'Inherited Context',
-      child.inheritedContext || 'No inherited context provided.',
+      [
+        child.inheritedContext || 'No inherited context provided.',
+        '',
+        '> Provisional seed. This context was inherited from the parent split decision. It is a **starting point, not a final scope decision** — treat every inherited claim as an assumption until it is revalidated below.',
+      ].join('\n'),
+    ],
+    [
+      'Inherited Context Revalidation Gate',
+      [
+        'This project resumes at **discovery**, not planning or implementation. Inherited context may be stale by the time work resumes, so it must be revalidated before this discovery is completed.',
+        '',
+        '- [ ] Re-read the inherited context against the current codebase and sibling progress.',
+        '- [ ] Confirm or correct the child scope, dependencies, and assumptions below.',
+        '- [ ] When revalidation is complete, set `oat_inherited_context_revalidated: true` in this file.',
+        '',
+        'Discovery cannot be marked complete — and planning must not begin — while `oat_inherited_context_revalidated: false`. A child left in this state is expected work-in-progress, not stale bookkeeping.',
+      ].join('\n'),
     ],
     ['Child Scope', child.description ?? child.slug],
     ['Known Dependencies', bulletList(child.knownDependencies)],
     [
       'Assumptions To Revalidate',
-      '- Revalidate inherited context before completing discovery.',
+      [
+        '- Revalidate inherited context before completing discovery.',
+        '- Confirm the child scope still matches reality before generating a plan.',
+      ].join('\n'),
     ],
     ['Likely Workflow Mode', 'quick'],
     ['Sibling Projects', bulletList(siblingSlugs)],
@@ -141,8 +164,16 @@ export async function seedChildren(
       oat_siblings: siblings,
       oat_depends_on: child.knownDependencies,
     });
+    // Children resume at discovery, so their scaffolded plan.md is a
+    // placeholder only. Re-mark it as a not-started template (the scaffold
+    // strips these markers when rendering) so neither tooling nor agents can
+    // mistake the seed for an active or validated plan; routing keys off
+    // state.md (oat_phase: discovery) and oat-project-next treats
+    // oat_template: true as a still-a-template signal.
     await updateFrontmatter(join(childRoot, 'plan.md'), {
       oat_plan_source: 'quick',
+      oat_template: true,
+      oat_template_name: 'plan',
     });
     await writeFile(
       join(childRoot, 'discovery.md'),

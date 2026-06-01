@@ -1,6 +1,6 @@
 ---
 name: oat-project-split
-version: 1.0.0
+version: 1.1.0
 description: Use when a discovery or brainstorm should split one broad scope into coordinated OAT child projects.
 argument-hint: '--plan-file <path>'
 disable-model-invocation: true
@@ -73,10 +73,25 @@ The run command marks the parent `oat_phase: decomposition` and `oat_phase_statu
 
 If a previous split wrote a coordination parent but did not finish all children, the run command resumes from `references/split-plan.json`. Do not reconstruct missing child seed data from slugs alone.
 
+## Children Resume At Discovery (Revalidation Contract)
+
+A split seeds children with inherited context, but that context is only a **starting point**. By the time an agent resumes a child it may be stale, so children must never be treated as discovered, planned, or implementation-ready just because the split wrote their files.
+
+What the run command guarantees, and what reviewers should expect:
+
+- **Child `state.md` routes to discovery.** Each child is written with `oat_phase: discovery` and `oat_phase_status: in_progress`, plus preserved `oat_parent`, `oat_siblings`, and `oat_depends_on` links. Resume, progress, and quick-start all key off `state.md`, so they pick the child back up at discovery — not at plan or implementation.
+- **Child `discovery.md` is in progress with an unmet revalidation gate.** It carries `oat_status: in_progress` and `oat_inherited_context_revalidated: false`, an explicit "Inherited Context Revalidation Gate" section, and language stating that parent-derived scope is a seed, not a final decision. The discovery-completion gate blocks marking discovery complete until `oat_inherited_context_revalidated: true`.
+- **Child discovery is never marked complete during split generation.** Seeding only provides a provisional starting point.
+- **Placeholder `plan.md` cannot be mistaken for a real plan.** The seeded `plan.md` is re-marked as a not-started template (`oat_template: true`, `oat_template_name: plan`). Routing decisions read `state.md` (`oat_phase: discovery`), and `oat-project-next` treats `oat_template: true` as a still-a-template signal, so the placeholder never reads as plan-ready.
+
+A child sitting at `discovery` / `in_progress` after a split is **expected work-in-progress**, not stale bookkeeping. Do not flag it as drift or "skipped discovery" — revalidating inherited context is the next intended step.
+
 ## Success Criteria
 
 - Coordination parent exists and has no `spec.md`, `design.md`, `plan.md`, or `implementation.md`.
 - Parent `state.md` records `oat_kind: coordination`, ordered `oat_children`, and terminal decomposition status.
 - `references/split-plan.json` contains the full `SplitPlanDocument`.
-- Every child has seeded discovery content, parent/sibling/dependency links, and `oat_inherited_context_revalidated: false`.
+- Every child `state.md` records `oat_phase: discovery` and `oat_phase_status: in_progress` so resume/progress/quick-start route it back to discovery.
+- Every child has seeded discovery content, parent/sibling/dependency links, `oat_inherited_context_revalidated: false`, and an explicit revalidation gate; no child discovery is marked complete by the split.
+- Every child `plan.md` is a not-started template placeholder (`oat_template: true`) that never reads as plan-ready.
 - `.oat/config.local.json.activeProject` points at the repo-relative initial child path.
