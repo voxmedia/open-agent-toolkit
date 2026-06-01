@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-31
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2: `oat project archive` push command       | passed  | 1     | 1/1       |
 | Phase 3: Deprecated `archive sync` shim           | passed  | 1     | 1/1       |
 | Phase 4: Error strings + docs alignment           | passed  | 1     | 1/1       |
-| Phase 5: Rewrite completion Step 8                | pending | 1     | 0/1       |
+| Phase 5: Rewrite completion Step 8                | passed  | 1     | 1/1       |
 | Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
 
-**Total:** 5/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ---
 
@@ -253,17 +253,43 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 5: Rewrite `oat-project-complete` Step 8 + skill version bump
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- `oat-project-complete` Step 8 now delegates archive side effects to `oat project archive "$PROJECT_PATH"`.
+- The long duplicated archive shell implementation was removed from the skill.
+- Skill-owned lifecycle responsibilities remain in the skill: archive gating, ordering, post-archive path reassignment, commit/push handling, and summary reporting.
+- `oat-project-complete` version bumped from `1.4.8` to `1.4.9`.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-complete/SKILL.md` - simplified Step 8 and bumped version.
+
+**Verification:**
+
+- Run: `pnpm run cli -- sync --scope all`
+- Run: `grep -n "oat project archive" .agents/skills/oat-project-complete/SKILL.md`
+- Run: grep checks confirming no `ARCHIVED_ROOT`, `mv "$PROJECT_PATH"`, or manual `aws s3 sync` archive block remains in Step 8.
+- Run: `pnpm run cli -- status --scope project`
+- Result: all passed; unscoped status still reports unrelated unmanaged user provider entries.
+
+**Notes / Decisions:**
+
+- Provider skill views are symlinks to the canonical skill, so only the canonical skill changed.
+- p05 review passed with no findings.
 
 ### Task p05-t01: Replace inline archive bash with `oat project archive`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 715bc054
 
 **Notes:**
 
-- Collapse Step 8 inline bash to a single command call; bump SKILL `version:`.
+- Collapsed Step 8 inline bash to a single command call; bumped SKILL `version:`.
 
 ---
 
@@ -413,6 +439,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 5 - 2026-06-01 23:37 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p05   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p05: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p05 implementation used Codex `oat-phase-implementer-xhigh`; reviewer used `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None for p05.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -436,7 +493,9 @@ Chronological log of implementation progress.
 - [x] p03 review passed - `reviews/p03-review-2026-06-01.md`
 - [x] p04-t01: Update error strings and docs references - fca52ad1
 - [x] p04 review passed - `reviews/p04-review-2026-06-01.md`
-- [ ] p05-t01: Replace inline archive bash with `oat project archive` - next
+- [x] p05-t01: Replace inline archive bash with `oat project archive` - 715bc054
+- [x] p05 review passed - `reviews/p05-review-2026-06-01.md`
+- [ ] p06-t01: Bump public packages and validate release - next
 
 **What changed (high level):**
 
@@ -445,6 +504,7 @@ Chronological log of implementation progress.
 - `oat project archive` exists and delegates to the completion archive helper with target preflight and dry-run support.
 - `oat project archive sync` remains as a deprecated shim that warns on stderr and preserves JSON stdout.
 - Archive sync docs and error messages now point to `oat repo archive sync`.
+- `oat-project-complete` now calls `oat project archive` instead of duplicating archive shell logic.
 
 **Follow-ups / TODO:**
 
@@ -480,7 +540,7 @@ Track test execution during implementation.
 | 2     | focused project archive push/archive-utils/index tests; dry-run smoke; lint; type-check                   | yes    | 0      | n/a      |
 | 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                   | yes    | 0      | n/a      |
 | 4     | CLI package test suite; lint; type-check; docs index regeneration                                         | yes    | 0      | n/a      |
-| 5     | -                                                                                                         | -      | -      | -        |
+| 5     | skill sync; project status sync check; Step 8 grep checks                                                 | yes    | 0      | n/a      |
 | 6     | -                                                                                                         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)

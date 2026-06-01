@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: fca52ad1
+oat_current_task: p06-t01
+oat_last_commit: 715bc054
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-01T00:00:12.006Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-01T23:25:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-01T23:37:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress — current task `p05-t01`
+Implementation in progress — current task `p06-t01`
 
 ## Artifacts
 
@@ -58,7 +58,8 @@ Implementation in progress — current task `p05-t01`
 - ✓ Phase 2 complete (`p02`)
 - ✓ Phase 3 complete (`p03`)
 - ✓ Phase 4 complete (`p04`)
-- ⧗ Implementing Phase 5 (`p05-t01`)
+- ✓ Phase 5 complete (`p05`)
+- ⧗ Implementing Phase 6 (`p06-t01`)
 
 ## Blockers
 
@@ -66,4 +67,4 @@ None
 
 ## Next Milestone
 
-Complete `p05-t01` — rewrite `oat-project-complete` Step 8 to call `oat project archive`
+Complete `p06-t01` — bump public package versions and validate release
