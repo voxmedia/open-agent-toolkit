@@ -227,4 +227,3 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Discovery: `discovery.md`
-  </content>
