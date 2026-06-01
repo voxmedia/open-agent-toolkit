@@ -353,16 +353,17 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------ |
+| p01    | code     | pending  | -          | -                                          |
+| p02    | code     | pending  | -          | -                                          |
+| p03    | code     | pending  | -          | -                                          |
+| p04    | code     | pending  | -          | -                                          |
+| p05    | code     | pending  | -          | -                                          |
+| final  | code     | pending  | -          | -                                          |
+| plan   | artifact | received | 2026-06-01 | reviews/artifact-plan-review-2026-06-01.md |
+| spec   | artifact | pending  | -          | -                                          |
+| design | artifact | pending  | -          | -                                          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
