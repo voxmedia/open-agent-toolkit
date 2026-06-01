@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.8
+version: 1.4.9
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -340,166 +340,30 @@ Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path
 
 Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 
-The archive-side effects in this step are CLI-owned. Follow the canonical behavior from `packages/cli/src/commands/project/archive/archive-utils.ts` rather than inventing separate S3 or summary-export logic inside the skill.
-
-**Anti-pattern (do NOT do this):** Running `git check-ignore` on the
-`.oat/projects/archived` directory itself to decide durability. A common
-gitignore shape for this repo is `.oat/projects/archived/**`, which leaves the
-directory visible in the tree while ignoring every file placed inside. A
-directory-level check reports "not ignored" and produces the inverse of the
-intended decision — archiving in the worktree when the archive must actually
-go to the primary repo. Always probe a representative path **inside** the
-archive directory (the project subpath or a probe filename), matching the CLI
-helper at `packages/cli/src/commands/project/archive/archive-utils.ts`.
+The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.
 
 ```bash
-ARCHIVED_ROOT=".oat/projects/archived"
-# ARCHIVE_RELATIVE_PATH is the contents-level probe: a hypothetical file that
-# would live inside the archive directory. This is the same probe shape the
-# CLI helper uses — do not simplify this to the directory itself.
-ARCHIVE_RELATIVE_PATH=".oat/projects/archived/${PROJECT_NAME}"
-PRIMARY_REPO_ARCHIVE=""
-ARCHIVE_CONTENTS_TRACKED="true"
-USE_PRIMARY_REPO_ARCHIVE="false"
-
-# Will a newly-archived file at ${ARCHIVE_RELATIVE_PATH} actually be tracked in
-# this checkout? Probe a representative path INSIDE the directory, not the
-# directory itself. A `.oat/projects/archived/**` gitignore pattern leaves the
-# directory visible in the tree but ignores everything placed inside, so a
-# directory-level check reports "tracked" and gives the inverse of the
-# intended answer.
-if git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH" 2>/dev/null; then
-  ARCHIVE_CONTENTS_TRACKED="false"
+ARCHIVE_OUTPUT=""
+if ! ARCHIVE_OUTPUT=$(oat project archive "$PROJECT_PATH" 2>&1); then
+  printf '%s\n' "$ARCHIVE_OUTPUT" >&2
+  echo "Error: Project archive failed." >&2
+  exit 1
 fi
 
-# Fall back to the primary checkout whenever archive contents are local-only
-# in the current worktree, regardless of whether the archive directory itself
-# happens to exist in the tree.
-if [[ "$ARCHIVE_CONTENTS_TRACKED" == "false" ]] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
-  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || true)
-  if [[ -n "$GIT_COMMON_DIR" && -n "$GIT_DIR" && "$GIT_COMMON_DIR" != "$GIT_DIR" ]]; then
-    PRIMARY_REPO_ROOT=$(cd "$(dirname "$GIT_COMMON_DIR")" && pwd)
-    PRIMARY_REPO_ARCHIVE="${PRIMARY_REPO_ROOT}/.oat/projects/archived"
-    if [[ -d "$(dirname "$PRIMARY_REPO_ARCHIVE")" ]]; then
-      USE_PRIMARY_REPO_ARCHIVE="true"
-      ARCHIVED_ROOT="$PRIMARY_REPO_ARCHIVE"
-    else
-      echo "Warning: Running in a worktree with a local-only archive path, but the primary repo archive path is unavailable: $PRIMARY_REPO_ARCHIVE"
-      echo "A worktree-local archive may be deleted when the worktree is removed and is not a durable archive."
-      echo "Require explicit confirmation before proceeding with local-only archive."
-    fi
-  fi
+printf '%s\n' "$ARCHIVE_OUTPUT"
+
+ARCHIVE_PATH=$(printf '%s\n' "$ARCHIVE_OUTPUT" | sed -nE 's/^Archived project `[^`]+` to `(.+)`\.$/\1/p' | tail -1)
+if [[ -z "$ARCHIVE_PATH" ]]; then
+  echo "Error: oat project archive did not report the archived path." >&2
+  exit 1
 fi
 
-if [[ "$USE_PRIMARY_REPO_ARCHIVE" != "true" ]]; then
-  ARCHIVED_ROOT=".oat/projects/archived"
-fi
-
-mkdir -p "$ARCHIVED_ROOT"
-ARCHIVE_PATH="${ARCHIVED_ROOT}/${PROJECT_NAME}"
-
-if [[ -e "$ARCHIVE_PATH" ]]; then
-  ARCHIVE_PATH="${ARCHIVED_ROOT}/${PROJECT_NAME}-$(date +%Y%m%d-%H%M%S)"
-fi
-
-mv "$PROJECT_PATH" "$ARCHIVE_PATH"
 PROJECT_PATH="$ARCHIVE_PATH"
-echo "Project archived to $ARCHIVE_PATH"
+ARCHIVE_S3_PATH=$(printf '%s\n' "$ARCHIVE_OUTPUT" | sed -nE 's/^S3 archive: (.+)$/\1/p' | tail -1)
+ARCHIVE_S3_CONTEXT=$(printf '%s\n' "$ARCHIVE_OUTPUT" | grep -E '^Archive S3 sync: .*profile=.*region=' | tail -1 || true)
 ```
 
-**Canonical helper behaviors (required):**
-
-- Always archive locally first. The local archive is the authoritative completion artifact even when remote sync is also configured.
-- If `archive.summaryExportPath` is configured and `summary.md` exists after archive, copy it to `{repoRoot}/{archive.summaryExportPath}/YYYYMMDD-{PROJECT_NAME}.md`.
-- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, sync the archived project to `{archive.s3Uri}/{repo-slug}/projects/YYYYMMDD-{PROJECT_NAME}/`. The S3 sync excludes process artifacts (`reviews/*`, `pr/*`) — only core deliverables (discovery, spec, design, plan, implementation, summary, state) are uploaded. The CLI enforces this via `S3_ARCHIVE_SYNC_EXCLUDES` in `archive-utils.ts`.
-- If AWS CLI is missing or unusable for that S3 sync, warn and continue. Completion must not fail after the local archive succeeds.
-- If `archive.s3SyncOnComplete` is false or `archive.s3Uri` is unset, skip remote sync without prompting.
-
-**AWS credential handling for archive S3 sync (required):**
-
-When `archive.s3SyncOnComplete=true` and `archive.s3Uri` is set, the agent MUST honor the repo's archive-scoped AWS credentials instead of falling back to whatever shell profile/region happens to be active. The contract mirrors `buildAwsEnv` in `packages/cli/src/commands/project/archive/archive-utils.ts`.
-
-- **Read both keys from OAT config before any AWS CLI call:**
-
-  ```bash
-  ARCHIVE_AWS_PROFILE=$(oat config get archive.awsProfile 2>/dev/null || true)
-  ARCHIVE_AWS_REGION=$(oat config get archive.awsRegion 2>/dev/null || true)
-  ```
-
-- **Apply them to every `aws` invocation tied to archive sync** — preflight checks (`aws --version`, `aws sts get-caller-identity`), bucket access probes (`aws s3 ls`), and the actual `aws s3 sync`. Do not mix configured values across some calls and ambient values across others.
-- **Configured archive values WIN over ambient shell AWS env vars.** A non-empty `archive.awsProfile` overrides any `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` already exported in the shell. A non-empty `archive.awsRegion` overrides `AWS_REGION` and `AWS_DEFAULT_REGION`. Treat the repo's archive-scoped declaration as deliberate intent — users should not have to unset shell env vars to get correct archive credentials. Empty/unset config values fall through to the AWS CLI's normal resolution chain.
-- **Prefer the OAT CLI when it is available.** If you delegate archive sync to an `oat project archive ...` invocation, the CLI applies the canonical handling for you (config-resolved profile/region clobber the spawned env). Do not pass `--profile` / `--region` flags unless the user asked for a one-off override different from the repo config.
-- **Manual AWS CLI fallback** — when no OAT command wraps the operation and the agent must call `aws` directly, pass the configured profile/region explicitly. Either use flags:
-
-  ```bash
-  AWS_FLAGS=()
-  if [[ -n "$ARCHIVE_AWS_PROFILE" ]]; then
-    AWS_FLAGS+=(--profile "$ARCHIVE_AWS_PROFILE")
-  fi
-  if [[ -n "$ARCHIVE_AWS_REGION" ]]; then
-    AWS_FLAGS+=(--region "$ARCHIVE_AWS_REGION")
-  fi
-
-  aws "${AWS_FLAGS[@]}" sts get-caller-identity
-  aws "${AWS_FLAGS[@]}" s3 sync \
-    "$ARCHIVE_PATH" \
-    "${ARCHIVE_S3_URI%/}/${REPO_SLUG}/projects/${SNAPSHOT_NAME}/" \
-    --exclude 'reviews/*' --exclude 'pr/*'
-  ```
-
-  …or set the equivalent env vars for the spawned process so the same precedence applies:
-
-  ```bash
-  AWS_ENV=()
-  [[ -n "$ARCHIVE_AWS_PROFILE" ]] && AWS_ENV+=("AWS_PROFILE=$ARCHIVE_AWS_PROFILE")
-  [[ -n "$ARCHIVE_AWS_REGION" ]] && AWS_ENV+=("AWS_REGION=$ARCHIVE_AWS_REGION")
-  env "${AWS_ENV[@]}" aws s3 sync ...
-  ```
-
-  Both shapes are acceptable; the AWS CLI treats `--profile` / `--region` and `AWS_PROFILE` / `AWS_REGION` env as higher precedence than `AWS_DEFAULT_*`, so the configured values win.
-
-- **Report the resolved profile/region in the completion summary** so the user can confirm the right identity ran the sync, e.g. `Archive S3 sync used AWS profile=tkstang-artifact-sync region=us-east-1`. Do not echo raw access keys, session tokens, or any value from `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN`. If `archive.awsProfile` or `archive.awsRegion` is unset, report `<unset; using shell default>` for that field.
-- **AccessDenied troubleshooting** — if `aws s3 sync` returns AccessDenied, confirm before retrying that the spawn actually used `archive.awsProfile` (not the ambient shell profile). A common pitfall is invoking `aws s3 sync` without flags from a shell where `AWS_PROFILE` points at an unrelated identity; rerun with the configured profile/region applied as above.
-
-**Worktree durability guard (required):**
-
-- If running in a worktree and the primary repo archive path is unavailable, do not silently continue with a local-only archive.
-- Ask the user explicitly: "Primary repo archive path is unavailable, so this archive may be lost when the worktree is deleted. Continue with local-only archive anyway?"
-- If the user declines, skip archiving and continue the completion flow without archive.
-- Resolve the durable repo root from `git rev-parse --git-common-dir` and `git rev-parse --git-dir`, matching the CLI helper in `packages/cli/src/commands/project/archive/archive-utils.ts`. Do not rely on a `main` checkout or default-branch naming.
-- Apply this guard only when `git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"` reports that the archive **contents** are local-only in the current checkout. `$ARCHIVE_RELATIVE_PATH` must be a path **inside** the archive directory (the project subpath), never the directory itself — see the anti-pattern note above the bash block.
-
-**Git handling after archive:**
-
-If the archived directory is gitignored (check with `git check-ignore -q "$ARCHIVE_PATH"`), the move looks like a deletion to git — the original tracked files disappear and the archived copy is local-only. To commit:
-
-```bash
-git add -A "$PROJECTS_ROOT/$PROJECT_NAME" 2>/dev/null || true
-```
-
-This stages the deletions from the shared directory. The archived copy is preserved locally but not tracked by git.
-
-**Worktree archive target (required when available):**
-
-If running from a git worktree, prefer the primary repo archive directory whenever a newly-archived file inside `.oat/projects/archived/` would be local-only in the current checkout.
-
-Reference path:
-
-```bash
-GIT_COMMON_DIR=$(git rev-parse --git-common-dir)
-PRIMARY_REPO_ROOT=$(cd "$(dirname "$GIT_COMMON_DIR")" && pwd)
-PRIMARY_REPO_ARCHIVE="${PRIMARY_REPO_ROOT}/.oat/projects/archived"
-```
-
-Guidance:
-
-- In a worktree, prefer `PRIMARY_REPO_ARCHIVE` whenever `git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"` reports the archive **contents** as ignored — regardless of whether the archive directory itself happens to exist in the tree. Only archive in the current checkout when a hypothetical file at `.oat/projects/archived/<project>/state.md` would actually be tracked here.
-- Do not check `git check-ignore` on `.oat/projects/archived` (the directory itself). A `.oat/projects/archived/**` ignore pattern leaves the directory unignored while ignoring all contents, so a directory-level check reports "tracked" and an agent can mistakenly archive in the worktree.
-- Do not treat the worktree-local archive as durable.
-- If forced to use a local-only archive, warn and require explicit user confirmation.
-- Always write the dated `archive.summaryExportPath` copy into the current checkout (`repoRoot`), even when the project archive itself is written to the primary checkout.
-- Do not hardcode user-specific absolute paths.
+Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details. If S3 sync ran and only `ARCHIVE_S3_PATH` is available, report the destination and note that credential context was not emitted by the command.
 
 ### Step 9: Regenerate Dashboard
 
@@ -607,7 +471,7 @@ Show user:
 
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
-- If S3 archive sync ran: include the resolved AWS profile and region used (e.g. `Archive S3 sync: profile=<archive.awsProfile> region=<archive.awsRegion>`). Show `<unset; using shell default>` for any field the config did not provide. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
+- If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
 - Include commit hash and push result for the bookkeeping changes.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
