@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-05-31
-oat_current_task_id: p06-t01
+oat_last_updated: 2026-06-01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                             | Status  | Tasks | Completed |
-| ------------------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Shared sync runner + `repo archive sync` | passed  | 2     | 2/2       |
-| Phase 2: `oat project archive` push command       | passed  | 1     | 1/1       |
-| Phase 3: Deprecated `archive sync` shim           | passed  | 1     | 1/1       |
-| Phase 4: Error strings + docs alignment           | passed  | 1     | 1/1       |
-| Phase 5: Rewrite completion Step 8                | passed  | 1     | 1/1       |
-| Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
+| Phase                                             | Status | Tasks | Completed |
+| ------------------------------------------------- | ------ | ----- | --------- |
+| Phase 1: Shared sync runner + `repo archive sync` | passed | 2     | 2/2       |
+| Phase 2: `oat project archive` push command       | passed | 1     | 1/1       |
+| Phase 3: Deprecated `archive sync` shim           | passed | 1     | 1/1       |
+| Phase 4: Error strings + docs alignment           | passed | 1     | 1/1       |
+| Phase 5: Rewrite completion Step 8                | passed | 1     | 1/1       |
+| Phase 6: Lockstep version bump + release          | passed | 1     | 1/1       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -295,17 +295,44 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 6: Lockstep version bumps + release validation
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- The five lockstep public packages were bumped together to `0.1.17`.
+- The stale review-skill contract test was updated to assert the new `oat-project-complete` archive delegation contract.
+- The full release gate passed, including `pnpm release:validate`.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - public package version bump.
+- `packages/control-plane/package.json` - public package version bump.
+- `packages/docs-config/package.json` - public package version bump.
+- `packages/docs-theme/package.json` - public package version bump.
+- `packages/docs-transforms/package.json` - public package version bump.
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` - updated archive Step 8 contract expectations after the p05 skill rewrite.
+
+**Verification:**
+
+- Run: `pnpm build && pnpm test && pnpm lint && pnpm type-check && pnpm release:validate`
+- Result: all passed after the contract-test update.
+
+**Notes / Decisions:**
+
+- The initial p06 verification failed because `review-skill-contracts.test.ts` still expected the removed inline archive shell details; the follow-up fix aligned the test with the new CLI delegation contract.
+- p06 review passed with no findings.
 
 ### Task p06-t01: Bump public packages and validate release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f603964f, 5d4ab8d8
 
 **Notes:**
 
-- Bump all five public package versions together; run `pnpm release:validate`.
+- Bumped all five public packages to `0.1.17`; updated the stale archive skill contract test; full build/test/lint/type-check/release validation passed.
 
 ---
 
@@ -470,6 +497,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 6 - 2026-06-01 23:54 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p06   | DONE_WITH_CONCERNS | pass   | 1/2            | passed      |
+
+#### Parallel Groups
+
+- p06: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p06 implementation used Codex `oat-phase-implementer-xhigh`; verification-fix dispatch used `oat-phase-implementer-xhigh`; reviewer used `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None for p06. The stale contract test was fixed in `5d4ab8d8`; p06 review passed.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted                             | Reason                                                                                                              | Source of Truth                           | Follow-up |
+| ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------- |
+| p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite intentionally removed inline archive shell details that the old contract test still asserted. | Code + `reviews/p06-review-2026-06-01.md` | None      |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -495,7 +553,9 @@ Chronological log of implementation progress.
 - [x] p04 review passed - `reviews/p04-review-2026-06-01.md`
 - [x] p05-t01: Replace inline archive bash with `oat project archive` - 715bc054
 - [x] p05 review passed - `reviews/p05-review-2026-06-01.md`
-- [ ] p06-t01: Bump public packages and validate release - next
+- [x] p06-t01: Bump public packages and validate release - f603964f
+- [x] p06 contract-test fix: update archive skill contract expectations - 5d4ab8d8
+- [x] p06 review passed - `reviews/p06-review-2026-06-01.md`
 
 **What changed (high level):**
 
@@ -505,6 +565,7 @@ Chronological log of implementation progress.
 - `oat project archive sync` remains as a deprecated shim that warns on stderr and preserves JSON stdout.
 - Archive sync docs and error messages now point to `oat repo archive sync`.
 - `oat-project-complete` now calls `oat project archive` instead of duplicating archive shell logic.
+- Public packages were bumped together to `0.1.17` and release validation passes.
 
 **Follow-ups / TODO:**
 
@@ -526,9 +587,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted                             | Reason                                                                                                                                           | Source of Truth                           | Follow-up |
+| ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | --------- |
+| p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite made the old contract assertions stale; the test fix preserves regression coverage around the new CLI delegation contract. | Code + `reviews/p06-review-2026-06-01.md` | None      |
 
 ## Test Results
 
@@ -541,25 +602,37 @@ Track test execution during implementation.
 | 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                   | yes    | 0      | n/a      |
 | 4     | CLI package test suite; lint; type-check; docs index regeneration                                         | yes    | 0      | n/a      |
 | 5     | skill sync; project status sync check; Step 8 grep checks                                                 | yes    | 0      | n/a      |
-| 6     | -                                                                                                         | -      | -      | -        |
+| 6     | full workspace build, test, lint, type-check, release validation                                          | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {filled when implementation completes}
+- `oat repo archive sync` as the canonical archive pull command.
+- `oat project archive [project-path]` as the archive push command backed by `archiveProjectOnCompletion()`.
+- Deprecated `oat project archive sync` shim that preserves JSON stdout while warning on stderr.
+- Archive docs, error strings, and config help updated to the repo-scoped sync command.
+- `oat-project-complete` Step 8 delegates archive side effects to `oat project archive "$PROJECT_PATH"`.
+- Lockstep public package version bump to `0.1.17`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Archive pulls now live at `oat repo archive sync`; the old project-scoped sync command remains as a deprecated forwarding alias.
+- Project archive push can be run directly through `oat project archive`, including dry-run and JSON output paths.
+- Completion archive behavior is centralized in CLI code instead of duplicated in the lifecycle skill.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/archive/sync-runner.ts` - shared archive sync runner.
+- `packages/cli/src/commands/repo/archive/index.ts` - repo archive command namespace.
+- `packages/cli/src/commands/project/archive/push-runner.ts` - project archive push orchestration.
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - shared archive target and durability helpers.
+- `.agents/skills/oat-project-complete/SKILL.md` - completion workflow archive delegation.
+- `apps/oat-docs/docs/**` - archive command documentation updates.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/release:validate}
+- Focused archive command vitest suites, full CLI vitest suite, help snapshots, docs index regeneration, skill sync/status checks, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm release:validate`.
 
 ## References
 

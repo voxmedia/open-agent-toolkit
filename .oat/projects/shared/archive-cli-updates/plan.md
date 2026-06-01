@@ -351,6 +351,7 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 | p03    | code     | passed  | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
 | p04    | code     | passed  | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
 | p05    | code     | passed  | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
+| p06    | code     | passed  | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
 | final  | code     | pending | -          | -                                                   |
 | plan   | artifact | passed  | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
 | spec   | artifact | pending | -          | -                                                   |
@@ -373,7 +374,7 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 
 **Total: 7 tasks**
 
-After these tasks complete, the project will be ready for code review and merge.
+All implementation tasks are complete. The project is at the final code review checkpoint before merge.
 
 ---
 
