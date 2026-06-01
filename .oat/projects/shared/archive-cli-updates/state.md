@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 174e8427
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-01T00:00:12.006Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-01T22:04:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-01T22:21:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress — current task `p01-t01`
+Implementation in progress — current task `p02-t01`
 
 ## Artifacts
 
@@ -54,7 +54,8 @@ Implementation in progress — current task `p01-t01`
 - ✓ Discovery captured and completed
 - ✓ Quick plan generated (6 phases, 7 tasks)
 - ✓ Dispatch ceiling set (maximum: codex xhigh · claude opus)
-- ⧗ Implementing Phase 1 (`p01-t01`)
+- ✓ Phase 1 complete (`p01`)
+- ⧗ Implementing Phase 2 (`p02-t01`)
 
 ## Blockers
 
@@ -62,4 +63,4 @@ None
 
 ## Next Milestone
 
-Complete `p01-t01` — extract the shared archive sync runner
+Complete `p02-t01` — add the `oat project archive` push command

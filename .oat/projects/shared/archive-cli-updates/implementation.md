@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-31
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase                                             | Status  | Tasks | Completed |
 | ------------------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Shared sync runner + `repo archive sync` | pending | 2     | 0/2       |
+| Phase 1: Shared sync runner + `repo archive sync` | passed  | 2     | 2/2       |
 | Phase 2: `oat project archive` push command       | pending | 1     | 0/1       |
 | Phase 3: Deprecated `archive sync` shim           | pending | 1     | 0/1       |
 | Phase 4: Error strings + docs alignment           | pending | 1     | 0/1       |
 | Phase 5: Rewrite completion Step 8                | pending | 1     | 0/1       |
 | Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
 
-**Total:** 0/7 tasks completed
+**Total:** 2/7 tasks completed
 
 ---
 
@@ -60,28 +60,57 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 1: Shared sync runner + `oat repo archive sync`
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- The existing S3 archive sync behavior now lives in `sync-runner.ts`.
+- `oat project archive sync` delegates to the shared runner without changing behavior.
+- A new `oat repo archive sync` command delegates to the same runner and is registered under `oat repo`.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/project/archive/sync-runner.ts` - extracted shared archive sync logic.
+- `packages/cli/src/commands/project/archive/index.ts` - reduced project archive command to a delegating handler.
+- `packages/cli/src/commands/repo/archive/index.ts` - added the repo archive command namespace.
+- `packages/cli/src/commands/repo/index.ts` - registered `repo archive`.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/sync-runner.test.ts src/commands/project/archive/index.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/repo/archive/index.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run`
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Run: `pnpm run cli -- repo --help` and `pnpm run cli -- repo archive --help`
+- Result: all passed.
+
+**Notes / Decisions:**
+
+- p01 review passed with one Medium finding: the shared runner's `--force` validation message still names `oat project archive sync` when invoked through `oat repo archive sync`. Carry this into Phase 4's command-string cleanup.
 
 ### Task p01-t01: Extract archive sync runner into a shared module
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a131167e
 
 **Notes:**
 
-- Extract sync internals from `project/archive/index.ts` into `sync-runner.ts`; no behavior change.
+- Extracted sync internals from `project/archive/index.ts` into `sync-runner.ts`; no behavior change.
 
 ---
 
 ### Task p01-t02: Add `oat repo archive sync` command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 174e8427
 
 **Notes:**
 
-- New `oat repo archive` namespace delegating to the shared runner.
+- Added the `oat repo archive` namespace and `sync` subcommand delegating to the shared runner.
 
 ---
 
@@ -114,7 +143,7 @@ No findings deferred, rejected, or needing user direction.
 **Notes:**
 
 - Deprecation notice on stderr; forwards to shared runner; JSON stdout preserved.
-- HiLL checkpoint pauses after this phase.
+- This remains a milestone boundary, but the configured HiLL checkpoint is after Phase 6.
 
 ---
 
@@ -131,6 +160,7 @@ No findings deferred, rejected, or needing user direction.
 **Notes:**
 
 - Update `archive-utils.ts` sync error strings + docs; regenerate docs index.
+- Include the p01 review Medium finding: make the repo sync `--force` validation mention `oat repo archive sync`.
 
 ---
 
@@ -170,6 +200,37 @@ No findings deferred, rejected, or needing user direction.
 
 <!-- orchestration-runs-start -->
 
+### Run 1 - 2026-06-01 22:21 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`; reviewer used `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- Medium from `reviews/p01-review-2026-06-01.md`: repo sync `--force` validation still names `oat project archive sync`; carry into p04 command-string cleanup.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
@@ -180,7 +241,33 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-_No implementation sessions yet. The first `oat-project-implement` run starts at `p01-t01`._
+### 2026-06-01
+
+**Session Start:** 22:04 UTC
+
+- [x] p01-t01: Extract archive sync runner into a shared module - a131167e
+- [x] p01-t02: Add `oat repo archive sync` command - 174e8427
+- [x] p01 review passed - `reviews/p01-review-2026-06-01.md`
+- [ ] p02-t01: Add `oat project archive` push action - next
+
+**What changed (high level):**
+
+- Archive sync behavior is shared through `sync-runner.ts`.
+- `oat repo archive sync` exists and delegates to the shared runner.
+
+**Follow-ups / TODO:**
+
+- Address the p01 Medium finding during p04: repo sync `--force` validation should name `oat repo archive sync`.
+
+**Blockers:**
+
+- None
+
+---
+
+## Deferred Findings (p01)
+
+- Medium: `oat repo archive sync --force` currently reports a validation message naming `oat project archive sync`. Source: `reviews/p01-review-2026-06-01.md`. Planned disposition: address in Phase 4 command-string cleanup before final review.
 
 ---
 
@@ -196,14 +283,14 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
-| 5     | -         | -      | -      | -        |
-| 6     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                 | Passed | Failed | Coverage |
+| ----- | --------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | focused archive sync/repo command tests; CLI package test suite; lint; type-check; repo help smoke checks | yes    | 0      | n/a      |
+| 2     | -                                                                                                         | -      | -      | -        |
+| 3     | -                                                                                                         | -      | -      | -        |
+| 4     | -                                                                                                         | -      | -      | -        |
+| 5     | -                                                                                                         | -      | -      | -        |
+| 6     | -                                                                                                         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
