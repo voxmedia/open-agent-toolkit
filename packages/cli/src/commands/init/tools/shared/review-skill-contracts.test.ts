@@ -92,24 +92,47 @@ describe('review skill contracts', () => {
     );
   });
 
-  it('keeps version-controlled archives on the current worktree during completion', () => {
+  it('delegates project completion archive side effects to the CLI command', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',
     );
     const content = readFileSync(skillPath, 'utf8');
 
-    expect(content).toContain('ARCHIVE_RELATIVE_PATH');
+    const step7Index = content.indexOf('### Step 7: Generate PR Description');
+    const step8Index = content.indexOf(
+      '### Step 8: Archive Project (Conditional)',
+    );
+    const step10Index = content.indexOf(
+      '### Step 10: Commit + Push Bookkeeping (Required)',
+    );
+
+    expect(step7Index).toBeGreaterThanOrEqual(0);
+    expect(step8Index).toBeGreaterThan(step7Index);
+    expect(step10Index).toBeGreaterThan(step8Index);
+
     expect(content).toContain(
+      '**Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**',
+    );
+    expect(content).toContain(
+      'Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).',
+    );
+    expect(content).toContain(
+      'The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.',
+    );
+    expect(content).toContain('oat project archive "$PROJECT_PATH"');
+    expect(content).toContain('PROJECT_PATH="$ARCHIVE_PATH"');
+
+    expect(content).not.toContain('ARCHIVE_RELATIVE_PATH');
+    expect(content).not.toContain('mv "$PROJECT_PATH"');
+    expect(content).not.toContain('aws s3 sync');
+    expect(content).not.toContain(
       'git check-ignore --quiet --no-index "$ARCHIVE_RELATIVE_PATH"',
-    );
-    expect(content).toContain(
-      'Only archive in the current checkout when a hypothetical file at `.oat/projects/archived/<project>/state.md` would actually be tracked here.',
-    );
-    expect(content).toContain(
-      'Do not check `git check-ignore` on `.oat/projects/archived` (the directory itself).',
     );
     expect(content).not.toContain(
       'If running from a git worktree, the primary repo archive directory is the canonical/durable archive destination.',
+    );
+    expect(content).toContain(
+      'Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details.',
     );
   });
 
