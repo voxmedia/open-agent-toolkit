@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-05-31
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p03'] # pause after CLI commands exist, before skill/docs/version work
+oat_plan_hill_phases: ['p06'] # pause after final implementation phase (from workflow.hillCheckpointDefault=final)
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
 oat_plan_parallel_groups: [] # fully sequential — see ## Parallelism
 oat_plan_source: quick
 oat_import_reference: null
@@ -28,7 +29,7 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (pause after p03)
+- [x] Configured HiLL checkpoints from workflow default (pause after p06)
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
@@ -240,7 +241,7 @@ git add packages/cli/src/commands/project/archive/
 git commit -m "feat(p03-t01): add deprecated oat project archive sync shim"
 ```
 
-> **HiLL checkpoint:** pause after Phase 3 for review — all three command surfaces now exist before touching skill/docs/versions.
+> **Milestone:** all three command surfaces now exist before touching skill/docs/versions. The configured HiLL checkpoint is after Phase 6.
 
 ---
 
