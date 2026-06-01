@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: ef32aae7
+oat_current_task: p04-t01
+oat_last_commit: 5865dc25
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-01T00:00:12.006Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-01T22:50:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-01T23:09:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress — current task `p03-t01`
+Implementation in progress — current task `p04-t01`
 
 ## Artifacts
 
@@ -56,7 +56,8 @@ Implementation in progress — current task `p03-t01`
 - ✓ Dispatch ceiling set (maximum: codex xhigh · claude opus)
 - ✓ Phase 1 complete (`p01`)
 - ✓ Phase 2 complete (`p02`)
-- ⧗ Implementing Phase 3 (`p03-t01`)
+- ✓ Phase 3 complete (`p03`)
+- ⧗ Implementing Phase 4 (`p04-t01`)
 
 ## Blockers
 
@@ -64,4 +65,4 @@ None
 
 ## Next Milestone
 
-Complete `p03-t01` — add the deprecated `oat project archive sync` shim
+Complete `p04-t01` — update archive sync error strings and docs references

@@ -348,7 +348,7 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 | ------ | -------- | ------- | ---------- | --------------------------------------------------- |
 | p01    | code     | passed  | 2026-06-01 | reviews/p01-review-2026-06-01.md                    |
 | p02    | code     | passed  | 2026-06-01 | reviews/p02-review-2026-06-01-v2.md                 |
-| p03    | code     | pending | -          | -                                                   |
+| p03    | code     | passed  | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
 | p04    | code     | pending | -          | -                                                   |
 | p05    | code     | pending | -          | -                                                   |
 | final  | code     | pending | -          | -                                                   |

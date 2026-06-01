@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ------------------------------------------------- | ------- | ----- | --------- |
 | Phase 1: Shared sync runner + `repo archive sync` | passed  | 2     | 2/2       |
 | Phase 2: `oat project archive` push command       | passed  | 1     | 1/1       |
-| Phase 3: Deprecated `archive sync` shim           | pending | 1     | 0/1       |
+| Phase 3: Deprecated `archive sync` shim           | passed  | 1     | 1/1       |
 | Phase 4: Error strings + docs alignment           | pending | 1     | 0/1       |
 | Phase 5: Rewrite completion Step 8                | pending | 1     | 0/1       |
 | Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
 
-**Total:** 3/7 tasks completed
+**Total:** 4/7 tasks completed
 
 ---
 
@@ -160,13 +160,40 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 3: Deprecated `oat project archive sync` shim
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- `oat project archive sync` remains available as a deprecated shim.
+- The shim forwards to the shared sync runner and writes the deprecation notice to stderr so JSON stdout stays parseable.
+- `oat project archive` help points users to `oat repo archive sync`.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/project/archive/index.ts` - added the deprecated sync subcommand and help text.
+- `packages/cli/src/commands/project/archive/index.test.ts` - covered deprecation forwarding and JSON stdout preservation.
+- `packages/cli/src/commands/help-snapshots.test.ts` - updated the parent command help snapshot for the new archive command signature.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/index.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts src/commands/project/archive/index.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run`
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: all passed after the help snapshot fix.
+
+**Notes / Decisions:**
+
+- p03 review passed with no findings.
 
 ### Task p03-t01: Deprecated `sync` alias + help pointer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 439c0aec, 5865dc25
 
 **Notes:**
 
@@ -292,6 +319,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 3 - 2026-06-01 23:09 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p03   | DONE_WITH_CONCERNS | pass   | 1/2            | passed      |
+
+#### Parallel Groups
+
+- p03: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p03 implementation used Codex `oat-phase-implementer-xhigh`; a verification-fix dispatch updated the project help snapshot; reviewer used `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None for p03.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -310,13 +368,17 @@ Chronological log of implementation progress.
 - [x] p02-t01: Add `oat project archive` push action - 49b5f7ae
 - [x] p02 review fix: align archive push target preflight - ef32aae7
 - [x] p02 re-review passed - `reviews/p02-review-2026-06-01-v2.md`
-- [ ] p03-t01: Deprecated `sync` alias + help pointer - next
+- [x] p03-t01: Deprecated `sync` alias + help pointer - 439c0aec
+- [x] p03 verification fix: update project archive help snapshot - 5865dc25
+- [x] p03 review passed - `reviews/p03-review-2026-06-01.md`
+- [ ] p04-t01: Update error strings and docs references - next
 
 **What changed (high level):**
 
 - Archive sync behavior is shared through `sync-runner.ts`.
 - `oat repo archive sync` exists and delegates to the shared runner.
 - `oat project archive` exists and delegates to the completion archive helper with target preflight and dry-run support.
+- `oat project archive sync` remains as a deprecated shim that warns on stderr and preserves JSON stdout.
 
 **Follow-ups / TODO:**
 
@@ -350,8 +412,7 @@ Track test execution during implementation.
 | ----- | --------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | focused archive sync/repo command tests; CLI package test suite; lint; type-check; repo help smoke checks | yes    | 0      | n/a      |
 | 2     | focused project archive push/archive-utils/index tests; dry-run smoke; lint; type-check                   | yes    | 0      | n/a      |
-| 2     | -                                                                                                         | -      | -      | -        |
-| 3     | -                                                                                                         | -      | -      | -        |
+| 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                   | yes    | 0      | n/a      |
 | 4     | -                                                                                                         | -      | -      | -        |
 | 5     | -                                                                                                         | -      | -      | -        |
 | 6     | -                                                                                                         | -      | -      | -        |
