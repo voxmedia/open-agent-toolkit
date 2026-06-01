@@ -2,6 +2,8 @@
 
 This document is a birdseye view of where OAT is _right now_ in `open-agent-toolkit`: what exists, where it lives, how to run it, and what’s next.
 
+**Reference update:** 2026-06-01 (`pjm-init` shipped `oat pjm init` as the explicit instantiate step for project-management repo-reference docs. The project-management pack installs skills and template sources; `oat pjm init` materializes `.oat/repo/reference/{current-state,roadmap,decision-record}.md` plus the file-backed `backlog/` tree non-destructively. See ADR-020.)
+
 **Last Updated:** 2026-05-29 (`dispatch-ceiling-ux` reshaped the ceiling into a provider-neutral intent — presets (`balanced`/`maximum`/`cost-conscious`) compile at write time to concrete per-provider values behind a provider adapter registry; Codex enforces via pinned variants and Claude via the per-call Task `model` parameter (bidirectional, verified); enforcement mode (enforced/advisory/unsupported) is computed at dispatch and never persisted; verify-on-upgrade guards above-orchestrator requests; clean break of the old flat config keys, no migration (ADR-019). Earlier, `dispatch-ceiling` shipped the follow-up to PR #87: OAT now owns an explicit provider-aware dispatch ceiling instead of treating Codex base/unpinned roles as parent-effort inheritance. Codex deterministic dispatch uses pinned implementer/reviewer variants including `xhigh`, capped by the resolved ceiling. `oat project dispatch-ceiling resolve` provides the project-aware resolver surface for implementation preflight, reports Codex provider default effort as informational context, and blocks unresolved non-interactive preflight only through explicit non-interactive signals. Lifecycle skill guidance also preserves accepted design drift explicitly: `oat-project-implement` records intentional spec/design/plan deltas in `implementation.md`, `oat-project-review-receive` converts defensible implementation vs stale artifact findings into artifact-alignment tasks or explicit deferrals, and `oat-project-summary` carries those review-received decisions into Design Deltas.)
 
 ## Canonical References
@@ -135,7 +137,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat-pjm-add-backlog-item` (create a file-backed backlog item from the backlog template, regenerate the managed index, and prompt for curated-overview updates)
 - `oat-pjm-update-repo-reference` (sync repo backlog, roadmap, and current-state/reference documents with the file-backed backlog structure)
 - `oat-pjm-review-backlog` (analyze the file-backed backlog, completed summary, and roadmap to recommend priorities and next work)
-- CLI tool pack: `project-management` (installs the `oat-pjm-*` skills and the backlog/roadmap templates)
+- `oat pjm init` (instantiate `.oat/repo/reference/{current-state,roadmap,decision-record}.md` plus `backlog/` from project-management templates; idempotent, non-destructive, supports `--reference-root` and `--json`)
+- CLI tool pack: `project-management` (installs the `oat-pjm-*` skills and `backlog-item`, `roadmap`, `current-state`, and `decision-record` template sources)
 
 ### Repo Maintainability (Utility)
 
@@ -189,6 +192,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat cleanup project`, `oat cleanup artifacts`
   - `oat instructions validate`, `oat instructions sync`
   - `oat backlog init`, `oat backlog generate-id`, `oat backlog regenerate-index`
+  - `oat pjm init`
   - `oat config get`, `oat config set`, `oat config list`, `oat config describe`, `oat config dump`
   - `oat project status`, `oat project list`, `oat project dispatch-ceiling resolve`
   - `oat project archive sync`, `oat project archive sync <project-name>`
