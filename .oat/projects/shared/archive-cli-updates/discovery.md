@@ -148,8 +148,3 @@ Word-order for the pull: `oat repo archive sync` was chosen over
   export, conditional S3 sync, worktree durability).
 - All five public packages bumped; `oat-project-complete` SKILL `version:` bumped.
 - `pnpm release:validate`, `pnpm test`, `pnpm lint`, `pnpm type-check` pass.
-  </content>
-  </invoke>
-
-<system-reminder>
-Warning: the contents of this file were NOT modified. Either the new_string was not found in the file, or it appears multiple times in the file. Re-read the file and check for exact matches and try again. Edit the tool result is for a different tool. This warning can be ignored if the edit was a success.

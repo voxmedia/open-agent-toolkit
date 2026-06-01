@@ -45,16 +45,6 @@ The plan is **fully sequential** (`oat_plan_parallel_groups: []`). Reasoning:
 
 ---
 
-## Dispatch Profile
-
-_No explicit per-phase provider constraints. Runtime selection chooses the tier within the resolved dispatch ceiling._
-
-| Phase | Claude model | Codex effort | Rationale         |
-| ----- | ------------ | ------------ | ----------------- |
-| —     | auto         | auto         | runtime selection |
-
----
-
 ## Phase 1: Shared sync runner + `oat repo archive sync`
 
 Relocate the pull to its scope-correct home without changing behavior. Extract the sync engine so both the new `repo archive sync` and the later deprecated `project archive sync` shim share one implementation.
@@ -77,14 +67,14 @@ Extract the sync internals currently inline in `index.ts` — `ArchiveSyncOption
 // dry-run output, skip-when-current, JSON contract shape, exit codes.
 ```
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/sync-runner.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/sync-runner.test.ts`
 Expected: Test fails (RED) — module/exports not present yet.
 
 **Step 2: Implement (GREEN)**
 
 Move the logic out of `index.ts` into `sync-runner.ts`; have `index.ts` import and call `runArchiveSyncCommand`. No behavior change.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/sync-runner.test.ts packages/cli/src/commands/project/archive/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/sync-runner.test.ts src/commands/project/archive/index.test.ts`
 Expected: Both pass (GREEN) — existing `index.test.ts` still green against the delegating command.
 
 **Step 3: Refactor**
@@ -122,14 +112,14 @@ Build `createRepoArchiveCommand()` returning an `archive` namespace with a `sync
 // emits the same JSON contract, and enforces `--force requires project name`.
 ```
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/repo/archive/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/repo/archive/index.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement the command + register it in `repo/index.ts`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/repo/archive/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/repo/archive/index.test.ts`
 Expected: Pass (GREEN).
 
 **Step 3: Refactor**
@@ -178,14 +168,14 @@ Add a bare action on `oat project archive [project-path]` that:
 // S3 push skipped when s3SyncOnComplete=false; project-path arg vs activeProject fallback; JSON contract.
 ```
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/push-runner.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/push-runner.test.ts`
 Expected: Test fails (RED).
 
 **Step 2: Implement (GREEN)**
 
 Implement `push-runner.ts` and wire the bare action in `index.ts`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/`
 Expected: Pass (GREEN).
 
 **Step 3: Refactor**
@@ -224,14 +214,14 @@ Re-add a `sync` subcommand under `oat project archive` that: prints a deprecatio
 // --json stdout remains valid JSON (notice on stderr).
 ```
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/index.test.ts`
 Expected: New assertions fail (RED).
 
 **Step 2: Implement (GREEN)**
 
 Add the deprecated subcommand + help text.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run packages/cli/src/commands/project/archive/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/index.test.ts`
 Expected: Pass (GREEN).
 
 **Step 3: Refactor**
@@ -353,17 +343,17 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| p04    | code     | pending  | -          | -                                          |
-| p05    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-06-01 | reviews/artifact-plan-review-2026-06-01.md |
-| spec   | artifact | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| p04    | code     | pending | -          | -                                                   |
+| p05    | code     | pending | -          | -                                                   |
+| final  | code     | pending | -          | -                                                   |
+| plan   | artifact | passed  | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
+| spec   | artifact | pending | -          | -                                                   |
+| design | artifact | pending | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -382,7 +372,7 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 
 **Total: 7 tasks**
 
-Ready for code review and merge.
+After these tasks complete, the project will be ready for code review and merge.
 
 ---
 
@@ -393,4 +383,3 @@ Ready for code review and merge.
 - Discovery: `discovery.md`
 - Key code: `packages/cli/src/commands/project/archive/index.ts`, `…/archive/archive-utils.ts`, `packages/cli/src/commands/repo/index.ts`
 - Skill: `.agents/skills/oat-project-complete/SKILL.md` (Step 8)
-  </content>

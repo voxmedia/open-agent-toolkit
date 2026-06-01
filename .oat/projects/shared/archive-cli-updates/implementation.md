@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-01
+oat_last_updated: 2026-05-31
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -18,103 +18,155 @@ oat_generated: false
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews`.
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                             | Status  | Tasks | Completed |
+| ------------------------------------------------- | ------- | ----- | --------- |
+| Phase 1: Shared sync runner + `repo archive sync` | pending | 2     | 0/2       |
+| Phase 2: `oat project archive` push command       | pending | 1     | 0/1       |
+| Phase 3: Deprecated `archive sync` shim           | pending | 1     | 0/1       |
+| Phase 4: Error strings + docs alignment           | pending | 1     | 0/1       |
+| Phase 5: Rewrite completion Step 8                | pending | 1     | 0/1       |
+| Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-06-01
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/7 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
+## Review History
+
+### Review Received: plan (artifact)
+
+**Date:** 2026-06-01
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-06-01.md`
+
+**Findings:** Critical: 0 · Important: 3 · Medium: 2 · Minor: 0
+
+**Disposition:** All five findings resolved directly in the artifacts (artifact review — no plan tasks created):
+
+- `I1` resolve_in_artifact — stripped leaked tool/session markup from `discovery.md` and `plan.md` tails.
+- `I2` resolve_in_artifact — rewrote focused vitest commands from repo-root paths to package-relative (`exec vitest run src/…`), since `pnpm --filter @open-agent-toolkit/cli exec` runs from `packages/cli`. Verified: repo-root paths resolve to a nonexistent `packages/cli/packages/cli/…`.
+- `I3` resolve_in_artifact — removed the invalid placeholder row / Dispatch Profile section (no real per-phase overrides; ceiling lives in `state.md`).
+- `M1` resolve_in_artifact — populated this file from the placeholder scaffold to match the concrete 6-phase / 7-task plan.
+- `M2` resolve_in_artifact — reworded `## Implementation Complete` to state readiness is post-implementation, not current.
+
+No findings deferred, rejected, or needing user direction.
+
+---
+
+## Phase 1: Shared sync runner + `oat repo archive sync`
+
+**Status:** pending
+**Started:** -
+
+### Task p01-t01: Extract archive sync runner into a shared module
 
 **Status:** pending
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Extract sync internals from `project/archive/index.ts` into `sync-runner.ts`; no behavior change.
 
 ---
 
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+### Task p01-t02: Add `oat repo archive sync` command
 
 **Status:** pending
 **Commit:** -
 
+**Notes:**
+
+- New `oat repo archive` namespace delegating to the shared runner.
+
+---
+
+## Phase 2: `oat project archive` push command
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Add `oat project archive` push action
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Bare push action backed by `archiveProjectOnCompletion()`; `--dry-run`, no `--yes`.
+
+---
+
+## Phase 3: Deprecated `oat project archive sync` shim
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Deprecated `sync` alias + help pointer
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Deprecation notice on stderr; forwards to shared runner; JSON stdout preserved.
+- HiLL checkpoint pauses after this phase.
+
+---
+
+## Phase 4: Error strings + docs alignment
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Update error strings and docs references
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Update `archive-utils.ts` sync error strings + docs; regenerate docs index.
+
+---
+
+## Phase 5: Rewrite `oat-project-complete` Step 8 + skill version bump
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Replace inline archive bash with `oat project archive`
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Collapse Step 8 inline bash to a single command call; bump SKILL `version:`.
+
+---
+
+## Phase 6: Lockstep version bumps + release validation
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Bump public packages and validate release
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Bump all five public package versions together; run `pnpm release:validate`.
+
 ---
 
 ## Orchestration Runs
-
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
@@ -128,38 +180,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-06-01
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-06-01
-
-**Session Start:** {time}
-
-{Continue log...}
+_No implementation sessions yet. The first `oat-project-implement` run starts at `p01-t01`._
 
 ---
 
@@ -179,13 +200,16 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
+| 5     | -         | -      | -      | -        |
+| 6     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- {filled when implementation completes}
 
 **Behavioral changes (user-facing):**
 
@@ -197,14 +221,10 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+- {tests/lint/typecheck/build/release:validate}
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+  </content>
