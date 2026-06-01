@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-31
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1: Shared sync runner + `repo archive sync` | passed  | 2     | 2/2       |
 | Phase 2: `oat project archive` push command       | passed  | 1     | 1/1       |
 | Phase 3: Deprecated `archive sync` shim           | passed  | 1     | 1/1       |
-| Phase 4: Error strings + docs alignment           | pending | 1     | 0/1       |
+| Phase 4: Error strings + docs alignment           | passed  | 1     | 1/1       |
 | Phase 5: Rewrite completion Step 8                | pending | 1     | 0/1       |
 | Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
 
-**Total:** 4/7 tasks completed
+**Total:** 5/7 tasks completed
 
 ---
 
@@ -204,18 +204,50 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 4: Error strings + docs alignment
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Archive pull docs and config help now point to `oat repo archive sync`.
+- Sync-mode AWS CLI errors reference the repo-scoped archive sync command.
+- The carried p01 Medium finding is closed: repo sync `--force` validation now reports `oat repo archive sync`.
+- `apps/oat-docs/index.md` was regenerated from the docs source.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - updated sync error text.
+- `packages/cli/src/commands/project/archive/sync-runner.ts` - added command-label handling for shared sync validation.
+- `packages/cli/src/commands/repo/archive/index.ts` - passed the repo command label.
+- `packages/cli/src/commands/project/archive/index.ts` - kept the deprecated project alias label.
+- `apps/oat-docs/docs/**` - updated archive sync references.
+- `apps/oat-docs/index.md` - regenerated generated index.
+
+**Verification:**
+
+- Run: `grep -rn "oat project archive sync" packages/cli/src apps/oat-docs/docs`
+- Run: `pnpm run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run`
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: all passed.
+
+**Notes / Decisions:**
+
+- The p04 implementation necessarily touched shared sync runner wiring and config catalog text beyond the narrow initial file list to clear all CLI-source references and the p01 review finding.
+- p04 review passed with no findings.
 
 ### Task p04-t01: Update error strings and docs references
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fca52ad1
 
 **Notes:**
 
-- Update `archive-utils.ts` sync error strings + docs; regenerate docs index.
-- Include the p01 review Medium finding: make the repo sync `--force` validation mention `oat repo archive sync`.
+- Updated sync error strings and docs; regenerated docs index.
+- Closed the p01 review Medium finding by making repo sync `--force` validation mention `oat repo archive sync`.
 
 ---
 
@@ -350,6 +382,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 4 - 2026-06-01 23:25 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p04: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p04 implementation used Codex `oat-phase-implementer-xhigh`; reviewer used `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None for p04. The deferred p01 Medium finding is closed.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -371,7 +434,9 @@ Chronological log of implementation progress.
 - [x] p03-t01: Deprecated `sync` alias + help pointer - 439c0aec
 - [x] p03 verification fix: update project archive help snapshot - 5865dc25
 - [x] p03 review passed - `reviews/p03-review-2026-06-01.md`
-- [ ] p04-t01: Update error strings and docs references - next
+- [x] p04-t01: Update error strings and docs references - fca52ad1
+- [x] p04 review passed - `reviews/p04-review-2026-06-01.md`
+- [ ] p05-t01: Replace inline archive bash with `oat project archive` - next
 
 **What changed (high level):**
 
@@ -379,10 +444,11 @@ Chronological log of implementation progress.
 - `oat repo archive sync` exists and delegates to the shared runner.
 - `oat project archive` exists and delegates to the completion archive helper with target preflight and dry-run support.
 - `oat project archive sync` remains as a deprecated shim that warns on stderr and preserves JSON stdout.
+- Archive sync docs and error messages now point to `oat repo archive sync`.
 
 **Follow-ups / TODO:**
 
-- Address the p01 Medium finding during p04: repo sync `--force` validation should name `oat repo archive sync`.
+- None at this point.
 
 **Blockers:**
 
@@ -392,7 +458,7 @@ Chronological log of implementation progress.
 
 ## Deferred Findings (p01)
 
-- Medium: `oat repo archive sync --force` currently reports a validation message naming `oat project archive sync`. Source: `reviews/p01-review-2026-06-01.md`. Planned disposition: address in Phase 4 command-string cleanup before final review.
+- Closed in p04: `oat repo archive sync --force` validation now reports `oat repo archive sync`. Source: `reviews/p01-review-2026-06-01.md`; closure verified by `reviews/p04-review-2026-06-01.md`.
 
 ---
 
@@ -413,7 +479,7 @@ Track test execution during implementation.
 | 1     | focused archive sync/repo command tests; CLI package test suite; lint; type-check; repo help smoke checks | yes    | 0      | n/a      |
 | 2     | focused project archive push/archive-utils/index tests; dry-run smoke; lint; type-check                   | yes    | 0      | n/a      |
 | 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                   | yes    | 0      | n/a      |
-| 4     | -                                                                                                         | -      | -      | -        |
+| 4     | CLI package test suite; lint; type-check; docs index regeneration                                         | yes    | 0      | n/a      |
 | 5     | -                                                                                                         | -      | -      | -        |
 | 6     | -                                                                                                         | -      | -      | -        |
 
