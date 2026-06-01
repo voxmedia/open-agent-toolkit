@@ -2,6 +2,12 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command } from 'commander';
 
 import {
+  defaultProjectArchivePushCommandDependencies,
+  runArchivePushCommand,
+  type ArchivePushOptions,
+  type ProjectArchivePushCommandDependencies,
+} from './push-runner';
+import {
   defaultProjectArchiveCommandDependencies,
   runArchiveSyncCommand,
   type ArchiveSyncOptions,
@@ -12,17 +18,45 @@ export type {
   ArchiveSyncOptions,
   ProjectArchiveCommandDependencies,
 } from './sync-runner';
+export type {
+  ArchivePushOptions,
+  ProjectArchivePushCommandDependencies,
+} from './push-runner';
+
+type ProjectArchiveDependencies = ProjectArchiveCommandDependencies &
+  ProjectArchivePushCommandDependencies;
 
 export function createProjectArchiveCommand(
-  overrides: Partial<ProjectArchiveCommandDependencies> = {},
+  overrides: Partial<ProjectArchiveDependencies> = {},
 ): Command {
   const dependencies = {
     ...defaultProjectArchiveCommandDependencies(),
+    ...defaultProjectArchivePushCommandDependencies(),
     ...overrides,
   };
 
   return new Command('archive')
     .description('Manage archived project data')
+    .argument('[project-path]', 'Project path to archive')
+    .option('--dry-run', 'Preview archive without moving files or syncing S3')
+    .action(
+      async (
+        projectPath: string | undefined,
+        options: ArchivePushOptions,
+        command: Command,
+      ) => {
+        const context = dependencies.buildCommandContext(
+          readGlobalOptions(command),
+        );
+
+        await runArchivePushCommand(
+          dependencies,
+          projectPath,
+          options,
+          context,
+        );
+      },
+    )
     .addCommand(
       new Command('sync')
         .description(
@@ -45,11 +79,15 @@ export function createProjectArchiveCommand(
             const context = dependencies.buildCommandContext(
               readGlobalOptions(command),
             );
+            const syncOptions = {
+              ...options,
+              dryRun: options.dryRun ?? context.dryRun,
+            };
 
             await runArchiveSyncCommand(
               dependencies,
               projectName,
-              options,
+              syncOptions,
               context,
             );
           },
