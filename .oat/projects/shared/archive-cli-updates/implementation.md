@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-05-31
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase                                             | Status  | Tasks | Completed |
 | ------------------------------------------------- | ------- | ----- | --------- |
 | Phase 1: Shared sync runner + `repo archive sync` | passed  | 2     | 2/2       |
-| Phase 2: `oat project archive` push command       | pending | 1     | 0/1       |
+| Phase 2: `oat project archive` push command       | passed  | 1     | 1/1       |
 | Phase 3: Deprecated `archive sync` shim           | pending | 1     | 0/1       |
 | Phase 4: Error strings + docs alignment           | pending | 1     | 0/1       |
 | Phase 5: Rewrite completion Step 8                | pending | 1     | 0/1       |
 | Phase 6: Lockstep version bump + release          | pending | 1     | 0/1       |
 
-**Total:** 2/7 tasks completed
+**Total:** 3/7 tasks completed
 
 ---
 
@@ -116,17 +116,45 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 2: `oat project archive` push command
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- `oat project archive [project-path]` now invokes the existing archive-on-completion helper through `push-runner.ts`.
+- The command supports explicit project paths, active-project fallback, text/JSON output, and dry-run preview.
+- Review fixes aligned dry-run/apply archive target resolution and prevent local-only worktree archives when the primary checkout is unavailable.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/project/archive/push-runner.ts` - added archive push command orchestration.
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - exposed shared archive target planning and durability assertion.
+- `packages/cli/src/commands/project/archive/index.ts` - wired the bare `project archive` action.
+- `packages/cli/src/commands/project/archive/push-runner.test.ts` - covered apply, dry-run, JSON, active-project fallback, and worktree durability cases.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/push-runner.test.ts src/commands/project/archive/archive-utils.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/index.test.ts`
+- Run: `pnpm run cli -- project archive --dry-run .oat/projects/shared/archive-cli-updates`
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: all passed.
+
+**Notes / Decisions:**
+
+- p02 initial review found one Important and one Medium issue; both were fixed in `ef32aae7` and the p02 v2 re-review passed with no findings.
 
 ### Task p02-t01: Add `oat project archive` push action
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 49b5f7ae, ef32aae7
 
 **Notes:**
 
-- Bare push action backed by `archiveProjectOnCompletion()`; `--dry-run`, no `--yes`.
+- Added the bare push action backed by `archiveProjectOnCompletion()`; review fixes aligned target preflight and durability behavior.
 
 ---
 
@@ -233,6 +261,37 @@ No findings deferred, rejected, or needing user direction.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 2 - 2026-06-01 22:50 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | pass   | 1/2            | passed      |
+
+#### Parallel Groups
+
+- p02: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p02 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`; reviewer and re-review used `oat-reviewer-xhigh`; fix dispatch used `oat-phase-implementer-xhigh`.
+
+#### Outstanding Items
+
+- None for p02. Original p02 review findings are closed in `reviews/p02-review-2026-06-01-v2.md`.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -248,12 +307,16 @@ Chronological log of implementation progress.
 - [x] p01-t01: Extract archive sync runner into a shared module - a131167e
 - [x] p01-t02: Add `oat repo archive sync` command - 174e8427
 - [x] p01 review passed - `reviews/p01-review-2026-06-01.md`
-- [ ] p02-t01: Add `oat project archive` push action - next
+- [x] p02-t01: Add `oat project archive` push action - 49b5f7ae
+- [x] p02 review fix: align archive push target preflight - ef32aae7
+- [x] p02 re-review passed - `reviews/p02-review-2026-06-01-v2.md`
+- [ ] p03-t01: Deprecated `sync` alias + help pointer - next
 
 **What changed (high level):**
 
 - Archive sync behavior is shared through `sync-runner.ts`.
 - `oat repo archive sync` exists and delegates to the shared runner.
+- `oat project archive` exists and delegates to the completion archive helper with target preflight and dry-run support.
 
 **Follow-ups / TODO:**
 
@@ -286,6 +349,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                                                                                 | Passed | Failed | Coverage |
 | ----- | --------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | focused archive sync/repo command tests; CLI package test suite; lint; type-check; repo help smoke checks | yes    | 0      | n/a      |
+| 2     | focused project archive push/archive-utils/index tests; dry-run smoke; lint; type-check                   | yes    | 0      | n/a      |
 | 2     | -                                                                                                         | -      | -      | -        |
 | 3     | -                                                                                                         | -      | -      | -        |
 | 4     | -                                                                                                         | -      | -      | -        |
