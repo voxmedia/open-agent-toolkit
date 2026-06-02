@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings
   provider: codex # codex | claude
@@ -21,8 +21,8 @@ oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/103' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-05-29T14:47:26.658Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-06-01T23:33:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
@@ -31,16 +31,15 @@ oat_generated: false
 
 # Project State: pjm-init
 
-**Status:** Implementation complete; final review passed; rebased onto main — ready for PR
+**Status:** PR open (#103), awaiting human review
 **Started:** 2026-05-29
 **Last Updated:** 2026-06-01
 
 ## Current Phase
 
-Implementation and final review are complete (final marked `passed`). The `I1` pre-PR rebase is
-**done**: branch rebased onto current `origin/main` (42 ahead / 0 behind), public lockstep at
-`0.1.18`, release gates + 1766 tests green. Ready for docs sync and final PR. The rebase rewrote
-history, so the branch needs a **force-push**. Minor `m2` is deferred.
+Implementation — PR open, awaiting human review. Final review `passed`; `I1` rebase done
+(lockstep `0.1.18`, release gates + 1766 tests green); docs/repo-reference synced; PR #103 opened
+against `main`. Minor `m2` is deferred.
 
 ## Artifacts
 
@@ -48,7 +47,9 @@ history, so the branch needs a **force-push**. Minor `m2` is deferred.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
 - **Plan:** `plan.md` (complete — 7 phases, 11 tasks, sequential)
-- **Implementation:** `implementation.md` (in progress; `p07-t01` queued from final review v4)
+- **Implementation:** `implementation.md` (complete; final review passed)
+- **Summary:** `summary.md` (complete)
+- **PR:** `pr/project-pr-2026-06-01.md` → [#103](https://github.com/voxmedia/open-agent-toolkit/pull/103)
 
 ## Progress
 
@@ -65,6 +66,9 @@ history, so the branch needs a **force-push**. Minor `m2` is deferred.
 - ✓ Final independent review (v4) received — `m1` fix (`p07-t01`) implemented + phase-gate reviewed; `I1` rebase deferred to PR prep; `m2` deferred
 - ✓ Final review marked `passed` (accepted phase-gate verification)
 - ✓ Rebased onto current `main` — `I1` resolved; lockstep `0.1.18`; release gates + tests green
+- ✓ Docs + repo-reference synced
+- ✓ PR created (#103)
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -72,4 +76,7 @@ None
 
 ## Next Milestone
 
-Sync docs (`oat-project-document`) and prepare the final PR (`oat-project-pr-final`); force-push the rebased branch.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
