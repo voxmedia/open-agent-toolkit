@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-01
-oat_current_task_id: p06-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                             | Status      | Tasks | Completed |
-| ------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Shared sync runner + `repo archive sync` | passed      | 2     | 2/2       |
-| Phase 2: `oat project archive` push command       | passed      | 1     | 1/1       |
-| Phase 3: Deprecated `archive sync` shim           | passed      | 1     | 1/1       |
-| Phase 4: Error strings + docs alignment           | passed      | 1     | 1/1       |
-| Phase 5: Rewrite completion Step 8                | passed      | 1     | 1/1       |
-| Phase 6: Lockstep version bump + release          | in_progress | 3     | 1/3       |
+| Phase                                             | Status    | Tasks | Completed |
+| ------------------------------------------------- | --------- | ----- | --------- |
+| Phase 1: Shared sync runner + `repo archive sync` | passed    | 2     | 2/2       |
+| Phase 2: `oat project archive` push command       | passed    | 1     | 1/1       |
+| Phase 3: Deprecated `archive sync` shim           | passed    | 1     | 1/1       |
+| Phase 4: Error strings + docs alignment           | passed    | 1     | 1/1       |
+| Phase 5: Rewrite completion Step 8                | passed    | 1     | 1/1       |
+| Phase 6: Lockstep version bump + release          | completed | 3     | 3/3       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -322,7 +322,7 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 6: Lockstep version bumps + release validation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-06-01
 
 ### Phase Summary
@@ -352,6 +352,7 @@ No findings deferred, rejected, or needing user direction.
 - The initial p06 verification failed because `review-skill-contracts.test.ts` still expected the removed inline archive shell details; the follow-up fix aligned the test with the new CLI delegation contract.
 - p06 review passed with no findings.
 - Final review added two follow-up fix tasks: absolute `projects.root` archive target handling and archive AWS config catalog precedence.
+- Final review fixes completed in `faf964e6` and `d6d4c338`; final re-review is pending.
 
 ### Task p06-t01: Bump public packages and validate release
 
@@ -366,23 +367,23 @@ No findings deferred, rejected, or needing user direction.
 
 ### Task p06-t02: (review) Fix absolute projects.root archive destination
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** faf964e6
 
 **Notes:**
 
-- Final review Important finding. Fix duplicated archive destinations for absolute `projects.root` values and add regression coverage.
+- Final review Important finding. Fixed duplicated archive destinations for absolute `projects.root` values and added resolver/dry-run regression coverage.
 
 ---
 
 ### Task p06-t03: (review) Update archive AWS config catalog precedence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d6d4c338
 
 **Notes:**
 
-- Final review Medium finding. Align `oat config describe` precedence text with implementation and docs.
+- Final review Medium finding. Aligned `oat config describe` precedence text with implementation and docs, with describe assertions.
 
 ---
 
@@ -578,6 +579,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------- |
 | p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite intentionally removed inline archive shell details that the old contract test still asserted. | Code + `reviews/p06-review-2026-06-01.md` | None      |
 
+### Run 7 - 2026-06-02 00:20 UTC
+
+**Branch:** feat/archive-cli-flow
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition     |
+| ----- | ----------- | ------ | -------------- | --------------- |
+| p06   | DONE        | n/a    | 0/2            | fixes_completed |
+
+#### Parallel Groups
+
+- p06 final-review fixes: sequential
+
+#### Dispatch Notes
+
+- Dispatch: final-review fixes used Codex `oat-phase-implementer-xhigh` for `p06-t02` and `p06-t03`.
+
+#### Outstanding Items
+
+- Final re-review pending.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -606,8 +638,8 @@ Chronological log of implementation progress.
 - [x] p06-t01: Bump public packages and validate release - f603964f
 - [x] p06 contract-test fix: update archive skill contract expectations - 5d4ab8d8
 - [x] p06 review passed - `reviews/p06-review-2026-06-01.md`
-- [ ] p06-t02: (review) Fix absolute projects.root archive destination - next
-- [ ] p06-t03: (review) Update archive AWS config catalog precedence - pending
+- [x] p06-t02: (review) Fix absolute projects.root archive destination - faf964e6
+- [x] p06-t03: (review) Update archive AWS config catalog precedence - d6d4c338
 
 **What changed (high level):**
 
@@ -618,6 +650,7 @@ Chronological log of implementation progress.
 - Archive sync docs and error messages now point to `oat repo archive sync`.
 - `oat-project-complete` now calls `oat project archive` instead of duplicating archive shell logic.
 - Public packages were bumped together to `0.1.17` and release validation passes.
+- Final review fixes resolved absolute `projects.root` archive targets and archive AWS config catalog precedence.
 
 **Follow-ups / TODO:**
 
@@ -654,7 +687,7 @@ Track test execution during implementation.
 | 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                   | yes    | 0      | n/a      |
 | 4     | CLI package test suite; lint; type-check; docs index regeneration                                         | yes    | 0      | n/a      |
 | 5     | skill sync; project status sync check; Step 8 grep checks                                                 | yes    | 0      | n/a      |
-| 6     | full workspace build, test, lint, type-check, release validation                                          | yes    | 0      | n/a      |
+| 6     | full workspace build, test, lint, type-check, release validation; final-review fix focused suites         | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
@@ -666,12 +699,14 @@ Track test execution during implementation.
 - Archive docs, error strings, and config help updated to the repo-scoped sync command.
 - `oat-project-complete` Step 8 delegates archive side effects to `oat project archive "$PROJECT_PATH"`.
 - Lockstep public package version bump to `0.1.17`.
+- Absolute `projects.root` archive targets no longer duplicate the repository root; archive AWS config catalog precedence matches implementation.
 
 **Behavioral changes (user-facing):**
 
 - Archive pulls now live at `oat repo archive sync`; the old project-scoped sync command remains as a deprecated forwarding alias.
 - Project archive push can be run directly through `oat project archive`, including dry-run and JSON output paths.
 - Completion archive behavior is centralized in CLI code instead of duplicated in the lifecycle skill.
+- Repo-local absolute `projects.root` / `OAT_PROJECTS_ROOT` values archive under the selected repository's `.oat/projects/archived` path.
 
 **Key files / modules:**
 
@@ -680,11 +715,12 @@ Track test execution during implementation.
 - `packages/cli/src/commands/project/archive/push-runner.ts` - project archive push orchestration.
 - `packages/cli/src/commands/project/archive/archive-utils.ts` - shared archive target and durability helpers.
 - `.agents/skills/oat-project-complete/SKILL.md` - completion workflow archive delegation.
+- `packages/cli/src/commands/config/index.ts` - archive AWS config catalog descriptions.
 - `apps/oat-docs/docs/**` - archive command documentation updates.
 
 **Verification performed:**
 
-- Focused archive command vitest suites, full CLI vitest suite, help snapshots, docs index regeneration, skill sync/status checks, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm release:validate`.
+- Focused archive command vitest suites, config describe vitest suite, full CLI vitest suite, help snapshots, docs index regeneration, skill sync/status checks, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm release:validate`.
 
 ## References
 

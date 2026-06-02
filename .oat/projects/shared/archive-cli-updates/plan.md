@@ -407,18 +407,18 @@ git commit -m "fix(p06-t03): correct archive AWS config precedence docs"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                            |
-| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed      | 2026-06-01 | reviews/p01-review-2026-06-01.md                    |
-| p02    | code     | passed      | 2026-06-01 | reviews/p02-review-2026-06-01-v2.md                 |
-| p03    | code     | passed      | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
-| p04    | code     | passed      | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
-| p05    | code     | passed      | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
-| p06    | code     | passed      | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
-| final  | code     | fixes_added | 2026-06-01 | reviews/archived/final-review-2026-06-01.md         |
-| plan   | artifact | passed      | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
-| spec   | artifact | pending     | -          | -                                                   |
-| design | artifact | pending     | -          | -                                                   |
+| Scope  | Type     | Status          | Date       | Artifact                                            |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed          | 2026-06-01 | reviews/p01-review-2026-06-01.md                    |
+| p02    | code     | passed          | 2026-06-01 | reviews/p02-review-2026-06-01-v2.md                 |
+| p03    | code     | passed          | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
+| p04    | code     | passed          | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
+| p05    | code     | passed          | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
+| p06    | code     | passed          | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
+| final  | code     | fixes_completed | 2026-06-01 | reviews/archived/final-review-2026-06-01.md         |
+| plan   | artifact | passed          | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
+| spec   | artifact | pending         | -          | -                                                   |
+| design | artifact | pending         | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -437,7 +437,7 @@ git commit -m "fix(p06-t03): correct archive AWS config precedence docs"
 
 **Total: 9 tasks**
 
-Final review fixes have been added. The project is ready to resume implementation at `p06-t02`.
+All implementation tasks and final-review fix tasks are complete. The project is awaiting final re-review.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t02
-oat_last_commit: 9f6a31c9
+oat_current_task: null
+oat_last_commit: d6d4c338
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,19 +27,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-01T00:00:12.006Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-02T00:10:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-02T00:20:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: archive-cli-updates
 
-**Status:** Final review fixes in progress
+**Status:** Final review fixes complete; awaiting final re-review
 **Started:** 2026-06-01
 **Last Updated:** 2026-06-01
 
 ## Current Phase
 
-Implementation in progress — current review-fix task `p06-t02`
+Implementation tasks complete; awaiting final re-review.
 
 ## Artifacts
 
@@ -47,7 +47,7 @@ Implementation in progress — current review-fix task `p06-t02`
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — architecture captured in `discovery.md`)
 - **Plan:** `plan.md` (complete, ready for implement)
-- **Implementation:** `implementation.md` (final review fixes added)
+- **Implementation:** `implementation.md` (all planned and review-fix tasks complete)
 
 ## Progress
 
@@ -59,7 +59,8 @@ Implementation in progress — current review-fix task `p06-t02`
 - ✓ Phase 3 complete (`p03`)
 - ✓ Phase 4 complete (`p04`)
 - ✓ Phase 5 complete (`p05`)
-- ⧗ Final review fixes added (`p06-t02`, `p06-t03`)
+- ✓ Phase 6 complete, including final review fixes (`p06-t02`, `p06-t03`)
+- ⧗ Awaiting final re-review
 
 ## Blockers
 
@@ -67,4 +68,4 @@ None
 
 ## Next Milestone
 
-Complete `p06-t02` and `p06-t03`, then rerun final code review
+Rerun final code review
