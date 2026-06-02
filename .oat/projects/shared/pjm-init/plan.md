@@ -564,22 +564,61 @@ git commit -m "fix(p06-t02): restore dispatch-ceiling config docs"
 
 ---
 
+## Phase 7: Final review polish
+
+### Task p07-t01: (review) Strip leading blank line after template frontmatter
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/pjm/init.ts`
+- Modify: `packages/cli/src/commands/pjm/init.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding `m1` (final review v4): `stripTemplateFrontmatter` removes the closing
+`\n---` then `replace(/^\r?\n/, '')` strips only a single newline, so with the template shape
+`---\n...\n---\n\n# Heading` one blank line remains before the H1 in the instantiated reference
+doc (output is `"\n# OAT Decision Record\n"`). Cosmetic only — markdown renders identically.
+
+Location: `packages/cli/src/commands/pjm/init.ts:108`
+
+**Step 2: Implement fix**
+
+Change the leading-newline strip to remove all leading blank lines, e.g.
+`afterFrontmatter.replace(/^\r?\n+/, '')` (or `.trimStart()`). Add/extend a unit test in
+`init.test.ts` asserting the instantiated doc begins exactly at the `# ` heading with no leading
+blank line.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pjm suite green (including the new leading-edge assertion); lint + type-check clean.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/pjm/init.ts packages/cli/src/commands/pjm/init.test.ts
+git commit -m "fix(p07-t01): strip leading blank line after template frontmatter"
+```
+
+---
+
 ## Reviews
 
 Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
 code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-| Scope  | Type     | Status   | Date       | Artifact                                               |
-| ------ | -------- | -------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed   | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md              |
-| p02    | code     | passed   | 2026-05-29 | reviews/archived/p02-review-2026-05-29-v2.md           |
-| p03    | code     | passed   | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md              |
-| p04    | code     | passed   | 2026-05-29 | reviews/archived/p04-review-2026-05-29.md              |
-| p05    | code     | passed   | 2026-05-29 | reviews/archived/p05-review-2026-05-29-v2.md           |
-| p06    | code     | passed   | 2026-05-29 | reviews/archived/p06-review-2026-05-29.md              |
-| final  | code     | received | 2026-05-29 | reviews/archived/final-review-2026-05-29-v4.md         |
-| design | artifact | pending  | -          | -                                                      |
-| plan   | artifact | passed   | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
+| Scope  | Type     | Status      | Date       | Artifact                                               |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | passed      | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md              |
+| p02    | code     | passed      | 2026-05-29 | reviews/archived/p02-review-2026-05-29-v2.md           |
+| p03    | code     | passed      | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md              |
+| p04    | code     | passed      | 2026-05-29 | reviews/archived/p04-review-2026-05-29.md              |
+| p05    | code     | passed      | 2026-05-29 | reviews/archived/p05-review-2026-05-29-v2.md           |
+| p06    | code     | passed      | 2026-05-29 | reviews/archived/p06-review-2026-05-29.md              |
+| final  | code     | fixes_added | 2026-06-01 | reviews/archived/final-review-2026-05-29-v4.md         |
+| design | artifact | pending     | -          | -                                                      |
+| plan   | artifact | passed      | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -602,10 +641,13 @@ code rows as needed; do not delete the `design`/`plan` artifact rows.
 - Phase 4: 1 task — lockstep `0.1.11 → 0.1.12` bump + `release:validate`.
 - Phase 5: 2 review-fix tasks — restore dispatch-ceiling mainline contract and canonical skill versions from `main`.
 - Phase 6: 2 review-fix tasks — bump public packages forward from current `main` and restore dispatch-ceiling config docs.
+- Phase 7: 1 review-fix task — strip leading blank line after template frontmatter (final review v4 finding `m1`).
 
-**Total: 10 tasks**
+**Total: 11 tasks**
 
-Final review passed; prepare the final PR.
+Final review v4 received: one polish fix task queued (`p07-t01`); the Important finding (rebase
+onto current `main`) is a pre-PR process action, and minor `m2` is deferred. Execute `p07-t01`,
+re-review, then rebase and prepare the final PR.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 oat_status: complete
-oat_ready_for: null
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-05-29
-oat_current_task_id: null
+oat_last_updated: 2026-06-01
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -24,18 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status | Tasks | Completed |
-| ------------------------------------- | ------ | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
-| Phase 3: Documentation                | passed | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
-| Phase 5: Final review fixes           | passed | 2     | 2/2       |
-| Phase 6: Final re-review fixes        | passed | 2     | 2/2       |
+| Phase                                 | Status  | Tasks | Completed |
+| ------------------------------------- | ------- | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
+| Phase 3: Documentation                | passed  | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed  | 1     | 1/1       |
+| Phase 5: Final review fixes           | passed  | 2     | 2/2       |
+| Phase 6: Final re-review fixes        | passed  | 2     | 2/2       |
+| Phase 7: Final review polish          | pending | 1     | 0/1       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
-**Next task:** none — final review passed.
+**Next task:** `p07-t01` — strip leading blank line after template frontmatter (final review v4 finding `m1`).
 
 ---
 
@@ -655,13 +656,53 @@ Chronological log of implementation progress.
 
 ---
 
+## Review Received: final (code v4 — independent manual review)
+
+**Date:** 2026-06-01
+**Review artifact:** reviews/archived/final-review-2026-05-29-v4.md
+**Review type:** code (scope `final`) — independent manual review, target-relative `main..HEAD`.
+
+**Note:** This independent review ran _after_ the v3 auto-review passed clean. It re-scoped the
+diff to the true PR merge-target delta (`main..HEAD`, not `merge-base..HEAD`) and surfaced one
+process finding plus two cosmetics that the base-relative auto-reviews did not catch. The v4
+artifact had been marked `received` in `plan.md` and bulk-archived (commit `e3da477e`) before
+disposition; this section completes that disposition.
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** `p07-t01` (converts minor `m1`).
+
+**Finding disposition map:**
+
+- `I1` Stale base / merge conflicts against current `main` → **process action** (`artifact_alignment_required`). Not a code defect; resolved by rebasing onto current `main` at PR-prep time. Recorded in the Deviations table below. Not converted to a plan task.
+- `m1` Leading blank line after frontmatter strip (`init.ts:108`) → **converted** to fix task `p07-t01`.
+- `m2` `pjm` group help vs `cli-reference.md` verb phrasing → **deferred** (see Deferred Findings below).
+
+**Design drift / artifact alignment notes:**
+
+- `I1`: The review found the branch was cut from a stale base and is now 5 commits behind `origin/main`; a test-merge produces conflicts in the five public `package.json` version lines + `apps/oat-docs/index.md`. The shipped PJM code and the `0.1.14` forward lockstep bump are accepted as correct (implementation is source of truth). The lifecycle alignment is a **rebase onto current `main` before opening/merging the PR**, which collapses the Phase 5–6 "restore from main" churn and makes `release:check-versions` tip-relative. Tracked as a Deviations-table row and a pre-PR step rather than a code task because no source change is required.
+
+**Deferred Findings (Minor):**
+
+- `m2` (`packages/cli/src/commands/pjm/index.ts:49` vs `apps/oat-docs/docs/reference/cli-reference.md`): the `pjm` group help ("Manage project-management repo reference docs") and the CLI-reference row ("Initialize the project-management repo-reference surface…") use different verbs. Both are accurate; the difference is an intentional register split (group blurb vs row action) with no user impact. **Deferred** — low probability anyone needs exact-string parity; revisit only if a docs-parity pass is requested.
+
+**Next:** Execute `p07-t01` via the `oat-project-implement` skill, then re-review (scope to fix
+task), then perform the `I1` rebase as part of `oat-project-pr-final`.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review        | Source Artifact            | Planned / Documented                          | Actual / Accepted                                        | Reason                                                                               | Source of Truth                                   | Follow-up                                                                                                                        |
+| -------------------- | -------------------------- | --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| final review v4 `I1` | git base / merge-readiness | Branch rebased on current `main` before merge | Branch on stale base `f47ed778`, 5 commits behind `main` | Branch was cut before #97/#99 landed; Phases 5–6 restored mainline files from `main` | Implementation (PJM code + `0.1.14` bump correct) | Rebase onto current `main` during `oat-project-pr-final`; eliminates the 6 merge conflicts and collapses Phase 5–6 restore churn |
 
 ## Test Results
 
@@ -687,7 +728,7 @@ Track test execution during implementation.
 - The public package lockstep is bumped to `0.1.14`.
 - Final review fixes restore dispatch-ceiling mainline behavior and canonical OAT skill versions from `main`.
 - Final re-review fixes restore provider-neutral dispatch-ceiling config docs/schema.
-- Final review passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+- Final auto-review (v3) passed clean; a follow-up independent review (v4, `main..HEAD` scope) surfaced one pre-PR rebase action (`I1`), one converted polish fix (`m1` → `p07-t01`), and one deferred cosmetic (`m2`).
 
 **Behavioral changes (user-facing):**
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 6aee1cfa
+oat_current_task: p07-t01
+oat_last_commit: e3da477e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling: # project override for provider-aware dispatch ceilings
   provider: codex # codex | claude
@@ -31,21 +31,23 @@ oat_generated: false
 
 # Project State: pjm-init
 
-**Status:** Implementation complete; final review passed
+**Status:** Final review v4 received; one polish fix task queued before PR
 **Started:** 2026-05-29
-**Last Updated:** 2026-05-29
+**Last Updated:** 2026-06-01
 
 ## Current Phase
 
-Implementation and final review are complete. The project is ready for final PR preparation.
+Implementation is complete. The independent final review (v4) surfaced one pre-PR rebase action
+(`I1`), one converted polish fix (`m1` → `p07-t01`), and one deferred cosmetic (`m2`). Execute
+`p07-t01`, re-review the fix, then rebase onto current `main` during PR prep.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes documentation as a first-class component)
-- **Plan:** `plan.md` (complete — 6 phases, 10 tasks, sequential)
-- **Implementation:** `implementation.md` (complete; final review passed)
+- **Plan:** `plan.md` (complete — 7 phases, 11 tasks, sequential)
+- **Implementation:** `implementation.md` (in progress; `p07-t01` queued from final review v4)
 
 ## Progress
 
@@ -58,7 +60,8 @@ Implementation and final review are complete. The project is ready for final PR 
 - ✓ Phase 4 implemented, validation-fixed, and reviewed
 - ✓ Phase 5 final review fixes implemented and reviewed
 - ✓ Phase 6 final re-review fixes implemented and reviewed
-- ✓ Final review passed
+- ✓ Final auto-review (v3) passed
+- ◯ Final independent review (v4) received — `p07-t01` queued (`m1`); `I1` rebase deferred to PR prep; `m2` deferred
 
 ## Blockers
 
@@ -66,4 +69,4 @@ None
 
 ## Next Milestone
 
-Prepare the final PR for `pjm-init`.
+Execute `p07-t01`, re-review, then rebase onto current `main` and prepare the final PR for `pjm-init`.
