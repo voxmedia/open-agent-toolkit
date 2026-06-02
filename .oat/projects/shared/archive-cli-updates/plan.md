@@ -415,7 +415,7 @@ git commit -m "fix(p06-t03): correct archive AWS config precedence docs"
 | p04    | code     | passed  | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
 | p05    | code     | passed  | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
 | p06    | code     | passed  | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
-| final  | code     | passed  | 2026-06-01 | reviews/final-review-2026-06-01-v2.md               |
+| final  | code     | passed  | 2026-06-02 | reviews/final-review-2026-06-02.md                  |
 | plan   | artifact | passed  | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
 | spec   | artifact | pending | -          | -                                                   |
 | design | artifact | pending | -          | -                                                   |
