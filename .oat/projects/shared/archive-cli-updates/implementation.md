@@ -88,7 +88,7 @@ No findings deferred, rejected, or needing user direction.
 ### Review Received: final re-review
 
 **Date:** 2026-06-01
-**Review artifact:** `reviews/final-review-2026-06-01-v2.md`
+**Review artifact:** `reviews/archived/final-review-2026-06-01-v2.md`
 
 **Findings:**
 
@@ -432,7 +432,7 @@ No findings deferred, rejected, or needing user direction.
 
 #### Outstanding Items
 
-- Medium from `reviews/p01-review-2026-06-01.md`: repo sync `--force` validation still names `oat project archive sync`; carry into p04 command-string cleanup.
+- Medium from `reviews/archived/p01-review-2026-06-01.md`: repo sync `--force` validation still names `oat project archive sync`; carry into p04 command-string cleanup.
 
 #### Artifact / Design Deltas
 
@@ -465,7 +465,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- None for p02. Original p02 review findings are closed in `reviews/p02-review-2026-06-01-v2.md`.
+- None for p02. Original p02 review findings are closed in `reviews/archived/p02-review-2026-06-01-v2.md`.
 
 #### Artifact / Design Deltas
 
@@ -593,9 +593,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Artifact / Design Deltas
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted                             | Reason                                                                                                              | Source of Truth                           | Follow-up |
-| ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------- |
-| p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite intentionally removed inline archive shell details that the old contract test still asserted. | Code + `reviews/p06-review-2026-06-01.md` | None      |
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted                             | Reason                                                                                                              | Source of Truth                                    | Follow-up |
+| ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------- |
+| p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite intentionally removed inline archive shell details that the old contract test still asserted. | Code + `reviews/archived/p06-review-2026-06-01.md` | None      |
 
 ### Run 7 - 2026-06-02 00:20 UTC
 
@@ -620,7 +620,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- None. Final re-review passed in `reviews/final-review-2026-06-01-v2.md`.
+- None. Final re-review passed in `reviews/archived/final-review-2026-06-01-v2.md`.
 
 #### Artifact / Design Deltas
 
@@ -642,23 +642,23 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Extract archive sync runner into a shared module - a131167e
 - [x] p01-t02: Add `oat repo archive sync` command - 174e8427
-- [x] p01 review passed - `reviews/p01-review-2026-06-01.md`
+- [x] p01 review passed - `reviews/archived/p01-review-2026-06-01.md`
 - [x] p02-t01: Add `oat project archive` push action - 49b5f7ae
 - [x] p02 review fix: align archive push target preflight - ef32aae7
-- [x] p02 re-review passed - `reviews/p02-review-2026-06-01-v2.md`
+- [x] p02 re-review passed - `reviews/archived/p02-review-2026-06-01-v2.md`
 - [x] p03-t01: Deprecated `sync` alias + help pointer - 439c0aec
 - [x] p03 verification fix: update project archive help snapshot - 5865dc25
-- [x] p03 review passed - `reviews/p03-review-2026-06-01.md`
+- [x] p03 review passed - `reviews/archived/p03-review-2026-06-01.md`
 - [x] p04-t01: Update error strings and docs references - fca52ad1
-- [x] p04 review passed - `reviews/p04-review-2026-06-01.md`
+- [x] p04 review passed - `reviews/archived/p04-review-2026-06-01.md`
 - [x] p05-t01: Replace inline archive bash with `oat project archive` - 715bc054
-- [x] p05 review passed - `reviews/p05-review-2026-06-01.md`
+- [x] p05 review passed - `reviews/archived/p05-review-2026-06-01.md`
 - [x] p06-t01: Bump public packages and validate release - f603964f
 - [x] p06 contract-test fix: update archive skill contract expectations - 5d4ab8d8
-- [x] p06 review passed - `reviews/p06-review-2026-06-01.md`
+- [x] p06 review passed - `reviews/archived/p06-review-2026-06-01.md`
 - [x] p06-t02: (review) Fix absolute projects.root archive destination - faf964e6
 - [x] p06-t03: (review) Update archive AWS config catalog precedence - d6d4c338
-- [x] final re-review passed - `reviews/final-review-2026-06-01-v2.md`
+- [x] final re-review passed - `reviews/archived/final-review-2026-06-01-v2.md`
 
 **What changed (high level):**
 
@@ -683,7 +683,7 @@ Chronological log of implementation progress.
 
 ## Deferred Findings (p01)
 
-- Closed in p04: `oat repo archive sync --force` validation now reports `oat repo archive sync`. Source: `reviews/p01-review-2026-06-01.md`; closure verified by `reviews/p04-review-2026-06-01.md`.
+- Closed in p04: `oat repo archive sync --force` validation now reports `oat repo archive sync`. Source: `reviews/archived/p01-review-2026-06-01.md`; closure verified by `reviews/archived/p04-review-2026-06-01.md`.
 
 ---
 
@@ -691,9 +691,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted                             | Reason                                                                                                                                           | Source of Truth                           | Follow-up |
-| ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | --------- |
-| p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite made the old contract assertions stale; the test fix preserves regression coverage around the new CLI delegation contract. | Code + `reviews/p06-review-2026-06-01.md` | None      |
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted                             | Reason                                                                                                                                           | Source of Truth                                    | Follow-up |
+| ------------- | --------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------- |
+| p06-t01       | `plan.md`       | Version bumps only   | Also updated `review-skill-contracts.test.ts` | The p05 skill rewrite made the old contract assertions stale; the test fix preserves regression coverage around the new CLI delegation contract. | Code + `reviews/archived/p06-review-2026-06-01.md` | None      |
 
 ## Test Results
 

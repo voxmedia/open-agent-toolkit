@@ -409,13 +409,13 @@ git commit -m "fix(p06-t03): correct archive AWS config precedence docs"
 
 | Scope  | Type     | Status  | Date       | Artifact                                            |
 | ------ | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed  | 2026-06-01 | reviews/p01-review-2026-06-01.md                    |
-| p02    | code     | passed  | 2026-06-01 | reviews/p02-review-2026-06-01-v2.md                 |
-| p03    | code     | passed  | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
-| p04    | code     | passed  | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
-| p05    | code     | passed  | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
-| p06    | code     | passed  | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
-| final  | code     | passed  | 2026-06-02 | reviews/final-review-2026-06-02.md                  |
+| p01    | code     | passed  | 2026-06-01 | reviews/archived/p01-review-2026-06-01.md           |
+| p02    | code     | passed  | 2026-06-01 | reviews/archived/p02-review-2026-06-01-v2.md        |
+| p03    | code     | passed  | 2026-06-01 | reviews/archived/p03-review-2026-06-01.md           |
+| p04    | code     | passed  | 2026-06-01 | reviews/archived/p04-review-2026-06-01.md           |
+| p05    | code     | passed  | 2026-06-01 | reviews/archived/p05-review-2026-06-01.md           |
+| p06    | code     | passed  | 2026-06-01 | reviews/archived/p06-review-2026-06-01.md           |
+| final  | code     | passed  | 2026-06-02 | reviews/archived/final-review-2026-06-02.md         |
 | plan   | artifact | passed  | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
 | spec   | artifact | pending | -          | -                                                   |
 | design | artifact | pending | -          | -                                                   |
