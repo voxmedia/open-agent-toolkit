@@ -304,7 +304,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set archive.awsProfile <value>',
     description:
-      'AWS named profile forwarded as AWS_PROFILE to every `aws` invocation made by the archive S3 sync (completion + `oat repo archive sync`). Precedence: per-invocation flag > existing shell env > this config value.',
+      'AWS named profile forwarded as AWS_PROFILE to every `aws` invocation made by the archive S3 sync (completion + `oat repo archive sync`). Precedence: per-invocation flag > this config value > existing shell env.',
   },
   {
     key: 'archive.awsRegion',
@@ -316,7 +316,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set archive.awsRegion <value>',
     description:
-      'AWS region forwarded as AWS_REGION to every `aws` invocation made by the archive S3 sync (completion + `oat repo archive sync`). Precedence: per-invocation flag > existing shell env > this config value.',
+      'AWS region forwarded as AWS_REGION to every `aws` invocation made by the archive S3 sync (completion + `oat repo archive sync`). Precedence: per-invocation flag > this config value > existing shell env.',
   },
   {
     key: 'tools.brainstorm',

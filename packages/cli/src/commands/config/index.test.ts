@@ -1360,6 +1360,9 @@ describe('oat config', () => {
   });
 
   describe('archive.awsProfile + archive.awsRegion', () => {
+    const archiveAwsPrecedenceDescription =
+      'Precedence: per-invocation flag > this config value > existing shell env.';
+
     it('sets archive.awsProfile in config.json', async () => {
       const root = await createRepoRoot();
       const { command } = createHarness({ cwd: root });
@@ -1457,6 +1460,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain(
         'Owning command: oat config set archive.awsProfile <value>',
       );
+      expect(capture.info[0]).toContain(archiveAwsPrecedenceDescription);
       expect(capture.info[0]).toContain('Description:');
       expect(process.exitCode).toBe(0);
     });
@@ -1475,6 +1479,9 @@ describe('oat config', () => {
             key: 'archive.awsProfile',
             file: '.oat/config.json',
             scope: 'shared repo',
+            description: expect.stringContaining(
+              archiveAwsPrecedenceDescription,
+            ),
           }),
         ],
       });
@@ -1493,6 +1500,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain(
         'Owning command: oat config set archive.awsRegion <value>',
       );
+      expect(capture.info[0]).toContain(archiveAwsPrecedenceDescription);
       expect(process.exitCode).toBe(0);
     });
 
