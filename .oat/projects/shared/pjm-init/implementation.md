@@ -36,7 +36,7 @@ oat_generated: false
 
 **Total:** 11/11 tasks completed
 
-**Next task:** none — all plan tasks complete. Final re-review of the `m1` fix, then rebase onto current `main` (`I1`) and PR.
+**Next task:** none — all plan tasks complete, final review `passed`, and the `I1` rebase onto current `main` is done (lockstep `0.1.18`). Remaining: docs sync + final PR (force-push required).
 
 ---
 
