@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: e3da477e
+oat_current_task: null
+oat_last_commit: fef6d340
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -61,7 +61,7 @@ Implementation is complete. The independent final review (v4) surfaced one pre-P
 - ✓ Phase 5 final review fixes implemented and reviewed
 - ✓ Phase 6 final re-review fixes implemented and reviewed
 - ✓ Final auto-review (v3) passed
-- ◯ Final independent review (v4) received — `p07-t01` queued (`m1`); `I1` rebase deferred to PR prep; `m2` deferred
+- ✓ Final independent review (v4) received — `m1` fix (`p07-t01`) implemented + phase-gate reviewed; `I1` rebase deferred to PR prep; `m2` deferred
 
 ## Blockers
 

@@ -1,9 +1,9 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-implement
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-01
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status  | Tasks | Completed |
-| ------------------------------------- | ------- | ----- | --------- |
-| Phase 1: PM-pack templates & bundling | passed  | 2     | 2/2       |
-| Phase 2: Scaffolder & `oat pjm init`  | passed  | 2     | 2/2       |
-| Phase 3: Documentation                | passed  | 1     | 1/1       |
-| Phase 4: Release lockstep & validate  | passed  | 1     | 1/1       |
-| Phase 5: Final review fixes           | passed  | 2     | 2/2       |
-| Phase 6: Final re-review fixes        | passed  | 2     | 2/2       |
-| Phase 7: Final review polish          | pending | 1     | 0/1       |
+| Phase                                 | Status | Tasks | Completed |
+| ------------------------------------- | ------ | ----- | --------- |
+| Phase 1: PM-pack templates & bundling | passed | 2     | 2/2       |
+| Phase 2: Scaffolder & `oat pjm init`  | passed | 2     | 2/2       |
+| Phase 3: Documentation                | passed | 1     | 1/1       |
+| Phase 4: Release lockstep & validate  | passed | 1     | 1/1       |
+| Phase 5: Final review fixes           | passed | 2     | 2/2       |
+| Phase 6: Final re-review fixes        | passed | 2     | 2/2       |
+| Phase 7: Final review polish          | passed | 1     | 1/1       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
-**Next task:** `p07-t01` — strip leading blank line after template frontmatter (final review v4 finding `m1`).
+**Next task:** none — all plan tasks complete. Final re-review of the `m1` fix, then rebase onto current `main` (`I1`) and PR.
 
 ---
 
@@ -314,6 +314,38 @@ oat_generated: false
 
 ---
 
+## Phase 7: Final review polish
+
+**Status:** passed
+**Started:** 2026-06-01
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Fixed final-review v4 finding `m1`: `stripTemplateFrontmatter` now strips all leading blank lines after the closing frontmatter delimiter, so instantiated repo-reference docs begin exactly at their `# ` heading.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/pjm/init.ts` - leading-newline strip changed from `/^\r?\n/` to `/^\r?\n+/`.
+- `packages/cli/src/commands/pjm/init.test.ts` - added assertion that an instantiated doc starts at `# ` with no leading blank line.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm` — 10 passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint` — clean.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check` — clean.
+- Result: pass.
+
+**Review:** Tier-1 phase-gate review (oat-reviewer, scoped to fix commit `fef6d340`) passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+
+### Task p07-t01: (review) Strip leading blank line after template frontmatter
+
+**Status:** completed
+**Commit:** fef6d340
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -476,6 +508,38 @@ _- Outstanding Items_
 
 - Dispatch: p05 implementation used `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state Codex ceiling `xhigh`; the phase restored cross-cutting target-branch dispatch-ceiling and canonical skill behavior.
 - Dispatch: p05 review used `oat-reviewer-xhigh` with `effort_axis=selected:xhigh` for deterministic quality gate behavior.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
+### Run 6 — 2026-06-01 20:20
+
+**Branch:** feat/pjm-init
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p07   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p07: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p07 implementation used base `oat-phase-implementer` with `model_axis=selected:sonnet`; Claude dispatch ceiling unresolved/advisory (project state configures Codex only). Trivial single-file regex change + one test assertion.
+- Dispatch: p07 review used base `oat-reviewer` with `model_axis=selected:sonnet` (advisory ceiling); scoped re-review of the single fix commit `fef6d340`.
 
 #### Outstanding Items
 
@@ -691,8 +755,10 @@ disposition; this section completes that disposition.
 
 - `m2` (`packages/cli/src/commands/pjm/index.ts:49` vs `apps/oat-docs/docs/reference/cli-reference.md`): the `pjm` group help ("Manage project-management repo reference docs") and the CLI-reference row ("Initialize the project-management repo-reference surface…") use different verbs. Both are accurate; the difference is an intentional register split (group blurb vs row action) with no user impact. **Deferred** — low probability anyone needs exact-string parity; revisit only if a docs-parity pass is requested.
 
-**Next:** Execute `p07-t01` via the `oat-project-implement` skill, then re-review (scope to fix
-task), then perform the `I1` rebase as part of `oat-project-pr-final`.
+**Next:** `p07-t01` implemented and committed (`fef6d340`); Tier-1 phase-gate review passed
+(0/0/0/0). Remaining: a final lifecycle re-review (or accept the phase-gate verification — see
+cycle-cap note) to move the `final` row to `passed`, then the `I1` rebase onto current `main`
+during `oat-project-pr-final`.
 
 ---
 
