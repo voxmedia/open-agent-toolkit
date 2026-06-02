@@ -68,7 +68,7 @@ oat_generated: false
 - Run: `pnpm format`
 - Result: pass.
 
-**Review:** `reviews/p01-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/archived/p01-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p01-t01: Add current-state and decision-record starter templates
 
@@ -110,7 +110,7 @@ oat_generated: false
 - Run: `pnpm --filter @open-agent-toolkit/cli type-check`
 - Result: pass.
 
-**Review:** `reviews/p02-review-2026-05-29.md` found 1 Important issue; `reviews/p02-review-2026-05-29-v2.md` passed after the fix with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/archived/p02-review-2026-05-29.md` found 1 Important issue; `reviews/archived/p02-review-2026-05-29-v2.md` passed after the fix with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p02-t01: Implement initializeRepoReference scaffolder
 
@@ -156,7 +156,7 @@ oat_generated: false
 - Run: `pnpm build:docs`
 - Result: pass; generated docs index had no tracked drift.
 
-**Review:** `reviews/p03-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/archived/p03-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p03-t01: Document install-vs-initialize lifecycle and `oat pjm init`
 
@@ -194,7 +194,7 @@ oat_generated: false
 - Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm release:validate`
 - Result: pass.
 
-**Review:** `reviews/p04-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/archived/p04-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p04-t01: Lockstep version bump and release validation
 
@@ -247,7 +247,7 @@ oat_generated: false
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/validation/skills.test.ts`
 - Result: pass.
 
-**Review:** `reviews/p05-review-2026-05-29.md` passed; after validation-test/index follow-up, `reviews/p05-review-2026-05-29-v2.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/archived/p05-review-2026-05-29.md` passed; after validation-test/index follow-up, `reviews/archived/p05-review-2026-05-29-v2.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p05-t01: (review) Restore dispatch-ceiling mainline contract
 
@@ -299,7 +299,7 @@ oat_generated: false
 - Run: focused docs check for stale flat-key examples/schema rows in the two edited docs pages.
 - Result: pass.
 
-**Review:** `reviews/p06-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
+**Review:** `reviews/archived/p06-review-2026-05-29.md` passed with 0 Critical, 0 Important, 0 Medium, 0 Minor findings.
 
 ### Task p06-t01: (review) Bump public packages forward from target branch
 
@@ -631,7 +631,7 @@ Chronological log of implementation progress.
 ## Review Received: final (code re-review v3)
 
 **Date:** 2026-05-29
-**Review artifact:** reviews/final-review-2026-05-29-v3.md
+**Review artifact:** reviews/archived/final-review-2026-05-29-v3.md
 **Review type:** code (scope `final`) — auto-review at final HiLL checkpoint.
 
 **Findings:**
