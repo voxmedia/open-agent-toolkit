@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling:
   preset: maximum
@@ -27,19 +27,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-01T00:00:12.006Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-02T00:20:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-02T00:27:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: archive-cli-updates
 
-**Status:** Final review fixes complete; awaiting final re-review
+**Status:** Implementation and final review complete
 **Started:** 2026-06-01
 **Last Updated:** 2026-06-01
 
 ## Current Phase
 
-Implementation tasks complete; awaiting final re-review.
+Implementation tasks complete; final review passed.
 
 ## Artifacts
 
@@ -47,7 +47,7 @@ Implementation tasks complete; awaiting final re-review.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — architecture captured in `discovery.md`)
 - **Plan:** `plan.md` (complete, ready for implement)
-- **Implementation:** `implementation.md` (all planned and review-fix tasks complete)
+- **Implementation:** `implementation.md` (all planned and review-fix tasks complete; final review passed)
 
 ## Progress
 
@@ -60,7 +60,7 @@ Implementation tasks complete; awaiting final re-review.
 - ✓ Phase 4 complete (`p04`)
 - ✓ Phase 5 complete (`p05`)
 - ✓ Phase 6 complete, including final review fixes (`p06-t02`, `p06-t03`)
-- ⧗ Awaiting final re-review
+- ✓ Final review passed
 
 ## Blockers
 
@@ -68,4 +68,4 @@ None
 
 ## Next Milestone
 
-Rerun final code review
+Open final PR / closeout workflow

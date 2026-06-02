@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                             | Status    | Tasks | Completed |
-| ------------------------------------------------- | --------- | ----- | --------- |
-| Phase 1: Shared sync runner + `repo archive sync` | passed    | 2     | 2/2       |
-| Phase 2: `oat project archive` push command       | passed    | 1     | 1/1       |
-| Phase 3: Deprecated `archive sync` shim           | passed    | 1     | 1/1       |
-| Phase 4: Error strings + docs alignment           | passed    | 1     | 1/1       |
-| Phase 5: Rewrite completion Step 8                | passed    | 1     | 1/1       |
-| Phase 6: Lockstep version bump + release          | completed | 3     | 3/3       |
+| Phase                                             | Status | Tasks | Completed |
+| ------------------------------------------------- | ------ | ----- | --------- |
+| Phase 1: Shared sync runner + `repo archive sync` | passed | 2     | 2/2       |
+| Phase 2: `oat project archive` push command       | passed | 1     | 1/1       |
+| Phase 3: Deprecated `archive sync` shim           | passed | 1     | 1/1       |
+| Phase 4: Error strings + docs alignment           | passed | 1     | 1/1       |
+| Phase 5: Rewrite completion Step 8                | passed | 1     | 1/1       |
+| Phase 6: Lockstep version bump + release          | passed | 3     | 3/3       |
 
 **Total:** 9/9 tasks completed
 
@@ -82,6 +82,24 @@ No findings deferred, rejected, or needing user direction.
 - None. Both findings require code/test/doc-catalog fixes rather than accepting implementation drift.
 
 **Next:** Execute fix tasks via the `oat-project-implement` skill, then rerun final code review.
+
+---
+
+### Review Received: final re-review
+
+**Date:** 2026-06-01
+**Review artifact:** `reviews/final-review-2026-06-01-v2.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Disposition:** Passed. Prior Important and Medium final-review findings are closed; no unresolved deferred Medium or Minor findings remain.
+
+**Next:** Proceed to final PR/closeout workflow.
 
 ---
 
@@ -352,7 +370,7 @@ No findings deferred, rejected, or needing user direction.
 - The initial p06 verification failed because `review-skill-contracts.test.ts` still expected the removed inline archive shell details; the follow-up fix aligned the test with the new CLI delegation contract.
 - p06 review passed with no findings.
 - Final review added two follow-up fix tasks: absolute `projects.root` archive target handling and archive AWS config catalog precedence.
-- Final review fixes completed in `faf964e6` and `d6d4c338`; final re-review is pending.
+- Final review fixes completed in `faf964e6` and `d6d4c338`; final re-review passed with no findings.
 
 ### Task p06-t01: Bump public packages and validate release
 
@@ -602,7 +620,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Final re-review pending.
+- None. Final re-review passed in `reviews/final-review-2026-06-01-v2.md`.
 
 #### Artifact / Design Deltas
 
@@ -640,6 +658,7 @@ Chronological log of implementation progress.
 - [x] p06 review passed - `reviews/p06-review-2026-06-01.md`
 - [x] p06-t02: (review) Fix absolute projects.root archive destination - faf964e6
 - [x] p06-t03: (review) Update archive AWS config catalog precedence - d6d4c338
+- [x] final re-review passed - `reviews/final-review-2026-06-01-v2.md`
 
 **What changed (high level):**
 
@@ -680,14 +699,14 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                 | Passed | Failed | Coverage |
-| ----- | --------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | focused archive sync/repo command tests; CLI package test suite; lint; type-check; repo help smoke checks | yes    | 0      | n/a      |
-| 2     | focused project archive push/archive-utils/index tests; dry-run smoke; lint; type-check                   | yes    | 0      | n/a      |
-| 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                   | yes    | 0      | n/a      |
-| 4     | CLI package test suite; lint; type-check; docs index regeneration                                         | yes    | 0      | n/a      |
-| 5     | skill sync; project status sync check; Step 8 grep checks                                                 | yes    | 0      | n/a      |
-| 6     | full workspace build, test, lint, type-check, release validation; final-review fix focused suites         | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                                    | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | focused archive sync/repo command tests; CLI package test suite; lint; type-check; repo help smoke checks                    | yes    | 0      | n/a      |
+| 2     | focused project archive push/archive-utils/index tests; dry-run smoke; lint; type-check                                      | yes    | 0      | n/a      |
+| 3     | focused project archive tests; help snapshots; CLI package test suite; lint; type-check                                      | yes    | 0      | n/a      |
+| 4     | CLI package test suite; lint; type-check; docs index regeneration                                                            | yes    | 0      | n/a      |
+| 5     | skill sync; project status sync check; Step 8 grep checks                                                                    | yes    | 0      | n/a      |
+| 6     | full workspace build, test, lint, type-check, release validation; final-review fix focused suites and final re-review probes | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
@@ -720,7 +739,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Focused archive command vitest suites, config describe vitest suite, full CLI vitest suite, help snapshots, docs index regeneration, skill sync/status checks, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm release:validate`.
+- Focused archive command vitest suites, config describe vitest suite, full CLI vitest suite, help snapshots, docs index regeneration, skill sync/status checks, direct absolute-root resolver probe, config describe smoke checks, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm type-check`, and `pnpm release:validate`.
 
 ## References
 
