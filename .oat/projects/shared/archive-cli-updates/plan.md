@@ -338,24 +338,87 @@ git add packages/*/package.json
 git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 ```
 
+### Task p06-t02: (review) Fix absolute projects.root archive destination
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/push-runner.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `resolveCompletionArchivePath()` prefixes `archiveRepoRoot` onto an already absolute archive project path. For absolute `projects.root` values such as `/repo/.oat/projects/shared`, this can produce duplicated archive destinations like `/repo/repo/.oat/projects/archived/demo`.
+
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:293`
+
+**Step 2: Implement fix**
+
+Normalize archive paths before joining. Repo-local absolute `projects.root` values should archive under the primary repository root at `.oat/projects/archived/<projectName>`, without duplicating the repo path. External absolute roots must be handled explicitly rather than blindly prefixed with `archiveRepoRoot`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts src/commands/project/archive/push-runner.test.ts`
+
+Expected: Regression coverage passes for `resolveArchiveProjectTarget()` and `oat project archive --dry-run` with an absolute `projects.root` / `OAT_PROJECTS_ROOT`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/archive/push-runner.test.ts
+git commit -m "fix(p06-t02): handle absolute archive project roots"
+```
+
+---
+
+### Task p06-t03: (review) Update archive AWS config catalog precedence
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat config describe archive.awsProfile` and `archive.awsRegion` describe precedence as `flag > shell env > config`, while implementation, tests, and docs use `flag > config > shell env`.
+
+Location: `packages/cli/src/commands/config/index.ts:307`
+
+**Step 2: Implement fix**
+
+Update both catalog descriptions to `per-invocation flag > this config value > existing shell env`, and add or adjust describe assertions so the catalog cannot drift from the archive credential contract again.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+
+Expected: Config describe tests pass and assert the corrected precedence text for both keys.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
+git commit -m "fix(p06-t03): correct archive AWS config precedence docs"
+```
+
 ---
 
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                            |
-| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed  | 2026-06-01 | reviews/p01-review-2026-06-01.md                    |
-| p02    | code     | passed  | 2026-06-01 | reviews/p02-review-2026-06-01-v2.md                 |
-| p03    | code     | passed  | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
-| p04    | code     | passed  | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
-| p05    | code     | passed  | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
-| p06    | code     | passed  | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
-| final  | code     | pending | -          | -                                                   |
-| plan   | artifact | passed  | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
-| spec   | artifact | pending | -          | -                                                   |
-| design | artifact | pending | -          | -                                                   |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed      | 2026-06-01 | reviews/p01-review-2026-06-01.md                    |
+| p02    | code     | passed      | 2026-06-01 | reviews/p02-review-2026-06-01-v2.md                 |
+| p03    | code     | passed      | 2026-06-01 | reviews/p03-review-2026-06-01.md                    |
+| p04    | code     | passed      | 2026-06-01 | reviews/p04-review-2026-06-01.md                    |
+| p05    | code     | passed      | 2026-06-01 | reviews/p05-review-2026-06-01.md                    |
+| p06    | code     | passed      | 2026-06-01 | reviews/p06-review-2026-06-01.md                    |
+| final  | code     | fixes_added | 2026-06-01 | reviews/archived/final-review-2026-06-01.md         |
+| plan   | artifact | passed      | 2026-06-01 | reviews/archived/artifact-plan-review-2026-06-01.md |
+| spec   | artifact | pending     | -          | -                                                   |
+| design | artifact | pending     | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -370,11 +433,11 @@ git commit -m "chore(p06-t01): lockstep version bump for archive CLI changes"
 - Phase 3: 1 task — deprecated `oat project archive sync` shim
 - Phase 4: 1 task — error strings + docs alignment
 - Phase 5: 1 task — rewrite completion Step 8 + skill version bump
-- Phase 6: 1 task — lockstep version bump + release validation
+- Phase 6: 3 tasks — lockstep version bump + release validation + final review fixes
 
-**Total: 7 tasks**
+**Total: 9 tasks**
 
-All implementation tasks are complete. The project is at the final code review checkpoint before merge.
+Final review fixes have been added. The project is ready to resume implementation at `p06-t02`.
 
 ---
 

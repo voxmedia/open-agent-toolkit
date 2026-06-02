@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-01
-oat_current_task_id: null
+oat_current_task_id: p06-t02
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                             | Status | Tasks | Completed |
-| ------------------------------------------------- | ------ | ----- | --------- |
-| Phase 1: Shared sync runner + `repo archive sync` | passed | 2     | 2/2       |
-| Phase 2: `oat project archive` push command       | passed | 1     | 1/1       |
-| Phase 3: Deprecated `archive sync` shim           | passed | 1     | 1/1       |
-| Phase 4: Error strings + docs alignment           | passed | 1     | 1/1       |
-| Phase 5: Rewrite completion Step 8                | passed | 1     | 1/1       |
-| Phase 6: Lockstep version bump + release          | passed | 1     | 1/1       |
+| Phase                                             | Status      | Tasks | Completed |
+| ------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 1: Shared sync runner + `repo archive sync` | passed      | 2     | 2/2       |
+| Phase 2: `oat project archive` push command       | passed      | 1     | 1/1       |
+| Phase 3: Deprecated `archive sync` shim           | passed      | 1     | 1/1       |
+| Phase 4: Error strings + docs alignment           | passed      | 1     | 1/1       |
+| Phase 5: Rewrite completion Step 8                | passed      | 1     | 1/1       |
+| Phase 6: Lockstep version bump + release          | in_progress | 3     | 1/3       |
 
-**Total:** 7/7 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
@@ -55,6 +55,33 @@ oat_generated: false
 - `M2` resolve_in_artifact — reworded `## Implementation Complete` to state readiness is post-implementation, not current.
 
 No findings deferred, rejected, or needing user direction.
+
+---
+
+### Review Received: final
+
+**Date:** 2026-06-01
+**Review artifact:** `reviews/archived/final-review-2026-06-01.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Disposition:** Both findings converted to review-fix tasks:
+
+- `I1` code_fix_required — `p06-t02` fixes duplicated archive destinations for absolute `projects.root` values.
+- `M1` code_fix_required — `p06-t03` corrects archive AWS credential precedence text in `oat config describe`.
+
+**New tasks added:** `p06-t02`, `p06-t03`
+
+**Design drift / artifact alignment notes:**
+
+- None. Both findings require code/test/doc-catalog fixes rather than accepting implementation drift.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill, then rerun final code review.
 
 ---
 
@@ -295,7 +322,7 @@ No findings deferred, rejected, or needing user direction.
 
 ## Phase 6: Lockstep version bumps + release validation
 
-**Status:** passed
+**Status:** in_progress
 **Started:** 2026-06-01
 
 ### Phase Summary
@@ -324,6 +351,7 @@ No findings deferred, rejected, or needing user direction.
 
 - The initial p06 verification failed because `review-skill-contracts.test.ts` still expected the removed inline archive shell details; the follow-up fix aligned the test with the new CLI delegation contract.
 - p06 review passed with no findings.
+- Final review added two follow-up fix tasks: absolute `projects.root` archive target handling and archive AWS config catalog precedence.
 
 ### Task p06-t01: Bump public packages and validate release
 
@@ -333,6 +361,28 @@ No findings deferred, rejected, or needing user direction.
 **Notes:**
 
 - Bumped all five public packages to `0.1.17`; updated the stale archive skill contract test; full build/test/lint/type-check/release validation passed.
+
+---
+
+### Task p06-t02: (review) Fix absolute projects.root archive destination
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Final review Important finding. Fix duplicated archive destinations for absolute `projects.root` values and add regression coverage.
+
+---
+
+### Task p06-t03: (review) Update archive AWS config catalog precedence
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Final review Medium finding. Align `oat config describe` precedence text with implementation and docs.
 
 ---
 
@@ -556,6 +606,8 @@ Chronological log of implementation progress.
 - [x] p06-t01: Bump public packages and validate release - f603964f
 - [x] p06 contract-test fix: update archive skill contract expectations - 5d4ab8d8
 - [x] p06 review passed - `reviews/p06-review-2026-06-01.md`
+- [ ] p06-t02: (review) Fix absolute projects.root archive destination - next
+- [ ] p06-t03: (review) Update archive AWS config catalog precedence - pending
 
 **What changed (high level):**
 
