@@ -105,7 +105,7 @@ function stripTemplateFrontmatter(content: string): string {
   }
 
   const afterFrontmatter = content.slice(end + '\n---'.length);
-  return afterFrontmatter.replace(/^\r?\n/, '');
+  return afterFrontmatter.replace(/^\r?\n+/, '');
 }
 
 async function writeFileIfMissing(

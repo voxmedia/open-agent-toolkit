@@ -161,6 +161,22 @@ describe('initializeRepoReference', () => {
     expect(currentState).toContain('# current-state.md');
   });
 
+  it('instantiated reference docs start at the heading with no leading blank lines', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const referenceRoot = join(root, 'repo', 'reference');
+    await seedTemplates(join(assetsRoot, 'templates'));
+
+    await initializeRepoReference({ assetsRoot, referenceRoot });
+
+    const decisionRecord = await readFile(
+      join(referenceRoot, 'decision-record.md'),
+      'utf8',
+    );
+    expect(decisionRecord.startsWith('# ')).toBe(true);
+  });
+
   it('throws an actionable error when a template is missing from both sources', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
