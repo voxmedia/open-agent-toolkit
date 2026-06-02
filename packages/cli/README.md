@@ -36,7 +36,8 @@ Additional useful entry points:
 - `oat project status --json`
 - `oat project list --json`
 - `oat project complete-state /path/to/project`
-- `oat project archive sync`
+- `oat project archive /path/to/project`
+- `oat repo archive sync`
 - `oat doctor`
 
 ## Inspection Commands

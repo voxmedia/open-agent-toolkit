@@ -20,7 +20,7 @@ Key outcomes:
 
 - Added shared archive settings in `.oat/config.json`: `archive.s3Uri`, `archive.s3SyncOnComplete`, and `archive.summaryExportPath`.
 - `oat-project-complete` still archives locally, but can now upload dated archive snapshots to a repo-scoped S3 path and export dated `summary.md` snapshots into a durable tracked directory.
-- Added `oat project archive sync [project-name]` so archived projects can be synced back down from S3 into `.oat/projects/archived/`, selecting the latest dated remote snapshot for each project and materializing it into the bare local project archive path.
+- Added archive sync so archived projects can be synced back down from S3 into `.oat/projects/archived/`, selecting the latest dated remote snapshot for each project and materializing it into the bare local project archive path. Current command: `oat repo archive sync [project-name]`; the original `oat project archive sync` path is deprecated.
 - Added warning/failure shaping around AWS CLI detection and access so completion remains local-first while explicit sync commands fail fast.
 
 Links:

@@ -1,6 +1,6 @@
 ---
 name: oat-wrap-up
-version: 1.0.0
+version: 1.0.1
 description: Use when preparing a shipping digest or weekly/biweekly wrap-up summarizing OAT projects and merged PRs over a time window. Reads local summary files and GitHub PR metadata; writes a version-controlled markdown report.
 argument-hint: '[--since YYYY-MM-DD] [--until YYYY-MM-DD] [--past-week|--past-2-weeks|--past-month] [--output <path>] [--dry-run]'
 disable-model-invocation: false
@@ -26,7 +26,7 @@ Don't use when:
 
 - You need a single specific project's summary — use `oat-project-summary` instead.
 - You want an always-current status view without a fixed window — the wrap-up is window-scoped by design.
-- Archived projects from teammates have not been hydrated locally yet — run `oat project archive sync` first so the digest reflects the full team's work. The skill warns if this looks undone but will not auto-run sync.
+- Archived projects from teammates have not been hydrated locally yet — run `oat repo archive sync` first so the digest reflects the full team's work. The skill warns if this looks undone but will not auto-run sync.
 
 ## Arguments
 
@@ -45,7 +45,7 @@ Exactly one time-range specifier is required: either a named range (`--past-week
 ## Prerequisites
 
 - Repository is an OAT project (contains `.oat/`).
-- For cross-teammate visibility: `oat project archive sync` has been run recently so teammates' archived projects are hydrated into `.oat/projects/archived/`. The skill warns if `archive.s3Uri` is configured but the local archive has no `.oat-archive-source.json` metadata files.
+- For cross-teammate visibility: `oat repo archive sync` has been run recently so teammates' archived projects are hydrated into `.oat/projects/archived/`. The skill warns if `archive.s3Uri` is configured but the local archive has no `.oat-archive-source.json` metadata files.
 - `gh` CLI authenticated for the current repository (needed for merged-PR fetching via `gh api graphql`).
 
 ## Mode Assertion
@@ -57,7 +57,7 @@ Exactly one time-range specifier is required: either a named range (`--past-week
 **BLOCKED Activities:**
 
 - No modifying OAT project summaries, plan files, or other implementation artifacts.
-- No auto-running `oat project archive sync` — it is a user-gated prerequisite, not a side effect of this skill.
+- No auto-running `oat repo archive sync` — it is a user-gated prerequisite, not a side effect of this skill.
 - No network writes of any kind. The GitHub API is read-only.
 
 **ALLOWED Activities:**
@@ -71,7 +71,7 @@ Exactly one time-range specifier is required: either a named range (`--past-week
 If you catch yourself:
 
 - About to modify a summary file → STOP, the skill is strictly read-only against summaries.
-- About to auto-run `oat project archive sync` → STOP, the skill only warns; the user runs sync themselves.
+- About to auto-run `oat repo archive sync` → STOP, the skill only warns; the user runs sync themselves.
 - About to string-concatenate summary prose verbatim → STOP, the report is a synthesis, not a concatenation.
 - About to skip the prerequisite warning when the local archive is empty and S3 is configured → STOP, emit the warning first.
 
@@ -123,12 +123,12 @@ S3_URI="$(oat config get archive.s3Uri 2>/dev/null || true)"
 if [ -n "$S3_URI" ] && [ -d "$ARCHIVE_DIR" ]; then
   if ! find "$ARCHIVE_DIR" -maxdepth 2 -name '.oat-archive-source.json' 2>/dev/null | grep -q . ; then
     printf '⚠️  archive.s3Uri is configured but no archived snapshots are hydrated locally.\n'
-    printf '    Run "oat project archive sync" first so teammates archived projects are visible to the wrap-up.\n'
+    printf '    Run "oat repo archive sync" first so teammates archived projects are visible to the wrap-up.\n'
     printf '    (Proceeding with active projects and the version-controlled summaries directory only.)\n'
   fi
 elif [ -n "$S3_URI" ]; then
   printf '⚠️  archive.s3Uri is configured but %s does not exist.\n' "$ARCHIVE_DIR"
-  printf '    Run "oat project archive sync" first so archived projects are available.\n'
+  printf '    Run "oat repo archive sync" first so archived projects are available.\n'
   printf '    (Proceeding with active projects and the version-controlled summaries directory only.)\n'
 fi
 ```
@@ -362,7 +362,7 @@ so I can review before committing it.
 
 - Report skeleton: `references/report-template.md`
 - Automation patterns (Claude Code `CronCreate`, Codex host scheduling, plain cron): `references/automation-recipes.md`
-- Prerequisite command: `oat project archive sync` at `packages/cli/src/commands/project/archive/index.ts:244`
+- Prerequisite command: `oat repo archive sync` at `packages/cli/src/commands/repo/archive/index.ts`
 - Merged-PR query pattern: `packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts:198-205`
 - Summary frontmatter schema: `.oat/templates/summary.md`
 - Config key: `archive.wrapUpExportPath` (managed via `oat config set archive.wrapUpExportPath <path>`)
@@ -377,7 +377,7 @@ so I can review before committing it.
 **Report is empty or "no summaries found":**
 
 - The window may genuinely have no activity — double-check `SINCE` and `UNTIL`.
-- Check whether teammates' archived projects are hydrated: `ls .oat/projects/archived/` should list directories. If empty and `archive.s3Uri` is configured, run `oat project archive sync` first.
+- Check whether teammates' archived projects are hydrated: `ls .oat/projects/archived/` should list directories. If empty and `archive.s3Uri` is configured, run `oat repo archive sync` first.
 - Verify that `.oat/projects/*/*/summary.md` and/or `${SUMMARY_EXPORT_PATH}/*.md` contain files whose `oat_last_updated` falls inside the window.
 
 **Report is missing PRs that clearly merged in the window:**

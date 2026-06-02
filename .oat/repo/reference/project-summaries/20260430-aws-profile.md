@@ -15,12 +15,12 @@ oat_summary_includes_revisions: ['p-rev1']
 
 ## Overview
 
-Before this project, the S3 archive sync that runs during `oat-project-complete` (and the standalone `oat project archive sync` command) used whatever ambient AWS credentials happened to be in the shell — there was no way to scope a different AWS profile or region per repo, and no way to override profile/region for a single run. This project added per-repo config keys and per-invocation CLI flags so users can route the archive sync through a specific AWS identity without exporting environment variables in their shell.
+Before this project, the S3 archive sync that runs during `oat-project-complete` and the standalone archive hydration command used whatever ambient AWS credentials happened to be in the shell — there was no way to scope a different AWS profile or region per repo, and no way to override profile/region for a single run. This project added per-repo config keys and per-invocation CLI flags so users can route the archive sync through a specific AWS identity without exporting environment variables in their shell.
 
 ## What Was Implemented
 
 - **Two new repo config keys** — `archive.awsProfile` and `archive.awsRegion`. Both round-trip through `oat config set` / `get` / `describe` / `list` and through the resolver. Empty strings normalize to "unset" (mirrors the existing `archive.s3Uri` pattern).
-- **Two new CLI flags** on `oat project archive sync` — `--profile <profile>` and `--region <region>`. Both override the config and the shell env for that single invocation.
+- **Two new CLI flags** on archive sync — `--profile <profile>` and `--region <region>`. Both override the config and the shell env for that single invocation. Current command: `oat repo archive sync`.
 - **Non-clobbering env merge at the spawn boundary.** A new file-private `buildAwsEnv` helper in `archive-utils.ts` layers `AWS_PROFILE` and `AWS_REGION` into a cloned env only when the parent env doesn't already provide them. Every `aws` execFile callsite (`aws --version`, `aws sts get-caller-identity`, `aws s3 ls`, `aws s3 sync`) routes through it.
 - **End-to-end precedence** — flag > shell env > config — implemented for both code paths. The sync command builds the precedence by layering the flag onto the parent env up-front (`resolveSyncAwsEnv` in `commands/project/archive/index.ts`), then passes that env into `ensureS3ArchiveAccess` so the preflight `aws sts get-caller-identity` honors flags too.
 - **Completion path stays config-only** (discovery decision #5). `archiveProjectOnCompletion` accepts `awsProfile` / `awsRegion` only as config-derived options; no per-invocation flag, no skill-text change to `oat-project-complete`.

@@ -56,7 +56,7 @@
     - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase-subagent dispatch, tier detection, runtime dispatch selection, bounded fix loop, plan-declared parallelism, and dry-run mode in oat-project-implement v2.0.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
-    - [Repository Analysis](workflows/projects/repo-analysis.md) — Repository-level analysis commands for collecting and triaging PR review comments.
+    - [Repository PR Comment Analysis](workflows/projects/repo-analysis.md) — Repository-level PR comment analysis commands for collecting and triaging review feedback.
     - [Reviews](workflows/projects/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.
     - [Project Splitting](workflows/projects/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.

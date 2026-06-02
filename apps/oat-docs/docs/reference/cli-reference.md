@@ -7,7 +7,7 @@ description: Scannable reference for the current OAT CLI surface, with links to 
 
 Use this page when you need a quick map of the OAT CLI rather than the full command-by-command docs. It is intentionally shallow: each section points to the owning page that documents the detailed behavior.
 
-The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oat tools`, docs commands, and repo-analysis commands without adopting the full project workflow.
+The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oat tools`, docs commands, repo archive sync, and repo-analysis commands without adopting the full project workflow.
 
 ## Contents
 
@@ -18,7 +18,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 - [Provider Sync](../provider-sync/index.md) - Sync behavior, provider capabilities, config, and drift management.
 - [Agentic Workflows](../workflows/index.md) - Tracked project execution, skills, ideas, and workflow routing.
 - [Workflow & Projects](../workflows/projects/index.md) - Project lifecycle, artifacts, reviews, PR flow, and state-machine docs.
-- [Repository Analysis](../workflows/projects/repo-analysis.md) - Detailed `oat repo pr-comments ...` behavior.
+- [Repository PR Comment Analysis](../workflows/projects/repo-analysis.md) - Detailed `oat repo pr-comments ...` behavior.
 
 ## Command Groups
 
@@ -32,10 +32,10 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 | `oat state ...` / `oat index ...` / `internal`  | Repo dashboard refresh, repo indexing, validation helpers, and diagnostics.                                                             | [Config and Local State](../cli-utilities/config-and-local-state.md)           |
 | `oat docs ...`                                  | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints.                                               | [Docs Tooling Commands](../docs-tooling/commands.md)                           |
 | `oat status` / `oat sync` / `oat providers ...` | Provider sync, drift inspection, provider configuration, and adoption behavior.                                                         | [Provider Sync](../provider-sync/index.md)                                     |
-| `oat project ...` / `oat cleanup ...`           | Project scaffolding, active-project status inspection, tracked-project listing, plan validation, and project/artifact cleanup commands. | [Workflow & Projects](../workflows/projects/index.md)                          |
-| `oat repo ...`                                  | Repository-level analysis workflows, currently centered on PR comments.                                                                 | [Repository Analysis](../workflows/projects/repo-analysis.md)                  |
+| `oat project ...` / `oat cleanup ...`           | Project scaffolding, active-project status inspection, tracked-project listing, plan validation, archive creation, and project/artifact cleanup commands. | [Workflow & Projects](../workflows/projects/index.md)                          |
+| `oat repo ...`                                  | Repository-level workflows such as archive sync and PR-comment analysis.                                                                 | [Repository Analysis](../workflows/projects/repo-analysis.md)                  |
 
-Notable inspection commands introduced in the current CLI surface:
+Notable commands introduced in the current CLI surface:
 
 - `oat config dump --json` - merged config with source attribution
 - `oat project status --json` - full parsed state for the active tracked project. **Stable contract for skills:** the JSON output is a typed read interface for OAT skills; the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`. Removing or renaming any of `project.{name, path, phase, phaseStatus, workflowMode, docsUpdated, lastCommit, prStatus, prUrl}` is a breaking change and will fail the contract test.
@@ -44,6 +44,8 @@ Notable inspection commands introduced in the current CLI surface:
 - `oat project status --shell NAME=path ...` - print shell-safe assignments for one or more fields from one status read, e.g. `WORKFLOW_MODE='quick'`. This is the preferred multi-field read API for skills. See [Writing Skills → Reading project state](../contributing/skills.md#reading-project-state) for examples and the `npx`-backed `oat` shim contract.
 - `oat project list --json` - summary state for tracked projects under the configured projects root
 - `oat project complete-state <project-path>` - apply the canonical completed-state mutation to a project's `state.md`; used by `oat-project-complete` during lifecycle closeout
+- `oat project archive [project-path]` - archive a tracked project through the same local move, summary export, and optional S3 upload path used by completion. When omitted, the project path falls back to the active project.
+- `oat repo archive sync [project-name]` - hydrate archived project snapshots from the configured repo-scoped S3 archive into `.oat/projects/archived/`. The old `oat project archive sync` path remains as a deprecated shim.
 - `oat project validate-plan --project-path <path>` - validates `oat_plan_parallel_groups` metadata in `plan.md`; exits non-zero on invalid. See [Implementation Execution](../workflows/projects/implementation-execution.md#validating-plan-metadata).
 - `oat project set-mode` — deprecated no-op. Execution mode is no longer user-selectable; emits a deprecation warning and preserves the `--json` contract.
 

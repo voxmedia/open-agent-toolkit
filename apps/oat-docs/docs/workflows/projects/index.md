@@ -39,4 +39,4 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 - [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.
 - [Reviews](reviews.md) - How review request/receive loops work inside OAT projects.
 - [PR Flow](pr-flow.md) - Progress and final PR generation expectations.
-- [Repository Analysis](repo-analysis.md) - Repo-wide PR comment collection and triage workflows.
+- [Repository PR Comment Analysis](repo-analysis.md) - Repo-wide PR comment collection and triage workflows.

@@ -1,11 +1,13 @@
 ---
-title: Repository Analysis
-description: 'Repository-level analysis commands for collecting and triaging PR review comments.'
+title: Repository PR Comment Analysis
+description: 'Repository-level PR comment analysis commands for collecting and triaging review feedback.'
 ---
 
-# Repository Analysis (`oat repo`)
+# Repository PR Comment Analysis (`oat repo pr-comments`)
 
-The `oat repo` command group provides repository-level analysis and insight tools. These commands operate across merged pull requests rather than on individual PRs.
+The `oat repo pr-comments` command group provides repository-level review analysis tools. These commands operate across merged pull requests rather than on individual PRs.
+
+This page covers the PR-comment analysis surface only. Other repository-level commands, such as `oat repo archive sync`, are covered in [Lifecycle](lifecycle.md#completion-archive-behavior) and [Configuration](../../cli-utilities/configuration.md#shared-repo-config-you-will-touch-most-often).
 
 ## Quick Look
 
@@ -100,3 +102,4 @@ Both commands accept dependency injection for testability:
 
 - Source: `packages/cli/src/commands/repo/pr-comments/`
 - Types: `packages/cli/src/commands/repo/pr-comments/collect/pr-comments.types.ts`
+- Archive sync: [Lifecycle](lifecycle.md#completion-archive-behavior) and [Configuration](../../cli-utilities/configuration.md#shared-repo-config-you-will-touch-most-often)
