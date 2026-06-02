@@ -9,7 +9,10 @@ import type { OatConfig, OatLocalConfig } from '@config/oat-config';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ArchiveProjectTarget } from './archive-utils';
+import {
+  resolveArchiveProjectTarget,
+  type ArchiveProjectTarget,
+} from './archive-utils';
 import { createProjectArchiveCommand } from './index';
 import {
   runArchivePushCommand,
@@ -312,6 +315,54 @@ describe('oat project archive push', () => {
     expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
     expect(capture.info[0]).toBe(
       'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project-20260401123456`.',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('previews an absolute OAT_PROJECTS_ROOT archive target without duplicating the repo root', async () => {
+    const cwd = '/tmp/workspace/open-agent-toolkit';
+    const projectsRoot = join(cwd, '.oat', 'projects', 'shared');
+    const { archiveProjectOnCompletion, capture, context, dependencies } =
+      createHarness({
+        cwd,
+        projectsRoot,
+        processEnv: {
+          PATH: '/usr/bin',
+          OAT_PROJECTS_ROOT: projectsRoot,
+        },
+      });
+    dependencies.resolveProjectsRoot = vi.fn(async (_repoRoot, env) => {
+      return env.OAT_PROJECTS_ROOT ?? '.oat/projects/shared';
+    });
+    dependencies.resolveArchiveProjectTarget = vi.fn(
+      async (options, targetDependencies) => {
+        return resolveArchiveProjectTarget(options, {
+          ...targetDependencies,
+          gitExecFile: async () => {
+            const error = new Error('not ignored') as NodeJS.ErrnoException;
+            error.code = 1;
+            throw error;
+          },
+        });
+      },
+    );
+
+    await runArchivePushCommand(
+      dependencies,
+      undefined,
+      { dryRun: true },
+      context,
+    );
+
+    expect(dependencies.resolveProjectsRoot).toHaveBeenCalledWith(
+      cwd,
+      expect.objectContaining({
+        OAT_PROJECTS_ROOT: projectsRoot,
+      }),
+    );
+    expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+    expect(capture.info[0]).toBe(
+      'Dry-run: would archive project `demo-project` from `/tmp/workspace/open-agent-toolkit/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project`.',
     );
     expect(process.exitCode).toBe(0);
   });

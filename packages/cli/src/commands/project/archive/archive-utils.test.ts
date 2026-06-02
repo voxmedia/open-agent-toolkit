@@ -96,6 +96,106 @@ describe('archive utils', () => {
     ).toBe('.oat/projects/archived/demo-project');
   });
 
+  it('resolves repo-local absolute projects roots under the primary checkout', async () => {
+    const tempRoot = await createRepoRoot();
+    const mainRepoRoot = join(tempRoot, 'main-repo');
+    const worktreeRoot = join(tempRoot, 'feature-worktree');
+    const projectsRoot = join(worktreeRoot, '.oat', 'projects', 'shared');
+
+    await mkdir(join(mainRepoRoot, '.git'), { recursive: true });
+    await mkdir(projectsRoot, { recursive: true });
+
+    const gitExecFile = vi.fn(async (file: string, args: string[]) => {
+      if (
+        file === 'git' &&
+        args[0] === 'check-ignore' &&
+        args[1] === '--quiet' &&
+        args[2] === '--no-index' &&
+        args[3] === '.oat/projects/archived/demo'
+      ) {
+        return {
+          stdout: '',
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-common-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git'),
+          stderr: '',
+        };
+      }
+      if (
+        file === 'git' &&
+        args[0] === 'rev-parse' &&
+        args[1] === '--git-dir'
+      ) {
+        return {
+          stdout: join(mainRepoRoot, '.git', 'worktrees', 'feature-worktree'),
+          stderr: '',
+        };
+      }
+
+      throw new Error(`Unexpected command: ${file} ${args.join(' ')}`);
+    });
+
+    const target = await resolveArchiveProjectTarget(
+      {
+        repoRoot: worktreeRoot,
+        projectsRoot,
+        projectName: 'demo',
+      },
+      {
+        gitExecFile,
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
+    );
+
+    expect(target.archiveProjectPath).toBe('.oat/projects/archived/demo');
+    expect(target.archivePath).toBe(
+      join(mainRepoRoot, '.oat', 'projects', 'archived', 'demo'),
+    );
+    expect(target.archivePathIsGitignored).toBe(true);
+    expect(target.primaryRepoRoot).toBe(mainRepoRoot);
+  });
+
+  it('resolves external absolute projects roots without prefixing the repo root', async () => {
+    const tempRoot = await createRepoRoot();
+    const repoRoot = join(tempRoot, 'repo');
+    const projectsRoot = join(tempRoot, 'external-projects', 'shared');
+
+    await mkdir(repoRoot, { recursive: true });
+    await mkdir(projectsRoot, { recursive: true });
+
+    const gitExecFile = vi.fn(async () => {
+      const error = new Error('not ignored') as NodeJS.ErrnoException;
+      error.code = 1;
+      throw error;
+    });
+
+    const target = await resolveArchiveProjectTarget(
+      {
+        repoRoot,
+        projectsRoot,
+        projectName: 'demo',
+      },
+      {
+        gitExecFile,
+        timestamp: () => '2026-04-01T12:34:56Z',
+      },
+    );
+
+    expect(target.archiveProjectPath).toBe(
+      join(tempRoot, 'external-projects', 'archived', 'demo'),
+    );
+    expect(target.archivePath).toBe(
+      join(tempRoot, 'external-projects', 'archived', 'demo'),
+    );
+  });
+
   it('archives the project locally during completion', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');

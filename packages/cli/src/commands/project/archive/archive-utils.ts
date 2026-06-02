@@ -1,6 +1,15 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { rm, writeFile } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, posix as path } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  posix as path,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import { promisify } from 'node:util';
 
 import { CliError } from '@errors/cli-error';
@@ -285,15 +294,51 @@ export function resolveLocalArchiveProjectPath(
   return path.join(projectsBase, 'archived', projectName);
 }
 
-function resolveCompletionArchivePath(
-  archiveRepoRoot: string,
+function normalizePathForConfig(pathValue: string): string {
+  return pathValue.replaceAll('\\', '/');
+}
+
+function isInsidePath(parentPath: string, childPath: string): boolean {
+  const relativePath = relative(parentPath, childPath);
+  return (
+    relativePath === '' ||
+    (!relativePath.startsWith(`..${sep}`) &&
+      relativePath !== '..' &&
+      !isAbsolute(relativePath))
+  );
+}
+
+function resolveArchiveProjectPath(
+  repoRoot: string,
   projectsRoot: string,
   projectName: string,
 ): string {
-  return join(
-    archiveRepoRoot,
-    resolveLocalArchiveProjectPath(projectsRoot, projectName),
+  const archiveProjectPath = resolveLocalArchiveProjectPath(
+    projectsRoot,
+    projectName,
   );
+  if (!isAbsolute(archiveProjectPath)) {
+    return archiveProjectPath;
+  }
+
+  const resolvedRepoRoot = resolve(repoRoot);
+  const resolvedArchiveProjectPath = resolve(archiveProjectPath);
+  if (!isInsidePath(resolvedRepoRoot, resolvedArchiveProjectPath)) {
+    return resolvedArchiveProjectPath;
+  }
+
+  return normalizePathForConfig(
+    relative(resolvedRepoRoot, resolvedArchiveProjectPath),
+  );
+}
+
+function resolveCompletionArchivePath(
+  archiveRepoRoot: string,
+  archiveProjectPath: string,
+): string {
+  return isAbsolute(archiveProjectPath)
+    ? archiveProjectPath
+    : join(archiveRepoRoot, archiveProjectPath);
 }
 
 function resolveGitPath(repoRoot: string, gitPath: string): string {
@@ -426,7 +471,8 @@ export async function resolveArchiveProjectTarget(
   options: ResolveArchiveProjectTargetOptions,
   dependencies: ResolveArchiveProjectTargetDependencies = {},
 ): Promise<ArchiveProjectTarget> {
-  const archiveProjectPath = resolveLocalArchiveProjectPath(
+  const archiveProjectPath = resolveArchiveProjectPath(
+    options.repoRoot,
     options.projectsRoot,
     options.projectName,
   );
@@ -467,8 +513,7 @@ export async function resolveArchiveProjectTarget(
 
   const archiveBasePath = resolveCompletionArchivePath(
     archiveRepoRoot,
-    options.projectsRoot,
-    options.projectName,
+    archiveProjectPath,
   );
   const archivePath = await resolveUniqueArchivePath(archiveBasePath, {
     dirExists: dependencies.dirExists,
