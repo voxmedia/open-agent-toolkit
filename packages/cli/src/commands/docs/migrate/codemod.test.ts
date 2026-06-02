@@ -10,10 +10,19 @@ describe('convertAdmonitions', () => {
     expect(result.admonitionsConverted).toBe(1);
   });
 
-  it('converts an admonition with a custom title', () => {
+  it('promotes a custom title to a bold first body line', () => {
     const input = '!!! warning "Watch out"\n    Be careful here.\n';
     const result = convertAdmonitions(input);
-    expect(result.content).toBe('> [!WARNING] Watch out\n> Be careful here.\n');
+    expect(result.content).toBe(
+      '> [!WARNING]\n> **Watch out**\n>\n> Be careful here.\n',
+    );
+    expect(result.admonitionsConverted).toBe(1);
+  });
+
+  it('promotes a custom title even when the admonition has no body', () => {
+    const input = '!!! note "Just a title"\n';
+    const result = convertAdmonitions(input);
+    expect(result.content).toBe('> [!NOTE]\n> **Just a title**\n');
     expect(result.admonitionsConverted).toBe(1);
   });
 
@@ -65,7 +74,7 @@ describe('convertAdmonitions', () => {
       '!!! note\n    First note.\n\n!!! warning "Title"\n    Second warning.\n';
     const result = convertAdmonitions(input);
     expect(result.content).toBe(
-      '> [!NOTE]\n> First note.\n\n> [!WARNING] Title\n> Second warning.\n',
+      '> [!NOTE]\n> First note.\n\n> [!WARNING]\n> **Title**\n>\n> Second warning.\n',
     );
     expect(result.admonitionsConverted).toBe(2);
   });
@@ -81,7 +90,7 @@ describe('convertAdmonitions', () => {
     const input = '??? tip "Click to expand"\n    Hidden content.\n';
     const result = convertAdmonitions(input);
     expect(result.content).toBe(
-      '> [!TIP] Click to expand\n> Hidden content.\n',
+      '> [!TIP]\n> **Click to expand**\n>\n> Hidden content.\n',
     );
     expect(result.admonitionsConverted).toBe(1);
   });

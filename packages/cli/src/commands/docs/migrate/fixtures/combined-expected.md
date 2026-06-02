@@ -7,7 +7,9 @@ description: ""
 
 The OAT CLI provides a comprehensive API for tool management.
 
-> [!IMPORTANT] Breaking Change
+> [!IMPORTANT]
+> **Breaking Change**
+>
 > The `v2` API removes support for legacy tool formats.
 > Please migrate your tools before upgrading.
 
@@ -22,7 +24,9 @@ const client = new OATClient({
 });
 ```
 
-> [!TIP] Usage Example
+> [!TIP]
+> **Usage Example**
+>
 > Here's how to list your tools:
 >
 > ```typescript

@@ -40,10 +40,22 @@ export function convertAdmonitions(content: string): CodemodResult {
     const title = match[2] ?? undefined;
     const gfmType = ADMONITION_TYPE_MAP[typeName] ?? 'NOTE';
 
-    const header = title ? `> [!${gfmType}] ${title}` : `> [!${gfmType}]`;
-    output.push(header);
+    // GitHub-style alerts (and the Fumadocs alert plugin) do not support a
+    // custom title on the marker line. Emit a bare `> [!TYPE]` marker and
+    // promote the admonition's title to a bold first body line so it survives
+    // rendering instead of being demoted to the generic type label.
+    output.push(`> [!${gfmType}]`);
     admonitionsConverted++;
     i++;
+
+    if (title) {
+      output.push(`> **${title}**`);
+      // Separate the promoted title from the body with a blockquote blank so it
+      // renders as its own paragraph — but only when body content follows.
+      if (i < lines.length && lines[i]!.startsWith('    ')) {
+        output.push('>');
+      }
+    }
 
     while (i < lines.length) {
       const line = lines[i]!;

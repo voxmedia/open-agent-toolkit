@@ -120,7 +120,7 @@ describe('docs pipeline e2e', () => {
       join(docsDir, 'guides', 'getting-started.md'),
       'utf8',
     );
-    expect(migratedGuide).toContain('> [!NOTE] Prerequisites');
+    expect(migratedGuide).toContain('> [!NOTE]\n> **Prerequisites**');
     expect(migratedGuide).toContain('> [!TIP]');
     expect(migratedGuide).not.toContain('!!! note');
     expect(migratedGuide).not.toContain('!!! tip');
@@ -143,7 +143,7 @@ describe('docs pipeline e2e', () => {
       join(docsDir, 'api', 'auth.md'),
       'utf8',
     );
-    expect(migratedAuth).toContain('> [!CAUTION] Security');
+    expect(migratedAuth).toContain('> [!CAUTION]\n> **Security**');
     expect(migratedAuth).toContain('title: Authentication');
 
     // Step 2: Generate index
