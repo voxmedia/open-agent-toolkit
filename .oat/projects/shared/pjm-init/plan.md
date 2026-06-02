@@ -608,17 +608,17 @@ git commit -m "fix(p07-t01): strip leading blank line after template frontmatter
 Code rows (p01–p04, final) and artifact rows (design, plan) are tracked below. Add additional
 code rows as needed; do not delete the `design`/`plan` artifact rows.
 
-| Scope  | Type     | Status          | Date       | Artifact                                               |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed          | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md              |
-| p02    | code     | passed          | 2026-05-29 | reviews/archived/p02-review-2026-05-29-v2.md           |
-| p03    | code     | passed          | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md              |
-| p04    | code     | passed          | 2026-05-29 | reviews/archived/p04-review-2026-05-29.md              |
-| p05    | code     | passed          | 2026-05-29 | reviews/archived/p05-review-2026-05-29-v2.md           |
-| p06    | code     | passed          | 2026-05-29 | reviews/archived/p06-review-2026-05-29.md              |
-| final  | code     | fixes_completed | 2026-06-01 | reviews/archived/final-review-2026-05-29-v4.md         |
-| design | artifact | pending         | -          | -                                                      |
-| plan   | artifact | passed          | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
+| Scope  | Type     | Status  | Date       | Artifact                                               |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | passed  | 2026-05-29 | reviews/archived/p01-review-2026-05-29.md              |
+| p02    | code     | passed  | 2026-05-29 | reviews/archived/p02-review-2026-05-29-v2.md           |
+| p03    | code     | passed  | 2026-05-29 | reviews/archived/p03-review-2026-05-29.md              |
+| p04    | code     | passed  | 2026-05-29 | reviews/archived/p04-review-2026-05-29.md              |
+| p05    | code     | passed  | 2026-05-29 | reviews/archived/p05-review-2026-05-29-v2.md           |
+| p06    | code     | passed  | 2026-05-29 | reviews/archived/p06-review-2026-05-29.md              |
+| final  | code     | passed  | 2026-06-01 | reviews/archived/final-review-2026-05-29-v4.md         |
+| design | artifact | pending | -          | -                                                      |
+| plan   | artifact | passed  | 2026-05-29 | reviews/archived/artifact-plan-review-2026-05-29-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -645,9 +645,11 @@ code rows as needed; do not delete the `design`/`plan` artifact rows.
 
 **Total: 11 tasks**
 
-Final review v4 received: one polish fix task queued (`p07-t01`); the Important finding (rebase
-onto current `main`) is a pre-PR process action, and minor `m2` is deferred. Execute `p07-t01`,
-re-review, then rebase and prepare the final PR.
+Final review passed: the v4 `m1` fix (`p07-t01`) is implemented and verified by a Tier-1
+phase-gate review; the `final` row is marked `passed` on accepted phase-gate verification (the
+v4 lifecycle review covered substance — only `m1` required a code change). The Important finding
+`I1` (rebase onto current `main`) is a recorded pre-PR process action; minor `m2` is deferred.
+Next: rebase onto current `main`, then prepare the final PR.
 
 ---
 

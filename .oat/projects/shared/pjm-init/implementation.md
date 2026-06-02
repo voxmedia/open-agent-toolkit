@@ -795,6 +795,7 @@ Track test execution during implementation.
 - Final review fixes restore dispatch-ceiling mainline behavior and canonical OAT skill versions from `main`.
 - Final re-review fixes restore provider-neutral dispatch-ceiling config docs/schema.
 - Final auto-review (v3) passed clean; a follow-up independent review (v4, `main..HEAD` scope) surfaced one pre-PR rebase action (`I1`), one converted polish fix (`m1` → `p07-t01`), and one deferred cosmetic (`m2`).
+- `p07-t01` fixed `m1`: `stripTemplateFrontmatter` now strips all leading blank lines so instantiated reference docs begin at their `# ` heading (commit `fef6d340`). Final review marked `passed` on accepted Tier-1 phase-gate verification.
 
 **Behavioral changes (user-facing):**
 
