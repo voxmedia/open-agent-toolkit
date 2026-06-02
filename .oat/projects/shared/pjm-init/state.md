@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: fef6d340
+oat_last_commit: a6cb0c93
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -31,15 +31,16 @@ oat_generated: false
 
 # Project State: pjm-init
 
-**Status:** Implementation complete; final review passed — pre-PR rebase pending
+**Status:** Implementation complete; final review passed; rebased onto main — ready for PR
 **Started:** 2026-05-29
 **Last Updated:** 2026-06-01
 
 ## Current Phase
 
-Implementation and final review are complete (final marked `passed` on accepted Tier-1
-phase-gate verification of the `m1` fix). One pre-PR process action remains: rebase onto current
-`main` (`I1`) before opening the PR. Minor `m2` is deferred.
+Implementation and final review are complete (final marked `passed`). The `I1` pre-PR rebase is
+**done**: branch rebased onto current `origin/main` (42 ahead / 0 behind), public lockstep at
+`0.1.18`, release gates + 1766 tests green. Ready for docs sync and final PR. The rebase rewrote
+history, so the branch needs a **force-push**. Minor `m2` is deferred.
 
 ## Artifacts
 
@@ -63,6 +64,7 @@ phase-gate verification of the `m1` fix). One pre-PR process action remains: reb
 - ✓ Final auto-review (v3) passed
 - ✓ Final independent review (v4) received — `m1` fix (`p07-t01`) implemented + phase-gate reviewed; `I1` rebase deferred to PR prep; `m2` deferred
 - ✓ Final review marked `passed` (accepted phase-gate verification)
+- ✓ Rebased onto current `main` — `I1` resolved; lockstep `0.1.18`; release gates + tests green
 
 ## Blockers
 
@@ -70,4 +72,4 @@ None
 
 ## Next Milestone
 
-Rebase onto current `main` (resolves `I1`), then prepare the final PR for `pjm-init`.
+Sync docs (`oat-project-document`) and prepare the final PR (`oat-project-pr-final`); force-push the rebased branch.

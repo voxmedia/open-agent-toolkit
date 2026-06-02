@@ -587,11 +587,12 @@ Chronological log of implementation progress.
 - Preserved structured JSON error output for scaffolding failures.
 - Documented the install-vs-initialize lifecycle and canonical repo-reference surface.
 - Bumped the public package lockstep to `0.1.12` and passed the release validation gate.
-- Bumped the public package lockstep to `0.1.14` and restored provider-neutral dispatch-ceiling config docs/schema.
+- Bumped the public package lockstep (intermediate `0.1.14`) and restored provider-neutral dispatch-ceiling config docs/schema.
+- Rebased onto current `origin/main` (advanced to `0.1.17`); Phase 5–6 restore churn collapsed; public lockstep finalized at `0.1.18`.
 
 **Decisions:**
 
-- No deviations from plan/design.
+- One accepted deviation (`I1`): the branch was rebased onto current `main` rather than merged; see `## Deviations from Plan / Design`. No code-behavior deviations from plan/design.
 
 **Follow-ups / TODO:**
 
@@ -749,16 +750,16 @@ disposition; this section completes that disposition.
 
 **Design drift / artifact alignment notes:**
 
-- `I1`: The review found the branch was cut from a stale base and is now 5 commits behind `origin/main`; a test-merge produces conflicts in the five public `package.json` version lines + `apps/oat-docs/index.md`. The shipped PJM code and the `0.1.14` forward lockstep bump are accepted as correct (implementation is source of truth). The lifecycle alignment is a **rebase onto current `main` before opening/merging the PR**, which collapses the Phase 5–6 "restore from main" churn and makes `release:check-versions` tip-relative. Tracked as a Deviations-table row and a pre-PR step rather than a code task because no source change is required.
+- `I1`: The review found the branch was cut from a stale base and behind `origin/main`; a test-merge produced conflicts in the five public `package.json` version lines + `apps/oat-docs/index.md`. The shipped PJM code was accepted as correct (implementation is source of truth); the lifecycle alignment was a **rebase onto current `main`**. **RESOLVED 2026-06-01:** the branch was rebased onto `origin/main` (which had advanced to `0.1.17`). All three Phase 5–6 "restore from main" commits auto-dropped as already-upstream (churn collapsed), the five public packages were resolved to the new forward lockstep `0.1.18`, and `index.md` was regenerated with zero drift. Post-rebase: 42 ahead / 0 behind `origin/main`; `release:check-versions` passes tip-relative (0.1.18 > 0.1.17); `release:validate` passes; 1766 CLI tests + lint + type-check green.
 
 **Deferred Findings (Minor):**
 
 - `m2` (`packages/cli/src/commands/pjm/index.ts:49` vs `apps/oat-docs/docs/reference/cli-reference.md`): the `pjm` group help ("Manage project-management repo reference docs") and the CLI-reference row ("Initialize the project-management repo-reference surface…") use different verbs. Both are accurate; the difference is an intentional register split (group blurb vs row action) with no user impact. **Deferred** — low probability anyone needs exact-string parity; revisit only if a docs-parity pass is requested.
 
-**Next:** `p07-t01` implemented and committed (`fef6d340`); Tier-1 phase-gate review passed
-(0/0/0/0). Remaining: a final lifecycle re-review (or accept the phase-gate verification — see
-cycle-cap note) to move the `final` row to `passed`, then the `I1` rebase onto current `main`
-during `oat-project-pr-final`.
+**Next:** `p07-t01` implemented and committed; Tier-1 phase-gate review passed (0/0/0/0); `final`
+row marked `passed` on accepted phase-gate verification; `I1` rebase **completed** (branch on
+current `main`, lockstep `0.1.18`). Remaining: docs sync (`oat-project-document`) and final PR
+(`oat-project-pr-final`) — the branch requires a force-push since the rebase rewrote history.
 
 ---
 
@@ -766,9 +767,9 @@ during `oat-project-pr-final`.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review        | Source Artifact            | Planned / Documented                          | Actual / Accepted                                        | Reason                                                                               | Source of Truth                                   | Follow-up                                                                                                                        |
-| -------------------- | -------------------------- | --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| final review v4 `I1` | git base / merge-readiness | Branch rebased on current `main` before merge | Branch on stale base `f47ed778`, 5 commits behind `main` | Branch was cut before #97/#99 landed; Phases 5–6 restored mainline files from `main` | Implementation (PJM code + `0.1.14` bump correct) | Rebase onto current `main` during `oat-project-pr-final`; eliminates the 6 merge conflicts and collapses Phase 5–6 restore churn |
+| Task / Review        | Source Artifact            | Planned / Documented                          | Actual / Accepted                                                               | Reason                                                                                          | Source of Truth                                          | Follow-up                                                                                                                                                       |
+| -------------------- | -------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| final review v4 `I1` | git base / merge-readiness | Branch rebased on current `main` before merge | RESOLVED: rebased onto `origin/main`; 42 ahead / 0 behind; lockstep at `0.1.18` | Branch was cut before later main commits landed; Phases 5–6 restored mainline files from `main` | Implementation (PJM code correct; lockstep now `0.1.18`) | DONE 2026-06-01 — rebase dropped 3 restore commits as already-upstream, resolved versions to `0.1.18`, regenerated `index.md`; release gates + 1766 tests green |
 
 ## Test Results
 
@@ -791,7 +792,7 @@ Track test execution during implementation.
 - `initializeRepoReference()` scaffolds the complete PJM repo-reference surface under `.oat/repo/reference/`.
 - `oat pjm init` instantiates repo reference docs and delegates backlog scaffolding to `initializeBacklog()`.
 - Docs describe the install-vs-initialize lifecycle, command surface, and canonical repo-reference layout.
-- The public package lockstep is bumped to `0.1.14`.
+- The public package lockstep is bumped to `0.1.18` (forward lockstep above main's `0.1.17` after the pre-PR rebase).
 - Final review fixes restore dispatch-ceiling mainline behavior and canonical OAT skill versions from `main`.
 - Final re-review fixes restore provider-neutral dispatch-ceiling config docs/schema.
 - Final auto-review (v3) passed clean; a follow-up independent review (v4, `main..HEAD` scope) surfaced one pre-PR rebase action (`I1`), one converted polish fix (`m1` → `p07-t01`), and one deferred cosmetic (`m2`).
