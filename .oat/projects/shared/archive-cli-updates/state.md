@@ -23,23 +23,23 @@ oat_dispatch_ceiling:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/105' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-01T00:00:12.006Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-02T22:40:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-02T23:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: archive-cli-updates
 
-**Status:** PR description ready; manual PR creation required
+**Status:** PR open, awaiting human review
 **Started:** 2026-06-01
-**Last Updated:** 2026-06-01
+**Last Updated:** 2026-06-02
 
 ## Current Phase
 
-Implementation — PR artifact ready. Branch pushed, but GitHub PR creation requires authentication/permissions outside this checkout.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -66,23 +66,17 @@ Implementation — PR artifact ready. Branch pushed, but GitHub PR creation requ
 - ✓ Documentation sync complete
 - ✓ PR description artifact generated
 - ✓ Branch pushed to `origin/feat/archive-cli-flow`
-- ⧗ GitHub PR creation pending manual auth/permission follow-up
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
-GitHub PR creation could not be completed from this checkout:
-
-- `gh pr create` failed with `HTTP 401: Requires authentication`
-- GitHub connector fallback failed with `403 Resource not accessible by integration`
+None
 
 ## Next Milestone
 
-Open the final PR manually:
+PR is open for review.
 
-- Base: `main`
-- Head: `feat/archive-cli-flow`
-- Title: `feat: split archive CLI command surface`
-- Body source: `pr/project-pr-2026-06-02.md`
-- Create URL: https://github.com/voxmedia/open-agent-toolkit/pull/new/feat/archive-cli-flow
-
-After the PR is open, record the PR URL in `oat_pr_url` and set `oat_pr_status: open`. To incorporate feedback, run `oat-project-revise`; when approved, run `oat-project-complete`.
+- PR: https://github.com/voxmedia/open-agent-toolkit/pull/105
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
