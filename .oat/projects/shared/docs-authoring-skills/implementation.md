@@ -291,7 +291,7 @@ oat_generated: false
 ### Task p04-t04: Bootstrap/docs validation pass
 
 **Status:** completed
-**Commit:** p04-t04 validation tracking commit
+**Commit:** `ae0dcb6b1ac9139709983d1b77c0987c8f6e816c`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
