@@ -96,6 +96,10 @@ Identify the docs task, target reader, docs app root, authored docs root, and
 nearest local instruction files. Read repository and docs-app guidance before
 choosing placement.
 
+Use `references/docs-root-resolution.md` before assuming any path. OAT docs apps
+commonly live outside `apps/oat-docs`, and `.oat/config.json` may describe the
+generated root index separately from the authored docs root.
+
 If the request needs universal documentation standards, load `authoring-docs`
 and use its reference map for evidence gathering, page type, writing style,
 templates, and review rubric.
@@ -113,6 +117,10 @@ Use `references/targeted-authoring-workflow.md` for the focused edit loop.
 Edit source docs pages and local maps together. Keep changes near the requested
 target unless the user explicitly approved broader restructuring.
 
+Use `references/oat-fumadocs-contract.md` for the concrete authored-source
+rules: `index.md`, `## Contents`, `.md` links, generated root indexes, Markdown
+defaults, and asset-only exceptions.
+
 Prefer plain Markdown for content pages. Use MDX only when local guidance and
 the task require JSX or custom components.
 
@@ -121,6 +129,9 @@ the task require JSX or custom components.
 Regenerate or freshness-check derived docs artifacts using local scripts when
 the change affects navigation or generated indexes. Run the docs app's local
 validation commands when they exist and are meaningful.
+
+Use `references/validation.md` for script discovery, generated-index checks,
+and render spot-check guidance.
 
 ### Step 5: Handoff
 
@@ -132,8 +143,14 @@ facts, and any recommended lifecycle follow-up.
 
 Load only the references needed for the task:
 
+- `references/docs-root-resolution.md`: resolve docs app root, authored docs
+  root, generated root index, and local instruction surfaces.
+- `references/oat-fumadocs-contract.md`: OAT/Fumadocs authored-source and
+  generated-artifact contract.
 - `references/targeted-authoring-workflow.md`: focused OAT/Fumadocs authoring
   flow for small edits.
+- `references/validation.md`: local validation, generated-index, and render
+  spot-check guidance.
 - `authoring-docs`: universal documentation-quality baseline.
 
 ## Examples
