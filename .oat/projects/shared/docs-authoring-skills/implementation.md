@@ -320,6 +320,7 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `2eecc0ecc53027aeab021fc371860c66f77931e7`
+**Tracking commit:** `5265571152cdca59589e3ba3791c59c6a0e42189`
 **Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/p04-review-2026-06-05.md`
 **Verification:**
 
@@ -491,6 +492,40 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
 | ------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
 | p03 tracking  | `plan.md` p03-t01 and phase dispatch | Parallel p03 boundary notes stayed in handoff/status output and final tracking after fan-in. | p03 progress, verification, and boundary notes were recorded directly in `implementation.md`. | Parallel worktree bootstrap degraded; p03 ran sequentially on the orchestration branch, and the dispatch explicitly required implementation tracking updates. | Phase Scope dispatch for p03 on 2026-06-05 | None; p06 still owns provider sync, bundled assets, public package versions, and release validation. |
+
+### Run 4 — 2026-06-05 18:47
+
+**Branch:** feat/docs-authoring-skill
+**Tier:** 1
+**Policy:** merge-strategy=sequential-degraded, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p04   | DONE_WITH_CONCERNS | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p03-p05: planned parallel group already degraded to sequential execution; p04 ran sequentially on `feat/docs-authoring-skill`.
+
+#### Dispatch Notes
+
+- Dispatch: p04 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state dispatch ceiling `xhigh`.
+- Dispatch: p04 initial review used Codex `oat-reviewer-xhigh`; review failed with 0 Critical, 1 Important, 1 Medium, and 0 Minor findings.
+- Dispatch: p04 fix iteration 1 used Codex `oat-phase-implementer-xhigh` to correct Fumadocs generated-index wording in bootstrap and docs contract surfaces.
+- Dispatch: p04 re-review used Codex `oat-reviewer-xhigh`; reviewer passed the phase with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+#### Outstanding Items
+
+- `apps/oat-docs/index.md` is dirty generated output from `pnpm build:docs`; p06 owns generated docs output and provider/distribution sync.
+
+#### Artifact / Design Deltas
+
+| Task / Review            | Source Artifact            | Planned / Documented                                     | Actual / Accepted                                                                                   | Reason                                                                                                                | Source of Truth                             | Follow-up                                           |
+| ------------------------ | -------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------- |
+| p04-t04 generated output | `plan.md` p04/p06 boundary | p04 validates docs; p06 owns generated/provider outputs. | `pnpm build:docs` regenerated `apps/oat-docs/index.md`, and the generated change was not committed. | The generated app-root index is outside p04 source-doc ownership and p06 owns generated output/version/provider sync. | Phase Scope dispatch and plan p06 ownership | p06 should regenerate/sync owned generated outputs. |
 
 <!-- orchestration-runs-end -->
 
