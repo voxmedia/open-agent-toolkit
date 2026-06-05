@@ -39,6 +39,7 @@ OAT/Fumadocs source-of-truth contract.
 - Applying a batch of approved audit recommendations.
 - Writing project-derived release or feature docs from active OAT project
   artifacts.
+- Running a full MkDocs-to-OAT-Fumadocs migration.
 - Treating generated navigation artifacts as editable source.
 
 **ALLOWED Activities:**
@@ -58,8 +59,14 @@ If you catch yourself:
 - Expanding a targeted task into a repo-wide audit -> STOP and route to
   `oat-docs-analyze`.
 - Applying a broad set of recommendations -> STOP and route to `oat-docs-apply`.
+- Bootstrapping or repairing a docs app shell -> STOP and route to
+  `oat-docs-bootstrap`.
+- Migrating an existing MkDocs docs app to OAT/Fumadocs -> STOP and use the
+  standalone migration guide; bootstrap is not the migration workflow.
 - Editing generated root indexes or derived navigation output -> STOP and move
   the change back to authored docs sources.
+- Treating generated root indexes as proof of local navigation health -> STOP
+  and inspect the nearest authored `## Contents` map.
 
 **Recovery:**
 
@@ -95,6 +102,9 @@ tell what is happening after they confirm.
 Identify the docs task, target reader, docs app root, authored docs root, and
 nearest local instruction files. Read repository and docs-app guidance before
 choosing placement.
+
+Use `references/lifecycle-boundaries.md` first when the request may be setup,
+audit, apply, project-documentation, or migration work.
 
 Use `references/docs-root-resolution.md` before assuming any path. OAT docs apps
 commonly live outside `apps/oat-docs`, and `.oat/config.json` may describe the
@@ -145,6 +155,8 @@ Load only the references needed for the task:
 
 - `references/docs-root-resolution.md`: resolve docs app root, authored docs
   root, generated root index, and local instruction surfaces.
+- `references/lifecycle-boundaries.md`: route setup, audits, applies,
+  project-derived docs, and migrations to the correct workflow owner.
 - `references/oat-fumadocs-contract.md`: OAT/Fumadocs authored-source and
   generated-artifact contract.
 - `references/targeted-authoring-workflow.md`: focused OAT/Fumadocs authoring

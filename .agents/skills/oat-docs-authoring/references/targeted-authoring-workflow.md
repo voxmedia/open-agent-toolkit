@@ -13,8 +13,9 @@ or review inside an existing OAT/Fumadocs docs app.
 - Restate the requested target in terms of pages or directories.
 - Identify whether the work is content authoring, local restructuring, link
   repair, or review.
-- If the task becomes repo-wide or recommendation-driven, stop and route to the
-  appropriate lifecycle skill.
+- If the task becomes setup, repo-wide audit, recommendation-driven apply,
+  project-derived documentation, or full migration work, stop and route through
+  `references/lifecycle-boundaries.md`.
 
 ## 2. Gather Evidence
 
