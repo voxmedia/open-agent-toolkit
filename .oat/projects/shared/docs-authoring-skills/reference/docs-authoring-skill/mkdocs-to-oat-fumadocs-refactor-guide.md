@@ -5,6 +5,20 @@ description: Agent handoff guide for migrating an existing MkDocs docs app to OA
 
 # MkDocs to OAT Fumadocs refactor guide
 
+## Direct handoff
+
+Give the migration agent the target repo path, base branch, branch/PR expectation, and any known docs app path. The agent should start with the [Agent handoff prompt](#agent-handoff-prompt), record a preflight inventory before editing, then execute the [Execution-ready migration phases](#execution-ready-migration-phases).
+
+Non-negotiables:
+
+- Inventory current source, config, scripts, deploy/indexing, syntax, navigation, and source references before edits.
+- Treat current repo files as the source of truth when older docs or PR narratives disagree.
+- Preserve integration-heavy paths unless there is explicit reason and owner approval to rename.
+- Author navigation in `docs/**/index.md` `## Contents`; regenerate derived root indexes instead of editing them.
+- Render-check migration-sensitive syntax and images after a green build.
+- Keep formatter, OAT config, root task graph, and source-reference repairs inside the migration scope.
+- Mark unverifiable commands, deploy behavior, owners, integrations, and architecture claims for owner review.
+
 ## Source projects reviewed
 
 Citation shorthand used below:
@@ -12,6 +26,8 @@ Citation shorthand used below:
 - `duet:<path>:<line>` refers to `/Users/thomas.stang/Code/vox/duet/.oat/projects/archived/fumadocs-refactor/<path>`.
 - `honeycomb:<path>:<line>` refers to `/Users/thomas.stang/Code/vox/honeycomb/.oat/projects/archived/fumadocs-refactor/<path>`.
 - `oat:<path>:<line>` refers to `/Users/thomas.stang/.superconductor/worktrees/open-agent-toolkit/sc-coupled-fermion-beae/<path>`.
+
+These citations explain where the guide's lessons came from. They are context for maintainers, not required inputs for the target migration agent; the target repo's current source remains authoritative.
 
 Reviewed projects and artifacts:
 
@@ -87,6 +103,20 @@ Final report: list files changed, sources inspected, structural counts, syntax c
 - **Use tooling boundaries deliberately.** Formatter handles layout; markdownlint handles content/structure/accessibility; neither substitutes for source accuracy verification (`duet:reference/corrections-log.md:222-249`).
 - **Keep docs app build/dev isolated.** In monorepos, root `build` and root `dev` should not build or start the docs app. Expose explicit docs commands such as `build:docs` and `dev:docs`; Honeycomb also had to prevent root `turbo test` from pulling in the docs Next build (`honeycomb:implementation.md:194-202`).
 - **Capture uncertainty.** If a command, deploy path, external tool, ownership claim, or source reference cannot be verified, flag it for owner decision instead of guessing.
+
+## Prior-refactor lesson check
+
+Before marking a migration complete, confirm the handoff preserves these lessons from Duet and Honeycomb:
+
+- **Inventory before editing:** counts, directories, `overview.md`, unsupported syntax, scripts, deploy/indexing, OAT config, and source-reference systems were recorded before structural changes.
+- **Current source over stale docs:** disputed framework versions, package scripts, commands, environment variables, exports, workflows, and architecture claims were checked against current files.
+- **Integration path gravity:** existing docs app paths, package filters, deploy targets, indexing, and `.oat/config.json` references were preserved unless a deliberate rename was approved.
+- **Authored index maps:** every Markdown-bearing directory has `index.md`, every touched index has `## Contents`, and generated root indexes were regenerated from authored maps.
+- **Render checks beyond build:** exported pages were inspected for callouts, images, tabs, Mermaid, snippets/macros, and literal MkDocs syntax.
+- **Formatter hazards:** Markdown formatter configuration was inspected before running formatters, and complex fences/tutorial examples were reviewed after formatting.
+- **OAT config validity:** `.oat/config.json` parses and points at the Fumadocs docs root, generated index, and correct tooling.
+- **Build/dev isolation:** root `build`, `dev`, `test`, lint, and type-check graphs do not accidentally schedule the docs app unless intended.
+- **Accuracy audit:** stale architecture, removed subsystems, unsupported commands, and unverifiable operational claims were rewritten, removed, or flagged for owner review.
 
 ## Preflight inventory
 
