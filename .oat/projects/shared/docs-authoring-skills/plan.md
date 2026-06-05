@@ -858,19 +858,19 @@ Run: `git add .oat/projects/shared/docs-authoring-skills && git diff --cached --
 
 ## Reviews
 
-| Scope     | Type     | Status  | Date       | Artifact       |
-| --------- | -------- | ------- | ---------- | -------------- |
-| p01       | code     | pending | -          | -              |
-| p02       | code     | pending | -          | -              |
-| p03       | code     | pending | -          | -              |
-| p04       | code     | pending | -          | -              |
-| p05       | code     | pending | -          | -              |
-| p06       | code     | pending | -          | -              |
-| final     | code     | pending | -          | -              |
-| discovery | artifact | passed  | 2026-06-05 | discovery.md   |
-| spec      | artifact | pending | -          | N/A quick mode |
-| design    | artifact | passed  | 2026-06-05 | design.md      |
-| plan      | artifact | passed  | 2026-06-05 | plan.md        |
+| Scope     | Type     | Status   | Date       | Artifact                                   |
+| --------- | -------- | -------- | ---------- | ------------------------------------------ |
+| p01       | code     | pending  | -          | -                                          |
+| p02       | code     | pending  | -          | -                                          |
+| p03       | code     | pending  | -          | -                                          |
+| p04       | code     | pending  | -          | -                                          |
+| p05       | code     | pending  | -          | -                                          |
+| p06       | code     | pending  | -          | -                                          |
+| final     | code     | pending  | -          | -                                          |
+| discovery | artifact | passed   | 2026-06-05 | discovery.md                               |
+| spec      | artifact | pending  | -          | N/A quick mode                             |
+| design    | artifact | passed   | 2026-06-05 | design.md                                  |
+| plan      | artifact | received | 2026-06-05 | reviews/artifact-plan-review-2026-06-05.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
