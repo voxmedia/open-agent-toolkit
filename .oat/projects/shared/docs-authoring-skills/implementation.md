@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -23,16 +23,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                             | Status   | Tasks | Completed |
-| ----------------------------------------------------------------- | -------- | ----- | --------- |
-| p01 - Build the agnostic `authoring-docs` baseline                | complete | 4     | 4/4       |
-| p02 - Build the `oat-docs-authoring` wrapper                      | complete | 4     | 4/4       |
-| p03 - Improve `oat-docs-analyze` checks and references            | pending  | 5     | 0/5       |
-| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending  | 4     | 0/4       |
-| p05 - Polish the standalone migration handoff guide               | pending  | 3     | 0/3       |
-| p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
+| Phase                                                             | Status      | Tasks | Completed |
+| ----------------------------------------------------------------- | ----------- | ----- | --------- |
+| p01 - Build the agnostic `authoring-docs` baseline                | complete    | 4     | 4/4       |
+| p02 - Build the `oat-docs-authoring` wrapper                      | complete    | 4     | 4/4       |
+| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 1/5       |
+| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending     | 4     | 0/4       |
+| p05 - Polish the standalone migration handoff guide               | pending     | 3     | 0/3       |
+| p06 - Register, version, sync, and validate the shipped asset set | pending     | 6     | 0/6       |
 
-**Total:** 8/26 tasks completed
+**Total:** 9/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -138,13 +138,22 @@ oat_generated: false
 
 ## Phase p03: Improve `oat-docs-analyze` checks and references
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-06-05
 
 ### Task p03-t01: Confirm analyzer implementation boundary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** recorded in task commit
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Boundary note:**
+
+- The current `oat docs analyze` CLI command is a guidance shim to `oat-docs-analyze`.
+- The p03 implementation surface remains skill-only unless a concrete non-mutating CLI primitive becomes necessary later in this phase.
+- No TypeScript CLI behavior was changed for p03-t01.
 
 ### Task p03-t02: Add generated-index and local-map checks
 
