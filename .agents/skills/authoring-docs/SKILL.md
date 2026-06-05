@@ -57,7 +57,8 @@ behavior. Mark useful but unverified facts as needing confirmation.
 Classify the project type and docs category: API, CLI, frontend app, backend
 service, worker, library, framework, monorepo, architecture, operations, or
 mixed. Identify the reader's job: first success, task completion, exact lookup,
-system understanding, safe operation, or review.
+system understanding, safe operation, or review. Load
+`references/categories.md` when category-specific coverage matters.
 
 ### Step 3: Choose the Right Page Type
 
@@ -101,6 +102,8 @@ Load only the references needed for the current task:
 - `references/information-architecture.md`: docs structure, naming, and links.
 - `references/page-types.md`: tutorial, how-to, reference, explanation, and
   runbook guidance.
+- `references/categories.md`: API, CLI, app, service, library, framework,
+  monorepo, architecture, operations, and audience-specific guidance.
 - `references/writing-style.md`: plain technical writing and Markdown rules.
 - `references/templates.md`: reusable page and handoff templates.
 - `references/review-rubric.md`: readiness checklist and review rubric.
