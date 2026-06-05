@@ -27,6 +27,8 @@ oat_analysis_commit: { commitHash }
 - **Contradicted claims:** {N}
 - **Coverage gaps / content opportunities:** {N}
 - **Generated index findings:** {N}
+- **Broken or extensionless local docs links:** {N}
+- **Markdown hygiene findings:** {N}
 
 ## Docs Inventory
 
@@ -134,6 +136,38 @@ For every generated-index finding:
 - State whether generated warning banners are present, absent, or not expected.
 - Do not recommend hand-editing generated artifacts; recommend source-map fixes,
   regeneration, local guidance updates, or generator investigation.
+
+## Authored Links, Contents, and Markdown Hygiene
+
+Use this section for local Markdown links, `## Contents` quality, page-extension
+conventions, and Markdown syntax issues that affect rendering, navigation, or
+search quality.
+
+| #   | Category                   | File Ref          | Issue                                           | Evidence                             | Severity | Recommended Fix                         |
+| --- | -------------------------- | ----------------- | ----------------------------------------------- | ------------------------------------ | -------- | --------------------------------------- |
+| 1   | {broken local link}        | `{docs/path.md}`  | Target does not exist                           | `{source line and target path}`      | High     | Update or remove the link               |
+| 2   | {extensionless local link} | `{docs/path.md}`  | Link omits `.md` suffix                         | `{source line}`                      | Medium   | Use `.md` or `subdir/index.md`          |
+| 3   | {placeholder Contents}     | `{docs/index.md}` | `## Contents` is scaffold                       | `{source line}`                      | Medium   | Replace with useful local map           |
+| 4   | {overview.md}              | `{docs/topic/}`   | Legacy entrypoint remains                       | `{overview.md refs}`                 | Medium   | Convert to `index.md` or topic page     |
+| 5   | {unexpected mdx}           | `{docs/page.mdx}` | Plain content uses `.mdx`                       | `{page and local guidance}`          | Medium   | Convert to `.md` or document exception  |
+| 6   | {unlabeled code fence}     | `{docs/path.md}`  | Code fence has no language                      | `{source line}`                      | Low      | Add a language identifier               |
+| 7   | {shell fence drift}        | `{docs/path.md}`  | Shell fence convention drifts                   | `{source line and guidance}`         | Low      | Use the documented shell fence language |
+| 8   | {heading hygiene}          | `{docs/path.md}`  | Empty heading or extra H1                       | `{source line}`                      | Low      | Fix heading hierarchy                   |
+| 9   | {metadata hygiene}         | `{docs/path.md}`  | Description too long, truncated, or README-like | `{frontmatter refs and local limit}` | Low      | Rewrite concise metadata                |
+
+{Or: "No authored link, Contents, or Markdown hygiene findings identified."}
+
+False-positive guardrails:
+
+- Ignore external URLs, anchors-only links, `mailto:` links, image links, and
+  asset/file links that are not docs pages.
+- Accept anchors on `.md` links, such as `page.md#section`.
+- Ignore link syntax shown inside inline code, fenced snippets, placeholder
+  templates, or intentional examples.
+- Only enforce frontmatter description length limits when local guidance,
+  schemas, or generators define the limit.
+- Do not flag multiple H1s in intentional imported README/generated contexts
+  unless local guidance says those files are authored docs.
 
 ## Accuracy Verification
 

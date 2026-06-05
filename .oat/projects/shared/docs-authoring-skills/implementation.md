@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p03-t03
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | ----------------------------------------------------------------- | ----------- | ----- | --------- |
 | p01 - Build the agnostic `authoring-docs` baseline                | complete    | 4     | 4/4       |
 | p02 - Build the `oat-docs-authoring` wrapper                      | complete    | 4     | 4/4       |
-| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 2/5       |
+| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 3/5       |
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | pending     | 4     | 0/4       |
 | p05 - Polish the standalone migration handoff guide               | pending     | 3     | 0/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | pending     | 6     | 0/6       |
 
-**Total:** 10/26 tasks completed
+**Total:** 11/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -158,7 +158,7 @@ oat_generated: false
 ### Task p03-t02: Add generated-index and local-map checks
 
 **Status:** completed
-**Commit:** recorded in task commit
+**Commit:** `0ffe3de18d52ec672ef1b180d6cfc847df3ebb58`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -171,8 +171,17 @@ oat_generated: false
 
 ### Task p03-t03: Add link, Contents, and Markdown hygiene checks
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** recorded in task commit
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Notes:**
+
+- Added authored-link resolution checks for broken local relative Markdown links, OAT/Fumadocs extensionless links, `.md#anchor` allowance, and inline-code/fenced-example false-positive avoidance.
+- Expanded `index.md` and `## Contents` checks for placeholder maps, immediate child directory coverage, single-page directory maps, asset-only exemptions, lingering `overview.md`, and unexpected plain-content `.mdx`.
+- Added Markdown hygiene checks for unlabeled fences, shell fence convention drift, empty headings, multiple H1s, description limits, ellipsis truncation, and README-copy metadata signals.
 
 ### Task p03-t04: Add docs-app guidance and coverage checks
 

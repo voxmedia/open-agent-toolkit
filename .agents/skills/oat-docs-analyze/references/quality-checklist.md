@@ -6,8 +6,45 @@ Use this checklist when evaluating a docs surface.
 
 - Every docs directory has an `index.md`.
 - Every `index.md` includes a `## Contents` section.
+- `## Contents` is useful content, not a placeholder comment, empty list, or
+  generic "add links here" scaffold.
 - `## Contents` links describe sibling files and immediate child directories.
+- Parent `## Contents` maps include immediate child directories that contain
+  docs.
+- Single-page directories still expose a useful `index.md` entrypoint or local
+  section map.
+- Asset-only directories are exempt when they contain no Markdown content and
+  are not linked as navigable docs sections.
 - `overview.md` is not used as the directory entrypoint.
+- Plain docs content uses `.md` by default; `.mdx` is reserved for pages that
+  need JSX/components or are explicitly allowed by local guidance.
+
+## Links
+
+- Local relative Markdown links resolve from the page where they appear.
+- OAT/Fumadocs docs apps use `.md`-suffixed local links for docs pages,
+  including `subdir/index.md` for child directory maps.
+- Anchors on `.md` links are allowed, such as `page.md#section`.
+- Extensionless local docs links are flagged when local guidance follows the
+  OAT/Fumadocs `.md` link convention.
+- Inline-code examples, fenced snippets, placeholder templates, external URLs,
+  anchors-only links, `mailto:` links, and asset/image links are not false
+  positives for broken docs-page links.
+
+## Markdown Hygiene
+
+- Opening code fences have language identifiers.
+- Shell command examples follow the repo's documented fence convention; default
+  to `sh` unless local guidance uses `bash` or the block requires Bash-only
+  syntax.
+- Headings are non-empty.
+- Each authored page has at most one document-level H1 unless the file is an
+  intentional imported README or generated/imported artifact.
+- Frontmatter descriptions respect local length limits when those limits are
+  documented.
+- Descriptions are not ellipsis-truncated.
+- Titles, descriptions, and metadata do not look like copied README boilerplate
+  when rendered in docs navigation or search.
 
 ## Accuracy
 
@@ -44,5 +81,7 @@ Use this checklist when evaluating a docs surface.
 - Nav points to missing files.
 - Files exist but are not represented in indexes/nav.
 - Index descriptions no longer match the content they point to.
+- Generated root indexes include stale paths, omit authored-map entries, or
+  order entries differently without documented generator semantics.
 - Commands mention removed or renamed tooling.
 - Docs claim plugin support or structure rules that are not backed by current repo evidence.

@@ -144,9 +144,17 @@ For every documentation directory:
 
 1. Verify `index.md` exists.
 2. Verify `index.md` includes a `## Contents` section.
-3. Verify the `## Contents` section maps sibling pages and immediate child directories.
-4. Flag `overview.md` usage as a migration finding.
-5. Verify single-file directories still expose an `index.md` entrypoint.
+3. Flag placeholder-only `## Contents` sections, including comments, generic
+   "add links here" copy, or empty lists.
+4. Verify the `## Contents` section maps sibling pages and immediate child directories.
+5. Verify parent `## Contents` maps include child directories that contain docs.
+6. Flag `overview.md` usage as a migration finding.
+7. Flag unexpected `.mdx` for plain content unless JSX/components or local
+   guidance justify it.
+8. Verify single-file directories still expose a useful `index.md` entrypoint
+   or local section map.
+9. Exempt asset-only directories that contain no Markdown content and are not
+   linked as navigable docs sections.
 
 For OAT/Fumadocs docs apps, also distinguish authored source maps from generated
 root indexes:
@@ -197,13 +205,28 @@ Evidence standard:
 For each evaluated page or directory:
 
 1. Read the docs file plus the local evidence needed to validate its claims.
-2. Record findings with severity, exact source refs, and confidence.
-3. Decide a disclosure mode for each recommendation:
+2. Resolve every local relative Markdown link from the page where it appears.
+   Flag broken targets. In OAT/Fumadocs docs apps, flag extensionless local
+   Markdown links and prefer `.md`-suffixed targets, including
+   `subdir/index.md`.
+3. Accept anchors on `.md` links, such as `page.md#section`, and do not flag
+   anchors-only, external URLs, `mailto:` links, image/asset links, or link
+   syntax intentionally shown inside inline code, fenced examples, or template
+   snippets.
+4. Check Markdown hygiene: opening code fences need language identifiers; shell
+   examples should follow local fence conventions, defaulting to `sh` unless
+   local guidance uses `bash` or the block needs Bash-only syntax.
+5. Flag empty headings, multiple document-level H1s outside intentional imported
+   README contexts, overlong frontmatter descriptions when local guidance
+   defines a limit, ellipsis-truncated descriptions, and README-copy metadata
+   signals that make search/navigation output look stale.
+6. Record findings with severity, exact source refs, and confidence.
+7. Decide a disclosure mode for each recommendation:
    - `inline`
    - `link_only`
    - `omit`
    - `ask_user`
-4. Record canonical link targets whenever a `link_only` recommendation is used.
+8. Record canonical link targets whenever a `link_only` recommendation is used.
 
 In `delta` mode, always evaluate changed docs files plus the nearest parent `index.md` pages.
 In `full` mode, evaluate the whole docs surface.
@@ -341,6 +364,7 @@ Populate the artifact with:
 - Severity-rated findings
 - Directory coverage and contract gaps
 - Generated index and authored local-map findings
+- Authored link, `## Contents`, and Markdown hygiene findings
 - Accuracy verification verdicts for repo-checkable claims
 - Content opportunities for missing or thin docs coverage
 - Navigation/drift findings
