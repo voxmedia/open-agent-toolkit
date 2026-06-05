@@ -17,8 +17,8 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 
 - `oat docs init` scaffolds a docs app (Fumadocs or MkDocs)
 - `oat docs migrate` converts MkDocs admonitions to GFM callouts and injects frontmatter
-- `oat docs generate-index` generates a docs index from the markdown file tree
-- `oat docs nav sync` regenerates mkdocs.yml nav from `index.md` `## Contents` sections
+- `oat docs generate-index` generates a Fumadocs app-root docs index manifest from the Markdown file tree
+- `oat docs nav sync` regenerates MkDocs `mkdocs.yml` nav from `index.md` `## Contents` sections
 - `oat docs analyze` and `oat docs apply` expose the workflow surface in CLI help
 
 ### Skills
@@ -55,10 +55,10 @@ skills.
 ## Typical flow
 
 1. Bootstrap a docs app with `oat-docs-bootstrap` (preferred — guided, includes post-scaffold patches and walkthrough) or `oat docs init` directly (CLI-only / non-interactive workflows)
-2. (Optional) If migrating from MkDocs: `oat docs migrate --docs-dir docs --config mkdocs.yml --apply`
+2. (Optional) If migrating from MkDocs, handle that as a separate migration workstream; `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` is only the syntax/frontmatter helper
 3. Author docs so every directory has an `index.md` with a `## Contents` section
 4. Keep local `## Contents` sections current
-5. Sync navigation:
+5. Refresh generated artifacts:
    - **MkDocs:** `oat docs nav sync`
    - **Fumadocs:** `oat docs generate-index` (runs automatically via `predev`/`prebuild` hooks)
 6. Run `oat-docs-analyze`; by default it verifies the generated analysis artifact
