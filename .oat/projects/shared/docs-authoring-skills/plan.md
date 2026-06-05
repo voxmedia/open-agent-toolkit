@@ -8,6 +8,9 @@ oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups:
   - ['p03', 'p04', 'p05']
+oat_plan_hill_phases:
+  - p06
+oat_auto_review_at_hill_checkpoints: true
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
