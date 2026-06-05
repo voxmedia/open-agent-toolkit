@@ -218,6 +218,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 **What changed (high level):**
 
 - Quick-start planning artifacts were prepared for `oat-project-implement`.
+- Moved brainstorm reference directory into project-local `reference/docs-authoring-skill/` and removed the already-addressed Stoa improvement artifact.
 
 **Decisions:**
 
@@ -230,6 +231,35 @@ _Orchestration runs from `oat-project-implement` are appended here._
 **Blockers:**
 
 - None.
+
+### Review Received: plan
+
+**Date:** 2026-06-05
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-06-05.md`
+**Review type:** artifact
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 2
+
+**Artifact edits applied:**
+
+- `M1`: Resolved in `plan.md` by removing the shared `implementation.md` write from parallel task `p03-t01`; analyzer-boundary notes now stay in phase handoff/status output and final tracking after fan-in.
+- `m1`: Resolved in `plan.md` by marking frontmatter `oat_plan_parallel_groups` as the authoritative parallelism source and the prose YAML block as a readability mirror.
+- `m2`: Resolved in `plan.md` by clarifying that `pnpm format` is repo hygiene and may not cover `.oat/repo/reference/**` Markdown, so the migration guide is also verified through the self/handoff review steps.
+
+**New tasks added:** None. Artifact review findings were resolved directly in the reviewed artifact.
+
+**Finding disposition map:**
+
+- `M1` -> `resolve_in_artifact`
+- `m1` -> `resolve_in_artifact`
+- `m2` -> `resolve_in_artifact`
+
+**Next:** Plan remains ready for `oat-project-implement` starting at `p01-t01`.
 
 ## Deviations from Plan / Design
 

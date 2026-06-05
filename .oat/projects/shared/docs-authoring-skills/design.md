@@ -121,7 +121,7 @@ The project changes three kinds of repository surfaces: new skill directories, e
 
 **Interfaces:**
 
-- `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`.
+- `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`.
 
 ## Testing Strategy
 
@@ -160,7 +160,7 @@ Inspect the standalone migration guide and new wrapper references for boundary c
 ## References
 
 - Discovery: `discovery.md`
-- Brainstorm notes: `.oat/repo/reference/brainstorms/docs-authoring-skill/brainstorm-notes.md`
-- Wrapper analysis: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
-- Analyzer recommendations: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
-- Migration guide: `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+- Brainstorm notes: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/brainstorm-notes.md`
+- Wrapper analysis: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
+- Analyzer recommendations: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
+- Migration guide: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`

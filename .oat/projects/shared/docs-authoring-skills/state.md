@@ -26,7 +26,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-05T19:11:00Z'
+oat_project_state_updated: '2026-06-05T20:22:41Z'
 oat_generated: false
 ---
 
@@ -56,6 +56,8 @@ Plan - Quick-start plan generated, reviewed, and ready for `oat-project-implemen
 - ✓ Lightweight design complete
 - ✓ Plan generated
 - ✓ Plan artifact review passed
+- ✓ External plan artifact review received and resolved
+- ✓ Brainstorm reference moved into project
 - ✓ Dispatch ceiling persisted (maximum)
 - ⧗ Awaiting implementation
 

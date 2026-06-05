@@ -38,7 +38,7 @@ After `p02`, phases `p03`, `p04`, and `p05` may run concurrently in isolated wor
 
 Phase `p06` must run after the parallel group merges. It owns shared distribution files, provider sync output, lockstep public package version bumps, generated assets, and repository-wide validation. No earlier phase should edit public package versions or bundled skill manifests except where explicitly assigned in `p06`.
 
-Declared parallel group:
+The frontmatter `oat_plan_parallel_groups` value is authoritative. The following block mirrors that value for readability and must be kept aligned if the frontmatter changes:
 
 ```yaml
 oat_plan_parallel_groups:
@@ -54,13 +54,13 @@ oat_plan_parallel_groups:
 - Create: `.agents/skills/authoring-docs/SKILL.md`
 - Create: `.agents/skills/authoring-docs/references/` files as needed
 - Read: `.agents/skills/create-agnostic-skill/SKILL.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/SKILL.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/01-principles.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/02-agent-workflow.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/03-information-architecture.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/04-page-types.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/05-writing-style.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/14-review-rubric.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/SKILL.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/01-principles.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/02-agent-workflow.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/03-information-architecture.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/04-page-types.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/05-writing-style.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/14-review-rubric.md`
 
 **Step 1: Reconfirm conventions**
 
@@ -91,13 +91,13 @@ Run: `git add .agents/skills/authoring-docs && git commit -m "feat(p01-t01): add
 
 - Modify: `.agents/skills/authoring-docs/SKILL.md`
 - Modify/Create: `.agents/skills/authoring-docs/references/*.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/07-api-docs.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/08-cli-docs.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/09-app-service-docs.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/10-library-framework-docs.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/11-monorepo-docs.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/12-architecture-ops.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/13-internal-public.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/07-api-docs.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/08-cli-docs.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/09-app-service-docs.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/10-library-framework-docs.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/03-information-architecture.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/11-architecture-operations-docs.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/12-internal-vs-public.md`
 
 **Step 1: Add category guidance**
 
@@ -126,9 +126,9 @@ Run: `git add .agents/skills/authoring-docs && git commit -m "feat(p01-t02): exp
 **Files:**
 
 - Modify/Create: `.agents/skills/authoring-docs/references/*.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/15-templates.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/16-docs-audit-prompts.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/manifest.json`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/13-templates.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/16-docs-audit-prompts.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/manifest.json`
 
 **Step 1: Add reusable templates**
 
@@ -196,8 +196,8 @@ Run: `git add .agents/skills/authoring-docs && git commit -m "chore(p01-t04): po
 - Create: `.agents/skills/oat-docs-authoring/references/` files as needed
 - Read: `.agents/skills/create-oat-skill/SKILL.md`
 - Read: `.agents/skills/authoring-docs/SKILL.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/brainstorm-notes.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/brainstorm-notes.md`
 
 **Step 1: Apply OAT skill conventions**
 
@@ -262,7 +262,7 @@ Run: `git add .agents/skills/oat-docs-authoring && git commit -m "feat(p02-t02):
 - Read: `.agents/skills/oat-docs-analyze/SKILL.md`
 - Read: `.agents/skills/oat-docs-apply/SKILL.md`
 - Read: `.agents/skills/oat-project-document/SKILL.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
 
 **Step 1: Add routing rules**
 
@@ -327,7 +327,7 @@ Run: `git add .agents/skills/oat-docs-authoring && git commit -m "chore(p02-t04)
 - Read: `.agents/skills/oat-docs-analyze/references/directory-assessment-criteria.md`
 - Read: `packages/cli/AGENTS.md`
 - Read: `packages/cli/src/commands/docs/analyze.ts`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
 
 **Step 1: Inspect current boundaries**
 
@@ -337,9 +337,9 @@ Confirm whether implementation can stay in the skill and reference artifacts. Th
 
 Default to updating `oat-docs-analyze` instructions/references. If TypeScript CLI behavior is added, follow `packages/cli/AGENTS.md`, keep handlers thin, add tests, and avoid parent-relative imports.
 
-**Step 3: Record implementation note**
+**Step 3: Prepare boundary handoff note**
 
-Record the chosen boundary in `implementation.md` during execution so future maintainers know whether analyzer changes are skill-only or include CLI support.
+Prepare a concise boundary note for the phase handoff/status output so future maintainers know whether analyzer changes are skill-only or include CLI support. Do not edit shared project tracking files such as `implementation.md` from the parallel `p03` worktree; final tracking updates are centralized after fan-in.
 
 **Step 4: Verify**
 
@@ -348,7 +348,7 @@ Expected: current skill set still validates before behavior edits.
 
 **Step 5: Commit**
 
-Run: `git add .oat/projects/shared/docs-authoring-skills/implementation.md && git diff --cached --quiet || git commit -m "chore(p03-t01): record analyzer implementation boundary"`
+Run: `git add .agents/skills/oat-docs-analyze packages/cli/src/commands/docs && git diff --cached --quiet || git commit -m "chore(p03-t01): confirm analyzer implementation boundary"`
 
 ---
 
@@ -477,8 +477,8 @@ Run: `git add .agents/skills/oat-docs-analyze packages/cli/src/commands/docs && 
 
 - Modify: `.agents/skills/oat-docs-bootstrap/SKILL.md`
 - Modify: `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-bootstrap-gotchas.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-bootstrap-gotchas.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
 
 **Step 1: Bump skill version**
 
@@ -595,9 +595,9 @@ Run: `git add .agents/skills/oat-docs-bootstrap apps/oat-docs/docs && git diff -
 
 **Files:**
 
-- Modify: `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-bootstrap-gotchas.md`
-- Read: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
+- Modify: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-bootstrap-gotchas.md`
+- Read: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
 
 **Step 1: Review the guide as an agent handoff**
 
@@ -614,7 +614,7 @@ Expected: skill validation still passes. Formatting for the standalone guide is 
 
 **Step 4: Commit**
 
-Run: `git add .oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md && git commit -m "docs(p05-t01): audit migration handoff guide scope"`
+Run: `git add .oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md && git commit -m "docs(p05-t01): audit migration handoff guide scope"`
 
 ---
 
@@ -622,7 +622,7 @@ Run: `git add .oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat
 
 **Files:**
 
-- Modify: `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+- Modify: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
 
 **Step 1: Add a crisp agent prompt section**
 
@@ -643,7 +643,7 @@ Expected: skill validation still passes; the guide is not a skill but this catch
 
 **Step 5: Commit**
 
-Run: `git add .oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md && git commit -m "docs(p05-t02): make migration guide execution ready"`
+Run: `git add .oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md && git commit -m "docs(p05-t02): make migration guide execution ready"`
 
 ---
 
@@ -651,7 +651,7 @@ Run: `git add .oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat
 
 **Files:**
 
-- Modify: `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+- Modify: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
 
 **Step 1: Review against prior refactor lessons**
 
@@ -664,11 +664,11 @@ Ensure all citations and paths are useful context but not required for the migra
 **Step 3: Verify**
 
 Run: `pnpm format`
-Expected: formatting check passes, or any failures are fixed before commit.
+Expected: repository formatting check passes, or any failures are fixed before commit. This may not cover `.oat/repo/reference/**` Markdown; guide quality is also verified by the prior-refactor lesson review and standalone handoff check in Steps 1 and 2.
 
 **Step 4: Commit**
 
-Run: `git add .oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md && git commit -m "docs(p05-t03): polish migration handoff guide"`
+Run: `git add .oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md && git commit -m "docs(p05-t03): polish migration handoff guide"`
 
 ---
 
@@ -900,10 +900,10 @@ Ready for `oat-project-implement` after the plan artifact review row is passed o
 
 - Discovery: `.oat/projects/shared/docs-authoring-skills/discovery.md`
 - Design: `.oat/projects/shared/docs-authoring-skills/design.md`
-- Brainstorm notes: `.oat/repo/reference/brainstorms/docs-authoring-skill/brainstorm-notes.md`
-- Imported research pack manifest: `.oat/repo/reference/brainstorms/docs-authoring-skill/manifest.json`
-- Wrapper pattern analysis: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
-- Analyzer recommendations: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
-- Bootstrap gotchas: `.oat/repo/reference/brainstorms/docs-authoring-skill/oat-docs-bootstrap-gotchas.md`
-- Migration guide: `.oat/repo/reference/brainstorms/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
-- Existing per-repo improvement artifacts: `.oat/repo/reference/brainstorms/docs-authoring-skill/existing-oat-fumadocs-improvements/`
+- Brainstorm notes: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/brainstorm-notes.md`
+- Imported research pack manifest: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/manifest.json`
+- Wrapper pattern analysis: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-authoring-wrapper-pattern-analysis.md`
+- Analyzer recommendations: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-analyze-improvement-recommendations.md`
+- Bootstrap gotchas: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/oat-docs-bootstrap-gotchas.md`
+- Migration guide: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+- Existing per-repo improvement artifacts: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/existing-oat-fumadocs-improvements/`

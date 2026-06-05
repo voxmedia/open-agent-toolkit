@@ -17,7 +17,7 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-Create a quick-mode OAT project for the docs authoring skill work that emerged from the brainstorm in `.oat/repo/reference/brainstorms/docs-authoring-skill/`.
+Create a quick-mode OAT project for the docs authoring skill work that emerged from the brainstorm in `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/`.
 
 The project should deliver a layered documentation-authoring capability:
 
