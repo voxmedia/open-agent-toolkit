@@ -316,6 +316,23 @@ oat_generated: false
 | p04-t02 validation cleanup | `plan.md` p04 task files   | p04 docs edits stay on contract/bootstrap docs pages.    | Labeled one pre-existing unlabeled fenced block in `apps/oat-docs/docs/workflows/projects/implementation-execution.md` as `text`. | Required `pnpm --filter oat-docs docs:lint` failed on that existing Markdown hygiene issue before p04 changes could validate. | `markdownlint-cli2` failure during p04-t02 verification | None.                                               |
 | p04-t04 generated output   | `plan.md` p04/p06 boundary | p04 validates docs; p06 owns generated/provider outputs. | `pnpm build:docs` regenerated `apps/oat-docs/index.md`, and the generated change was not committed.                               | The generated app-root index is outside p04 source-doc ownership and p06 owns generated output/version/provider sync.         | Phase Scope dispatch and plan p06 ownership             | p06 should regenerate/sync owned generated outputs. |
 
+### Review Fix p04-r01: Generated index wording
+
+**Status:** completed
+**Commit:** `2eecc0ecc53027aeab021fc371860c66f77931e7`
+**Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/p04-review-2026-06-05.md`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+- `pnpm --filter oat-docs docs:lint` - pass
+- `pnpm build:docs` - pass; Next.js emitted the existing module-type warning for `apps/oat-docs/next.config.js`
+
+**Notes:**
+
+- Updated `oat-docs-bootstrap` Section A so `documentation.index` narration branches on inspected framework/path: Fumadocs now describes the generated app-root manifest and separately names authored `docs/index.md`; MkDocs now describes the configured `mkdocs.yml` nav/config surface.
+- Split the top-level docs index contract generated-artifact rule by framework: Fumadocs refresh/freshness-checks the generated manifest and compares it to authored `## Contents`; MkDocs nav sync regenerates `mkdocs.yml` from authored `## Contents` and preserves local map order.
+- `pnpm build:docs` regenerated `apps/oat-docs/index.md`; the generated change remains uncommitted because p06 owns generated docs output.
+
 ## Phase p05: Polish the standalone migration handoff guide
 
 **Status:** pending
