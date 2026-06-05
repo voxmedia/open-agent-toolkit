@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -23,16 +23,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                             | Status      | Tasks | Completed |
-| ----------------------------------------------------------------- | ----------- | ----- | --------- |
-| p01 - Build the agnostic `authoring-docs` baseline                | complete    | 4     | 4/4       |
-| p02 - Build the `oat-docs-authoring` wrapper                      | complete    | 4     | 4/4       |
-| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 4/5       |
-| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending     | 4     | 0/4       |
-| p05 - Polish the standalone migration handoff guide               | pending     | 3     | 0/3       |
-| p06 - Register, version, sync, and validate the shipped asset set | pending     | 6     | 0/6       |
+| Phase                                                             | Status   | Tasks | Completed |
+| ----------------------------------------------------------------- | -------- | ----- | --------- |
+| p01 - Build the agnostic `authoring-docs` baseline                | complete | 4     | 4/4       |
+| p02 - Build the `oat-docs-authoring` wrapper                      | complete | 4     | 4/4       |
+| p03 - Improve `oat-docs-analyze` checks and references            | complete | 5     | 5/5       |
+| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending  | 4     | 0/4       |
+| p05 - Polish the standalone migration handoff guide               | pending  | 3     | 0/3       |
+| p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
 
-**Total:** 12/26 tasks completed
+**Total:** 13/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -138,8 +138,9 @@ oat_generated: false
 
 ## Phase p03: Improve `oat-docs-analyze` checks and references
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-06-05
+**Completed:** 2026-06-05
 
 ### Task p03-t01: Confirm analyzer implementation boundary
 
@@ -186,7 +187,7 @@ oat_generated: false
 ### Task p03-t04: Add docs-app guidance and coverage checks
 
 **Status:** completed
-**Commit:** recorded in task commit
+**Commit:** `36c03ab6e279e80af20c588c2a5f24728fba14e8`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -199,8 +200,20 @@ oat_generated: false
 
 ### Task p03-t05: Analyzer validation pass
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** recorded in task commit
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+- `pnpm --filter @open-agent-toolkit/cli test` - skipped, no `packages/cli/src/**` files changed in p03
+
+**Phase summary:**
+
+- Kept p03 skill-only; no `oat docs analyze` CLI behavior or TypeScript tests were needed.
+- Bumped `oat-docs-analyze` from `1.3.0` to `1.4.0`.
+- Added generated-index/local-map checks, authored-link checks, `## Contents` and `index.md` contract checks, Markdown hygiene checks, docs-app guidance checks, and app/API/CLI/operations coverage checks.
+- Extended analyzer artifact output so generated-index, local guidance, authored-link, hygiene, coverage, and owner-review findings carry exact evidence and remain apply-ready.
+- Deferred provider sync, bundled assets, public package version bumps, and release validation to p06 as required by plan.
 
 ## Phase p04: Refine bootstrap guidance and OAT docs contract pages
 
@@ -473,11 +486,30 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Continue p03, p04, and p05 sequentially on `feat/docs-authoring-skill`; p06 remains responsible for provider sync and distribution/versioning.
 
+### Phase p03 Complete
+
+**Date:** 2026-06-05
+**Review artifact:** pending
+**Review verdict:** pending
+
+**Outcome:**
+
+- Improved `oat-docs-analyze` as a skill-only update; the existing CLI command remains a non-mutating guidance shim.
+- Added repeatable read-only checks for generated root index freshness, local-map drift, authored links, `## Contents`, Markdown hygiene, local docs-app guidance, and app/API/CLI/operations coverage.
+- Updated the analyzer artifact template so future analysis output can classify generated-index findings, guidance gaps, hygiene findings, coverage gaps, and owner-review needs with exact evidence.
+
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass during each p03 task.
+- `pnpm --filter @open-agent-toolkit/cli test` - skipped because no `packages/cli/src/**` files changed in p03.
+
+**Next:** Continue implementation at `p04-t01`.
+
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
+| ------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| p03 tracking  | `plan.md` p03-t01 and phase dispatch | Parallel p03 boundary notes stayed in handoff/status output and final tracking after fan-in. | p03 progress, verification, and boundary notes were recorded directly in `implementation.md`. | Parallel worktree bootstrap degraded; p03 ran sequentially on the orchestration branch, and the dispatch explicitly required implementation tracking updates. | Phase Scope dispatch for p03 on 2026-06-05 | None; p06 still owns provider sync, bundled assets, public package versions, and release validation. |
 
 ## Test Results
 
@@ -485,6 +517,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | -------- | --------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
 | planning | Inline plan artifact checks | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps. |
 | p02      | `pnpm oat:validate-skills`  | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                  |
+| p03      | `pnpm oat:validate-skills`  | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.        |
 
 ## Final Summary (for PR/docs)
 
