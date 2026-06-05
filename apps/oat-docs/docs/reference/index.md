@@ -13,7 +13,7 @@ Contributor how-to material now lives under `contributing/`, and user-facing rou
 
 - [CLI Reference](cli-reference.md) - Shallow map of the OAT command surface with links to owning sections.
 - [File Locations](file-locations.md) - Where core OAT files, assets, and artifacts live.
-- [Docs Index Contract](docs-index-contract.md) - Rules for directory `index.md` files and reserved `## Contents` sections.
+- [Docs Index Contract](docs-index-contract.md) - Authored `index.md` maps, `.md` links, generated Fumadocs manifests, and MkDocs nav sync boundaries.
 - [OAT Directory Structure](oat-directory-structure.md) - Canonical `.oat/` tree map and the role of each major directory.
 - [Troubleshooting](troubleshooting.md) - Common issues, diagnostics, and remediation guidance.
 
