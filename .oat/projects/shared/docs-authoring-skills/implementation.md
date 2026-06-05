@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | p01 - Build the agnostic `authoring-docs` baseline                | complete | 4     | 4/4       |
 | p02 - Build the `oat-docs-authoring` wrapper                      | complete | 4     | 4/4       |
 | p03 - Improve `oat-docs-analyze` checks and references            | complete | 5     | 5/5       |
-| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending  | 4     | 0/4       |
+| p04 - Refine bootstrap guidance and OAT docs contract pages       | complete | 4     | 4/4       |
 | p05 - Polish the standalone migration handoff guide               | pending  | 3     | 0/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
 
-**Total:** 13/26 tasks completed
+**Total:** 17/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -232,28 +232,89 @@ oat_generated: false
 
 ## Phase p04: Refine bootstrap guidance and OAT docs contract pages
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-05
+**Completed:** 2026-06-05
 
 ### Task p04-t01: Clarify bootstrap generated-index behavior
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8b9b64a1c7844368aa5590940bd024e4b2e96f04`
+**Follow-up commits:**
+
+- `79c7452e319f42400735a0b33194138d6b8a8914` - corrected generated-index source wording after self-review against current CLI implementation.
+- `f5a5d0d0d5564a843e52adee9a4e5e4f746665f6` - removed stale "two index" wording from the MkDocs walkthrough note.
+
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+- `pnpm oat:validate-skills` - pass after generated-index source wording fix
+- `pnpm oat:validate-skills` - pass after stale wording fix
+
+**Notes:**
+
+- Bumped `oat-docs-bootstrap` from `1.0.1` to `1.1.0`.
+- Clarified Fumadocs app-root generated manifests, MkDocs `mkdocs.yml` nav output, authored `## Contents` maps, generated warning banners, and freshness expectations without making bootstrap own MkDocs migration.
 
 ### Task p04-t02: Update OAT docs index contract semantics
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `33cf0c50258ce2f6d9828bdbdbfe12e121e33059`
+**Follow-up commit:**
+
+- `09bc3b01f935e9b4cc030f2697f48cf03bde3e96` - corrected generated-index source wording after checking current CLI behavior.
+
+**Verification:**
+
+- `pnpm --filter oat-docs docs:lint` - fail initially on pre-existing unlabeled fence in `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- `pnpm --filter oat-docs docs:lint` - pass after labeling that fence `text`
+- `pnpm --filter oat-docs docs:lint` - pass after generated-index source wording fix
+
+**Notes:**
+
+- Updated the OAT docs index contract to separate Fumadocs app-root generated manifests from MkDocs `nav:` sync.
+- Reinforced authored `docs/**/index.md`, `## Contents`, `.md` links, generated-file boundaries, and freshness checks.
 
 ### Task p04-t03: Align bootstrap-related docs references
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d7fca2e1fde7b027f3d49564525d05c85792a790`
+**Verification:**
+
+- `pnpm --filter oat-docs docs:lint` - pass
+
+**Notes:**
+
+- Updated docs-tooling pages to describe `oat-docs-bootstrap` as guided bootstrap, not migration ownership.
+- Clarified that `oat docs generate-index` produces the Fumadocs app-root manifest from the Markdown file tree, while `oat docs nav sync` updates MkDocs `mkdocs.yml` navigation from authored `## Contents`.
 
 ### Task p04-t04: Bootstrap/docs validation pass
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** p04-t04 validation tracking commit
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+- `pnpm --filter oat-docs docs:lint` - pass
+- `pnpm build:docs` - pass; Next.js emitted the existing module-type warning for `apps/oat-docs/next.config.js`
+
+**Notes:**
+
+- `pnpm build:docs` regenerated `apps/oat-docs/index.md`; the generated output change was intentionally not kept because p06 owns generated assets/provider sync output.
+
+**Phase summary:**
+
+- Updated `oat-docs-bootstrap` guidance and its scaffolded `AGENTS.md` template for generated root manifests, authored local maps, warning banners, and regeneration/freshness expectations.
+- Updated OAT docs contract and tooling pages so Fumadocs generated app-root manifests and MkDocs `mkdocs.yml` nav sync are described separately.
+- Kept MkDocs migration out of bootstrap; docs now treat it as a separate migration workstream and describe `oat docs migrate` as a syntax/frontmatter helper only.
+- Deferred provider sync output, bundled assets, app-root generated index output, public package version bumps, and release validation to p06 as required by plan and dispatch.
+
+**Deviations from plan/design/spec:**
+
+| Task / Review              | Source Artifact            | Planned / Documented                                     | Actual / Accepted                                                                                                                 | Reason                                                                                                                        | Source of Truth                                         | Follow-up                                           |
+| -------------------------- | -------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------- |
+| p04-t02 validation cleanup | `plan.md` p04 task files   | p04 docs edits stay on contract/bootstrap docs pages.    | Labeled one pre-existing unlabeled fenced block in `apps/oat-docs/docs/workflows/projects/implementation-execution.md` as `text`. | Required `pnpm --filter oat-docs docs:lint` failed on that existing Markdown hygiene issue before p04 changes could validate. | `markdownlint-cli2` failure during p04-t02 verification | None.                                               |
+| p04-t04 generated output   | `plan.md` p04/p06 boundary | p04 validates docs; p06 owns generated/provider outputs. | `pnpm build:docs` regenerated `apps/oat-docs/index.md`, and the generated change was not committed.                               | The generated app-root index is outside p04 source-doc ownership and p06 owns generated output/version/provider sync.         | Phase Scope dispatch and plan p06 ownership             | p06 should regenerate/sync owned generated outputs. |
 
 ## Phase p05: Polish the standalone migration handoff guide
 
