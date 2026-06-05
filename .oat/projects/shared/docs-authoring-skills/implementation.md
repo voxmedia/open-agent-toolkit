@@ -69,7 +69,7 @@ oat_generated: false
 ### Task p01-t04: Baseline acceptance review
 
 **Status:** completed
-**Commit:** this commit (`chore(p01-t04): polish authoring docs baseline`)
+**Commit:** `983dea058033821290323ab964e587b5ba07365a`
 **Verification:**
 
 - `grep -R "OAT\|Fumadocs\|fumadocs" .agents/skills/authoring-docs || true` - pass, no matches
@@ -227,7 +227,37 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here._
+### Run 1 — 2026-06-05 17:21
+
+**Branch:** feat/docs-authoring-skill
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state dispatch ceiling `xhigh`.
+- Dispatch: p01 review used Codex `oat-reviewer-xhigh` with `effort_axis=selected:xhigh`; reviewer passed the phase with 0 Critical and 0 Important findings.
+
+#### Outstanding Items
+
+- Non-blocking p01 review notes: Medium CLI exit-code template should avoid concrete, source-free exit-code meanings; Minor implementation log caveat that `pnpm oat:validate-skills` does not fully validate non-`oat-*` agnostic skill coverage.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
 
 <!-- orchestration-runs-end -->
 
@@ -287,6 +317,31 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - `m2` -> `resolve_in_artifact`
 
 **Next:** Plan remains ready for `oat-project-implement` starting at `p01-t01`.
+
+### Phase p01 Complete
+
+**Date:** 2026-06-05
+**Review artifact:** `reviews/p01-review-2026-06-05.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
+
+**Outcome:**
+
+- Created the provider-agnostic `authoring-docs` baseline skill and split reusable guidance into progressive reference files.
+- Covered documentation categories, page types, information architecture, writing style, templates, and review rubric without adding OAT/Fumadocs-specific contract rules.
+- Left provider sync, bundled assets, and public package version bumps for p06 as planned.
+
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass during each p01 task.
+- `grep -R "OAT\|Fumadocs\|fumadocs" .agents/skills/authoring-docs || true` - pass, no matches.
+- `rg -n '^````?md$|^````?$' .agents/skills/authoring-docs/references/templates.md` - pass.
+
+**Non-blocking review notes:**
+
+- Medium: CLI template exit-code guidance should avoid concrete, source-free exit-code meanings.
+- Minor: implementation validation notes should distinguish repo `oat-*` skill validation from direct checks for agnostic skills.
+
+**Next:** Continue implementation at `p02-t01`.
 
 ## Deviations from Plan / Design
 
