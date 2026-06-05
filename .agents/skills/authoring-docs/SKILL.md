@@ -30,13 +30,13 @@ Use when:
 
 ## When NOT to Use
 
-Do not use when:
+Do not use by itself when:
 
 - The user only asks for copy editing that does not require repository evidence.
-- A repository-specific docs framework contract is the main problem; load that
-  local skill or instruction set as well.
-- Generated reference output must be regenerated from a tool; use the generator
-  and treat this skill as review guidance.
+- A repository-specific docs framework contract is the main problem; load the
+  local skill or instruction set alongside this baseline.
+- Generated reference output must be regenerated from a tool; run the generator
+  first and use this skill for review and surrounding prose.
 - Legal, policy, marketing, or brand copy needs domain-specific approval outside
   the repository.
 

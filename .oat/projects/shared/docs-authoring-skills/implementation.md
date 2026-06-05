@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -23,41 +23,68 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                             | Status  | Tasks | Completed |
-| ----------------------------------------------------------------- | ------- | ----- | --------- |
-| p01 - Build the agnostic `authoring-docs` baseline                | pending | 4     | 0/4       |
-| p02 - Build the `oat-docs-authoring` wrapper                      | pending | 4     | 0/4       |
-| p03 - Improve `oat-docs-analyze` checks and references            | pending | 5     | 0/5       |
-| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending | 4     | 0/4       |
-| p05 - Polish the standalone migration handoff guide               | pending | 3     | 0/3       |
-| p06 - Register, version, sync, and validate the shipped asset set | pending | 6     | 0/6       |
+| Phase                                                             | Status   | Tasks | Completed |
+| ----------------------------------------------------------------- | -------- | ----- | --------- |
+| p01 - Build the agnostic `authoring-docs` baseline                | complete | 4     | 4/4       |
+| p02 - Build the `oat-docs-authoring` wrapper                      | pending  | 4     | 0/4       |
+| p03 - Improve `oat-docs-analyze` checks and references            | pending  | 5     | 0/5       |
+| p04 - Refine bootstrap guidance and OAT docs contract pages       | pending  | 4     | 0/4       |
+| p05 - Polish the standalone migration handoff guide               | pending  | 3     | 0/3       |
+| p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
 
-**Total:** 0/26 tasks completed
+**Total:** 4/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-05
+**Completed:** 2026-06-05
 
 ### Task p01-t01: Define the baseline skill structure
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `698dcb403505b39a28f31011b1e2ba7b4b5a7ee4`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
 
 ### Task p01-t02: Cover documentation categories without OAT coupling
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `a461c7cf91b1f1bb0babf600e7e05a0be7121b84`
+**Verification:**
+
+- `grep -R "OAT\|Fumadocs\|fumadocs" .agents/skills/authoring-docs || true` - pass, no matches
+- `pnpm oat:validate-skills` - pass
 
 ### Task p01-t03: Add templates and review rubric guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `3fd4861a294cffe9e9e608b5cc71e434d2b1f138`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+- `rg -n '^````?md$|^````?$' .agents/skills/authoring-docs/references/templates.md` - pass, nested template fences balanced
 
 ### Task p01-t04: Baseline acceptance review
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** this commit (`chore(p01-t04): polish authoring docs baseline`)
+**Verification:**
+
+- `grep -R "OAT\|Fumadocs\|fumadocs" .agents/skills/authoring-docs || true` - pass, no matches
+- `pnpm oat:validate-skills` - pass
+
+**Phase summary:**
+
+- Created provider-agnostic `authoring-docs` at `version: 1.0.0`.
+- Added evidence-first workflow, page-type guidance, information architecture, writing style, category guidance, reusable templates, and review rubric references.
+- Confirmed the baseline has no OAT/Fumadocs-specific authoring contract.
+- Deferred provider sync output and public package version bumps to p06 as required by plan.
+
+**Deviations from plan/design/spec:**
+
+- None. No intentional divergence recorded.
 
 ## Phase p02: Build the `oat-docs-authoring` wrapper
 
