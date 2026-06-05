@@ -12,7 +12,8 @@ OAT docs navigation starts from authored `docs/**/index.md` files. Each `## Cont
 - Every documentation directory must contain an `index.md`.
 - Every `index.md` must include a `## Contents` section.
 - Every `## Contents` link should use a `.md`-suffixed relative target, including child directory links such as `subdir/index.md`.
-- Generated navigation artifacts must be refreshed from authored `## Contents` after adding, removing, renaming, or reordering pages.
+- For Fumadocs, refresh or freshness-check the generated app-root manifest after adding, removing, or renaming Markdown files. Compare that manifest against authored `## Contents` maps for drift; reordering `## Contents` does not reorder the generated manifest's file-tree sort.
+- For MkDocs, run `oat docs nav sync` after adding, removing, renaming, or reordering pages. It regenerates `mkdocs.yml` from authored `## Contents` maps and preserves the order declared in each local map.
 
 ## `## Contents` format
 

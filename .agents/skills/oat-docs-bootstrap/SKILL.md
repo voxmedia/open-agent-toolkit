@@ -928,7 +928,10 @@ Narrate each field actually present in their config (skip fields that are absent
 
 - **`documentation.root`** — the scaffolded app directory. Downstream tools (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`) use this to find "the docs" without the user having to tell them.
 - **`documentation.tooling`** — framework + lint + format. `oat-docs-analyze` uses `framework` to pick the right rule set; the tooling values also get echoed into the `## Documentation` section the CLI wrote into root `AGENTS.md`.
-- **`documentation.index`** — the authored `docs/index.md`. This is the content map (not the generated root `index.md` — that's Section B). Tools read this to understand top-level navigation intent.
+- **`documentation.index`** — branch this narration on the inspected `documentation.tooling` and path; do not describe one meaning for every framework:
+  - **Fumadocs:** this should be the generated app-root manifest, usually `<appRoot>/index.md`, after the successful build ran `oat docs generate-index`. Explain that this machine-shaped file is how tools inspect the full Markdown file tree, and that the authored source map the user edits is a separate file at `<appRoot>/docs/index.md` with its own `## Contents`.
+  - **Fumadocs stale path warning:** if the inspected path still points inside `<appRoot>/docs/` after build verification, do not teach that as normal. Surface it as a warning that `oat docs generate-index` did not update `documentation.index` as expected, then point the user to Section B for the generated/authored split.
+  - **MkDocs:** this should point at the configured MkDocs nav/config surface, usually `<appRoot>/mkdocs.yml` and matching `documentation.config`. Explain that the YAML file contains the generated/derived `nav:` block when `oat docs nav sync` is used, while authored `docs/index.md` and nested `## Contents` sections remain the source maps the user edits.
 - **`documentation.config`** (MkDocs only) — path to `mkdocs.yml`. Present for MkDocs because its chrome/nav is YAML-configured; absent for Fumadocs because chrome is code.
 - **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until `oat-docs-analyze` reports no open recommendations. Explain whichever value is set on this project.
 
