@@ -26,6 +26,7 @@ oat_analysis_commit: { commitHash }
 - **Open questions / ask-user items:** {N}
 - **Contradicted claims:** {N}
 - **Coverage gaps / content opportunities:** {N}
+- **Generated index findings:** {N}
 
 ## Docs Inventory
 
@@ -108,6 +109,32 @@ None | {numbered list}
 
 {Or: "No directory contract gaps identified."}
 
+## Generated Index and Local Map Findings
+
+Use this section for OAT/Fumadocs docs apps or any docs surface with generated
+root indexes, generated manifests, `meta.json`, or comparable derived navigation
+files. Treat authored `docs/**/index.md` `## Contents` maps as source unless
+local configuration or guidance proves a different source of truth.
+
+| #   | Classification                   | Generated Artifact       | Authored Source Evidence        | Issue                         | Severity | Recommended Fix                         |
+| --- | -------------------------------- | ------------------------ | ------------------------------- | ----------------------------- | -------- | --------------------------------------- |
+| 1   | {missing output}                 | `{index.md or manifest}` | `{config/script/guidance refs}` | Generated output is absent    | Medium   | Run or document the generation workflow |
+| 2   | {ignored/local output}           | `{index.md or manifest}` | `{gitignore/config refs}`       | Local generated file is stale | Medium   | Regenerate locally or clarify lifecycle |
+| 3   | {stale output}                   | `{index.md or manifest}` | `{docs/**/index.md refs}`       | Deleted path still appears    | High     | Regenerate derived output               |
+| 4   | {authored-source contract drift} | `{index.md or manifest}` | `{parent index.md refs}`        | Source map omits child docs   | Medium   | Fix authored `## Contents` map          |
+| 5   | {unclear generator semantics}    | `{index.md or manifest}` | `{generator/config refs}`       | Ordering or inclusion unclear | Low      | Document or investigate semantics       |
+
+{Or: "No generated index or local-map findings identified."}
+
+For every generated-index finding:
+
+- Cite exact generated artifact paths and authored source-map paths.
+- Distinguish missing entries, stale entries, ordering drift, unreachable
+  generated entries, and unclear generator behavior.
+- State whether generated warning banners are present, absent, or not expected.
+- Do not recommend hand-editing generated artifacts; recommend source-map fixes,
+  regeneration, local guidance updates, or generator investigation.
+
 ## Accuracy Verification
 
 Check only claims that are verifiable from repo sources such as code, config, schemas,
@@ -180,6 +207,10 @@ canonical docs/config/examples.
 
 - `oat-docs-apply` may only implement recommendations backed by evidence in this artifact.
 - Findings based on contradicted claims must be resolved against cited repo sources before `oat-docs-apply` acts on them.
+- Generated artifacts must not be hand-edited by `oat-docs-apply`. If a
+  generated-index finding requires output changes, apply should update authored
+  source maps or run the documented generator only after user approval and local
+  workflow confirmation.
 - Content opportunity recommendations require `oat-docs-apply` to read the cited router/service/model files before generating prose; it must not synthesize feature coverage from memory.
 - Recommendations marked `omit` must stay out of generated docs changes.
 - Recommendations marked `ask_user` require explicit user confirmation before generation.

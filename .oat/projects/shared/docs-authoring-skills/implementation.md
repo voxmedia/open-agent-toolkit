@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | ----------------------------------------------------------------- | ----------- | ----- | --------- |
 | p01 - Build the agnostic `authoring-docs` baseline                | complete    | 4     | 4/4       |
 | p02 - Build the `oat-docs-authoring` wrapper                      | complete    | 4     | 4/4       |
-| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 1/5       |
+| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 2/5       |
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | pending     | 4     | 0/4       |
 | p05 - Polish the standalone migration handoff guide               | pending     | 3     | 0/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | pending     | 6     | 0/6       |
 
-**Total:** 9/26 tasks completed
+**Total:** 10/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -144,7 +144,7 @@ oat_generated: false
 ### Task p03-t01: Confirm analyzer implementation boundary
 
 **Status:** completed
-**Commit:** recorded in task commit
+**Commit:** `5f4b6ffca5a64812981b72dafd0081fd8c770d28`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -157,8 +157,17 @@ oat_generated: false
 
 ### Task p03-t02: Add generated-index and local-map checks
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** recorded in task commit
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Notes:**
+
+- Bumped `oat-docs-analyze` from `1.3.0` to `1.4.0`.
+- Added read-only generated root index, warning banner, freshness, stale entry, missing entry, ordering drift, unreachable generated entry, and unclear generator semantics checks.
+- Extended the analysis artifact template with generated-index/local-map finding classifications and a generated-file no-hand-editing apply contract.
 
 ### Task p03-t03: Add link, Contents, and Markdown hygiene checks
 

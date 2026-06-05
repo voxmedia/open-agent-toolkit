@@ -1,6 +1,6 @@
 ---
 name: oat-docs-analyze
-version: 1.3.0
+version: 1.4.0
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
@@ -50,6 +50,9 @@ If you catch yourself:
 
 - Editing docs content directly -> STOP and move that recommendation to the artifact.
 - Rewriting navigation while analyzing -> STOP and record the required fix instead.
+- Hand-editing or regenerating generated root indexes -> STOP and record a
+  generated-artifact finding with the exact evidence that proves freshness or
+  source-contract drift.
 
 **Recovery:**
 
@@ -73,7 +76,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[4/10] Assessing quality + coverage…`
   - `[5/10] Verifying substantive claims…`
   - `[6/10] Finding content opportunities…`
-  - `[7/10] Checking nav and drift…`
+  - `[7/10] Checking generated indexes, nav and drift…`
   - `[8/10] Writing analysis artifact…`
   - `[9/10] Reviewing artifact accuracy…`
   - `[10/10] Updating verified tracking + summary…`
@@ -109,6 +112,8 @@ Build a complete inventory of:
 - All directories containing Markdown files
 - All `index.md` files
 - Any `overview.md` files
+- Generated root indexes or manifests, including warning banners such as "do not edit"
+- Local guidance that identifies generated index paths or regeneration commands
 - `mkdocs.yml` nav entries when present
 
 Record the docs surface type:
@@ -116,10 +121,13 @@ Record the docs surface type:
 - `mkdocs-app`
 - `docs-tree`
 - `root-markdown`
+- `oat-fumadocs-app`
 
 Capture the evidence sources that will justify later findings and recommendations. Prefer:
 
 - `mkdocs.yml` and generated nav structure
+- `.oat/config.json`, package scripts, generator scripts, and local `AGENTS.md`
+  files that identify authored docs roots or generated root indexes
 - `docs/contributing.md`, contributor guides, and setup docs
 - `package.json` scripts, `requirements.txt`, and docs bootstrap scripts
 - existing `index.md` trees and repeated directory patterns
@@ -139,6 +147,30 @@ For every documentation directory:
 3. Verify the `## Contents` section maps sibling pages and immediate child directories.
 4. Flag `overview.md` usage as a migration finding.
 5. Verify single-file directories still expose an `index.md` entrypoint.
+
+For OAT/Fumadocs docs apps, also distinguish authored source maps from generated
+root indexes:
+
+1. Resolve the authored docs source root and generated root index path from
+   `.oat/config.json`, package scripts, generator scripts, or local guidance.
+2. Confirm the generated root index exists when local configuration says it is
+   produced, and record whether it appears tracked, ignored, or local-only.
+3. Confirm generated warning banners are present when the repo's generator emits
+   them or local guidance requires them.
+4. Compare generated entries against the authored `## Contents` graph.
+5. Flag stale generated entries that point to deleted or moved docs paths.
+6. Flag missing generated entries for authored pages or child directories that
+   are reachable from source `## Contents` maps.
+7. Flag generated entries that are not reachable from any authored parent
+   `## Contents` map unless local generator semantics explicitly explain them.
+8. Classify ordering drift separately from missing or stale entries.
+9. If source maps and generated output disagree but generator behavior is not
+   documented well enough to judge, classify the finding as unclear generator
+   semantics instead of guessing.
+
+Generated index checks are read-only. Recommend regeneration, source-map fixes,
+or tool investigation in the analysis artifact; do not hand-edit generated
+files from this skill.
 
 ### Step 3: Assess Quality and Coverage
 
@@ -261,6 +293,19 @@ where the docs should live, and what specific subtopics the codebase shows shoul
 
 ### Step 6: Check Navigation and Drift
 
+If a generated root index or manifest exists:
+
+1. Compare generated entries with the authored `## Contents` graph.
+2. Flag generated output that is missing, ignored/local-only when local guidance
+   expects a tracked artifact, stale, ordered differently from authored maps, or
+   unclear because generator semantics are undocumented.
+3. Flag generated entries that are not reachable from authored maps as either
+   authored-source contract drift or generator-semantics uncertainty, depending
+   on the evidence.
+4. Cite exact generated paths, authored source paths, package scripts, config
+   files, and representative links for each finding.
+5. Prefer source-of-truth fixes over generated-file edits.
+
 If `mkdocs.yml` exists:
 
 1. Compare nav entries with the docs tree.
@@ -295,6 +340,7 @@ Populate the artifact with:
 - Inventory summary
 - Severity-rated findings
 - Directory coverage and contract gaps
+- Generated index and authored local-map findings
 - Accuracy verification verdicts for repo-checkable claims
 - Content opportunities for missing or thin docs coverage
 - Navigation/drift findings
