@@ -1008,7 +1008,7 @@ In scope (required — share these):
 - **Material theme provides the default UI.** Light/dark toggle, responsive sidebar, search UI. Config lives under `theme:` in `mkdocs.yml`.
 - **Plugins are pip-installed and named in `mkdocs.yml`.** The scaffold's `requirements.txt` pins the plugins currently wired in. Adding a new plugin = add to both files.
 - **Python environment via `requirements.txt` + `setup-docs.sh`.** The scaffold provides a `setup-docs.sh` that creates a venv, installs `requirements.txt`, and is idempotent on re-run. Use it; the skill assumes you will.
-- **The shared concepts still apply.** The `## Contents` contract (Section C), the two `index.md` model (Section B — note for MkDocs the generated artifact is the `nav:` section of `mkdocs.yml`, not a root `index.md`), and the three agent-instruction surfaces (Section D) all transfer directly.
+- **The shared concepts still apply.** The `## Contents` contract (Section C), the authored-source/generated-navigation model (Section B), and the three agent-instruction surfaces (Section D) all transfer directly.
 
 Deferred (out of scope for this skill — point, don't teach):
 
