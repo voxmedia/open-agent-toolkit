@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | p02 - Build the `oat-docs-authoring` wrapper                      | complete | 4     | 4/4       |
 | p03 - Improve `oat-docs-analyze` checks and references            | complete | 5     | 5/5       |
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | complete | 4     | 4/4       |
-| p05 - Polish the standalone migration handoff guide               | pending  | 3     | 0/3       |
+| p05 - Polish the standalone migration handoff guide               | complete | 3     | 3/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
 
-**Total:** 17/26 tasks completed
+**Total:** 20/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -336,23 +336,62 @@ oat_generated: false
 
 ## Phase p05: Polish the standalone migration handoff guide
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-05
+**Completed:** 2026-06-05
 
 ### Task p05-t01: Audit guide scope and contradictions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8f4c53eb6eebad044e846b4c026c8ec494d63f4f`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Notes:**
+
+- Added an explicit standalone migration scope boundary.
+- Clarified that bootstrap outputs may be reference material but `oat-docs-bootstrap` does not own migration completion.
+- Tightened generated-index/build and render-check list formatting in the migration sequence.
 
 ### Task p05-t02: Add execution-ready migration flow
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ed6755cfc2a4e072078599db46edc3f71237b1ea`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Notes:**
+
+- Added a copy-paste agent handoff prompt with target repo, branch/PR, inventory, validation, and final-report expectations.
+- Added execution-ready migration phases covering preflight, app shell alignment, content conversion, navigation/index conversion, source-reference repair, config/CI/deploy/indexing, instruction surfaces, validation/render checks, and final handoff.
+- Added owner-review handling for unverifiable commands, deploy paths, owners/support claims, integrations, stale architecture claims, and repo-specific source-reference systems.
 
 ### Task p05-t03: Final guide polish and handoff check
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e4136aa90cf67b1bb3d687fb0b0f09f1f9b6b743`
+**Verification:**
+
+- `pnpm format` - pass
+
+**Notes:**
+
+- Added a concise direct handoff section at the top of the guide.
+- Clarified that historical Duet/Honeycomb/OAT citations are rationale for maintainers, not required target-repo inputs.
+- Added a prior-refactor lesson check covering inventory before editing, current source over stale docs, integration path gravity, authored index maps, render checks beyond build, formatter hazards, OAT config validity, build/dev isolation, and accuracy audits.
+
+**Phase summary:**
+
+- Polished the standalone MkDocs-to-OAT-Fumadocs migration guide into an execution-ready handoff.
+- Kept the guide standalone and outside `oat-docs-bootstrap` ownership.
+- Added clear migration inputs, task phases, validation discovery, owner-review rules, and final handoff expectations.
+- Left generated docs output, provider sync, distribution registration, bundled assets, and public package version bumps to p06 as required by plan and dispatch.
+
+**Deviations from plan/design/spec:**
+
+- None. No intentional divergence recorded.
 
 ## Phase p06: Register, version, sync, and validate the shipped asset set
 
@@ -672,6 +711,27 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Continue implementation at `p04-t01`.
 
+### Phase p05 Complete
+
+**Date:** 2026-06-05
+**Review artifact:** pending
+**Review verdict:** pending
+
+**Outcome:**
+
+- Polished the standalone MkDocs-to-OAT-Fumadocs migration handoff guide.
+- Added a direct handoff section, standalone scope boundary, copy-paste agent prompt, execution-ready migration phases, owner-review rules, and prior-refactor lesson checklist.
+- Preserved the migration/bootstrap boundary: the guide can reference bootstrap-generated shell outputs, but it does not make `oat-docs-bootstrap` own migration.
+- Left dirty generated docs output and all provider/distribution/versioning work for p06.
+
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass for p05-t01.
+- `pnpm oat:validate-skills` - pass for p05-t02.
+- `pnpm format` - pass for p05-t03.
+
+**Next:** Continue implementation at `p06-t01`.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
@@ -680,11 +740,12 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 ## Test Results
 
-| Phase    | Tests Run                   | Passed | Failed | Notes                                                                                              |
-| -------- | --------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
-| planning | Inline plan artifact checks | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps. |
-| p02      | `pnpm oat:validate-skills`  | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                  |
-| p03      | `pnpm oat:validate-skills`  | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.        |
+| Phase    | Tests Run                                 | Passed | Failed | Notes                                                                                              |
+| -------- | ----------------------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
+| planning | Inline plan artifact checks               | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps. |
+| p02      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                  |
+| p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.        |
+| p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.       |
 
 ## Final Summary (for PR/docs)
 
