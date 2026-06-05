@@ -29,6 +29,8 @@ oat_analysis_commit: { commitHash }
 - **Generated index findings:** {N}
 - **Broken or extensionless local docs links:** {N}
 - **Markdown hygiene findings:** {N}
+- **Local guidance gaps:** {N}
+- **Owner-review gaps:** {N}
 
 ## Docs Inventory
 
@@ -169,6 +171,23 @@ False-positive guardrails:
 - Do not flag multiple H1s in intentional imported README/generated contexts
   unless local guidance says those files are authored docs.
 
+## Local Docs-App Guidance
+
+Use this section when the repository has docs-app `AGENTS.md`, contributing
+docs, authoring guides, generated-index docs, or legacy docs workflow guidance.
+
+| #   | Guidance Area              | Source Ref             | Status                        | Evidence       | Severity | Recommended Fix                     |
+| --- | -------------------------- | ---------------------- | ----------------------------- | -------------- | -------- | ----------------------------------- |
+| 1   | Authored docs source root  | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Medium   | Document the source root            |
+| 2   | Generated root index       | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Medium   | Explain derived output lifecycle    |
+| 3   | `index.md` / `## Contents` | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Medium   | Add local map contract guidance     |
+| 4   | `.md` links                | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Medium   | Document `.md` relative links       |
+| 5   | `.md` vs `.mdx`            | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Low      | Explain when `.mdx` is allowed      |
+| 6   | Analyze/apply boundaries   | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Medium   | Route audits/apply work correctly   |
+| 7   | Freshness checks           | `{AGENTS.md or guide}` | {covered \| missing \| stale} | `{exact refs}` | Medium   | Add regeneration/freshness guidance |
+
+{Or: "No local docs-app guidance gaps identified."}
+
 ## Accuracy Verification
 
 Check only claims that are verifiable from repo sources such as code, config, schemas,
@@ -182,6 +201,22 @@ runtime-only behavior here.
 | ... |                |                       |                      |                                          |                                            |                                                  |
 
 {Or: "No repo-checkable substantive claims required accuracy verification."}
+
+## Coverage Review by Surface
+
+Summarize which documentable surfaces were proven by repo evidence and how well
+the docs cover them. Mark owner-review gaps instead of guessing when claims
+depend on unsupported ownership, support, deployment, observability, rollback,
+external integration, or production behavior.
+
+| #   | Surface     | Repo Evidence                      | Docs Coverage State                      | Missing or Thin Areas                                      | Owner Review Needed |
+| --- | ----------- | ---------------------------------- | ---------------------------------------- | ---------------------------------------------------------- | ------------------- |
+| 1   | App/service | `{entrypoint/service/config refs}` | {adequate \| thin \| no coverage \| N/A} | `{setup/testing/config/deploy/observability/runbook refs}` | {yes/no + reason}   |
+| 2   | API         | `{router/schema refs}`             | {adequate \| thin \| no coverage \| N/A} | `{contracts/auth/errors/examples/versioning}`              | {yes/no + reason}   |
+| 3   | CLI         | `{command/flag/test refs}`         | {adequate \| thin \| no coverage \| N/A} | `{flags/output/dry-run/force/scripting/exit-codes}`        | {yes/no + reason}   |
+| 4   | Operations  | `{deploy/monitoring/runbook refs}` | {adequate \| thin \| no coverage \| N/A} | `{release/rollback/support/escalation/troubleshooting}`    | {yes/no + reason}   |
+
+{Or: "No app/service, API, CLI, or operations surface required coverage review."}
 
 ## Content Opportunities
 

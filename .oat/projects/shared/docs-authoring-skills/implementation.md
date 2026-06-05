@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p03-t04
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | ----------------------------------------------------------------- | ----------- | ----- | --------- |
 | p01 - Build the agnostic `authoring-docs` baseline                | complete    | 4     | 4/4       |
 | p02 - Build the `oat-docs-authoring` wrapper                      | complete    | 4     | 4/4       |
-| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 3/5       |
+| p03 - Improve `oat-docs-analyze` checks and references            | in_progress | 5     | 4/5       |
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | pending     | 4     | 0/4       |
 | p05 - Polish the standalone migration handoff guide               | pending     | 3     | 0/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | pending     | 6     | 0/6       |
 
-**Total:** 11/26 tasks completed
+**Total:** 12/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -172,7 +172,7 @@ oat_generated: false
 ### Task p03-t03: Add link, Contents, and Markdown hygiene checks
 
 **Status:** completed
-**Commit:** recorded in task commit
+**Commit:** `73bcd250ddd6158fdd30433c25f5a55184bafc6d`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -185,8 +185,17 @@ oat_generated: false
 
 ### Task p03-t04: Add docs-app guidance and coverage checks
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** recorded in task commit
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Notes:**
+
+- Added docs-app guidance checks for authored docs roots, generated manifests, `index.md`, `## Contents`, `.md` links, `.md` vs `.mdx`, analyze/apply boundaries, and generated artifact freshness.
+- Added app/service, API, CLI, and operations coverage checks with owner-review handling for unsupported or unverifiable operational claims.
+- Extended the analysis artifact template with local guidance and surface coverage review sections.
 
 ### Task p03-t05: Analyzer validation pass
 

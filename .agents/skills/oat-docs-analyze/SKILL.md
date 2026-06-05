@@ -129,12 +129,29 @@ Capture the evidence sources that will justify later findings and recommendation
 - `.oat/config.json`, package scripts, generator scripts, and local `AGENTS.md`
   files that identify authored docs roots or generated root indexes
 - `docs/contributing.md`, contributor guides, and setup docs
+- docs-app `AGENTS.md`, contributing pages, or authoring guides that tell
+  agents how to edit, analyze, apply, and validate docs
 - `package.json` scripts, `requirements.txt`, and docs bootstrap scripts
 - existing `index.md` trees and repeated directory patterns
 - exact missing or stale paths, commands, and page references
 
 Do **not** infer docs structure conventions from a tiny sample of pages when the broader
 tree or config disagrees.
+
+For OAT/Fumadocs docs apps, check whether local guidance covers:
+
+- authored docs source location
+- generated root indexes or manifests and their no-hand-edit boundary
+- every content directory needing `index.md`
+- useful `## Contents` maps
+- `.md`-suffixed relative links, including `subdir/index.md`
+- `.md` as the default format and `.mdx` only for JSX/component needs
+- read-only audit routing to `oat-docs-analyze`
+- approved bulk edits routing to `oat-docs-apply`
+- generated artifact regeneration or freshness checks after source docs changes
+
+Flag stale local guidance that references older aliases without mapping them to
+the current analyze/apply flow.
 
 ### Step 2: Evaluate the `index.md` Contract
 
@@ -282,8 +299,31 @@ sources only. Prefer:
 - `app/services/`, `src/services/`, or equivalent business-logic modules
 - the main application entrypoint and route registration files
 - key models, schemas, and config surfaces that define user-facing behavior
+- command definitions, CLI parsers, flag schemas, and command tests
+- deployment, release, monitoring, runbook, rollback, and support/escalation
+  files that define operational behavior
 
 Do not speculate about future roadmap items or undocumented external integrations.
+
+Classify coverage by the surfaces proven in the repo:
+
+- For app/service docs, check purpose, audience, local setup, testing,
+  configuration, deployment/release, observability, runbooks, rollback,
+  ownership, support/escalation, troubleshooting, and common failure modes.
+- For API docs, check whether broad API surfaces have navigable
+  contract-grade reference pages with routes/endpoints, request/response
+  shapes, authentication, error modes, examples, and versioning where those
+  concepts exist in repo sources.
+- For CLI docs, check command groups, flags, output modes, destructive
+  behavior, dry-run/force options, scripting contracts, exit-code behavior when
+  sourced, and examples for common workflows.
+- For operations docs, flag "Future Topics" placeholders, empty runbook
+  outlines, unsupported deploy/monitoring claims, and missing owner-reviewed
+  gaps for unverifiable operations knowledge.
+
+When a claim affects ownership, support, deployment, observability, rollback, or
+external integration behavior and repo evidence cannot verify it, mark it as an
+owner-review gap rather than guessing.
 
 For each significant feature or API capability found in the codebase:
 
@@ -365,6 +405,7 @@ Populate the artifact with:
 - Directory coverage and contract gaps
 - Generated index and authored local-map findings
 - Authored link, `## Contents`, and Markdown hygiene findings
+- Local docs-app guidance gaps
 - Accuracy verification verdicts for repo-checkable claims
 - Content opportunities for missing or thin docs coverage
 - Navigation/drift findings

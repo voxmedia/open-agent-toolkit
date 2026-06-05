@@ -63,6 +63,37 @@ Use this checklist when evaluating a docs surface.
 - `mkdocs.yml` exists when the repo is using an OAT docs app.
 - Navigation is consistent with the docs tree.
 - `docs/contributing.md` documents enabled plugins/extensions when an MkDocs app exists.
+- OAT/Fumadocs docs-app guidance identifies the authored docs source root.
+- Local guidance explains that generated root indexes/manifests are derived
+  output and must not be hand-edited.
+- Local guidance states that each content directory needs `index.md` and each
+  authored `index.md` needs a useful `## Contents`.
+- Local guidance documents `.md`-suffixed relative docs links, including
+  `subdir/index.md`.
+- Local guidance explains `.md` vs `.mdx` expectations.
+- Local guidance routes broad read-only audits to `oat-docs-analyze` and
+  approved bulk changes to `oat-docs-apply`.
+- Local guidance tells agents to regenerate or freshness-check generated
+  artifacts after source docs edits.
+- Older analyze/apply aliases are mapped to the current flow or removed.
+
+## Coverage
+
+- App/service docs cover purpose, audience, local setup, testing, configuration,
+  deployment/release, observability, runbooks, rollback, ownership,
+  support/escalation, troubleshooting, and common failure modes when those
+  surfaces exist in repo evidence.
+- API docs for broad API surfaces include navigable contract-grade references:
+  routes/endpoints, request/response shapes, authentication, error modes,
+  examples, and versioning when applicable.
+- CLI docs expose command groups, flags, output modes, destructive behavior,
+  dry-run/force options, scripting contracts, exit-code behavior when sourced,
+  and common workflow examples.
+- Operations docs replace "Future Topics" placeholders with concrete pages or
+  explicit owner-reviewed gaps.
+- Unsupported or unverifiable claims about owners, support, deployment,
+  observability, rollback, external integrations, or production behavior are
+  marked for owner review instead of being treated as facts.
 
 ## Claims Are Evidence-Backed
 
