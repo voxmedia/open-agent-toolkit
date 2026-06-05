@@ -1,0 +1,24 @@
+{
+  "name": "vox-docs-authoring-skill",
+  "description": "Markdown-first technical documentation authoring guide for humans and AI agents.",
+  "files": [
+    "README.md",
+    "SKILL.md",
+    "01-principles.md",
+    "02-agent-workflow.md",
+    "03-information-architecture.md",
+    "04-page-types.md",
+    "05-writing-style.md",
+    "06-markdown-fumadocs.md",
+    "07-api-docs.md",
+    "08-cli-docs.md",
+    "09-app-service-docs.md",
+    "10-library-framework-docs.md",
+    "11-architecture-operations-docs.md",
+    "12-internal-vs-public.md",
+    "13-templates.md",
+    "14-review-rubric.md",
+    "15-references.md",
+    "16-docs-audit-prompts.md"
+  ]
+}
