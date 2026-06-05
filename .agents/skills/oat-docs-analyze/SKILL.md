@@ -13,7 +13,8 @@ Scan a repository's documentation surface, evaluate it against the OAT docs cont
 
 ## Prerequisites
 
-- Git repository with either an MkDocs app, a `docs/` tree, or root-level Markdown docs.
+- Git repository with either an OAT/Fumadocs docs app, an MkDocs app, a
+  `docs/` tree, or root-level Markdown docs.
 - `jq` available in PATH for tracking updates.
 
 ## Mode Assertion
@@ -85,14 +86,27 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ### Step 0: Resolve Docs Target and Analysis Mode
 
-Determine the documentation root using the first matching surface:
+Determine the documentation root using explicit docs-app evidence before generic
+repo fallbacks:
 
-1. `apps/*/mkdocs.yml`
-2. `mkdocs.yml` at repo root
-3. `docs/`
-4. Root-level Markdown docs (`README.md`, `CONTRIBUTING.md`, etc.) when no docs app exists
+1. `.oat/config.json` `documentation.root` / `documentation.tooling`.
+   - When `documentation.tooling` is `fumadocs`, record the surface type as
+     `oat-fumadocs-app`.
+   - Treat `documentation.root` as the docs app root. Resolve the authored docs
+     source root and generated index path from `documentation.index`, app config,
+     package scripts, generator scripts, or local guidance.
+2. OAT/Fumadocs app candidates under `apps/*`, before root `docs/` fallback:
+   - `apps/*/source.config.*`
+   - `apps/*/next.config.*` with `apps/*/docs`
+   - `apps/*/docs` plus docs-app package scripts or local guidance evidence
+3. `apps/*/mkdocs.yml`
+4. `mkdocs.yml` at repo root
+5. generic root `docs/`
+6. Root-level Markdown docs (`README.md`, `CONTRIBUTING.md`, etc.) when no docs app exists
 
-Prefer the OAT docs app when multiple MkDocs apps exist and one is clearly the active repo docs surface.
+Do not select generic root `docs/` or root Markdown docs while `.oat/config.json`
+or `apps/*` Fumadocs evidence identifies an active OAT/Fumadocs docs app. Prefer
+the app declared in `.oat/config.json` when multiple app candidates exist.
 
 Resolve tracking and analysis mode using the shared helper:
 

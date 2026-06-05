@@ -60,9 +60,19 @@ Use this checklist when evaluating a docs surface.
 
 ## Docs App Contract
 
-- `mkdocs.yml` exists when the repo is using an OAT docs app.
-- Navigation is consistent with the docs tree.
-- `docs/contributing.md` documents enabled plugins/extensions when an MkDocs app exists.
+- For `mkdocs-app`, `mkdocs.yml` exists.
+- For `mkdocs-app`, navigation is consistent with the docs tree.
+- For `mkdocs-app`, `docs/contributing.md` documents enabled
+  plugins/extensions when local convention requires it.
+- For `oat-fumadocs-app`, OAT config or app-local evidence identifies the docs
+  app before any generic root `docs/` fallback.
+- For `oat-fumadocs-app`, `.oat/config.json` `documentation.root` /
+  `documentation.tooling`, `apps/*/source.config.*`, `apps/*/next.config.*`, or
+  equivalent local guidance backs the classification.
+- For `oat-fumadocs-app`, the authored docs source root exists and is distinct
+  from generated app-root indexes/manifests when the app uses generated output.
+- For `oat-fumadocs-app`, generated app-root index evidence exists when local
+  config or guidance declares one.
 - OAT/Fumadocs docs-app guidance identifies the authored docs source root.
 - Local guidance explains that generated root indexes/manifests are derived
   output and must not be hand-edited.
