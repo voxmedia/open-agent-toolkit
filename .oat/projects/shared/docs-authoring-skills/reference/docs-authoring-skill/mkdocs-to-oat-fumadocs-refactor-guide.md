@@ -32,6 +32,14 @@ Use this guide when converting an existing MkDocs docs app into an OAT-conventio
 
 Do not use it as the primary guide for a brand-new docs surface. For a new docs surface, use `oat-docs-bootstrap` and then optionally run a content audit. This guide assumes there is existing content, existing navigation, existing build/deploy behavior, and possibly legacy MkDocs syntax or source-code references that must be preserved, converted, or deleted.
 
+## Scope boundary
+
+This is a standalone migration handoff. It can reference OAT docs conventions, compare against bootstrap-generated app shells, and reuse commands already present in the target repo, but it does not modify `oat-docs-bootstrap` or make bootstrap own migration completion.
+
+Use bootstrap outputs as a scaffold reference only after the migration agent has inventoried the existing repo. If the target has `mkdocs.yml`, Python docs tooling, populated docs trees, deploy workflows, or source-to-doc reference systems, treat the work as migration first and bootstrap second.
+
+The migration agent owns these outputs for the target repo: a converted Fumadocs app shell, converted authored docs, updated local `index.md` maps, regenerated derived files, current OAT config, coherent instruction surfaces, validation evidence, render evidence, and owner-review items for anything unverifiable.
+
 ## Migration principles
 
 - **Inventory before editing.** Honeycomb's successful migration started with counts and concrete facts: 122 Markdown files, about 42 directories, 38 `overview.md`, MkDocs tooling, syntax features, deploy workflow, docs indexing, OAT config, Node/pnpm constraints, and app path decisions (`honeycomb:discovery.md:28-56`).
@@ -146,15 +154,14 @@ Before editing, inspect and record:
    - Run formatter first, then lint autofix, then manually fix remaining content findings.
    - Watch for formatter corruption in nested fences and tutorial content.
 10. **Generate indexes and build.**
-
-- Run the docs build.
-- Confirm generated root index has a generated warning.
-- Confirm `out/` exists.
+    - Run the local index-generation command discovered from package scripts or OAT config.
+    - Run the docs build.
+    - Confirm generated root index has a generated warning.
+    - Confirm `out/` exists.
 
 11. **Verify rendered HTML.**
-
-- Inspect exported pages for callouts, images, tabs, Mermaid, and no literal MkDocs syntax.
-- A build-only verification is insufficient.
+    - Inspect exported pages for callouts, images, tabs, Mermaid, and no literal MkDocs syntax.
+    - A build-only verification is insufficient.
 
 12. **Update CI/config/agent surfaces.**
 
@@ -445,4 +452,4 @@ Use this at the end of a migration:
 - Which root package script patterns are safe for automatic docs build/dev isolation patches, and which should be surfaced as manual diffs?
 - If the target repo has source-to-doc reference tooling, what project-specific repair command should be run after `overview.md`→`index.md` renames?
 - What is the expected long-term migration path for repos that still need MkDocs-only plugins with no OAT/Fumadocs equivalent?
-- Should OAT docs bootstrap require render checks against `out/` before a migration can be marked complete?
+- Should this migration handoff require render checks against `out/` before a migration can be marked complete?
