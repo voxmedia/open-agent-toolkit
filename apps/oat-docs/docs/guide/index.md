@@ -9,6 +9,14 @@ This page is now a compatibility router.
 
 The old catch-all User Guide is being split into clearer adoption lanes so new users can choose the part of OAT that matches what they actually need.
 
+## Contents
+
+- [Core Concepts](concepts.md) - High-level mental model while concept material is being redistributed.
+
+## Status
+
+This guide bucket remains visible so older links have a stable landing page. New docs should go into the canonical top-level sections below instead of adding more pages under `guide/`.
+
 ## Canonical Sections
 
 - [Provider Sync](../provider-sync/index.md) - Provider interoperability, drift, sync, and config behavior.

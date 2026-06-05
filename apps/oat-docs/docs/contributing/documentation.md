@@ -12,6 +12,7 @@ Documentation should ship with the code it explains. This page covers the core d
 - Every documentation directory must contain an `index.md`.
 - Each `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
+- Fumadocs and MkDocs share this authored contract, but they regenerate different artifacts.
 
 ## Local workflow
 
@@ -51,12 +52,13 @@ Documentation should ship with the code it explains. This page covers the core d
 
 - Keep docs aligned with the current repo behavior and current command surface.
 - Prefer cross-links over duplicated conceptual content.
-- When you add, remove, or rename docs pages, refresh the generated docs surface:
+- When you add, remove, or rename docs pages in this Fumadocs app, refresh the generated root manifest:
 
   ```bash
   pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
   ```
 
+- In MkDocs apps, use `oat docs nav sync` to refresh `mkdocs.yml` instead. Do not use MkDocs nav sync as the Fumadocs regeneration step.
 - Use [Markdown Features](markdown-features.md) for supported syntax and examples.
 
 ## Agent guidance

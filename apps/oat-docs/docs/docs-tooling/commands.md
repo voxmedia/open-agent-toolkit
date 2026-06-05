@@ -17,14 +17,23 @@ and **MkDocs Material**.
 
 ## Command surface
 
-| Command                   | Purpose                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------ |
-| `oat docs init`           | Scaffold a new docs app (Fumadocs or MkDocs).                                        |
-| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.                   |
-| `oat docs generate-index` | Generate a docs index from the markdown file tree.                                   |
-| `oat docs nav sync`       | Regenerate `mkdocs.yml` navigation from directory `index.md` `## Contents` sections. |
-| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.                    |
-| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.                      |
+| Command                   | Purpose                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------- |
+| `oat docs init`           | Scaffold a new docs app (Fumadocs or MkDocs).                                               |
+| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.                          |
+| `oat docs generate-index` | Generate a docs index from the markdown file tree.                                          |
+| `oat docs nav sync`       | Regenerate MkDocs `mkdocs.yml` navigation from directory `index.md` `## Contents` sections. |
+| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.                           |
+| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.                             |
+
+## Which Generation Command To Run
+
+Use the framework-specific generated-artifact command:
+
+- Fumadocs apps run `fumadocs-mdx` and `oat docs generate-index`. In this repo, `predev` and `prebuild` regenerate `apps/oat-docs/index.md` from `apps/oat-docs/docs`.
+- MkDocs apps use `oat docs nav sync` to regenerate the `nav:` block in `mkdocs.yml` from authored directory `index.md` `## Contents` sections.
+
+Both frameworks keep authored `## Contents` sections as the source of local discovery. The generated artifact differs by framework.
 
 ## `oat docs init`
 
@@ -139,10 +148,12 @@ script hooks.
 
 ## `oat docs nav sync`
 
-Use nav sync after adding, removing, or renaming docs pages.
+Use nav sync in MkDocs apps after adding, removing, or renaming docs pages.
 
 The command reads only the reserved `## Contents` section from each directory
 `index.md` and regenerates the `nav:` block in `mkdocs.yml`.
+
+For Fumadocs apps, regenerate the root markdown manifest with `oat docs generate-index` instead.
 
 Example:
 

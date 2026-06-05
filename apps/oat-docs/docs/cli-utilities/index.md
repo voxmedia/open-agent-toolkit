@@ -7,11 +7,25 @@ description: Standalone adoption lane for general OAT CLI surfaces outside provi
 
 CLI Utilities is the OAT lane for the useful command surface that does not primarily belong to Provider Sync, Docs Tooling, or tracked workflow lifecycle execution.
 
-Use this section when you want bootstrap guidance, tool-pack lifecycle details, configuration help, and general-purpose command references.
+Use this section when you want bootstrap guidance, tool-pack lifecycle details, configuration help, and general-purpose command references. It covers general-purpose setup, configuration, pack-management, and diagnostic utilities that support the rest of the toolkit without being specific to provider sync, docs tooling, or tracked workflow execution.
 
-## What This Section Is
+## Contents
+
+- [CLI Bootstrap](bootstrap.md) - Foundational `oat init` guidance outside provider-sync-specific onboarding.
+- [Tool Packs and Installed Assets](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
+- [Configuration](configuration.md) - OAT configuration guidance across shared, local, user, and provider-sync surfaces.
+- [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
+
+## What Lives Here
 
 This section collects the command groups that help you initialize OAT, manage installed packs, inspect local or config state, and use the wider CLI without implying that you are adopting provider sync or tracked workflows.
+
+Examples include:
+
+- bootstrap and setup flows such as `oat init`
+- bundled pack management through `oat tools`
+- general configuration guidance
+- utility command groups for config, local state, diagnostics, and related inspection flows
 
 ## Who It's For
 
@@ -19,11 +33,20 @@ This section collects the command groups that help you initialize OAT, manage in
 - Teams managing installed tool packs and local config
 - People who need a general command map without diving into workflow lifecycle docs
 
+## When To Use This Section
+
+Use CLI Utilities when:
+
+- you are first setting up OAT in a repo
+- you need to install or update OAT packs
+- you are looking for configuration or local-state inspection help
+- you need the general CLI surface without committing to one of the deeper lanes yet
+
 ## Start Here
 
-- Read [Overview](overview.md) to see what command groups live here and how this section relates to the other adoption lanes.
 - Use [CLI Bootstrap](bootstrap.md) when you are starting with `oat init`.
 - Go to [Tool Packs](tool-packs.md) when you are managing bundled OAT packs and installed assets.
+- Read [Configuration](configuration.md) for config semantics, or [Config and Local State](config-and-local-state.md) for inspection and diagnostic command groups.
 
 ## Common Tasks
 
@@ -34,7 +57,6 @@ This section collects the command groups that help you initialize OAT, manage in
 
 ## Go Deeper
 
-- [Overview](overview.md) - What belongs in CLI Utilities and when to use this section.
 - [CLI Bootstrap](bootstrap.md) - Foundational `oat init` guidance outside provider-sync-specific onboarding.
 - [Tool Packs](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
 - [Configuration](configuration.md) - OAT configuration guidance.
