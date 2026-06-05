@@ -419,21 +419,23 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Continue implementation at `p03-t01` and run the declared p03/p04/p05 parallel group.
 
-### Phase p02 Complete
+### Parallel Group p03-p05 Bootstrap Degraded
 
 **Date:** 2026-06-05
-**Outcome:**
+**Disposition:** parallel worktree execution degraded to sequential execution on the orchestration branch.
 
-- Created the `oat-docs-authoring` wrapper skill as a targeted OAT/Fumadocs overlay over `authoring-docs`.
-- Added contract references for root resolution, authored navigation maps, generated artifacts, validation, and lifecycle routing.
-- Kept migration ownership out of bootstrap and pointed full MkDocs-to-OAT-Fumadocs work to the standalone migration guide.
-- Left provider sync, bundled assets, skill distribution registration, and public package version bumps for p06 as planned.
+**Reason:**
 
-**Verification:**
+- The repo-local `oat-worktree-bootstrap-auto` script uses Bash associative arrays, but this macOS environment exposes Bash 3.2, so the direct script invocation failed at `declare -A`.
+- Re-running the documented bootstrap logic step-by-step created p03/p04/p05 worktrees at the expected `009da51e353652512118c81b7fc1b235f7f0179f` base.
+- Strict bootstrap then failed p03's `git_clean` gate because `worktree:init` auto-synced provider views for the new p01/p02 skills, leaving `.oat/sync/manifest.json`, `.claude/skills/authoring-docs`, `.claude/skills/oat-docs-authoring`, `.cursor/skills/authoring-docs`, and `.cursor/skills/oat-docs-authoring` dirty.
+- Provider sync and bundled distribution output are intentionally owned by p06, so the generated setup output was not committed from the phase worktree.
 
-- `pnpm oat:validate-skills` - pass during each p02 task.
+**Cleanup:**
 
-**Next:** Phase p02 is ready for review. Continue implementation at `p03-t01` only after the orchestrator dispatches the next phase.
+- Removed the partial p03/p04/p05 worktrees and deleted branches `docs-authoring-skills/p03`, `docs-authoring-skills/p04`, and `docs-authoring-skills/p05`.
+
+**Next:** Continue p03, p04, and p05 sequentially on `feat/docs-authoring-skill`; p06 remains responsible for provider sync and distribution/versioning.
 
 ## Deviations from Plan / Design
 
