@@ -11,44 +11,53 @@ oat_children: []
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: design
+oat_phase: plan
 oat_phase_status: complete
 oat_workflow_mode: quick
 oat_workflow_origin: native
+oat_dispatch_ceiling:
+  preset: maximum
+  providers:
+    codex: xhigh
+    claude: opus
+  source: project-state
 oat_docs_updated: null
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-05T18:59:09Z'
+oat_project_state_updated: '2026-06-05T19:11:00Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** Design complete
+**Status:** Plan complete
 **Started:** 2026-06-05
 **Last Updated:** 2026-06-05
 
 ## Current Phase
 
-Design - Lightweight design complete; ready to complete discovery and generate plan.
+Plan - Quick-start plan generated, reviewed, and ready for `oat-project-implement`.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete; ready for `oat-project-implement`)
+- **Implementation:** `implementation.md` (initialized)
 
 ## Progress
 
-- ✓ Discovery started
+- ✓ Discovery complete
 - ✓ Execution artifacts scaffolded
 - ✓ Brainstorm context committed
 - ✓ Lightweight design complete
-- ⧗ Awaiting plan generation
+- ✓ Plan generated
+- ✓ Plan artifact review passed
+- ✓ Dispatch ceiling persisted (maximum)
+- ⧗ Awaiting implementation
 
 ## Blockers
 
@@ -56,4 +65,4 @@ None
 
 ## Next Milestone
 
-Complete discovery validation and generate an implementation-ready quick plan.
+Run `oat-project-implement` to execute the plan.
