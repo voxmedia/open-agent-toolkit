@@ -119,7 +119,7 @@ oat_generated: false
 ### Task p02-t04: Wrapper acceptance review
 
 **Status:** completed
-**Commit:** this commit (`chore(p02-t04): polish oat docs authoring wrapper`)
+**Commit:** `890f342962c777f69428ab043207d2fe72caf427`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -284,6 +284,38 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 2 — 2026-06-05 17:37
+
+**Branch:** feat/docs-authoring-skill
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p02: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p02 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state dispatch ceiling `xhigh`.
+- Dispatch: p02 review used Codex `oat-reviewer-xhigh` with `effort_axis=selected:xhigh`; reviewer passed the phase with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -367,6 +399,25 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 - Minor: implementation validation notes should distinguish repo `oat-*` skill validation from direct checks for agnostic skills.
 
 **Next:** Continue implementation at `p02-t01`.
+
+### Phase p02 Complete
+
+**Date:** 2026-06-05
+**Review artifact:** `reviews/p02-review-2026-06-05.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
+
+**Outcome:**
+
+- Created the user-invocable `oat-docs-authoring` wrapper skill at `version: 1.0.0`.
+- Kept universal docs-writing guidance delegated to `authoring-docs`.
+- Added OAT/Fumadocs contract references for docs-root resolution, authored navigation maps, generated root indexes, validation, and lifecycle routing.
+- Left provider sync, bundled assets, and public package version bumps for p06 as planned.
+
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass during each p02 task.
+
+**Next:** Continue implementation at `p03-t01` and run the declared p03/p04/p05 parallel group.
 
 ### Phase p02 Complete
 
