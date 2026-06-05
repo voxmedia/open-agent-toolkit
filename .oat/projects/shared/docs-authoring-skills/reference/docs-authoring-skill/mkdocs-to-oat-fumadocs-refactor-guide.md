@@ -40,6 +40,42 @@ Use bootstrap outputs as a scaffold reference only after the migration agent has
 
 The migration agent owns these outputs for the target repo: a converted Fumadocs app shell, converted authored docs, updated local `index.md` maps, regenerated derived files, current OAT config, coherent instruction surfaces, validation evidence, render evidence, and owner-review items for anything unverifiable.
 
+## Agent handoff prompt
+
+Use or adapt this prompt when assigning a migration:
+
+```md
+You are migrating `<target repo>` from MkDocs to an OAT-convention Fumadocs docs app.
+
+Inputs:
+
+- Target repo path: `<absolute path or repo URL>`
+- Base branch: `<branch>`
+- Preferred working branch: `<branch name>`
+- Existing docs app/root, if known: `<path or unknown>`
+- PR expectation: `<open PR, prepare PR description only, or local commit only>`
+
+Before editing, inventory `mkdocs.yml`, docs tree counts, `overview.md`, unsupported MkDocs syntax, package scripts, CI/deploy/indexing, `.oat/config.json`, source-to-doc references, formatter/linter config, and local agent/human docs instructions. Record exact counts and paths.
+
+Execute the migration in phases:
+
+1. Preflight inventory and source-of-truth decision.
+2. Branch/workspace setup and app path/package identity decision.
+3. Fumadocs app shell alignment.
+4. Content and frontmatter conversion.
+5. Navigation and generated-index conversion from `mkdocs.yml nav:` to authored `docs/**/index.md` `## Contents`.
+6. Source-reference, link, and route repair.
+7. OAT config, CI/deploy/indexing, and package-script updates.
+8. Agent instruction and human contributing-doc updates.
+9. Local validation, render verification, source-accuracy audit, and final handoff.
+
+Discover validation commands from the target repo before inventing commands. Prefer package scripts and OAT config evidence. At minimum, look for install, docs build, docs lint, docs format check, generated-index/nav generation, source-reference checks, root task dry-runs, and deploy workflow equivalents.
+
+Do not guess about commands, deploy paths, owners, support status, external integrations, stale architecture, or source-code references. Mark unverifiable items for owner review with the exact evidence you found and the decision needed.
+
+Final report: list files changed, sources inspected, structural counts, syntax conversions, validation commands and results, render spot checks, source-accuracy checks, unresolved owner-review items, and follow-up tasks. If PR creation is in scope, push the branch and open the PR or provide the exact manual PR URL if automation is blocked.
+```
+
 ## Migration principles
 
 - **Inventory before editing.** Honeycomb's successful migration started with counts and concrete facts: 122 Markdown files, about 42 directories, 38 `overview.md`, MkDocs tooling, syntax features, deploy workflow, docs indexing, OAT config, Node/pnpm constraints, and app path decisions (`honeycomb:discovery.md:28-56`).
@@ -113,6 +149,48 @@ Before editing, inspect and record:
   - `.oat/config.json` documentation block.
   - Whether `tooling` is `mkdocs` or `fumadocs`.
   - Whether the `root`, `index`, and stale `config` keys are correct.
+
+## Execution-ready migration phases
+
+Use these phases as the minimum migration flow. The detailed sequence below expands each phase, but the handoff should be reportable against this list.
+
+1. **Preflight inventory.**
+   - Freeze the source branch or base commit.
+   - Record counts, current docs path, MkDocs config, syntax features, scripts, deploy/indexing surfaces, OAT config, and source-reference systems before writes.
+2. **App shell and package alignment.**
+   - Preserve the existing path when workflows, indexing, package filters, or `.oat/config.json` already depend on it.
+   - Align Fumadocs app files, package identity, metadata, scripts, dependencies, formatter/linter config, and build/dev isolation.
+3. **Content conversion.**
+   - Convert `overview.md` to `index.md`, add quoted frontmatter, preserve accurate content, delete or rewrite stale architecture, and convert MkDocs-only syntax.
+4. **Navigation and generated-index conversion.**
+   - Translate `mkdocs.yml nav:` into authored per-directory `## Contents` maps with `.md` or `subdir/index.md` links.
+   - Regenerate derived indexes; do not hand-edit generated root manifests.
+5. **Source-reference and link repair.**
+   - Update internal links, anchors, source `@docs` annotations, generated docs-reference maps, URL derivation overrides, and references to removed `overview.md` paths.
+6. **Config, CI, deploy, and indexing updates.**
+   - Convert `.oat/config.json` to Fumadocs, update docs-specific root scripts, convert deploy output from `site/` to `out/`, and preserve deploy credentials/triggers unless intentionally changed.
+7. **Instruction surfaces.**
+   - Update root `AGENTS.md` pointers, docs-app `AGENTS.md`, supported runtime shims such as `CLAUDE.md`, and human contributing docs so each audience gets the correct contract.
+8. **Validation and render verification.**
+   - Run discovered install/build/lint/format/index/source-reference commands.
+   - Inspect exported HTML for callouts, figures/images, tabs, Mermaid, snippets/macros, and literal MkDocs syntax.
+9. **Accuracy audit and owner handoff.**
+   - Verify commands, paths, package names, workflows, environment variables, deploy claims, integrations, and architecture claims against current source.
+   - Produce a handoff that separates completed migration work from owner-review items.
+
+## Owner-review and uncertainty handling
+
+Migration agents must not fill gaps with plausible-sounding docs. Mark these as owner-review items when evidence is missing or contradictory:
+
+- validation commands or root task graph behavior that cannot be run locally;
+- CI/deploy paths, buckets, roles, triggers, or hosted output that cannot be verified from workflow files;
+- ownership, support, escalation, SLO, or operational responsibility claims;
+- external integrations such as Docs MCP indexing, source-reference generators, analytics, search, auth, or hosting;
+- architecture claims that are stale, contradicted by source, or backed only by old docs;
+- source-to-doc references where route derivation or repair commands are repo-specific;
+- MkDocs plugins/macros with no clear OAT/Fumadocs equivalent.
+
+For each item, include the claim, evidence inspected, why it remains uncertain, the decision needed, and the safest temporary handling in the migrated docs.
 
 ## Recommended migration sequence
 
