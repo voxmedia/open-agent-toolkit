@@ -380,6 +380,40 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 3 — 2026-06-05 18:08
+
+**Branch:** feat/docs-authoring-skill
+**Tier:** 1
+**Policy:** merge-strategy=sequential-degraded, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p03   | DONE        | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p03-p05: planned parallel group degraded to sequential execution after bootstrap failed strict `git_clean` from provider-sync output; p03 ran sequentially on `feat/docs-authoring-skill`.
+
+#### Dispatch Notes
+
+- Dispatch: p03 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state dispatch ceiling `xhigh`.
+- Dispatch: p03 initial review used Codex `oat-reviewer-xhigh`; review failed with 0 Critical, 1 Important, 0 Medium, and 1 Minor finding.
+- Dispatch: p03 fix iteration 1 used Codex `oat-phase-implementer-xhigh` to resolve Fumadocs app target classification and implementation traceability.
+- Dispatch: p03 re-review used Codex `oat-reviewer-xhigh`; reviewer passed the phase with 0 Critical and 0 Important findings.
+
+#### Outstanding Items
+
+- Non-blocking p03 review note: Medium finding that `oat-fumadocs-app` remains omitted from artifact/output placeholders.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
+| ------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| p03 tracking  | `plan.md` p03-t01 and phase dispatch | Parallel p03 boundary notes stayed in handoff/status output and final tracking after fan-in. | p03 progress, verification, and boundary notes were recorded directly in `implementation.md`. | Parallel worktree bootstrap degraded; p03 ran sequentially on the orchestration branch, and the dispatch explicitly required implementation tracking updates. | Phase Scope dispatch for p03 on 2026-06-05 | None; p06 still owns provider sync, bundled assets, public package versions, and release validation. |
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -504,19 +538,24 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p03 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** pending
-**Review verdict:** pending
+**Review artifact:** `reviews/p03-review-2026-06-05-v2.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings after 1 fix iteration
 
 **Outcome:**
 
 - Improved `oat-docs-analyze` as a skill-only update; the existing CLI command remains a non-mutating guidance shim.
 - Added repeatable read-only checks for generated root index freshness, local-map drift, authored links, `## Contents`, Markdown hygiene, local docs-app guidance, and app/API/CLI/operations coverage.
 - Updated the analyzer artifact template so future analysis output can classify generated-index findings, guidance gaps, hygiene findings, coverage gaps, and owner-review needs with exact evidence.
+- Fixed review-blocking Fumadocs app detection by resolving OAT/Fumadocs evidence before generic root docs fallbacks and splitting MkDocs-only checks from Fumadocs app checks.
 
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass during each p03 task.
 - `pnpm --filter @open-agent-toolkit/cli test` - skipped because no `packages/cli/src/**` files changed in p03.
+
+**Non-blocking review notes:**
+
+- Medium: `oat-fumadocs-app` remains omitted from artifact/output placeholders.
 
 **Next:** Continue implementation at `p04-t01`.
 
