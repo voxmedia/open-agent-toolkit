@@ -201,7 +201,7 @@ oat_generated: false
 ### Task p03-t05: Analyzer validation pass
 
 **Status:** completed
-**Commit:** recorded in task commit
+**Commit:** `a9054012b26ea2fb91e1de8705ecac2294ed457a`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -214,6 +214,21 @@ oat_generated: false
 - Added generated-index/local-map checks, authored-link checks, `## Contents` and `index.md` contract checks, Markdown hygiene checks, docs-app guidance checks, and app/API/CLI/operations coverage checks.
 - Extended analyzer artifact output so generated-index, local guidance, authored-link, hygiene, coverage, and owner-review findings carry exact evidence and remain apply-ready.
 - Deferred provider sync, bundled assets, public package version bumps, and release validation to p06 as required by plan.
+
+### Review Fix p03-r01: Fumadocs docs app target resolution
+
+**Status:** completed
+**Commit:** `70334f7bfd0ac80ac6cfa0b07895c0a529f27ea4`
+**Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/p03-review-2026-06-05.md`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Notes:**
+
+- Updated `oat-docs-analyze` Step 0 to resolve `.oat/config.json` and `apps/*` OAT/Fumadocs app evidence before generic root `docs/` or root Markdown fallbacks.
+- Split analyzer checklist docs-app contract checks so `mkdocs.yml` is required only for `mkdocs-app`, while `oat-fumadocs-app` uses OAT config, Fumadocs/source config, authored docs root, and generated app-root index evidence.
+- Corrected the p03-t05 implementation record from the placeholder commit text to the actual task commit hash.
 
 ## Phase p04: Refine bootstrap guidance and OAT docs contract pages
 
