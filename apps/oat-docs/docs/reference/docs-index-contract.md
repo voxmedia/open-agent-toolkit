@@ -5,7 +5,7 @@ description: 'Docs source contract: authored index.md maps, generated Fumadocs m
 
 # Docs Index Contract
 
-OAT docs navigation starts from authored `docs/**/index.md` files. Each `## Contents` section is the local source of truth for sibling pages and child directories. Generated artifacts are derived from those authored maps and should not be edited directly.
+OAT docs navigation starts from authored `docs/**/index.md` files. Each `## Contents` section is the local source of truth for sibling pages and child directories. Generated artifacts are derived from docs source and should not be edited directly.
 
 ## Rules
 
@@ -36,7 +36,7 @@ Notes:
 
 Fumadocs and MkDocs use the same authored source, but they do not use the same generated artifact.
 
-For Fumadocs docs apps, `oat docs generate-index` walks the docs tree from `docs/index.md` downward and writes the app-root generated manifest, for example `apps/oat-docs/index.md`.
+For Fumadocs docs apps, `oat docs generate-index` walks the Markdown file tree under `docs/` and writes the app-root generated manifest, for example `apps/oat-docs/index.md`.
 
 ```bash
 pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
@@ -48,16 +48,17 @@ Generated behavior:
 
 - Root `docs/index.md` becomes `Home`.
 - Child directory `index.md` files become section landing pages.
-- Nested entries are emitted in the order they appear under each local `## Contents` block.
+- Fumadocs generated entries are ordered by the file-tree generator: `index.md` first, directories before files, then lexical order.
+- MkDocs nested entries are emitted in the order they appear under each local `## Contents` block.
 - Fumadocs generated manifests should carry an autogen warning and are rewritten by `predev` / `prebuild`.
 - MkDocs `mkdocs.yml` may contain other configuration, but its `nav:` block is derived from authored `## Contents`.
 
 ## Generated-file boundaries
 
 - Edit authored files under `docs/`, especially the nearest `index.md` and `## Contents`.
-- Do not hand-edit a Fumadocs app-root generated `index.md`; regenerate it from authored maps.
+- Do not hand-edit a Fumadocs app-root generated `index.md`; regenerate it from the docs source tree.
 - Do not hand-maintain MkDocs `nav:` entries when the local workflow uses `oat docs nav sync`.
-- If a generated artifact looks stale, compare it to authored `## Contents` before treating it as evidence.
+- If a Fumadocs generated manifest lists pages that are missing from authored `## Contents`, treat that as authored-source drift or intentional generator-inventory behavior to verify before relying on the generated file as navigation evidence.
 
 ## Authoring guidance
 

@@ -52,7 +52,7 @@ Documentation should ship with the code it explains. This page covers the core d
 
 - Keep docs aligned with the current repo behavior and current command surface.
 - Prefer cross-links over duplicated conceptual content.
-- When you add, remove, or rename docs pages, refresh the generated Fumadocs root index. It is derived from authored `docs/**/index.md` maps and should not be hand-edited:
+- When you add, remove, or rename docs pages, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
 
   ```bash
   pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
