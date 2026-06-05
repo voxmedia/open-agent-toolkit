@@ -12,131 +12,177 @@ oat_generated: false
 
 Discovery is for requirements and decisions, not implementation details.
 
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+- Prefer outcomes and constraints over concrete deliverables.
+- If an implementation detail comes up, capture it as an open question, constraint, or planning input.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Create a quick-mode OAT project for the docs authoring skill work that emerged from the brainstorm in `.oat/repo/reference/brainstorms/docs-authoring-skill/`.
+
+The project should deliver a layered documentation-authoring capability:
+
+- an agnostic `authoring-docs` skill for general technical documentation authoring guidance;
+- an `oat-docs-authoring` wrapper skill for OAT/Fumadocs-specific authoring conventions;
+- improvements to `oat-docs-analyze` so repeatable docs-app drift patterns are detected;
+- limited bootstrap improvements that are relevant to new OAT docs apps;
+- a standalone MkDocs-to-OAT-Fumadocs migration handoff document for the one remaining migration repo.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Workflow shape
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should this be one OAT project or split into separate projects?
+**A:** One project.
+**Decision:** Keep the work as a single quick-mode project with coordinated phases/workstreams.
+
+### Question 2: Skill names
+
+**Q:** What should the baseline and wrapper skills be named?
+**A:** Use `authoring-docs` for the agnostic baseline and `oat-docs-authoring` for the OAT/Fumadocs wrapper.
+**Decision:** These names are fixed for planning and implementation.
+
+### Question 3: Migration scope
+
+**Q:** Should MkDocs-to-OAT-Fumadocs migration be incorporated into `oat-docs-bootstrap`?
+**A:** No. Migration should remain a separate single-file markdown handoff guide for an agent doing the remaining migration.
+**Decision:** Do not make `oat-docs-bootstrap` own migration. Bootstrap changes should only cover bootstrap-relevant improvements.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Layered skills plus lifecycle updates _(Recommended)_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Description:** Create the agnostic baseline and OAT/Fumadocs wrapper as distinct skills, then update existing lifecycle skills where the analyses found repeatable checks or scaffold guidance gaps.
+**When this is the right choice:** Best when the concepts are reusable across many docs tasks but OAT/Fumadocs also has a concrete contract that should not pollute the general baseline.
+**Tradeoffs:** Requires coordination across several artifacts and skill boundaries, but keeps responsibilities clean.
 
-### Approach 1: {Strategy Name} _(Recommended)_
+### Approach 2: Single large OAT docs authoring skill
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Put general documentation guidance, OAT/Fumadocs conventions, migration guidance, and lifecycle skill guidance into one skill.
+**When this is the right choice:** Better only if the goal is a single entry point with minimal cross-skill references.
+**Tradeoffs:** Would duplicate universal guidance, blur boundaries with bootstrap/analyze/apply, and make the skill harder to maintain.
 
-### Approach 2: {Strategy Name}
+### Approach 3: Lifecycle-only updates
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Skip new authoring skills and only update `oat-docs-analyze`, `oat-docs-bootstrap`, and related existing skills.
+**When this is the right choice:** Better if the need were only enforcement and not reusable authoring guidance.
+**Tradeoffs:** Would leave no reusable baseline for agents authoring docs outside OAT/Fumadocs or wrapper skills.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Layered skills plus lifecycle updates.
+**Rationale:** The brainstorm and analysis artifacts strongly support a universal baseline plus a thin OAT/Fumadocs overlay. Existing lifecycle skills should enforce or operationalize the standards without absorbing all authoring guidance.
+**User validated:** Yes.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Make `authoring-docs` reference-first
 
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
+**Description:** Treat `authoring-docs` as the universal documentation-quality baseline that other skills can read or reference.
 
 **Pros:**
 
-- {Benefit 1}
-- {Benefit 2}
+- Avoids coupling general docs guidance to OAT/Fumadocs.
+- Lets wrapper and lifecycle skills reuse the same authoring standards.
+- Keeps general documentation advice portable across repos and providers.
 
 **Cons:**
 
-- {Drawback 1}
-- {Drawback 2}
+- Agents may need to read an additional skill/reference file when working inside OAT docs apps.
 
-**Chosen:** {A/B/Neither}
+**Chosen:** A
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Summary:** The baseline should be reference-first, not an all-in-one active workflow.
+
+### Option B: Make `oat-docs-authoring` a thin wrapper
+
+**Description:** Keep OAT-specific guidance focused on docs root resolution, local maps, generated index behavior, validation, and lifecycle boundaries.
+
+**Pros:**
+
+- Prevents duplication of the agnostic baseline.
+- Encodes the concrete OAT/Fumadocs contract where it belongs.
+- Gives lifecycle skills a clear source for wrapper rules.
+
+**Cons:**
+
+- Requires clear handoff language so agents know when to use lifecycle skills.
+
+**Chosen:** B
+
+**Summary:** The wrapper should be thin and contract-focused.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Project mode:** Use a single quick-mode OAT project.
+2. **Baseline skill:** Create `authoring-docs` from the imported research pack as an agnostic, evidence-first technical documentation authoring baseline.
+3. **Wrapper skill:** Create `oat-docs-authoring` as a thin OAT/Fumadocs overlay over `authoring-docs`.
+4. **Analyzer updates:** Update `oat-docs-analyze` to catch repeatable drift patterns found across existing OAT Fumadocs docs apps.
+5. **Bootstrap scope:** Limit `oat-docs-bootstrap` changes to bootstrap-relevant improvements; do not make it a migration workflow.
+6. **Migration guide:** Keep `mkdocs-to-oat-fumadocs-refactor-guide.md` as the standalone handoff document for the remaining migration repo.
+7. **Repo improvements:** Treat the seven per-repo improvement artifacts as follow-up prompts/backlog inputs, not core skill content.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- No implementation code changes during quick-start planning.
+- Preserve existing OAT lifecycle skill boundaries: bootstrap, analyze, apply, and project-document should keep their distinct responsibilities.
+- Any changes to canonical skills under `.agents/skills/*/SKILL.md` require a version bump for each changed skill in the final PR diff.
+- Changes to shipped skills or bundled assets require the lockstep public package version bump for `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, and `packages/docs-transforms` when the change qualifies as shipped functionality.
+- Publishable-package changes require `pnpm release:validate` before finishing.
+- Prefer same-directory imports or package aliases if implementation touches TypeScript code; avoid parent-relative imports.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `authoring-docs` exists and covers general technical documentation authoring across APIs, CLIs, apps, services, libraries/frameworks, monorepos, architecture/operations, and internal/public contexts.
+- `oat-docs-authoring` exists and clearly references or layers on `authoring-docs` without duplicating broad writing guidance.
+- `oat-docs-authoring` documents the OAT/Fumadocs contract: authored `index.md`, `## Contents`, `.md` links, generated root index, `.md` preference, no `overview.md`, validation, and lifecycle-skill boundaries.
+- `oat-docs-analyze` can detect the most important repeatable drift patterns surfaced by the seven repo analyses.
+- `oat-docs-bootstrap` is improved only where bootstrap-specific guidance/checks need clarification.
+- `mkdocs-to-oat-fumadocs-refactor-guide.md` is polished enough to hand to an agent for the remaining MkDocs-to-OAT-Fumadocs migration.
+- Planning keeps repo-specific improvement work separate from the core skill/lifecycle updates unless explicitly chosen as follow-up work.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Implementing the remaining MkDocs-to-OAT-Fumadocs migration in another repo.
+- Making `oat-docs-bootstrap` a migration workflow.
+- Applying the seven per-repo improvement artifacts to their target repositories as part of this project.
+- Building a full spec-driven requirements/design lifecycle unless later promoted.
+- Replacing `oat-docs-analyze`, `oat-docs-apply`, or `oat-project-document` with the new wrapper skill.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Convert per-repo improvement artifacts into repo-specific backlog items or standalone project prompts.
+- Add an `oat docs` CLI command for read-only generated-index freshness checks if analyzer implementation needs a reusable primitive.
+- Create richer examples/evals for docs-authoring skills using the seven analyzed docs apps.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Skill scaffolding:** Should `authoring-docs` be created as an agnostic skill via the agnostic skill scaffold or as a project-local OAT skill? Planning should inspect current skill conventions before deciding.
+- **Wrapper invocation:** Should `oat-docs-authoring` be user-invocable directly, or primarily referenced by bootstrap/analyze/apply/project-document? Recommendation: make it user-invocable for targeted authoring/restructuring.
+- **Analyzer scope:** Which repeatable checks can be implemented inside existing `oat-docs-analyze` without adding new CLI support?
+- **Bootstrap scope:** Which generated-index/Fumadocs clarifications belong in `oat-docs-bootstrap` versus docs/reference pages?
+- **Migration guide polish:** What final additions are needed before the standalone migration guide is ready to hand to another agent?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The imported brainstorm research and analysis artifacts are authoritative planning inputs for this project.
+- Quick mode with optional lightweight design is sufficient; the project does not need full spec-driven rigor unless implementation uncovers deeper architectural risk.
+- Existing OAT skill scaffolding conventions and validation commands can be discovered from the repository during implementation.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Scope creep:** The project can expand into applying repo-specific docs fixes.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Keep repo-specific artifacts as references/backlog inputs unless explicitly pulled into scope.
+- **Boundary blur:** New skills could duplicate lifecycle skill behavior.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Make lifecycle boundaries explicit in discovery, design, and plan tasks.
+- **Release-policy miss:** Skill changes may require version bumps and release validation.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Include version and release-validation tasks in the plan.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Proceed with a lightweight design before generating the implementation plan, because the work spans new skills, existing lifecycle skill updates, reference artifacts, and release-policy requirements.
