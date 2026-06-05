@@ -33,6 +33,16 @@ or review inside an existing OAT/Fumadocs docs app.
 - Preserve local audience routers, area ownership notes, and sidebar metadata
   when present.
 
+For page moves and renames:
+
+- update both the old parent and new parent `## Contents` sections;
+- search for links to the old path before finishing;
+- preserve optional local sidebar metadata, such as `meta.json`, when present;
+- regenerate or freshness-check the generated root index after authored maps
+  change;
+- do not treat a generated-root entry as proof that the nearest parent map is
+  correct.
+
 ## 4. Validate Locally
 
 - Read package scripts before choosing validation commands.

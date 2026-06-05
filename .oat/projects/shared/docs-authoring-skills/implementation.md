@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 | Phase                                                             | Status   | Tasks | Completed |
 | ----------------------------------------------------------------- | -------- | ----- | --------- |
 | p01 - Build the agnostic `authoring-docs` baseline                | complete | 4     | 4/4       |
-| p02 - Build the `oat-docs-authoring` wrapper                      | pending  | 4     | 0/4       |
+| p02 - Build the `oat-docs-authoring` wrapper                      | complete | 4     | 4/4       |
 | p03 - Improve `oat-docs-analyze` checks and references            | pending  | 5     | 0/5       |
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | pending  | 4     | 0/4       |
 | p05 - Polish the standalone migration handoff guide               | pending  | 3     | 0/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
 
-**Total:** 4/26 tasks completed
+**Total:** 8/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -88,28 +88,53 @@ oat_generated: false
 
 ## Phase p02: Build the `oat-docs-authoring` wrapper
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-05
+**Completed:** 2026-06-05
 
 ### Task p02-t01: Create the wrapper skill entrypoint
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `94cce3ecbcde68e18b5768cfcdf436ec9ccf4a8e`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
 
 ### Task p02-t02: Add OAT/Fumadocs contract references
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c56d9d2d8c5a5d5dbeb0afae393918553479f0a8`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
 
 ### Task p02-t03: Encode lifecycle boundaries and migration pointers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `a4d9fb83ec07d6e89364967e0c95ee3255f096b0`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
 
 ### Task p02-t04: Wrapper acceptance review
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** this commit (`chore(p02-t04): polish oat docs authoring wrapper`)
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass
+
+**Phase summary:**
+
+- Created user-invocable `oat-docs-authoring` at `version: 1.0.0`.
+- Kept the wrapper thin by referencing `authoring-docs` for universal documentation quality.
+- Added OAT/Fumadocs references for docs-root resolution, authored `index.md`/`## Contents` maps, `.md` links, generated root indexes, validation, and lifecycle boundaries.
+- Routed new app setup, read-only audits, approved bulk applies, project-derived docs deltas, and full MkDocs migrations to their owning skills or standalone guide.
+- Deferred provider sync output, bundled assets, distribution registration, and public package version bumps to p06 as required by plan.
+
+**Deviations from plan/design/spec:**
+
+- None. No intentional divergence recorded.
 
 ## Phase p03: Improve `oat-docs-analyze` checks and references
 
@@ -343,6 +368,22 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Continue implementation at `p02-t01`.
 
+### Phase p02 Complete
+
+**Date:** 2026-06-05
+**Outcome:**
+
+- Created the `oat-docs-authoring` wrapper skill as a targeted OAT/Fumadocs overlay over `authoring-docs`.
+- Added contract references for root resolution, authored navigation maps, generated artifacts, validation, and lifecycle routing.
+- Kept migration ownership out of bootstrap and pointed full MkDocs-to-OAT-Fumadocs work to the standalone migration guide.
+- Left provider sync, bundled assets, skill distribution registration, and public package version bumps for p06 as planned.
+
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass during each p02 task.
+
+**Next:** Phase p02 is ready for review. Continue implementation at `p03-t01` only after the orchestrator dispatches the next phase.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
@@ -354,6 +395,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | Phase    | Tests Run                   | Passed | Failed | Notes                                                                                              |
 | -------- | --------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
 | planning | Inline plan artifact checks | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps. |
+| p02      | `pnpm oat:validate-skills`  | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                  |
 
 ## Final Summary (for PR/docs)
 

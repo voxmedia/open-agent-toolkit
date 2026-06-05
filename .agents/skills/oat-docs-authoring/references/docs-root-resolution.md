@@ -30,6 +30,9 @@ roots before editing.
      config, transforms, base paths, static export behavior, branding, metadata,
      or custom components.
    - Content-only edits usually should not modify these files.
+   - Site chrome, browser metadata, search behavior, image handling, and base
+     paths can be wired separately. Preserve local customizations unless the
+     user explicitly asked for app-shell work.
 5. Resolve the authored docs root.
    - The common root is `<docs-app>/docs`, but local guidance is authoritative.
    - Find the top-level authored `index.md`, then follow `## Contents` maps to
