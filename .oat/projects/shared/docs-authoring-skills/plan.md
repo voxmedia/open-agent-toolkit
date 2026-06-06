@@ -859,22 +859,120 @@ Run: `git add .oat/projects/shared/docs-authoring-skills && git diff --cached --
 
 ---
 
+## Phase p-rev1: Final Review Fixes
+
+Address the 2026-06-06 final review findings before regenerating PR handoff state.
+
+### Task prev1-t01: (review) Add Fumadocs analyzer surface placeholders
+
+**Files:**
+
+- Modify: `.agents/skills/oat-docs-analyze/SKILL.md`
+- Modify: `.agents/skills/oat-docs-analyze/references/analysis-artifact-template.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The analyzer classification logic includes `oat-fumadocs-app`, but two output placeholder enumerations still omit it.
+Location: `.agents/skills/oat-docs-analyze/SKILL.md:483`; `.agents/skills/oat-docs-analyze/references/analysis-artifact-template.md:15`
+
+**Step 2: Implement fix**
+
+Add `oat-fumadocs-app` to both placeholder enumerations so they match the surface type list defined earlier in the analyzer workflow.
+
+**Step 3: Verify**
+
+Run: `grep -n 'Surface' .agents/skills/oat-docs-analyze/SKILL.md .agents/skills/oat-docs-analyze/references/analysis-artifact-template.md`
+Expected: both placeholder enumerations include `oat-fumadocs-app`.
+
+Run: `pnpm oat:validate-skills`
+Expected: skill validation passes.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-docs-analyze/SKILL.md .agents/skills/oat-docs-analyze/references/analysis-artifact-template.md
+git commit -m "fix(prev1-t01): include fumadocs analyzer placeholders"
+```
+
+---
+
+### Task prev1-t02: (review) Fix escaped emphasis in migration guide
+
+**Files:**
+
+- Modify: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+
+**Step 1: Understand the issue**
+
+Review finding: A mapping label ends with escaped `\*\*`, so visible backslash-asterisks render instead of balanced bold markup.
+Location: `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md:296`
+
+**Step 2: Implement fix**
+
+Replace the escaped emphasis markers with valid Markdown, or restructure the label so inline code and bold delimiters are balanced.
+
+**Step 3: Verify**
+
+Run: `rg -n '\\\\\*\\\\\*' .oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md`
+Expected: no matches for escaped bold markers.
+
+Run: `pnpm format`
+Expected: repository formatting check passes.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md
+git commit -m "docs(prev1-t02): fix migration guide emphasis"
+```
+
+---
+
+### Task prev1-t03: (review) Clean MkDocs content heading numbering
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`
+
+**Step 1: Understand the issue**
+
+Review finding: `## 3c. Existing MkDocs content` is an H2, while `3a` and `3b` are H3 subsections under `## 3. Scaffold the docs app`, making the outline numbering read oddly.
+Location: `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md:119`
+
+**Step 2: Implement fix**
+
+Rename or restructure the heading so the outline numbering is internally consistent without changing the bootstrap/migration boundary.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter oat-docs docs:lint`
+Expected: docs lint passes.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md
+git commit -m "docs(prev1-t03): clean docs migration heading"
+```
+
+---
+
 ## Reviews
 
-| Scope     | Type     | Status   | Date       | Artifact                                            |
-| --------- | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01       | code     | passed   | 2026-06-05 | reviews/archived/p01-review-2026-06-05.md           |
-| p02       | code     | passed   | 2026-06-05 | reviews/archived/p02-review-2026-06-05.md           |
-| p03       | code     | passed   | 2026-06-05 | reviews/archived/p03-review-2026-06-05-v2.md        |
-| p04       | code     | passed   | 2026-06-05 | reviews/archived/p04-review-2026-06-05-v2.md        |
-| p05       | code     | passed   | 2026-06-05 | reviews/archived/p05-review-2026-06-05.md           |
-| p06       | code     | passed   | 2026-06-05 | reviews/archived/p06-review-2026-06-05.md           |
-| final     | code     | passed   | 2026-06-05 | reviews/archived/final-review-2026-06-05.md         |
-| final     | code     | received | 2026-06-06 | reviews/final-review-2026-06-06.md                  |
-| discovery | artifact | passed   | 2026-06-05 | discovery.md                                        |
-| spec      | artifact | pending  | -          | N/A quick mode                                      |
-| design    | artifact | passed   | 2026-06-05 | design.md                                           |
-| plan      | artifact | received | 2026-06-05 | reviews/archived/artifact-plan-review-2026-06-05.md |
+| Scope     | Type     | Status      | Date       | Artifact                                            |
+| --------- | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01       | code     | passed      | 2026-06-05 | reviews/archived/p01-review-2026-06-05.md           |
+| p02       | code     | passed      | 2026-06-05 | reviews/archived/p02-review-2026-06-05.md           |
+| p03       | code     | passed      | 2026-06-05 | reviews/archived/p03-review-2026-06-05-v2.md        |
+| p04       | code     | passed      | 2026-06-05 | reviews/archived/p04-review-2026-06-05-v2.md        |
+| p05       | code     | passed      | 2026-06-05 | reviews/archived/p05-review-2026-06-05.md           |
+| p06       | code     | passed      | 2026-06-05 | reviews/archived/p06-review-2026-06-05.md           |
+| final     | code     | passed      | 2026-06-05 | reviews/archived/final-review-2026-06-05.md         |
+| final     | code     | fixes_added | 2026-06-06 | reviews/archived/final-review-2026-06-06.md         |
+| discovery | artifact | passed      | 2026-06-05 | discovery.md                                        |
+| spec      | artifact | pending     | -          | N/A quick mode                                      |
+| design    | artifact | passed      | 2026-06-05 | design.md                                           |
+| plan      | artifact | received    | 2026-06-05 | reviews/archived/artifact-plan-review-2026-06-05.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -895,10 +993,11 @@ Run: `git add .oat/projects/shared/docs-authoring-skills && git diff --cached --
 - Phase p04: 4 tasks - Refine bootstrap guidance and OAT docs contract pages.
 - Phase p05: 3 tasks - Polish the standalone migration handoff guide.
 - Phase p06: 6 tasks - Register, version, sync, build, release-validate, and hand off.
+- Phase p-rev1: 3 tasks - Address final review findings from 2026-06-06.
 
-**Total: 26 tasks**
+**Total: 29 tasks**
 
-Ready for `oat-project-implement` after the plan artifact review row is passed or residual review findings are explicitly surfaced.
+Ready for `oat-project-implement` to execute final review fixes starting at `prev1-t01`.
 
 ## References
 

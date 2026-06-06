@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: c8d0e111
 oat_blockers: []
 associated_issues: []
@@ -12,7 +12,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_dispatch_ceiling:
@@ -22,23 +22,23 @@ oat_dispatch_ceiling:
     claude: opus
   source: project-state
 oat_docs_updated: complete
-oat_pr_status: ready
+oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T00:44:52Z'
+oat_project_state_updated: '2026-06-06T20:30:57Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** Implementation complete
+**Status:** Final review fixes queued
 **Started:** 2026-06-05
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-06
 
 ## Current Phase
 
-Implementation complete; final PR description generated and ready to open.
+Final review fixes queued; implementation should resume at `prev1-t01`.
 
 ## Artifacts
 
@@ -46,7 +46,7 @@ Implementation complete; final PR description generated and ready to open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (in progress; final review fixes queued)
 
 ## Progress
 
@@ -67,7 +67,7 @@ Implementation complete; final PR description generated and ready to open.
 - ✓ Phase p06 complete
 - ✓ Documentation sync complete
 - ✓ PR description generated
-- ⧗ PR creation pending
+- ⧗ Final review fixes queued
 
 ## Blockers
 
@@ -75,4 +75,4 @@ None
 
 ## Next Milestone
 
-Create the final PR against `main`.
+Run `oat-project-implement` to execute final review fixes starting at `prev1-t01`.

@@ -1,16 +1,16 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-06-05
-oat_current_task_id: null
+oat_last_updated: 2026-06-06
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
 # Implementation: docs-authoring-skills
 
 **Started:** 2026-06-05
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-06
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -31,8 +31,9 @@ oat_generated: false
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | complete | 4     | 4/4       |
 | p05 - Polish the standalone migration handoff guide               | complete | 3     | 3/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | complete | 6     | 6/6       |
+| p-rev1 - Final Review Fixes                                       | pending  | 3     | 0/3       |
 
-**Total:** 26/26 tasks completed
+**Total:** 26/29 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -922,6 +923,45 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 - Minor: migration guide mapping label has escaped emphasis markers.
 
 **Next:** Continue to documentation sync and final PR handoff.
+
+### Review Received: final
+
+**Date:** 2026-06-06
+**Review artifact:** `reviews/archived/final-review-2026-06-06.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 2
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
+
+**Finding disposition map:**
+
+- M1: converted to `prev1-t01` - add `oat-fumadocs-app` to analyzer surface placeholder enumerations.
+- m1: converted to `prev1-t02` - fix escaped emphasis markers in the project-local MkDocs-to-OAT-Fumadocs migration guide.
+- m2: converted to `prev1-t03` - clean the `add-docs-to-a-repo.md` MkDocs migration heading numbering.
+
+**Deferred Findings (Medium):**
+
+- None. The previously accepted analyzer placeholder gap was resurfaced by the 2026-06-06 final review and converted to `prev1-t01`.
+
+**Minor findings disposition:**
+
+- All minor findings were explicitly converted to tasks after user confirmation.
+
+**Design drift / artifact alignment notes:**
+
+- None. The findings are implementation/docs polish items, not accepted design drift.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill starting at `prev1-t01`.
+
+After the fix tasks are complete:
+
+- Update the final review row status to `fixes_completed`.
+- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
 
 ## Deviations from Plan / Design
 
