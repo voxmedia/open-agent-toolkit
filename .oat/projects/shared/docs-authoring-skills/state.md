@@ -21,12 +21,12 @@ oat_dispatch_ceiling:
     codex: xhigh
     claude: opus
   source: project-state
-oat_docs_updated: null
+oat_docs_updated: complete
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T00:32:51Z'
+oat_project_state_updated: '2026-06-06T00:38:45Z'
 oat_generated: false
 ---
 
@@ -38,7 +38,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete; final lifecycle review passed.
+Documentation sync complete; ready for final PR handoff.
 
 ## Artifacts
 
@@ -65,6 +65,7 @@ Implementation complete; final lifecycle review passed.
 - ✓ Phase p04 complete
 - ✓ Phase p05 complete
 - ✓ Phase p06 complete
+- ✓ Documentation sync complete
 
 ## Blockers
 
@@ -72,4 +73,4 @@ None
 
 ## Next Milestone
 
-Run documentation sync and final PR handoff.
+Generate and open the final PR.
