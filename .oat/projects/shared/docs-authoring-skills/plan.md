@@ -870,6 +870,7 @@ Run: `git add .oat/projects/shared/docs-authoring-skills && git diff --cached --
 | p05       | code     | passed   | 2026-06-05 | reviews/archived/p05-review-2026-06-05.md           |
 | p06       | code     | passed   | 2026-06-05 | reviews/archived/p06-review-2026-06-05.md           |
 | final     | code     | passed   | 2026-06-05 | reviews/archived/final-review-2026-06-05.md         |
+| final     | code     | received | 2026-06-06 | reviews/final-review-2026-06-06.md                  |
 | discovery | artifact | passed   | 2026-06-05 | discovery.md                                        |
 | spec      | artifact | pending  | -          | N/A quick mode                                      |
 | design    | artifact | passed   | 2026-06-05 | design.md                                           |
