@@ -900,6 +900,29 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Run the final lifecycle review/closeout.
 
+### Final Review Passed
+
+**Date:** 2026-06-05
+**Review artifact:** `reviews/final-review-2026-06-05.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 3
+
+**Non-blocking review notes:**
+
+- Medium: CLI documentation template should avoid source-free concrete exit-code meanings.
+- Medium: analyzer output template should include `oat-fumadocs-app` as a surface type.
+- Minor: implementation evidence should distinguish `oat-*` validation from direct agnostic-skill checks.
+- Minor: migration guide sequence bullets render as top-level bullets.
+- Minor: migration guide mapping label has escaped emphasis markers.
+
+**Next:** Continue to documentation sync and final PR handoff.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
@@ -955,6 +978,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 - `pnpm build`
 - `pnpm build:docs`
 - `pnpm release:validate`
+- Final lifecycle review passed with 0 Critical and 0 Important findings.
 
 **Design deltas (if any):**
 
