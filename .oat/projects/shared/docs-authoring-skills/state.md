@@ -12,7 +12,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_dispatch_ceiling:
@@ -22,23 +22,23 @@ oat_dispatch_ceiling:
     claude: opus
   source: project-state
 oat_docs_updated: complete
-oat_pr_status: null
+oat_pr_status: ready
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T21:13:03Z'
+oat_project_state_updated: '2026-06-06T21:20:27Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** Implementation complete
+**Status:** PR ready
 **Started:** 2026-06-05
 **Last Updated:** 2026-06-06
 
 ## Current Phase
 
-Implementation and final lifecycle review are complete. Documentation sync and final PR handoff are next.
+Implementation, final lifecycle review, documentation sync, and PR description generation are complete. Automated PR creation was blocked by GitHub authentication/authorization, so the branch is ready for manual PR creation.
 
 ## Artifacts
 
@@ -70,7 +70,10 @@ Implementation and final lifecycle review are complete. Documentation sync and f
 - ✓ Final review fixes complete
 - ✓ p-rev1 re-review passed
 - ✓ Final lifecycle review passed
-- ⧗ Documentation sync and final PR handoff
+- ✓ Documentation sync complete
+- ✓ Final PR description refreshed
+- ✓ Branch pushed to `origin/feat/docs-authoring-skill`
+- ⧗ Manual PR creation required
 
 ## Blockers
 
@@ -78,4 +81,8 @@ None
 
 ## Next Milestone
 
-Run documentation sync and final PR handoff.
+Open the PR manually:
+
+https://github.com/voxmedia/open-agent-toolkit/compare/main...feat/docs-authoring-skill?expand=1
+
+After the PR is open, set `oat_pr_status: open` and record the PR URL, or run `oat-project-pr-final` again once GitHub authentication is available.
