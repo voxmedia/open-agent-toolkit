@@ -219,7 +219,7 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `70334f7bfd0ac80ac6cfa0b07895c0a529f27ea4`
-**Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/p03-review-2026-06-05.md`
+**Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/archived/p03-review-2026-06-05.md`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -321,7 +321,7 @@ oat_generated: false
 **Status:** completed
 **Commit:** `2eecc0ecc53027aeab021fc371860c66f77931e7`
 **Tracking commit:** `5265571152cdca59589e3ba3791c59c6a0e42189`
-**Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/p04-review-2026-06-05.md`
+**Review artifact:** `.oat/projects/shared/docs-authoring-skills/reviews/archived/p04-review-2026-06-05.md`
 **Verification:**
 
 - `pnpm oat:validate-skills` - pass
@@ -763,7 +763,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p01 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** `reviews/p01-review-2026-06-05.md`
+**Review artifact:** `reviews/archived/p01-review-2026-06-05.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
@@ -788,7 +788,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p02 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** `reviews/p02-review-2026-06-05.md`
+**Review artifact:** `reviews/archived/p02-review-2026-06-05.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
@@ -825,7 +825,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p03 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** `reviews/p03-review-2026-06-05-v2.md`
+**Review artifact:** `reviews/archived/p03-review-2026-06-05-v2.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings after 1 fix iteration
 
 **Outcome:**
@@ -849,7 +849,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p05 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** `reviews/p05-review-2026-06-05.md`
+**Review artifact:** `reviews/archived/p05-review-2026-06-05.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
@@ -875,7 +875,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p06 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** `reviews/p06-review-2026-06-05.md`
+**Review artifact:** `reviews/archived/p06-review-2026-06-05.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
@@ -903,7 +903,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Final Review Passed
 
 **Date:** 2026-06-05
-**Review artifact:** `reviews/final-review-2026-06-05.md`
+**Review artifact:** `reviews/archived/final-review-2026-06-05.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Findings:**
