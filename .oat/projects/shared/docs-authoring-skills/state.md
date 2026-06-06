@@ -12,7 +12,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_dispatch_ceiling:
@@ -22,11 +22,11 @@ oat_dispatch_ceiling:
     claude: opus
   source: project-state
 oat_docs_updated: complete
-oat_pr_status: null
+oat_pr_status: ready
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T00:38:45Z'
+oat_project_state_updated: '2026-06-06T00:44:52Z'
 oat_generated: false
 ---
 
@@ -38,7 +38,7 @@ oat_generated: false
 
 ## Current Phase
 
-Documentation sync complete; ready for final PR handoff.
+Implementation complete; final PR description generated and ready to open.
 
 ## Artifacts
 
@@ -66,6 +66,8 @@ Documentation sync complete; ready for final PR handoff.
 - ✓ Phase p05 complete
 - ✓ Phase p06 complete
 - ✓ Documentation sync complete
+- ✓ PR description generated
+- ⧗ PR creation pending
 
 ## Blockers
 
@@ -73,4 +75,4 @@ None
 
 ## Next Milestone
 
-Generate and open the final PR.
+Create the final PR against `main`.
