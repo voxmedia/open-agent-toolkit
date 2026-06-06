@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-06
 oat_current_task_id: null
@@ -989,6 +989,32 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Run final lifecycle review for the updated branch.
 
+### Final Review Passed (v2)
+
+**Date:** 2026-06-06
+**Review artifact:** `reviews/final-review-2026-06-06-v2.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**Non-blocking review notes:**
+
+- Medium: the agnostic CLI command template still provides concrete exit-code meanings without requiring source-backed evidence. This is accepted as non-blocking polish and should be tracked separately if it is not addressed before merge.
+
+**Review verification:**
+
+- `pnpm oat:validate-skills` - pass.
+- `pnpm release:check-versions` - pass.
+- `pnpm --filter oat-docs docs:lint` - pass.
+- `git diff --check 516bbab474b8345fe854508cfe0e19d04480f0a8..HEAD` - pass.
+
+**Next:** Continue to documentation sync and final PR handoff.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
@@ -997,14 +1023,15 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 ## Test Results
 
-| Phase    | Tests Run                                 | Passed | Failed | Notes                                                                                              |
-| -------- | ----------------------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
-| planning | Inline plan artifact checks               | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps. |
-| p02      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                  |
-| p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.        |
-| p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.       |
-| p06      | Full p06 validation and release checks    | yes    | 0      | Format, lint, type-check, test, build, docs build, and release validation passed.                  |
-| p-rev1   | Review-fix validation and re-review       | yes    | 0      | Skills validation, format, docs lint, diff check, and p-rev1 code review passed.                   |
+| Phase    | Tests Run                                 | Passed | Failed | Notes                                                                                                |
+| -------- | ----------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------- |
+| planning | Inline plan artifact checks               | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps.   |
+| p02      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                    |
+| p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.          |
+| p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.         |
+| p06      | Full p06 validation and release checks    | yes    | 0      | Format, lint, type-check, test, build, docs build, and release validation passed.                    |
+| p-rev1   | Review-fix validation and re-review       | yes    | 0      | Skills validation, format, docs lint, diff check, and p-rev1 code review passed.                     |
+| final-v2 | Final lifecycle review and local gates    | yes    | 0      | Full local verification passed after one transient test rerun; final review passed with no blockers. |
 
 ## Final Summary (for PR/docs)
 
@@ -1046,7 +1073,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 - `pnpm build`
 - `pnpm build:docs`
 - `pnpm release:validate`
-- Final lifecycle review previously passed with 0 Critical and 0 Important findings; 2026-06-06 final-review findings were fixed and p-rev1 re-review passed with 0 Critical and 0 Important findings.
+- Final lifecycle review passed with 0 Critical and 0 Important findings after the 2026-06-06 p-rev1 fixes.
 
 **Design deltas (if any):**
 
