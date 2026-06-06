@@ -868,7 +868,7 @@ Run: `git add .oat/projects/shared/docs-authoring-skills && git diff --cached --
 | p03       | code     | passed   | 2026-06-05 | reviews/p03-review-2026-06-05-v2.md        |
 | p04       | code     | passed   | 2026-06-05 | reviews/p04-review-2026-06-05-v2.md        |
 | p05       | code     | passed   | 2026-06-05 | reviews/p05-review-2026-06-05.md           |
-| p06       | code     | pending  | -          | -                                          |
+| p06       | code     | passed   | 2026-06-05 | reviews/p06-review-2026-06-05.md           |
 | final     | code     | pending  | -          | -                                          |
 | discovery | artifact | passed   | 2026-06-05 | discovery.md                               |
 | spec      | artifact | pending  | -          | N/A quick mode                             |

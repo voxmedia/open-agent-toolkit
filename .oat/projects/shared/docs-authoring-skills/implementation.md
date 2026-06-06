@@ -468,7 +468,7 @@ oat_generated: false
 ### Task p06-t06: Final repository validation and handoff
 
 **Status:** completed
-**Commit:** final p06 tracking commit
+**Commit:** `54f4288cf5e675a7f3961728198b8b4dee5e459e`
 **Verification:**
 
 - `pnpm format` - pass
@@ -669,6 +669,38 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 6 — 2026-06-05 19:22
+
+**Branch:** feat/docs-authoring-skill
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p06   | DONE        | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p06: sequential integration phase
+
+#### Dispatch Notes
+
+- Dispatch: p06 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state dispatch ceiling `xhigh`.
+- Dispatch: p06 review used Codex `oat-reviewer-xhigh`; reviewer passed the phase with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
+#### Outstanding Items
+
+- Final lifecycle review is still required before PR handoff.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -843,8 +875,8 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p06 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** pending
-**Review verdict:** pending phase review
+**Review artifact:** `reviews/p06-review-2026-06-05.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
 
@@ -866,7 +898,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 - `pnpm release:validate` - pass.
 - Final `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm build:docs`, and `pnpm release:validate` - pass.
 
-**Next:** Run the p06 phase review, then final lifecycle review/closeout.
+**Next:** Run the final lifecycle review/closeout.
 
 ## Deviations from Plan / Design
 

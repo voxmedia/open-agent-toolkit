@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: cd6e29a4
+oat_last_commit: 54f4288c
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -26,19 +26,19 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T00:15:46Z'
+oat_project_state_updated: '2026-06-06T00:22:58Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** Implementation complete; awaiting p06 phase review
+**Status:** Implementation complete; awaiting final lifecycle review
 **Started:** 2026-06-05
 **Last Updated:** 2026-06-05
 
 ## Current Phase
 
-Implementation - Phase p06 complete; awaiting p06 phase review and final lifecycle review.
+Implementation - Phase p06 complete; awaiting final lifecycle review.
 
 ## Artifacts
 
@@ -72,4 +72,4 @@ None
 
 ## Next Milestone
 
-Run the p06 phase review, then the final lifecycle review/closeout.
+Run the final lifecycle review/closeout.
