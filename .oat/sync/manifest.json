@@ -1361,7 +1361,47 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-05-29T14:55:56.755Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/authoring-docs",
+      "providerPath": ".claude/skills/authoring-docs",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-06-06T00:07:57.846Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-authoring",
+      "providerPath": ".claude/skills/oat-docs-authoring",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-06-06T00:07:57.847Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/authoring-docs",
+      "providerPath": ".cursor/skills/authoring-docs",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-06-06T00:07:57.848Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-docs-authoring",
+      "providerPath": ".cursor/skills/oat-docs-authoring",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-06-06T00:07:57.848Z"
     }
   ],
-  "lastUpdated": "2026-05-29T14:55:56.755Z"
+  "lastUpdated": "2026-06-06T00:07:57.848Z"
 }
