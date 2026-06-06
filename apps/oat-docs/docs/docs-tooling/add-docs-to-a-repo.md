@@ -116,7 +116,7 @@ root `build:docs` script is available for docs-only builds. Use
 `--no-root-patch` to opt out, or `--dry-run` to preview the diff without
 writing it.
 
-## 3c. Existing MkDocs content
+### 3c. Existing MkDocs content
 
 Bootstrap is not the migration workflow. If you have an existing MkDocs site
 and want to switch to Fumadocs, treat that as a separate migration workstream.
