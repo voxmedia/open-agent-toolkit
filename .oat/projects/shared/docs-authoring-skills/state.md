@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 02b0275a
+oat_current_task: null
+oat_last_commit: cd6e29a4
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -12,7 +12,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_dispatch_ceiling:
@@ -26,19 +26,19 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T00:02:01Z'
+oat_project_state_updated: '2026-06-06T00:15:46Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** Implementation in progress
+**Status:** Implementation complete; awaiting p06 phase review
 **Started:** 2026-06-05
 **Last Updated:** 2026-06-05
 
 ## Current Phase
 
-Implementation - Phase p05 complete; current task is `p06-t01`.
+Implementation - Phase p06 complete; awaiting p06 phase review and final lifecycle review.
 
 ## Artifacts
 
@@ -46,7 +46,7 @@ Implementation - Phase p05 complete; current task is `p06-t01`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -64,7 +64,7 @@ Implementation - Phase p05 complete; current task is `p06-t01`.
 - ✓ Phase p03 complete
 - ✓ Phase p04 complete
 - ✓ Phase p05 complete
-- ⧗ Phase p06 in progress
+- ✓ Phase p06 complete
 
 ## Blockers
 
@@ -72,4 +72,4 @@ None
 
 ## Next Milestone
 
-Continue implementation at `p06-t01`.
+Run the p06 phase review, then the final lifecycle review/closeout.

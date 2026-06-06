@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-06-05
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | p03 - Improve `oat-docs-analyze` checks and references            | complete | 5     | 5/5       |
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | complete | 4     | 4/4       |
 | p05 - Polish the standalone migration handoff guide               | complete | 3     | 3/3       |
-| p06 - Register, version, sync, and validate the shipped asset set | pending  | 6     | 0/6       |
+| p06 - Register, version, sync, and validate the shipped asset set | complete | 6     | 6/6       |
 
-**Total:** 20/26 tasks completed
+**Total:** 26/26 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -395,38 +395,108 @@ oat_generated: false
 
 ## Phase p06: Register, version, sync, and validate the shipped asset set
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-05
+**Completed:** 2026-06-05
 
 ### Task p06-t01: Register new docs skills for distribution
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `b3a502c50a1615a574462a6801bca989b1ac3cad`
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli test -- src/commands/init/tools/docs/index.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts` - pass; Vitest expanded to the full CLI suite, 200 test files and 1809 tests passed.
+
+**Notes:**
+
+- Added `authoring-docs` and `oat-docs-authoring` to the docs pack manifest.
+- Added both skills to the CLI asset bundler skill list.
 
 ### Task p06-t02: Sync provider views
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `f3a17e54fda005f1303a09e24944eaa03ce527c9`
+**Verification:**
+
+- `oat sync --scope all` - pass
+- `git --no-pager diff -- .agents .claude .cursor .codex .oat/sync` - pass; provider-linked views mirror canonical skill paths.
+
+**Notes:**
+
+- Created project provider symlinks for `authoring-docs` and `oat-docs-authoring` under `.claude/skills/` and `.cursor/skills/`.
+- Updated `.oat/sync/manifest.json` for the new project provider links.
 
 ### Task p06-t03: Apply lockstep public package version bumps
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c07853760a0361c65a3647d3eade713c6b0eb498`
+**Verification:**
+
+- `pnpm release:check-versions` - pass
+
+**Notes:**
+
+- Bumped `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, and `packages/docs-transforms` from `0.1.21` to `0.1.22`.
+- `pnpm-lock.yaml` did not need a refresh because these workspace packages are represented as workspace links.
 
 ### Task p06-t04: Run targeted validation after integration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `cd6e29a49efbfbcb32aa979f5f3c615a338c32b3`
+**Verification:**
+
+- `pnpm oat:validate-skills` - pass; validated 52 `oat-*` skills.
+- `pnpm --filter @open-agent-toolkit/cli test` - pass; 200 test files and 1809 tests passed.
+- `pnpm --filter oat-docs docs:lint` - pass; 54 Markdown files, 0 errors.
+
+**Notes:**
+
+- Committed regenerated `apps/oat-docs/index.md` output from the docs source changes.
+- Committed tracked CLI asset version metadata in `packages/cli/assets/public-package-versions.json`.
+- The generated skill asset directories under `packages/cli/assets/skills/` are ignored by `.gitignore`; local bundling verified they are generated from canonical skills.
 
 ### Task p06-t05: Build and release-validate public packages
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** N/A - no tracked generated changes remained after build and release validation.
+**Verification:**
+
+- `pnpm build` - pass
+- `pnpm build:docs` - pass; Next.js emitted the existing module-type warning for `apps/oat-docs/next.config.js`.
+- `pnpm release:validate` - pass; validated 5 public packages at `0.1.22`.
 
 ### Task p06-t06: Final repository validation and handoff
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** final p06 tracking commit
+**Verification:**
+
+- `pnpm format` - pass
+- `pnpm lint` - pass
+- `pnpm type-check` - pass
+- `pnpm test` - pass; workspace tests passed, including CLI 200 test files and 1809 tests.
+- `pnpm build` - pass
+- `pnpm build:docs` - pass; Next.js emitted the existing module-type warning for `apps/oat-docs/next.config.js`.
+- `pnpm release:validate` - pass; validated 5 public packages at `0.1.22`.
+
+**Phase summary:**
+
+- Registered the new docs-authoring skills in the docs tool pack and CLI asset bundler.
+- Synced project provider views for the new canonical skills.
+- Applied the lockstep public package bump to `0.1.22`.
+- Regenerated and committed tracked docs/CLI generated outputs.
+- Completed targeted validation, package/docs builds, final repository validation, and release validation.
+
+**Release policy review:**
+
+- Changed canonical skill entrypoints have PR-scoped version coverage: `authoring-docs` `1.0.0`, `oat-docs-authoring` `1.0.0`, `oat-docs-analyze` `1.4.0`, and `oat-docs-bootstrap` `1.1.0`.
+- Public packages are lockstep at `0.1.22`: `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, and `packages/docs-transforms`.
+- Provider views were refreshed with `oat sync --scope all`.
+- `pnpm release:validate` passed after the version bump and again during final validation.
+
+**Deviations from plan/design/spec:**
+
+- None. No intentional divergence recorded.
 
 ## Orchestration Runs
 
@@ -770,6 +840,34 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Next:** Continue implementation at `p06-t01`.
 
+### Phase p06 Complete
+
+**Date:** 2026-06-05
+**Review artifact:** pending
+**Review verdict:** pending phase review
+
+**Outcome:**
+
+- Registered `authoring-docs` and `oat-docs-authoring` for `oat init tools docs` and CLI bundled assets.
+- Synced provider-linked skill views and `.oat/sync/manifest.json`.
+- Bumped all five public packages to `0.1.22` and regenerated tracked generated outputs.
+- Completed final repository and release validation.
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli test -- src/commands/init/tools/docs/index.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts` - pass; Vitest ran the CLI suite, 200 files and 1809 tests.
+- `oat sync --scope all` - pass.
+- `pnpm release:check-versions` - pass.
+- `pnpm oat:validate-skills` - pass.
+- `pnpm --filter @open-agent-toolkit/cli test` - pass.
+- `pnpm --filter oat-docs docs:lint` - pass.
+- `pnpm build` - pass.
+- `pnpm build:docs` - pass; existing Next module-type warning for `apps/oat-docs/next.config.js`.
+- `pnpm release:validate` - pass.
+- Final `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm build:docs`, and `pnpm release:validate` - pass.
+
+**Next:** Run the p06 phase review, then final lifecycle review/closeout.
+
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact                      | Planned / Documented                                                                         | Actual / Accepted                                                                             | Reason                                                                                                                                                        | Source of Truth                            | Follow-up                                                                                            |
@@ -784,24 +882,47 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | p02      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                  |
 | p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.        |
 | p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.       |
+| p06      | Full p06 validation and release checks    | yes    | 0      | Format, lint, type-check, test, build, docs build, and release validation passed.                  |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Not yet implemented.
+- Layered docs-authoring skill system: `authoring-docs`, `oat-docs-authoring`, strengthened `oat-docs-analyze`, narrowed `oat-docs-bootstrap` guidance, and the standalone MkDocs-to-OAT-Fumadocs migration handoff guide.
 
 **Behavioral changes (user-facing):**
 
-- Not yet implemented.
+- `oat init tools docs` now includes `authoring-docs` and `oat-docs-authoring`.
+- CLI bundled assets include the new docs-authoring skills and public package version metadata at `0.1.22`.
 
 **Key files / modules:**
 
-- Pending implementation.
+- `.agents/skills/authoring-docs/`
+- `.agents/skills/oat-docs-authoring/`
+- `.agents/skills/oat-docs-analyze/`
+- `.agents/skills/oat-docs-bootstrap/`
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+- `packages/cli/scripts/bundle-assets.sh`
+- `packages/cli/assets/public-package-versions.json`
+- `.claude/skills/authoring-docs`
+- `.claude/skills/oat-docs-authoring`
+- `.cursor/skills/authoring-docs`
+- `.cursor/skills/oat-docs-authoring`
+- `apps/oat-docs/index.md`
 
 **Verification performed:**
 
-- Plan artifact review only.
+- `pnpm oat:validate-skills`
+- `pnpm --filter @open-agent-toolkit/cli test`
+- `pnpm --filter oat-docs docs:lint`
+- `pnpm release:check-versions`
+- `pnpm format`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm test`
+- `pnpm build`
+- `pnpm build:docs`
+- `pnpm release:validate`
 
 **Design deltas (if any):**
 
