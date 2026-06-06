@@ -23,6 +23,12 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 
 ### Skills
 
+- `authoring-docs` is the provider-agnostic baseline for evidence-first
+  technical documentation: page types, information architecture, category
+  guidance, templates, and review rubrics
+- `oat-docs-authoring` layers the OAT/Fumadocs docs-app contract on top of
+  `authoring-docs` for targeted authoring, restructuring, link repair, and
+  local navigation maintenance inside an existing OAT docs app
 - `oat-docs-bootstrap` is the guided onramp for adding a docs app to a repo —
   wraps `oat docs init` with preflight detection, richer input gathering (site
   name distinct from package name), labeled post-patches for open CLI gaps,
@@ -56,14 +62,15 @@ skills.
 
 1. Bootstrap a docs app with `oat-docs-bootstrap` (preferred — guided, includes post-scaffold patches and walkthrough) or `oat docs init` directly (CLI-only / non-interactive workflows)
 2. (Optional) If migrating from MkDocs, handle that as a separate migration workstream; `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` is only the syntax/frontmatter helper
-3. Author docs so every directory has an `index.md` with a `## Contents` section
-4. Keep local `## Contents` sections current
-5. Refresh generated artifacts:
+3. Use `oat-docs-authoring` for targeted OAT/Fumadocs authoring work, with `authoring-docs` as the universal documentation-quality baseline
+4. Author docs so every directory has an `index.md` with a `## Contents` section
+5. Keep local `## Contents` sections current
+6. Refresh generated artifacts:
    - **MkDocs:** `oat docs nav sync`
    - **Fumadocs:** `oat docs generate-index` (runs automatically via `predev`/`prebuild` hooks)
-6. Run `oat-docs-analyze`; by default it verifies the generated analysis artifact
+7. Run `oat-docs-analyze`; by default it verifies the generated analysis artifact
    through `workflow.autoArtifactReview.analysis`
-7. Review the artifact and run `oat-docs-apply`
+8. Review the artifact and run `oat-docs-apply`
 
 ## Progressive disclosure
 

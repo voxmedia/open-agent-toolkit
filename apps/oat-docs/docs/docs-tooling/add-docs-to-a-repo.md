@@ -46,9 +46,10 @@ Legacy pack-specific path:
 oat init tools docs
 ```
 
-The docs pack installs `oat-docs-analyze`, `oat-docs-apply`,
-`oat-agent-instructions-analyze`, and `oat-agent-instructions-apply`. For this
-quickstart, the docs pair is the part you need immediately.
+The docs pack installs `authoring-docs`, `oat-docs-authoring`,
+`oat-docs-analyze`, `oat-docs-apply`, `oat-agent-instructions-analyze`, and
+`oat-agent-instructions-apply`. For this quickstart, the authoring and docs
+analysis/apply skills are the parts you need immediately.
 
 ## 3. Scaffold the docs app
 
@@ -130,6 +131,10 @@ refactor, use the assigned migration handoff guide or project plan; do not make
 `oat-docs-bootstrap` own that migration.
 
 ## 4. Start authoring docs with the OAT contract
+
+Use `oat-docs-authoring` for targeted OAT/Fumadocs content edits or local
+restructuring. It uses `authoring-docs` for the portable documentation baseline
+and adds the OAT-specific navigation, generated-index, and validation contract.
 
 Core rules:
 

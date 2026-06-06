@@ -4,7 +4,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 **Reference update:** 2026-06-01 (`pjm-init` shipped `oat pjm init` as the explicit instantiate step for project-management repo-reference docs. The project-management pack installs skills and template sources; `oat pjm init` materializes `.oat/repo/reference/{current-state,roadmap,decision-record}.md` plus the file-backed `backlog/` tree non-destructively. See ADR-020.)
 
-**Last Updated:** 2026-06-03 (`skill-automation-and-review` added default-on generated-artifact quality gates, newest-review discovery, and model-invocation guardrails for selected lifecycle skills. Earlier, `archive-cli-updates` split the archive command surface: `oat project archive [project-path]` now creates the archive via the CLI-owned completion helper, `oat repo archive sync [project-name]` is the canonical S3 hydration command, and `oat project archive sync` remains only as a deprecated forwarding shim. Earlier, `dispatch-ceiling-ux` reshaped the ceiling into a provider-neutral intent — presets (`balanced`/`maximum`/`cost-conscious`) compile at write time to concrete per-provider values behind a provider adapter registry; Codex enforces via pinned variants and Claude via the per-call Task `model` parameter (bidirectional, verified); enforcement mode (enforced/advisory/unsupported) is computed at dispatch and never persisted; verify-on-upgrade guards above-orchestrator requests; clean break of the old flat config keys, no migration (ADR-019).)
+**Last Updated:** 2026-06-05 (`docs-authoring-skills` added `authoring-docs` as the provider-agnostic documentation baseline, `oat-docs-authoring` as the OAT/Fumadocs targeted-authoring wrapper, hardened `oat-docs-analyze` and `oat-docs-bootstrap` guidance, refreshed docs contract pages, synced provider views, and bumped public packages to `0.1.22`. Earlier, `skill-automation-and-review` added default-on generated-artifact quality gates, newest-review discovery, and model-invocation guardrails for selected lifecycle skills. Earlier, `archive-cli-updates` split the archive command surface: `oat project archive [project-path]` now creates the archive via the CLI-owned completion helper, `oat repo archive sync [project-name]` is the canonical S3 hydration command, and `oat project archive sync` remains only as a deprecated forwarding shim.)
 
 ## Canonical References
 
@@ -120,10 +120,12 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - This closes the primary cause of cross-agent state drift: when a subagent ran a receive skill in isolation, it used to leave project tracking files dirty for the original agent to discover on return. The required commit is scoped (no `git add -A`) and worktree-aware.
 - `oat-project-implement` bookkeeping commits carry CRITICAL / DO NOT SKIP callouts across all four required commit points (per-task, review-fix completion, phase boundary, implementation complete).
 
-### Documentation Analysis & Bootstrap (Utility)
+### Documentation Authoring, Analysis & Bootstrap (Utility)
 
+- `authoring-docs` (provider-agnostic evidence-first documentation baseline for page types, information architecture, category guidance, templates, and review rubrics)
+- `oat-docs-authoring` (targeted OAT/Fumadocs authoring wrapper for existing docs apps; preserves authored `index.md` maps, `.md` links, generated app-root manifests, and validation boundaries)
 - `oat-docs-bootstrap` (guided docs-app onramp wrapping `oat docs init`: preflight detection, input gathering with distinct site/app names, capability-gated post-patches for FP-11/12/13/15/16/17 gaps, build verification, config inspection, and a seven-section educational walkthrough)
-- `oat-docs-analyze` (evaluate documentation structure, navigation, and coverage against the OAT docs app contract; severity-rated analysis artifacts)
+- `oat-docs-analyze` (evaluate documentation structure, navigation, generated-index freshness, Markdown hygiene, and content coverage against the OAT docs app contract; severity-rated analysis artifacts)
 - `oat-docs-apply` (apply approved docs analysis findings: branch, update docs, optionally open PR)
 
 ### Control Plane + Inspection Surfaces

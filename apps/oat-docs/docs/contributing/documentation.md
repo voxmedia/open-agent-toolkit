@@ -52,6 +52,9 @@ Documentation should ship with the code it explains. This page covers the core d
 
 - Keep docs aligned with the current repo behavior and current command surface.
 - Prefer cross-links over duplicated conceptual content.
+- Use `oat-docs-authoring` for targeted OAT/Fumadocs docs edits; it delegates
+  universal page-quality guidance to `authoring-docs` and keeps local
+  navigation, generated-index, and validation expectations in scope.
 - When you add, remove, or rename docs pages, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
 
   ```bash
