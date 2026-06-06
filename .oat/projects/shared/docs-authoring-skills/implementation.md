@@ -1004,7 +1004,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 **Non-blocking review notes:**
 
-- Medium: the agnostic CLI command template still provides concrete exit-code meanings without requiring source-backed evidence. This is accepted as non-blocking polish and should be tracked separately if it is not addressed before merge.
+- Medium: the agnostic CLI command template still provided concrete exit-code meanings without requiring source-backed evidence. Resolved before PR handoff in `0b6cdd5f` by replacing concrete exit-code meanings with source-backed placeholders and a "not documented" fallback rule.
 
 **Review verification:**
 
@@ -1023,15 +1023,15 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 ## Test Results
 
-| Phase    | Tests Run                                 | Passed | Failed | Notes                                                                                                |
-| -------- | ----------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------- |
-| planning | Inline plan artifact checks               | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps.   |
-| p02      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                    |
-| p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.          |
-| p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.         |
-| p06      | Full p06 validation and release checks    | yes    | 0      | Format, lint, type-check, test, build, docs build, and release validation passed.                    |
-| p-rev1   | Review-fix validation and re-review       | yes    | 0      | Skills validation, format, docs lint, diff check, and p-rev1 code review passed.                     |
-| final-v2 | Final lifecycle review and local gates    | yes    | 0      | Full local verification passed after one transient test rerun; final review passed with no blockers. |
+| Phase    | Tests Run                                 | Passed | Failed | Notes                                                                                                                                                     |
+| -------- | ----------------------------------------- | ------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| planning | Inline plan artifact checks               | yes    | 0      | Verified frontmatter, required sections, review rows, task count, and per-task verification steps.                                                        |
+| p02      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p02 task; provider sync warning remains deferred to p06 per plan.                                                                         |
+| p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.                                                               |
+| p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.                                                              |
+| p06      | Full p06 validation and release checks    | yes    | 0      | Format, lint, type-check, test, build, docs build, and release validation passed.                                                                         |
+| p-rev1   | Review-fix validation and re-review       | yes    | 0      | Skills validation, format, docs lint, diff check, and p-rev1 code review passed.                                                                          |
+| final-v2 | Final lifecycle review and local gates    | yes    | 0      | Full local verification passed after one transient test rerun; final review passed with no blockers; the remaining Medium was resolved before PR handoff. |
 
 ## Final Summary (for PR/docs)
 
@@ -1039,6 +1039,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 - Layered docs-authoring skill system: `authoring-docs`, `oat-docs-authoring`, strengthened `oat-docs-analyze`, narrowed `oat-docs-bootstrap` guidance, and the standalone MkDocs-to-OAT-Fumadocs migration handoff guide.
 - Final-review fixes for analyzer surface placeholders, migration-guide formatting, and MkDocs migration heading hierarchy.
+- Final-review Medium follow-up for source-backed CLI exit-code template guidance.
 
 **Behavioral changes (user-facing):**
 

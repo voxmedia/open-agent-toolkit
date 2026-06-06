@@ -28,6 +28,7 @@ The project also hardened the surrounding docs workflow: `oat-docs-analyze` gain
 - Polished `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md` into a standalone handoff with preflight, execution phases, validation discovery, owner-review rules, and final-report expectations.
 - Registered `authoring-docs` and `oat-docs-authoring` in the docs pack manifest and CLI asset bundler, synced provider views, regenerated tracked docs/CLI outputs, and bumped the lockstep public packages to `0.1.22`.
 - Addressed 2026-06-06 final-review findings by adding `oat-fumadocs-app` to analyzer surface placeholders, removing escaped emphasis markers from the migration guide, and cleaning the MkDocs migration heading hierarchy.
+- Resolved the final-review Medium follow-up by changing the CLI command template to require source-backed exit-code meanings or a "not documented" fallback.
 - Ran post-implementation docs/reference sync so user-facing docs mention the new authoring skills and repo-reference state has a completed project summary.
 
 ## Key Decisions
@@ -48,7 +49,7 @@ The project also hardened the surrounding docs workflow: `oat-docs-analyze` gain
 
 - The analyzer guidance needed to distinguish authored docs-source maps from generated app-root manifests without implying that Fumadocs and MkDocs share the same navigation update path.
 - Provider sync output had to be deferred until p06 to keep generated/provider-linked changes out of earlier phase ownership.
-- Final review v2 found one nonblocking Medium issue around source-free CLI template exit-code wording.
+- Final review v2 found one nonblocking Medium issue around source-free CLI template exit-code wording, which was resolved before PR handoff.
 
 ## Verification
 
@@ -60,4 +61,4 @@ The project also hardened the surrounding docs workflow: `oat-docs-analyze` gain
 
 ## Follow-up Items
 
-- Optional: address the remaining final-review Medium note by making the agnostic CLI command template require source-backed exit-code meanings or placeholders.
+- None.

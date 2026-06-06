@@ -26,7 +26,7 @@ oat_pr_status: ready
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T21:20:27Z'
+oat_project_state_updated: '2026-06-06T21:51:49Z'
 oat_generated: false
 ---
 
@@ -70,6 +70,7 @@ Implementation, final lifecycle review, documentation sync, and PR description g
 - ✓ Final review fixes complete
 - ✓ p-rev1 re-review passed
 - ✓ Final lifecycle review passed
+- ✓ Final-review Medium follow-up resolved
 - ✓ Documentation sync complete
 - ✓ Final PR description refreshed
 - ✓ Branch pushed to `origin/feat/docs-authoring-skill`
