@@ -2,11 +2,13 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-05
+oat_last_updated: 2026-06-06
 oat_generated: true
-oat_summary_last_task: p06-t06
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t03
+oat_summary_revision_count: 2
+oat_summary_includes_revisions:
+  - p-rev1
+  - final-v2
 ---
 
 # Summary: docs-authoring-skills
@@ -25,7 +27,8 @@ The project also hardened the surrounding docs workflow: `oat-docs-analyze` gain
 - Updated `oat-docs-bootstrap` to `version: 1.1.0` with clearer generated-index behavior, scaffold guidance, and docs-contract references while keeping MkDocs migration outside bootstrap ownership.
 - Polished `.oat/projects/shared/docs-authoring-skills/reference/docs-authoring-skill/mkdocs-to-oat-fumadocs-refactor-guide.md` into a standalone handoff with preflight, execution phases, validation discovery, owner-review rules, and final-report expectations.
 - Registered `authoring-docs` and `oat-docs-authoring` in the docs pack manifest and CLI asset bundler, synced provider views, regenerated tracked docs/CLI outputs, and bumped the lockstep public packages to `0.1.22`.
-- Ran post-implementation docs/reference sync so user-facing docs now mention the new authoring skills and repo-reference state has a completed project summary.
+- Addressed 2026-06-06 final-review findings by adding `oat-fumadocs-app` to analyzer surface placeholders, removing escaped emphasis markers from the migration guide, and cleaning the MkDocs migration heading hierarchy.
+- Ran post-implementation docs/reference sync so user-facing docs mention the new authoring skills and repo-reference state has a completed project summary.
 
 ## Key Decisions
 
@@ -45,16 +48,16 @@ The project also hardened the surrounding docs workflow: `oat-docs-analyze` gain
 
 - The analyzer guidance needed to distinguish authored docs-source maps from generated app-root manifests without implying that Fumadocs and MkDocs share the same navigation update path.
 - Provider sync output had to be deferred until p06 to keep generated/provider-linked changes out of earlier phase ownership.
-- Final review found only nonblocking Medium/Minor issues, primarily around conservative wording and optional artifact-template polish.
+- Final review v2 found one nonblocking Medium issue around source-free CLI template exit-code wording.
 
 ## Verification
 
 - Phase code reviews p01 through p06 passed; p03 and p04 passed after one review-fix loop each.
-- Final lifecycle review passed with no Critical or Important findings.
+- p-rev1 re-review passed after final-review fixes were implemented.
+- Final lifecycle review v2 passed with no Critical or Important findings.
 - Validation passed: `pnpm oat:validate-skills`, `pnpm --filter @open-agent-toolkit/cli test`, `pnpm --filter oat-docs docs:lint`, `pnpm build`, `pnpm build:docs`, `pnpm release:validate`, `pnpm format`, `pnpm lint`, `pnpm type-check`, and `pnpm test`.
 - Post-implementation docs sync passed `pnpm --filter oat-docs docs:lint` and `git diff --check`.
 
 ## Follow-up Items
 
-- Optional: address final-review Medium notes for source-free CLI template exit-code wording and adding `oat-fumadocs-app` to analyzer output placeholders.
-- Optional: clean up minor migration-guide formatting noted in final review.
+- Optional: address the remaining final-review Medium note by making the agnostic CLI command template require source-backed exit-code meanings or placeholders.
