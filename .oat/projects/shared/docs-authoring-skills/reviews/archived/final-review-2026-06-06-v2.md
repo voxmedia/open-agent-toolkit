@@ -43,7 +43,7 @@ None
 
 ## Requirements/Design Alignment
 
-**Evidence sources used:** `discovery.md`, `design.md`, `plan.md`, `implementation.md`, `reviews/p-rev1-review-2026-06-06.md`, archived final reviews, and the changed files in `516bbab474b8345fe854508cfe0e19d04480f0a8..HEAD`. `spec.md` is not present, which is expected for quick mode.
+**Evidence sources used:** `discovery.md`, `design.md`, `plan.md`, `implementation.md`, `reviews/archived/p-rev1-review-2026-06-06.md`, archived final reviews, and the changed files in `516bbab474b8345fe854508cfe0e19d04480f0a8..HEAD`. `spec.md` is not present, which is expected for quick mode.
 
 ### Requirements Coverage
 

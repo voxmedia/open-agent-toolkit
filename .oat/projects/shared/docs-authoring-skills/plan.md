@@ -969,8 +969,8 @@ git commit -m "docs(prev1-t03): clean docs migration heading"
 | p06       | code     | passed          | 2026-06-05 | reviews/archived/p06-review-2026-06-05.md           |
 | final     | code     | passed          | 2026-06-05 | reviews/archived/final-review-2026-06-05.md         |
 | final     | code     | fixes_completed | 2026-06-06 | reviews/archived/final-review-2026-06-06.md         |
-| p-rev1    | code     | passed          | 2026-06-06 | reviews/p-rev1-review-2026-06-06.md                 |
-| final     | code     | passed          | 2026-06-06 | reviews/final-review-2026-06-06-v2.md               |
+| p-rev1    | code     | passed          | 2026-06-06 | reviews/archived/p-rev1-review-2026-06-06.md        |
+| final     | code     | passed          | 2026-06-06 | reviews/archived/final-review-2026-06-06-v2.md      |
 | discovery | artifact | passed          | 2026-06-05 | discovery.md                                        |
 | spec      | artifact | pending         | -          | N/A quick mode                                      |
 | design    | artifact | passed          | 2026-06-05 | design.md                                           |

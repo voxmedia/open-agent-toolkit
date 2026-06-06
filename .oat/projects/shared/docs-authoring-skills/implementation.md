@@ -961,7 +961,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p-rev1 Complete
 
 **Date:** 2026-06-06
-**Review artifact:** `reviews/p-rev1-review-2026-06-06.md`
+**Review artifact:** `reviews/archived/p-rev1-review-2026-06-06.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
@@ -992,7 +992,7 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Final Review Passed (v2)
 
 **Date:** 2026-06-06
-**Review artifact:** `reviews/final-review-2026-06-06-v2.md`
+**Review artifact:** `reviews/archived/final-review-2026-06-06-v2.md`
 **Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Findings:**
