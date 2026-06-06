@@ -22,23 +22,23 @@ oat_dispatch_ceiling:
     claude: opus
   source: project-state
 oat_docs_updated: complete
-oat_pr_status: ready
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/108'
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T21:51:49Z'
+oat_project_state_updated: '2026-06-06T22:05:00Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** PR ready
+**Status:** PR open
 **Started:** 2026-06-05
 **Last Updated:** 2026-06-06
 
 ## Current Phase
 
-Implementation, final lifecycle review, documentation sync, and PR description generation are complete. Automated PR creation was blocked by GitHub authentication/authorization, so the branch is ready for manual PR creation.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -74,7 +74,8 @@ Implementation, final lifecycle review, documentation sync, and PR description g
 - ✓ Documentation sync complete
 - ✓ Final PR description refreshed
 - ✓ Branch pushed to `origin/feat/docs-authoring-skill`
-- ⧗ Manual PR creation required
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -82,8 +83,7 @@ None
 
 ## Next Milestone
 
-Open the PR manually:
+PR is open for review: https://github.com/voxmedia/open-agent-toolkit/pull/108
 
-https://github.com/voxmedia/open-agent-toolkit/compare/main...feat/docs-authoring-skill?expand=1
-
-After the PR is open, set `oat_pr_status: open` and record the PR URL, or run `oat-project-pr-final` again once GitHub authentication is available.
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
