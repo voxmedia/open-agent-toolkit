@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t01
+oat_current_task: null
 oat_last_commit: c8d0e111
 oat_blockers: []
 associated_issues: []
@@ -26,27 +26,27 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-05T17:30:38.189Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-06T20:30:57Z'
+oat_project_state_updated: '2026-06-06T21:05:21Z'
 oat_generated: false
 ---
 
 # Project State: docs-authoring-skills
 
-**Status:** Final review fixes queued
+**Status:** Final review fixes complete
 **Started:** 2026-06-05
 **Last Updated:** 2026-06-06
 
 ## Current Phase
 
-Final review fixes queued; implementation should resume at `prev1-t01`.
+Implementation tasks are complete; final lifecycle review should run on the updated branch.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete; ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress; final review fixes queued)
+- **Plan:** `plan.md` (complete; final review fixes implemented)
+- **Implementation:** `implementation.md` (complete; awaiting final review)
 
 ## Progress
 
@@ -67,7 +67,9 @@ Final review fixes queued; implementation should resume at `prev1-t01`.
 - ✓ Phase p06 complete
 - ✓ Documentation sync complete
 - ✓ PR description generated
-- ⧗ Final review fixes queued
+- ✓ Final review fixes complete
+- ✓ p-rev1 re-review passed
+- ⧗ Awaiting final lifecycle review
 
 ## Blockers
 
@@ -75,4 +77,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to execute final review fixes starting at `prev1-t01`.
+Run final lifecycle review for the updated branch.

@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-06-06
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | p04 - Refine bootstrap guidance and OAT docs contract pages       | complete | 4     | 4/4       |
 | p05 - Polish the standalone migration handoff guide               | complete | 3     | 3/3       |
 | p06 - Register, version, sync, and validate the shipped asset set | complete | 6     | 6/6       |
-| p-rev1 - Final Review Fixes                                       | pending  | 3     | 0/3       |
+| p-rev1 - Final Review Fixes                                       | complete | 3     | 3/3       |
 
-**Total:** 26/29 tasks completed
+**Total:** 29/29 tasks completed
 
 ## Phase p01: Build the agnostic `authoring-docs` baseline
 
@@ -956,12 +956,38 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 
 - None. The findings are implementation/docs polish items, not accepted design drift.
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill starting at `prev1-t01`.
+**Next:** Final review fixes are implemented and p-rev1 re-review passed. Re-run final lifecycle review for the updated branch.
 
-After the fix tasks are complete:
+### Phase p-rev1 Complete
 
-- Update the final review row status to `fixes_completed`.
-- Re-run `oat-project-review-provide code final` then `oat-project-review-receive` to reach `passed`.
+**Date:** 2026-06-06
+**Review artifact:** `reviews/p-rev1-review-2026-06-06.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
+
+**Outcome:**
+
+- Added `oat-fumadocs-app` to analyzer surface placeholder enumerations.
+- Removed the escaped bold-marker rendering issue from the MkDocs-to-OAT-Fumadocs migration guide while preserving the `docs/**/index.md` contract wording.
+- Cleaned the docs-tooling MkDocs migration heading so `3c` is a peer of `3a` and `3b`.
+
+**Tasks:**
+
+- `prev1-t01` - complete in `127909ff`; verified `grep -n 'Surface' ...` and `pnpm oat:validate-skills`.
+- `prev1-t02` - complete in `c79e0fa0`, follow-up fixes `bdaa93a2`, `f57ac9fc`, `879a6336`, `dbd24645`, and final cleanup `7cbf2a88`; verified no escaped marker remained, `docs/**/index.md` remained visible, and `pnpm format` passed.
+- `prev1-t03` - complete in `5222878b`; verified `pnpm --filter oat-docs docs:lint`.
+
+**Review verification:**
+
+- `pnpm oat:validate-skills` - pass.
+- `pnpm format` - pass.
+- `pnpm --filter oat-docs docs:lint` - pass.
+- `git diff --check 2141d325ce56e62eb47c390afebf6b36e6e25b35..HEAD` - pass.
+
+**Design deltas:**
+
+- None. The final-review fixes were implementation/docs polish items within the accepted design.
+
+**Next:** Run final lifecycle review for the updated branch.
 
 ## Deviations from Plan / Design
 
@@ -978,12 +1004,14 @@ After the fix tasks are complete:
 | p03      | `pnpm oat:validate-skills`                | yes    | 0      | Passed for each p03 task; CLI tests skipped because no `packages/cli/src/**` files changed.        |
 | p05      | `pnpm oat:validate-skills`; `pnpm format` | yes    | 0      | Skill validation passed for p05-t01 and p05-t02; repository format check passed for p05-t03.       |
 | p06      | Full p06 validation and release checks    | yes    | 0      | Format, lint, type-check, test, build, docs build, and release validation passed.                  |
+| p-rev1   | Review-fix validation and re-review       | yes    | 0      | Skills validation, format, docs lint, diff check, and p-rev1 code review passed.                   |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
 - Layered docs-authoring skill system: `authoring-docs`, `oat-docs-authoring`, strengthened `oat-docs-analyze`, narrowed `oat-docs-bootstrap` guidance, and the standalone MkDocs-to-OAT-Fumadocs migration handoff guide.
+- Final-review fixes for analyzer surface placeholders, migration-guide formatting, and MkDocs migration heading hierarchy.
 
 **Behavioral changes (user-facing):**
 
@@ -1018,7 +1046,7 @@ After the fix tasks are complete:
 - `pnpm build`
 - `pnpm build:docs`
 - `pnpm release:validate`
-- Final lifecycle review passed with 0 Critical and 0 Important findings.
+- Final lifecycle review previously passed with 0 Critical and 0 Important findings; 2026-06-06 final-review findings were fixed and p-rev1 re-review passed with 0 Critical and 0 Important findings.
 
 **Design deltas (if any):**
 
