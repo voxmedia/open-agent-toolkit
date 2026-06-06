@@ -293,8 +293,8 @@ For each item, include the claim, evidence inspected, why it remains uncertain, 
 
 ## Mapping MkDocs concepts to OAT Fumadocs
 
-- <strong><code>mkdocs.yml nav:</code> -> <code>docs/_<!-- -->_/index.md</code> <code>## Contents</code></strong>
-  - Translate global nav into local maps. Each directory owns its immediate children.
+- **MkDocs nav -> authored Contents maps**
+  - Translate `mkdocs.yml nav:` entries into local `docs/**/index.md` `## Contents` maps. Each directory owns its immediate children.
   - Generated root index and framework navigation derive from these maps.
 - **`overview.md` → `index.md`**
   - Use `index.md` for directory entrypoints. Update links and source annotations.
