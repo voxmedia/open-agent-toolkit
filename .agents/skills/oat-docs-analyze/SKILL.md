@@ -480,7 +480,7 @@ Output a summary:
 Analysis complete.
 
   Docs target:      {path}
-  Surface type:     {mkdocs-app|docs-tree|root-markdown}
+  Surface type:     {mkdocs-app|oat-fumadocs-app|docs-tree|root-markdown}
   Files evaluated:  {N}
   Mode:             {full|delta}
 

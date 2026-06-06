@@ -12,7 +12,7 @@ oat_analysis_commit: { commitHash }
 **Date:** {YYYY-MM-DD}
 **Mode:** {full|delta}
 **Docs Target:** `{docs-target-path}`
-**Surface Type:** {mkdocs-app|docs-tree|root-markdown}
+**Surface Type:** {mkdocs-app|oat-fumadocs-app|docs-tree|root-markdown}
 **Commit:** {short-hash}
 
 ## Summary
