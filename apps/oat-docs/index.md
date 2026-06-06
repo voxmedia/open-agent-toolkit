@@ -20,7 +20,7 @@
 - Docs Tooling
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
   - [Add Docs to a New Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
-  - [Docs App Commands](docs-tooling/commands.md) — Docs scaffolding CLI surface for Fumadocs/MkDocs, migration, index generation, and nav sync.
+  - [Docs App Commands](docs-tooling/commands.md) — Docs scaffolding CLI surface for Fumadocs/MkDocs, migration helpers, Fumadocs index generation, and MkDocs nav sync.
   - [Docs Tooling Overview](docs-tooling/overview.md) — Plain-language explanation of OAT docs support, docs app choices, and the index contract.
   - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
 - Guide
@@ -38,7 +38,7 @@
 - Reference
   - [Reference](reference/index.md) — Durable reference material for OAT file locations, docs contracts, directory structure, and troubleshooting.
   - [CLI Reference](reference/cli-reference.md) — Scannable reference for the current OAT CLI surface, with links to the deeper owning sections for each command family.
-  - [Docs Index Contract](reference/docs-index-contract.md) — Navigation generation contract: index.md format and authoring guidance.
+  - [Docs Index Contract](reference/docs-index-contract.md) — Docs source contract: authored index.md maps, generated Fumadocs manifests, and MkDocs nav sync.
   - [File Locations](reference/file-locations.md) — Canonical locations for agent assets, OAT config, projects, ideas, and templates.
   - [`.oat` Directory Structure](reference/oat-directory-structure.md) — Canonical .oat/ tree reference: config, projects, sync state, templates, and per-file purpose.
   - [Troubleshooting](reference/troubleshooting.md) — Common issues and fixes for skills visibility, worktrees, sync, and manifest problems.
