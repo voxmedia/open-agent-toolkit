@@ -317,10 +317,13 @@ curl -X POST "$BASE_URL/examples" \
 
 ## Exit codes
 
-| Code | Meaning                           |
-| ---: | --------------------------------- |
-|    0 | Success                           |
-|    1 | Validation or configuration error |
+Only include this table when exit-code meanings are explicit in source or
+existing documentation. If they are not explicit, say exit codes are not
+documented.
+
+| Code     | Source-backed meaning  |
+| -------- | ---------------------- |
+| `<code>` | `<documented meaning>` |
 
 ## Related commands
 
