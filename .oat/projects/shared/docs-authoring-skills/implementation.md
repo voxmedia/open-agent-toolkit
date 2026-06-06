@@ -566,6 +566,39 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 | ------------------------ | -------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------- |
 | p04-t04 generated output | `plan.md` p04/p06 boundary | p04 validates docs; p06 owns generated/provider outputs. | `pnpm build:docs` regenerated `apps/oat-docs/index.md`, and the generated change was not committed. | The generated app-root index is outside p04 source-doc ownership and p06 owns generated output/version/provider sync. | Phase Scope dispatch and plan p06 ownership | p06 should regenerate/sync owned generated outputs. |
 
+### Run 5 — 2026-06-05 19:02
+
+**Branch:** feat/docs-authoring-skill
+**Tier:** 1
+**Policy:** merge-strategy=sequential-degraded, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p05   | DONE        | pass   | 0/2            | completed   |
+
+#### Parallel Groups
+
+- p03-p05: planned parallel group already degraded to sequential execution; p05 ran sequentially on `feat/docs-authoring-skill`.
+
+#### Dispatch Notes
+
+- Dispatch: p05 implementation used Codex `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, capped by project-state dispatch ceiling `xhigh`.
+- Dispatch: p05 review used Codex `oat-reviewer-xhigh`; reviewer passed the phase with 0 Critical, 0 Important, 0 Medium, and 2 Minor findings.
+
+#### Outstanding Items
+
+- Non-blocking p05 review notes: recommended sequence bullets are visually detached from numbered steps; one mapping label has escaped emphasis markers.
+- `apps/oat-docs/index.md` remains dirty generated output from p04 `pnpm build:docs`; p06 owns generated docs output and provider/distribution sync.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -714,8 +747,8 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 ### Phase p05 Complete
 
 **Date:** 2026-06-05
-**Review artifact:** pending
-**Review verdict:** pending
+**Review artifact:** `reviews/p05-review-2026-06-05.md`
+**Review verdict:** passed with 0 Critical and 0 Important findings
 
 **Outcome:**
 
@@ -729,6 +762,11 @@ _Each run from `oat-project-implement` appends an entry below with run metadata,
 - `pnpm oat:validate-skills` - pass for p05-t01.
 - `pnpm oat:validate-skills` - pass for p05-t02.
 - `pnpm format` - pass for p05-t03.
+
+**Non-blocking review notes:**
+
+- Minor: recommended sequence bullets are detached from numbered steps.
+- Minor: one mapping label leaves escaped emphasis markers visible.
 
 **Next:** Continue implementation at `p06-t01`.
 
