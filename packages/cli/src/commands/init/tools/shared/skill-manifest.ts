@@ -110,10 +110,12 @@ export const CORE_SKILLS = ['oat-docs', 'oat-doctor'] as const;
 // ── Docs pack ─────────────────────────────────────────────────────
 
 export const DOCS_SKILLS = [
+  'authoring-docs',
   'oat-agent-instructions-analyze',
   'oat-agent-instructions-apply',
   'oat-docs-analyze',
   'oat-docs-apply',
+  'oat-docs-authoring',
   'oat-docs-bootstrap',
 ] as const;
 

@@ -1,6 +1,6 @@
 ---
 name: oat-docs-analyze
-version: 1.3.0
+version: 1.4.0
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
@@ -13,7 +13,8 @@ Scan a repository's documentation surface, evaluate it against the OAT docs cont
 
 ## Prerequisites
 
-- Git repository with either an MkDocs app, a `docs/` tree, or root-level Markdown docs.
+- Git repository with either an OAT/Fumadocs docs app, an MkDocs app, a
+  `docs/` tree, or root-level Markdown docs.
 - `jq` available in PATH for tracking updates.
 
 ## Mode Assertion
@@ -50,6 +51,9 @@ If you catch yourself:
 
 - Editing docs content directly -> STOP and move that recommendation to the artifact.
 - Rewriting navigation while analyzing -> STOP and record the required fix instead.
+- Hand-editing or regenerating generated root indexes -> STOP and record a
+  generated-artifact finding with the exact evidence that proves freshness or
+  source-contract drift.
 
 **Recovery:**
 
@@ -73,7 +77,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[4/10] Assessing quality + coverage…`
   - `[5/10] Verifying substantive claims…`
   - `[6/10] Finding content opportunities…`
-  - `[7/10] Checking nav and drift…`
+  - `[7/10] Checking generated indexes, nav and drift…`
   - `[8/10] Writing analysis artifact…`
   - `[9/10] Reviewing artifact accuracy…`
   - `[10/10] Updating verified tracking + summary…`
@@ -82,14 +86,27 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ### Step 0: Resolve Docs Target and Analysis Mode
 
-Determine the documentation root using the first matching surface:
+Determine the documentation root using explicit docs-app evidence before generic
+repo fallbacks:
 
-1. `apps/*/mkdocs.yml`
-2. `mkdocs.yml` at repo root
-3. `docs/`
-4. Root-level Markdown docs (`README.md`, `CONTRIBUTING.md`, etc.) when no docs app exists
+1. `.oat/config.json` `documentation.root` / `documentation.tooling`.
+   - When `documentation.tooling` is `fumadocs`, record the surface type as
+     `oat-fumadocs-app`.
+   - Treat `documentation.root` as the docs app root. Resolve the authored docs
+     source root and generated index path from `documentation.index`, app config,
+     package scripts, generator scripts, or local guidance.
+2. OAT/Fumadocs app candidates under `apps/*`, before root `docs/` fallback:
+   - `apps/*/source.config.*`
+   - `apps/*/next.config.*` with `apps/*/docs`
+   - `apps/*/docs` plus docs-app package scripts or local guidance evidence
+3. `apps/*/mkdocs.yml`
+4. `mkdocs.yml` at repo root
+5. generic root `docs/`
+6. Root-level Markdown docs (`README.md`, `CONTRIBUTING.md`, etc.) when no docs app exists
 
-Prefer the OAT docs app when multiple MkDocs apps exist and one is clearly the active repo docs surface.
+Do not select generic root `docs/` or root Markdown docs while `.oat/config.json`
+or `apps/*` Fumadocs evidence identifies an active OAT/Fumadocs docs app. Prefer
+the app declared in `.oat/config.json` when multiple app candidates exist.
 
 Resolve tracking and analysis mode using the shared helper:
 
@@ -109,6 +126,8 @@ Build a complete inventory of:
 - All directories containing Markdown files
 - All `index.md` files
 - Any `overview.md` files
+- Generated root indexes or manifests, including warning banners such as "do not edit"
+- Local guidance that identifies generated index paths or regeneration commands
 - `mkdocs.yml` nav entries when present
 
 Record the docs surface type:
@@ -116,17 +135,37 @@ Record the docs surface type:
 - `mkdocs-app`
 - `docs-tree`
 - `root-markdown`
+- `oat-fumadocs-app`
 
 Capture the evidence sources that will justify later findings and recommendations. Prefer:
 
 - `mkdocs.yml` and generated nav structure
+- `.oat/config.json`, package scripts, generator scripts, and local `AGENTS.md`
+  files that identify authored docs roots or generated root indexes
 - `docs/contributing.md`, contributor guides, and setup docs
+- docs-app `AGENTS.md`, contributing pages, or authoring guides that tell
+  agents how to edit, analyze, apply, and validate docs
 - `package.json` scripts, `requirements.txt`, and docs bootstrap scripts
 - existing `index.md` trees and repeated directory patterns
 - exact missing or stale paths, commands, and page references
 
 Do **not** infer docs structure conventions from a tiny sample of pages when the broader
 tree or config disagrees.
+
+For OAT/Fumadocs docs apps, check whether local guidance covers:
+
+- authored docs source location
+- generated root indexes or manifests and their no-hand-edit boundary
+- every content directory needing `index.md`
+- useful `## Contents` maps
+- `.md`-suffixed relative links, including `subdir/index.md`
+- `.md` as the default format and `.mdx` only for JSX/component needs
+- read-only audit routing to `oat-docs-analyze`
+- approved bulk edits routing to `oat-docs-apply`
+- generated artifact regeneration or freshness checks after source docs changes
+
+Flag stale local guidance that references older aliases without mapping them to
+the current analyze/apply flow.
 
 ### Step 2: Evaluate the `index.md` Contract
 
@@ -136,9 +175,41 @@ For every documentation directory:
 
 1. Verify `index.md` exists.
 2. Verify `index.md` includes a `## Contents` section.
-3. Verify the `## Contents` section maps sibling pages and immediate child directories.
-4. Flag `overview.md` usage as a migration finding.
-5. Verify single-file directories still expose an `index.md` entrypoint.
+3. Flag placeholder-only `## Contents` sections, including comments, generic
+   "add links here" copy, or empty lists.
+4. Verify the `## Contents` section maps sibling pages and immediate child directories.
+5. Verify parent `## Contents` maps include child directories that contain docs.
+6. Flag `overview.md` usage as a migration finding.
+7. Flag unexpected `.mdx` for plain content unless JSX/components or local
+   guidance justify it.
+8. Verify single-file directories still expose a useful `index.md` entrypoint
+   or local section map.
+9. Exempt asset-only directories that contain no Markdown content and are not
+   linked as navigable docs sections.
+
+For OAT/Fumadocs docs apps, also distinguish authored source maps from generated
+root indexes:
+
+1. Resolve the authored docs source root and generated root index path from
+   `.oat/config.json`, package scripts, generator scripts, or local guidance.
+2. Confirm the generated root index exists when local configuration says it is
+   produced, and record whether it appears tracked, ignored, or local-only.
+3. Confirm generated warning banners are present when the repo's generator emits
+   them or local guidance requires them.
+4. Compare generated entries against the authored `## Contents` graph.
+5. Flag stale generated entries that point to deleted or moved docs paths.
+6. Flag missing generated entries for authored pages or child directories that
+   are reachable from source `## Contents` maps.
+7. Flag generated entries that are not reachable from any authored parent
+   `## Contents` map unless local generator semantics explicitly explain them.
+8. Classify ordering drift separately from missing or stale entries.
+9. If source maps and generated output disagree but generator behavior is not
+   documented well enough to judge, classify the finding as unclear generator
+   semantics instead of guessing.
+
+Generated index checks are read-only. Recommend regeneration, source-map fixes,
+or tool investigation in the analysis artifact; do not hand-edit generated
+files from this skill.
 
 ### Step 3: Assess Quality and Coverage
 
@@ -165,13 +236,28 @@ Evidence standard:
 For each evaluated page or directory:
 
 1. Read the docs file plus the local evidence needed to validate its claims.
-2. Record findings with severity, exact source refs, and confidence.
-3. Decide a disclosure mode for each recommendation:
+2. Resolve every local relative Markdown link from the page where it appears.
+   Flag broken targets. In OAT/Fumadocs docs apps, flag extensionless local
+   Markdown links and prefer `.md`-suffixed targets, including
+   `subdir/index.md`.
+3. Accept anchors on `.md` links, such as `page.md#section`, and do not flag
+   anchors-only, external URLs, `mailto:` links, image/asset links, or link
+   syntax intentionally shown inside inline code, fenced examples, or template
+   snippets.
+4. Check Markdown hygiene: opening code fences need language identifiers; shell
+   examples should follow local fence conventions, defaulting to `sh` unless
+   local guidance uses `bash` or the block needs Bash-only syntax.
+5. Flag empty headings, multiple document-level H1s outside intentional imported
+   README contexts, overlong frontmatter descriptions when local guidance
+   defines a limit, ellipsis-truncated descriptions, and README-copy metadata
+   signals that make search/navigation output look stale.
+6. Record findings with severity, exact source refs, and confidence.
+7. Decide a disclosure mode for each recommendation:
    - `inline`
    - `link_only`
    - `omit`
    - `ask_user`
-4. Record canonical link targets whenever a `link_only` recommendation is used.
+8. Record canonical link targets whenever a `link_only` recommendation is used.
 
 In `delta` mode, always evaluate changed docs files plus the nearest parent `index.md` pages.
 In `full` mode, evaluate the whole docs surface.
@@ -227,8 +313,31 @@ sources only. Prefer:
 - `app/services/`, `src/services/`, or equivalent business-logic modules
 - the main application entrypoint and route registration files
 - key models, schemas, and config surfaces that define user-facing behavior
+- command definitions, CLI parsers, flag schemas, and command tests
+- deployment, release, monitoring, runbook, rollback, and support/escalation
+  files that define operational behavior
 
 Do not speculate about future roadmap items or undocumented external integrations.
+
+Classify coverage by the surfaces proven in the repo:
+
+- For app/service docs, check purpose, audience, local setup, testing,
+  configuration, deployment/release, observability, runbooks, rollback,
+  ownership, support/escalation, troubleshooting, and common failure modes.
+- For API docs, check whether broad API surfaces have navigable
+  contract-grade reference pages with routes/endpoints, request/response
+  shapes, authentication, error modes, examples, and versioning where those
+  concepts exist in repo sources.
+- For CLI docs, check command groups, flags, output modes, destructive
+  behavior, dry-run/force options, scripting contracts, exit-code behavior when
+  sourced, and examples for common workflows.
+- For operations docs, flag "Future Topics" placeholders, empty runbook
+  outlines, unsupported deploy/monitoring claims, and missing owner-reviewed
+  gaps for unverifiable operations knowledge.
+
+When a claim affects ownership, support, deployment, observability, rollback, or
+external integration behavior and repo evidence cannot verify it, mark it as an
+owner-review gap rather than guessing.
 
 For each significant feature or API capability found in the codebase:
 
@@ -260,6 +369,19 @@ The goal is not just to say "this page is thin," but to say what capability surf
 where the docs should live, and what specific subtopics the codebase shows should be documented.
 
 ### Step 6: Check Navigation and Drift
+
+If a generated root index or manifest exists:
+
+1. Compare generated entries with the authored `## Contents` graph.
+2. Flag generated output that is missing, ignored/local-only when local guidance
+   expects a tracked artifact, stale, ordered differently from authored maps, or
+   unclear because generator semantics are undocumented.
+3. Flag generated entries that are not reachable from authored maps as either
+   authored-source contract drift or generator-semantics uncertainty, depending
+   on the evidence.
+4. Cite exact generated paths, authored source paths, package scripts, config
+   files, and representative links for each finding.
+5. Prefer source-of-truth fixes over generated-file edits.
 
 If `mkdocs.yml` exists:
 
@@ -295,6 +417,9 @@ Populate the artifact with:
 - Inventory summary
 - Severity-rated findings
 - Directory coverage and contract gaps
+- Generated index and authored local-map findings
+- Authored link, `## Contents`, and Markdown hygiene findings
+- Local docs-app guidance gaps
 - Accuracy verification verdicts for repo-checkable claims
 - Content opportunities for missing or thin docs coverage
 - Navigation/drift findings
@@ -355,7 +480,7 @@ Output a summary:
 Analysis complete.
 
   Docs target:      {path}
-  Surface type:     {mkdocs-app|docs-tree|root-markdown}
+  Surface type:     {mkdocs-app|oat-fumadocs-app|docs-tree|root-markdown}
   Files evaluated:  {N}
   Mode:             {full|delta}
 

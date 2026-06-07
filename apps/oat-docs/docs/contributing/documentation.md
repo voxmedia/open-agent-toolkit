@@ -12,6 +12,7 @@ Documentation should ship with the code it explains. This page covers the core d
 - Every documentation directory must contain an `index.md`.
 - Each `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
+- Use `.md`-suffixed relative links in `## Contents`: `[Page](page.md)` for leaf pages and `[Section](subdir/index.md)` for child directories.
 - Fumadocs and MkDocs share this authored contract, but they regenerate different artifacts.
 
 ## Local workflow
@@ -52,7 +53,10 @@ Documentation should ship with the code it explains. This page covers the core d
 
 - Keep docs aligned with the current repo behavior and current command surface.
 - Prefer cross-links over duplicated conceptual content.
-- When you add, remove, or rename docs pages in this Fumadocs app, refresh the generated root manifest:
+- Use `oat-docs-authoring` for targeted OAT/Fumadocs docs edits; it delegates
+  universal page-quality guidance to `authoring-docs` and keeps local
+  navigation, generated-index, and validation expectations in scope.
+- When you add, remove, or rename docs pages in this Fumadocs app, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
 
   ```bash
   pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
@@ -65,7 +69,7 @@ Documentation should ship with the code it explains. This page covers the core d
 
 - Treat `index.md` plus its `## Contents` section as the local discovery source of truth.
 - Prefer linking to source files and commands explicitly when documenting behavior.
-- Regenerate the docs surface index after adding or removing pages.
+- Regenerate or freshness-check the docs surface index after adding, removing, renaming, or reordering pages.
 
 ## Related Guides
 
