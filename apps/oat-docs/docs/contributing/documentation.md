@@ -13,6 +13,7 @@ Documentation should ship with the code it explains. This page covers the core d
 - Each `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
 - Use `.md`-suffixed relative links in `## Contents`: `[Page](page.md)` for leaf pages and `[Section](subdir/index.md)` for child directories.
+- Fumadocs and MkDocs share this authored contract, but they regenerate different artifacts.
 
 ## Local workflow
 
@@ -55,12 +56,13 @@ Documentation should ship with the code it explains. This page covers the core d
 - Use `oat-docs-authoring` for targeted OAT/Fumadocs docs edits; it delegates
   universal page-quality guidance to `authoring-docs` and keeps local
   navigation, generated-index, and validation expectations in scope.
-- When you add, remove, or rename docs pages, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
+- When you add, remove, or rename docs pages in this Fumadocs app, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
 
   ```bash
   pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
   ```
 
+- In MkDocs apps, use `oat docs nav sync` to refresh `mkdocs.yml` instead. Do not use MkDocs nav sync as the Fumadocs regeneration step.
 - Use [Markdown Features](markdown-features.md) for supported syntax and examples.
 
 ## Agent guidance

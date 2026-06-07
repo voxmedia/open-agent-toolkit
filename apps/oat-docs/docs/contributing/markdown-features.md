@@ -92,6 +92,8 @@ Tab groups use the existing tab transform syntax:
 
 Standard fenced code blocks support syntax highlighting and optional file-title metadata.
 
+Use a language identifier on every opening fence. In this docs app, use `bash` for shell commands because the existing examples and repo scripts are Bash-oriented; use `sh` only when the command is intentionally POSIX-shell-specific.
+
 === "Syntax"
 
     ````text

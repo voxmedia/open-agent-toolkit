@@ -6,7 +6,6 @@
   - [CLI Bootstrap](cli-utilities/bootstrap.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
   - [Config and Local State](cli-utilities/config-and-local-state.md) — Utility command groups for config discovery, backlog helpers, local paths, instruction integrity, and diagnostics.
   - [Configuration](cli-utilities/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
-  - [CLI Utilities Overview](cli-utilities/overview.md) — Plain-language explanation of the OAT CLI surface that lives outside provider sync, docs tooling, and tracked workflows.
   - [Tool Packs and Installed Assets](cli-utilities/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Contributing
   - [Contributing](contributing/index.md) — Contributor-facing guide for working on OAT code, docs, markdown patterns, and skill authoring.
@@ -21,7 +20,6 @@
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
   - [Add Docs to a New Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
   - [Docs App Commands](docs-tooling/commands.md) — Docs scaffolding CLI surface for Fumadocs/MkDocs, migration helpers, Fumadocs index generation, and MkDocs nav sync.
-  - [Docs Tooling Overview](docs-tooling/overview.md) — Plain-language explanation of OAT docs support, docs app choices, and the index contract.
   - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
 - Guide
   - [User Guide](guide/index.md) — User-facing guide for operating OAT across provider sync, docs tooling, workflow execution, skills, and ideas.
@@ -32,7 +30,6 @@
   - [Sync Config (`.oat/sync/config.json`)](provider-sync/config.md) — Configuration schema and behavior for provider sync in .oat/sync/config.json.
   - [Instruction Sync](provider-sync/instruction-sync.md) — Project-scoped AGENTS.md and CLAUDE.md validation, repair strategies, and Claude-only adoption.
   - [Manifest and Drift](provider-sync/manifest-and-drift.md) — Manifest tracking, drift states, and stray adoption for canonical-to-provider reconciliation.
-  - [Provider Sync Overview](provider-sync/overview.md) — Plain-language explanation of canonical assets, provider views, and the first-sync loop.
   - [Providers](provider-sync/providers.md) — Provider-specific path mappings for Claude, Cursor, Copilot, Gemini, and Codex adapters.
   - [Provider Interop CLI Scope and Surface](provider-sync/scope-and-surface.md) — Scope boundaries and design principles for canonical-to-provider asset management.
 - Reference
@@ -62,5 +59,4 @@
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
   - Skills
     - [Skills](workflows/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
-  - [Agentic Workflows Overview](workflows/overview.md) — Plain-language explanation of when to use tracked OAT projects versus direct CLI usage.
 - [Quickstart](quickstart.md) — Start-here guide for choosing the right OAT adoption path.

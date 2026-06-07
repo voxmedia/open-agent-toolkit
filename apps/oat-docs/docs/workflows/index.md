@@ -7,7 +7,13 @@ description: Standalone adoption lane for tracked OAT projects, workflow lifecyc
 
 Agentic Workflows is the OAT lane for tracked, resumable work on top of the base CLI and provider-sync layers.
 
-Use this section when you want explicit project artifacts, stable task IDs, review loops, and resumable execution across longer-running work.
+Use this section when you want explicit project artifacts, stable task IDs, review loops, and resumable execution across longer-running work. The workflow layer is optional; stay with direct CLI usage when the task is straightforward and the overhead of project artifacts would outweigh the value.
+
+## Contents
+
+- [Ideas Workflow](ideas/index.md) - Lightweight idea capture, brainstorming, and promotion into tracked projects when the work becomes concrete.
+- [Workflow & Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
+- [Skills](skills/index.md) - Workflow-oriented skill discovery and use-case routing.
 
 ## What This Section Is
 
@@ -19,11 +25,33 @@ This section explains when workflow mode is worth the overhead, how OAT projects
 - Users who want explicit discovery, planning, implementation, and review state
 - Repos that need a repeatable human-in-the-loop execution model
 
+## When To Use Workflow Mode
+
+Use workflow mode when:
+
+- the work spans multiple sessions or contributors
+- you want explicit discovery, plan, implementation, and review artifacts
+- you need stable task sequencing and resumable execution
+- you want human-in-the-loop checkpoints around risky transitions
+
+Stay with direct CLI usage when:
+
+- the task is straightforward and bounded
+- you mainly need provider sync or a utility command
+- the overhead of project artifacts would outweigh the value
+
+## Workflow Modes In Practice
+
+- CLI only: direct commands, no tracked project artifacts
+- Quick mode: tracked work with a lighter upfront planning path
+- Spec-driven mode: explicit discovery, requirements, design, and plan artifacts
+- Import mode: an externally-authored plan imported into OAT for tracked execution
+
 ## Start Here
 
-- Read [Overview](overview.md) to decide whether you want workflow mode or just direct CLI usage.
 - Use [Skills](skills/index.md) when you want task-oriented guidance on the most useful workflow skills.
 - Go to [Workflow & Projects](projects/index.md) when you need the lifecycle and artifact model in detail.
+- Use [Ideas](ideas/index.md) when the work is still exploratory.
 
 ## Common Tasks
 
@@ -34,7 +62,6 @@ This section explains when workflow mode is worth the overhead, how OAT projects
 
 ## Go Deeper
 
-- [Overview](overview.md) - What the workflow layer adds and when to use it.
 - [Skills](skills/index.md) - Workflow-oriented skill discovery and use-case routing.
 - [Ideas](ideas/index.md) - Idea capture, refinement, and promotion flows.
 - [Workflow & Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.

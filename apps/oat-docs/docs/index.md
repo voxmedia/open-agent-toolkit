@@ -16,6 +16,7 @@ OAT is organized as three distinct capabilities that can be used together or ind
 ## Contents
 
 - [Quickstart](quickstart.md) - Canonical Start Here page for choosing the right OAT adoption path.
+- [User Guide](guide/index.md) - Legacy compatibility router for old guide links while content continues moving into the canonical sections below.
 - [Provider Sync](provider-sync/index.md) - Canonical section for provider interoperability, drift management, and canonical-to-provider sync.
 - [Agentic Workflows](workflows/index.md) - Canonical section for tracked project workflows, ideas, lifecycle execution, and workflow-oriented skills.
 - [Docs Tooling](docs-tooling/index.md) - Canonical section for docs app setup, docs commands, and docs maintenance workflows.
@@ -54,6 +55,7 @@ That page is the canonical path-selection guide. Use it to choose whether you ne
 ## Where To Go Next
 
 - New to OAT: [Quickstart](quickstart.md)
+- Following an older guide link: [User Guide](guide/index.md)
 - Need canonical-to-provider sync: [Provider Sync](provider-sync/index.md)
 - Need tracked project execution: [Agentic Workflows](workflows/index.md)
 - Need docs app or docs maintenance tooling: [Docs Tooling](docs-tooling/index.md)

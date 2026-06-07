@@ -9,6 +9,20 @@ Use this section when you want the detailed lifecycle and artifact model behind 
 
 Projects are where the workflow layer becomes concrete: lifecycle phases, `state.md`, `plan.md`, review gates, PR flow, and repository-analysis helpers all live here.
 
+## Contents
+
+- [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
+- [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
+- [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
+- [Dispatch Ceiling](dispatch-ceiling.md) - Provider-neutral ceiling model and provider-specific enforcement.
+- [Project Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
+- [Implementation Execution](implementation-execution.md) - Phase dispatch, runtime selection, review/fix loop, and dry-run behavior.
+- [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.
+- [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.
+- [Reviews](reviews.md) - How review request/receive loops work inside OAT projects.
+- [PR Flow](pr-flow.md) - Progress and final PR generation expectations.
+- [Repository PR Comment Analysis](repo-analysis.md) - Repo-wide PR comment collection and triage workflows.
+
 ## What This Section Is
 
 This sub-section is the deep technical surface for how tracked OAT projects execute and how their artifacts, reviews, and PR states fit together.
