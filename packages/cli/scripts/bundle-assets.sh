@@ -9,6 +9,7 @@ rm -rf "${ASSETS}"
 mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts" "${ASSETS}/docs"
 
 SKILLS=(
+  authoring-docs
   create-agnostic-skill
   oat-agent-instructions-analyze
   oat-agent-instructions-apply
@@ -16,6 +17,7 @@ SKILLS=(
   oat-docs
   oat-docs-analyze
   oat-docs-apply
+  oat-docs-authoring
   oat-docs-bootstrap
   oat-doctor
   oat-repo-maintainability-review
