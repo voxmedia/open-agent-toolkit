@@ -1,6 +1,6 @@
 # Automation Recipes
 
-The `oat-wrap-up` skill is manual and model-invocable by design. OAT itself does not ship a scheduler (see `.agents/docs/agent-instruction.md:18` — scheduling is out of scope for OAT). To run the skill on a recurring cadence, configure your host agent or an external cron to invoke it. Three patterns are documented below.
+The `oat-wrap-up` skill is manual and model-invocable by design. OAT itself does not ship a scheduler (scheduling is intentionally out of scope for OAT). To run the skill on a recurring cadence, configure your host agent or an external cron to invoke it. Three patterns are documented below.
 
 ## Pattern 1 — Claude Code `CronCreate` trigger
 
