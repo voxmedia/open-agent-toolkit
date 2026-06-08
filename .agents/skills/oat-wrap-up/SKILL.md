@@ -1,6 +1,6 @@
 ---
 name: oat-wrap-up
-version: 1.0.1
+version: 1.0.2
 description: Use when preparing a shipping digest or weekly/biweekly wrap-up summarizing OAT projects and merged PRs over a time window. Reads local summary files and GitHub PR metadata; writes a version-controlled markdown report.
 argument-hint: '[--since YYYY-MM-DD] [--until YYYY-MM-DD] [--past-week|--past-2-weeks|--past-month] [--output <path>] [--dry-run]'
 disable-model-invocation: false

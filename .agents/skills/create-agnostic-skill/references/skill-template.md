@@ -208,7 +208,7 @@ Successful completion means:
 - At 60+ skills, descriptions may be silently truncated
 - Keep descriptions concise; the body handles detail
 
-**Shared references:** If multiple skills need the same document, place it in `.agents/docs/` and reference via relative path (`../../docs/my-guide.md`). Don't duplicate into each skill's `references/` directory.
+**Shared references:** Keep a shared doc's canonical copy in `.agents/docs/` (edit it in one place). If a distributed skill needs it at invocation time, vendor it into `references/docs/` as a symlink to the canonical file (`ln -s ../../../../docs/my-guide.md references/docs/my-guide.md`); the build materializes the symlink so the doc travels with the skill. Reference the bundled `references/docs/...` path — a bare `.agents/docs/...` reference dangles once the skill is installed in another repo.
 
-For the full compatibility matrix and resolved research questions, see `.agents/docs/skills-guide.md`.
+For the full compatibility matrix and resolved research questions, see `references/docs/skills-guide.md`.
 ```

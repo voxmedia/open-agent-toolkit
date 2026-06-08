@@ -1,6 +1,6 @@
 ---
 name: create-agnostic-skill
-version: 1.3.0
+version: 1.4.0
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -12,7 +12,7 @@ user-invocable: true
 
 Create a new skill for AI coding agents using the [Agent Skills open standard](https://agentskills.io). Skills live in `.agents/skills/` (canonical source) and work across Claude Code, Cursor, Codex CLI, Gemini CLI, GitHub Copilot, and 20+ other compatible agents.
 
-For deep-dive research on cross-provider compatibility, frontmatter behavior, and distribution patterns, see `.agents/docs/skills-guide.md`.
+For deep-dive research on cross-provider compatibility, frontmatter behavior, and distribution patterns, see `references/docs/skills-guide.md` (bundled with this skill).
 
 ## When to Use
 
@@ -362,9 +362,12 @@ For multi-step skills, print brief progress updates so the user knows what's hap
 
 ### Shared References
 
-- If multiple skills need the same reference document, place it in `.agents/docs/` (not duplicated per skill)
 - Skill-specific references go in the skill's own `references/` directory
-- Reference from SKILL.md via relative path: `[guide](../../docs/my-guide.md)`
+- Keep a shared doc's canonical copy in `.agents/docs/` — edit it in one place, don't fork copies per skill
+- If a **distributed** skill needs that shared doc at invocation time, vendor it into the skill's `references/docs/` as a symlink to the canonical file:
+  `ln -s ../../../../docs/my-guide.md references/docs/my-guide.md`
+  The build (`bundle-assets.sh`, which copies with `cp -RL`) materializes the symlink into a real file, so the doc travels with the skill and the reference resolves wherever the skill is installed.
+- Reference the **bundled** path from SKILL.md (`references/docs/my-guide.md`), not repo-root `.agents/docs/`. A bare `.agents/docs/...` reference only resolves inside this monorepo and dangles once the skill is installed in another repo.
 
 ### Frontmatter Reference
 
@@ -384,7 +387,7 @@ Legend: ✅ supported | ⚠️ provider-specific | 💤 ignored | ❓ unknown
 | `context` / `agent`        | ❌              | ✅          | ❌     | 💤          | ❓         |
 | `hooks`                    | ❌              | ✅          | ❌     | 💤          | ❓         |
 
-**Key takeaway:** `name` + `description` are the only truly portable interface. Codex ignores unknown keys (safe to include Claude fields), so layer tool-specific fields on top of a portable baseline. For the full matrix, see `.agents/docs/skills-guide.md`.
+**Key takeaway:** `name` + `description` are the only truly portable interface. Codex ignores unknown keys (safe to include Claude fields), so layer tool-specific fields on top of a portable baseline. For the full matrix, see `references/docs/skills-guide.md` (bundled with this skill).
 
 ### Detail Level
 
@@ -426,8 +429,8 @@ I need a skill for running database migrations
 - [Gemini CLI Skills](https://geminicli.com/docs/cli/skills/) — Gemini-specific features
 - [npx skills CLI](https://github.com/vercel-labs/skills) — installing remote/community skills
 - [Skills best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — authoring guidance
-- `.agents/docs/skills-guide.md` — local deep-dive: compatibility matrix, resolved questions, patterns
-- `.agents/docs/reference-architecture.md` — local: where skills/agents/docs live and why
+- `references/docs/skills-guide.md` — bundled deep-dive: compatibility matrix, resolved questions, patterns
+- `.agents/docs/reference-architecture.md` — where skills/agents/docs live and why (OAT monorepo only; not bundled)
 
 ## Troubleshooting
 
