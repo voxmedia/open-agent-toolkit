@@ -2,6 +2,31 @@ import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const GLOB_CHARS = /[*?[]/;
+const PRUNED_CANDIDATE_DIRECTORIES = new Set([
+  '.cache',
+  '.git',
+  '.gradle',
+  '.next',
+  '.nuxt',
+  '.output',
+  '.parcel-cache',
+  '.pnpm-store',
+  '.pytest_cache',
+  '.ruff_cache',
+  '.turbo',
+  '.venv',
+  '.vite',
+  '.worktrees',
+  '.yarn',
+  '__pycache__',
+  'build',
+  'coverage',
+  'dist',
+  'node_modules',
+  'out',
+  'target',
+  'tmp',
+]);
 
 function normalizePattern(path: string): string {
   return path.replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
@@ -48,21 +73,42 @@ function globToRegExp(pattern: string): RegExp {
   return new RegExp(regex);
 }
 
+function isOatStatePath(path: string): boolean {
+  return path === '.oat' || path.startsWith('.oat/');
+}
+
+function shouldPruneCandidateDirectory(path: string, name: string): boolean {
+  return !isOatStatePath(path) && PRUNED_CANDIDATE_DIRECTORIES.has(name);
+}
+
 async function collectRelativePaths(
   root: string,
   current = '',
 ): Promise<string[]> {
-  const dirPath = current === '' ? root : join(root, current);
-  const entries = await readdir(dirPath, { withFileTypes: true });
   const paths: string[] = [];
+  const pendingDirectories = [current];
 
-  for (const entry of entries) {
-    const relativePath =
-      current === '' ? entry.name : `${current}/${entry.name}`;
-    paths.push(relativePath);
+  while (pendingDirectories.length > 0) {
+    const directory = pendingDirectories.pop()!;
+    const dirPath = directory === '' ? root : join(root, directory);
+    const entries = await readdir(dirPath, { withFileTypes: true });
 
-    if (entry.isDirectory()) {
-      paths.push(...(await collectRelativePaths(root, relativePath)));
+    for (const entry of entries) {
+      const relativePath =
+        directory === '' ? entry.name : `${directory}/${entry.name}`;
+      const shouldPrune =
+        entry.isDirectory() &&
+        shouldPruneCandidateDirectory(relativePath, entry.name);
+
+      if (shouldPrune) {
+        continue;
+      }
+
+      paths.push(relativePath);
+
+      if (entry.isDirectory()) {
+        pendingDirectories.push(relativePath);
+      }
     }
   }
 
@@ -106,7 +152,9 @@ export async function expandLocalPaths(
     if (matches.length === 0) {
       missingGlobs.push(localPath);
     } else {
-      resolved.push(...matches.sort());
+      for (const match of matches.sort()) {
+        resolved.push(match);
+      }
     }
   }
 
