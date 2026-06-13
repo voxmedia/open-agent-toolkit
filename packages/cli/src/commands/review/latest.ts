@@ -22,6 +22,8 @@ export interface LatestReview {
   scope: string;
   generatedAt: string;
   kind: ReviewLatestKind;
+  archived: boolean;
+  actionable: boolean;
 }
 
 interface ReviewCandidate extends LatestReview {
@@ -52,6 +54,8 @@ const EMPTY_RESULT = {
   scope: null,
   generatedAt: null,
   kind: null,
+  archived: null,
+  actionable: null,
 } as const;
 
 function normalizeRepoRelativePath(
@@ -121,6 +125,8 @@ async function readReviewCandidate(
   relativePath: string,
   kind: ReviewLatestKind,
   priority: number,
+  archived: boolean,
+  actionable: boolean,
 ): Promise<ReviewCandidate | null> {
   const content = await readFile(join(repoRoot, relativePath), 'utf8');
   const frontmatter = getFrontmatterBlock(content);
@@ -145,6 +151,8 @@ async function readReviewCandidate(
     scope,
     generatedAt,
     kind,
+    archived,
+    actionable,
     generatedTime,
     lifecycleRank: reviewLifecycleRank(scope),
     priority,
@@ -175,6 +183,8 @@ export async function findLatestReview(
     dir: string;
     kind: ReviewLatestKind;
     priority: number;
+    archived: boolean;
+    actionable: boolean;
   }> = [];
 
   if (projectPath) {
@@ -183,21 +193,33 @@ export async function findLatestReview(
         dir: `${projectPath}/reviews`,
         kind: 'project',
         priority: 0,
+        archived: false,
+        actionable: true,
       },
       {
         dir: `${projectPath}/reviews/archived`,
         kind: 'project',
         priority: 1,
+        archived: true,
+        actionable: false,
       },
     );
   }
 
   scanTargets.push(
-    { dir: '.oat/repo/reviews', kind: 'adhoc', priority: 2 },
+    {
+      dir: '.oat/repo/reviews',
+      kind: 'adhoc',
+      priority: 2,
+      archived: false,
+      actionable: true,
+    },
     {
       dir: '.oat/projects/local/orphan-reviews',
       kind: 'adhoc',
       priority: 3,
+      archived: false,
+      actionable: true,
     },
   );
 
@@ -212,6 +234,8 @@ export async function findLatestReview(
               file,
               target.kind,
               target.priority,
+              target.archived,
+              target.actionable,
             ),
           ),
         );
@@ -232,6 +256,8 @@ export async function findLatestReview(
     scope: latest.scope,
     generatedAt: latest.generatedAt,
     kind: latest.kind,
+    archived: latest.archived,
+    actionable: latest.actionable,
   };
 }
 

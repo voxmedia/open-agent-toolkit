@@ -57,6 +57,12 @@ export interface ReviewStatus {
   artifact: string;
 }
 
+export interface ReviewArtifactStatus {
+  path: string;
+  archived: boolean;
+  actionable: boolean;
+}
+
 export interface SkillRecommendation {
   skill: string;
   reason: string;
@@ -76,6 +82,7 @@ export interface ProjectState {
   progress: TaskProgress;
   artifacts: ArtifactStatus[];
   reviews: ReviewStatus[];
+  activeReviewArtifacts: ReviewArtifactStatus[];
   blockers: string[];
   hillCheckpoints: string[];
   hillCompleted: string[];

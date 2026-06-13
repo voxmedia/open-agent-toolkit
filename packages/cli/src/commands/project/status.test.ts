@@ -68,6 +68,7 @@ function makeProjectState(path: string): ProjectState {
     },
     artifacts: [],
     reviews: [],
+    activeReviewArtifacts: [],
     blockers: [],
     hillCheckpoints: [],
     hillCompleted: [],

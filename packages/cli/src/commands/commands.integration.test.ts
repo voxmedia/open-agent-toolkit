@@ -325,6 +325,8 @@ describe('CLI command integration', () => {
       scope: null,
       generatedAt: null,
       kind: null,
+      archived: null,
+      actionable: null,
     });
   });
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.2
+version: 1.5.3
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -105,7 +105,8 @@ Selection rules:
 - Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime.
 - Read the JSON result:
   - `path: null` means no review target was found.
-  - `kind: "project"` means this skill can process the target when the path is an active top-level project review.
+  - `kind: "project"` and `actionable: true` means this skill can process the target when the path is an active top-level project review.
+  - `archived: true` or `actionable: false` means the target is historical/non-actionable for project review-receive.
   - `kind: "adhoc"` means route to `oat-review-receive` after offering that handoff to the user.
 - Only process active project review artifacts in the top level of `"$PROJECT_PATH/reviews/"`.
 - Treat archived project artifacts as history only; do not receive them automatically. If `oat review latest` returns an archived project review, tell the user no active project review is waiting and offer to run `oat-project-review-provide`.
