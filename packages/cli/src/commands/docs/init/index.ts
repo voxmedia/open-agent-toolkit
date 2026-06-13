@@ -23,6 +23,7 @@ import {
 import { resolveAssetsRoot } from '@fs/assets';
 import { Command, Option } from 'commander';
 
+import { buildDocsCommands } from './docs-commands';
 import {
   DEFAULT_DOCS_REPO_SHAPE_DEPENDENCIES,
   type DocsFormatMode,
@@ -42,6 +43,7 @@ import { scaffoldDocsApp } from './scaffold';
 interface DocsInitCommandOptions {
   framework?: DocsFramework;
   appName?: string;
+  siteName?: string;
   targetDir?: string;
   description?: string;
   lint?: DocsLintMode;
@@ -211,6 +213,7 @@ async function runDocsInitCommand(
       acceptDefaults: options.yes ?? false,
       providedFramework: options.framework,
       providedAppName: options.appName,
+      providedSiteName: options.siteName,
       providedTargetDir: options.targetDir,
       providedSiteDescription: options.description,
       providedLint: options.lint,
@@ -275,12 +278,16 @@ async function runDocsInitCommand(
     if (!context.json) {
       context.logger.info('');
       context.logger.info('Next steps:');
-      if (resolved.repoShape === 'single-package') {
-        context.logger.info(`  cd ${resolved.targetDir} && pnpm install`);
-        context.logger.info('  pnpm build');
-      } else {
-        context.logger.info('  pnpm install');
-        context.logger.info(`  pnpm --filter ${resolved.appName} build`);
+      const commands = buildDocsCommands(
+        resolved.repoShape,
+        resolved.targetDir,
+        resolved.appName,
+      );
+      context.logger.info(`  ${commands.install}`);
+      context.logger.info(`  ${commands.dev}`);
+      context.logger.info(`  ${commands.build}`);
+
+      if (resolved.repoShape === 'monorepo') {
         const defaultName = getDefaultDocsAppName(
           context.cwd,
           resolved.repoShape,
@@ -323,6 +330,12 @@ export function createDocsInitCommand(
       ]),
     )
     .addOption(new Option('--app-name <name>', 'Docs app name'))
+    .addOption(
+      new Option(
+        '--site-name <name>',
+        'Display title (distinct from --app-name)',
+      ),
+    )
     .addOption(
       new Option('--target-dir <path>', 'Target directory for the docs app'),
     )

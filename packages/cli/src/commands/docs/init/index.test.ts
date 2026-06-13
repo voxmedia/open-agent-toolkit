@@ -107,7 +107,7 @@ describe('createDocsInitCommand', () => {
 
     await runCommand(command, [
       '--framework',
-      'fumadocs',
+      'mkdocs',
       '--app-name',
       'docs',
       '--target-dir',
@@ -133,7 +133,7 @@ describe('createDocsInitCommand', () => {
 
     await runCommand(command, [
       '--framework',
-      'fumadocs',
+      'mkdocs',
       '--app-name',
       'docs',
       '--target-dir',
@@ -177,7 +177,7 @@ describe('createDocsInitCommand', () => {
 
     await runCommand(command, [
       '--framework',
-      'fumadocs',
+      'mkdocs',
       '--app-name',
       'docs',
       '--target-dir',
@@ -190,9 +190,9 @@ describe('createDocsInitCommand', () => {
     ]);
 
     const output = capture.info.join('\n');
-    expect(output).toContain('cd docs');
-    expect(output).toContain('pnpm install');
-    expect(output).toContain('pnpm build');
+    expect(output).toContain('cd docs && pnpm install');
+    expect(output).toContain('cd docs && pnpm dev');
+    expect(output).toContain('cd docs && pnpm build');
   });
 
   it('warns and exits when existing docs config found in non-interactive mode', async () => {
@@ -343,6 +343,7 @@ describe('createDocsInitCommand', () => {
 
     const output = capture.info.join('\n');
     expect(output).toContain('pnpm install');
+    expect(output).toContain('pnpm --filter my-docs dev');
     expect(output).toContain('pnpm --filter my-docs build');
   });
 
@@ -370,6 +371,32 @@ describe('createDocsInitCommand', () => {
       '/tmp/assets',
     );
   });
+
+  it('passes --site-name through option resolution', async () => {
+    const { command, runDocsInit } = createHarness({ interactive: false });
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--site-name',
+      'Custom Docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      '',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    expect(runDocsInit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ siteName: 'Custom Docs' }),
+      '/tmp/assets',
+    );
+  });
 });
 
 describe('buildDocsSectionBody', () => {
@@ -379,6 +406,7 @@ describe('buildDocsSectionBody', () => {
       repoShape: 'monorepo',
       framework: 'fumadocs',
       appName: 'my-docs',
+      siteName: 'My Docs',
       targetDir: 'apps/my-docs',
       siteDescription: 'My docs',
       lint: 'none',
@@ -400,6 +428,7 @@ describe('buildDocsSectionBody', () => {
       repoShape: 'single-package',
       framework: 'mkdocs',
       appName: 'docs',
+      siteName: 'Docs',
       targetDir: 'docs',
       siteDescription: '',
       lint: 'none',

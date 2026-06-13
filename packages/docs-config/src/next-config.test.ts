@@ -1,44 +1,68 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+
+const mdxMocks = vi.hoisted(() => {
+  const withMDX = vi.fn((config: Record<string, unknown>) => ({
+    ...config,
+    mdxWrapped: true,
+  }));
+  const createMDX = vi.fn(() => withMDX);
+
+  return { createMDX, withMDX };
+});
 
 vi.mock('fumadocs-mdx/next', () => ({
-  createMDX: () => (config: Record<string, unknown>) => config,
+  createMDX: mdxMocks.createMDX,
 }));
 
-import { createDocsConfig } from './next-config.js';
+import { createDocsConfig, type DocsConfigOptions } from './next-config.js';
 
 describe('createDocsConfig', () => {
-  it('should return a Next.js config with static export settings', () => {
-    const config = createDocsConfig({ title: 'Test Docs' });
-
-    expect(config.output).toBe('export');
-    expect(config.trailingSlash).toBe(true);
-    expect(config.images).toEqual({ unoptimized: true });
-    expect(config.reactStrictMode).toBe(true);
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should accept optional description and logo', () => {
-    const config = createDocsConfig({
-      title: 'My Docs',
-      description: 'A test description',
-      logo: '/logo.svg',
+  it('should expose only basePath as an option at the type level', () => {
+    expectTypeOf<DocsConfigOptions>().toEqualTypeOf<{ basePath?: string }>();
+  });
+
+  it('should return a wrapped Next.js config with static export settings', () => {
+    const config = createDocsConfig({});
+
+    expect(config).toMatchObject({
+      output: 'export',
+      trailingSlash: true,
+      images: { unoptimized: true },
+      reactStrictMode: true,
     });
+    expect(config).not.toHaveProperty('basePath');
+    expect(config).toHaveProperty('mdxWrapped', true);
 
-    expect(config.output).toBe('export');
-    expect(config.reactStrictMode).toBe(true);
+    expect(mdxMocks.createMDX).toHaveBeenCalledTimes(1);
+    expect(mdxMocks.withMDX).toHaveBeenCalledWith({
+      output: 'export',
+      trailingSlash: true,
+      images: { unoptimized: true },
+      reactStrictMode: true,
+    });
   });
 
-  it('should set basePath when provided', () => {
-    const config = createDocsConfig({
-      title: 'Test Docs',
+  it('should set basePath when provided before wrapping with MDX', () => {
+    const config = createDocsConfig({ basePath: '/my-project' });
+
+    expect(config).toMatchObject({
+      output: 'export',
+      trailingSlash: true,
+      images: { unoptimized: true },
+      reactStrictMode: true,
       basePath: '/my-project',
     });
-
-    expect(config.basePath).toBe('/my-project');
-  });
-
-  it('should not set basePath when omitted', () => {
-    const config = createDocsConfig({ title: 'Test Docs' });
-
-    expect(config.basePath).toBeUndefined();
+    expect(config).toHaveProperty('mdxWrapped', true);
+    expect(mdxMocks.withMDX).toHaveBeenCalledWith({
+      output: 'export',
+      trailingSlash: true,
+      images: { unoptimized: true },
+      reactStrictMode: true,
+      basePath: '/my-project',
+    });
   });
 });

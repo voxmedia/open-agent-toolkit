@@ -17,9 +17,9 @@
     "@open-agent-toolkit/docs-config": "workspace:*",
     "@open-agent-toolkit/docs-theme": "workspace:*",
     "@open-agent-toolkit/docs-transforms": "workspace:*",
-    "fumadocs-core": "^16.6.13",
-    "fumadocs-mdx": "^14.2.9",
-    "fumadocs-ui": "^16.6.13",
+    "fumadocs-core": "^16.10.2",
+    "fumadocs-mdx": "^14.3.2",
+    "fumadocs-ui": "^16.10.2",
     "next": "^16.1.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

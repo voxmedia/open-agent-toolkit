@@ -2,7 +2,7 @@
   "name": "{{PACKAGE_NAME}}",
   "type": "module",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.0"{{PACKAGE_MANAGER_FIELD}},
   "description": "{{SITE_DESCRIPTION}}",
   "scripts": {
     "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
