@@ -200,6 +200,54 @@ oat_template: false
     });
   });
 
+  it('recommends review-receive when an active top-level review artifact exists', async () => {
+    const repoRoot = await createDir('oat-control-plane-active-review-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+
+    await createReviewRoutingProject(projectDir, 'complete');
+    await mkdir(join(projectDir, 'reviews'), { recursive: true });
+    await writeFile(
+      join(projectDir, 'reviews', 'p01-review.md'),
+      '# Active review\n',
+      'utf8',
+    );
+
+    const projectState = await getProjectState(projectDir);
+
+    expect(projectState.activeReviewArtifacts).toEqual([
+      {
+        path: 'reviews/p01-review.md',
+        archived: false,
+        actionable: true,
+      },
+    ]);
+    expect(projectState.recommendation).toMatchObject({
+      skill: 'oat-project-review-receive',
+      reason: 'Unprocessed review feedback exists',
+    });
+  });
+
+  it('does not recommend review-receive for archived review history when review rows passed and the PR is open', async () => {
+    const repoRoot = await createDir('oat-control-plane-archived-review-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+
+    await createReviewRoutingProject(projectDir, 'pr_open');
+    await mkdir(join(projectDir, 'reviews', 'archived'), { recursive: true });
+    await writeFile(
+      join(projectDir, 'reviews', 'archived', 'p01-review.md'),
+      '# Archived review\n',
+      'utf8',
+    );
+
+    const projectState = await getProjectState(projectDir);
+
+    expect(projectState.activeReviewArtifacts).toEqual([]);
+    expect(projectState.recommendation.skill).not.toBe(
+      'oat-project-review-receive',
+    );
+    expect(projectState.recommendation.skill).toBe('oat-project-complete');
+  });
+
   it('preserves completed decomposition coordination parents in state and summaries', async () => {
     const repoRoot = await createDir('oat-control-plane-coordination-');
     const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
@@ -245,6 +293,81 @@ oat_template: false
     });
   });
 });
+
+async function createReviewRoutingProject(
+  projectDir: string,
+  phaseStatus: string,
+): Promise<void> {
+  await mkdir(projectDir, { recursive: true });
+  await Promise.all([
+    writeFile(
+      join(projectDir, 'state.md'),
+      `---
+oat_current_task: null
+oat_last_commit: null
+oat_blockers: []
+oat_hill_checkpoints: []
+oat_hill_completed: []
+oat_parallel_execution: false
+oat_phase: implement
+oat_phase_status: ${phaseStatus}
+oat_execution_mode: single-thread
+oat_lifecycle: active
+oat_workflow_mode: quick
+oat_workflow_origin: native
+oat_docs_updated: null
+oat_pr_status: open
+oat_pr_url: https://example.test/pr/1
+oat_project_created: '2026-04-08T17:16:52.421Z'
+oat_project_completed: null
+oat_project_state_updated: '2026-04-09T22:00:00Z'
+oat_generated: false
+---
+`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'plan.md'),
+      `---
+oat_status: complete
+oat_template: false
+---
+
+## Phase 1: Example
+
+### Task p01-t01: Example
+
+## Reviews
+
+| Scope | Type | Status | Date | Artifact |
+| ----- | ---- | ------ | ---- | -------- |
+| p01 | code | passed | 2026-06-12 | reviews/p01-review.md |
+| final | code | passed | 2026-06-12 | reviews/final-review.md |
+`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'implementation.md'),
+      `---
+oat_current_task_id: null
+---
+
+### Task p01-t01: Example
+**Status:** completed
+`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'summary.md'),
+      `---
+oat_status: complete
+oat_template: false
+---
+`,
+      'utf8',
+    ),
+  ]);
+}
 
 async function createProject(
   projectsRoot: string,

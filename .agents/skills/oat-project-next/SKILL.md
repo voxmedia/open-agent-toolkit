@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.4
+version: 1.0.5
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -283,9 +283,9 @@ Parse plan.md Reviews table for a row with `Scope="final"` and `Type="code"`:
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Review fixes implemented — triggering re-review"
 
-- If row exists with other non-passed status (e.g., `"received"`, `"fixes_added"`):
-  → Route to `oat-project-review-receive` (review findings not yet converted to tasks)
-  → Announce: "Final review in progress — continuing review cycle"
+- If row exists with other non-passed status (e.g., `"received"`, `"fixes_added"`) and Step 5.2 did not find an active top-level review artifact:
+  → Route to `oat-project-review-provide` (with scope hint: "code final")
+  → Announce: "Final review is not passed and no active review artifact exists — rerunning final review"
 
 - If row exists with `Status="passed"`:
   → Continue to 5.4

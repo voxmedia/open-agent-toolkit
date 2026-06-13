@@ -28,7 +28,7 @@ oat review latest --json
 oat review latest --project .oat/projects/shared/example --json
 ```
 
-The resolver orders candidates by `oat_generated_at` frontmatter, not filesystem mtime. With an active or explicit project, it scans the project's `reviews/` directory first, then `reviews/archived/`, then ad-hoc review locations (`.oat/repo/reviews/` and `.oat/projects/local/orphan-reviews/`). When candidates share the same generated time, active project reviews outrank archived and ad-hoc reviews, then lifecycle recency breaks remaining ties (`final` > higher phase/task scope > lower phase/task scope). The JSON response contains `path`, `scope`, `generatedAt`, and `kind` (`project` or `adhoc`). If no review exists, those fields are `null`.
+The resolver orders candidates by `oat_generated_at` frontmatter, not filesystem mtime. With an active or explicit project, it scans the project's `reviews/` directory first, then `reviews/archived/`, then ad-hoc review locations (`.oat/repo/reviews/` and `.oat/projects/local/orphan-reviews/`). When candidates share the same generated time, active project reviews outrank archived and ad-hoc reviews, then lifecycle recency breaks remaining ties (`final` > higher phase/task scope > lower phase/task scope). The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. Archived project reviews remain discoverable as history but return `actionable: false`; active top-level project reviews return `actionable: true`. If no review exists, those fields are `null`.
 
 `oat-project-review-receive` uses this resolver when it is invoked from natural language and needs to offer the latest project review, or route an ad-hoc result to `oat-review-receive`.
 

@@ -3,7 +3,6 @@ import type {
   BoundaryTier,
   Phase,
   ProjectState,
-  ReviewStatus,
   SkillRecommendation,
   WorkflowMode,
 } from '../types';
@@ -162,7 +161,7 @@ function getPostImplementationRecommendation(
     };
   }
 
-  if (hasUnprocessedReviewFeedback(state)) {
+  if (hasActionableReviewArtifacts(state)) {
     return {
       skill: 'oat-project-review-receive',
       reason: 'Unprocessed review feedback exists',
@@ -191,8 +190,9 @@ function getPostImplementationRecommendation(
 
   if (finalReview.status !== 'passed') {
     return {
-      skill: 'oat-project-review-receive',
-      reason: 'Final review findings still need processing',
+      skill: 'oat-project-review-provide',
+      reason: 'Final review is not passed and no active review artifact exists',
+      context: 'code final',
     };
   }
 
@@ -227,23 +227,11 @@ function hasIncompleteRevisionPhase(
   );
 }
 
-function hasUnprocessedReviewFeedback(
+function hasActionableReviewArtifacts(
   state: Omit<ProjectState, 'recommendation'>,
 ): boolean {
-  return state.reviews.some((review) => {
-    if (review.scope === 'final' && review.type === 'code') {
-      return false;
-    }
-
-    return !isProcessedReviewStatus(review);
-  });
-}
-
-function isProcessedReviewStatus(review: ReviewStatus): boolean {
-  return (
-    review.status === 'passed' ||
-    review.status === 'fixes_added' ||
-    review.status === 'fixes_completed'
+  return state.activeReviewArtifacts.some(
+    (reviewArtifact) => reviewArtifact.actionable && !reviewArtifact.archived,
   );
 }
 

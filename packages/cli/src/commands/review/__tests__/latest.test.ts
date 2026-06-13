@@ -143,6 +143,8 @@ describe('oat review latest', () => {
       scope: 'ad-hoc',
       generatedAt: '2026-06-03',
       kind: 'adhoc',
+      archived: false,
+      actionable: true,
     });
   });
 
@@ -173,6 +175,8 @@ describe('oat review latest', () => {
 
     expect(result?.path).toBe(newByFrontmatter);
     expect(result?.generatedAt).toBe('2026-06-02');
+    expect(result?.archived).toBe(false);
+    expect(result?.actionable).toBe(true);
   });
 
   it('prefers active project reviews over archived and ad-hoc ties', async () => {
@@ -200,6 +204,30 @@ describe('oat review latest', () => {
     expect(result?.path).toBe(`${projectPath}/reviews/active.md`);
     expect(result?.kind).toBe('project');
     expect(result?.scope).toBe('p01');
+    expect(result?.archived).toBe(false);
+    expect(result?.actionable).toBe(true);
+  });
+
+  it('marks archived-only project review results as historical and non-actionable', async () => {
+    const root = await createRepoRoot();
+    const projectPath = '.oat/projects/shared/demo';
+
+    await writeReview(root, `${projectPath}/reviews/archived/archived.md`, {
+      generatedAt: '2026-06-03',
+      scope: 'final',
+      project: projectPath,
+    });
+
+    const result = await findLatestReview({ repoRoot: root, projectPath });
+
+    expect(result).toEqual({
+      path: `${projectPath}/reviews/archived/archived.md`,
+      scope: 'final',
+      generatedAt: '2026-06-03',
+      kind: 'project',
+      archived: true,
+      actionable: false,
+    });
   });
 
   it('prefers final review scope when active project reviews share a generated time', async () => {
@@ -227,6 +255,8 @@ describe('oat review latest', () => {
 
     expect(result?.path).toBe(`${projectPath}/reviews/project-final-review.md`);
     expect(result?.scope).toBe('final');
+    expect(result?.archived).toBe(false);
+    expect(result?.actionable).toBe(true);
   });
 
   it('prefers higher phase scope when active project reviews share a generated time', async () => {
@@ -249,6 +279,8 @@ describe('oat review latest', () => {
 
     expect(result?.path).toBe(`${projectPath}/reviews/p06-review.md`);
     expect(result?.scope).toBe('p06');
+    expect(result?.archived).toBe(false);
+    expect(result?.actionable).toBe(true);
   });
 
   it('emits json for the latest review', async () => {
@@ -272,6 +304,8 @@ describe('oat review latest', () => {
       scope: 'p01',
       generatedAt: '2026-06-03',
       kind: 'project',
+      archived: false,
+      actionable: true,
     });
     expect(process.exitCode).toBe(0);
   });
@@ -287,6 +321,8 @@ describe('oat review latest', () => {
       scope: null,
       generatedAt: null,
       kind: null,
+      archived: null,
+      actionable: null,
     });
     expect(process.exitCode).toBe(0);
   });

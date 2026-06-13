@@ -24,6 +24,7 @@ function makeState(
     },
     artifacts: makeArtifacts(),
     reviews: [],
+    activeReviewArtifacts: [],
     blockers: [],
     hillCheckpoints: [],
     hillCompleted: [],
@@ -218,14 +219,45 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-implement');
   });
 
-  it('routes unprocessed reviews to review-receive', () => {
+  it('routes active top-level review artifacts to review-receive', () => {
     const state = makeState({
       phase: 'implement',
       phaseStatus: 'complete',
-      reviews: [makeReview({ scope: 'p01', status: 'received' })],
+      reviews: [makeReview({ scope: 'p01', status: 'passed' })],
+      activeReviewArtifacts: [
+        {
+          path: 'reviews/p01-review.md',
+          archived: false,
+          actionable: true,
+        },
+      ],
     });
 
     expect(recommendSkill(state).skill).toBe('oat-project-review-receive');
+  });
+
+  it('does not route stale review rows to review-receive without an active artifact', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'pr_open',
+      reviews: [
+        makeReview({
+          scope: 'p01',
+          status: 'received',
+          artifact: 'reviews/archived/p01-review.md',
+        }),
+        makeReview({ scope: 'final', status: 'passed' }),
+      ],
+      artifacts: makeArtifacts({
+        type: 'summary',
+        exists: true,
+        status: 'complete',
+        boundaryTier: 1,
+      }),
+      activeReviewArtifacts: [],
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-complete');
   });
 
   it('routes pending final review to review-provide with code final context', () => {
@@ -251,14 +283,17 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-review-provide');
   });
 
-  it('routes non-passed final review statuses back to review-receive', () => {
+  it('routes non-passed final review statuses back to review-provide when no active review exists', () => {
     const state = makeState({
       phase: 'implement',
       phaseStatus: 'complete',
       reviews: [makeReview({ scope: 'final', status: 'fixes_added' })],
     });
 
-    expect(recommendSkill(state).skill).toBe('oat-project-review-receive');
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-review-provide',
+      context: 'code final',
+    });
   });
 
   it('routes passed final review without summary to summary', () => {

@@ -6,7 +6,12 @@ import { scanArtifacts } from './state/artifacts';
 import { parseStateFrontmatter } from './state/parser';
 import { parseReviewTable, scanUnprocessedReviews } from './state/reviews';
 import { parseTaskProgress } from './state/tasks';
-import type { ProjectState, ProjectSummary, ReviewStatus } from './types';
+import type {
+  ProjectState,
+  ProjectSummary,
+  ReviewArtifactStatus,
+  ReviewStatus,
+} from './types';
 
 export async function getProjectState(
   projectPath: string,
@@ -27,10 +32,13 @@ export async function getProjectState(
   ]);
 
   const parsedState = parseStateFrontmatter(stateContent);
-  const reviews = mergeReviews(
-    parseReviewTable(planContent),
+  const activeReviewArtifacts = toActiveReviewArtifacts(
     reviewFiles,
     projectPath,
+  );
+  const reviews = mergeReviews(
+    parseReviewTable(planContent),
+    activeReviewArtifacts,
   );
   const progress = parseTaskProgress(planContent, implementationContent);
 
@@ -50,6 +58,7 @@ export async function getProjectState(
     progress,
     artifacts,
     reviews,
+    activeReviewArtifacts,
     blockers: parsedState.blockers,
     hillCheckpoints: parsedState.hillCheckpoints,
     hillCompleted: parsedState.hillCompleted,
@@ -98,10 +107,13 @@ export async function listProjects(
           scanUnprocessedReviews(projectDir),
         ]);
       const parsedState = parseStateFrontmatter(stateContent);
-      const reviews = mergeReviews(
-        parseReviewTable(planContent),
+      const activeReviewArtifacts = toActiveReviewArtifacts(
         reviewFiles,
         projectDir,
+      );
+      const reviews = mergeReviews(
+        parseReviewTable(planContent),
+        activeReviewArtifacts,
       );
       const progress = parseTaskProgress(planContent, implementationContent);
 
@@ -118,6 +130,7 @@ export async function listProjects(
         progress,
         artifacts,
         reviews,
+        activeReviewArtifacts,
         blockers: parsedState.blockers,
         hillCheckpoints: parsedState.hillCheckpoints,
         hillCompleted: parsedState.hillCompleted,
@@ -229,31 +242,37 @@ async function readOptionalFile(path: string): Promise<string> {
 
 function mergeReviews(
   tableReviews: ReviewStatus[],
-  reviewFiles: string[],
-  projectPath: string,
+  activeReviewArtifacts: ReviewArtifactStatus[],
 ): ReviewStatus[] {
   const merged = [...tableReviews];
   const existingArtifacts = new Set(
     tableReviews.map((review) => review.artifact),
   );
 
-  for (const reviewFile of reviewFiles) {
-    const relativeArtifact = relative(projectPath, reviewFile).replace(
-      /\\/g,
-      '/',
-    );
-    if (existingArtifacts.has(relativeArtifact)) {
+  for (const reviewArtifact of activeReviewArtifacts) {
+    if (existingArtifacts.has(reviewArtifact.path)) {
       continue;
     }
 
     merged.push({
-      scope: basename(reviewFile, '.md'),
+      scope: basename(reviewArtifact.path, '.md'),
       type: 'code',
       status: 'received',
       date: '-',
-      artifact: relativeArtifact,
+      artifact: reviewArtifact.path,
     });
   }
 
   return merged;
+}
+
+function toActiveReviewArtifacts(
+  reviewFiles: string[],
+  projectPath: string,
+): ReviewArtifactStatus[] {
+  return reviewFiles.map((reviewFile) => ({
+    path: relative(projectPath, reviewFile).replace(/\\/g, '/'),
+    archived: false,
+    actionable: true,
+  }));
 }
