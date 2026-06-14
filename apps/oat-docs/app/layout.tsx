@@ -3,9 +3,14 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { ReactNode } from 'react';
 
 import './globals.css';
+import StaticSearchDialog from '@/components/search';
 import { source } from '@/lib/source';
 
-const basePath = '/open-agent-toolkit';
+export const metadata = {
+  title: 'Open Agent Toolkit',
+  description:
+    'An open-source toolkit for portable, provider-agnostic agent tooling and workflows.',
+};
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
@@ -13,11 +18,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <body>
         <RootProvider
           search={{
-            options: {
-              type: 'static' as const,
-              // Static search does not inherit Next.js basePath automatically.
-              api: `${basePath}/api/search`,
-            },
+            SearchDialog: StaticSearchDialog,
           }}
         >
           <DocsLayout

@@ -1,10 +1,18 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 
 import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
 import { OAT_VERSION } from '@shared/oat-version';
 
+import { buildDocsCommands } from './docs-commands';
 import type {
   DocsFormatMode,
   DocsFramework,
@@ -53,6 +61,10 @@ const FUMA_TEMPLATE_FILES: TemplateFile[] = [
   {
     source: join('app', 'layout.tsx'),
     destination: join('app', 'layout.tsx'),
+  },
+  {
+    source: join('components', 'search.tsx'),
+    destination: join('components', 'search.tsx'),
   },
   {
     source: join('app', '[[...slug]]', 'page.tsx'),
@@ -105,6 +117,16 @@ export interface OatDepContext {
   oatPackageVersions: Record<string, string>;
 }
 
+type MaybePromise<T> = T | Promise<T>;
+
+export interface ScaffoldDocsAppDependencies {
+  detectPnpmVersion: () => MaybePromise<string | null | undefined>;
+  hasInheritedPackageManager: (
+    repoRoot: string,
+    appRoot: string,
+  ) => MaybePromise<boolean>;
+}
+
 const OAT_DEP_PACKAGES = [
   'cli',
   'docs-config',
@@ -113,6 +135,7 @@ const OAT_DEP_PACKAGES = [
 ] as const;
 const DEFAULT_OAT_PUBLISHED_VERSION = OAT_VERSION;
 const PUBLIC_PACKAGE_VERSIONS_FILE = 'public-package-versions.json';
+export const PNPM_FALLBACK = '10.13.1';
 
 export async function detectIsOatRepo(repoRoot: string): Promise<boolean> {
   for (const pkg of OAT_DEP_PACKAGES) {
@@ -187,14 +210,6 @@ export async function resolveOatDepContext(
   return { isOatRepo, localPackages, oatPackageVersions };
 }
 
-function humanizeAppName(appName: string): string {
-  return appName
-    .split(/[-_]/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
 function buildDevDependencies(
   lint: DocsLintMode,
   format: DocsFormatMode,
@@ -247,22 +262,114 @@ function oatDepVersion(depContext: OatDepContext, packageName: string): string {
   return `^${depContext.oatPackageVersions[packageName] ?? DEFAULT_OAT_PUBLISHED_VERSION}`;
 }
 
+function detectPnpmVersionFromUserAgent(): string | null {
+  const userAgent = process.env.npm_config_user_agent ?? '';
+  return userAgent.match(/\bpnpm\/([^\s]+)/)?.[1] ?? null;
+}
+
+function isDescendantOrSame(root: string, candidate: string): boolean {
+  const relativePath = relative(root, candidate);
+  return (
+    relativePath === '' ||
+    (!relativePath.startsWith('..') && !isAbsolute(relativePath))
+  );
+}
+
+async function packageJsonHasPackageManager(
+  packageJsonPath: string,
+): Promise<boolean> {
+  if (!(await fileExists(packageJsonPath))) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(await readFile(packageJsonPath, 'utf8')) as {
+      packageManager?: unknown;
+    };
+    return (
+      typeof parsed.packageManager === 'string' &&
+      parsed.packageManager.trim().length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function hasInheritedPackageManager(
+  repoRoot: string,
+  appRoot: string,
+): Promise<boolean> {
+  const root = resolve(repoRoot);
+  let current = resolve(dirname(appRoot));
+
+  while (isDescendantOrSame(root, current)) {
+    if (await packageJsonHasPackageManager(join(current, 'package.json'))) {
+      return true;
+    }
+
+    if (current === root) {
+      break;
+    }
+    current = dirname(current);
+  }
+
+  return false;
+}
+
+const DEFAULT_SCAFFOLD_DEPENDENCIES: ScaffoldDocsAppDependencies = {
+  detectPnpmVersion: detectPnpmVersionFromUserAgent,
+  hasInheritedPackageManager,
+};
+
+function normalizePnpmVersion(version: string | null | undefined): string {
+  const trimmed = version?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : PNPM_FALLBACK;
+}
+
+async function buildPackageManagerField(
+  options: DocsInitResolvedOptions,
+  appRoot: string,
+  dependencies: ScaffoldDocsAppDependencies,
+): Promise<string> {
+  if (
+    await dependencies.hasInheritedPackageManager(options.repoRoot, appRoot)
+  ) {
+    return '';
+  }
+
+  const version = normalizePnpmVersion(await dependencies.detectPnpmVersion());
+  return `,\n  "packageManager": ${JSON.stringify(`pnpm@${version}`)}`;
+}
+
 function renderTemplate(
   template: string,
   options: DocsInitResolvedOptions,
   depContext: OatDepContext,
+  packageManagerField: string,
 ): string {
   const repoName = basename(options.repoRoot);
-  const siteName = `${humanizeAppName(options.appName)} Documentation`;
+  const commands = buildDocsCommands(
+    options.repoShape,
+    options.targetDir,
+    options.appName,
+  );
   const replacements: Record<string, string> = {
     '{{APP_NAME}}': options.appName,
     '{{PACKAGE_NAME}}': options.appName,
-    '{{SITE_NAME}}': siteName,
+    '{{SITE_NAME}}': options.siteName,
     '{{SITE_DESCRIPTION}}': options.siteDescription,
+    '{{INSTALL_CMD}}': commands.install,
+    '{{DEV_CMD}}': commands.dev,
+    '{{BUILD_CMD}}': commands.build,
+    '{{PACKAGE_MANAGER_FIELD}}': packageManagerField,
     '{{DOCS_LINT_SCRIPT}}':
       options.lint === 'markdownlint-cli2'
         ? "markdownlint-cli2 'docs/**/*.md'"
         : "echo 'docs lint disabled'",
+    '{{LINT_PHRASE}}':
+      options.lint === 'markdownlint-cli2'
+        ? 'formatting and linting'
+        : 'formatting',
     '{{DOCS_FORMAT_SCRIPT}}':
       options.format === 'oxfmt'
         ? "oxfmt 'docs/**/*.md'"
@@ -327,6 +434,7 @@ async function ensureTargetWritable(appRoot: string): Promise<void> {
 
 export async function scaffoldDocsApp(
   options: ScaffoldDocsAppOptions,
+  overrides: Partial<ScaffoldDocsAppDependencies> = {},
 ): Promise<ScaffoldDocsAppResult> {
   const appRoot = join(options.repoRoot, options.targetDir);
   const templateDir = getTemplateDir(options.framework);
@@ -337,6 +445,10 @@ export async function scaffoldDocsApp(
     options.repoRoot,
     options.assetsRoot,
   );
+  const dependencies = {
+    ...DEFAULT_SCAFFOLD_DEPENDENCIES,
+    ...overrides,
+  };
 
   if (!(await fileExists(join(templateRoot, frameworkConfig.sentinelFile)))) {
     throw new Error(`Docs app templates not found under ${templateRoot}`);
@@ -344,12 +456,22 @@ export async function scaffoldDocsApp(
 
   await ensureTargetWritable(appRoot);
   await ensureDir(appRoot);
+  const packageManagerField = await buildPackageManagerField(
+    options,
+    appRoot,
+    dependencies,
+  );
 
   for (const templateFile of frameworkConfig.templateFiles) {
     const source = join(templateRoot, templateFile.source);
     const destination = join(appRoot, templateFile.destination);
     const template = await readFile(source, 'utf8');
-    const rendered = renderTemplate(template, options, depContext);
+    const rendered = renderTemplate(
+      template,
+      options,
+      depContext,
+      packageManagerField,
+    );
     await ensureDir(dirname(destination));
     await writeFile(destination, rendered, 'utf8');
     createdFiles.push(templateFile.destination);

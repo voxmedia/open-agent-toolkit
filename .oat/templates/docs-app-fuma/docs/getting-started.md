@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: ''
+description: 'Set up the local docs toolchain and preview the site.'
 ---
 
 # Getting Started
@@ -15,19 +15,19 @@ Use this guide to set up your local environment and preview {{SITE_NAME}}.
 ## Install dependencies
 
 ```bash
-pnpm install
+{{INSTALL_CMD}}
 ```
 
 ## Run the docs locally
 
 ```bash
-pnpm dev
+{{DEV_CMD}}
 ```
 
 ## Build for production
 
 ```bash
-pnpm build
+{{BUILD_CMD}}
 ```
 
 The static output is generated in the `out/` directory.

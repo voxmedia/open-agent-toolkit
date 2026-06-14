@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-theme",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "private": false,
   "description": "Theme components for OAT documentation sites",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-theme",
@@ -48,8 +48,8 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "fumadocs-core": "^16.6.13",
-    "fumadocs-ui": "^16.6.13",
+    "fumadocs-core": "^16.10.2",
+    "fumadocs-ui": "^16.10.2",
     "next": "^16.1.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

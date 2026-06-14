@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: ''
+description: 'Authoring conventions and navigation rules.'
 ---
 
 # Contributing to {{SITE_NAME}}
@@ -19,16 +19,16 @@ Documentation should ship with the code it explains. This docs app is scaffolded
 1. Install dependencies:
 
    ```bash
-   pnpm install
+   {{INSTALL_CMD}}
    ```
 
 2. Run the live preview:
 
    ```bash
-   pnpm dev
+   {{DEV_CMD}}
    ```
 
-3. Run Markdown formatting and linting as configured for this docs app.
+3. Run Markdown {{LINT_PHRASE}} as configured for this docs app.
 
 ## Supported Markdown features
 

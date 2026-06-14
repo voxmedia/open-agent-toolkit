@@ -524,6 +524,7 @@ describe('help output snapshots', () => {
         --framework <framework>  Documentation framework (choices: "fumadocs",
                                  "mkdocs")
         --app-name <name>        Docs app name
+        --site-name <name>       Display title (distinct from --app-name)
         --target-dir <path>      Target directory for the docs app
         --description <text>     Site description
         --lint <mode>            Markdown lint mode (choices: "none",

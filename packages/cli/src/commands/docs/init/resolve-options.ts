@@ -1,4 +1,4 @@
-import { basename, join } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 
 import type {
   PromptContext,
@@ -6,7 +6,8 @@ import type {
 } from '@commands/shared/shared.prompts';
 import { dirExists, fileExists } from '@fs/io';
 
-export type DocsRepoShape = 'monorepo' | 'single-package';
+export type DocsRepoShape = 'monorepo' | 'single-package' | 'nested-standalone';
+export type DocsDetectedRepoShape = Exclude<DocsRepoShape, 'nested-standalone'>;
 export type DocsFramework = 'fumadocs' | 'mkdocs';
 export type DocsLintMode = 'none' | 'markdownlint-cli2';
 export type DocsFormatMode = 'oxfmt' | 'none';
@@ -16,6 +17,7 @@ export interface DocsInitResolvedOptions {
   repoShape: DocsRepoShape;
   framework: DocsFramework;
   appName: string;
+  siteName: string;
   targetDir: string;
   siteDescription: string;
   lint: DocsLintMode;
@@ -30,6 +32,7 @@ export interface ResolveDocsInitOptionsInput {
   acceptDefaults: boolean;
   providedFramework?: DocsFramework;
   providedAppName?: string;
+  providedSiteName?: string;
   providedTargetDir?: string;
   providedSiteDescription?: string;
   providedLint?: DocsLintMode;
@@ -90,6 +93,14 @@ export function getDefaultDocsTargetDir(
   return appName;
 }
 
+export function humanizeAppName(appName: string): string {
+  return appName
+    .split(/[-_]/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 function hasWorkspaceConfig(rawPackageJson: string): boolean {
   try {
     const parsed = JSON.parse(rawPackageJson) as {
@@ -111,7 +122,7 @@ function hasWorkspaceConfig(rawPackageJson: string): boolean {
 export async function detectDocsRepoShape(
   repoRoot: string,
   dependencies: DocsRepoShapeDependencies,
-): Promise<DocsRepoShape> {
+): Promise<DocsDetectedRepoShape> {
   if (await dependencies.fileExists(join(repoRoot, 'pnpm-workspace.yaml'))) {
     return 'monorepo';
   }
@@ -136,6 +147,31 @@ export async function detectDocsRepoShape(
 
 export function getTemplateDir(framework: DocsFramework): string {
   return framework === 'fumadocs' ? 'docs-app-fuma' : 'docs-app-mkdocs';
+}
+
+export function resolveEffectiveDocsShape(
+  repoShape: DocsRepoShape,
+  framework: DocsFramework,
+  repoRoot: string,
+  targetDir: string,
+): DocsRepoShape {
+  if (repoShape !== 'single-package' || framework !== 'fumadocs') {
+    return repoShape;
+  }
+
+  if (!targetDir.trim()) {
+    return repoShape;
+  }
+
+  const targetPath = resolve(repoRoot, targetDir);
+  const relativeTarget = relative(resolve(repoRoot), targetPath);
+  const isRepoSubdirectory =
+    relativeTarget !== '' &&
+    relativeTarget !== '.' &&
+    !relativeTarget.startsWith('..') &&
+    !isAbsolute(relativeTarget);
+
+  return isRepoSubdirectory ? 'nested-standalone' : repoShape;
 }
 
 export async function resolveDocsInitOptions(
@@ -165,6 +201,17 @@ export async function resolveDocsInitOptions(
       : defaultAppName);
 
   if (!appName) {
+    return null;
+  }
+
+  const defaultSiteName = humanizeAppName(appName);
+  const siteName =
+    input.providedSiteName ??
+    (input.interactive && !input.acceptDefaults
+      ? await input.inputWithDefault('Site name', defaultSiteName, ctx)
+      : defaultSiteName);
+
+  if (siteName === null) {
     return null;
   }
 
@@ -209,11 +256,19 @@ export async function resolveDocsInitOptions(
     return null;
   }
 
+  const repoShape = resolveEffectiveDocsShape(
+    input.repoShape,
+    framework,
+    input.repoRoot,
+    targetDir,
+  );
+
   return {
     repoRoot: input.repoRoot,
-    repoShape: input.repoShape,
+    repoShape,
     framework,
     appName,
+    siteName,
     targetDir,
     siteDescription,
     lint,

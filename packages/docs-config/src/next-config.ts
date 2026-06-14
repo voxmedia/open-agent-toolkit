@@ -2,9 +2,6 @@ import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
 
 export interface DocsConfigOptions {
-  title: string;
-  description?: string;
-  logo?: string;
   basePath?: string;
 }
 

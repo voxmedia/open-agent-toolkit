@@ -49,6 +49,7 @@ describe('MkDocs scaffold compatibility (FR8)', () => {
         repoShape: 'single-package',
         framework: 'mkdocs',
         appName: 'docs',
+        siteName: 'Docs',
         targetDir: 'docs',
         siteDescription: '',
         lint: 'none',
@@ -89,8 +90,11 @@ describe('MkDocs scaffold compatibility (FR8)', () => {
         repoShape: 'single-package',
         framework: 'mkdocs',
         appName: 'my-docs',
+        siteName: 'My Docs',
         targetDir: 'my-docs',
         siteDescription: '',
+        lint: 'none',
+        format: 'oxfmt',
       });
 
       // Verify no Fumadocs-specific files
