@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-06-16
 oat_generated: false
@@ -12,131 +12,127 @@ oat_generated: false
 
 Discovery is for requirements and decisions, not implementation details.
 
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+- Prefer outcomes and constraints over concrete deliverables.
+- Implementation details captured here are root-cause pointers for the
+  plan phase, not a committed deliverable list.
 
 ## Initial Request
 
-{Copy of user's initial request}
-
-## Clarifying Questions
-
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+Running the interactive `oat tools install` (bare command) walks through all
+tool packs and lets you set user or project scope for each pack. Bug: setting a
+pack to project scope **uninstalls** it from user scope (and vice versa). The
+expectation is that installing a pack at a scope should be **additive** — it
+must not remove the pack from a scope where it is already installed. Removing a
+pack from a scope should only happen as a deliberate, confirmed action.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Additive scope management with an interactive reconcile manager _(Recommended)_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Description:** Treat every install as additive. Redesign the interactive
+`oat tools install` scope step into a reconcile-to-end-state manager that shows
+each pack's current placement (pre-selected), where checking a scope adds and
+unchecking a currently-installed scope stages a removal, gated by a batch
+confirmation. Non-interactive paths are strictly additive (never remove).
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**When this is the right choice:** The bug is a destructive side effect of
+treating scope as mutually exclusive (move semantics). Making install additive
+and isolating removal to an explicit, visible action directly resolves it.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Tradeoffs:** Removal is no longer possible non-interactively (acceptable; a
+future `oat tools uninstall` can add that path if a real need appears).
 
-### Approach 2: {Strategy Name}
+### Approach 2: Confirmation prompt on the existing move semantics
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Keep move semantics but prompt before stripping another scope.
+
+**When this is the right choice:** Minimal change if move-by-default were
+desired.
+
+**Tradeoffs:** Still treats scope as exclusive by default; confirmation fatigue;
+doesn't match the "installing is additive" mental model. Rejected.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Approach:** Approach 1 — Additive scope management with an interactive
+reconcile manager.
+**Rationale:** Installing should never destroy an existing install. Removal
+becomes a deliberate, visible action (explicit uncheck + batch confirm) rather
+than a silent side effect of choosing a scope.
+**User validated:** Yes — explicit buy-in on additive-by-default, interactive
+reconcile manager, batch-confirm removals, and strictly-additive non-interactive
+parity.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Additive by default:** Installing a pack at a scope never removes it from
+   any other scope. A pack at `user` + install at `project` becomes `both`.
+2. **Removal is interactive-only and explicit:** The only way an install path
+   removes a pack from a scope is the user explicitly unchecking a
+   currently-installed scope in the interactive flow.
+3. **Interactive flow = reconcile-to-end-state manager:** Replace the binary
+   _"which packs should install at user scope? (unselected go to project
+   scope)"_ prompt with per-pack scope state, current placement pre-selected.
+   Check = add; uncheck-currently-installed = stage removal.
+4. **Batch confirm removals:** Collect staged adds/removes and show one change
+   summary (`+ adds`, `- removes`) gated on a single `Apply? (y/n)` before
+   applying. Breezing through with no changes = zero removals.
+5. **Non-interactive parity (strictly additive):** Non-interactive install,
+   including `--scope project` / `--scope user` and the default pack set, never
+   removes a scope. This also fixes the `--scope project` override path that
+   currently strips user.
+6. **No `--move`/`--exclusive` flag for now:** Keep it simple; add later only if
+   a real need surfaces.
 
-## Constraints
+## Root-Cause Pointers (for plan phase)
 
-- {Constraint 1}
-- {Constraint 2}
+- `packages/cli/src/commands/init/tools/index.ts`
+  - `runInitTools` reconciliation loop (~lines 757-780): drives
+    `removePackFromScope` off `desiredScope` vs `currentLocation` (move
+    semantics). The `desiredScope === 'project'` fall-through strips user
+    (~line 777); the `desiredScope === 'user'` branch strips project (~line 770).
+    Must be driven by explicit removal intent, not scope choice.
+  - `resolvePackScopes` (~lines 456-544): the interactive binary user-scope
+    prompt (~line 525) and the explicit `--scope project|user` overrides
+    (~lines 483-495) force a single scope for all eligible packs. Non-interactive
+    resolution (~lines 506-519) already preserves existing placement.
+- Pack install state model: `location` is `not-installed | project | user |
+both` (`packages/cli/src/commands/init/tools/install-state.ts`); a `both`
+  end-state already exists and should be the additive result.
+- Auto-sync after install (`packages/cli/src/commands/tools/install/index.ts`,
+  `packages/cli/src/engine/compute-plan.ts`): verify the sync/removal plan does
+  not prune the preserved scope once file-level removals stop happening.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Interactive `oat tools install`: setting a pack to project when it is already
+  at user results in `both` (user retained), not a move.
+- Interactive flow shows current per-pack placement and only removes a scope
+  when the user explicitly unchecks it, gated by a batch confirmation.
+- Non-interactive install (incl. `--scope project`/`--scope user`) never removes
+  a pack from an existing scope.
+- Running interactive install and changing nothing produces zero removals.
+- Tests cover: additive project install over user install → both; explicit
+  uncheck + confirm → removal; non-interactive `--scope` additive.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- A dedicated `oat tools uninstall` command (possible future follow-up for
+  non-interactive removal).
+- A `--move`/`--exclusive` flag.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
-
-## Risks
-
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Sync pruning:** Confirm `computeSyncPlan` removal logic won't prune a
+  preserved scope's entries once the file-level move-removals are gone (validate
+  during implementation; may need a scope-aware manifest/filter fix).
+- **UI primitive:** Whether existing prompt primitives support per-pack
+  two-toggle (user/project) state cleanly, or whether the reconcile manager is
+  expressed as pre-checked multiselects + a change-summary step.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- **Quick mode → straight to plan:** proceed to `oat-project-quick-start` to
+  produce `plan.md`. Scope is clear; the one architectural unknown (sync
+  pruning + prompt primitive) is captured as an Open Question to resolve in
+  planning/implementation.
