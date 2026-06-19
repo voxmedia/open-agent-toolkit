@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-06-16
+oat_last_updated: 2026-06-19
 oat_generated: false
 ---
 
