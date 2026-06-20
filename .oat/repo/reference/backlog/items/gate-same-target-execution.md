@@ -8,7 +8,7 @@ scope_estimate: L # XS | S | M | L | XL | XXL
 labels: [gates, workflow-end-triggers, cross-provider, v2]
 assignee: null
 created: '2026-06-20T17:40:00Z'
-updated: '2026-06-20T17:40:00Z'
+updated: '2026-06-20T23:53:16Z'
 associated_issues: [{ type: project, ref: 'workflow-end-triggers' }]
 oat_template: false
 ---
@@ -23,14 +23,16 @@ Claude) and detection is **runtime-level only**. This item captures the deferred
 
 **The deferred capability:** let a gate stay on the _same runtime_ but switch to a
 different _execution target_ (model / effort) — e.g. "review on Codex but with a
-different model," or "same Cursor session, different model." This is `avoid: same-target`,
+different configured model/effort target," or "use Cursor again, but dispatch a fresh
+`cursor-agent` subprocess with a different model slug." This is `avoid: same-target`,
 and it requires **target-level identity/detection**, which is the brittle part V1
-intentionally skips.
+intentionally skips. It is not session reuse: same-target execution is about selecting
+a different cognitive/model target, not resuming the current provider conversation.
 
 ### Why deferred
 
 Same-target avoidance drags in target-level detection, which is hard and provider-specific:
-there is no reliable runtime signal for "I am model X at effort Y inside this session."
+there is no reliable target signal for "I am model X at effort Y inside this session."
 V1 sidesteps it entirely by avoiding at the runtime level. This item is where the
 target-detection machinery lands once it's worth the complexity.
 
@@ -91,6 +93,10 @@ Builds on V1's config shape `workflow.gates.{ execTargets, skills }`.
   `composer-2.5` ≡ `composer-2.5-fast` without a tested rule; exact match → detected, else unknown
   → degrade. Prefer `oat internal cursor-current-target matches <slug>` over raw shell in config.
 
+- **Cursor dispatch semantics:** `cursor-agent -p --force --model <slug>` should be treated as a
+  fresh headless subprocess. Even when the runtime is still Cursor, the gate is not resuming the
+  current conversation; it is selecting a configured target for a new execution.
+
 ### Load-bearing rules (carried from V1, must hold in V2 too)
 
 - **No fallback after dispatch.** Pre-dispatch fallback (provider unavailable/unauthenticated)
@@ -109,5 +115,9 @@ Builds on V1's config shape `workflow.gates.{ execTargets, skills }`.
   best-effort with the slug-vs-variant caveat handled conservatively (exact match or degrade).
 - The no-fallback-after-dispatch rule and declaration-over-introspection rule are preserved.
 - Multiple targets can share a `runtime` (model/effort variants) without OAT parsing target ids.
+- Target ids and model slugs are treated as opaque strings; OAT does not infer model family or
+  effort semantics unless a later explicit heuristic is designed.
+- Cursor same-target execution is documented as a fresh `cursor-agent` dispatch, not same-session
+  continuation.
 - Depends on V1 (`workflow-end-triggers`): config shape `gates.{execTargets,skills}`, the
   `oat gate cross-provider-exec` command, and runtime-level detection must already exist.
