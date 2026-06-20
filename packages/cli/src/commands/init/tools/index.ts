@@ -453,59 +453,6 @@ function buildPackChoices(
   ];
 }
 
-function buildUserScopeChoices(
-  packs: UserEligiblePack[],
-  installedPackStates: PackInstallStateMap,
-): MultiSelectChoice<UserEligiblePack>[] {
-  return packs.map((pack) => {
-    const location = installedPackStates[pack].location;
-    // Existing-install detection wins over PACK_METADATA defaultScope so
-    // re-installs of an already-placed pack do not silently migrate the
-    // user across scopes. When the pack is not yet installed at any
-    // scope, fall back to PACK_METADATA[pack]?.defaultScope (defaults
-    // to 'project' when absent).
-    const checked =
-      location === 'user' || location === 'both'
-        ? true
-        : location === 'not-installed'
-          ? resolvePackDefaultScope(pack) === 'user'
-          : false;
-    return {
-      label:
-        location === 'not-installed'
-          ? pack
-          : `${pack} (current: ${formatInstalledLocation(location)})`,
-      value: pack,
-      checked,
-    };
-  });
-}
-
-async function resolveBothScopeTarget(
-  pack: UserEligiblePack,
-  dependencies: InitToolsDependencies,
-  interactive: boolean,
-): Promise<'both' | 'user'> {
-  const selection = await dependencies.selectWithAbort(
-    `${pack} is currently installed in project and user scope. Keep both installs or normalize to user scope?`,
-    [
-      {
-        label: 'Keep project + user (recommended)',
-        value: 'both',
-        description: 'Preserve both installed copies',
-      },
-      {
-        label: 'User only',
-        value: 'user',
-        description: 'Remove the project-scoped copy',
-      },
-    ],
-    { interactive },
-  );
-
-  return selection ?? 'both';
-}
-
 export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
   const metadata = lastRunInitToolsMetadata;
   lastRunInitToolsMetadata = null;
@@ -593,28 +540,89 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Interactive: let user pick which packs go to user scope
-  const userScopePacks =
-    (await dependencies.selectManyWithAbort(
-      'Which packs should install at user scope? (unselected go to project scope)',
-      buildUserScopeChoices(eligiblePacks, installedPackStates),
-      { interactive: context.interactive },
-    )) ?? [];
-
-  const userScopeSet = new Set(userScopePacks);
+  // Interactive: for each user-eligible pack, choose its desired end-state
+  // placement (project / user / both). The default offered is the pack's
+  // current placement (or its default scope when not yet installed), so
+  // breezing through accepting defaults is a no-op and never removes a scope.
   for (const pack of eligiblePacks) {
-    if (!userScopeSet.has(pack)) {
-      scopes[pack] = 'project';
-      continue;
-    }
-
-    scopes[pack] =
-      installedPackStates[pack].location === 'both'
-        ? await resolveBothScopeTarget(pack, dependencies, context.interactive)
-        : 'user';
+    const currentLocation = installedPackStates[pack].location;
+    const defaultEndState = resolvePackDefaultEndState(pack, currentLocation);
+    const selection = await dependencies.selectWithAbort(
+      `Where should ${pack} install?`,
+      buildPackEndStateChoices(pack, currentLocation, defaultEndState),
+      { interactive: context.interactive },
+    );
+    scopes[pack] = selection ?? defaultEndState;
   }
 
   return scopes as PackScopeMap;
+}
+
+/**
+ * Default end-state offered for a pack in the interactive selector: its
+ * current placement when installed, or its configured default scope when not
+ * yet present.
+ */
+function resolvePackDefaultEndState(
+  pack: UserEligiblePack,
+  currentLocation: PackInstallState['location'],
+): PackInstallTarget {
+  switch (currentLocation) {
+    case 'project':
+      return 'project';
+    case 'user':
+      return 'user';
+    case 'both':
+      return 'both';
+    default:
+      return resolvePackDefaultScope(pack);
+  }
+}
+
+/**
+ * Per-pack end-state options (project / user / both) for the interactive
+ * selector. The default end-state is listed first so the underlying
+ * single-select highlights it.
+ */
+function buildPackEndStateChoices(
+  pack: UserEligiblePack,
+  currentLocation: PackInstallState['location'],
+  defaultEndState: PackInstallTarget,
+): SelectChoice<PackInstallTarget>[] {
+  const currentLabel =
+    currentLocation === 'not-installed'
+      ? 'not installed'
+      : `current: ${formatInstalledLocation(currentLocation)}`;
+  const baseChoices: SelectChoice<PackInstallTarget>[] = [
+    {
+      label: `Project scope (${pack})`,
+      value: 'project',
+      description: 'Install at project scope only',
+    },
+    {
+      label: `User scope (${pack})`,
+      value: 'user',
+      description: 'Install at user scope only',
+    },
+    {
+      label: `Project + user (${pack})`,
+      value: 'both',
+      description: 'Install at both scopes',
+    },
+  ];
+
+  // Annotate the option matching the default so the prompt communicates the
+  // current placement, and order it first so it is the highlighted default.
+  const annotated = baseChoices.map((choice) =>
+    choice.value === defaultEndState
+      ? { ...choice, label: `${choice.label} [${currentLabel}]` }
+      : choice,
+  );
+  const defaultChoice = annotated.find(
+    (choice) => choice.value === defaultEndState,
+  );
+  const rest = annotated.filter((choice) => choice.value !== defaultEndState);
+  return defaultChoice ? [defaultChoice, ...rest] : annotated;
 }
 
 function buildInstalledToolsConfig(
