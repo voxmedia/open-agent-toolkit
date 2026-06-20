@@ -292,12 +292,12 @@ git commit -m "test(p01-t04): pin additive auto-sync scoping guarantee"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                    |
-| ------ | -------- | ------- | ---------- | ------------------------------------------- |
-| p01    | code     | pending | -          | -                                           |
-| final  | code     | pending | -          | -                                           |
-| design | artifact | passed  | 2026-06-19 | design.md (lightweight, collaborative)      |
-| plan   | artifact | passed  | 2026-06-19 | auto-review: 1 important fix applied, clean |
+| Scope  | Type     | Status   | Date       | Artifact                                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------ |
+| p01    | code     | pending  | -          | -                                          |
+| final  | code     | pending  | -          | -                                          |
+| design | artifact | passed   | 2026-06-19 | design.md (lightweight, collaborative)     |
+| plan   | artifact | received | 2026-06-20 | reviews/artifact-plan-review-2026-06-20.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
