@@ -19,7 +19,7 @@ The design rests on three pillars established in discovery:
 2. **Skill-opts-in eligibility.** A skill advertises `oat_gateable: true` in its frontmatter and carries a standard "run configured gate" final step. Config can only attach gates to skills that advertise the capability, so honoring the gate is part of the skill's own contract — satisfying "MUST run before done" — and a gate configured for a non-gate-aware skill is detectable rather than a silent no-op.
 3. **`onFailure` spans the enforcement spectrum.** `block` drives a bounded autonomous remediation loop (agent reads feedback, addresses it, re-runs, up to `maxAttempts`, then escalates to the human); `prompt` surfaces the failure and asks; `warn` records it and continues. "Trigger" is just `onFailure: warn`.
 
-Configuration lives in `workflow.gates` (keyed by skill name) across all config layers, resolved most-specific-wins: local project config > repo project config > user config, with user config the expected primary home since provider choice is user-specific. The v1 enforcement boundary is the agent-enforced skill step; deterministic CLI-boundary enforcement is explicitly deferred.
+Configuration lives in `workflow.gates` (keyed by skill name) across all config layers, resolved most-specific-wins: local (`.oat/config.local.json`) > shared repo (`.oat/config.json`) > user config, with user config the expected primary home since provider choice is user-specific. The v1 enforcement boundary is the agent-enforced skill step; deterministic CLI-boundary enforcement is explicitly deferred.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ The mechanism is deliberately thin on the CLI side (resolve + validate config) a
 **Key Components:**
 
 - **Gate config schema** — extends `OatWorkflowConfig` with `gates?: Record<string, GateConfig>` in `config/oat-config.ts`, normalized in `normalizeWorkflowConfig` (validates `command`, `onFailure` enum, `maxAttempts`, `description`).
-- **Gate resolver** — layered, per-skill-key resolution in `config/resolve.ts` (`resolveEffectiveConfig`), most-specific-wins (local > repo > user), no within-gate value merge; `null` at a higher layer disables a skill's gate.
+- **Gate resolver** — layered, per-skill-key resolution in `config/resolve.ts` (`resolveEffectiveConfig`), most-specific-wins (local > shared > user), no within-gate value merge; `null` at a higher layer disables a skill's gate.
 - **Gate lookup surface** — a dedicated `oat gate resolve <skill>` command returning the merged result as JSON, so a skill's Gate Execution step fetches its own resolved gate without re-implementing the per-skill-key merge / `null`-disable semantics.
 - **Gate config write surface** — a dedicated `oat gate set <skill>` / `oat gate unset <skill>` command pair that writes a full `GateConfig` (or `null` to disable) to a chosen layer. Required because `oat config set` uses a closed `ConfigKey` union (`commands/config/index.ts`) that rejects `workflow.gates.*` and cannot express structured gate objects; a dedicated command keeps the structured write + `null`-disable out of that fixed-key surface.
 - **Skill opt-in + Gate Execution step** — `oat_gateable: true` frontmatter marker + a shared, authored final-step block; adopted by `oat-project-implement` and `oat-project-plan` first.
@@ -125,7 +125,7 @@ export function resolveGate(
 
 **Responsibilities:**
 
-- Per-skill-key precedence: local > repo > user. First layer that mentions the key wins **wholesale** (no within-gate merge).
+- Per-skill-key precedence: local > shared > user. First layer that mentions the key wins **wholesale** (no within-gate merge).
 - A layer setting the key to `null` resolves to "disabled" — short-circuits, lower layers ignored.
 - A layer omitting the key falls through to the next.
 
@@ -180,7 +180,7 @@ export function resolveGate(
 ```
 oat gate set <skill> --command <cmd> --on-failure <block|prompt|warn>
                       [--description <text>] [--max-attempts <N>]
-                      [--layer <local|repo|user>]   # default: user (provider-specific home)
+                      [--layer <local|shared|user>] # default: user; matches ConfigSurface vocabulary
 oat gate unset <skill> [--layer <...>]              # remove the key
 oat gate set <skill> --disable [--layer <...>]      # write null (disable at this layer)
 ```
@@ -205,7 +205,7 @@ Non-obvious scenarios this design must handle explicitly:
 ### Unit Tests
 
 - **`GateConfig` normalization** (`oat-config.test.ts` style): valid gate accepted; empty/missing `command` dropped; invalid `onFailure` dropped; `maxAttempts` coercion (default 2, integers ≥ 1, non-numeric ignored); `null` preserved as the disable signal distinct from absent.
-- **`resolveGate` precedence** (`resolve.test.ts` harness): local > repo > user wholesale win; `null` at a higher layer disables and short-circuits; key omitted in a layer falls through; **no within-gate value merge** (a higher layer defining the key never inherits sibling fields from a lower layer).
+- **`resolveGate` precedence** (`resolve.test.ts` harness): local > shared > user wholesale win; `null` at a higher layer disables and short-circuits; key omitted in a layer falls through; **no within-gate value merge** (a higher layer defining the key never inherits sibling fields from a lower layer).
 - **`oat gate resolve` output:** gate present → JSON + exit 0; absent → `null` + exit 0; disabled (`null`) → `null` + exit 0; unknown skill → `null` + exit 0.
 - **`oat gate set` / `unset` round-trip** (`config/index.test.ts` or a dedicated gate-command test): `set` then `resolve` reads it back; `--disable` writes `null`; `unset` removes the key; invalid `command`/`onFailure` rejected; `--layer` targets the right config file without touching sibling skills' gates.
 
