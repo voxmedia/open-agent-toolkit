@@ -8,7 +8,11 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildToolPacksSectionBody, createInitToolsCommand } from './index';
+import {
+  buildToolPacksSectionBody,
+  createInitToolsCommand,
+  formatReconcileSummary,
+} from './index';
 import { PACK_METADATA } from './shared/skill-manifest';
 
 interface HarnessOptions {
@@ -658,6 +662,60 @@ describe('createInitToolsCommand', () => {
     expect(capture.info.join('\n')).toContain('No sync needed.');
   });
 
+  it('batch-confirm gate: dropping user from a both-scope pack removes user on confirm', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research']],
+        // research selector → project (drops user); gate → yes
+        scopeSelection: ['project', 'yes'],
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    // The dropped user scope is removed exactly once (skills + agents under
+    // the user root).
+    expect(removeDirectory).toHaveBeenCalledWith(
+      '/tmp/home/.agents/skills/analyze',
+    );
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/home/.agents/agents/skeptical-evaluator.md',
+    );
+    // The change summary listed the removal.
+    expect(capture.info.join('\n')).toContain('- research@user');
+    // research stays at project (idempotent install), end-state project.
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    // user is the only changed scope surfaced for sync.
+    expect(capture.info.join('\n')).toContain('oat sync --scope user');
+  });
+
+  it('batch-confirm gate: declining applies no installs and no removals', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research']],
+        // research selector → project (drops user); gate → no
+        scopeSelection: ['project', 'no'],
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    expect(installResearch).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('No changes applied.');
+  });
+
   // NOTE: The former move-semantics tests ("migrates user-eligible packs from
   // project to user scope by removing project canonical content" and
   // "normalizes a both-scopes install to project by removing user canonical
@@ -1238,6 +1296,29 @@ describe('PACK_METADATA-driven default scope (migration safety)', () => {
     // current placement. The selector defaults to project (current).
     expect(choices?.[0]?.value).toBe('project');
     expect(choices?.[0]?.label).toContain('current: project');
+  });
+});
+
+describe('formatReconcileSummary', () => {
+  it('lists adds with + and removes with - under a review header', () => {
+    const summary = formatReconcileSummary(
+      [{ pack: 'research', scope: 'project' }],
+      [{ pack: 'research', scope: 'user' }],
+    );
+
+    expect(summary).toContain('Review pending changes:');
+    expect(summary).toContain('+ research@project');
+    expect(summary).toContain('- research@user');
+  });
+
+  it('renders a removes-only summary', () => {
+    const summary = formatReconcileSummary(
+      [],
+      [{ pack: 'docs', scope: 'user' }],
+    );
+
+    expect(summary).toContain('- docs@user');
+    expect(summary).not.toContain('+ ');
   });
 });
 

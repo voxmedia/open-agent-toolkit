@@ -347,6 +347,30 @@ function reconcilePackScope(
   return { adds, removes };
 }
 
+interface PackScopeChange {
+  pack: ToolPack;
+  scope: ConcreteScope;
+}
+
+/**
+ * Render a batch change summary (`+ pack@scope` adds / `- pack@scope` removes)
+ * for the interactive removal-confirmation gate. Pure for snapshot-friendly
+ * testing.
+ */
+export function formatReconcileSummary(
+  adds: PackScopeChange[],
+  removes: PackScopeChange[],
+): string {
+  const lines = ['Review pending changes:'];
+  for (const { pack, scope } of adds) {
+    lines.push(`  + ${pack}@${scope}`);
+  }
+  for (const { pack, scope } of removes) {
+    lines.push(`  - ${pack}@${scope}`);
+  }
+  return lines.join('\n');
+}
+
 /**
  * Additive union of a pack's current placement with a requested scope. Never
  * returns a placement narrower than current — installing at one scope can
@@ -885,6 +909,45 @@ export async function runInitTools(
         'Non-interactive install attempted to remove a pack from a scope; ' +
           'install is strictly additive in non-interactive mode.',
       );
+    }
+
+    // Interactive removal gate: if any pack would lose a scope, surface one
+    // batch change summary and require a single confirmation before mutating
+    // anything. Declining aborts with zero changes (no installs, no removals).
+    if (stagedRemovals.length > 0 && context.interactive) {
+      const stagedAdds: PackScopeChange[] = [];
+      for (const [pack, reconciliation] of reconciliationByPack) {
+        for (const scope of reconciliation.adds) {
+          stagedAdds.push({ pack, scope });
+        }
+      }
+
+      context.logger.info(formatReconcileSummary(stagedAdds, stagedRemovals));
+      const confirmation = await dependencies.selectWithAbort(
+        'Apply these changes? Removals will delete the listed scoped installs.',
+        [
+          {
+            label: 'No, cancel (recommended)',
+            value: 'no',
+            description: 'Make no changes',
+          },
+          {
+            label: 'Yes, apply adds and removals',
+            value: 'yes',
+            description: 'Install adds and delete the listed removals',
+          },
+        ],
+        { interactive: context.interactive },
+      );
+
+      if (confirmation !== 'yes') {
+        lastRunInitToolsMetadata = { affectedScopes: [] };
+        if (!context.json) {
+          context.logger.info('No changes applied.');
+        }
+        process.exitCode = 0;
+        return [];
+      }
     }
 
     for (const { pack, scope } of stagedRemovals) {
