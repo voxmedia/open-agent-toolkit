@@ -17,37 +17,39 @@
 - **Sub-project split escape hatch — `bl-3a4a` (closed, medium):** shipped as a standalone `oat-project-split` skill with discover and brainstorm integration hooks. The parent is coordination-only, marked complete by decomposition in place, and never archived as part of the split; children are flat sibling execution projects with distilled discovery seeds and revalidation requirements.
 - **Staleness work — `bl-b5af` (new, medium) + `bl-f9bd` (deferred, low):** extracted the user-configurable threshold config key as its own quick-win item; left the fuller diff-based detection + hard-blocking work deferred under `bl-f9bd`.
 - **Remote PR review — `bl-9fb8`:** completes the review/PR loop story (posting findings, responding, summarizing) once the core loop priorities are clear.
+- **Gates V2 — `bl-e6fc` (new, medium):** direct follow-up to the active **workflow-end-triggers** project. V1 ships per-skill gates + cross-**runtime** review execution (`avoid: same-runtime`, runtime-level detection only). `bl-e6fc` captures the deferred **same-target** layer — staying on one runtime but switching model/effort — which requires brittle target-level detection (incl. a best-effort Cursor `--list-models` probe with a slug-vs-variant caveat). Full settled design is captured in the item so it won't need re-deriving. Depends on V1's `gates.{execTargets,skills}` config shape and the `oat gate cross-provider-exec` command.
 - **Deferred / low priority:** `bl-3327` (dependency intelligence — no active demand, keep as directional), `bl-ff5d` (Jira refinement flow — narrow audience, keep ad hoc), `bl-71a1` (memory system — roadmap Phase 10, blocked behind Phase 8/9 proven usage), `bl-931d` (listProjects fast path — conditional on `bl-281c` producing a measurement baseline).
 - **Closed this pass:** `bl-42f9` (PM workflow family — shipped via `oat-pjm-*` skills + `oat backlog/cleanup` CLI + `localPaths` config), `bl-fb3f` (lifecycle follow-through — shipped via the subagent-implement-refactor project), `bl-cbdd` (Codex prompt wrapper — won't-do because `.codex/prompts/` was deprecated), and `bl-0738` (runtime dispatch selection and Dispatch Profile override guidance).
 
 <!-- OAT BACKLOG-INDEX -->
 
-| ID      | Title                                                                                | Status      | Priority | Scope      | Estimate |
-| ------- | ------------------------------------------------------------------------------------ | ----------- | -------- | ---------- | -------- |
-| bl-af93 | Add `oat config unset <key>` command for removing config values                      | open        | high     | feature    | S        |
-| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                              | open        | high     | feature    | S        |
-| bl-074b | Live dogfood for `oat-project-split` declared and detected entry paths               | open        | high     | task       | S        |
-| bl-b5af | Add configurable staleness threshold to oat config                                   | open        | medium   | feature    | S        |
-| bl-86e9 | Add oat state conflict resolver command                                              | open        | medium   | task       | S        |
-| bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote) | open        | medium   | feature    | L        |
-| bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                     | open        | medium   | feature    | L        |
-| bl-3a4a | Codified sub-project split escape hatch                                              | closed      | medium   | feature    | L        |
-| bl-7d5b | Live dogfood for `oat-brainstorm` (fold-back commit safety + 9 destination families) | open        | medium   | task       | M        |
-| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                   | open        | medium   | initiative | M        |
-| bl-0ace | Move oat-project-complete state mutations into a CLI helper                          | in_progress | medium   | feature    | M        |
-| bl-28ce | Persist instruction sync strategy in config and expose it in init                    | open        | medium   | feature    | M        |
-| bl-53f0 | Project-independent brainstorming mode                                               | closed      | medium   | feature    | L        |
-| bl-f19a | Strict-YAML validation in `oat:validate-skills`                                      | open        | medium   | task       | S        |
-| bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads                        | open        | medium   | feature    | M        |
-| bl-a7cd | Wire provide-remote skills to the review-remote helper layer via a CLI command       | open        | medium   | feature    | L        |
-| bl-3327 | Add dependency intelligence skill family                                             | open        | low      | feature    | L        |
-| bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                        | open        | low      | feature    | L        |
-| bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                              | open        | low      | feature    | M        |
-| bl-4b5a | Clarify docs generate-index ordering semantics                                       | open        | low      | task       | S        |
-| bl-f9bd | Deeper staleness detection and strict-mode enforcement                               | open        | low      | feature    | L        |
-| bl-71a1 | Memory system + provider enhancements                                                | open        | low      | initiative | XL       |
-| bl-931d | Optimize control-plane `listProjects()` summary path                                 | open        | low      | task       | M        |
-| bl-c3d8 | Third-provider dispatch-ceiling adapter (e.g. Cursor)                                | open        | low      | feature    | M        |
+| ID      | Title                                                                                      | Status      | Priority | Scope      | Estimate |
+| ------- | ------------------------------------------------------------------------------------------ | ----------- | -------- | ---------- | -------- |
+| bl-af93 | Add `oat config unset <key>` command for removing config values                            | open        | high     | feature    | S        |
+| bl-7e68 | Clarify quick-mode resume routing from oat-project-plan                                    | open        | high     | feature    | S        |
+| bl-074b | Live dogfood for `oat-project-split` declared and detected entry paths                     | open        | high     | task       | S        |
+| bl-b5af | Add configurable staleness threshold to oat config                                         | open        | medium   | feature    | S        |
+| bl-86e9 | Add oat state conflict resolver command                                                    | open        | medium   | task       | S        |
+| bl-9fb8 | Add PR review follow-on skill set (provide-remote, respond-remote, summarize-remote)       | open        | medium   | feature    | L        |
+| bl-ff5d | Backlog Refinement Flow (Jira ticket generation)                                           | open        | medium   | feature    | L        |
+| bl-3a4a | Codified sub-project split escape hatch                                                    | closed      | medium   | feature    | L        |
+| bl-e6fc | Gates V2: same-target execution + target-level detection (workflow-end-triggers follow-up) | open        | medium   | feature    | L        |
+| bl-7d5b | Live dogfood for `oat-brainstorm` (fold-back commit safety + 9 destination families)       | open        | medium   | task       | M        |
+| bl-281c | Migrate skills to control-plane-backed CLI with cloud-env fallback                         | open        | medium   | initiative | M        |
+| bl-0ace | Move oat-project-complete state mutations into a CLI helper                                | in_progress | medium   | feature    | M        |
+| bl-28ce | Persist instruction sync strategy in config and expose it in init                          | open        | medium   | feature    | M        |
+| bl-53f0 | Project-independent brainstorming mode                                                     | closed      | medium   | feature    | L        |
+| bl-f19a | Strict-YAML validation in `oat:validate-skills`                                            | open        | medium   | task       | S        |
+| bl-e582 | Wire .oat/repo/reference artifacts into lifecycle skill reads                              | open        | medium   | feature    | M        |
+| bl-a7cd | Wire provide-remote skills to the review-remote helper layer via a CLI command             | open        | medium   | feature    | L        |
+| bl-3327 | Add dependency intelligence skill family                                                   | open        | low      | feature    | L        |
+| bl-b3f7 | Add idea promotion and auto-discovery flow to oat-project-new                              | open        | low      | feature    | L        |
+| bl-c745 | Add per-CLAUDE.md adoption opt-out for instruction sync                                    | open        | low      | feature    | M        |
+| bl-4b5a | Clarify docs generate-index ordering semantics                                             | open        | low      | task       | S        |
+| bl-f9bd | Deeper staleness detection and strict-mode enforcement                                     | open        | low      | feature    | L        |
+| bl-71a1 | Memory system + provider enhancements                                                      | open        | low      | initiative | XL       |
+| bl-931d | Optimize control-plane `listProjects()` summary path                                       | open        | low      | task       | M        |
+| bl-c3d8 | Third-provider dispatch-ceiling adapter (e.g. Cursor)                                      | open        | low      | feature    | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 
