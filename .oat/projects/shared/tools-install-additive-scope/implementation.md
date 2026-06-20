@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-20
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,12 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 5/5 tasks completed (awaiting final review)
 
 ---
 
@@ -52,78 +51,62 @@ No deferrals. No design/code drift accepted (the plan had not yet been implement
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Additive scope management
 
-**Status:** in_progress
-**Started:** 2026-06-16
+**Status:** complete
+**Started:** 2026-06-20
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- `oat tools install` is now additive: installing a pack at a scope never removes it from another scope (pack at `user` + install `project` → `both`).
+- Interactive flow replaced the binary user-scope multiselect with a per-pack end-state selector (`project / user / both`) defaulting to current placement.
+- Removals happen only via explicit interactive selection, gated behind a single batch `Apply? (y/n)` confirmation; decline mutates nothing.
+- Non-interactive paths (incl. `--scope project|user`) are strictly additive (guarded so removals can never run non-interactively).
+- Auto-sync stays scoped to actually-changed scopes (`affectedScopes`), preserving the no-prune guarantee for untouched scopes.
+- Lockstep patch bump (0.1.27 → 0.1.28) across the five public packages + regenerated bundled `public-package-versions.json`.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/init/tools/index.ts` - additive end-state model, reconcile diff, per-pack selector, batch-confirm gate, scoped `affectedScopes`
+- `packages/cli/src/commands/init/tools/index.test.ts` - reworked move-semantics tests; added additive/gate/no-op/pure-helper tests
+- `packages/cli/src/commands/tools/install/index.test.ts` - additive auto-sync no-prune scoping guards
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` + `packages/cli/assets/public-package-versions.json` - lockstep 0.1.28
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli test && lint && type-check`; `pnpm release:validate`
+- Result: pass — 1837 tests, 0 lint, 0 type errors, release validation passed for 5 public packages.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Design-wording deviation recorded below: installs copy the full desired end-state idempotently (not adds-only), with `affectedScopes` restricted to the diff. Preserves the idempotent-refresh contract while still satisfying the no-prune guarantee.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Additive end-state model + strictly-additive non-interactive paths
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** 7c2953f0
 
-**Outcome (required when completed):**
+### Task p01-t02: Per-pack end-state selector (interactive)
 
-- {what materially changed (not “did task”, but “system now does X”)}
+**Status:** completed
+**Commit:** b8a3f2c2
 
-**Files changed:**
+### Task p01-t03: Batch removal confirmation gate
 
-- `{path}` - {why}
+**Status:** completed
+**Commit:** f3dd8c67
 
-**Verification:**
+### Task p01-t04: Auto-sync scoping regression guard (test-only)
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Status:** completed
+**Commit:** 89807dfe
 
-**Notes / Decisions:**
+### Task p01-t05: (release) Lockstep public-package version bump + release:validate
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cd8c2642, 2a6e1738
 
 ---
 
@@ -138,6 +121,35 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 — 2026-06-20
+
+**Branch:** chore/i-ve-noticed-a-bug
+**Tier:** 1 (subagents)
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review  | Fix Iterations | Disposition |
+| ----- | ----------- | ------- | -------------- | ----------- |
+| p01   | DONE        | pending | 0/2            | merged      |
+
+#### Parallel Groups
+
+- None (single phase, sequential)
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation via oat-phase-implementer, model_axis=selected:opus (ceiling=opus, maximum). No escalation needed; implementer returned DONE with high confidence.
+
+#### Outstanding Items
+
+- None
+
+#### Artifact / Design Deltas
+
+- See `## Deviations from Plan / Design` — one accepted design-wording deviation (idempotent full-end-state install vs adds-only); code is source of truth, no follow-up.
 
 <!-- orchestration-runs-end -->
 
@@ -186,9 +198,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                              | Planned / Documented                                                                          | Actual / Accepted                                                                                                                                                                          | Reason                                                                                                                                                                                                                                                                                                                                                      | Source of Truth                                        | Follow-up                                                                                                                         |
+| ------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| p01-t01..t04  | design.md (Data Flow step 6 / Reconciliation "Apply `adds`") | "Apply `adds` (install into added scopes)" — implied installs only run for newly-added scopes | Installs copy the **full desired end-state** idempotently (e.g. end-state `both` re-copies both roots), but only scopes with a real add or confirmed remove enter `affectedScopes`         | Driving installs off `adds` only would make re-running install a no-op and break the established idempotent-refresh contract (e.g. existing "keep both updates both roots" + outdated-skill refresh tests). The no-prune guarantee the design actually cares about is satisfied by scoping `affectedScopes` to the diff, not by skipping idempotent copies. | Code (`packages/cli/src/commands/init/tools/index.ts`) | None — behavior matches all design success criteria; auto-sync scoping pinned by tests in `commands/tools/install/index.test.ts`. |
+| p01-t01       | plan.md (t01 Step 1)                                         | Add three new non-interactive additive tests as written                                       | Added the three additive tests AND retired/reworked invalidated tests (move-semantics removal tests; "reports final per-pack scopes" sync assertion) earlier than their literal task slots | The non-interactive `--scope` + reconciliation changes immediately invalidated interactive sync/removal assertions; reworking them at the point of breakage keeps each commit green                                                                                                                                                                         | Code + tests                                           | None                                                                                                                              |
 
 ## Test Results
 
