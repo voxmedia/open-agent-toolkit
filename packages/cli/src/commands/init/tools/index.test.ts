@@ -591,57 +591,20 @@ describe('createInitToolsCommand', () => {
       'Installed tool packs: core (user), ideas (user), docs (project)',
     );
     expect(output).not.toContain('User-eligible pack scope:');
+    // Additive scoping: only changed scopes are surfaced for sync. core and
+    // ideas add to user; docs was already at project (unchanged), so project
+    // is not re-synced.
     expect(output).toContain('Run: oat sync --scope user');
-    expect(output).toContain('Also run: oat sync --scope project');
+    expect(output).not.toContain('oat sync --scope project');
   });
 
-  it('migrates user-eligible packs from project to user scope by removing project canonical content', async () => {
-    const { command, installIdeas, removeDirectory, removeFile } =
-      createHarness({
-        interactive: true,
-        packSelection: [['ideas'], ['ideas']],
-        toolsByScope: {
-          project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
-          user: [],
-        },
-      });
-
-    await runCommand(command, [], ['--scope', 'all']);
-
-    expect(installIdeas).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/home' }),
-    );
-    expect(removeDirectory).toHaveBeenCalledWith(
-      '/tmp/workspace/.agents/skills/oat-idea-new',
-    );
-    expect(removeDirectory).toHaveBeenCalledTimes(4);
-    expect(removeFile).not.toHaveBeenCalled();
-  });
-
-  it('normalizes a both-scopes install to project by removing user canonical content and agents', async () => {
-    const { command, installResearch, removeDirectory, removeFile } =
-      createHarness({
-        interactive: true,
-        packSelection: [['research'], []],
-        toolsByScope: {
-          project: [createScannedTool('analyze', 'research', 'project')],
-          user: [createScannedTool('analyze', 'research', 'user')],
-        },
-      });
-
-    await runCommand(command, [], ['--scope', 'all']);
-
-    expect(installResearch).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
-    );
-    expect(removeDirectory).toHaveBeenCalledWith(
-      '/tmp/home/.agents/skills/analyze',
-    );
-    expect(removeDirectory).toHaveBeenCalledTimes(5);
-    expect(removeFile).toHaveBeenCalledWith(
-      '/tmp/home/.agents/agents/skeptical-evaluator.md',
-    );
-  });
+  // NOTE: The former move-semantics tests ("migrates user-eligible packs from
+  // project to user scope by removing project canonical content" and
+  // "normalizes a both-scopes install to project by removing user canonical
+  // content and agents") were retired here. Under the additive model, a
+  // scope is only ever removed via the explicit, batch-confirmed interactive
+  // path — covered by the per-pack selector (p01-t02) and confirmation gate
+  // (p01-t03) tests below.
 
   it('bare oat init tools cancellation exits without installing packs', async () => {
     const {
@@ -957,6 +920,87 @@ describe('createInitToolsCommand', () => {
       'Always-on brainstorming entry point with visual companion',
     );
     expect(brainstormChoice?.checked).toBe(true);
+  });
+});
+
+describe('additive non-interactive scope resolution', () => {
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
+  afterEach(() => {
+    process.exitCode = originalExitCode;
+  });
+
+  it('--scope project over a pack at user resolves to both and never removes user', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    // Additive: research now lives at project + user; the project scope
+    // received the new install and the preserved user scope is never removed.
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    // research becomes both — no longer surfaces only project; user is retained.
+    const output = capture.info.join('\n');
+    expect(output).toContain('research (project + user)');
+  });
+
+  it('--scope user over a pack at project resolves to both and never removes project', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'user']);
+
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    const output = capture.info.join('\n');
+    expect(output).toContain('research (project + user)');
+  });
+
+  it('default non-interactive set preserves existing placement (no removals)', async () => {
+    const { command, installResearch, installIdeas, removeDirectory } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    // ideas stays project, research stays user — neither scope is added a
+    // second time and nothing is removed.
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
   });
 });
 
