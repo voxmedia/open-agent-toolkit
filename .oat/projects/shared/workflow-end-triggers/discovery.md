@@ -17,126 +17,170 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Add a **trigger / gate mechanism** to OAT workflows — and potentially OAT skills in
+general. The idea: a skill (or workflow step) can have a configured final
+step — a **gate** — that **must run before the skill is considered fully
+executed**. Defined per-skill in OAT config. Like a stop hook, but specific to
+the skill it is attached to: if a gate exists for a skill, you run it.
 
-## Clarifying Questions
-
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+The flagship motivation is **cross-model / cross-provider verification**. For
+`oat-project-implement`, the gate would dispatch an _independent_ review in a
+fresh session — e.g. if Claude implemented, Codex runs `oat-project-review-provide`
+as an independent final review (or vice versa). The same mechanism on
+`oat-project-plan` would force an independent agent to review the plan before it
+is considered done. The gate command is generic, though: it can be any CLI/bash
+command or npm/pnpm script the user wants run as a dependency of "done."
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+This was an exploratory brainstorm. The design converged through a series of
+forks, each captured below as a Key Decision. The headline shape:
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**A per-skill gate, defined in OAT config, that runs a generic command as the
+final step of a skill and governs whether that skill is "done."** "Trigger" and
+"gate" collapse into one mechanism — a trigger is just a gate whose failure
+behavior is advisory.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** A thin, per-skill gate config (`description` + `command` +
+`onFailure` + `maxAttempts`) that the executing agent runs as a final skill
+step. The command is generic (exit code is the universal pass/fail signal); the
+intelligence lives inside the command (e.g. a cross-model reviewer prompt or an
+OAT review skill). Context is resolved implicitly via OAT state + the invoked
+skill — no plumbing. Feedback flows back via captured stdout plus any artifacts
+the command writes; the `description` tells the orchestrating agent how to
+process that feedback and what to do next.
 
-## Options Considered
+**Rationale:** Keeps the mechanism dumb and the command smart. One field
+(`onFailure`) spans the whole enforcement spectrum from hard auto-remediation to
+advisory note. Leans on OAT's existing strength — implicit context via state —
+so the flagship cross-model review case needs zero new context-passing
+machinery.
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**User validated:** Yes — converged interactively across the full brainstorm.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Unified gate/trigger model:** One mechanism, not two. A "trigger" is just a
+   gate with `onFailure: warn`. Gate vs trigger collapses into the failure-behavior
+   field.
+
+2. **Generic command, exit-code contract:** The gate runs _any_ command (bash,
+   npm/pnpm script, `codex exec`, `claude -p`, …). The universal success signal
+   every command already shares is the **exit code** — exit 0 = pass, nonzero =
+   fail. No bespoke verdict schema. The command carries its own pass logic.
+
+3. **`onFailure` spans the spectrum** with three values:
+   - `block` — **autonomous remediation loop.** On nonzero exit, the agent reads
+     the feedback, dispositions/addresses it on its own judgement, re-runs, and
+     proceeds when clean. "Figure this out before proceeding." Escalates to the
+     human only when genuinely stuck.
+   - `prompt` — surface the failure and ask the human to decide disposition.
+   - `warn` — advisory; record it and continue (this is the "trigger" case).
+
+4. **`block` is bounded by `maxAttempts` (default 2), then escalate.** Prevents
+   an overzealous / non-deterministic reviewer from wedging the loop or churning
+   tokens indefinitely. After N failed remediation rounds, auto-escalate to the
+   human with accumulated feedback. (Chosen over convergence-detection or an
+   unbounded "trust the agent to self-terminate" approach.)
+
+5. **Agent-enforced baseline.** The gate is run by the executing agent as a real
+   final skill step (not a dumb shell check), because `block`'s auto-remediation
+   loop inherently requires agent judgement. This is provider-portable. A
+   deterministic CLI-boundary enforcement is available _additionally_ wherever an
+   `oat` subcommand owns the boundary (the strongest "MUST" guarantee), but the
+   portable agent-enforced step is the baseline.
+
+6. **Context is implicit via OAT state + the invoked skill.** The flagship gate
+   command is just `oat-project-review-provide` run in a fresh session; the skill
+   already knows how to resolve project/diff/scope from OAT state and git. The
+   gate config passes no context. Fresh session = independence (clean context,
+   ideally a different model).
+
+7. **Feedback handoff: stdout always captured + artifacts when present (the "C"
+   option).** Exit code is the pass/fail signal; stdout/stderr is always captured
+   and shown to the remediating agent; when the gate is an OAT review skill, the
+   richer review artifact (e.g. under `reviews/`) is the primary structured
+   source. A dumb `pnpm lint` gate works on stdout alone.
+
+8. **Two distinct config fields with distinct audiences (refined late):**
+   - `command` → speaks to the **gate runner**. Self-contained; it _is_ the gate
+     agent's prompt. Everything the fresh session needs lives here or in the skill
+     it invokes.
+   - `description` → speaks to the **orchestrating / main agent**. _Why_ the gate
+     exists, how to read its result, and **what to do next** (e.g. "run
+     `oat-project-review-receive`, process findings, address blocking issues,
+     re-run until clean"). No overlap with `command`; the earlier idea of also
+     briefing the gate-runner via `description` was rejected as duplication.
+
+## Reference Config Shape (illustrative — not a deliverable spec)
+
+```jsonc
+// OAT config, per skill
+"gates": {
+  "oat-project-implement": {
+    // for the MAIN/orchestrating agent: why + how to process the result + next steps
+    "description": "Independent cross-model review. On completion, run oat-project-review-receive, process findings, address blocking issues, re-run until clean.",
+    // for the GATE runner: self-contained command / prompt; fresh session = independence
+    "command": "codex exec 'Run oat-project-review-provide for the active project as an independent final review...'",
+    "onFailure": "block",   // block (auto-remediate loop) | prompt (ask human) | warn (advisory)
+    "maxAttempts": 2         // block only; then escalate to human
+  }
+}
+```
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Mechanism stays **thin / dumb**; intelligence lives in the command and the
+  skill it invokes.
+- Must be **provider-portable** at the baseline (agent-enforced final step works
+  for any provider/runtime).
+- Pass/fail contract is the **process exit code** — no custom verdict format.
+- Gate context resolution must reuse **existing OAT state/skill mechanisms** — no
+  new context-passing plumbing for the OAT-native flagship case.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A skill with a configured gate runs that gate as a final step before being
+  considered "done."
+- `onFailure: block` drives an autonomous remediation loop bounded by
+  `maxAttempts`, escalating to the human on exhaustion.
+- `onFailure: prompt` and `onFailure: warn` behave as surface-and-ask and
+  advisory-note respectively.
+- The flagship cross-model case works end-to-end with zero bespoke
+  context-passing: implement (one model) → independent review gate (another
+  model) → remediation loop → done.
+- Gate output (stdout + any artifact) is available to the remediating agent, and
+  the `description` orients it on next steps.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Per-provider harness-level Stop-hook implementations (the purest un-skippable
+  enforcement) — noted as a possible future layer, not this project.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
+_To be resolved in the discussion before lightweight design._
 
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
-
-## Risks
-
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Config location & precedence:** Where do gate definitions live — global OAT
+  config, per-repo config, and/or per-project `state.md` override? What's the
+  precedence / merge order when more than one defines a gate for the same skill?
+- **Skill eligibility:** Which skills can be gated — any OAT lifecycle skill,
+  any OAT skill at all, or an explicit allowlist/registry of gateable boundaries?
+  Does a non-OAT / arbitrary skill even have a well-defined "done" boundary to
+  hang a gate on?
+- **Enforcement boundary mechanics:** For the deterministic CLI-boundary
+  enforcement (beyond the agent-enforced baseline) — which `oat` subcommands own
+  a boundary clean enough to enforce a gate at, and how does that compose with
+  the agent loop?
+- **Loop state / observability:** Where does the per-attempt remediation history
+  live so the escalation-to-human carries the accumulated feedback (and so a
+  resumed session can see prior attempts)?
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Discuss the Open Questions (config location, skill eligibility) with the user,
+then proceed to **lightweight design** (`design.md`) covering the gate config
+schema, the executing-agent gate-run step, the remediation loop, and the
+feedback/enforcement boundaries.
