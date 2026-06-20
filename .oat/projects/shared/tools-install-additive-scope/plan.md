@@ -339,12 +339,12 @@ git commit -m "chore(p01-t05): lockstep public package version bump for additive
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                            |
-| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                   |
-| final  | code     | pending | -          | -                                                   |
-| design | artifact | passed  | 2026-06-19 | design.md (lightweight, collaborative)              |
-| plan   | artifact | passed  | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
+| Scope  | Type     | Status | Date       | Artifact                                            |
+| ------ | -------- | ------ | ---------- | --------------------------------------------------- |
+| p01    | code     | passed | 2026-06-20 | reviews/final-review-2026-06-20.md                  |
+| final  | code     | passed | 2026-06-20 | reviews/final-review-2026-06-20.md                  |
+| design | artifact | passed | 2026-06-19 | design.md (lightweight, collaborative)              |
+| plan   | artifact | passed | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

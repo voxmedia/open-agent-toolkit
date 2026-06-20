@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-20
@@ -131,9 +131,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review  | Fix Iterations | Disposition |
-| ----- | ----------- | ------- | -------------- | ----------- |
-| p01   | DONE        | pending | 0/2            | merged      |
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 1/2 (I1)       | merged      |
 
 #### Parallel Groups
 
@@ -145,7 +145,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- None
+- Final/p01 code review (oat-reviewer, opus): **pass**. Artifact `reviews/final-review-2026-06-20.md`.
+- Review I1 (important, test quality) fixed in commit `1934a059` (strengthened additive no-prune sync test).
+- Review m1 (minor) **deferred with rationale**: outdated-skill refresh on a preserved scope is not added to `affectedScopes`; reviewer said "no change required to ship", consistent with no-prune design, fixing would expand scope. Candidate follow-up backlog item.
 
 #### Artifact / Design Deltas
 
@@ -216,24 +218,30 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- `oat tools install` is now additive across all paths: installing a pack at one scope never removes it from another. The original bug — installing at project scope wiping the user-level install — is fixed.
+- The interactive scope step is a reconcile-to-end-state manager: a per-pack selector (`project / user / both`) defaulting to current placement. Removals happen only when you explicitly choose a narrower end-state, gated behind a single batch `Apply? (y/n)` confirmation (decline = no changes).
+- Non-interactive paths (`--scope project|user` and the default set) are strictly additive and guarded so a removal can never run non-interactively.
+- Auto-sync is scoped to actually-changed scopes, so a preserved scope is never re-synced or pruned.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Installing a pack at project scope while it is installed at user scope now results in `both` (user retained), not a move.
+- Removing a pack from a scope is now an explicit, confirmed interactive action — no longer a silent side effect of choosing a scope.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/init/tools/index.ts` - additive end-state model, reconcile diff, per-pack selector, batch-confirm gate, scoped `affectedScopes`
+- `packages/cli/src/commands/init/tools/index.test.ts`, `packages/cli/src/commands/tools/install/index.test.ts` - additive + no-prune + gate test coverage
+- five public `package.json` files + `packages/cli/assets/public-package-versions.json` - lockstep 0.1.28
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm test` (workspace, 10/10), `pnpm --filter @open-agent-toolkit/cli test` (1837 tests), `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm release:validate` (5 public packages at 0.1.28) — all pass.
+- Final/p01 code review (oat-reviewer, opus): pass; 1 important test-quality finding fixed, 1 minor deferred.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Installs copy the full desired end-state idempotently rather than adds-only, with `affectedScopes` restricted to the diff. Preserves the idempotent-refresh contract while keeping the no-prune guarantee. Code is source of truth; no follow-up required.
 
 ## References
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 2a6e1738
+oat_last_commit: 1934a059
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling:
   preset: maximum
@@ -33,30 +33,29 @@ oat_generated: false
 
 # Project State: tools-install-additive-scope
 
-**Status:** Plan
+**Status:** Implementation complete
 **Started:** 2026-06-16
-**Last Updated:** 2026-06-19
+**Last Updated:** 2026-06-20
 
 ## Current Phase
 
-Plan complete (4 tasks, sequential) - ready for implementation
+Implementation complete — all 5 tasks done, final review passed. Ready for PR.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight)
-- **Plan:** `plan.md` (complete — 4 tasks, artifact review passed)
-- **Implementation:** `implementation.md` (initialized — first task p01-t01)
+- **Plan:** `plan.md` (complete — 5 tasks, artifact review passed)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
 - ✓ Discovery complete (seeded from brainstorm)
 - ✓ Lightweight design complete (collaborative)
 - ✓ Plan generated + artifact review passed
-- ⧗ Awaiting implementation (`oat-project-implement`)
+- ✓ Implementation tasks complete (5/5)
+- ✓ Final review passed (p01 + final)
 
 ## Blockers
 
@@ -64,4 +63,4 @@ None
 
 ## Next Milestone
 
-Implement Phase 1 (additive scope management) via `oat-project-implement`
+Create the final PR (`oat-project-pr-final`)
