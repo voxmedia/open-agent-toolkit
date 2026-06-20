@@ -24,15 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                            | Status  | Tasks | Completed |
-| -------------------------------- | ------- | ----- | --------- |
-| Phase 1 — Gate config schema     | pending | 1     | 0/1       |
-| Phase 2 — Gate resolver          | pending | 1     | 0/1       |
-| Phase 3 — Eligibility validation | pending | 1     | 0/1       |
-| Phase 4 — CLI gate commands      | pending | 2     | 0/2       |
-| Phase 5 — Skill-side + release   | pending | 2     | 0/2       |
+| Phase                                    | Status  | Tasks | Completed |
+| ---------------------------------------- | ------- | ----- | --------- |
+| Phase 1 — Config schema (gate+target)    | pending | 1     | 0/1       |
+| Phase 2 — Resolver                       | pending | 1     | 0/1       |
+| Phase 3 — Eligibility validation         | pending | 1     | 0/1       |
+| Phase 4 — CLI read/write surfaces        | pending | 2     | 0/2       |
+| Phase 5 — cross-provider-exec dispatcher | pending | 1     | 0/1       |
+| Phase 6 — Skill marker + Gate step       | pending | 1     | 0/1       |
+| Phase 7 — Release bookkeeping            | pending | 1     | 0/1       |
 
-**Total:** 0/7 tasks completed
+**Total:** 0/8 tasks completed
 
 **Parallel group:** `[['p02','p03']]` — resolver + eligibility validation run concurrently after Phase 1.
 

@@ -19,20 +19,20 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** Add a per-skill gate mechanism — a configured final step a gate-aware skill must run before it is "done" — with config schema, layered resolution, read/write CLI surfaces, eligibility validation, and the skill-side opt-in marker + Gate Execution step. Flagship use: cross-model/cross-provider verification.
+**Goal:** Per-skill gates that a gate-aware skill must run before it is "done," plus runtime-agnostic **cross-runtime** execution (`oat gate cross-provider-exec`) so the flagship case — Claude implements → Codex reviews (or vice versa) — works out of the box. V1 is runtime-level only; same-target execution is deferred to backlog `bl-e6fc`.
 
-**Architecture:** Two homes — CLI/TypeScript side (`packages/cli`) owns gate config (schema, resolution, validation, read/write commands); skill-authoring side (`.agents/skills`) owns gate execution (`oat_gateable` marker + a shared "Gate Execution" final step the agent runs). Thin mechanism, smart command; exit code is the pass/fail signal.
+**Architecture:** Two homes — CLI/TypeScript (`packages/cli`) owns config (schema, resolution, validation), read/write surfaces, and the `cross-provider-exec` dispatcher; skill-authoring (`.agents/skills`) owns the `oat_gateable` marker + a shared "Gate Execution" final step. Config: `workflow.gates.{ execTargets, skills }`. Exit code is the pass/fail signal.
 
-**Tech Stack:** TypeScript ESM (Node 22), `@open-agent-toolkit/cli`, vitest, oxlint/oxfmt, pnpm workspaces + Turborepo.
+**Tech Stack:** TypeScript ESM (Node 22), `@open-agent-toolkit/cli`, vitest, oxlint/oxfmt, pnpm + Turborepo.
 
-**Commit Convention:** `{type}({scope}): {description}` — e.g., `feat(p01-t01): add GateConfig schema + normalization`
+**Commit Convention:** `{type}({scope}): {description}` — e.g., `feat(p01-t01): add gate + exec-target schema`
 
 ## Planning Checklist
 
 - [x] Confirmed HiLL checkpoints with user (default: pause after every phase; adjustable)
-- [x] Set `oat_plan_hill_phases` in frontmatter
-- [x] Evaluated phases for parallelism opportunities
-- [x] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Set `oat_plan_hill_phases`
+- [x] Evaluated phases for parallelism
+- [x] Set `oat_plan_parallel_groups`
 
 ---
 
@@ -40,18 +40,15 @@ oat_template: false
 
 **Declared group: `[['p02', 'p03']]`.**
 
-- **p01 (schema)** is foundational — every other phase imports `GateConfig` from it, so it runs first, alone.
-- **p02 (resolver, `config/resolve.ts`)** and **p03 (eligibility validation, `validation/skills.ts`)** both depend only on p01's types and write to **disjoint files** with independent verification (resolver unit tests vs skills-validation unit tests). They run concurrently in isolated worktrees and merge back in plan order.
-- **p04 (CLI commands)** depends on p02 (`oat gate resolve` calls `resolveGate`) and p01 — runs after the group.
-- **p05 (skill-side + release)** depends on p04 (the Gate Execution step calls `oat gate resolve`) — runs last.
-
-Not parallelized further: p04 and p05 are a strict dependency chain on the resolve command; p01 is a shared-type prerequisite for everything.
+- **p01 (schema)** is foundational — all phases import its types; runs first, alone.
+- **p02 (resolver, `config/resolve.ts`)** and **p03 (eligibility validation, `validation/skills.ts`)** depend only on p01, write to **disjoint files**, verify independently → run concurrently, merge in plan order.
+- **p04 (read/write commands)** depends on p02; **p05 (dispatcher)** depends on p02 (`resolveExecTargets`) + p04 (command group); **p06 (skills)** depends on p04/p05 (the step calls `oat gate resolve` / `cross-provider-exec`); **p07 (release)** is last. These form a strict chain — not parallelized.
 
 ---
 
-## Phase 1: Gate config schema (`config/oat-config.ts`)
+## Phase 1: Config schema (`config/oat-config.ts`)
 
-### Task p01-t01: Add GateConfig schema + normalization
+### Task p01-t01: Add gate + exec-target schema, normalization, built-ins
 
 **Files:**
 
@@ -60,46 +57,37 @@ Not parallelized further: p04 and p05 are a strict dependency chain on the resol
 
 **Step 1: Write test (RED)**
 
-Add cases to `oat-config.test.ts` asserting `normalizeWorkflowConfig` / `normalizeOatConfig` handling of `workflow.gates`:
+Cases for `workflow.gates`:
 
-- valid gate (`command` + `onFailure`) is accepted and preserved
-- entry with empty/missing `command` is dropped
-- entry with invalid `onFailure` is dropped
-- `maxAttempts` coercion: default `2` when absent; integers `≥ 1` kept; non-numeric/`< 1` ignored (falls to default)
-- `description` optional, preserved when present
-- `null` value preserved (disable signal), distinct from an absent key
+- `GateConfig`: valid (`command`+`onFailure`) preserved; empty/missing `command` dropped; bad `onFailure` dropped; `maxAttempts` coercion (default 2, int ≥ 1, else default); `execPolicy.avoid` validated (default `same-runtime`, bad value → default); `null` skill preserved.
+- `ExecTarget`: requires non-empty `runtime` + non-empty `baseCommand: string[]`; optional `hostDetectionCommand`/`availabilityCommand` validated as `string[]`; `priority` numeric; invalid dropped; `null` target preserved.
+- Built-in exec targets (codex-default/claude-default/cursor-default) exposed as a constant for the resolver to merge.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
-Expected: New cases fail (RED)
+Expected: RED
 
 **Step 2: Implement (GREEN)**
 
-In `oat-config.ts`: add `export type GateOnFailure = 'block' | 'prompt' | 'warn';` and `export interface GateConfig { command: string; onFailure: GateOnFailure; description?: string; maxAttempts?: number; }`. Add `gates?: Record<string, GateConfig | null>;` to `OatWorkflowConfig`. Extend `normalizeWorkflowConfig` with a `gates` branch following the existing validate-or-drop pattern (no throws): preserve `null`, drop invalid objects, coerce `maxAttempts` to integer `≥ 1` default `2`.
+Add `GateOnFailure`, `GateAvoid`, `GateConfig`, `ExecTarget`. Set `OatWorkflowConfig.gates = { execTargets?: Record<string, ExecTarget | null>; skills?: Record<string, GateConfig | null> }`. Extend `normalizeWorkflowConfig` (validate-or-drop, no throws; preserve `null`). Export `BUILTIN_EXEC_TARGETS` (codex/claude/cursor defaults with `runtime`, `baseCommand`, `hostDetectionCommand`, `availabilityCommand`, `priority`).
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
-Expected: Tests pass (GREEN)
+Run: same as above. Expected: GREEN
 
-**Step 3: Refactor**
+**Step 3: Refactor** — `normalizeGateConfig` / `normalizeExecTarget` helpers paralleling sibling normalizers.
 
-Factor a `normalizeGateConfig(value): GateConfig | null | undefined` helper if the branch grows; keep parity with sibling normalizers.
-
-**Step 4: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
-Expected: No errors
+**Step 4: Verify** — `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts
-git commit -m "feat(p01-t01): add GateConfig schema + normalization"
+git commit -m "feat(p01-t01): add gate + exec-target schema with normalization and built-ins"
 ```
 
 ---
 
-## Phase 2: Gate resolver (`config/resolve.ts`)
+## Phase 2: Resolver (`config/resolve.ts`)
 
-### Task p02-t01: Implement resolveGate with layered precedence
+### Task p02-t01: resolveGate + resolveExecTargets
 
 **Files:**
 
@@ -108,39 +96,27 @@ git commit -m "feat(p01-t01): add GateConfig schema + normalization"
 
 **Step 1: Write test (RED)**
 
-Add `resolveGate` cases to `resolve.test.ts`:
+- `resolveGate`: local>shared>user wholesale win; `null` disables + short-circuits; fall-through; **no within-gate merge** (a higher layer never inherits sibling fields). Reads raw layers, not flattened `resolved`.
+- `resolveExecTargets`: built-ins present by default; keyed **partial** merge (override only `priority` of a built-in); `null` disables a built-in; new id adds a target; precedence user→shared→local.
 
-- only one layer defines the gate → that gate resolves
-- precedence local > shared > user: highest layer that mentions the key wins **wholesale**
-- **no within-gate value merge**: a higher layer defining the key never inherits sibling fields from a lower layer
-- `null` at a higher layer → resolves to "disabled" (`null`) and short-circuits lower layers
-- key omitted in a layer → falls through to the next
-- no layer defines it → `null`
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts`
-Expected: New cases fail (RED)
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts` — RED
 
 **Step 2: Implement (GREEN)**
 
-Add `export function resolveGate(effective, skillName): GateConfig | null` to `resolve.ts`. **Read the raw layer objects directly — `effective.local.workflow?.gates`, `effective.shared.workflow?.gates`, `effective.user.workflow?.gates` — NOT `effective.resolved`.** `flattenConfig` recurses into nested records, so reading the flattened `resolved` map would shred each `GateConfig` into leaf keys (`workflow.gates.<skill>.command`, …) and silently merge fields across layers — exactly the within-gate merge the design forbids. Return the first (most-specific) raw layer that mentions the skill key, wholesale (including a `null` disable), else `null`.
+- `resolveGate(effective, skillName)`: read `effective.local/.shared/.user .workflow?.gates?.skills` (raw layer objects — NOT `effective.resolved`, whose `flattenConfig` shreds gate objects and would merge fields across layers). First raw layer mentioning the key wins wholesale (incl. `null`); else `null`.
+- `resolveExecTargets(effective)`: start from `BUILTIN_EXEC_TARGETS`, then keyed partial-merge layers user → shared → local; `null` deletes an id; return the merged `Record<string, ExecTarget>`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts`
-Expected: Tests pass (GREEN)
+Run: same — GREEN
 
-**Step 3: Refactor**
+**Step 3: Refactor** — keep consistent with `resolveEffectiveConfig` section style.
 
-Reuse the existing per-section resolution shape in `resolveEffectiveConfig`; keep `resolveGate` consistent with how other `workflow.*` values are surfaced.
-
-**Step 4: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
-Expected: No errors
+**Step 4: Verify** — lint + type-check (filtered).
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts
-git commit -m "feat(p02-t01): add resolveGate layered per-skill resolution"
+git commit -m "feat(p02-t01): add resolveGate + resolveExecTargets"
 ```
 
 ---
@@ -153,44 +129,37 @@ git commit -m "feat(p02-t01): add resolveGate layered per-skill resolution"
 
 - Modify: `packages/cli/src/validation/skills.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/internal/validate-oat-skills.ts` (the caller — wires resolved config in)
+- Modify: `packages/cli/src/commands/internal/validate-oat-skills.test.ts`
 
 **Step 1: Write test (RED)**
 
-Add cases to `skills.test.ts`:
+- Validator unit (`skills.test.ts`): `gates.skills` key → skill with `oat_gateable: true` → no finding; → skill without marker → warning; → unknown skill → warning. Gate keys injected via the existing `ValidateOatSkillsOptions`/`Dependencies` seam (no disk).
+- Caller (`validate-oat-skills.test.ts`): the command resolves config and threads real `gates.skills` keys into the validator, so a configured gate on a non-gateable skill actually surfaces a warning end-to-end (not only via the injected seam).
 
-- a configured `workflow.gates` key targeting a skill whose `SKILL.md` has `oat_gateable: true` → no finding
-- a key targeting a skill **without** the marker → a warning finding (non-blocking)
-- a key targeting an unknown/missing skill → a warning finding
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
-Expected: New cases fail (RED)
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/internal/validate-oat-skills.test.ts` — RED
 
 **Step 2: Implement (GREEN)**
 
-`validateOatSkills(repoRoot, options, dependencies)` currently takes no config and only scans `.agents/skills/*`. Wire gate keys in via the existing injection seam: extend `ValidateOatSkillsOptions` (or `ValidateOatSkillsDependencies`) to accept the resolved `workflow.gates` keys (or a `ResolvedConfig`), populated by the `validate-oat-skills` caller (the entry behind `pnpm oat:validate-skills`) from real resolved config — so tests inject gate config without touching disk. **Validate the union of gate keys across all layers** (so any misconfiguration is visible even if a higher layer disables the key with `null`). For each key, read the named `.agents/skills/<skill>/SKILL.md` frontmatter using the existing helpers (`getFrontmatterBlock` / `frontmatterHasKey`) and push a non-blocking warning finding when the skill lacks `oat_gateable: true` or does not exist. Do **not** use `agents/canonical/parse.ts`.
+- Validator: `validateOatSkills(repoRoot, options, dependencies)` takes no config today and only scans `.agents/skills/*`. Extend `ValidateOatSkillsOptions`/`ValidateOatSkillsDependencies` to accept the resolved `gates.skills` keys. Validate the **union** of keys across layers; for each read `.agents/skills/<skill>/SKILL.md` frontmatter via `getFrontmatterBlock`/`frontmatterHasKey` (NOT `agents/canonical/parse.ts`); non-blocking warning when marker missing or skill absent.
+- **Caller wiring (closes the end-to-end gap):** `commands/internal/validate-oat-skills.ts` currently calls `validateOatSkills(context.cwd, options)` with no config. Resolve effective config (`resolveEffectiveConfig`), extract the union of `gates.skills` keys from the raw `.shared/.local/.user` layers, and pass them through the extended options — otherwise `pnpm oat:validate-skills` never fires the warning even though the unit test passes.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
-Expected: Tests pass (GREEN)
+Run: same — GREEN
 
-**Step 3: Refactor**
+**Step 3: Refactor** — extract a small shared frontmatter reader if needed, beside existing helpers.
 
-If reading skill frontmatter needs a small shared reader, extract it next to the existing helpers rather than duplicating parse logic.
-
-**Step 4: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
-Expected: No errors
+**Step 4: Verify** — lint + type-check (filtered) + end-to-end smoke: `pnpm run cli -- internal validate-oat-skills --json` surfaces the warning when a gate targets a non-gateable skill.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts
-git commit -m "feat(p03-t01): warn on gates configured for non-gateable skills"
+git add packages/cli/src/validation/skills.ts packages/cli/src/validation/skills.test.ts packages/cli/src/commands/internal/validate-oat-skills.ts packages/cli/src/commands/internal/validate-oat-skills.test.ts
+git commit -m "feat(p03-t01): warn on gates configured for non-gateable skills (validator + caller wiring)"
 ```
 
 ---
 
-## Phase 4: CLI gate commands (`commands/gate/`)
+## Phase 4: CLI read/write surfaces (`commands/gate/`)
 
 ### Task p04-t01: `oat gate resolve <skill>`
 
@@ -198,46 +167,28 @@ git commit -m "feat(p03-t01): warn on gates configured for non-gateable skills"
 
 - Create: `packages/cli/src/commands/gate/index.ts`
 - Create: `packages/cli/src/commands/gate/index.test.ts`
-- Modify: `packages/cli/src/commands/index.ts` — add `program.addCommand(createGateCommand())` in `registerCommands`
+- Modify: `packages/cli/src/commands/index.ts` — `program.addCommand(createGateCommand())` in `registerCommands`
 
-**Step 1: Write test (RED)**
+**Step 1: Write test (RED)** — gate present → JSON + exit 0; absent/disabled/unknown skill → `null` + exit 0 (never errors).
 
-In `commands/gate/index.test.ts`:
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts` — RED
 
-- gate present → prints resolved `GateConfig` JSON, exit 0
-- absent → prints `null`, exit 0
-- disabled (`null` in config) → prints `null`, exit 0
-- unknown skill → prints `null`, exit 0 (never errors)
+**Step 2: Implement (GREEN)** — `oat gate resolve <skill>` via `resolveGate`; register the `gate` command group. Thin handler; logger (no raw `console.*`); exit 0.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
-Expected: Fails (RED)
+Run: same — GREEN
 
-**Step 2: Implement (GREEN)**
-
-Implement `oat gate resolve <skill>` calling `resolveGate` against the loaded effective config; print JSON (default/only shape). Register the `gate` command group. Keep the handler thin (route logic through config modules) per CLI package conventions.
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
-Expected: Passes (GREEN)
-
-**Step 3: Refactor**
-
-Confirm exit semantics (0 success) and logger usage (no raw `console.*`).
-
-**Step 4: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check && pnpm run cli -- gate resolve oat-project-plan --json`
-Expected: No errors; prints a gate or `null`
+**Step 4: Verify** — lint + type-check + `pnpm run cli -- gate resolve oat-project-plan --json`
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/gate/ packages/cli/src/commands
+git add packages/cli/src/commands/gate/ packages/cli/src/commands/index.ts
 git commit -m "feat(p04-t01): add oat gate resolve command"
 ```
 
 ---
 
-### Task p04-t02: `oat gate set` / `oat gate unset`
+### Task p04-t02: `oat gate set/unset <skill>` + `oat gate target set/unset <id>`
 
 **Files:**
 
@@ -246,79 +197,106 @@ git commit -m "feat(p04-t01): add oat gate resolve command"
 
 **Step 1: Write test (RED)**
 
-Add cases:
+- `gate set <skill>` then `resolve` round-trips; `--disable` → `null`; `unset` removes; invalid `--command`/`--on-failure` rejected (nonzero, actionable).
+- `gate target set <id> --runtime --base-command …` then resolve registry shows it; `--disable` → `null`; `unset` removes; invalid argv rejected.
+- `--layer local|shared|user` writes the right file (shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`); siblings untouched.
 
-- `set` then `resolve` round-trips the gate back
-- `--disable` writes `null` at the chosen layer (resolve returns `null`)
-- `unset` removes the key entirely
-- invalid `--command` (empty) / invalid `--on-failure` rejected with a non-zero actionable error
-- `--layer local|shared|user` writes the right config file (shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`) and leaves sibling skills' gates untouched
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
-Expected: New cases fail (RED)
+Run: same test path — RED
 
 **Step 2: Implement (GREEN)**
 
-Implement `oat gate set <skill> --command <cmd> --on-failure <block|prompt|warn> [--description <text>] [--max-attempts <N>] [--layer <local|shared|user>]` (default layer `user`), `oat gate unset <skill> [--layer]`, and `oat gate set <skill> --disable [--layer]` (writes `null`). Use the `shared` layer name to match the existing `ConfigSurface = 'auto' | 'shared' | 'local' | 'user'` vocabulary (`.oat/config.json` is the "shared" layer), mapping shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`. Validate inputs through the Component 1 normalization before writing; write per-skill-key into `workflow.gates`, leaving siblings intact. Do not route through the closed-`ConfigKey` `oat config set` surface. _Note: set/unset tests live in `commands/gate/index.test.ts` (co-located, per CLI file-naming convention) rather than design's tentative `config/index.test.ts` — intentional divergence._
+Implement `gate set/unset <skill>` (writes `gates.skills.<skill>`, `--disable` → `null`) and `gate target set/unset <id>` (writes `gates.execTargets.<id>`, `--disable` → `null`). `--layer` accepts the **three concrete write layers `shared|local|user`** — a subset of `ConfigSurface` that **excludes `auto`** (which has no write helper) — default `user`, mapping shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`. Reject `auto`/invalid layer with a nonzero actionable error. Validate via Component 1 normalization. Per-key writes only — never touch sibling skills/targets. Do not route through the closed-`ConfigKey` `oat config set` surface. _Tests co-located in `commands/gate/index.test.ts`._
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
-Expected: Passes (GREEN)
+Run: same — GREEN
 
-**Step 3: Refactor**
-
-Share a write helper with the existing config-write utilities (`writeOatConfig` / `writeOatLocalConfig` / `writeUserConfig`); keep per-skill mutation isolated.
-
-**Step 4: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
-Expected: No errors
+**Step 4: Verify** — lint + type-check (filtered).
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/gate/
-git commit -m "feat(p04-t02): add oat gate set/unset write surface"
+git commit -m "feat(p04-t02): add gate + exec-target write surfaces"
 ```
 
 ---
 
-## Phase 5: Skill-side opt-in + release bookkeeping
+## Phase 5: Cross-runtime dispatcher
 
-### Task p05-t01: Add `oat_gateable` marker + Gate Execution step to lifecycle skills
+### Task p05-t01: `oat gate cross-provider-exec <prompt...>`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Write test (RED)** (child process mocked/injected)
+
+- Current runtime resolution: `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`.
+- `avoid: same-runtime` (default) excludes targets whose `runtime` == current; `avoid: none` keeps them.
+- Selection: highest-priority target whose `availabilityCommand` passes (absent ⇒ available).
+- No eligible target → nonzero + actionable message; **no** same-runtime fallback unless `avoid: none`.
+- Executes `baseCommand + [prompt...]` and **exits with the child's status**; passes through stdout/stderr.
+- `unknown` current runtime → `same-runtime` excludes nothing (all eligible).
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts` — RED
+
+**Step 2: Implement (GREEN)**
+
+Implement `cross-provider-exec` per Component 4: resolve merged `execTargets`; resolve current runtime (flag → env → detection short-circuit → unknown); filter by `avoid`; pick by priority + availability; spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. Prompt = trailing args joined with spaces.
+
+Run: same — GREEN
+
+**Step 3: Refactor** — isolate selection logic into a pure, unit-testable function (registry + currentRuntime + avoid → chosen target | null).
+
+**Step 4: Verify** — lint + type-check (filtered).
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/
+git commit -m "feat(p05-t01): add oat gate cross-provider-exec dispatcher"
+```
+
+---
+
+## Phase 6: Skill opt-in + Gate Execution step
+
+### Task p06-t01: `oat_gateable` marker + Gate Execution step on lifecycle skills
 
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/skills/oat-project-plan/SKILL.md`
 
-**Step 1: Author the changes**
+**Step 1: Author**
 
-To both skills: add `oat_gateable: true` to frontmatter and bump each skill's `version:` (PR-scoped bump per AGENTS.md). Append a shared, identical **"Gate Execution"** final step authored as prose:
+Add `oat_gateable: true` + bump each skill's `version:` (PR-scoped). Append a shared identical **"Gate Execution"** final step:
 
-1. Run `oat gate resolve <this-skill> --json`.
-2. `null` → skill is done.
-3. Else run `command`, capturing stdout/stderr + exit code.
-4. Exit 0 → done. Nonzero → branch on `onFailure`:
-   - `block` → read feedback (stdout + any artifact), remediate, re-run; repeat up to `maxAttempts` (default 2); on exhaustion escalate to the human with accumulated per-attempt feedback appended to `implementation.md`; distinguish a launch failure (missing binary / PATH) and bias it toward escalation rather than consuming remediation attempts.
-   - `prompt` → surface failure, ask the human to disposition.
-   - `warn` → record and continue (done).
-   - Use `description` to orient remediation + next steps.
+1. `oat gate resolve <this-skill> --json`; `null` → done.
+2. Else run `command` (typically `oat gate cross-provider-exec "<prompt>"`), capture stdout/stderr + exit code.
+3. Exit 0 → done. Nonzero → branch on `onFailure`:
+   - `block` → read feedback, remediate, re-run ≤ `maxAttempts` (default 2); on exhaustion escalate with accumulated feedback appended to `implementation.md`; treat a launch failure (missing CLI / no eligible runtime) as escalation-biased, not a remediation attempt.
+   - `prompt` → surface, ask human.
+   - `warn` → record, continue.
+   - Use `description` to orient next steps.
+4. Note: `cross-provider-exec` learns the current host from `OAT_CURRENT_RUNTIME` when the launcher exports it, else from built-in `hostDetectionCommand`s — the step does not need to detect the host itself.
 
-**Step 2: Verify**
+_Anti-drift: the two skills' Gate Execution blocks must be kept **verbatim-identical**. A shared-include / snippet mechanism is out of scope for V1 (two hand-authored copies); revisit if more skills adopt the marker._
 
-Run: `pnpm oat:validate-skills`
-Expected: Skills still validate (required frontmatter intact, name/dir match, version bumps detected) with no regression from adding `oat_gateable` or the Gate Execution prose. Note: `validateOatSkills` does not treat `oat_gateable` as a required key and has no generic "step-structure" check — the real signal is a clean pass plus the version-bump detection. (Adding explicit `oat_gateable`/step validation would be a separate change to `validateOatSkills`, not in scope here.)
+**Step 2: Verify** — `pnpm oat:validate-skills` (skills still validate; required frontmatter intact; version bumps detected; no regression — note `oat_gateable` is not a required key and there is no generic step-structure check).
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-plan/SKILL.md
-git commit -m "feat(p05-t01): add oat_gateable marker + Gate Execution step to lifecycle skills"
+git commit -m "feat(p06-t01): add oat_gateable marker + Gate Execution step"
 ```
 
 ---
 
-### Task p05-t02: Lockstep public-package version bump + release validation
+## Phase 7: Release bookkeeping
+
+### Task p07-t01: Lockstep public-package version bump + release validation
 
 **Files:**
 
@@ -328,23 +306,18 @@ git commit -m "feat(p05-t01): add oat_gateable marker + Gate Execution step to l
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 
-**Step 1: Bump versions**
-
-This PR ships CLI functionality **and** bundled-asset (`.agents/skills`) changes, so bump all five lockstep public packages together by the same increment (per AGENTS.md release policy).
+**Step 1: Bump** — this PR ships CLI functionality + bundled-asset (`.agents/skills`) changes; bump all five lockstep public packages together by the same increment (AGENTS.md release policy).
 
 **Step 2: Verify (definition of done)**
 
-Run: `pnpm release:validate`
-Expected: Passes (publishable-package PR is not done until this passes)
-
-Then a full gate: `pnpm build && pnpm lint && pnpm type-check && pnpm test`
-Expected: No errors
+- `pnpm release:validate` (publishable-package PR is not done until this passes)
+- `pnpm build && pnpm lint && pnpm type-check && pnpm test`
 
 **Step 3: Commit**
 
 ```bash
 git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
-git commit -m "chore(p05-t02): lockstep public-package version bump + release validation"
+git commit -m "chore(p07-t01): lockstep public-package version bump + release validation"
 ```
 
 ---
@@ -353,19 +326,20 @@ git commit -m "chore(p05-t02): lockstep public-package version bump + release va
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-{Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
+{Keep both code + artifact rows below. Do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                              |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                     |
-| p02    | code     | pending | -          | -                                                     |
-| p03    | code     | pending | -          | -                                                     |
-| p04    | code     | pending | -          | -                                                     |
-| p05    | code     | pending | -          | -                                                     |
-| final  | code     | pending | -          | -                                                     |
-| plan   | artifact | passed  | 2026-06-20 | structured review (in-session); all findings applied  |
-| spec   | artifact | n/a     | -          | - (quick mode — no spec.md)                           |
-| design | artifact | passed  | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                       |
+| p02    | code     | pending | -          | -                                                       |
+| p03    | code     | pending | -          | -                                                       |
+| p04    | code     | pending | -          | -                                                       |
+| p05    | code     | pending | -          | -                                                       |
+| p06    | code     | pending | -          | -                                                       |
+| final  | code     | pending | -          | -                                                       |
+| plan   | artifact | passed  | 2026-06-20 | structured re-review (in-session); all findings applied |
+| spec   | artifact | n/a     | -          | - (quick mode — no spec.md)                             |
+| design | artifact | passed  | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -375,13 +349,15 @@ git commit -m "chore(p05-t02): lockstep public-package version bump + release va
 
 **Summary:**
 
-- Phase 1: 1 task — Gate config schema + normalization
-- Phase 2: 1 task — Layered `resolveGate`
-- Phase 3: 1 task — Eligibility validation warning
-- Phase 4: 2 tasks — `oat gate resolve` + `oat gate set/unset`
-- Phase 5: 2 tasks — Skill marker + Gate Execution step; lockstep version bump + release validation
+- Phase 1: 1 task — gate + exec-target schema, normalization, built-ins
+- Phase 2: 1 task — `resolveGate` + `resolveExecTargets`
+- Phase 3: 1 task — eligibility validation warning
+- Phase 4: 2 tasks — `oat gate resolve` + gate/target write surfaces
+- Phase 5: 1 task — `cross-provider-exec` dispatcher
+- Phase 6: 1 task — skill marker + Gate Execution step
+- Phase 7: 1 task — lockstep version bump + release validation
 
-**Total: 7 tasks**
+**Total: 8 tasks**
 
 Ready for code review and merge.
 
@@ -391,4 +367,5 @@ Ready for code review and merge.
 
 - Design: `design.md`
 - Discovery: `discovery.md`
+- Follow-up backlog: `bl-e6fc` (Gates V2 — same-target execution + target-level detection)
 - Spec: n/a (quick mode — no `spec.md`)
