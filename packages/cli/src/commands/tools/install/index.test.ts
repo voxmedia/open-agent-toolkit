@@ -11,7 +11,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createToolsInstallCommand } from './index';
 
-function createHarness() {
+function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
+  const packScope = options.packScope ?? 'project';
   const capture = createLoggerCapture();
   const syncScopes: Scope[] = [];
   const selectManyWithAbort = vi.fn(
@@ -109,12 +110,12 @@ function createHarness() {
       resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
       resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
       scanTools: vi.fn(async ({ scope }: { scope: 'project' | 'user' }) =>
-        scope === 'project'
+        scope === packScope
           ? [
               {
                 name: 'oat-docs-analyze',
                 type: 'skill' as const,
-                scope: 'project' as const,
+                scope: packScope,
                 version: '1.0.0',
                 bundledVersion: '1.0.0',
                 pack: 'docs' as const,
@@ -246,18 +247,26 @@ describe('createToolsInstallCommand', () => {
     expect(syncScopes).toEqual(['user']);
   });
 
-  it('additive --scope project over a user pack syncs only the added project scope', async () => {
-    const { command, installDocs, removeDirectory, syncScopes } =
-      createHarness();
+  it('additive --scope project over a user pack syncs only the added project scope (no prune)', async () => {
+    // Place docs at user so --scope project is a genuine additive add, not a
+    // no-op over the same scope.
+    const { capture, command, installDocs, removeDirectory, syncScopes } =
+      createHarness({ packScope: 'user' });
 
-    // Re-point the scan so docs lives at user, not project.
     await runCommand(command, [], ['--scope', 'project']);
 
-    // docs was at project (per the harness scan) and --scope project is a
-    // no-op add there — but the additive guarantee still holds: nothing is
-    // removed and only changed scopes are synced.
+    // docs was at user; --scope project is additive → end-state both, with the
+    // new install landing at the project root and no removal of the user
+    // install.
+    expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
     expect(removeDirectory).not.toHaveBeenCalled();
-    expect(installDocs).toHaveBeenCalled();
-    expect(syncScopes).not.toContain('user');
+    expect(capture.info.join('\n')).toContain(
+      'Installed tool packs: docs (project + user)',
+    );
+    // Only the newly-added project scope is auto-synced; the preserved user
+    // scope is never re-synced or pruned.
+    expect(syncScopes).toEqual(['project']);
   });
 });
