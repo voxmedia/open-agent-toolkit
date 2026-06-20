@@ -37,8 +37,9 @@ The mechanism is deliberately thin on the CLI side (resolve + validate config) a
 - **Gate config schema** — extends `OatWorkflowConfig` with `gates?: Record<string, GateConfig>` in `config/oat-config.ts`, normalized in `normalizeWorkflowConfig` (validates `command`, `onFailure` enum, `maxAttempts`, `description`).
 - **Gate resolver** — layered, per-skill-key resolution in `config/resolve.ts` (`resolveEffectiveConfig`), most-specific-wins (local > repo > user), no within-gate value merge; `null` at a higher layer disables a skill's gate.
 - **Gate lookup surface** — a dedicated `oat gate resolve <skill>` command returning the merged result as JSON, so a skill's Gate Execution step fetches its own resolved gate without re-implementing the per-skill-key merge / `null`-disable semantics.
+- **Gate config write surface** — a dedicated `oat gate set <skill>` / `oat gate unset <skill>` command pair that writes a full `GateConfig` (or `null` to disable) to a chosen layer. Required because `oat config set` uses a closed `ConfigKey` union (`commands/config/index.ts`) that rejects `workflow.gates.*` and cannot express structured gate objects; a dedicated command keeps the structured write + `null`-disable out of that fixed-key surface.
 - **Skill opt-in + Gate Execution step** — `oat_gateable: true` frontmatter marker + a shared, authored final-step block; adopted by `oat-project-implement` and `oat-project-plan` first.
-- **Eligibility validation** — detects a gate configured for a skill lacking `oat_gateable` (frontmatter parsed via `agents/canonical/parse.ts`), surfaced through existing skill-validation/doctor tooling as a **warning** (non-blocking; the gate no-ops with a visible note).
+- **Eligibility validation** — detects a gate configured for a skill lacking `oat_gateable`, surfaced through the existing skill-validation surface (`validation/skills.ts` / `validateOatSkills`, which already scans `.agents/skills/*/SKILL.md`) and doctor tooling as a **warning** (non-blocking; the gate no-ops with a visible note). _Not_ `agents/canonical/parse.ts`, which models `.agents/agents/*.md` agent docs.
 
 ### Component Diagram
 
@@ -55,10 +56,12 @@ The mechanism is deliberately thin on the CLI side (resolve + validate config) a
  │   Gate resolver     │◄───────────────────────┘
  │ (resolve.ts)        │────────► GateConfig | null
  └─────────────────────┘
-           ▲ validate (gateable?)
- ┌─────────────────────┐
- │ Eligibility check   │  parse.ts frontmatter (oat_gateable)
- └─────────────────────┘
+     ▲ write          ▲ validate (gateable?)
+ ┌────────────────┐  ┌─────────────────────────────┐
+ │ oat gate set/  │  │ Eligibility check           │
+ │ unset <skill>  │  │ validation/skills.ts        │
+ └────────────────┘  │ (validateOatSkills)         │
+                     └─────────────────────────────┘
 ```
 
 ### Data Flow
@@ -156,10 +159,37 @@ export function resolveGate(
 
 **Purpose:** Catch gates configured for non-gate-aware skills.
 
+**Home:** the existing skill-validation surface — `packages/cli/src/validation/skills.ts` (`validateOatSkills`), which already scans `.agents/skills/*/SKILL.md` and carries frontmatter helpers (`getFrontmatterBlock`, `frontmatterHasKey`). **Not** `agents/canonical/parse.ts` — that parser models `.agents/agents/*.md` agent documents (name/description/tools), a different subsystem.
+
 **Behavior:**
 
-- Reads configured `workflow.gates` keys; parses each named skill's frontmatter (`agents/canonical/parse.ts`) for `oat_gateable: true`.
-- A configured gate whose target skill lacks the marker → **warning** through existing skill-validation / doctor tooling. Non-blocking; the gate simply never fires.
+- Reads configured `workflow.gates` keys; for each, reads the named skill's `SKILL.md` frontmatter via the existing helper and checks for `oat_gateable: true` (reuse `frontmatterHasKey` / a small shared frontmatter-reader rather than a new parser).
+- A configured gate whose target skill **lacks** the marker → **warning** through `validateOatSkills` + doctor tooling. Non-blocking; the gate simply never fires.
+- An unknown/missing skill name in `workflow.gates` → same warning path.
+
+**Tests:** configured gate targeting a skill **with** `oat_gateable: true` (clean), a skill **without** the marker (warning), and an unknown/missing skill (warning) — added to `validation/skills.test.ts`.
+
+### Component 6 — Gate config write surface (`oat gate set` / `oat gate unset`)
+
+**Purpose:** Give users a defined way to _write_ gate config, since discovery makes user config the expected primary home for the cross-model gate.
+
+**Why a dedicated command (not `oat config set`):** `oat config set` validates against a **closed `ConfigKey` union** with a `VALID_CONFIG_KEYS` allowlist (`commands/config/index.ts`); `workflow.gates.*` keys are absent and rejected before writing, and the fixed-key surface cannot express a structured `GateConfig` object or the `null`-disable. Extending that union with nested per-skill gate keys would bloat it and still couldn't carry the object shape cleanly.
+
+**Behavior:**
+
+```
+oat gate set <skill> --command <cmd> --on-failure <block|prompt|warn>
+                      [--description <text>] [--max-attempts <N>]
+                      [--layer <local|repo|user>]   # default: user (provider-specific home)
+oat gate unset <skill> [--layer <...>]              # remove the key
+oat gate set <skill> --disable [--layer <...>]      # write null (disable at this layer)
+```
+
+- Validates inputs against `GateConfig` normalization (Component 1) before writing; rejects an empty `command` or invalid `onFailure`.
+- Writes into the chosen layer's `workflow.gates[<skill>]`, leaving sibling skills' gates untouched (per-skill-key write, mirroring the resolver's per-skill-key merge).
+- `--disable` writes `null` (the disable signal); `unset` removes the key entirely.
+
+**Tests:** round-trip set → `oat gate resolve` reads it back; `--disable` writes `null`; `unset` removes; invalid `command`/`onFailure` rejected; layer targeting writes the right file. Added to `config/index.test.ts` (or a dedicated `gate` command test).
 
 ## Error Handling
 
@@ -177,11 +207,12 @@ Non-obvious scenarios this design must handle explicitly:
 - **`GateConfig` normalization** (`oat-config.test.ts` style): valid gate accepted; empty/missing `command` dropped; invalid `onFailure` dropped; `maxAttempts` coercion (default 2, integers ≥ 1, non-numeric ignored); `null` preserved as the disable signal distinct from absent.
 - **`resolveGate` precedence** (`resolve.test.ts` harness): local > repo > user wholesale win; `null` at a higher layer disables and short-circuits; key omitted in a layer falls through; **no within-gate value merge** (a higher layer defining the key never inherits sibling fields from a lower layer).
 - **`oat gate resolve` output:** gate present → JSON + exit 0; absent → `null` + exit 0; disabled (`null`) → `null` + exit 0; unknown skill → `null` + exit 0.
+- **`oat gate set` / `unset` round-trip** (`config/index.test.ts` or a dedicated gate-command test): `set` then `resolve` reads it back; `--disable` writes `null`; `unset` removes the key; invalid `command`/`onFailure` rejected; `--layer` targets the right config file without touching sibling skills' gates.
 
 ### Integration Tests
 
 - **Layered resolution end-to-end:** real `config.local.json` + `config.json` + user `config.json` fixtures (mirroring `resolveEffectiveConfig` tests) resolve to the expected gate per skill.
-- **Eligibility validation:** a gate configured for a skill **with** `oat_gateable: true` passes clean; a gate configured for a skill **without** the marker emits a warning (non-blocking) through the existing validation/doctor path.
+- **Eligibility validation** (`validation/skills.test.ts`): a gate configured for a skill **with** `oat_gateable: true` passes clean; a skill **without** the marker emits a warning (non-blocking) through `validateOatSkills`; an unknown/missing skill name emits the same warning.
 
 ### Manual / Skill-Level Verification
 
@@ -196,7 +227,7 @@ Resolved during design (recorded here for traceability):
 
 ## References
 
-- Specification: `spec.md`
+- Discovery: `discovery.md` (quick mode — no `spec.md`)
 - Knowledge Base: `.oat/repo/knowledge/project-index.md`
 - Architecture Docs: `.oat/repo/knowledge/architecture.md`
 - Conventions: `.oat/repo/knowledge/conventions.md`
