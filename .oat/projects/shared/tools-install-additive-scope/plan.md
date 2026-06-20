@@ -5,7 +5,6 @@ oat_blockers: []
 oat_last_updated: 2026-06-19
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null
@@ -29,8 +28,7 @@ oat_template: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (quick mode defaults — none beyond implementation phase)
-- [x] Set `oat_plan_hill_phases` in frontmatter
+- [x] Defer HiLL checkpoint confirmation to oat-project-implement
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -38,12 +36,13 @@ oat_template: false
 
 ## Parallelism
 
-Fully sequential (`oat_plan_parallel_groups: []`). All four tasks modify the
+Fully sequential (`oat_plan_parallel_groups: []`). Tasks t01-t04 modify the
 same file (`packages/cli/src/commands/init/tools/index.ts`) and the shared test
 file (`commands/init/tools/index.test.ts`), and they have a strict dependency
 chain: the end-state/reconciliation data model (t01) underpins the interactive
 selector (t02), which produces the removals the confirmation gate (t03) guards,
-and `affectedScopes` correctness (t04) depends on all prior changes. Disjoint
+and `affectedScopes` correctness (t04) depends on all prior changes. t05 is a
+release closeout that must run last (after all source changes land). Disjoint
 write boundaries do not exist here, so no parallel groups are declared.
 
 ---
@@ -288,16 +287,62 @@ git commit -m "test(p01-t04): pin additive auto-sync scoping guarantee"
 
 ---
 
+### Task p01-t05: (release) Lockstep public-package version bump + release:validate
+
+Repo guardrail (root `AGENTS.md`): a change to shipped CLI functionality
+(`packages/cli/src/commands/init/tools/index.ts`) requires bumping all five
+public packages together in the same PR, and `pnpm release:validate` is the
+definition of done for publishable-package changes. Run this as the final
+closeout once t01-t04 are complete.
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Step 1: Understand the requirement**
+
+The lockstep public set is `packages/cli`, `packages/control-plane`,
+`packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`. All
+five versions move together (patch bump for this bug fix) even though only the
+CLI package changed source.
+
+**Step 2: Implement**
+
+- Bump the `version` field of all five public packages in lockstep (patch).
+- Update any generated lockfile/version artifacts the bump touches.
+
+**Step 3: Verify**
+
+Run: `pnpm release:validate`
+Expected: Passes (publishable-package definition of done).
+
+Also confirm consistency:
+Run: `pnpm run cli -- project validate-plan --project-path .oat/projects/shared/tools-install-additive-scope`
+Expected: Passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git commit -m "chore(p01-t05): lockstep public package version bump for additive tools install"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| design | artifact | passed   | 2026-06-19 | design.md (lightweight, collaborative)     |
-| plan   | artifact | received | 2026-06-20 | reviews/artifact-plan-review-2026-06-20.md |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| final  | code     | pending | -          | -                                                   |
+| design | artifact | passed  | 2026-06-19 | design.md (lightweight, collaborative)              |
+| plan   | artifact | passed  | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -314,9 +359,9 @@ git commit -m "test(p01-t04): pin additive auto-sync scoping guarantee"
 
 **Summary:**
 
-- Phase 1: 4 tasks — additive scope resolution, per-pack end-state selector, batch-confirm removals, auto-sync scoping guard
+- Phase 1: 5 tasks — additive scope resolution, per-pack end-state selector, batch-confirm removals, auto-sync scoping guard, lockstep release closeout
 
-**Total: 4 tasks**
+**Total: 5 tasks**
 
 Ready for code review and merge.
 

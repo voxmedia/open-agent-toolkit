@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-16
+oat_last_updated: 2026-06-20
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -30,6 +30,25 @@ oat_generated: false
 | Phase 2 | pending     | N     | 0/N       |
 
 **Total:** 0/{N} tasks completed
+
+---
+
+### Review Received: plan (artifact)
+
+**Date:** 2026-06-20
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-06-20.md`
+**Type:** artifact (`oat_review_type: artifact`, manual) — findings resolved directly in `plan.md`, not converted to code-fix tasks.
+
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 0
+
+**Disposition map:**
+
+- `I1` (Important — missing release/versioning closeout) → resolve_in_artifact: added plan task `p01-t05` (lockstep public-package version bump for the five public packages + `pnpm release:validate`); `## Implementation Complete` total updated 4 → 5.
+- `M1` (Medium — HiLL metadata pre-confirmed/inconsistent) → resolve_in_artifact: removed `oat_plan_hill_phases` from `plan.md` frontmatter and replaced the HiLL checklist lines with "Defer HiLL checkpoint confirmation to oat-project-implement" (per `oat-project-plan` SKILL contract).
+
+No deferrals. No design/code drift accepted (the plan had not yet been implemented).
+
+**Next:** Execute the plan via `oat-project-implement` (now 5 tasks; first task `p01-t01`).
 
 ---
 
