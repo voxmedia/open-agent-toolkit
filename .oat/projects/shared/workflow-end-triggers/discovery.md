@@ -161,26 +161,44 @@ machinery.
 
 ## Open Questions
 
-_To be resolved in the discussion before lightweight design._
+### Resolved during discovery discussion
 
-- **Config location & precedence:** Where do gate definitions live — global OAT
-  config, per-repo config, and/or per-project `state.md` override? What's the
-  precedence / merge order when more than one defines a gate for the same skill?
-- **Skill eligibility:** Which skills can be gated — any OAT lifecycle skill,
-  any OAT skill at all, or an explicit allowlist/registry of gateable boundaries?
-  Does a non-OAT / arbitrary skill even have a well-defined "done" boundary to
-  hang a gate on?
-- **Enforcement boundary mechanics:** For the deterministic CLI-boundary
-  enforcement (beyond the agent-enforced baseline) — which `oat` subcommands own
-  a boundary clean enough to enforce a gate at, and how does that compose with
-  the agent loop?
-- **Loop state / observability:** Where does the per-attempt remediation history
-  live so the escalation-to-human carries the accumulated feedback (and so a
-  resumed session can see prior attempts)?
+- **Config location & precedence — RESOLVED.** Gates live in `workflow.gates`,
+  keyed by skill name, supported in **all** config layers. Precedence follows the
+  existing most-specific-wins model: local project config (`.oat/config.local.json`)
+
+  > repo project config (`.oat/config.json`) > user config (`~/.../config.json`).
+  > Merge is **keyed on the skill** — no within-gate value merging across layers; a
+  > layer that defines a skill's gate replaces the whole gate object, and a layer can
+  > disable a single skill's gate (e.g. `null`) without affecting others. Provider
+  > choice is user-specific, so **user config is the expected primary home** for the
+  > cross-model gate; repo/local exist for project-specific overrides and disables.
+  > (Exact resolver wiring to be confirmed in design — matches `workflow.*` resolution.)
+
+- **Skill eligibility — RESOLVED (hybrid, opt-in marker).** A skill declares itself
+  gate-aware via its own frontmatter (e.g. `oat_gateable: true`) plus a standard
+  final "run configured gate" step. Config can only attach gates to skills that
+  advertise the capability. Honoring the gate is part of the skill's own contract
+  (not an external bolt-on), which satisfies "MUST run before done." Avoids the
+  silent-no-op trap of pure config-convention and the drift of a central registry.
+  Lifecycle skills (`implement`, `plan`) adopt the marker first; "any skill in
+  general" becomes "any skill that adopts the marker" — an incremental path.
+
+### Deferred to design (mechanism detail, not product decisions)
+
+- **Enforcement boundary mechanics — design.** Largely settled by the
+  agent-enforced baseline + opt-in marker: the enforcement boundary _is_ the skill's
+  final gate-run step. Deterministic CLI-boundary enforcement stays out of scope for
+  v1 (see Out of Scope). Design covers only the agent-enforced step.
+- **Loop state / observability — design.** Keep lightweight: in-memory accumulation
+  across the `maxAttempts` loop, surfaced into the escalation message and appended to
+  existing tracking (`implementation.md` or equivalent) on escalation. No new
+  persistent store. Design pins the exact landing spot.
 
 ## Next Steps
 
-Discuss the Open Questions (config location, skill eligibility) with the user,
-then proceed to **lightweight design** (`design.md`) covering the gate config
-schema, the executing-agent gate-run step, the remediation loop, and the
-feedback/enforcement boundaries.
+Open questions resolved (config location, skill eligibility) and design-level
+items dispositioned. Proceed to **lightweight design** (`design.md`) covering the
+gate config schema (`workflow.gates`), the `oat_gateable` opt-in marker + standard
+gate-run skill step, the bounded remediation loop, and the feedback/escalation
+landing spots.
