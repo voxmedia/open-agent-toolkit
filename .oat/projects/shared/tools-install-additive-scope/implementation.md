@@ -145,7 +145,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Final/p01 code review (oat-reviewer, opus): **pass**. Artifact `reviews/final-review-2026-06-20.md`.
+- Final/p01 code review (oat-reviewer, opus): **pass**. Artifact `reviews/archived/final-review-2026-06-20.md`.
 - Review I1 (important, test quality) fixed in commit `1934a059` (strengthened additive no-prune sync test).
 - Review m1 (minor) **deferred with rationale**: outdated-skill refresh on a preserved scope is not added to `affectedScopes`; reviewer said "no change required to ship", consistent with no-prune design, fixing would expand scope. Candidate follow-up backlog item.
 
