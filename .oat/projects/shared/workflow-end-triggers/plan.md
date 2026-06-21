@@ -334,7 +334,7 @@ git commit -m "chore(p07-t01): lockstep public-package version bump + release va
 | p01    | code     | passed  | 2026-06-21 | reviews/p01-review-2026-06-21.md                                            |
 | p02    | code     | passed  | 2026-06-21 | reviews/p02-review-2026-06-21-v2.md                                         |
 | p03    | code     | passed  | 2026-06-21 | reviews/p03-review-2026-06-21-v2.md                                         |
-| p04    | code     | pending | -          | -                                                                           |
+| p04    | code     | passed  | 2026-06-21 | reviews/p04-review-2026-06-21.md                                            |
 | p05    | code     | pending | -          | -                                                                           |
 | p06    | code     | pending | -          | -                                                                           |
 | final  | code     | pending | -          | -                                                                           |

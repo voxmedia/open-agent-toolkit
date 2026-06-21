@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-21
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 — Config schema (gate+target)    | complete | 1     | 1/1       |
 | Phase 2 — Resolver                       | complete | 1     | 1/1       |
 | Phase 3 — Eligibility validation         | complete | 1     | 1/1       |
-| Phase 4 — CLI read/write surfaces        | pending  | 2     | 0/2       |
+| Phase 4 — CLI read/write surfaces        | complete | 2     | 2/2       |
 | Phase 5 — cross-provider-exec dispatcher | pending  | 1     | 0/1       |
 | Phase 6 — Skill marker + Gate step       | pending  | 1     | 0/1       |
 | Phase 7 — Release bookkeeping            | pending  | 1     | 0/1       |
 
-**Total:** 3/8 tasks completed
+**Total:** 5/8 tasks completed
 
 **Parallel group:** `[['p02','p03']]` — resolver + eligibility validation run concurrently after Phase 1.
 
@@ -253,15 +253,108 @@ oat_generated: false
 
 ## Phase 4: CLI read/write surfaces
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-21
+**Completed:** 2026-06-21
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added and registered the `oat gate` command group.
+- Added `oat gate resolve <skill>` to emit resolved gate config JSON or `null` for absent, disabled, or unknown skills.
+- Added gate skill write surfaces for set, unset, and disable tombstones across user/shared/local layers.
+- Added exec-target write surfaces for set, unset, and disable tombstones, with JSON argv parsing so provider flags such as `-p`, `-m`, `--model`, and `--effort` round-trip intact.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/gate/index.ts` - gate command group, read/write handlers, validation, and layer routing.
+- `packages/cli/src/commands/gate/index.test.ts` - command behavior coverage.
+- `packages/cli/src/commands/index.ts` - registered `createGateCommand()`.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+- Smoke run: `pnpm run cli -- gate resolve oat-project-plan --json`
+- Result: passed (`null`, exit 0).
+
+**Notes / Decisions:**
+
+- No plan/design divergence.
 
 ### Task p04-t01: `oat gate resolve <skill>`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `57cd369c` (`feat(p04-t01): add oat gate resolve command`)
+
+**Outcome (required when completed):**
+
+- `oat gate resolve <skill>` resolves configured gates through the resolver and exits 0 for configured, absent, disabled, and unknown skill cases.
+- The command group is registered with the root CLI command registry.
+
+**Files changed:**
+
+- `packages/cli/src/commands/gate/index.ts`
+- `packages/cli/src/commands/gate/index.test.ts`
+- `packages/cli/src/commands/index.ts`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+- Smoke run: `pnpm run cli -- gate resolve oat-project-plan --json`
+- Result: passed (`null`, exit 0).
+
+**Issues Encountered:**
+
+- None.
 
 ### Task p04-t02: `oat gate set/unset <skill>` + `oat gate target set/unset <id>`
+
+**Status:** completed
+**Commit:** `ca82b010` (`feat(p04-t02): add gate + exec-target write surfaces`)
+
+**Outcome (required when completed):**
+
+- `oat gate set/unset <skill>` writes per-skill gate configs, disable tombstones, or removes keys at the selected concrete layer.
+- `oat gate target set/unset <id>` writes exec-target configs, disable tombstones, or removes keys at the selected concrete layer.
+- JSON argv flags preserve provider-specific dash-prefixed arguments and invalid inputs fail with actionable errors.
+
+**Files changed:**
+
+- `packages/cli/src/commands/gate/index.ts`
+- `packages/cli/src/commands/gate/index.test.ts`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+## Phase 5: cross-provider-exec dispatcher
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: `oat gate cross-provider-exec <prompt...>`
 
 **Status:** pending
 **Commit:** -
@@ -356,6 +449,40 @@ Run-scoped snapshot only. The durable record is `## Deviations from Plan / Desig
 | ------------- | ---------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------ | --------- |
 | p02 review    | `plan.md` p02 declared files | Resolver phase limited to `packages/cli/src/config/resolve.ts` and `resolve.test.ts` | Accepted fix also touched `packages/cli/src/config/oat-config.ts` and `oat-config.test.ts` | Real config loading dropped partial built-in target overrides before the resolver could merge them | Implementation + p02 re-review | None      |
 
+### Run 3 — 2026-06-20 21:54
+
+**Branch:** `workflow-end-triggers`
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p04: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p04 implementation used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-phase-implementer-xhigh`.
+- Dispatch: p04 review used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. The durable record is `## Deviations from Plan / Design`; consolidate any non-`None` entries there at the next phase boundary.
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -416,6 +543,31 @@ Chronological log of implementation progress.
 
 - None.
 
+### 2026-06-20 — p04 CLI read/write surfaces
+
+**Session:** 21:54
+
+- [x] p04-t01: `oat gate resolve <skill>` - `57cd369c`
+- [x] p04-t02: `oat gate set/unset <skill>` + `oat gate target set/unset <id>` - `ca82b010`
+
+**What changed (high level):**
+
+- Added the `oat gate` command group and registered it with the CLI.
+- Added gate resolution, skill gate writes, and exec-target writes across user/shared/local layers.
+- Covered JSON argv handling so provider command flags round-trip without Commander parsing them as OAT flags.
+
+**Decisions:**
+
+- Kept write layer selection to concrete `shared|local|user`; `auto` remains rejected because there is no write helper for it.
+
+**Follow-ups / TODO:**
+
+- Continue with Phase 5 dispatcher (`p05-t01`); no HiLL checkpoint until Phase 7.
+
+**Blockers:**
+
+- None.
+
 ---
 
 ## Deviations from Plan / Design
@@ -435,6 +587,7 @@ Track test execution during implementation.
 | 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`                                                                                                                                                                  | yes    | 0      | n/a      |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts src/config/oat-config.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; post-merge `pnpm test`; `pnpm lint`; `pnpm type-check`                                                                               | yes    | 0      | n/a      |
 | 3     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/internal/validate-oat-skills.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- internal validate-oat-skills --json`; post-merge `pnpm test`; `pnpm lint`; `pnpm type-check` | yes    | 0      | n/a      |
+| 4     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate resolve oat-project-plan --json`                                                                                                        | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
