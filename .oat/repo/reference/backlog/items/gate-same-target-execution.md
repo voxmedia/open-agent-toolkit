@@ -8,14 +8,14 @@ scope_estimate: L # XS | S | M | L | XL | XXL
 labels: [gates, workflow-end-triggers, cross-provider, v2]
 assignee: null
 created: '2026-06-20T17:40:00Z'
-updated: '2026-06-20T23:53:16Z'
+updated: '2026-06-21T00:00:00Z'
 associated_issues: [{ type: project, ref: 'workflow-end-triggers' }]
 oat_template: false
 ---
 
 ## Description
 
-Follow-up to the **workflow-end-triggers** project (per-skill gates + cross-runtime
+Follow-up to the shipped **workflow-end-triggers** V1 project (per-skill gates + cross-runtime
 review execution). V1 ships cross-**runtime** independence only — `avoid: same-runtime`,
 where the gate's `oat gate cross-provider-exec` picks a different _runtime_ (Codex ↔
 Claude) and detection is **runtime-level only**. This item captures the deferred
