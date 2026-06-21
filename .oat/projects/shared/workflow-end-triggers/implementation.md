@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-21
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,11 +30,11 @@ oat_generated: false
 | Phase 2 — Resolver                       | complete | 1     | 1/1       |
 | Phase 3 — Eligibility validation         | complete | 1     | 1/1       |
 | Phase 4 — CLI read/write surfaces        | complete | 2     | 2/2       |
-| Phase 5 — cross-provider-exec dispatcher | pending  | 1     | 0/1       |
+| Phase 5 — cross-provider-exec dispatcher | complete | 1     | 1/1       |
 | Phase 6 — Skill marker + Gate step       | pending  | 1     | 0/1       |
 | Phase 7 — Release bookkeeping            | pending  | 1     | 0/1       |
 
-**Total:** 5/8 tasks completed
+**Total:** 6/8 tasks completed
 
 **Parallel group:** `[['p02','p03']]` — resolver + eligibility validation run concurrently after Phase 1.
 
@@ -351,10 +351,78 @@ oat_generated: false
 
 ## Phase 5: cross-provider-exec dispatcher
 
+**Status:** complete
+**Started:** 2026-06-21
+**Completed:** 2026-06-21
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added `oat gate cross-provider-exec <prompt...>` with `--target`, `--avoid`, and `--current-runtime` options.
+- Added runtime detection through built-in `hostDetectionCommand` probes with short-circuit behavior and no ambient `OAT_CURRENT_RUNTIME` fallback.
+- Added deterministic target selection by descending priority and lexicographic target id, with availability checks before dispatch.
+- Added exact target routing that skips detection/avoidance and child process execution that passes through stdout/stderr and exits with the child status.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/gate/index.ts` - dispatcher command, runtime detection, selection, availability, and child execution.
+- `packages/cli/src/commands/gate/index.test.ts` - dispatcher behavior coverage.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+- Review smoke: `pnpm run cli -- gate cross-provider-exec --help`
+- Result: passed.
+
+**Notes / Decisions:**
+
+- No plan/design divergence.
+
+### Task p05-t01: `oat gate cross-provider-exec <prompt...>`
+
+**Status:** completed
+**Commit:** `2f92b6f6` (`feat(p05-t01): add oat gate cross-provider-exec dispatcher`)
+
+**Outcome (required when completed):**
+
+- `cross-provider-exec` selects and dispatches an eligible exec target using default same-runtime avoidance, explicit target override, availability checks, and deterministic tie-breaking.
+- Unknown runtime keeps all targets eligible under default avoidance.
+- Ambient `OAT_CURRENT_RUNTIME` and `OAT_GATE_EXEC_TARGET` variables are intentionally ignored in V1.
+
+**Files changed:**
+
+- `packages/cli/src/commands/gate/index.ts`
+- `packages/cli/src/commands/gate/index.test.ts`
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+- Review smoke: `pnpm run cli -- gate cross-provider-exec --help`
+- Result: passed.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+## Phase 6: Skill marker + Gate Execution step
+
 **Status:** pending
 **Started:** -
 
-### Task p05-t01: `oat gate cross-provider-exec <prompt...>`
+### Task p06-t01: `oat_gateable` marker + Gate Execution step on lifecycle skills
 
 **Status:** pending
 **Commit:** -
@@ -483,6 +551,40 @@ Run-scoped snapshot only. The durable record is `## Deviations from Plan / Desig
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 4 — 2026-06-20 22:10
+
+**Branch:** `workflow-end-triggers`
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p05   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p05: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p05 implementation used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-phase-implementer-xhigh`.
+- Dispatch: p05 review used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. The durable record is `## Deviations from Plan / Design`; consolidate any non-`None` entries there at the next phase boundary.
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -568,6 +670,29 @@ Chronological log of implementation progress.
 
 - None.
 
+### 2026-06-20 — p05 cross-provider-exec dispatcher
+
+**Session:** 22:10
+
+- [x] p05-t01: `oat gate cross-provider-exec <prompt...>` - `2f92b6f6`
+
+**What changed (high level):**
+
+- Added the cross-runtime gate dispatcher with built-in runtime detection, default same-runtime avoidance, explicit target routing, deterministic target selection, availability probing, and child status passthrough.
+- Added tests for Codex/Claude/Cursor detector acceptance, env vars intentionally ignored by V1, target override behavior, no-eligible failure, tie-breaking, and child status propagation.
+
+**Decisions:**
+
+- Kept `--avoid` and `--target` as command flags rather than durable gate config fields, matching the V1 plan.
+
+**Follow-ups / TODO:**
+
+- Continue with Phase 6 skill marker and Gate Execution step (`p06-t01`); no HiLL checkpoint until Phase 7.
+
+**Blockers:**
+
+- None.
+
 ---
 
 ## Deviations from Plan / Design
@@ -588,6 +713,7 @@ Track test execution during implementation.
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts src/config/oat-config.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; post-merge `pnpm test`; `pnpm lint`; `pnpm type-check`                                                                               | yes    | 0      | n/a      |
 | 3     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/internal/validate-oat-skills.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- internal validate-oat-skills --json`; post-merge `pnpm test`; `pnpm lint`; `pnpm type-check` | yes    | 0      | n/a      |
 | 4     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate resolve oat-project-plan --json`                                                                                                        | yes    | 0      | n/a      |
+| 5     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate cross-provider-exec --help`                                                                                                             | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

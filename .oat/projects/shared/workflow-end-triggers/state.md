@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: ca82b010
+oat_current_task: p06-t01
+oat_last_commit: 2f92b6f6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-20T16:13:42.618Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-21T02:54:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-21T03:10:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. Current task: `p05-t01`.
+Implementation in progress. Current task: `p06-t01`.
 
 ## Artifacts
 
@@ -47,7 +47,7 @@ Implementation in progress. Current task: `p05-t01`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; reviewed by Codex + Cursor)
 - **Plan:** `plan.md` (complete — 7 phases, 8 tasks; `oat_ready_for: oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress; 5/8 tasks)
+- **Implementation:** `implementation.md` (in progress; 6/8 tasks)
 
 ## Progress
 
@@ -58,7 +58,8 @@ Implementation in progress. Current task: `p05-t01`.
 - ✓ Phase 2 complete (`p02-t01`)
 - ✓ Phase 3 complete (`p03-t01`)
 - ✓ Phase 4 complete (`p04-t01`, `p04-t02`)
-- ⧗ Implementation in progress (`p05-t01`)
+- ✓ Phase 5 complete (`p05-t01`)
+- ⧗ Implementation in progress (`p06-t01`)
 
 ## Blockers
 
@@ -66,4 +67,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 5 cross-provider-exec dispatcher (`p05-t01`). HiLL checkpoints now pause only after the final phase (`p07`).
+Complete Phase 6 skill marker and Gate Execution step (`p06-t01`). HiLL checkpoints now pause only after the final phase (`p07`).
