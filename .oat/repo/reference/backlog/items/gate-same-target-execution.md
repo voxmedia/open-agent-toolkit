@@ -40,15 +40,24 @@ target-detection machinery lands once it's worth the complexity.
 
 - **V1 ships:** the `execTargets` registry + `gates.skills`; built-in runtime detectors **pinned**
   (`claude` → `$CLAUDECODE`, `codex` → `$CODEX_THREAD_ID`‖`$CODEX_SESSION_ID`, `cursor` → `$CURSOR_AGENT`); the
-  `oat gate cross-provider-exec [--avoid <same-runtime|none>] <prompt...>` dispatcher — **avoidance
-  is a command-line flag, not config**; and `oat gate target set --base-command-json '<json argv>'`
-  (JSON argv input, because Commander variadic options reject provider flags like `-p`/`--model`).
+  `oat gate cross-provider-exec [--target <id>] [--avoid <same-runtime|none>] <prompt...>` dispatcher —
+  **avoidance is a command-line flag, not config**, with two modes: **explicit-target** (`--target` /
+  `OAT_GATE_EXEC_TARGET`, user-directed, skips detection) and **avoidance** (built-in detection →
+  avoid same-runtime → priority with **lexicographic-id tie-break**); and
+  `oat gate target set --base-command-json '<json argv>'` (JSON argv input, because Commander variadic
+  options reject provider flags like `-p`/`--model`). V1 `cursor-default` pins no `--model` (uses the
+  user's default Cursor model — runtime-level independence only).
 - **V2 (this item) reintroduces config-driven `execPolicy`** on `gates.skills.<skill>` — so
   avoidance/target selection can live per-skill in config rather than only inline in the command —
-  plus `avoid: same-target`, `targetPriority`, `onUnknownTarget`, and target-level detection. The V2
-  exec-target examples below should be **written via `--base-command-json`** (same JSON argv input
-  V1 establishes); any `targetDetectionCommand` follows the same best-effort contract as the V1
-  built-in host detectors.
+  plus `avoid: same-target`, `targetPriority`, `onUnknownTarget`, **pinned per-target `--model`/effort
+  (same-target/model-level independence)**, and target-level detection. The V2 exec-target examples
+  below should be **written via `--base-command-json`** (same JSON argv input V1 establishes); any
+  `targetDetectionCommand` follows the same best-effort contract as the V1 built-in host detectors.
+- **Deferred enhancement (also V2-ish):** **authoritative current-runtime auto-stamping** by a
+  launcher/orchestrator (so even non-built-in hosts get reliable `same-runtime` avoidance without the
+  user setting `OAT_GATE_EXEC_TARGET`). V1 deliberately does NOT auto-stamp `OAT_CURRENT_RUNTIME`
+  (chicken-and-egg + ambient-env-var fragility); built-in detection + user-directed
+  `OAT_GATE_EXEC_TARGET` are the V1 paths.
 
 ### Design already settled (Codex session 2026-06-20)
 

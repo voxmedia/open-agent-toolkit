@@ -138,7 +138,9 @@ export interface ExecTarget {
   - `codex-default` — `runtime: codex`, `baseCommand: ["codex","exec"]`, `hostDetectionCommand: ["sh","-c","[ -n \"$CODEX_THREAD_ID\" ] || [ -n \"$CODEX_SESSION_ID\" ]"]` (the current Codex host exposes `$CODEX_THREAD_ID`, not `$CODEX_SESSION_ID`; the OR keeps both signals; precise var names avoid false-matching a Claude host's `$CODEX_COMPANION_SESSION_ID`), `availabilityCommand: ["codex","--version"]`, `priority: 100`
   - `claude-default` — `runtime: claude`, `baseCommand: ["claude","-p"]`, `hostDetectionCommand: ["sh","-c","test -n \"$CLAUDECODE\""]`, `availabilityCommand: ["claude","--version"]`, `priority: 100`
   - `cursor-default` — `runtime: cursor`, `baseCommand: ["cursor-agent","-p","--force"]`, `hostDetectionCommand: ["sh","-c","test -n \"$CURSOR_AGENT\""]`, `availabilityCommand: ["cursor-agent","--version"]`, `priority: 70`
-  - These detectors are **best-effort**; `OAT_CURRENT_RUNTIME` is the authoritative override (Component 4 / Component 6).
+  - **`cursor-default` pins no `--model`** — as a _dispatch_ target it uses the user's default Cursor model (from `~/.cursor/cli-config.json`). V1 independence is **runtime-level only**; pinned-model dispatch is `bl-e6fc`.
+  - **Cursor binary alias:** `cursor-agent` may also be exposed as `agent` on some installs (same build). The built-in pins `cursor-agent`; if a PATH exposes only `agent`, the availability probe fails until the user overrides via `oat gate target set`. (A future optional fallback `["sh","-c","command -v cursor-agent || command -v agent"]` is noted, not in V1.)
+  - These detectors are **best-effort, primary in V1**; `OAT_CURRENT_RUNTIME` is an optional override and `OAT_GATE_EXEC_TARGET` (explicit target) bypasses detection entirely (Component 4 / Component 6). OAT does **not** rely on a harness auto-setting these vars.
 
 ### Component 2 — Gate resolver (`config/resolve.ts`)
 
@@ -165,12 +167,15 @@ export function resolveExecTargets(
 
 **Behavior:**
 
-- **Signature:** `oat gate cross-provider-exec [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>`. The prompt is the trailing args (joined with spaces) — reduces quote sensitivity; quoted strings also work. (`--prompt`/stdin can come later; no prompt-files for v1.)
-- **`--avoid`** (default `same-runtime`) carries the avoidance policy — it lives on the command, not in config (V1). The skill's `command` string is where per-skill policy is expressed (`oat gate cross-provider-exec --avoid none "…"`).
+- **Signature:** `oat gate cross-provider-exec [--target <id>] [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>`. The prompt is the trailing args (joined with spaces) — reduces quote sensitivity; quoted strings also work. (`--prompt`/stdin can come later; no prompt-files for v1.)
 - Resolves the merged `execTargets` registry (Component 2).
-- **Current runtime:** `--current-runtime` flag → `OAT_CURRENT_RUNTIME` env → run each target's `hostDetectionCommand` in descending priority order, **short-circuit on first exit 0** → else `unknown`. (Declaration-first; detection is the fallback.)
-- **`--avoid same-runtime`** (default): drop every target whose `runtime` equals the current runtime. `--avoid none`: keep all (no independence requirement).
-- **Select:** in descending priority, run `availabilityCommand` (absent ⇒ available); first that passes wins.
+- **Two modes:**
+  - **Explicit-target mode (preferred when the user cares):** if `--target <id>` is given (or `OAT_GATE_EXEC_TARGET` env is set), run **that exact target** — **skip detection and avoidance entirely**. This is the reliable, user-directed path: the agent exports `OAT_GATE_EXEC_TARGET` because the user instructed it at skill-invocation time, so there is no dependence on ambient harness env vars. Unknown target id → exit nonzero (actionable). In explicit mode independence is the user's deliberate choice; OAT does not second-guess it.
+  - **Avoidance mode (zero-config default):** no explicit target → determine the current runtime, then avoid it.
+    - **`--avoid`** (default `same-runtime`) carries the policy — it lives on the command, not in config (V1): `oat gate cross-provider-exec --avoid none "…"`.
+    - **Current runtime:** `--current-runtime` flag → `OAT_CURRENT_RUNTIME` env → built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0** → else `unknown`. **Built-in detection is the primary V1 path** (`OAT_CURRENT_RUNTIME` is an optional override, NOT something OAT relies on a harness to set — see Component 6).
+    - **`--avoid same-runtime`** (default): drop every target whose `runtime` equals the current runtime. `--avoid none`: keep all.
+- **Select** (avoidance mode): order candidates by **descending `priority`, breaking ties by lexicographic `target id`** (deterministic — users override with explicit `priority`); run each candidate's `availabilityCommand` (absent ⇒ available) in that order; first that passes wins. _(The tie-break matters: built-in `codex-default` and `claude-default` are both priority 100, so from a Cursor host both survive `same-runtime` avoidance — lexicographic order makes `claude-default` the deterministic winner rather than leaving it to registry iteration order.)_
 - **Execute** `baseCommand + [prompt...]`; pass through stdout/stderr; **exit with the child's status**.
 - **No eligible target** (all filtered or unavailable) → exit nonzero with an actionable message; do **not** silently fall back to the current runtime unless `--avoid none`. Independence is the point.
 - **No fallback after dispatch:** once a target runs, its nonzero exit is the result.
@@ -185,7 +190,7 @@ export function resolveExecTargets(
 
 - **Frontmatter:** `oat_gateable: true` on gateable skills (`oat-project-implement`, `oat-project-plan` first).
 - **Authored "Gate Execution" step** (shared identical prose): run `oat gate resolve <this-skill>`; `null` → done; else run `command`, capture stdout/stderr + exit code; exit 0 → done; nonzero → branch on `onFailure` (block loop ≤ `maxAttempts` then escalate / prompt / warn), using `description` to orient next steps.
-- **Current-runtime declaration:** the launcher that dispatches gated work (e.g. `oat-project-implement`, which already selects the tier) exports **`OAT_CURRENT_RUNTIME`** so `cross-provider-exec` knows the host without guessing; `hostDetectionCommand` built-ins are the fallback when it's absent (e.g. human-launched session).
+- **Runtime selection (V1 — built-ins primary, declaration optional and user-directed):** the Gate Execution step runs the configured `command` as-is. `cross-provider-exec` resolves the host from **built-in `hostDetectionCommand`s by default** (the zero-config path). OAT does **not** auto-stamp `OAT_CURRENT_RUNTIME` from the launcher in V1 — that is chicken-and-egg (the skill would have to detect its own runtime the same way the dispatcher already does) and ambient harness env vars proved unreliable across providers/versions. Instead, when the user wants a specific, guaranteed reviewer, they **instruct the agent to export `OAT_GATE_EXEC_TARGET=<target-id>`** at skill-invocation time; `cross-provider-exec` then runs that exact target and skips detection/avoidance. `OAT_CURRENT_RUNTIME` remains an optional override that an _external_ orchestrator may set, but nothing in V1 depends on it.
 
 ### Component 7 — Eligibility validation (`validation/skills.ts` / `validateOatSkills`)
 
@@ -208,7 +213,7 @@ export function resolveExecTargets(
 - **Schema normalization** (`oat-config.test.ts`): `GateConfig` (drop invalid command/onFailure, coerce maxAttempts, preserve `null`; no `execPolicy` field in V1); `ExecTarget` (require runtime + non-empty argv `baseCommand`, validate optional argv fields, preserve `null`); built-in exec targets present with the pinned detectors.
 - **`resolveGate`** (`resolve.test.ts`): local>shared>user wholesale win; `null` disables/short-circuits; fall-through; **no within-gate merge** (raw layers, not flattened `resolved`).
 - **`resolveExecTargets`** (`resolve.test.ts`): built-ins present by default; keyed **partial** merge (override one field); `null` disables a built-in; new id adds a target; layer precedence.
-- **`cross-provider-exec` selection** (command test, child process mocked): current runtime via `--current-runtime` / `OAT_CURRENT_RUNTIME` / detection short-circuit; `--avoid same-runtime` exclusion; built-in detectors resolve the host (`$CLAUDECODE` / `$CODEX_THREAD_ID`‖`$CODEX_SESSION_ID` / `$CURSOR_AGENT`); priority + availability ordering; no-eligible-target → nonzero; exit-code passthrough; `--avoid none` keeps same-runtime targets.
+- **`cross-provider-exec` selection** (command test, child process mocked): **explicit-target mode** — `--target <id>` / `OAT_GATE_EXEC_TARGET` runs that exact target and skips detection/avoidance; unknown id → nonzero. **Avoidance mode** — current runtime via `--current-runtime` / `OAT_CURRENT_RUNTIME` / built-in detection short-circuit; built-in detectors resolve the host (`$CLAUDECODE` / `$CODEX_THREAD_ID`‖`$CODEX_SESSION_ID` / `$CURSOR_AGENT`; a Claude host's `$CODEX_COMPANION_SESSION_ID` must NOT resolve to codex); `--avoid same-runtime` exclusion; **deterministic priority + lexicographic-id tie-break** (from a `cursor` host with codex+claude both at 100, selection is stable = `claude-default`); availability ordering; no-eligible-target → nonzero; exit-code passthrough; `--avoid none` keeps same-runtime targets.
 - **`oat gate resolve` / `set` / `unset` / `target set/unset`** round-trips, `--disable` → `null`, layer targeting, sibling isolation, invalid-input rejection.
 
 ### Integration Tests
@@ -225,7 +230,7 @@ The Gate Execution loop (`block`/`prompt`/`warn`, escalation) is **agent prose, 
 Resolved / dispositioned:
 
 - **Same-target execution + target-level detection** — **deferred to backlog `bl-e6fc`** (the full settled design, incl. `execPolicy.avoid: same-target`, `onUnknownTarget`, and the best-effort Cursor `--list-models` probe, is captured there). V1 is runtime-level only.
-- **Current-runtime detection** — declaration-first (`OAT_CURRENT_RUNTIME`, stamped by the launcher), with `hostDetectionCommand` built-ins as best-effort fallback; `unknown` host means `same-runtime` simply excludes nothing (all targets eligible).
+- **Runtime selection** — **built-in `hostDetectionCommand`s are the primary V1 path**; `unknown` host means `same-runtime` excludes nothing (all targets eligible). OAT does **not** rely on ambient harness env vars (they proved unreliable: `CODEX_SESSION_ID`→`CODEX_THREAD_ID`, false-positive `CODEX_COMPANION_SESSION_ID`, no `CURSOR_MODEL`). The **reliable user-directed override is `OAT_GATE_EXEC_TARGET=<target-id>`** — the agent exports it when the user asks for a specific reviewer at skill-invocation time, and the dispatcher runs that target directly (no detection/avoidance). `OAT_CURRENT_RUNTIME` remains an optional override for external orchestrators. **Deferred enhancement:** authoritative auto-stamping of the current runtime by a launcher (so even non-built-in hosts get reliable avoidance) — noted on `bl-e6fc`, not V1.
 - **Loop state / observability** — accumulated `block` feedback held in-conversation, appended to `implementation.md` on escalation. No new store.
 - **CLI-boundary enforcement** — out of scope for v1; agent-enforced Gate Execution step is the enforcement boundary.
 

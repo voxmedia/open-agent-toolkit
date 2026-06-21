@@ -33,27 +33,28 @@ oat_generated: false
 
 # Project State: workflow-end-triggers
 
-**Status:** Discovery
+**Status:** Plan complete — ready for implementation
 **Started:** 2026-06-20
 **Last Updated:** 2026-06-20
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Plan complete (quick mode, lightweight design). Ready for `oat-project-implement`.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** `design.md` (complete; reviewed by Codex + Cursor)
+- **Plan:** `plan.md` (complete — 7 phases, 8 tasks; `oat_ready_for: oat-project-implement`)
+- **Implementation:** `implementation.md` (initialized; 0/8 tasks)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Discovery complete (open questions resolved)
+- ✓ Lightweight design complete (cross-runtime gates V1)
+- ✓ Plan generated and reviewed (design + 3 plan review cycles: Codex ×2, Cursor ×1)
+- ⧗ Implementation not started
 
 ## Blockers
 
@@ -61,4 +62,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Execute the implementation plan via `oat-project-implement` (first task `p01-t01`)

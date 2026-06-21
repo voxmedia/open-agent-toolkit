@@ -61,7 +61,7 @@ Cases for `workflow.gates`:
 
 - `GateConfig`: valid (`command`+`onFailure`) preserved; empty/missing `command` dropped; bad `onFailure` dropped; `maxAttempts` coercion (default 2, int ≥ 1, else default); `null` skill preserved. **No `execPolicy` field in V1** (avoidance is a `cross-provider-exec --avoid` flag, not config).
 - `ExecTarget`: requires non-empty `runtime` + non-empty `baseCommand: string[]`; optional `hostDetectionCommand`/`availabilityCommand` validated as `string[]`; `priority` numeric; invalid dropped; `null` target preserved.
-- Built-in exec targets exposed as a `BUILTIN_EXEC_TARGETS` constant with **pinned detectors**: `codex-default` (`["codex","exec"]`, host `[ -n "$CODEX_THREAD_ID" ] || [ -n "$CODEX_SESSION_ID" ]` — current Codex host exposes `$CODEX_THREAD_ID`; OR covers both; avail `codex --version`, priority 100), `claude-default` (`["claude","-p"]`, host `test -n "$CLAUDECODE"`, avail `claude --version`, priority 100), `cursor-default` (`["cursor-agent","-p","--force"]`, host `test -n "$CURSOR_AGENT"`, avail `cursor-agent --version`, priority 70). A test asserts each built-in's runtime + detector shape.
+- Built-in exec targets exposed as a `BUILTIN_EXEC_TARGETS` constant with **pinned detectors**: `codex-default` (`["codex","exec"]`, host `[ -n "$CODEX_THREAD_ID" ] || [ -n "$CODEX_SESSION_ID" ]` — current Codex host exposes `$CODEX_THREAD_ID`; OR covers both; avail `codex --version`, priority 100), `claude-default` (`["claude","-p"]`, host `test -n "$CLAUDECODE"`, avail `claude --version`, priority 100), `cursor-default` (`["cursor-agent","-p","--force"]`, host `test -n "$CURSOR_AGENT"`, avail `cursor-agent --version`, priority 70). A test asserts each built-in's runtime + detector shape. **Notes:** (a) `cursor-default` pins **no `--model`** — as a dispatch target it uses the user's default Cursor model; V1 independence is runtime-level only (pinned-model dispatch is `bl-e6fc`); (b) the Cursor CLI may also be exposed as `agent` (same build) — the built-in pins `cursor-agent`, and a PATH exposing only `agent` requires a `gate target set` override (optional `command -v cursor-agent || command -v agent` fallback is a future enhancement, not V1).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
 Expected: RED
@@ -231,9 +231,10 @@ git commit -m "feat(p04-t02): add gate + exec-target write surfaces"
 
 **Step 1: Write test (RED)** (child process mocked/injected)
 
-- Current runtime resolution: `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`. **Built-in detector acceptance:** with `CLAUDECODE=1` in the env the resolved runtime is `claude`; with `CODEX_THREAD_ID` set → `codex` (and `CODEX_SESSION_ID` also → `codex`); with `CURSOR_AGENT=1` → `cursor`. A Claude host carrying `CODEX_COMPANION_SESSION_ID` must NOT resolve to `codex`.
+- **Explicit-target mode:** `--target <id>` (or `OAT_GATE_EXEC_TARGET` env) runs **that exact target** and **skips detection + avoidance**; unknown id → nonzero actionable error. (Test: `--target claude-default` from any host runs `claude-default`.)
+- Current runtime resolution (avoidance mode): `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`. **Built-in detector acceptance:** `CLAUDECODE=1` → `claude`; `CODEX_THREAD_ID` set → `codex` (and `CODEX_SESSION_ID` also → `codex`); `CURSOR_AGENT=1` → `cursor`. A Claude host carrying `CODEX_COMPANION_SESSION_ID` must NOT resolve to `codex`.
 - `--avoid same-runtime` (default) excludes targets whose `runtime` == current; `--avoid none` keeps them (test: from a `claude` host, `--avoid none` can select `claude-default`).
-- Selection: highest-priority target whose `availabilityCommand` passes (absent ⇒ available).
+- **Selection + tie-break:** order by descending `priority`, **break ties by lexicographic target id**, then availability. **Determinism test:** from a `cursor` host (`CURSOR_AGENT=1`) with codex+claude both available at priority 100, selection is **stable across runs = `claude-default`** (lexicographic), not registry-iteration-dependent.
 - No eligible target → nonzero + actionable message; **no** same-runtime fallback unless `--avoid none`.
 - Executes `baseCommand + [prompt...]` and **exits with the child's status**; passes through stdout/stderr.
 - `unknown` current runtime → `--avoid same-runtime` excludes nothing (all eligible).
@@ -242,11 +243,11 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/in
 
 **Step 2: Implement (GREEN)**
 
-Implement `oat gate cross-provider-exec [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>` per Component 4: parse `--avoid` (default `same-runtime`); resolve merged `execTargets`; resolve current runtime (`--current-runtime` → `OAT_CURRENT_RUNTIME` → built-in `hostDetectionCommand` short-circuit → unknown); filter by `--avoid`; pick by priority + availability; spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. Prompt = trailing args joined with spaces. (Avoidance lives on this flag, not in `GateConfig` — V1.)
+Implement `oat gate cross-provider-exec [--target <id>] [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>` per Component 4. **Explicit-target mode first:** if `--target`/`OAT_GATE_EXEC_TARGET` is set, run that exact target (skip detection/avoidance; unknown id → nonzero). **Else avoidance mode:** parse `--avoid` (default `same-runtime`); resolve merged `execTargets`; resolve current runtime (`--current-runtime` → `OAT_CURRENT_RUNTIME` → built-in `hostDetectionCommand` short-circuit → unknown); filter by `--avoid`; order by descending `priority` then **lexicographic target id**; pick first whose `availabilityCommand` passes. Spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. (Avoidance lives on the `--avoid` flag, not in `GateConfig` — V1.)
 
 Run: same — GREEN
 
-**Step 3: Refactor** — isolate selection logic into a pure, unit-testable function (registry + currentRuntime + avoid → chosen target | null).
+**Step 3: Refactor** — isolate selection logic into a pure, unit-testable function (registry + currentRuntime + avoid → chosen target | null), with the tie-break applied there so it is directly tested.
 
 **Step 4: Verify** — lint + type-check (filtered).
 
@@ -279,7 +280,7 @@ Add `oat_gateable: true` + bump each skill's `version:` (PR-scoped). Append a sh
    - `prompt` → surface, ask human.
    - `warn` → record, continue.
    - Use `description` to orient next steps.
-4. Note: `cross-provider-exec` learns the current host from `OAT_CURRENT_RUNTIME` when the launcher exports it, else from built-in `hostDetectionCommand`s — the step does not need to detect the host itself.
+4. Runtime selection note (V1): the step does **not** auto-stamp `OAT_CURRENT_RUNTIME`. By default `cross-provider-exec` resolves the host from **built-in `hostDetectionCommand`s** (zero-config). When the user wants a specific guaranteed reviewer, they instruct the agent to **export `OAT_GATE_EXEC_TARGET=<target-id>`** (or pass `--target <id>` in the gate `command`) at invocation time — the dispatcher then runs that exact target and skips detection. The Gate Execution prose should mention this explicit-target option so users know how to pin a reviewer.
 
 _Anti-drift: the two skills' Gate Execution blocks must be kept **verbatim-identical**. A shared-include / snippet mechanism is out of scope for V1 (two hand-authored copies); revisit if more skills adopt the marker._
 
@@ -328,18 +329,18 @@ git commit -m "chore(p07-t01): lockstep public-package version bump + release va
 
 {Keep both code + artifact rows below. Do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                     |
-| p02    | code     | pending  | -          | -                                                     |
-| p03    | code     | pending  | -          | -                                                     |
-| p04    | code     | pending  | -          | -                                                     |
-| p05    | code     | pending  | -          | -                                                     |
-| p06    | code     | pending  | -          | -                                                     |
-| final  | code     | pending  | -          | -                                                     |
-| plan   | artifact | received | 2026-06-20 | reviews/artifact-plan-review-2026-06-20-v3.md         |
-| spec   | artifact | n/a      | -          | - (quick mode — no spec.md)                           |
-| design | artifact | passed   | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                                              |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                                                     |
+| p02    | code     | pending | -          | -                                                                                     |
+| p03    | code     | pending | -          | -                                                                                     |
+| p04    | code     | pending | -          | -                                                                                     |
+| p05    | code     | pending | -          | -                                                                                     |
+| p06    | code     | pending | -          | -                                                                                     |
+| final  | code     | pending | -          | -                                                                                     |
+| plan   | artifact | passed  | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20-v3.md (Cursor; all findings applied) |
+| spec   | artifact | n/a     | -          | - (quick mode — no spec.md)                                                           |
+| design | artifact | passed  | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md                                 |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
