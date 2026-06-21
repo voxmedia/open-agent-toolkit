@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: e0a17d2f
+oat_last_commit: d9397a17
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -22,18 +22,18 @@ oat_dispatch_ceiling:
   source: project-state
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-20T16:13:42.618Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-21T04:15:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-21T04:30:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: workflow-end-triggers
 
-**Status:** Implementation complete
+**Status:** Implementation complete; documentation updated
 **Started:** 2026-06-20
 **Last Updated:** 2026-06-20
 
@@ -63,6 +63,7 @@ Implementation complete. Final code review passed.
 - ✓ Phase 7 complete (`p07-t01`)
 - ✓ Final phase HiLL checkpoint approved
 - ✓ Final code review passed
+- ✓ Documentation updated
 
 ## Blockers
 
@@ -70,4 +71,4 @@ None
 
 ## Next Milestone
 
-Create the project summary and final PR when ready.
+Create the project summary and final PR.
