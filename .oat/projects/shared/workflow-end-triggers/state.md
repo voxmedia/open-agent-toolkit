@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['p07'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p07'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-20T16:13:42.618Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-21T03:32:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-21T04:06:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation tasks complete. Final phase HiLL checkpoint reached; final code review remains pending.
+Implementation tasks complete. Final phase HiLL checkpoint approved; final code review remains pending.
 
 ## Artifacts
 
@@ -61,7 +61,7 @@ Implementation tasks complete. Final phase HiLL checkpoint reached; final code r
 - ✓ Phase 5 complete (`p05-t01`)
 - ✓ Phase 6 complete (`p06-t01`)
 - ✓ Phase 7 complete (`p07-t01`)
-- ⧗ Final phase HiLL checkpoint reached
+- ✓ Final phase HiLL checkpoint approved
 - ⧗ Final code review pending
 
 ## Blockers
@@ -70,4 +70,4 @@ None
 
 ## Next Milestone
 
-Approve continuation past the Phase 7 HiLL checkpoint, then run the final code review.
+Run the final code review and process any findings.
