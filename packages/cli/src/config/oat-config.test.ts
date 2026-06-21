@@ -869,7 +869,7 @@ describe('oat-config', () => {
       ).not.toHaveProperty('execPolicy');
     });
 
-    it('normalizes workflow.gates.execTargets entries and preserves null tombstones', async () => {
+    it('normalizes workflow.gates.execTargets partial entries and preserves null tombstones', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');
       await writeFile(
@@ -890,7 +890,16 @@ describe('oat-config', () => {
                   availabilityCommand: ['codex', '--version'],
                   priority: 80,
                 },
-                'default-priority': {
+                'codex-default': {
+                  priority: 80,
+                },
+                'partial-command': {
+                  baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
+                },
+                'partial-runtime': {
+                  runtime: 'custom',
+                },
+                'complete-without-priority': {
                   runtime: 'custom',
                   baseCommand: ['custom-agent'],
                 },
@@ -902,32 +911,9 @@ describe('oat-config', () => {
                   priority: 10,
                 },
                 disabled: null,
-                missingRuntime: {
-                  baseCommand: ['agent'],
-                  priority: 1,
-                },
-                emptyRuntime: {
+                invalidOnly: {
                   runtime: '   ',
-                  baseCommand: ['agent'],
-                  priority: 1,
-                },
-                missingBaseCommand: {
-                  runtime: 'custom',
-                  priority: 1,
-                },
-                emptyBaseCommand: {
-                  runtime: 'custom',
                   baseCommand: [],
-                  priority: 1,
-                },
-                nonStringBaseCommand: {
-                  runtime: 'custom',
-                  baseCommand: ['agent', 1],
-                  priority: 1,
-                },
-                badPriority: {
-                  runtime: 'custom',
-                  baseCommand: ['agent'],
                   priority: 'high',
                 },
               },
@@ -946,10 +932,18 @@ describe('oat-config', () => {
           availabilityCommand: ['codex', '--version'],
           priority: 80,
         },
-        'default-priority': {
+        'codex-default': {
+          priority: 80,
+        },
+        'partial-command': {
+          baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
+        },
+        'partial-runtime': {
+          runtime: 'custom',
+        },
+        'complete-without-priority': {
           runtime: 'custom',
           baseCommand: ['custom-agent'],
-          priority: 0,
         },
         'invalid-optional-commands': {
           runtime: 'custom',

@@ -264,8 +264,9 @@ function mergeExecTargetLayer(
       continue;
     }
 
-    if (isCompleteExecTarget(override)) {
-      targets[id] = cloneExecTarget(override);
+    const completeTarget = toCompleteExecTarget(override);
+    if (completeTarget) {
+      targets[id] = completeTarget;
     }
   }
 }
@@ -298,18 +299,43 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
   return next;
 }
 
-function isCompleteExecTarget(
-  target: Partial<ExecTarget>,
-): target is ExecTarget {
-  return (
-    typeof target.runtime === 'string' &&
-    target.runtime.trim().length > 0 &&
-    Array.isArray(target.baseCommand) &&
-    target.baseCommand.length > 0 &&
-    target.baseCommand.every((part) => typeof part === 'string') &&
-    typeof target.priority === 'number' &&
-    Number.isFinite(target.priority)
-  );
+function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
+  const runtime =
+    typeof target.runtime === 'string' ? target.runtime.trim() : '';
+  if (!runtime || !isValidArgv(target.baseCommand)) {
+    return null;
+  }
+
+  const completeTarget: ExecTarget = {
+    runtime,
+    baseCommand: [...target.baseCommand],
+    priority:
+      typeof target.priority === 'number' && Number.isFinite(target.priority)
+        ? target.priority
+        : 0,
+  };
+
+  if (isValidArgv(target.hostDetectionCommand)) {
+    completeTarget.hostDetectionCommand = [...target.hostDetectionCommand];
+  }
+  if (isValidArgv(target.availabilityCommand)) {
+    completeTarget.availabilityCommand = [...target.availabilityCommand];
+  }
+
+  return completeTarget;
+}
+
+function isValidArgv(value: unknown): value is string[] {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every((part): part is string => typeof part === 'string')
+  ) {
+    return false;
+  }
+
+  const [executable] = value;
+  return executable !== undefined && executable.trim().length > 0;
 }
 
 function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {

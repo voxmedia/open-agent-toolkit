@@ -76,8 +76,10 @@ export interface ExecTarget {
   priority: number;
 }
 
+export type ExecTargetConfig = Partial<ExecTarget>;
+
 export interface WorkflowGatesConfig {
-  execTargets?: Record<string, ExecTarget | null>;
+  execTargets?: Record<string, ExecTargetConfig | null>;
   skills?: Record<string, GateConfig | null>;
 }
 
@@ -205,7 +207,9 @@ function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
   return gate;
 }
 
-function normalizeExecTarget(value: unknown): ExecTarget | null | undefined {
+function normalizeExecTarget(
+  value: unknown,
+): ExecTargetConfig | null | undefined {
   if (value === null) {
     return null;
   }
@@ -213,28 +217,24 @@ function normalizeExecTarget(value: unknown): ExecTarget | null | undefined {
     return undefined;
   }
 
+  const target: ExecTargetConfig = {};
+
   const runtime = trimNonEmptyString(value.runtime);
+  if (runtime !== undefined) {
+    target.runtime = runtime;
+  }
+
   const baseCommand = normalizeArgv(value.baseCommand);
-  if (runtime === undefined || baseCommand === undefined) {
-    return undefined;
+  if (baseCommand !== undefined) {
+    target.baseCommand = baseCommand;
   }
 
-  let priority = 0;
   if ('priority' in value) {
-    if (
-      typeof value.priority !== 'number' ||
-      !Number.isFinite(value.priority)
-    ) {
-      return undefined;
+    if (typeof value.priority === 'number' && Number.isFinite(value.priority)) {
+      target.priority = value.priority;
     }
-    priority = value.priority;
   }
 
-  const target: ExecTarget = {
-    runtime,
-    baseCommand,
-    priority,
-  };
   const hostDetectionCommand = normalizeArgv(value.hostDetectionCommand);
   if (hostDetectionCommand !== undefined) {
     target.hostDetectionCommand = hostDetectionCommand;
@@ -244,7 +244,7 @@ function normalizeExecTarget(value: unknown): ExecTarget | null | undefined {
     target.availabilityCommand = availabilityCommand;
   }
 
-  return target;
+  return Object.keys(target).length > 0 ? target : undefined;
 }
 
 function normalizeRecordMap<T>(

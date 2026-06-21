@@ -103,6 +103,36 @@ describe('resolveEffectiveConfig', () => {
     });
   });
 
+  it('preserves partial built-in exec target overrides loaded from config files', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await createUserConfigDir();
+
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': { priority: 80 },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const effective = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+    expect(
+      effective.shared.workflow?.gates?.execTargets?.['codex-default'],
+    ).toEqual({ priority: 80 });
+    expect(resolveExecTargets(effective)['codex-default']).toEqual({
+      ...BUILTIN_EXEC_TARGETS['codex-default'],
+      priority: 80,
+    });
+  });
+
   it('applies local over shared precedence and user fallback for uncovered keys', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await createUserConfigDir();
@@ -1044,7 +1074,7 @@ describe('resolveExecTargets', () => {
             },
           },
         },
-      } as unknown as OatConfig,
+      },
       local: {
         version: 1,
         workflow: {
@@ -1056,7 +1086,7 @@ describe('resolveExecTargets', () => {
             },
           },
         },
-      } as unknown as OatLocalConfig,
+      },
       user: {
         version: 1,
         workflow: {
@@ -1067,7 +1097,7 @@ describe('resolveExecTargets', () => {
             },
           },
         },
-      } as unknown as UserConfig,
+      },
     });
 
     expect(resolveExecTargets(effective)['codex-default']).toEqual({
@@ -1128,6 +1158,10 @@ describe('resolveExecTargets', () => {
                 baseCommand: ['team-agent', 'review'],
                 priority: 90,
               },
+              'default-priority-reviewer': {
+                runtime: 'team',
+                baseCommand: ['team-agent'],
+              },
             },
           },
         },
@@ -1138,6 +1172,11 @@ describe('resolveExecTargets', () => {
       runtime: 'team',
       baseCommand: ['team-agent', 'review'],
       priority: 90,
+    });
+    expect(resolveExecTargets(effective)['default-priority-reviewer']).toEqual({
+      runtime: 'team',
+      baseCommand: ['team-agent'],
+      priority: 0,
     });
   });
 });
