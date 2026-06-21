@@ -950,10 +950,11 @@ export async function runInitTools(
       }
     }
 
-    for (const { pack, scope } of stagedRemovals) {
-      await removePackFromScope(pack, scopeRoot(scope), dependencies);
-      affectedScopes.add(scope);
-    }
+    // Removals are deferred until after the add phase below: for a confirmed
+    // move (e.g. user -> project), the replacement install must succeed before
+    // the preserved scope is deleted. If any installer throws, the catch
+    // handler aborts and these removals never run, so the pack is never left
+    // installed in neither scope (review I1; design.md:86/114).
 
     if (selectedPacks.includes('core')) {
       // Core pack always installs at user scope, regardless of userEligibleScope
@@ -1167,6 +1168,13 @@ export async function runInitTools(
           });
         }
       }
+    }
+
+    // Apply confirmed removals only after every add has succeeded, so a failed
+    // replacement install can never leave a pack uninstalled in both scopes.
+    for (const { pack, scope } of stagedRemovals) {
+      await removePackFromScope(pack, scopeRoot(scope), dependencies);
+      affectedScopes.add(scope);
     }
 
     if (outdatedSkills.length > 0) {

@@ -716,6 +716,36 @@ describe('createInitToolsCommand', () => {
     expect(capture.info.join('\n')).toContain('No changes applied.');
   });
 
+  it('batch-confirm gate: a failed replacement add does not remove the preserved scope (review I1)', async () => {
+    const { command, installResearch, removeDirectory, removeFile } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research']],
+        // research currently at user only; selector → project (a move:
+        // + research@project / - research@user); gate → yes.
+        scopeSelection: ['project', 'yes'],
+        toolsByScope: {
+          project: [],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    // The replacement install into the added scope (project) fails.
+    installResearch.mockRejectedValueOnce(new Error('install failed'));
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    // The add was attempted...
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    // ...but because it threw, the preserved user scope must NOT be deleted.
+    // Removals run only after additions succeed, so nothing under the user
+    // root is removed when the replacement add fails.
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
   // NOTE: The former move-semantics tests ("migrates user-eligible packs from
   // project to user scope by removing project canonical content" and
   // "normalizes a both-scopes install to project by removing user canonical
