@@ -135,7 +135,7 @@ No deferrals. No design/code drift accepted (the plan had not yet been implement
 
 ## Phase 2: Review Fixes (final)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-06-20
 
 ### Task p02-t01: (review) Apply scope additions before confirmed removals
