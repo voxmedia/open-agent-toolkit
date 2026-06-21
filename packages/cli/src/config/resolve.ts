@@ -1,7 +1,10 @@
 import {
+  BUILTIN_EXEC_TARGETS,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
+  type ExecTarget,
+  type GateConfig,
   type OatConfig,
   type OatLocalConfig,
   type UserConfig,
@@ -196,6 +199,119 @@ export async function resolveEffectiveConfig(
   };
 }
 
+export function resolveGate(
+  effective: ResolvedConfig,
+  skillName: string,
+): GateConfig | null {
+  for (const skills of [
+    effective.local.workflow?.gates?.skills,
+    effective.shared.workflow?.gates?.skills,
+    effective.user.workflow?.gates?.skills,
+  ]) {
+    if (!skills || !hasOwn(skills, skillName)) {
+      continue;
+    }
+
+    return skills[skillName] ?? null;
+  }
+
+  return null;
+}
+
+export function resolveExecTargets(
+  effective: ResolvedConfig,
+): Record<string, ExecTarget> {
+  const targets = cloneExecTargetRegistry(BUILTIN_EXEC_TARGETS);
+
+  for (const execTargets of [
+    effective.user.workflow?.gates?.execTargets,
+    effective.shared.workflow?.gates?.execTargets,
+    effective.local.workflow?.gates?.execTargets,
+  ]) {
+    mergeExecTargetLayer(targets, execTargets);
+  }
+
+  return targets;
+}
+
+type ExecTargetOverride = Partial<ExecTarget> | null;
+
+function mergeExecTargetLayer(
+  targets: Record<string, ExecTarget>,
+  layer: Record<string, ExecTargetOverride> | undefined,
+): void {
+  if (!layer) {
+    return;
+  }
+
+  for (const [id, override] of Object.entries(layer)) {
+    if (override === null) {
+      delete targets[id];
+      continue;
+    }
+
+    const existing = targets[id];
+    if (existing) {
+      targets[id] = cloneExecTarget({
+        runtime: override.runtime ?? existing.runtime,
+        baseCommand: override.baseCommand ?? existing.baseCommand,
+        hostDetectionCommand:
+          override.hostDetectionCommand ?? existing.hostDetectionCommand,
+        availabilityCommand:
+          override.availabilityCommand ?? existing.availabilityCommand,
+        priority: override.priority ?? existing.priority,
+      });
+      continue;
+    }
+
+    if (isCompleteExecTarget(override)) {
+      targets[id] = cloneExecTarget(override);
+    }
+  }
+}
+
+function cloneExecTargetRegistry(
+  registry: Readonly<Record<string, ExecTarget>>,
+): Record<string, ExecTarget> {
+  return Object.fromEntries(
+    Object.entries(registry).map(([id, target]) => [
+      id,
+      cloneExecTarget(target),
+    ]),
+  );
+}
+
+function cloneExecTarget(target: ExecTarget): ExecTarget {
+  const next: ExecTarget = {
+    runtime: target.runtime,
+    baseCommand: [...target.baseCommand],
+    priority: target.priority,
+  };
+
+  if (target.hostDetectionCommand) {
+    next.hostDetectionCommand = [...target.hostDetectionCommand];
+  }
+  if (target.availabilityCommand) {
+    next.availabilityCommand = [...target.availabilityCommand];
+  }
+
+  return next;
+}
+
+function isCompleteExecTarget(
+  target: Partial<ExecTarget>,
+): target is ExecTarget {
+  return (
+    typeof target.runtime === 'string' &&
+    target.runtime.trim().length > 0 &&
+    Array.isArray(target.baseCommand) &&
+    target.baseCommand.length > 0 &&
+    target.baseCommand.every((part) => typeof part === 'string') &&
+    typeof target.priority === 'number' &&
+    Number.isFinite(target.priority)
+  );
+}
+
 function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
   if (!isRecord(value)) {
     return {};
@@ -234,6 +350,10 @@ function resolveEnvOverride(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasOwn(value: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function isResolvedValue(value: unknown): boolean {
