@@ -61,7 +61,7 @@ Cases for `workflow.gates`:
 
 - `GateConfig`: valid (`command`+`onFailure`) preserved; empty/missing `command` dropped; bad `onFailure` dropped; `maxAttempts` coercion (default 2, int ≥ 1, else default); `null` skill preserved. **No `execPolicy` field in V1** (avoidance is a `cross-provider-exec --avoid` flag, not config).
 - `ExecTarget`: requires non-empty `runtime` + non-empty `baseCommand: string[]`; optional `hostDetectionCommand`/`availabilityCommand` validated as `string[]`; `priority` numeric; invalid dropped; `null` target preserved.
-- Built-in exec targets exposed as a `BUILTIN_EXEC_TARGETS` constant with **pinned detectors**: `codex-default` (`["codex","exec"]`, host `test -n "$CODEX_SESSION_ID"`, avail `codex --version`, priority 100), `claude-default` (`["claude","-p"]`, host `test -n "$CLAUDECODE"`, avail `claude --version`, priority 100), `cursor-default` (`["cursor-agent","-p","--force"]`, host `test -n "$CURSOR_AGENT"`, avail `cursor-agent --version`, priority 70). A test asserts each built-in's runtime + detector shape.
+- Built-in exec targets exposed as a `BUILTIN_EXEC_TARGETS` constant with **pinned detectors**: `codex-default` (`["codex","exec"]`, host `[ -n "$CODEX_THREAD_ID" ] || [ -n "$CODEX_SESSION_ID" ]` — current Codex host exposes `$CODEX_THREAD_ID`; OR covers both; avail `codex --version`, priority 100), `claude-default` (`["claude","-p"]`, host `test -n "$CLAUDECODE"`, avail `claude --version`, priority 100), `cursor-default` (`["cursor-agent","-p","--force"]`, host `test -n "$CURSOR_AGENT"`, avail `cursor-agent --version`, priority 70). A test asserts each built-in's runtime + detector shape.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
 Expected: RED
@@ -231,7 +231,7 @@ git commit -m "feat(p04-t02): add gate + exec-target write surfaces"
 
 **Step 1: Write test (RED)** (child process mocked/injected)
 
-- Current runtime resolution: `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`. **Built-in detector acceptance:** with `CLAUDECODE=1` in the env the resolved runtime is `claude`; with `CODEX_SESSION_ID` set → `codex`; with `CURSOR_AGENT=1` → `cursor`.
+- Current runtime resolution: `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`. **Built-in detector acceptance:** with `CLAUDECODE=1` in the env the resolved runtime is `claude`; with `CODEX_THREAD_ID` set → `codex` (and `CODEX_SESSION_ID` also → `codex`); with `CURSOR_AGENT=1` → `cursor`. A Claude host carrying `CODEX_COMPANION_SESSION_ID` must NOT resolve to `codex`.
 - `--avoid same-runtime` (default) excludes targets whose `runtime` == current; `--avoid none` keeps them (test: from a `claude` host, `--avoid none` can select `claude-default`).
 - Selection: highest-priority target whose `availabilityCommand` passes (absent ⇒ available).
 - No eligible target → nonzero + actionable message; **no** same-runtime fallback unless `--avoid none`.
@@ -328,18 +328,18 @@ git commit -m "chore(p07-t01): lockstep public-package version bump + release va
 
 {Keep both code + artifact rows below. Do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                     |
-| p02    | code     | pending  | -          | -                                                     |
-| p03    | code     | pending  | -          | -                                                     |
-| p04    | code     | pending  | -          | -                                                     |
-| p05    | code     | pending  | -          | -                                                     |
-| p06    | code     | pending  | -          | -                                                     |
-| final  | code     | pending  | -          | -                                                     |
-| plan   | artifact | received | 2026-06-20 | reviews/artifact-plan-review-2026-06-20-v2.md         |
-| spec   | artifact | n/a      | -          | - (quick mode — no spec.md)                           |
-| design | artifact | passed   | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                                                |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                                                       |
+| p02    | code     | pending | -          | -                                                                                       |
+| p03    | code     | pending | -          | -                                                                                       |
+| p04    | code     | pending | -          | -                                                                                       |
+| p05    | code     | pending | -          | -                                                                                       |
+| p06    | code     | pending | -          | -                                                                                       |
+| final  | code     | pending | -          | -                                                                                       |
+| plan   | artifact | passed  | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20-v2.md (Codex v2; detector fix applied) |
+| spec   | artifact | n/a     | -          | - (quick mode — no spec.md)                                                             |
+| design | artifact | passed  | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

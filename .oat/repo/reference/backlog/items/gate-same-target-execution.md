@@ -39,7 +39,7 @@ target-detection machinery lands once it's worth the complexity.
 ### V1/V2 boundary (refined 2026-06-20 after plan review)
 
 - **V1 ships:** the `execTargets` registry + `gates.skills`; built-in runtime detectors **pinned**
-  (`claude` → `$CLAUDECODE`, `codex` → `$CODEX_SESSION_ID`, `cursor` → `$CURSOR_AGENT`); the
+  (`claude` → `$CLAUDECODE`, `codex` → `$CODEX_THREAD_ID`‖`$CODEX_SESSION_ID`, `cursor` → `$CURSOR_AGENT`); the
   `oat gate cross-provider-exec [--avoid <same-runtime|none>] <prompt...>` dispatcher — **avoidance
   is a command-line flag, not config**; and `oat gate target set --base-command-json '<json argv>'`
   (JSON argv input, because Commander variadic options reject provider flags like `-p`/`--model`).
