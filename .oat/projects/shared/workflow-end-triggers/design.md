@@ -77,12 +77,14 @@ The mechanism is deliberately thin: OAT resolves config and dispatches; the beha
    capturing stdout/stderr + exit code.
    cross-provider-exec internally:
      a. resolveExecTargets() → merged registry (built-ins + config).
-     b. current runtime: OAT_CURRENT_RUNTIME → else hostDetectionCommand in priority
-        order (short-circuit on first exit 0) → else unknown.
-     c. avoid same-runtime: drop targets whose runtime == current.
-     d. in priority order, availabilityCommand passes → first available wins.
-     e. no eligible target → exit nonzero (independence unmet; no same-runtime fallback
-        unless `--avoid none`).
+     b. EXPLICIT-TARGET MODE: if --target / OAT_GATE_EXEC_TARGET set → run that exact
+        target (skip c–e); unknown id → exit nonzero. Else AVOIDANCE MODE (c–e):
+     c. current runtime: built-in hostDetectionCommand (primary) — or --current-runtime /
+        OAT_CURRENT_RUNTIME override → else unknown.
+     d. avoid same-runtime: drop targets whose runtime == current.
+     e. order by priority, tie-break by lexicographic target id; first whose
+        availabilityCommand passes wins. No eligible target → exit nonzero (independence
+        unmet; no same-runtime fallback unless --avoid none).
      f. exec baseCommand + [prompt...]; pass through; exit with child status.
 4. gate.command exit 0 → skill done.
 5. nonzero → branch on onFailure:
