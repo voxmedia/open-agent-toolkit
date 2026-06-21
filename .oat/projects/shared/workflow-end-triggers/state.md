@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-20T16:13:42.618Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-21T01:37:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-21T01:56:57.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -63,4 +63,4 @@ None
 
 ## Next Milestone
 
-Continue to the parallel Phase 2 / Phase 3 group (`p02-t01`, `p03-t01`) after the configured HiLL checkpoint.
+Continue to the parallel Phase 2 / Phase 3 group (`p02-t01`, `p03-t01`). HiLL checkpoints now pause only after the final phase (`p07`).

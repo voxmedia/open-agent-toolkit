@@ -190,7 +190,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p02/p03 parallel group after the configured HiLL checkpoint.
+- Continue with p02/p03 parallel group; HiLL checkpoints now pause only after the final phase (`p07`).
 
 **Blockers:**
 

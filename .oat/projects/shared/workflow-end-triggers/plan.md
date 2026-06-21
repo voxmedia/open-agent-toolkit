@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-06-20
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p07'] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: [['p02', 'p03']] # resolver + eligibility validation are file-disjoint
 oat_plan_source: quick
 oat_import_reference: null
@@ -29,7 +29,7 @@ oat_template: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (default: pause after every phase; adjustable)
+- [x] Confirmed HiLL checkpoints with user (final phase only)
 - [x] Set `oat_plan_hill_phases`
 - [x] Evaluated phases for parallelism
 - [x] Set `oat_plan_parallel_groups`
