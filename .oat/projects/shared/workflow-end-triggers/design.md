@@ -82,7 +82,7 @@ The mechanism is deliberately thin: OAT resolves config and dispatches; the beha
      c. avoid same-runtime: drop targets whose runtime == current.
      d. in priority order, availabilityCommand passes → first available wins.
      e. no eligible target → exit nonzero (independence unmet; no same-runtime fallback
-        unless execPolicy.avoid = none).
+        unless `--avoid none`).
      f. exec baseCommand + [prompt...]; pass through; exit with child status.
 4. gate.command exit 0 → skill done.
 5. nonzero → branch on onFailure:
@@ -102,15 +102,18 @@ The mechanism is deliberately thin: OAT resolves config and dispatches; the beha
 
 ```typescript
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
-export type GateAvoid = 'same-runtime' | 'none'; // V1; 'same-target' deferred → bl-e6fc
+export type GateAvoid = 'same-runtime' | 'none'; // V1; the value of cross-provider-exec's --avoid flag ('same-target' deferred → bl-e6fc)
 
 export interface GateConfig {
-  command: string; // required; the gate runner's command (often `oat gate cross-provider-exec ...`)
+  command: string; // required; the gate runner's command (often `oat gate cross-provider-exec --avoid same-runtime ...`)
   onFailure: GateOnFailure; // required
   description?: string; // for the orchestrating agent: why + next steps
   maxAttempts?: number; // block-only; default 2
-  execPolicy?: { avoid?: GateAvoid }; // default avoid: same-runtime (only meaningful when command is cross-provider-exec)
 }
+// NB: avoidance policy is NOT a GateConfig field in V1. It lives on the command
+// itself (`oat gate cross-provider-exec --avoid <same-runtime|none>`), where it
+// is actually consumed. Config-driven per-skill `execPolicy` rejoins in V2 (bl-e6fc)
+// with the richer same-target semantics.
 
 export interface ExecTarget {
   runtime: string; // logical family used for same-runtime independence (codex|claude|cursor|custom)
@@ -129,9 +132,13 @@ export interface ExecTarget {
 
 **Normalization rules (validate-or-drop, no throws — matches `normalizeWorkflowConfig`):**
 
-- `GateConfig`: `command` non-empty string and `onFailure` in enum, else the gate entry is dropped; `maxAttempts` coerced to int ≥ 1 (default 2); `execPolicy.avoid` validated against the enum (default `same-runtime`); `null` preserved as the disable signal.
+- `GateConfig`: `command` non-empty string and `onFailure` in enum, else the gate entry is dropped; `maxAttempts` coerced to int ≥ 1 (default 2); `null` preserved as the disable signal. (No `execPolicy` in V1.)
 - `ExecTarget`: `runtime` non-empty string, `baseCommand` non-empty `string[]`, `priority` a number (default e.g. 0); `hostDetectionCommand`/`availabilityCommand` validated as `string[]` when present; `null` preserved (disable).
-- **Built-in exec targets** (codex-default, claude-default, cursor-default) are provided by OAT and merged as the lowest layer (see Component 2). A user `null` disables a built-in.
+- **Built-in exec targets** are provided by OAT and merged as the lowest layer (see Component 2); a user `null` disables one. Concretely:
+  - `codex-default` — `runtime: codex`, `baseCommand: ["codex","exec"]`, `hostDetectionCommand: ["sh","-c","test -n \"$CODEX_SESSION_ID\""]`, `availabilityCommand: ["codex","--version"]`, `priority: 100`
+  - `claude-default` — `runtime: claude`, `baseCommand: ["claude","-p"]`, `hostDetectionCommand: ["sh","-c","test -n \"$CLAUDECODE\""]`, `availabilityCommand: ["claude","--version"]`, `priority: 100`
+  - `cursor-default` — `runtime: cursor`, `baseCommand: ["cursor-agent","-p","--force"]`, `hostDetectionCommand: ["sh","-c","test -n \"$CURSOR_AGENT\""]`, `availabilityCommand: ["cursor-agent","--version"]`, `priority: 70`
+  - These detectors are **best-effort**; `OAT_CURRENT_RUNTIME` is the authoritative override (Component 4 / Component 6).
 
 ### Component 2 — Gate resolver (`config/resolve.ts`)
 
@@ -158,20 +165,21 @@ export function resolveExecTargets(
 
 **Behavior:**
 
-- Accepts the prompt as trailing args (joined with spaces) — reduces quote sensitivity; quoted strings also work. (`--prompt`/stdin can come later; no prompt-files for v1.)
+- **Signature:** `oat gate cross-provider-exec [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>`. The prompt is the trailing args (joined with spaces) — reduces quote sensitivity; quoted strings also work. (`--prompt`/stdin can come later; no prompt-files for v1.)
+- **`--avoid`** (default `same-runtime`) carries the avoidance policy — it lives on the command, not in config (V1). The skill's `command` string is where per-skill policy is expressed (`oat gate cross-provider-exec --avoid none "…"`).
 - Resolves the merged `execTargets` registry (Component 2).
 - **Current runtime:** `--current-runtime` flag → `OAT_CURRENT_RUNTIME` env → run each target's `hostDetectionCommand` in descending priority order, **short-circuit on first exit 0** → else `unknown`. (Declaration-first; detection is the fallback.)
-- **Avoid `same-runtime`** (default): drop every target whose `runtime` equals the current runtime. `avoid: none`: keep all.
+- **`--avoid same-runtime`** (default): drop every target whose `runtime` equals the current runtime. `--avoid none`: keep all (no independence requirement).
 - **Select:** in descending priority, run `availabilityCommand` (absent ⇒ available); first that passes wins.
 - **Execute** `baseCommand + [prompt...]`; pass through stdout/stderr; **exit with the child's status**.
-- **No eligible target** (all filtered or unavailable) → exit nonzero with an actionable message; do **not** silently fall back to the current runtime unless `avoid: none`. Independence is the point.
+- **No eligible target** (all filtered or unavailable) → exit nonzero with an actionable message; do **not** silently fall back to the current runtime unless `--avoid none`. Independence is the point.
 - **No fallback after dispatch:** once a target runs, its nonzero exit is the result.
 
 ### Component 5 — Write surfaces
 
-- **`oat gate set <skill> --command <cmd> --on-failure <…> [--description] [--max-attempts N] [--avoid same-runtime|none] [--layer local|shared|user]`** (default layer `user`), **`oat gate unset <skill>`**, **`oat gate set <skill> --disable`** (writes `null`).
-- **`oat gate target set <id> --runtime <r> --base-command <argv...> [--host-detection <argv...>] [--availability <argv...>] [--priority N] [--layer …]`**, **`oat gate target unset <id>`**, **`--disable`** (writes `null`).
-- Both validate through Component 1 normalization before writing; both write **per-key** (one skill / one target id), leaving siblings intact. Layer names match `ConfigSurface` (`shared` = `.oat/config.json` → `writeOatConfig`; `local` → `writeOatLocalConfig`; `user` → `writeUserConfig`). A dedicated command is required because `oat config set`'s closed `ConfigKey` union rejects `workflow.gates.*` and can't carry structured objects.
+- **`oat gate set <skill> --command <cmd> --on-failure <…> [--description] [--max-attempts N] [--layer local|shared|user]`** (default layer `user`), **`oat gate unset <skill>`**, **`oat gate set <skill> --disable`** (writes `null`). (No `--avoid` — avoidance is a `cross-provider-exec` flag inside the command, not a gate field, in V1.)
+- **`oat gate target set <id> --runtime <r> --base-command-json '<json argv>' [--host-detection-json '<json argv>'] [--availability-json '<json argv>'] [--priority N] [--layer …]`**, **`oat gate target unset <id>`**, **`--disable`** (writes `null`). **argv inputs are JSON arrays**, not variadic options: the repo uses Commander, and a variadic `--base-command claude -p --model opus` would make Commander reject `-p`/`--model` as unknown OAT options. `--base-command-json '["claude","-p","--model","opus"]'` parses cleanly and round-trips through the `ExecTarget.baseCommand: string[]` shape.
+- Both validate through Component 1 normalization before writing; both write **per-key** (one skill / one target id), leaving siblings intact. `--layer` is the three concrete write layers `shared|local|user` (a subset of `ConfigSurface` excluding `auto`): `shared` = `.oat/config.json` → `writeOatConfig`; `local` → `writeOatLocalConfig`; `user` → `writeUserConfig`. A dedicated command is required because `oat config set`'s closed `ConfigKey` union rejects `workflow.gates.*` and can't carry structured objects.
 
 ### Component 6 — Skill opt-in marker + Gate Execution step
 
@@ -197,10 +205,10 @@ export function resolveExecTargets(
 
 ### Unit Tests
 
-- **Schema normalization** (`oat-config.test.ts`): `GateConfig` (drop invalid command/onFailure, coerce maxAttempts, default+validate `execPolicy.avoid`, preserve `null`); `ExecTarget` (require runtime + non-empty argv `baseCommand`, validate optional argv fields, preserve `null`).
+- **Schema normalization** (`oat-config.test.ts`): `GateConfig` (drop invalid command/onFailure, coerce maxAttempts, preserve `null`; no `execPolicy` field in V1); `ExecTarget` (require runtime + non-empty argv `baseCommand`, validate optional argv fields, preserve `null`); built-in exec targets present with the pinned detectors.
 - **`resolveGate`** (`resolve.test.ts`): local>shared>user wholesale win; `null` disables/short-circuits; fall-through; **no within-gate merge** (raw layers, not flattened `resolved`).
 - **`resolveExecTargets`** (`resolve.test.ts`): built-ins present by default; keyed **partial** merge (override one field); `null` disables a built-in; new id adds a target; layer precedence.
-- **`cross-provider-exec` selection** (command test, child process mocked): current runtime via flag/env/detection short-circuit; `same-runtime` exclusion; priority + availability ordering; no-eligible-target → nonzero; exit-code passthrough; `avoid: none` keeps same-runtime targets.
+- **`cross-provider-exec` selection** (command test, child process mocked): current runtime via `--current-runtime` / `OAT_CURRENT_RUNTIME` / detection short-circuit; `--avoid same-runtime` exclusion; built-in detectors resolve the host (`$CLAUDECODE`/`$CODEX_SESSION_ID`/`$CURSOR_AGENT`); priority + availability ordering; no-eligible-target → nonzero; exit-code passthrough; `--avoid none` keeps same-runtime targets.
 - **`oat gate resolve` / `set` / `unset` / `target set/unset`** round-trips, `--disable` → `null`, layer targeting, sibling isolation, invalid-input rejection.
 
 ### Integration Tests

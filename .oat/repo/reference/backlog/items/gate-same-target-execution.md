@@ -36,6 +36,20 @@ there is no reliable target signal for "I am model X at effort Y inside this ses
 V1 sidesteps it entirely by avoiding at the runtime level. This item is where the
 target-detection machinery lands once it's worth the complexity.
 
+### V1/V2 boundary (refined 2026-06-20 after plan review)
+
+- **V1 ships:** the `execTargets` registry + `gates.skills`; built-in runtime detectors **pinned**
+  (`claude` → `$CLAUDECODE`, `codex` → `$CODEX_SESSION_ID`, `cursor` → `$CURSOR_AGENT`); the
+  `oat gate cross-provider-exec [--avoid <same-runtime|none>] <prompt...>` dispatcher — **avoidance
+  is a command-line flag, not config**; and `oat gate target set --base-command-json '<json argv>'`
+  (JSON argv input, because Commander variadic options reject provider flags like `-p`/`--model`).
+- **V2 (this item) reintroduces config-driven `execPolicy`** on `gates.skills.<skill>` — so
+  avoidance/target selection can live per-skill in config rather than only inline in the command —
+  plus `avoid: same-target`, `targetPriority`, `onUnknownTarget`, and target-level detection. The V2
+  exec-target examples below should be **written via `--base-command-json`** (same JSON argv input
+  V1 establishes); any `targetDetectionCommand` follows the same best-effort contract as the V1
+  built-in host detectors.
+
 ### Design already settled (Codex session 2026-06-20)
 
 Builds on V1's config shape `workflow.gates.{ execTargets, skills }`.

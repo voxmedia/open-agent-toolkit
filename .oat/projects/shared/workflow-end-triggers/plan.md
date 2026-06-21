@@ -59,9 +59,9 @@ oat_template: false
 
 Cases for `workflow.gates`:
 
-- `GateConfig`: valid (`command`+`onFailure`) preserved; empty/missing `command` dropped; bad `onFailure` dropped; `maxAttempts` coercion (default 2, int ≥ 1, else default); `execPolicy.avoid` validated (default `same-runtime`, bad value → default); `null` skill preserved.
+- `GateConfig`: valid (`command`+`onFailure`) preserved; empty/missing `command` dropped; bad `onFailure` dropped; `maxAttempts` coercion (default 2, int ≥ 1, else default); `null` skill preserved. **No `execPolicy` field in V1** (avoidance is a `cross-provider-exec --avoid` flag, not config).
 - `ExecTarget`: requires non-empty `runtime` + non-empty `baseCommand: string[]`; optional `hostDetectionCommand`/`availabilityCommand` validated as `string[]`; `priority` numeric; invalid dropped; `null` target preserved.
-- Built-in exec targets (codex-default/claude-default/cursor-default) exposed as a constant for the resolver to merge.
+- Built-in exec targets exposed as a `BUILTIN_EXEC_TARGETS` constant with **pinned detectors**: `codex-default` (`["codex","exec"]`, host `test -n "$CODEX_SESSION_ID"`, avail `codex --version`, priority 100), `claude-default` (`["claude","-p"]`, host `test -n "$CLAUDECODE"`, avail `claude --version`, priority 100), `cursor-default` (`["cursor-agent","-p","--force"]`, host `test -n "$CURSOR_AGENT"`, avail `cursor-agent --version`, priority 70). A test asserts each built-in's runtime + detector shape.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
 Expected: RED
@@ -198,14 +198,14 @@ git commit -m "feat(p04-t01): add oat gate resolve command"
 **Step 1: Write test (RED)**
 
 - `gate set <skill>` then `resolve` round-trips; `--disable` → `null`; `unset` removes; invalid `--command`/`--on-failure` rejected (nonzero, actionable).
-- `gate target set <id> --runtime --base-command …` then resolve registry shows it; `--disable` → `null`; `unset` removes; invalid argv rejected.
+- `gate target set <id> --runtime <r> --base-command-json '<json argv>'` then resolve registry shows it; `--disable` → `null`; `unset` removes; malformed JSON / non-array rejected. **Provider flags survive parsing:** `--base-command-json '["claude","-p","--model","opus"]'`, `'["cursor-agent","-p","--model","composer-2.5"]'`, `'["codex","exec","-m","gpt-5.5"]'` all round-trip with `-p`/`-m`/`--model`/`--effort` intact (the reason argv is JSON, not a Commander variadic option that would reject leading-dash flags).
 - `--layer local|shared|user` writes the right file (shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`); siblings untouched.
 
 Run: same test path — RED
 
 **Step 2: Implement (GREEN)**
 
-Implement `gate set/unset <skill>` (writes `gates.skills.<skill>`, `--disable` → `null`) and `gate target set/unset <id>` (writes `gates.execTargets.<id>`, `--disable` → `null`). `--layer` accepts the **three concrete write layers `shared|local|user`** — a subset of `ConfigSurface` that **excludes `auto`** (which has no write helper) — default `user`, mapping shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`. Reject `auto`/invalid layer with a nonzero actionable error. Validate via Component 1 normalization. Per-key writes only — never touch sibling skills/targets. Do not route through the closed-`ConfigKey` `oat config set` surface. _Tests co-located in `commands/gate/index.test.ts`._
+Implement `gate set/unset <skill>` (writes `gates.skills.<skill>`, `--disable` → `null`; no `--avoid` flag — avoidance is a `cross-provider-exec` flag, not a gate field) and `gate target set/unset <id>` (writes `gates.execTargets.<id>`, `--disable` → `null`). **Target argv inputs are JSON arrays** — `--base-command-json`, `--host-detection-json`, `--availability-json` — parsed with `JSON.parse` and validated as `string[]`, NOT Commander variadic options (which would reject provider flags like `-p`/`--model` as unknown options). `--layer` accepts the **three concrete write layers `shared|local|user`** — a subset of `ConfigSurface` that **excludes `auto`** (no write helper) — default `user`, mapping shared→`writeOatConfig`, local→`writeOatLocalConfig`, user→`writeUserConfig`; reject `auto`/invalid layer with a nonzero actionable error. Validate via Component 1 normalization. Per-key writes only — never touch sibling skills/targets. Do not route through the closed-`ConfigKey` `oat config set` surface. _Tests co-located in `commands/gate/index.test.ts`._
 
 Run: same — GREEN
 
@@ -231,18 +231,18 @@ git commit -m "feat(p04-t02): add gate + exec-target write surfaces"
 
 **Step 1: Write test (RED)** (child process mocked/injected)
 
-- Current runtime resolution: `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`.
-- `avoid: same-runtime` (default) excludes targets whose `runtime` == current; `avoid: none` keeps them.
+- Current runtime resolution: `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`. **Built-in detector acceptance:** with `CLAUDECODE=1` in the env the resolved runtime is `claude`; with `CODEX_SESSION_ID` set → `codex`; with `CURSOR_AGENT=1` → `cursor`.
+- `--avoid same-runtime` (default) excludes targets whose `runtime` == current; `--avoid none` keeps them (test: from a `claude` host, `--avoid none` can select `claude-default`).
 - Selection: highest-priority target whose `availabilityCommand` passes (absent ⇒ available).
-- No eligible target → nonzero + actionable message; **no** same-runtime fallback unless `avoid: none`.
+- No eligible target → nonzero + actionable message; **no** same-runtime fallback unless `--avoid none`.
 - Executes `baseCommand + [prompt...]` and **exits with the child's status**; passes through stdout/stderr.
-- `unknown` current runtime → `same-runtime` excludes nothing (all eligible).
+- `unknown` current runtime → `--avoid same-runtime` excludes nothing (all eligible).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts` — RED
 
 **Step 2: Implement (GREEN)**
 
-Implement `cross-provider-exec` per Component 4: resolve merged `execTargets`; resolve current runtime (flag → env → detection short-circuit → unknown); filter by `avoid`; pick by priority + availability; spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. Prompt = trailing args joined with spaces.
+Implement `oat gate cross-provider-exec [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>` per Component 4: parse `--avoid` (default `same-runtime`); resolve merged `execTargets`; resolve current runtime (`--current-runtime` → `OAT_CURRENT_RUNTIME` → built-in `hostDetectionCommand` short-circuit → unknown); filter by `--avoid`; pick by priority + availability; spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. Prompt = trailing args joined with spaces. (Avoidance lives on this flag, not in `GateConfig` — V1.)
 
 Run: same — GREEN
 
@@ -328,18 +328,18 @@ git commit -m "chore(p07-t01): lockstep public-package version bump + release va
 
 {Keep both code + artifact rows below. Do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                     |
-| p02    | code     | pending  | -          | -                                                     |
-| p03    | code     | pending  | -          | -                                                     |
-| p04    | code     | pending  | -          | -                                                     |
-| p05    | code     | pending  | -          | -                                                     |
-| p06    | code     | pending  | -          | -                                                     |
-| final  | code     | pending  | -          | -                                                     |
-| plan   | artifact | received | 2026-06-20 | reviews/artifact-plan-review-2026-06-20.md            |
-| spec   | artifact | n/a      | -          | - (quick mode — no spec.md)                           |
-| design | artifact | passed   | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                                          |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                                                 |
+| p02    | code     | pending | -          | -                                                                                 |
+| p03    | code     | pending | -          | -                                                                                 |
+| p04    | code     | pending | -          | -                                                                                 |
+| p05    | code     | pending | -          | -                                                                                 |
+| p06    | code     | pending | -          | -                                                                                 |
+| final  | code     | pending | -          | -                                                                                 |
+| plan   | artifact | passed  | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md (Codex; all findings applied) |
+| spec   | artifact | n/a     | -          | - (quick mode — no spec.md)                                                       |
+| design | artifact | passed  | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -359,7 +359,7 @@ git commit -m "chore(p07-t01): lockstep public-package version bump + release va
 
 **Total: 8 tasks**
 
-Ready for code review and merge.
+Ready for implementation.
 
 ---
 
