@@ -231,8 +231,8 @@ git commit -m "feat(p04-t02): add gate + exec-target write surfaces"
 
 **Step 1: Write test (RED)** (child process mocked/injected)
 
-- **Explicit-target mode:** `--target <id>` (or `OAT_GATE_EXEC_TARGET` env) runs **that exact target** and **skips detection + avoidance**; unknown id → nonzero actionable error. (Test: `--target claude-default` from any host runs `claude-default`.)
-- Current runtime resolution (avoidance mode): `--current-runtime` flag wins; else `OAT_CURRENT_RUNTIME`; else built-in `hostDetectionCommand` in descending priority, **short-circuit on first exit 0**; else `unknown`. **Built-in detector acceptance:** `CLAUDECODE=1` → `claude`; `CODEX_THREAD_ID` set → `codex` (and `CODEX_SESSION_ID` also → `codex`); `CURSOR_AGENT=1` → `cursor`. A Claude host carrying `CODEX_COMPANION_SESSION_ID` must NOT resolve to `codex`.
+- **Avoidance is the default** (no per-prompt input). Current runtime resolution: built-in `hostDetectionCommand` in descending order, **short-circuit on first exit 0**; `--current-runtime <r>` flag overrides (test seam); else `unknown`. **No env var is read** (no `OAT_CURRENT_RUNTIME`). **Built-in detector acceptance:** `CLAUDECODE=1` → `claude`; `CODEX_THREAD_ID` set → `codex` (and `CODEX_SESSION_ID` also → `codex`); `CURSOR_AGENT=1` → `cursor`. A Claude host carrying `CODEX_COMPANION_SESSION_ID` must NOT resolve to `codex`.
+- **Optional `--target <id>`** runs **that exact target** and **skips detection + avoidance**; unknown id → nonzero actionable error. (Test: `--target claude-default` from any host runs `claude-default`.) No `OAT_GATE_EXEC_TARGET` env — the flag is the only mechanism.
 - `--avoid same-runtime` (default) excludes targets whose `runtime` == current; `--avoid none` keeps them (test: from a `claude` host, `--avoid none` can select `claude-default`).
 - **Selection + tie-break:** order by descending `priority`, **break ties by lexicographic target id**, then availability. **Determinism test:** from a `cursor` host (`CURSOR_AGENT=1`) with codex+claude both available at priority 100, selection is **stable across runs = `claude-default`** (lexicographic), not registry-iteration-dependent.
 - No eligible target → nonzero + actionable message; **no** same-runtime fallback unless `--avoid none`.
@@ -243,7 +243,7 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/in
 
 **Step 2: Implement (GREEN)**
 
-Implement `oat gate cross-provider-exec [--target <id>] [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>` per Component 4. **Explicit-target mode first:** if `--target`/`OAT_GATE_EXEC_TARGET` is set, run that exact target (skip detection/avoidance; unknown id → nonzero). **Else avoidance mode:** parse `--avoid` (default `same-runtime`); resolve merged `execTargets`; resolve current runtime (`--current-runtime` → `OAT_CURRENT_RUNTIME` → built-in `hostDetectionCommand` short-circuit → unknown); filter by `--avoid`; order by descending `priority` then **lexicographic target id**; pick first whose `availabilityCommand` passes. Spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. (Avoidance lives on the `--avoid` flag, not in `GateConfig` — V1.)
+Implement `oat gate cross-provider-exec [--target <id>] [--avoid <same-runtime|none>] [--current-runtime <r>] <prompt...>` per Component 4. **If `--target <id>` is given:** run that exact target (skip detection/avoidance; unknown id → nonzero). **Otherwise — avoidance mode (default):** parse `--avoid` (default `same-runtime`); resolve merged `execTargets`; resolve current runtime via built-in `hostDetectionCommand` short-circuit (`--current-runtime` flag overrides; **no env var read**); filter by `--avoid`; order by descending `priority` then **lexicographic target id**; pick first whose `availabilityCommand` passes. Spawn `baseCommand` + trailing prompt args; inherit/stream stdio; exit with child status; no post-dispatch fallback. (`--avoid` is a flag, not config; `--target`/config-driven per-skill policy beyond the flag is V2.)
 
 Run: same — GREEN
 
@@ -280,7 +280,7 @@ Add `oat_gateable: true` + bump each skill's `version:` (PR-scoped). Append a sh
    - `prompt` → surface, ask human.
    - `warn` → record, continue.
    - Use `description` to orient next steps.
-4. Runtime selection note (V1): the step does **not** auto-stamp `OAT_CURRENT_RUNTIME`. By default `cross-provider-exec` resolves the host from **built-in `hostDetectionCommand`s** (zero-config). When the user wants a specific guaranteed reviewer, they instruct the agent to **export `OAT_GATE_EXEC_TARGET=<target-id>`** (or pass `--target <id>` in the gate `command`) at invocation time — the dispatcher then runs that exact target and skips detection. The Gate Execution prose should mention this explicit-target option so users know how to pin a reviewer.
+4. Runtime selection note (V1): the step runs the gate `command` as-is and reads **no env var**. By default `cross-provider-exec` resolves the host from **built-in `hostDetectionCommand`s** and avoids the same runtime (zero-config). To pin a specific reviewer for a skill, set `--target <id>` once in that skill's gate `command` (optional precision; no per-prompt input, no `OAT_GATE_EXEC_TARGET`). The Gate Execution prose should mention the `--target` option so users know how to pin a reviewer.
 
 _Anti-drift: the two skills' Gate Execution blocks must be kept **verbatim-identical**. A shared-include / snippet mechanism is out of scope for V1 (two hand-authored copies); revisit if more skills adopt the marker._
 
