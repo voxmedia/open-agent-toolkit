@@ -978,8 +978,8 @@ Track test execution during implementation.
 **Status:** passed
 **Artifacts:**
 
-- `reviews/final-review-2026-06-20.md` - Claude independent review; 0 Critical, 0 Important, 0 Medium, 3 Minor non-blocking observations accepted as no-change.
-- `reviews/final-review-2026-06-21.md` - OAT final review; 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- `reviews/archived/final-review-2026-06-20.md` - Claude independent review; 0 Critical, 0 Important, 0 Medium, 3 Minor non-blocking observations accepted as no-change.
+- `reviews/archived/final-review-2026-06-21.md` - OAT final review; 0 Critical, 0 Important, 0 Medium, 0 Minor.
 
 **Outcome:**
 

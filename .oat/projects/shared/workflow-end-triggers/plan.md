@@ -329,19 +329,19 @@ git commit -m "chore(p07-t01): lockstep public-package version bump + release va
 
 {Keep both code + artifact rows below. Do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status | Date       | Artifact                                                                                                                     |
-| ------ | -------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | passed | 2026-06-21 | reviews/p01-review-2026-06-21.md                                                                                             |
-| p02    | code     | passed | 2026-06-21 | reviews/p02-review-2026-06-21-v2.md                                                                                          |
-| p03    | code     | passed | 2026-06-21 | reviews/p03-review-2026-06-21-v2.md                                                                                          |
-| p04    | code     | passed | 2026-06-21 | reviews/p04-review-2026-06-21.md                                                                                             |
-| p05    | code     | passed | 2026-06-21 | reviews/p05-review-2026-06-21.md                                                                                             |
-| p06    | code     | passed | 2026-06-21 | reviews/p06-review-2026-06-21.md                                                                                             |
-| p07    | code     | passed | 2026-06-21 | reviews/p07-review-2026-06-21.md                                                                                             |
-| final  | code     | passed | 2026-06-21 | reviews/final-review-2026-06-20.md (Claude independent — Minor only); reviews/final-review-2026-06-21.md (OAT final — clean) |
-| plan   | artifact | passed | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20-v4.md (clean — 0 findings)                                                  |
-| spec   | artifact | n/a    | -          | - (quick mode — no spec.md)                                                                                                  |
-| design | artifact | passed | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md                                                                        |
+| Scope  | Type     | Status | Date       | Artifact                                                                                                                                       |
+| ------ | -------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | passed | 2026-06-21 | reviews/archived/p01-review-2026-06-21.md                                                                                                      |
+| p02    | code     | passed | 2026-06-21 | reviews/archived/p02-review-2026-06-21-v2.md                                                                                                   |
+| p03    | code     | passed | 2026-06-21 | reviews/archived/p03-review-2026-06-21-v2.md                                                                                                   |
+| p04    | code     | passed | 2026-06-21 | reviews/archived/p04-review-2026-06-21.md                                                                                                      |
+| p05    | code     | passed | 2026-06-21 | reviews/archived/p05-review-2026-06-21.md                                                                                                      |
+| p06    | code     | passed | 2026-06-21 | reviews/archived/p06-review-2026-06-21.md                                                                                                      |
+| p07    | code     | passed | 2026-06-21 | reviews/archived/p07-review-2026-06-21.md                                                                                                      |
+| final  | code     | passed | 2026-06-21 | reviews/archived/final-review-2026-06-20.md (Claude independent — Minor only); reviews/archived/final-review-2026-06-21.md (OAT final — clean) |
+| plan   | artifact | passed | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20-v4.md (clean — 0 findings)                                                                    |
+| spec   | artifact | n/a    | -          | - (quick mode — no spec.md)                                                                                                                    |
+| design | artifact | passed | 2026-06-20 | reviews/archived/artifact-design-review-2026-06-20.md                                                                                          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
