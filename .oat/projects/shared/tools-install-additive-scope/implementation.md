@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-20
-oat_current_task_id: null
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,11 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | in_progress | 1     | 0/1       |
 
-**Total:** 5/5 tasks completed (awaiting final review)
+**Total:** 5/6 tasks completed (final-review fix p02-t01 pending)
 
 ---
 
@@ -48,6 +49,28 @@ oat_generated: false
 No deferrals. No design/code drift accepted (the plan had not yet been implemented).
 
 **Next:** Execute the plan via `oat-project-implement` (now 5 tasks; first task `p01-t01`).
+
+---
+
+### Review Received: final (v2)
+
+**Date:** 2026-06-20
+**Review artifact:** `reviews/archived/final-review-2026-06-20-v2.md`
+**Type:** code (manual). Second final-review pass after PR #113 opened.
+
+**Findings:** Critical 0 · Important 1 · Medium 0 · Minor 0
+
+**New tasks added:** `p02-t01`
+
+- `I1` (Important, `code_fix_required`) — confirmed scope _moves_ apply the
+  removal before the replacement install succeeds (`index.ts:953` removes before
+  installers at `:974`), so a partial failure on `user → project` leaves the pack
+  in neither scope. Converted to fix task **p02-t01**: apply `adds` before
+  confirmed `removes`, with a regression test for an install-failure-mid-move.
+
+**Next:** Execute `p02-t01` via `oat-project-implement`, then re-run
+`oat-project-review-provide code final` → `oat-project-review-receive` to reach
+`passed`, and push to update PR #113.
 
 ---
 
@@ -107,6 +130,25 @@ No deferrals. No design/code drift accepted (the plan had not yet been implement
 
 **Status:** completed
 **Commit:** cd8c2642, 2a6e1738
+
+---
+
+## Phase 2: Review Fixes (final)
+
+**Status:** in_progress
+**Started:** 2026-06-20
+
+### Task p02-t01: (review) Apply scope additions before confirmed removals
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- From final-review v2 finding I1 (`code_fix_required`). Reorder the apply phase
+  so installers for `reconciliation.adds` run before `removePackFromScope` for
+  confirmed `stagedRemovals`; add a regression test for install-failure-mid-move
+  (`user → project`) asserting the `user` scope is not removed.
 
 ---
 

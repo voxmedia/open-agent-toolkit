@@ -335,16 +335,63 @@ git commit -m "chore(p01-t05): lockstep public package version bump for additive
 
 ---
 
+## Phase 2: Review Fixes (final)
+
+### Task p02-t01: (review) Apply scope additions before confirmed removals
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (final-review-2026-06-20-v2 I1): After the batch confirmation,
+`runInitTools` applies every `stagedRemoval` (~lines 953-955) **before** the
+pack installer blocks run (~line 974). For a confirmed move (pack at `user` with
+desired end-state `project`), reconciliation holds both `+ pack@project` and
+`- pack@user`; if the project install then throws, the preserved `user` install
+has already been deleted and the pack is left installed in neither scope.
+Location: `packages/cli/src/commands/init/tools/index.ts:953`. This violates the
+design data-flow ordering ("apply `adds` … then confirmed `removes`",
+`design.md:86`/`:114`).
+
+**Step 2: Implement fix**
+
+Reorder the apply phase so additions run before destructive removals: run the
+pack installers for `reconciliation.adds` first, confirm they succeeded, and only
+then call `removePackFromScope` for the confirmed `stagedRemovals`. Keep
+`affectedScopes` accounting unchanged (adds + confirmed removes). The
+non-interactive strictly-additive guard stays in place.
+
+**Step 3: Verify**
+
+Add a regression test: mock an install failure for current `user` → desired
+`project` and assert `removePackFromScope` is **not** called for `user` (the
+preserved scope is retained when the replacement add fails).
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: New regression test passes; full CLI suite, lint, type-check green.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts
+git commit -m "fix(p02-t01): apply scope additions before confirmed removals (review I1)"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                            |
-| ------ | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed   | 2026-06-20 | reviews/archived/final-review-2026-06-20.md         |
-| final  | code     | received | 2026-06-20 | reviews/final-review-2026-06-20-v2.md               |
-| design | artifact | passed   | 2026-06-19 | design.md (lightweight, collaborative)              |
-| plan   | artifact | passed   | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | passed      | 2026-06-20 | reviews/archived/final-review-2026-06-20.md         |
+| final  | code     | fixes_added | 2026-06-20 | reviews/archived/final-review-2026-06-20-v2.md      |
+| design | artifact | passed      | 2026-06-19 | design.md (lightweight, collaborative)              |
+| plan   | artifact | passed      | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -362,8 +409,9 @@ git commit -m "chore(p01-t05): lockstep public package version bump for additive
 **Summary:**
 
 - Phase 1: 5 tasks — additive scope resolution, per-pack end-state selector, batch-confirm removals, auto-sync scoping guard, lockstep release closeout
+- Phase 2: 1 task — review fix: apply scope additions before confirmed removals (final review I1)
 
-**Total: 5 tasks**
+**Total: 6 tasks**
 
 Ready for code review and merge.
 
