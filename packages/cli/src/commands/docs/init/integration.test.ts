@@ -119,8 +119,9 @@ describe('scaffold integration', () => {
         join(result.appRoot, 'next.config.js'),
         'utf8',
       );
-      expect(nextConfig).toContain('createDocsConfig({');
-      expect(nextConfig).toContain('...(basePath ? { basePath } : {})');
+      expect(nextConfig).toContain(
+        'createDocsConfig(basePath ? { basePath } : {})',
+      );
       expect(nextConfig).not.toContain('title:');
       expect(nextConfig).not.toContain('description:');
       expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
