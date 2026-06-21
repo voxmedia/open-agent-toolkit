@@ -14,6 +14,7 @@ import {
   validateOatSkills as defaultValidateOatSkills,
   type ValidateOatSkillsOptions,
   type ValidateOatSkillsResult,
+  type ValidationFinding,
 } from '@validation/index';
 import { Command } from 'commander';
 
@@ -54,6 +55,10 @@ function collectConfiguredGateSkillNames(effective: ResolvedConfig): string[] {
   return [...names].sort();
 }
 
+function isBlockingFinding(finding: ValidationFinding): boolean {
+  return finding.severity !== 'warning';
+}
+
 function reportFindings(
   context: CommandContext,
   result: ValidateOatSkillsResult,
@@ -76,6 +81,28 @@ function reportFindings(
   );
 }
 
+function reportWarnings(
+  context: CommandContext,
+  result: ValidateOatSkillsResult,
+): void {
+  if (context.json) {
+    context.logger.json({
+      status: 'ok',
+      validatedSkillCount: result.validatedSkillCount,
+      findings: result.findings,
+    });
+    return;
+  }
+
+  context.logger.warn('OAT skill validation warnings:\n');
+  for (const finding of result.findings) {
+    context.logger.warn(`- ${finding.file}: ${finding.message}`);
+  }
+  context.logger.info(
+    `OK: validated ${result.validatedSkillCount} oat-* skills`,
+  );
+}
+
 async function runValidateOatSkills(
   context: CommandContext,
   options: ValidateOatSkillsOptions,
@@ -95,9 +122,15 @@ async function runValidateOatSkills(
       validationOptions,
     );
 
-    if (result.findings.length > 0) {
+    if (result.findings.some(isBlockingFinding)) {
       reportFindings(context, result);
       process.exitCode = 1;
+      return;
+    }
+
+    if (result.findings.length > 0) {
+      reportWarnings(context, result);
+      process.exitCode = 0;
       return;
     }
 

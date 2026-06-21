@@ -7,14 +7,17 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import type { ValidateOatSkillsOptions } from '@validation/index';
+import type {
+  ValidateOatSkillsOptions,
+  ValidationFinding,
+} from '@validation/index';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createValidateOatSkillsCommand } from './validate-oat-skills';
 
 interface HarnessOptions {
-  findings?: Array<{ file: string; message: string }>;
+  findings?: ValidationFinding[];
   validatedSkillCount?: number;
   throwError?: boolean;
 }
@@ -129,6 +132,47 @@ describe('createValidateOatSkillsCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('returns error-severity validation findings with exit code 1', async () => {
+    const { command, capture } = createHarness({
+      findings: [
+        {
+          file: '/tmp/workspace/.agents/skills/oat-demo/SKILL.md',
+          message: 'Missing frontmatter key: allowed-tools',
+          severity: 'error',
+        },
+      ],
+    });
+
+    await runCommand(command);
+
+    expect(capture.error.join('\n')).toContain('OAT skill validation failed:');
+    expect(capture.error.join('\n')).toContain(
+      'Missing frontmatter key: allowed-tools',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('returns warning-only validation findings without failing', async () => {
+    const { command, capture } = createHarness({
+      findings: [
+        {
+          file: '/tmp/workspace/.agents/skills/oat-demo/SKILL.md',
+          message: 'Configured gate targets skill without oat_gateable: true',
+          severity: 'warning',
+        },
+      ],
+    });
+
+    await runCommand(command);
+
+    expect(capture.warn.join('\n')).toContain('OAT skill validation warnings:');
+    expect(capture.warn.join('\n')).toContain(
+      'Configured gate targets skill without oat_gateable: true',
+    );
+    expect(capture.error).toEqual([]);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('outputs JSON when --json is set', async () => {
     const { command, capture } = createHarness({
       validatedSkillCount: 2,
@@ -233,7 +277,7 @@ describe('createValidateOatSkillsCommand', () => {
     await runCommand(command, ['--json']);
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'failed',
+      status: 'ok',
       validatedSkillCount: 1,
       findings: [
         {
@@ -243,6 +287,6 @@ describe('createValidateOatSkillsCommand', () => {
         },
       ],
     });
-    expect(process.exitCode).toBe(1);
+    expect(process.exitCode).toBe(0);
   });
 });
