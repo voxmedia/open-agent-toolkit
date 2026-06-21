@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
@@ -76,14 +80,21 @@ async function runCommand(
 
 describe('createValidateOatSkillsCommand', () => {
   let originalExitCode: number | undefined;
+  const tempDirs: string[] = [];
 
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
   });
 
   it('returns success output when no findings', async () => {
@@ -153,5 +164,85 @@ describe('createValidateOatSkillsCommand', () => {
     expect(validateOatSkills).toHaveBeenCalledWith('/tmp/workspace', {
       baseRef: 'origin/main',
     });
+  });
+
+  it('resolves gates.skills config and surfaces non-gateable warnings', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-validate-command-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-validate-home-'));
+    tempDirs.push(repoRoot, home);
+    const skillDir = join(repoRoot, '.agents', 'skills', 'oat-not-gateable');
+    await mkdir(skillDir, { recursive: true });
+    const skillPath = join(skillDir, 'SKILL.md');
+    await writeFile(
+      skillPath,
+      [
+        '---',
+        'name: oat-not-gateable',
+        'description: Use when validating command-level gateability warnings.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ].join('\n'),
+      'utf8',
+    );
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify(
+        {
+          version: 1,
+          workflow: {
+            gates: {
+              skills: {
+                'oat-not-gateable': {
+                  command: 'pnpm test',
+                  onFailure: 'warn',
+                },
+              },
+            },
+          },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    const capture = createLoggerCapture();
+    const command = createValidateOatSkillsCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: repoRoot,
+        home,
+        interactive: !(globalOptions.json ?? false),
+        logger: capture.logger,
+      }),
+    });
+
+    await runCommand(command, ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'failed',
+      validatedSkillCount: 1,
+      findings: [
+        {
+          file: skillPath,
+          message: 'Configured gate targets skill without oat_gateable: true',
+          severity: 'warning',
+        },
+      ],
+    });
+    expect(process.exitCode).toBe(1);
   });
 });

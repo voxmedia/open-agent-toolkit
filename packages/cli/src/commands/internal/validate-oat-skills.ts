@@ -1,9 +1,15 @@
+import { join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  resolveEffectiveConfig as defaultResolveEffectiveConfig,
+  type ResolvedConfig,
+} from '@config/resolve';
 import {
   validateOatSkills as defaultValidateOatSkills,
   type ValidateOatSkillsOptions,
@@ -17,12 +23,36 @@ interface ValidateOatSkillsDependencies {
     repoRoot: string,
     options?: ValidateOatSkillsOptions,
   ) => Promise<ValidateOatSkillsResult>;
+  resolveEffectiveConfig: (
+    repoRoot: string,
+    userConfigDir: string,
+    env?: NodeJS.ProcessEnv,
+  ) => Promise<ResolvedConfig>;
+  env?: NodeJS.ProcessEnv;
 }
 
 const DEFAULT_DEPENDENCIES: ValidateOatSkillsDependencies = {
   buildCommandContext,
   validateOatSkills: defaultValidateOatSkills,
+  resolveEffectiveConfig: defaultResolveEffectiveConfig,
 };
+
+function collectConfiguredGateSkillNames(effective: ResolvedConfig): string[] {
+  const names = new Set<string>();
+
+  for (const layer of [effective.shared, effective.local, effective.user]) {
+    const skills = layer.workflow?.gates?.skills;
+    if (!skills) {
+      continue;
+    }
+
+    for (const skillName of Object.keys(skills)) {
+      names.add(skillName);
+    }
+  }
+
+  return [...names].sort();
+}
 
 function reportFindings(
   context: CommandContext,
@@ -52,7 +82,18 @@ async function runValidateOatSkills(
   dependencies: ValidateOatSkillsDependencies,
 ): Promise<void> {
   try {
-    const result = await dependencies.validateOatSkills(context.cwd, options);
+    const effectiveConfig = await dependencies.resolveEffectiveConfig(
+      context.cwd,
+      join(context.home, '.oat'),
+      dependencies.env ?? process.env,
+    );
+    const gateSkillNames = collectConfiguredGateSkillNames(effectiveConfig);
+    const validationOptions =
+      gateSkillNames.length > 0 ? { ...options, gateSkillNames } : options;
+    const result = await dependencies.validateOatSkills(
+      context.cwd,
+      validationOptions,
+    );
 
     if (result.findings.length > 0) {
       reportFindings(context, result);

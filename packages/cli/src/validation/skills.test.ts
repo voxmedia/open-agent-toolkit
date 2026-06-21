@@ -45,6 +45,27 @@ function validSkillContent(skillName: string): string {
   ].join('\n');
 }
 
+function validGateableSkillContent(skillName: string): string {
+  return [
+    '---',
+    `name: ${skillName}`,
+    'description: Use when validating oat skill structure. Provides a valid fixture for validator tests.',
+    'disable-model-invocation: true',
+    'user-invocable: true',
+    'allowed-tools: Read, Write',
+    'oat_gateable: true',
+    '---',
+    '',
+    '# Demo',
+    '',
+    '## Progress Indicators (User-Facing)',
+    '',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ' OAT ▸ DEMO',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+  ].join('\n');
+}
+
 function currentSkillContent(
   skillName: string,
   version: string,
@@ -235,6 +256,64 @@ describe('validateOatSkills', () => {
     const result = await validateOatSkills(root);
     expect(result.validatedSkillCount).toBe(2);
     expect(result.findings).toEqual([]);
+  });
+
+  it('does not warn when a configured gate targets a gateable skill', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await createSkillFile(
+      root,
+      'oat-gateable',
+      validGateableSkillContent('oat-gateable'),
+    );
+
+    const result = await validateOatSkills(root, {
+      gateSkillNames: ['oat-gateable'],
+    });
+
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('warns when a configured gate targets a skill without oat_gateable true', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-not-gateable',
+      validSkillContent('oat-not-gateable'),
+    );
+
+    const result = await validateOatSkills(root, {
+      gateSkillNames: ['oat-not-gateable'],
+    });
+
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: skillPath,
+        message: 'Configured gate targets skill without oat_gateable: true',
+        severity: 'warning',
+      }),
+    ]);
+  });
+
+  it('warns when a configured gate targets an unknown skill', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills'), { recursive: true });
+
+    const result = await validateOatSkills(root, {
+      gateSkillNames: ['oat-unknown'],
+    });
+
+    expect(result.validatedSkillCount).toBe(0);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        file: join(root, '.agents', 'skills', 'oat-unknown', 'SKILL.md'),
+        message: 'Configured gate targets unknown skill: oat-unknown',
+        severity: 'warning',
+      }),
+    ]);
   });
 
   it('reports frontmatter name mismatch with directory', async () => {

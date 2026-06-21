@@ -8,6 +8,7 @@ import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 export interface ValidationFinding {
   file: string;
   message: string;
+  severity?: 'error' | 'warning';
 }
 
 export interface ValidateOatSkillsResult {
@@ -26,6 +27,7 @@ export interface ValidateChangedSkillVersionBumpsResult {
 
 export interface ValidateOatSkillsOptions {
   baseRef?: string;
+  gateSkillNames?: readonly string[];
 }
 
 export type ExecFileResult = {
@@ -64,6 +66,13 @@ function getFrontmatterScalar(frontmatter: string, key: string): string | null {
   const re = new RegExp(`^${key}:\\s*(.*)$`, 'm');
   const match = frontmatter.match(re);
   return match?.[1]?.trim() ?? null;
+}
+
+function hasTrueFrontmatterValue(frontmatter: string, key: string): boolean {
+  return (
+    frontmatterHasKey(frontmatter, key) &&
+    getFrontmatterScalar(frontmatter, key) === 'true'
+  );
 }
 
 function isValidSemver(value: string): boolean {
@@ -180,6 +189,51 @@ function validateQuickStartSemantics(
       message:
         'Quick-start must treat a bare project name as insufficient input, ask for a project description, and avoid inferring scope from the repo',
     });
+  }
+}
+
+function normalizeGateSkillNames(
+  gateSkillNames: readonly string[] | undefined,
+): string[] {
+  if (!gateSkillNames) {
+    return [];
+  }
+
+  return [
+    ...new Set(gateSkillNames.map((name) => name.trim()).filter(Boolean)),
+  ].sort();
+}
+
+async function collectGateabilityFindings(
+  skillsRoot: string,
+  gateSkillNames: readonly string[] | undefined,
+  findings: ValidationFinding[],
+): Promise<void> {
+  for (const skillName of normalizeGateSkillNames(gateSkillNames)) {
+    const skillPath = join(skillsRoot, skillName, 'SKILL.md');
+    let content: string;
+    try {
+      content = await readFile(skillPath, 'utf8');
+    } catch {
+      findings.push({
+        file: skillPath,
+        message: `Configured gate targets unknown skill: ${skillName}`,
+        severity: 'warning',
+      });
+      continue;
+    }
+
+    const frontmatter = getFrontmatterBlock(content);
+    if (
+      frontmatter === null ||
+      !hasTrueFrontmatterValue(frontmatter, 'oat_gateable')
+    ) {
+      findings.push({
+        file: skillPath,
+        message: 'Configured gate targets skill without oat_gateable: true',
+        severity: 'warning',
+      });
+    }
   }
 }
 
@@ -423,6 +477,12 @@ export async function validateOatSkills(
       validateQuickStartSemantics(skillPath, content, findings);
     }
   }
+
+  await collectGateabilityFindings(
+    skillsRoot,
+    options.gateSkillNames,
+    findings,
+  );
 
   if (options.baseRef) {
     const changedSkillFiles = await listChangedSkillFiles(
