@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-21
-oat_current_task_id: p06-t01
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -31,10 +31,10 @@ oat_generated: false
 | Phase 3 — Eligibility validation         | complete | 1     | 1/1       |
 | Phase 4 — CLI read/write surfaces        | complete | 2     | 2/2       |
 | Phase 5 — cross-provider-exec dispatcher | complete | 1     | 1/1       |
-| Phase 6 — Skill marker + Gate step       | pending  | 1     | 0/1       |
+| Phase 6 — Skill marker + Gate step       | complete | 1     | 1/1       |
 | Phase 7 — Release bookkeeping            | pending  | 1     | 0/1       |
 
-**Total:** 6/8 tasks completed
+**Total:** 7/8 tasks completed
 
 **Parallel group:** `[['p02','p03']]` — resolver + eligibility validation run concurrently after Phase 1.
 
@@ -419,10 +419,72 @@ oat_generated: false
 
 ## Phase 6: Skill marker + Gate Execution step
 
+**Status:** complete
+**Started:** 2026-06-21
+**Completed:** 2026-06-21
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added `oat_gateable: true` to `oat-project-implement` and `oat-project-plan`.
+- Bumped each changed skill version once for the PR-scoped skill changes.
+- Added verbatim-identical Gate Execution blocks describing gate resolution, command execution, failure modes, bounded remediation, escalation, V1 runtime selection, and `--target` pinning.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` - gateable marker, version bump, Gate Execution step.
+- `.agents/skills/oat-project-plan/SKILL.md` - gateable marker, version bump, Gate Execution step.
+
+**Verification:**
+
+- Run: `pnpm oat:validate-skills`
+- Result: passed.
+- Run: Gate Execution block comparison between the two skills.
+- Result: passed.
+- Review run: scoped `git diff --check`
+- Result: passed.
+
+**Notes / Decisions:**
+
+- No plan/design divergence.
+
+### Task p06-t01: `oat_gateable` marker + Gate Execution step on lifecycle skills
+
+**Status:** completed
+**Commit:** `1725f73b` (`feat(p06-t01): add oat_gateable marker + Gate Execution step`)
+
+**Outcome (required when completed):**
+
+- The two lifecycle skills now opt into gates and explain how to execute configured gate commands before declaring completion.
+- The Gate Execution prose is intentionally duplicated verbatim for V1; a shared include/snippet remains out of scope.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.agents/skills/oat-project-plan/SKILL.md`
+
+**Verification:**
+
+- Run: `pnpm oat:validate-skills`
+- Result: passed.
+- Run: Gate Execution block comparison between the two skills.
+- Result: passed.
+- Review run: scoped `git diff --check`
+- Result: passed.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+## Phase 7: Release bookkeeping
+
 **Status:** pending
 **Started:** -
 
-### Task p06-t01: `oat_gateable` marker + Gate Execution step on lifecycle skills
+### Task p07-t01: Lockstep public-package version bump + release validation
 
 **Status:** pending
 **Commit:** -
@@ -585,6 +647,40 @@ Run-scoped snapshot only. The durable record is `## Deviations from Plan / Desig
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 5 — 2026-06-20 22:18
+
+**Branch:** `workflow-end-triggers`
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p06   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p06: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p06 implementation used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-phase-implementer-xhigh`.
+- Dispatch: p06 review used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. The durable record is `## Deviations from Plan / Design`; consolidate any non-`None` entries there at the next phase boundary.
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -693,6 +789,29 @@ Chronological log of implementation progress.
 
 - None.
 
+### 2026-06-20 — p06 skill marker + Gate Execution step
+
+**Session:** 22:18
+
+- [x] p06-t01: `oat_gateable` marker + Gate Execution step on lifecycle skills - `1725f73b`
+
+**What changed (high level):**
+
+- Added gateable frontmatter and version bumps to `oat-project-implement` and `oat-project-plan`.
+- Added identical Gate Execution steps that tell future agents how to resolve and execute configured gates, handle failures, and use runtime selection/pinning.
+
+**Decisions:**
+
+- Kept the two Gate Execution blocks duplicated and verbatim-identical, as planned for V1.
+
+**Follow-ups / TODO:**
+
+- Continue with Phase 7 release bookkeeping (`p07-t01`), then pause at the configured final HiLL checkpoint after the phase is reviewed.
+
+**Blockers:**
+
+- None.
+
 ---
 
 ## Deviations from Plan / Design
@@ -714,6 +833,7 @@ Track test execution during implementation.
 | 3     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/internal/validate-oat-skills.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- internal validate-oat-skills --json`; post-merge `pnpm test`; `pnpm lint`; `pnpm type-check` | yes    | 0      | n/a      |
 | 4     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate resolve oat-project-plan --json`                                                                                                        | yes    | 0      | n/a      |
 | 5     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate cross-provider-exec --help`                                                                                                             | yes    | 0      | n/a      |
+| 6     | `pnpm oat:validate-skills`; Gate Execution block comparison; scoped `git diff --check`                                                                                                                                                                                                                                                                   | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
