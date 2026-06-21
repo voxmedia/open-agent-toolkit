@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-20
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 1     | 1/1       |
 
-**Total:** 5/6 tasks completed (final-review fix p02-t01 pending)
+**Total:** 6/6 tasks completed
 
 ---
 
@@ -140,15 +140,20 @@ No deferrals. No design/code drift accepted (the plan had not yet been implement
 
 ### Task p02-t01: (review) Apply scope additions before confirmed removals
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 96f4919a
 
-**Notes:**
+**Outcome:**
 
-- From final-review v2 finding I1 (`code_fix_required`). Reorder the apply phase
-  so installers for `reconciliation.adds` run before `removePackFromScope` for
-  confirmed `stagedRemovals`; add a regression test for install-failure-mid-move
-  (`user → project`) asserting the `user` scope is not removed.
+- Confirmed `stagedRemovals` now apply **after** all per-pack install blocks
+  (moved out of the pre-install position). A `user → project` move whose project
+  install throws now aborts via the existing try/catch before any removal runs —
+  the preserved scope survives. `affectedScopes` accounting, the non-interactive
+  additive guard, and the batch-confirm gate are unchanged.
+- Regression test added: failed replacement add on a `user → project` move
+  asserts `removeDirectory`/`removeFile` are not called (fails pre-fix, passes
+  post-fix). 49 CLI tests pass; lint + type-check clean.
+- Re-review (oat-reviewer, opus): **pass**, I1 resolved, zero findings.
 
 ---
 
@@ -194,6 +199,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 #### Artifact / Design Deltas
 
 - See `## Deviations from Plan / Design` — one accepted design-wording deviation (idempotent full-end-state install vs adds-only); code is source of truth, no follow-up.
+
+### Run 2 — 2026-06-20
+
+**Branch:** feat/tools-install-additive-scope
+**Tier:** 1 (subagents)
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | pass   | 0/2            | merged      |
+
+#### Dispatch Notes
+
+- Dispatch: p02 fix (review I1) via oat-phase-implementer, model_axis=selected:opus. Re-review via oat-reviewer @ opus → pass, I1 resolved.
+
+#### Outstanding Items
+
+- None. Final review now passed (v2 re-review). PR #113 to be updated with the fix.
+
+#### Artifact / Design Deltas
+
+- None.
 
 <!-- orchestration-runs-end -->
 
@@ -264,6 +294,7 @@ Track test execution during implementation.
 - The interactive scope step is a reconcile-to-end-state manager: a per-pack selector (`project / user / both`) defaulting to current placement. Removals happen only when you explicitly choose a narrower end-state, gated behind a single batch `Apply? (y/n)` confirmation (decline = no changes).
 - Non-interactive paths (`--scope project|user` and the default set) are strictly additive and guarded so a removal can never run non-interactively.
 - Auto-sync is scoped to actually-changed scopes, so a preserved scope is never re-synced or pruned.
+- Confirmed scope moves apply additions before destructive removals, so a failed replacement install can never leave a pack uninstalled in both scopes (final-review fix p02-t01).
 
 **Behavioral changes (user-facing):**
 

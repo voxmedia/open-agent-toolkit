@@ -386,12 +386,13 @@ git commit -m "fix(p02-t01): apply scope additions before confirmed removals (re
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                            |
-| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
-| p01    | code     | passed      | 2026-06-20 | reviews/archived/final-review-2026-06-20.md         |
-| final  | code     | fixes_added | 2026-06-20 | reviews/archived/final-review-2026-06-20-v2.md      |
-| design | artifact | passed      | 2026-06-19 | design.md (lightweight, collaborative)              |
-| plan   | artifact | passed      | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
+| Scope  | Type     | Status | Date       | Artifact                                            |
+| ------ | -------- | ------ | ---------- | --------------------------------------------------- |
+| p01    | code     | passed | 2026-06-20 | reviews/archived/final-review-2026-06-20.md         |
+| p02    | code     | passed | 2026-06-20 | reviews/archived/final-review-2026-06-20-v2.md      |
+| final  | code     | passed | 2026-06-20 | reviews/archived/final-review-2026-06-20-v2.md      |
+| design | artifact | passed | 2026-06-19 | design.md (lightweight, collaborative)              |
+| plan   | artifact | passed | 2026-06-20 | reviews/archived/artifact-plan-review-2026-06-20.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
