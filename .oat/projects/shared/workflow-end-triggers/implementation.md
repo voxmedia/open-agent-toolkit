@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-21
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -32,9 +32,9 @@ oat_generated: false
 | Phase 4 — CLI read/write surfaces        | complete | 2     | 2/2       |
 | Phase 5 — cross-provider-exec dispatcher | complete | 1     | 1/1       |
 | Phase 6 — Skill marker + Gate step       | complete | 1     | 1/1       |
-| Phase 7 — Release bookkeeping            | pending  | 1     | 0/1       |
+| Phase 7 — Release bookkeeping            | complete | 1     | 1/1       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 **Parallel group:** `[['p02','p03']]` — resolver + eligibility validation run concurrently after Phase 1.
 
@@ -481,13 +481,87 @@ oat_generated: false
 
 ## Phase 7: Release bookkeeping
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-21
+**Completed:** 2026-06-21
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Bumped the five lockstep public package manifests from `0.1.27` to `0.1.28`.
+- Updated the generated CLI public-package versions asset to match the bumped public package versions used by docs scaffold tooling.
+- Fixed the root help inline snapshot to include the new `gate` command that Phase 4 registered.
+- Re-ran release validation and the full verification stack successfully.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - public package version bump.
+- `packages/control-plane/package.json` - public package version bump.
+- `packages/docs-config/package.json` - public package version bump.
+- `packages/docs-theme/package.json` - public package version bump.
+- `packages/docs-transforms/package.json` - public package version bump.
+- `packages/cli/assets/public-package-versions.json` - generated public-package version asset.
+- `packages/cli/src/commands/help-snapshots.test.ts` - root help snapshot update for the registered `gate` command.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: passed.
+- Run: `pnpm build`
+- Result: passed.
+- Run: `pnpm lint`
+- Result: passed.
+- Run: `pnpm type-check`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
+- Result: passed.
+- Run: `pnpm test`
+- Result: passed.
+
+**Notes / Decisions:**
+
+- The generated `packages/cli/assets/public-package-versions.json` update was accepted as tooling-required release bookkeeping.
+- The help snapshot update was accepted as a release-verification fix for earlier Phase 4 CLI command registration.
 
 ### Task p07-t01: Lockstep public-package version bump + release validation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commits:** `20c97eae` (`chore(p07-t01): lockstep public-package version bump + release validation`), `d77117f8` (`fix(p07): update root help snapshot for gate command`)
+
+**Outcome (required when completed):**
+
+- All five public packages are bumped consistently to `0.1.28`.
+- Release validation and the full project verification stack pass.
+
+**Files changed:**
+
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+- `packages/cli/assets/public-package-versions.json`
+- `packages/cli/src/commands/help-snapshots.test.ts`
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: passed.
+- Run: `pnpm build`
+- Result: passed.
+- Run: `pnpm lint`
+- Result: passed.
+- Run: `pnpm type-check`
+- Result: passed.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
+- Result: passed.
+- Run: `pnpm test`
+- Result: passed.
+
+**Issues Encountered:**
+
+- Initial full `pnpm test` failed because the root help inline snapshot did not include the new `gate` command from Phase 4. Fixed by `d77117f8`; p07 review passed with no findings.
 
 ---
 
@@ -681,6 +755,42 @@ Run-scoped snapshot only. The durable record is `## Deviations from Plan / Desig
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 6 — 2026-06-20 22:32
+
+**Branch:** `workflow-end-triggers`
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition                           |
+| ----- | ----------- | ------ | -------------- | ------------------------------------- |
+| p07   | DONE        | pass   | 1/2            | passed; final HiLL checkpoint reached |
+
+#### Parallel Groups
+
+- p07: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p07 implementation used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-phase-implementer-xhigh`.
+- Dispatch: p07 verification fix used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-phase-implementer-xhigh`.
+- Dispatch: p07 review used `model_axis=inherited`, `effort_axis=selected:xhigh`, `dispatch_ceiling=xhigh`, target `oat-reviewer-xhigh`.
+
+#### Outstanding Items
+
+- Final code review remains pending; this run stopped at the configured final phase HiLL checkpoint.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. The durable record is `## Deviations from Plan / Design`; consolidate any non-`None` entries there at the next phase boundary.
+
+| Task / Review      | Source Artifact              | Planned / Documented                              | Actual / Accepted                                                 | Reason                                                                                                     | Source of Truth             | Follow-up |
+| ------------------ | ---------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------- | --------- |
+| p07 implementation | `plan.md` p07 declared files | Five package manifests only                       | Also committed `packages/cli/assets/public-package-versions.json` | Release/build tooling requires the generated public-package version asset to match bumped package versions | Implementation + p07 review | None      |
+| p07 verification   | `plan.md` p07 declared files | Release validation only touches package manifests | Added `packages/cli/src/commands/help-snapshots.test.ts` fix      | Full `pnpm test` exposed stale root help snapshot for the Phase 4 `gate` command registration              | Implementation + p07 review | None      |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -812,15 +922,42 @@ Chronological log of implementation progress.
 
 - None.
 
+### 2026-06-20 — p07 release bookkeeping
+
+**Session:** 22:32
+
+- [x] p07-t01: Lockstep public-package version bump + release validation - `20c97eae`, `d77117f8`
+
+**What changed (high level):**
+
+- Bumped all five lockstep public package manifests from `0.1.27` to `0.1.28`.
+- Updated the generated CLI public-package version asset.
+- Fixed the root help snapshot to include the new `gate` command so the full test suite passes.
+
+**Decisions:**
+
+- Accepted the generated public-package version asset as part of release bookkeeping.
+- Accepted the help snapshot update as a release-verification fix for earlier command registration.
+
+**Follow-ups / TODO:**
+
+- Pause at the configured final phase HiLL checkpoint. Final code review is still pending.
+
+**Blockers:**
+
+- None.
+
 ---
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact              | Planned / Documented                                                                 | Actual / Accepted                                                                          | Reason                                                                                             | Source of Truth                | Follow-up |
-| ------------- | ---------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------ | --------- |
-| p02 review    | `plan.md` p02 declared files | Resolver phase limited to `packages/cli/src/config/resolve.ts` and `resolve.test.ts` | Accepted fix also touched `packages/cli/src/config/oat-config.ts` and `oat-config.test.ts` | Real config loading dropped partial built-in target overrides before the resolver could merge them | Implementation + p02 re-review | None      |
+| Task / Review      | Source Artifact              | Planned / Documented                                                                 | Actual / Accepted                                                                          | Reason                                                                                                     | Source of Truth                | Follow-up |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------------ | --------- |
+| p02 review         | `plan.md` p02 declared files | Resolver phase limited to `packages/cli/src/config/resolve.ts` and `resolve.test.ts` | Accepted fix also touched `packages/cli/src/config/oat-config.ts` and `oat-config.test.ts` | Real config loading dropped partial built-in target overrides before the resolver could merge them         | Implementation + p02 re-review | None      |
+| p07 implementation | `plan.md` p07 declared files | Five package manifests only                                                          | Also committed `packages/cli/assets/public-package-versions.json`                          | Release/build tooling requires the generated public-package version asset to match bumped package versions | Implementation + p07 review    | None      |
+| p07 verification   | `plan.md` p07 declared files | Release validation only touches package manifests                                    | Added `packages/cli/src/commands/help-snapshots.test.ts` fix                               | Full `pnpm test` exposed stale root help snapshot for the Phase 4 `gate` command registration              | Implementation + p07 review    | None      |
 
 ## Test Results
 
@@ -834,29 +971,47 @@ Track test execution during implementation.
 | 4     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate resolve oat-project-plan --json`                                                                                                        | yes    | 0      | n/a      |
 | 5     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm run cli -- gate cross-provider-exec --help`                                                                                                             | yes    | 0      | n/a      |
 | 6     | `pnpm oat:validate-skills`; Gate Execution block comparison; scoped `git diff --check`                                                                                                                                                                                                                                                                   | yes    | 0      | n/a      |
+| 7     | `pnpm release:validate`; `pnpm build`; `pnpm lint`; `pnpm type-check`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`; `pnpm test`                                                                                                                                                                          | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Per-skill workflow gates in OAT config via `workflow.gates.skills`.
+- Runtime-agnostic exec target registry via `workflow.gates.execTargets`, including built-in Codex, Claude, and Cursor defaults.
+- `oat gate resolve`, `oat gate set/unset`, `oat gate target set/unset`, and `oat gate cross-provider-exec`.
+- Gateability validation warnings for configured gates targeting missing or non-gateable skills.
+- `oat_gateable` marker and Gate Execution instructions for `oat-project-implement` and `oat-project-plan`.
+- Lockstep public package version bump to `0.1.28`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Users can configure gates for gate-aware skills and dispatch a prompt through the highest-priority available runtime that is not the current runtime by default.
+- Users can pin a specific exec target with `--target` or allow deterministic target selection with default same-runtime avoidance.
+- Skill validation warns when configured gates target skills that are missing or not marked `oat_gateable`.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/config/oat-config.ts` - gate/exec-target config types, normalization, and built-ins.
+- `packages/cli/src/config/resolve.ts` - gate and exec-target resolution.
+- `packages/cli/src/commands/gate/index.ts` - gate command group and cross-provider dispatcher.
+- `packages/cli/src/validation/skills.ts` - gateability validation.
+- `.agents/skills/oat-project-implement/SKILL.md` - gateable marker and Gate Execution step.
+- `.agents/skills/oat-project-plan/SKILL.md` - gateable marker and Gate Execution step.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused Vitest coverage for config, resolver, validation, gate commands, and help snapshots.
+- `pnpm release:validate`
+- `pnpm build`
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm test`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- p02 fix broadened into config normalization so partial exec-target overrides survive real config loading.
+- p07 release bookkeeping included the generated public-package version asset and root help snapshot fix required by repository validation.
 
 ## References
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: 1725f73b
+oat_current_task: null
+oat_last_commit: d77117f8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p07'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-20T16:13:42.618Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-21T03:18:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-21T03:32:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. Current task: `p07-t01`.
+Implementation tasks complete. Final phase HiLL checkpoint reached; final code review remains pending.
 
 ## Artifacts
 
@@ -47,7 +47,7 @@ Implementation in progress. Current task: `p07-t01`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; reviewed by Codex + Cursor)
 - **Plan:** `plan.md` (complete — 7 phases, 8 tasks; `oat_ready_for: oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress; 7/8 tasks)
+- **Implementation:** `implementation.md` (implementation tasks complete; 8/8 tasks)
 
 ## Progress
 
@@ -60,7 +60,9 @@ Implementation in progress. Current task: `p07-t01`.
 - ✓ Phase 4 complete (`p04-t01`, `p04-t02`)
 - ✓ Phase 5 complete (`p05-t01`)
 - ✓ Phase 6 complete (`p06-t01`)
-- ⧗ Implementation in progress (`p07-t01`)
+- ✓ Phase 7 complete (`p07-t01`)
+- ⧗ Final phase HiLL checkpoint reached
+- ⧗ Final code review pending
 
 ## Blockers
 
@@ -68,4 +70,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 7 release bookkeeping (`p07-t01`). HiLL checkpoints pause after Phase 7.
+Approve continuation past the Phase 7 HiLL checkpoint, then run the final code review.
