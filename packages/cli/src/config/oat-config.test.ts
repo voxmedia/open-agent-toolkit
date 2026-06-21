@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  BUILTIN_EXEC_TARGETS,
   clearActiveIdea,
   clearActiveProject,
   readOatConfig,
@@ -804,6 +805,192 @@ describe('oat-config', () => {
         hillCheckpointDefault: 'every',
         createPrOnComplete: true,
       });
+    });
+
+    it('normalizes workflow.gates.skills entries and preserves null tombstones', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              skills: {
+                'oat-project-implement': {
+                  command: 'pnpm test',
+                  onFailure: 'block',
+                  description: 'Run tests before done',
+                  maxAttempts: 3,
+                  execPolicy: { avoid: 'none' },
+                },
+                'oat-project-plan': {
+                  command: 'pnpm lint',
+                  onFailure: 'prompt',
+                },
+                'warn-only': {
+                  command: 'pnpm type-check',
+                  onFailure: 'warn',
+                  maxAttempts: 0,
+                },
+                disabled: null,
+                missingCommand: { onFailure: 'block' },
+                emptyCommand: { command: '   ', onFailure: 'block' },
+                badFailure: { command: 'pnpm build', onFailure: 'stop' },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow?.gates?.skills).toEqual({
+        'oat-project-implement': {
+          command: 'pnpm test',
+          onFailure: 'block',
+          description: 'Run tests before done',
+          maxAttempts: 3,
+        },
+        'oat-project-plan': {
+          command: 'pnpm lint',
+          onFailure: 'prompt',
+          maxAttempts: 2,
+        },
+        'warn-only': {
+          command: 'pnpm type-check',
+          onFailure: 'warn',
+          maxAttempts: 2,
+        },
+        disabled: null,
+      });
+      expect(
+        config.workflow?.gates?.skills?.['oat-project-implement'],
+      ).not.toHaveProperty('execPolicy');
+    });
+
+    it('normalizes workflow.gates.execTargets entries and preserves null tombstones', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                'codex-custom': {
+                  runtime: 'codex',
+                  baseCommand: ['codex', 'exec'],
+                  hostDetectionCommand: [
+                    'sh',
+                    '-c',
+                    'test -n "$CODEX_THREAD_ID"',
+                  ],
+                  availabilityCommand: ['codex', '--version'],
+                  priority: 80,
+                },
+                'default-priority': {
+                  runtime: 'custom',
+                  baseCommand: ['custom-agent'],
+                },
+                'invalid-optional-commands': {
+                  runtime: 'custom',
+                  baseCommand: ['custom-agent'],
+                  hostDetectionCommand: ['sh', 1],
+                  availabilityCommand: 'custom-agent --version',
+                  priority: 10,
+                },
+                disabled: null,
+                missingRuntime: {
+                  baseCommand: ['agent'],
+                  priority: 1,
+                },
+                emptyRuntime: {
+                  runtime: '   ',
+                  baseCommand: ['agent'],
+                  priority: 1,
+                },
+                missingBaseCommand: {
+                  runtime: 'custom',
+                  priority: 1,
+                },
+                emptyBaseCommand: {
+                  runtime: 'custom',
+                  baseCommand: [],
+                  priority: 1,
+                },
+                nonStringBaseCommand: {
+                  runtime: 'custom',
+                  baseCommand: ['agent', 1],
+                  priority: 1,
+                },
+                badPriority: {
+                  runtime: 'custom',
+                  baseCommand: ['agent'],
+                  priority: 'high',
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow?.gates?.execTargets).toEqual({
+        'codex-custom': {
+          runtime: 'codex',
+          baseCommand: ['codex', 'exec'],
+          hostDetectionCommand: ['sh', '-c', 'test -n "$CODEX_THREAD_ID"'],
+          availabilityCommand: ['codex', '--version'],
+          priority: 80,
+        },
+        'default-priority': {
+          runtime: 'custom',
+          baseCommand: ['custom-agent'],
+          priority: 0,
+        },
+        'invalid-optional-commands': {
+          runtime: 'custom',
+          baseCommand: ['custom-agent'],
+          priority: 10,
+        },
+        disabled: null,
+      });
+    });
+
+    it('exports built-in exec targets with pinned detector shapes', () => {
+      expect(BUILTIN_EXEC_TARGETS).toEqual({
+        'codex-default': {
+          runtime: 'codex',
+          baseCommand: ['codex', 'exec'],
+          hostDetectionCommand: [
+            'sh',
+            '-c',
+            '[ -n "$CODEX_THREAD_ID" ] || [ -n "$CODEX_SESSION_ID" ]',
+          ],
+          availabilityCommand: ['codex', '--version'],
+          priority: 100,
+        },
+        'claude-default': {
+          runtime: 'claude',
+          baseCommand: ['claude', '-p'],
+          hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
+          availabilityCommand: ['claude', '--version'],
+          priority: 100,
+        },
+        'cursor-default': {
+          runtime: 'cursor',
+          baseCommand: ['cursor-agent', '-p', '--force'],
+          hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
+          availabilityCommand: ['cursor-agent', '--version'],
+          priority: 70,
+        },
+      });
+      expect(BUILTIN_EXEC_TARGETS['cursor-default'].baseCommand).not.toContain(
+        '--model',
+      );
     });
 
     it('accepts workflow.designMode "collaborative"', async () => {
