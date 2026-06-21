@@ -7,17 +7,37 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import { BUILTIN_EXEC_TARGETS } from '@config/oat-config';
+import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
 import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createGateCommand } from './index';
+import { createGateCommand, selectExecTarget } from './index';
 
 interface HarnessOptions {
   cwd: string;
   home: string;
+  processEnv?: NodeJS.ProcessEnv;
+  runProcess?: ProcessRunner;
 }
+
+interface ProcessCall {
+  command: string;
+  args: string[];
+  purpose: 'host-detection' | 'availability' | 'execute';
+  stdio: 'ignore' | 'inherit';
+}
+
+type ProcessRunner = (
+  command: string,
+  args: string[],
+  options: {
+    cwd: string;
+    env: NodeJS.ProcessEnv;
+    purpose: ProcessCall['purpose'];
+    stdio: ProcessCall['stdio'];
+  },
+) => Promise<{ exitCode: number }>;
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
@@ -25,7 +45,7 @@ function createHarness(options: HarnessOptions): {
 } {
   const capture = createLoggerCapture();
 
-  const command = createGateCommand({
+  const overrides = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
       dryRun: false,
@@ -37,7 +57,11 @@ function createHarness(options: HarnessOptions): {
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
-  });
+    processEnv: options.processEnv ?? {},
+    ...(options.runProcess ? { runProcess: options.runProcess } : {}),
+  } as Parameters<typeof createGateCommand>[0];
+
+  const command = createGateCommand(overrides);
 
   return { capture, command };
 }
@@ -80,6 +104,105 @@ async function readJsonFile(path: string): Promise<unknown> {
 async function readResolvedTargets(root: string, home: string) {
   const effective = await resolveEffectiveConfig(root, join(home, '.oat'), {});
   return resolveExecTargets(effective);
+}
+
+function processKey(command: string, args: string[]): string {
+  return [command, ...args].join(' ');
+}
+
+function targetCommandKey(target: ExecTarget): string {
+  return processKey(target.baseCommand[0] ?? '', target.baseCommand.slice(1));
+}
+
+function createProcessRunner(
+  options: {
+    availableTargets?: Iterable<string>;
+    executeExitCode?: number;
+  } = {},
+): { calls: ProcessCall[]; runProcess: ProcessRunner } {
+  const calls: ProcessCall[] = [];
+  const availableTargets = new Set(
+    options.availableTargets ?? [
+      'codex-default',
+      'claude-default',
+      'cursor-default',
+    ],
+  );
+  const commandToTarget = new Map(
+    Object.entries(BUILTIN_EXEC_TARGETS).flatMap(([id, target]) => [
+      [targetCommandKey(target), id],
+      target.availabilityCommand
+        ? [
+            processKey(
+              target.availabilityCommand[0] ?? '',
+              target.availabilityCommand.slice(1),
+            ),
+            id,
+          ]
+        : [targetCommandKey(target), id],
+    ]),
+  );
+
+  const runProcess: ProcessRunner = async (command, args, runOptions) => {
+    calls.push({
+      command,
+      args: [...args],
+      purpose: runOptions.purpose,
+      stdio: runOptions.stdio,
+    });
+
+    if (runOptions.purpose === 'host-detection') {
+      const script = args[1] ?? '';
+      if (script.includes('CLAUDECODE')) {
+        return { exitCode: runOptions.env.CLAUDECODE ? 0 : 1 };
+      }
+      if (
+        script.includes('CODEX_THREAD_ID') ||
+        script.includes('CODEX_SESSION_ID')
+      ) {
+        return {
+          exitCode:
+            runOptions.env.CODEX_THREAD_ID || runOptions.env.CODEX_SESSION_ID
+              ? 0
+              : 1,
+        };
+      }
+      if (script.includes('CURSOR_AGENT')) {
+        return { exitCode: runOptions.env.CURSOR_AGENT ? 0 : 1 };
+      }
+      return { exitCode: 1 };
+    }
+
+    if (runOptions.purpose === 'availability') {
+      const targetId = commandToTarget.get(processKey(command, args));
+      return { exitCode: targetId && availableTargets.has(targetId) ? 0 : 1 };
+    }
+
+    return { exitCode: options.executeExitCode ?? 0 };
+  };
+
+  return { calls, runProcess };
+}
+
+async function runCrossProviderExec(options: {
+  root: string;
+  home: string;
+  processEnv?: NodeJS.ProcessEnv;
+  runProcess: ProcessRunner;
+  args?: string[];
+}): Promise<LoggerCapture> {
+  process.exitCode = undefined;
+  const { command, capture } = createHarness({
+    cwd: options.root,
+    home: options.home,
+    processEnv: options.processEnv,
+    runProcess: options.runProcess,
+  });
+  await runCommand(command, [
+    'cross-provider-exec',
+    ...(options.args ?? ['Run', 'review']),
+  ]);
+  return capture;
 }
 
 describe('oat gate', () => {
@@ -561,5 +684,331 @@ describe('oat gate', () => {
       ),
     });
     expect(process.exitCode).toBe(1);
+  });
+
+  it('selects targets by descending priority and lexicographic id', () => {
+    const selected = selectExecTarget(
+      {
+        'codex-default': {
+          runtime: 'codex',
+          baseCommand: ['codex', 'exec'],
+          priority: 100,
+        },
+        'claude-default': {
+          runtime: 'claude',
+          baseCommand: ['claude', '-p'],
+          priority: 100,
+        },
+        'cursor-default': {
+          runtime: 'cursor',
+          baseCommand: ['cursor-agent', '-p'],
+          priority: 70,
+        },
+      },
+      'cursor',
+      'same-runtime',
+    );
+
+    expect(selected).toEqual({
+      id: 'claude-default',
+      target: {
+        runtime: 'claude',
+        baseCommand: ['claude', '-p'],
+        priority: 100,
+      },
+    });
+  });
+
+  it('detects built-in runtimes and avoids the current runtime by default', async () => {
+    const cases: Array<{
+      name: string;
+      env: NodeJS.ProcessEnv;
+      expectedCommand: string;
+      expectedArgs: string[];
+      expectedDetectionCount: number;
+    }> = [
+      {
+        name: 'claude',
+        env: { CLAUDECODE: '1' },
+        expectedCommand: 'codex',
+        expectedArgs: ['exec', 'Run', 'review'],
+        expectedDetectionCount: 1,
+      },
+      {
+        name: 'codex thread',
+        env: { CODEX_THREAD_ID: 'thread-1' },
+        expectedCommand: 'claude',
+        expectedArgs: ['-p', 'Run', 'review'],
+        expectedDetectionCount: 2,
+      },
+      {
+        name: 'codex session',
+        env: { CODEX_SESSION_ID: 'session-1' },
+        expectedCommand: 'claude',
+        expectedArgs: ['-p', 'Run', 'review'],
+        expectedDetectionCount: 2,
+      },
+      {
+        name: 'cursor',
+        env: { CURSOR_AGENT: '1' },
+        expectedCommand: 'claude',
+        expectedArgs: ['-p', 'Run', 'review'],
+        expectedDetectionCount: 3,
+      },
+    ];
+
+    for (const testCase of cases) {
+      const { root, home } = await setup();
+      const runner = createProcessRunner();
+
+      await runCrossProviderExec({
+        root,
+        home,
+        processEnv: testCase.env,
+        runProcess: runner.runProcess,
+      });
+
+      expect(
+        runner.calls.filter((call) => call.purpose === 'host-detection'),
+        testCase.name,
+      ).toHaveLength(testCase.expectedDetectionCount);
+      expect(runner.calls.at(-1), testCase.name).toMatchObject({
+        command: testCase.expectedCommand,
+        args: testCase.expectedArgs,
+        purpose: 'execute',
+        stdio: 'inherit',
+      });
+      expect(process.exitCode).toBe(0);
+    }
+  });
+
+  it('does not read ambient OAT runtime or target env vars', async () => {
+    let setupResult = await setup();
+    let runner = createProcessRunner({
+      availableTargets: ['claude-default'],
+    });
+
+    await runCrossProviderExec({
+      root: setupResult.root,
+      home: setupResult.home,
+      processEnv: { OAT_CURRENT_RUNTIME: 'claude' },
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+
+    setupResult = await setup();
+    runner = createProcessRunner({
+      availableTargets: ['codex-default'],
+    });
+
+    await runCrossProviderExec({
+      root: setupResult.root,
+      home: setupResult.home,
+      processEnv: { CODEX_COMPANION_SESSION_ID: 'companion-1' },
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+
+    setupResult = await setup();
+    runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root: setupResult.root,
+      home: setupResult.home,
+      processEnv: {
+        CURSOR_AGENT: '1',
+        OAT_GATE_EXEC_TARGET: 'codex-default',
+      },
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('honors --current-runtime as an explicit detection override', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['--current-runtime', 'codex', 'Run', 'review'],
+    });
+
+    expect(
+      runner.calls.filter((call) => call.purpose === 'host-detection'),
+    ).toHaveLength(0);
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('runs an explicit --target and skips detection and avoidance', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner({ availableTargets: [] });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['--target', 'claude-default', 'Run', 'review'],
+    });
+
+    expect(
+      runner.calls.filter((call) => call.purpose !== 'execute'),
+    ).toHaveLength(0);
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('fails with an actionable error for an unknown explicit target', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    const capture = await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'missing-target', 'Run', 'review'],
+    });
+
+    expect(runner.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('Unknown exec target "missing-target"'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('supports --avoid none to keep same-runtime targets eligible', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'none', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('fails when no eligible non-current runtime is available', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'cursor-default': null,
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+    });
+
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('No eligible gate exec target'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('checks availability in deterministic order and runs the first available target', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner({
+      availableTargets: ['codex-default'],
+    });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CURSOR_AGENT: '1' },
+      runProcess: runner.runProcess,
+    });
+
+    const availabilityCalls = runner.calls.filter(
+      (call) => call.purpose === 'availability',
+    );
+    expect(availabilityCalls).toMatchObject([
+      { command: 'claude', args: ['--version'] },
+      { command: 'codex', args: ['--version'] },
+    ]);
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('passes prompt args to the child command and exits with the child status', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner({ executeExitCode: 7 });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['Review', 'the', 'current', 'project'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Review', 'the', 'current', 'project'],
+      purpose: 'execute',
+      stdio: 'inherit',
+    });
+    expect(process.exitCode).toBe(7);
   });
 });

@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 
 import {
@@ -7,12 +8,14 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
+  BUILTIN_EXEC_TARGETS,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
+  type ExecTarget,
   type ExecTargetConfig,
   type GateConfig,
   type GateOnFailure,
@@ -23,6 +26,7 @@ import {
 } from '@config/oat-config';
 import {
   resolveEffectiveConfig,
+  resolveExecTargets,
   resolveGate,
   type ResolvedConfig,
 } from '@config/resolve';
@@ -46,6 +50,11 @@ interface GateCommandDependencies {
     userConfigDir: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<ResolvedConfig>;
+  runProcess: (
+    command: string,
+    args: string[],
+    options: ProcessRunOptions,
+  ) => Promise<ProcessRunResult>;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -76,9 +85,32 @@ interface TargetUnsetOptions {
   layer?: string;
 }
 
+interface CrossProviderExecOptions {
+  target?: string;
+  avoid?: string;
+  currentRuntime?: string;
+}
+
+interface ProcessRunOptions {
+  cwd: string;
+  env: NodeJS.ProcessEnv;
+  purpose: 'host-detection' | 'availability' | 'execute';
+  stdio: 'ignore' | 'inherit';
+}
+
+interface ProcessRunResult {
+  exitCode: number;
+}
+
+type CrossProviderAvoid = 'same-runtime' | 'none';
 type GateWriteLayer = 'shared' | 'local' | 'user';
 type GateConfigContainer = OatConfig | OatLocalConfig | UserConfig;
 type GateConfigMutation = (config: GateConfigContainer) => GateConfigContainer;
+
+export interface SelectedExecTarget {
+  id: string;
+  target: ExecTarget;
+}
 
 const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   buildCommandContext,
@@ -90,6 +122,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   readUserConfig,
   writeUserConfig,
   resolveEffectiveConfig,
+  runProcess: runChildProcess,
   processEnv: process.env,
 };
 
@@ -99,6 +132,29 @@ const VALID_WRITE_LAYERS: readonly GateWriteLayer[] = [
   'local',
   'user',
 ];
+const VALID_CROSS_PROVIDER_AVOIDS: readonly CrossProviderAvoid[] = [
+  'same-runtime',
+  'none',
+];
+
+async function runChildProcess(
+  command: string,
+  args: string[],
+  options: ProcessRunOptions,
+): Promise<ProcessRunResult> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      env: options.env,
+      stdio: options.stdio,
+    });
+
+    child.on('error', reject);
+    child.on('close', (code) => {
+      resolve({ exitCode: code ?? 1 });
+    });
+  });
+}
 
 function isGateWriteLayer(value: string): value is GateWriteLayer {
   return (VALID_WRITE_LAYERS as readonly string[]).includes(value);
@@ -151,6 +207,16 @@ function parseLayer(value: string | undefined): GateWriteLayer {
     );
   }
   return layer;
+}
+
+function parseCrossProviderAvoid(
+  value: string | undefined,
+): CrossProviderAvoid {
+  const avoid = value?.trim() || 'same-runtime';
+  if (!(VALID_CROSS_PROVIDER_AVOIDS as readonly string[]).includes(avoid)) {
+    throw new Error('--avoid must be one of same-runtime | none.');
+  }
+  return avoid as CrossProviderAvoid;
 }
 
 function parseOnFailure(value: string | undefined): GateOnFailure {
@@ -354,6 +420,178 @@ async function readEffectiveConfig(
   );
 }
 
+function sortedExecTargetEntries(
+  registry: Readonly<Record<string, ExecTarget>>,
+): SelectedExecTarget[] {
+  return Object.entries(registry)
+    .map(([id, target]) => ({ id, target }))
+    .sort((left, right) => {
+      const priority = right.target.priority - left.target.priority;
+      return priority === 0 ? left.id.localeCompare(right.id) : priority;
+    });
+}
+
+function cloneExecTarget(target: ExecTarget): ExecTarget {
+  return {
+    runtime: target.runtime,
+    baseCommand: [...target.baseCommand],
+    priority: target.priority,
+    ...(target.hostDetectionCommand
+      ? { hostDetectionCommand: [...target.hostDetectionCommand] }
+      : {}),
+    ...(target.availabilityCommand
+      ? { availabilityCommand: [...target.availabilityCommand] }
+      : {}),
+  };
+}
+
+function argvHead(argv: string[]): [string, string[]] {
+  return [argv[0] ?? '', argv.slice(1)];
+}
+
+function listExecTargetCandidates(
+  registry: Readonly<Record<string, ExecTarget>>,
+  currentRuntime: string,
+  avoid: CrossProviderAvoid,
+): SelectedExecTarget[] {
+  const shouldAvoidSameRuntime =
+    avoid === 'same-runtime' && currentRuntime !== 'unknown';
+
+  return sortedExecTargetEntries(registry)
+    .filter(
+      ({ target }) =>
+        !shouldAvoidSameRuntime || target.runtime !== currentRuntime,
+    )
+    .map(({ id, target }) => ({ id, target: cloneExecTarget(target) }));
+}
+
+export function selectExecTarget(
+  registry: Readonly<Record<string, ExecTarget>>,
+  currentRuntime: string,
+  avoid: CrossProviderAvoid,
+): SelectedExecTarget | null {
+  return listExecTargetCandidates(registry, currentRuntime, avoid)[0] ?? null;
+}
+
+async function checkArgv(
+  argv: string[],
+  purpose: ProcessRunOptions['purpose'],
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<boolean> {
+  const [command, args] = argvHead(argv);
+  if (!command) {
+    return false;
+  }
+
+  try {
+    const result = await dependencies.runProcess(command, args, {
+      cwd: context.cwd,
+      env: dependencies.processEnv,
+      purpose,
+      stdio: 'ignore',
+    });
+    return result.exitCode === 0;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveCurrentRuntime(
+  currentRuntime: string | undefined,
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<string> {
+  const override = currentRuntime?.trim();
+  if (override) {
+    return override;
+  }
+
+  for (const { target } of sortedExecTargetEntries(BUILTIN_EXEC_TARGETS)) {
+    if (
+      target.hostDetectionCommand &&
+      (await checkArgv(
+        target.hostDetectionCommand,
+        'host-detection',
+        context,
+        dependencies,
+      ))
+    ) {
+      return target.runtime;
+    }
+  }
+
+  return 'unknown';
+}
+
+async function selectAvailableExecTarget(
+  registry: Readonly<Record<string, ExecTarget>>,
+  currentRuntime: string,
+  avoid: CrossProviderAvoid,
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<SelectedExecTarget | null> {
+  for (const candidate of listExecTargetCandidates(
+    registry,
+    currentRuntime,
+    avoid,
+  )) {
+    const availabilityCommand = candidate.target.availabilityCommand;
+    if (
+      !availabilityCommand ||
+      (await checkArgv(
+        availabilityCommand,
+        'availability',
+        context,
+        dependencies,
+      ))
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+async function executeTarget(
+  selected: SelectedExecTarget,
+  prompt: string[],
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<number> {
+  const [command, baseArgs] = argvHead(selected.target.baseCommand);
+  if (!command) {
+    throw new Error(`Exec target "${selected.id}" has an empty base command.`);
+  }
+
+  try {
+    const result = await dependencies.runProcess(
+      command,
+      [...baseArgs, ...prompt],
+      {
+        cwd: context.cwd,
+        env: dependencies.processEnv,
+        purpose: 'execute',
+        stdio: 'inherit',
+      },
+    );
+    return result.exitCode;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to launch exec target "${selected.id}" (${command}): ${message}`,
+      { cause: error },
+    );
+  }
+}
+
+function noEligibleTargetMessage(
+  currentRuntime: string,
+  avoid: CrossProviderAvoid,
+): string {
+  return `No eligible gate exec target found for current runtime "${currentRuntime}" with --avoid ${avoid}. Install or configure an alternate runtime, rerun with --avoid none, or pin a target with --target <id>.`;
+}
+
 async function updateConfigLayer(
   context: CommandContext,
   layer: GateWriteLayer,
@@ -477,6 +715,61 @@ async function runTargetUnset(
   }
 }
 
+async function runCrossProviderExec(
+  prompt: string[],
+  options: CrossProviderExecOptions,
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<void> {
+  try {
+    const effective = await readEffectiveConfig(context, dependencies);
+    const targets = resolveExecTargets(effective);
+    const explicitTarget = options.target?.trim();
+
+    if (explicitTarget) {
+      const target = targets[explicitTarget];
+      if (!target) {
+        throw new Error(`Unknown exec target "${explicitTarget}".`);
+      }
+
+      process.exitCode = await executeTarget(
+        { id: explicitTarget, target: cloneExecTarget(target) },
+        prompt,
+        context,
+        dependencies,
+      );
+      return;
+    }
+
+    const avoid = parseCrossProviderAvoid(options.avoid);
+    const currentRuntime = await resolveCurrentRuntime(
+      options.currentRuntime,
+      context,
+      dependencies,
+    );
+    const selected = await selectAvailableExecTarget(
+      targets,
+      currentRuntime,
+      avoid,
+      context,
+      dependencies,
+    );
+
+    if (!selected) {
+      throw new Error(noEligibleTargetMessage(currentRuntime, avoid));
+    }
+
+    process.exitCode = await executeTarget(
+      selected,
+      prompt,
+      context,
+      dependencies,
+    );
+  } catch (error) {
+    writeError(context, error);
+  }
+}
+
 export function createGateCommand(
   overrides: Partial<GateCommandDependencies> = {},
 ): Command {
@@ -534,6 +827,29 @@ export function createGateCommand(
           readGlobalOptions(command),
         );
         await runGateUnset(skillName, options, context, dependencies);
+      },
+    );
+
+  cmd
+    .command('cross-provider-exec')
+    .description('Run a prompt through an alternate configured runtime target')
+    .option('--target <id>', 'Run this exact exec target')
+    .option('--avoid <mode>', 'Avoidance mode: same-runtime or none')
+    .option(
+      '--current-runtime <runtime>',
+      'Override detected runtime for testing or manual routing',
+    )
+    .argument('<prompt...>', 'Prompt arguments appended to the target command')
+    .action(
+      async (
+        prompt: string[],
+        options: CrossProviderExecOptions,
+        command: Command,
+      ) => {
+        const context = dependencies.buildCommandContext(
+          readGlobalOptions(command),
+        );
+        await runCrossProviderExec(prompt, options, context, dependencies);
       },
     );
 
