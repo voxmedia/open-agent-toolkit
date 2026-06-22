@@ -39,7 +39,7 @@ const FUMA_TEMPLATE_FILES: Record<string, string> = {
   '.gitignore':
     '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':
-    "import { createDocsConfig } from '@open-agent-toolkit/docs-config';\nconst basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;\nexport default createDocsConfig({ ...(basePath ? { basePath } : {}) });\n",
+    "import { createDocsConfig } from '@open-agent-toolkit/docs-config';\nconst basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;\nexport default createDocsConfig(basePath ? { basePath } : {});\n",
   'postcss.config.mjs':
     "const config = {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n\nexport default config;\n",
   'source.config.ts':
@@ -424,8 +424,9 @@ describe('scaffoldDocsApp', () => {
       join(result.appRoot, 'next.config.js'),
       'utf8',
     );
-    expect(nextConfig).toContain('createDocsConfig({');
-    expect(nextConfig).toContain('...(basePath ? { basePath } : {})');
+    expect(nextConfig).toContain(
+      'createDocsConfig(basePath ? { basePath } : {})',
+    );
     expect(nextConfig).not.toContain('title:');
     expect(nextConfig).not.toContain('description:');
     expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
