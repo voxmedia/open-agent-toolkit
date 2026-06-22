@@ -218,13 +218,72 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 ---
 
+## Phase 2: Review Fixes (final)
+
+### Task p02-t01: (review) Move guided-setup scope gate after pack selection
+
+Relocate the `Customize per-pack scope? (y/N)` gate so it fires **after** pack
+selection and is **not shown at all** when no user-eligible packs are selected.
+Resolves final-review m1 (and folds in the m2 comment trim). Supersedes backlog
+`bl-1b29`.
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/index.ts` (guided setup — stop prompting the gate before `runToolPacks`)
+- Modify: `packages/cli/src/commands/init/tools/index.ts` (present the gate inside the tools flow after `selectedPacks` / eligible packs are known; trim the stale `defaults`-mode comment ~lines 557-564 — m2)
+- Modify: `packages/cli/src/commands/init/index.test.ts`, `packages/cli/src/commands/init/guided-setup.test.ts`, `packages/cli/src/commands/init/tools/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding m1 (`commands/init/index.ts:658-663`): `promptForScopeSelectionMode`
+is called before `dependencies.runToolPacks(guidedContext)`, but pack selection
+(`selectManyWithAbort`) happens inside `runInitTools`. So the gate appears before
+pack selection and is shown even when the user then selects zero user-eligible
+packs (the `scopeSelection` value is discarded — `resolvePackScopes` returns
+early when `eligiblePacks.length === 0`). Discovery requires the gate **after**
+pack selection (`discovery.md:41,76`).
+
+**Step 2: Implement fix**
+
+- Replace the upfront guided-setup gate with a deferred signal (e.g.
+  `scopeSelection: 'gate'`) on the guided context, so guided setup no longer
+  prompts before pack selection.
+- In the tools flow (`runInitTools`/`resolvePackScopes`), after `selectedPacks`
+  is chosen and the user-eligible subset is known: when the deferred-gate signal
+  is set, `context.interactive`, and `eligiblePacks.length > 0`, prompt
+  `Customize per-pack scope? (y/N)` → yes routes to the per-pack `Where should X
+install?` selector; no (and non-interactive) applies additive per-pack
+  defaults. When `eligiblePacks.length === 0`, **skip the gate entirely**.
+- Keep `oat tools install` behavior unchanged (it does not use the deferred
+  gate). Preserve the additive guarantee and non-interactive prompt-safety.
+- Trim the stale `defaults`-mode block comment in `tools/index.ts` (~557-564) to
+  describe only the non-interactive path (m2).
+
+**Step 3: Verify**
+
+- Update/extend tests: gate now fires after pack selection; gate is **not**
+  prompted when no user-eligible pack is selected; gate "yes" → per-pack radio;
+  gate "no"/non-interactive → defaults, no prompt; additive guarantee holds.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts src/commands/init/tools/index.test.ts && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: All green; a test asserts the gate is skipped when zero eligible packs are selected.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/index.ts packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/index.test.ts packages/cli/src/commands/init/guided-setup.test.ts packages/cli/src/commands/init/tools/index.test.ts
+git commit -m "fix(p02-t01): move guided-setup scope gate after pack selection (review m1)"
+```
+
+---
+
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                            |
-| ----- | -------- | -------- | ---------- | --------------------------------------------------- |
-| p01   | code     | passed   | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
-| final | code     | received | 2026-06-22 | reviews/final-review-2026-06-22-v2.md               |
-| plan  | artifact | passed   | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
+| Scope | Type     | Status      | Date       | Artifact                                            |
+| ----- | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01   | code     | passed      | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
+| final | code     | fixes_added | 2026-06-22 | reviews/archived/final-review-2026-06-22-v2.md      |
+| plan  | artifact | passed      | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -243,10 +302,11 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 - Phase 1: 3 tasks — scope-selection resolver mode, opt-in guided-setup gate, lockstep release closeout
 - Post-task verification hardening: docs index generation now uses the source CLI path to avoid rebundling shared CLI assets during concurrent Turbo verification.
+- Phase 2: 1 task — review fix: move the guided-setup scope gate after pack selection + skip when no eligible packs (final review m1/m2)
 
-**Total: 3 tasks**
+**Total: 4 tasks**
 
-Implementation tasks, verification hardening, and final review are complete. Ready for documentation sync and PR preparation.
+Ready for the p02-t01 review fix; re-review and update PR #116 after it lands.
 
 ---
 

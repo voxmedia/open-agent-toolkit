@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-document
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-22
-oat_current_task_id: null
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,11 +24,33 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 1     | 0/1       |
 
-**Total:** 3/3 planned tasks completed
+**Total:** 3/4 planned tasks completed (p02-t01 review fix pending)
+
+---
+
+### Review Received: final (v2, independent)
+
+**Date:** 2026-06-22
+**Review artifact:** `reviews/archived/final-review-2026-06-22-v2.md`
+**Type:** code (manual) — independent second final pass. Verdict: pass (0 Critical, 0 Important, 2 Minor).
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 2
+
+**New tasks added:** `p02-t01`
+
+**Disposition map:**
+
+- `m1` (Minor — gate fires before pack selection; shown with 0 eligible packs) → **converted** to `p02-t01` (`code_fix_required`, user-directed): move the gate after pack selection and skip it entirely when no user-eligible pack is selected. **Supersedes backlog `bl-1b29`** — close that item once p02-t01 merges.
+- `m2` (Negligible — stale `defaults`-mode comment) → **converted** (folded into `p02-t01`): trim the comment to describe only the non-interactive path.
+
+No deferrals.
+
+**Next:** Execute `p02-t01` via `oat-project-implement`, then re-review `code final` and push to update PR #116.
 
 ---
 
