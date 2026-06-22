@@ -11,13 +11,15 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_dispatch_ceiling: # optional project override for provider-aware dispatch ceilings
-#   provider: codex # codex | claude
-#   value: high # codex: low|medium|high|xhigh; claude: haiku|sonnet|opus
-#   source: project-state
+oat_dispatch_ceiling:
+  preset: maximum
+  providers:
+    codex: xhigh
+    claude: opus
+  source: project-state
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
@@ -37,20 +39,21 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery complete — ready to generate the quick implementation plan
+Plan complete (3 tasks, sequential) — ready for implementation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode — straightforward fix, no lightweight design needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** N/A (quick mode — straightforward fix)
+- **Plan:** `plan.md` (complete — 3 tasks, artifact review passed)
+- **Implementation:** `implementation.md` (initialized — first task p01-t01)
 
 ## Progress
 
 - ✓ Discovery complete (opt-in scope-customization gate decided)
-- ⧗ Awaiting quick-mode plan generation (`oat-project-quick-start`)
+- ✓ Plan generated + artifact review passed
+- ⧗ Awaiting implementation (`oat-project-implement`)
 
 ## Blockers
 
@@ -58,4 +61,4 @@ None
 
 ## Next Milestone
 
-Generate the quick implementation plan via `oat-project-quick-start`
+Implement Phase 1 (opt-in scope gate) via `oat-project-implement`
