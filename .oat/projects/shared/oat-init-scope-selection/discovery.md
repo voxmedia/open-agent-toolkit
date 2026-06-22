@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-06-22
 oat_generated: false
@@ -12,131 +12,93 @@ oat_generated: false
 
 Discovery is for requirements and decisions, not implementation details.
 
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+- Prefer outcomes and constraints over concrete deliverables.
+- Implementation details captured here are root-cause pointers for the plan phase.
 
 ## Initial Request
 
-{Copy of user's initial request}
+`oat init` guided setup (`oat init --setup`) does not surface the per-pack scope
+selector added in PR #113 (additive `oat tools install`). The interactive
+per-pack "Where should {pack} install?" radio (`project / user / both`) appears
+for `oat tools install` but not during first-run guided setup, so users can't
+choose where each user-eligible pack installs during onboarding.
 
-## Clarifying Questions
+## Root Cause
 
-### Question 1: {Topic}
+- `packages/cli/src/commands/init/index.ts:629` — guided setup builds
+  `guidedContext = { ...context, scope: 'project' }` and passes it to the tool
+  pack installer.
+- `resolvePackScopes` (`commands/init/tools/index.ts:528-540`) short-circuits on
+  an explicit concrete `scope` (`project`/`user`) via the additive `--scope`
+  union path and returns before the interactive per-pack selector loop
+  (`~lines 567-583`). So forcing `scope: 'project'` bypasses the radio entirely.
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+## Chosen Direction
 
-## Solution Space
+**Opt-in customization (user-validated).** Keep first-run onboarding lean rather
+than adding N per-pack prompts by default:
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+1. Guided setup selects packs, then presents a single gate:
+   **"Customize per-pack scope? (y/N)"**.
+2. **No (default):** apply sensible per-pack defaults without prompting — each
+   user-eligible pack resolves to its default placement (`resolvePackDefaultScope`
+   / preserve current placement), additively. Not a blanket force to `project`.
+3. **Yes:** run the existing per-pack `Where should {pack} install?` radio for
+   each eligible pack (same selector as `oat tools install`).
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+Rejected alternative: always prompt per-pack in guided setup — full control but
+adds onboarding friction the user wants to avoid.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Opt-in gate, not always-prompt.** A single y/N gate gates the per-pack
+   radios; default path stays prompt-free.
+2. **Default path uses sensible per-pack defaults, additively** — not a forced
+   `scope: 'project'` for all eligible packs. This also keeps guided setup
+   consistent with the additive (never-remove) guarantee from #113.
+3. **Reuse the existing selector.** The "yes" path reuses
+   `buildPackEndStateChoices` / the per-pack `selectWithAbort` loop already in
+   `resolvePackScopes`; no new prompt UI.
+4. **Per-pack radio shape is final** — user confirmed the radio
+   (`project / user / both`) is the desired interaction; this project only wires
+   it into guided setup, it does not change the selector itself.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Guided setup must remain non-interactive-safe (CI / `OAT_NON_INTERACTIVE`):
+  when non-interactive, skip the gate and apply defaults (no prompts).
+- Preserve the additive guarantee — guided setup must never remove a pack from a
+  scope it already occupies.
+- Keep the command handler thin per `packages/cli/AGENTS.md`.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- `oat init --setup` (interactive) presents a "Customize per-pack scope?" gate
+  after pack selection.
+- Choosing "no" applies per-pack default placement additively (no per-pack
+  prompts, no forced project-only, no removals).
+- Choosing "yes" runs the per-pack `Where should X install?` radio for each
+  eligible pack, identical to `oat tools install`.
+- Non-interactive guided setup applies defaults with no prompts.
+- Tests cover: gate-yes → per-pack selector invoked; gate-no → defaults applied,
+  selector not invoked; non-interactive → no gate, defaults applied; additive
+  behavior preserved (no removal).
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Changing the per-pack selector shape (radio stays; no checkbox/matrix rework).
+- Changes to `oat tools install` scope behavior (already shipped in #113).
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
-
-## Assumptions
-
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
-
-## Risks
-
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- Exact wording/placement of the "Customize per-pack scope?" gate within the
+  guided flow (resolve during plan/implementation).
+- Whether the "no" default should preserve current placement for already-installed
+  packs or strictly use `resolvePackDefaultScope` (lean: preserve current,
+  additive — consistent with #113).
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- **Quick mode → straight to plan:** proceed to `oat-project-quick-start` to
+  produce `plan.md`. Scope is clear; the design decision (opt-in gate) is
+  resolved.
