@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-22
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
 
-**Total:** 0/3 tasks completed
+**Total:** 3/3 planned tasks completed
 
 ---
 
@@ -51,78 +51,125 @@ No deferrals. No code/design drift (plan not yet implemented).
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Opt-in scope selection in guided setup
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-06-22
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- `oat init --setup` now asks whether to customize per-pack scope and routes yes/no choices through the tools installer scope resolver.
+- The tools installer supports a `scopeSelection` mode so guided setup can apply additive per-pack defaults without prompting while preserving the interactive per-pack selector when requested.
+- Non-interactive guided setup is prompt-safe and applies defaults without reaching interactive local-path or scope prompts.
+- Public package versions were bumped in lockstep to `0.1.30`.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/app/command-context.ts` - added the optional guided scope-selection signal.
+- `packages/cli/src/commands/init/tools/index.ts` - implemented defaults/interactive scope-selection behavior.
+- `packages/cli/src/commands/init/index.ts` - added the guided setup scope customization gate and non-interactive defaults.
+- `packages/cli/src/commands/init/*.test.ts` and `packages/cli/src/commands/init/tools/*.test.ts` - covered guided yes/no/non-interactive behavior and resolver defaults.
+- `packages/*/package.json` and `packages/cli/assets/public-package-versions.json` - lockstep public package release metadata.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts src/commands/init/tools/index.test.ts`
+- Result: pass (111 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass after `9d5425ae` stabilized the bundle consistency timeout; fix agent also reported the full suite passing after `7ba521e1`
+- Run: `pnpm release:validate`
+- Result: pass in reviewer verification
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The phase accepted one non-blocking Medium review finding: the guided customization gate still appears before pack selection. It is recorded under Deferred Findings for final-review disposition.
+- `packages/cli/src/commands/init/guided-setup.test.ts` was touched even though it was not named in the original plan because it is the existing integration harness for the changed guided setup prompt sequence.
 
 ### Task p01-t01: Scope-selection mode for the tools-install resolver
 
-**Status:** in_progress
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** 761cdf51
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Tools install can resolve additive per-pack defaults in an interactive context without prompting when guided setup requests defaults mode.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/app/command-context.ts` - added `scopeSelection`.
+- `packages/cli/src/commands/init/tools/index.ts` - threaded scope-selection mode through pack scope resolution.
+- `packages/cli/src/commands/init/tools/index.test.ts` - added defaults-mode and additive-preservation coverage.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts`
+- Result: pass
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- The default end-state path preserves existing scope placement where present, matching the additive guarantee.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Opt-in scope gate in `oat init` guided setup
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a963c4b9
 
-**Notes:**
+**Outcome:**
 
-- {Notes will be added during implementation}
+- Interactive guided setup routes yes/no scope-customization choices to interactive per-pack selection or additive defaults.
+- Non-interactive setup skips prompts and applies defaults.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/index.ts` - added guided gate and non-interactive prompt skipping.
+- `packages/cli/src/commands/init/index.test.ts` - added guided gate and non-interactive coverage.
+- `packages/cli/src/commands/init/guided-setup.test.ts` - updated integration prompt sequence coverage.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts`
+- Result: pass
+
+**Issues Encountered:**
+
+- Initial p01 review found non-interactive setup still reached a local-path prompt and concrete `--scope project` still bypassed guided scope selection. Both were fixed in `7ba521e1`.
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: (release) Lockstep public-package version bump + release:validate
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Commit:** b2c97091
 
-### Task p02-t01: {Task Name}
+**Outcome:**
 
-**Status:** pending
-**Commit:** -
+- Public packages moved in lockstep from `0.1.29` to `0.1.30`, with bundled public-package version metadata updated.
+
+**Files changed:**
+
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+- `packages/cli/assets/public-package-versions.json`
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Issues Encountered:**
+
+- Full CLI suite exposed a timeout in the bundle consistency shelling test under suite load; fixed in `9d5425ae` by giving that specific test a realistic timeout.
 
 ---
 
@@ -138,6 +185,42 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-06-22 18:07 UTC
+
+**Branch:** feat/oat-init-scope-selection
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p01   | DONE_WITH_CONCERNS | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- None — plan is fully sequential.
+
+#### Dispatch Notes
+
+- p01 implementation used `oat-phase-implementer-xhigh` with `effort_axis=selected:xhigh`, `model_axis=inherited`, ceiling source `project state`.
+- p01 review used `oat-reviewer-xhigh`; first review found 1 Critical, 1 Important, and 1 Medium.
+- Fix loop used `oat-phase-implementer-xhigh` and resolved the Critical and Important findings in `7ba521e1`.
+- p01 re-review used `oat-reviewer-xhigh` and passed with 0 Critical, 0 Important, 1 Medium, 0 Minor.
+
+#### Outstanding Items
+
+- Medium deferred to final-review disposition: customization gate still runs before pack selection (`reviews/archived/p01-review-2026-06-22-v2.md`).
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. The durable record is `## Deviations from Plan / Design`.
+
+| Task / Review | Source Artifact   | Planned / Documented                                               | Actual / Accepted                                                  | Reason                                                                 | Source of Truth | Follow-up |
+| ------------- | ----------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------------- | --------------- | --------- |
+| p01-t02       | plan.md file list | `packages/cli/src/commands/init/index.ts` and `index.test.ts` only | Also updated `packages/cli/src/commands/init/guided-setup.test.ts` | Existing integration harness covers the changed guided prompt sequence | implementation  | None      |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -148,36 +231,34 @@ Chronological log of implementation progress.
 
 ### 2026-06-22
 
-**Session Start:** {time}
+**Session Start:** 17:03 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Scope-selection mode for the tools-install resolver - 761cdf51
+- [x] p01-t02: Opt-in scope gate in `oat init` guided setup - a963c4b9
+- [x] p01-t03: Lockstep public-package version bump + release:validate - b2c97091
+- [x] p01 follow-up: stabilize bundle consistency timeout - 9d5425ae
+- [x] p01 review fix: make guided setup scope gate noninteractive-safe - 7ba521e1
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Added guided setup scope customization behavior.
+- Preserved additive defaults and existing interactive tools-install selector behavior.
+- Made non-interactive guided setup prompt-safe.
+- Bumped public packages to `0.1.30`.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Accepted `guided-setup.test.ts` as necessary supporting coverage for the guided prompt sequence, even though the initial plan file list did not name it.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Final review should explicitly disposition the remaining Medium finding about gate ordering before pack selection.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None
 
-**Session End:** {time}
-
----
-
-### 2026-06-22
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** 18:07 UTC
 
 ---
 
@@ -185,41 +266,57 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact   | Planned / Documented                                                                                          | Actual / Accepted                                                  | Reason                                                                             | Source of Truth | Follow-up |
+| ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | --------------- | --------- |
+| p01-t02       | plan.md file list | Only `packages/cli/src/commands/init/index.ts` and `packages/cli/src/commands/init/index.test.ts` were listed | Also updated `packages/cli/src/commands/init/guided-setup.test.ts` | Existing guided setup integration harness must reflect the changed prompt sequence | implementation  | None      |
+
+## Deferred Findings (p01 Review)
+
+| Finding                                             | Severity | Source                                         | Disposition                                                                                                      |
+| --------------------------------------------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Customization gate still runs before pack selection | Medium   | `reviews/archived/p01-review-2026-06-22-v2.md` | Deferred to final-review disposition; non-blocking for phase pass because no Critical/Important findings remain. |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                            | Passed | Failed | Coverage                           |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts src/commands/init/tools/index.test.ts` | 111    | 0      | Focused init/guided/tools coverage |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                         | 1845   | 0      | Full CLI suite after review fix    |
+| 1     | `pnpm release:validate`                                                                                                                                              | pass   | 0      | Public package release policy      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Guided setup can opt into per-pack scope customization.
+- Guided setup defaults apply per-pack additive placement without forcing project-only scope.
+- Non-interactive guided setup runs without interactive prompts.
+- Public package versions were bumped in lockstep to `0.1.30`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat init --setup` asks whether to customize per-pack scope in interactive mode.
+- `OAT_NON_INTERACTIVE=1 oat init --setup --no-hook` applies defaults without prompting.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/init/index.ts` - guided setup gate and non-interactive safety.
+- `packages/cli/src/commands/init/tools/index.ts` - scope-selection resolver behavior.
+- `packages/cli/src/app/command-context.ts` - shared scope-selection signal.
+- `packages/cli/src/commands/init/*.test.ts` - guided setup and resolver coverage.
+- `packages/*/package.json` - lockstep public package versions.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused init/guided/tools tests passed.
+- Full CLI test suite passed after the timeout and review fixes.
+- Release validation passed.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Quick mode has no design artifact. One Medium review finding remains deferred: the customization gate appears before pack selection, though the core yes/no/default behavior is implemented and non-blocking for the phase gate.
 
 ## References
 

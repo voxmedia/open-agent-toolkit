@@ -222,7 +222,7 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 | Scope | Type     | Status  | Date       | Artifact                                            |
 | ----- | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01   | code     | pending | -          | -                                                   |
+| p01   | code     | passed  | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
 | final | code     | pending | -          | -                                                   |
 | plan  | artifact | passed  | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
 
@@ -245,7 +245,7 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 **Total: 3 tasks**
 
-Ready for implementation; fill this section after p01-t01 through p01-t03 complete.
+Implementation tasks complete; awaiting final review.
 
 ---
 
