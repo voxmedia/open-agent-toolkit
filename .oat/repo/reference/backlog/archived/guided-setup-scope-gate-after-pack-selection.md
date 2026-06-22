@@ -1,17 +1,27 @@
 ---
 id: bl-1b29
 title: 'Move guided setup scope gate after pack selection'
-status: open
+status: done
 priority: medium
 scope: task
 scope_estimate: S
 labels: [cli, init, tool-packs, ux]
 assignee: null
 created: '2026-06-22T18:42:34Z'
-updated: '2026-06-22T18:42:34Z'
+updated: '2026-06-22T19:30:00Z'
 associated_issues: []
 oat_template: false
 ---
+
+## Resolution
+
+Resolved by the `oat-init-scope-selection` p02-t01 fix (PR #116, commit `817a600e`).
+The guided-setup scope gate was relocated out of `runGuidedSetupImpl` into the
+tools flow: `ScopeSelectionMode` gained a `'gate'` value, and `resolveDeferredGate`
+inside `resolvePackScopes` presents `Customize per-pack scope? (y/N)` only after
+pack selection and only when at least one user-eligible pack is selected (after the
+`eligiblePacks.length === 0` early return). All acceptance criteria met; the
+independent final review (v2) re-review passed with the fix.
 
 ## Description
 
