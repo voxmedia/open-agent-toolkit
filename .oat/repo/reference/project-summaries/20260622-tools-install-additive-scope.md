@@ -3,6 +3,9 @@ oat_generated: true
 oat_generated_at: 2026-06-20
 oat_project: tools-install-additive-scope
 oat_workflow_mode: quick
+oat_summary_last_task: p02-t01
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: false
 ---
 
 # Summary: tools-install-additive-scope
@@ -37,6 +40,10 @@ removal is an explicit, confirmed, interactive-only action.
 - **Release closeout.** Lockstep patch bump (0.1.27 → 0.1.28) across the five
   public packages + regenerated bundled `public-package-versions.json`;
   `pnpm release:validate` passes.
+- **Failure-safe moves (p02-t01, final-review fix).** Confirmed scope moves apply
+  additions before destructive removals, so a failed replacement install can
+  never leave a pack uninstalled in both scopes. Regression test pins the
+  behavior.
 
 ## Key Decisions
 
