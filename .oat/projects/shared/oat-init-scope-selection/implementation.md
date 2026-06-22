@@ -35,7 +35,7 @@ oat_generated: false
 ### Review Received: final
 
 **Date:** 2026-06-22
-**Review artifact:** `reviews/final-review-2026-06-22.md`
+**Review artifact:** `reviews/archived/final-review-2026-06-22.md`
 **Type:** code — final review
 
 **Findings:** Critical 0 · Important 0 · Medium 1 · Minor 0
@@ -233,7 +233,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- None blocking. Final review accepted/deferred the remaining Medium finding about scope-gate ordering as non-blocking follow-up (`reviews/final-review-2026-06-22.md`).
+- None blocking. Final review accepted/deferred the remaining Medium finding about scope-gate ordering as non-blocking follow-up (`reviews/archived/final-review-2026-06-22.md`).
 
 #### Artifact / Design Deltas
 
@@ -299,9 +299,9 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Deferred Findings (p01 Review)
 
-| Finding                                             | Severity | Source                               | Disposition                                                                                                  |
-| --------------------------------------------------- | -------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Customization gate still runs before pack selection | Medium   | `reviews/final-review-2026-06-22.md` | Explicitly deferred as non-blocking follow-up; final review passed with 0 Critical and 0 Important findings. |
+| Finding                                             | Severity | Source                                        | Disposition                                                                                                  |
+| --------------------------------------------------- | -------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Customization gate still runs before pack selection | Medium   | `reviews/archived/final-review-2026-06-22.md` | Explicitly deferred as non-blocking follow-up; final review passed with 0 Critical and 0 Important findings. |
 
 ## Test Results
 
