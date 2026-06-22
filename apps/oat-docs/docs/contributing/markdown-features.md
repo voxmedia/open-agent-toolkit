@@ -115,5 +115,5 @@ Use a language identifier on every opening fence. In this docs app, use `bash` f
 After adding or reorganizing docs pages, refresh the generated docs surface:
 
 ```bash
-pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 ```

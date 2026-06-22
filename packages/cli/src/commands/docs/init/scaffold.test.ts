@@ -823,12 +823,12 @@ describe('scaffoldDocsApp', () => {
     );
     expect(packageJson.devDependencies['@types/node']).toBe('^22.10.0');
 
-    // Should use pnpm -w run cli with full paths from workspace root
+    // Should use the source CLI with full paths from workspace root
     expect(packageJson.scripts['predev']).toBe(
-      'fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
+      'fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
     );
     expect(packageJson.scripts['prebuild']).toBe(
-      'fumadocs-mdx && pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
+      'fumadocs-mdx && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md',
     );
   });
 });
