@@ -564,34 +564,6 @@ function normalizeDocumentationRoot(
     : normalizedRelative;
 }
 
-async function promptForScopeSelectionMode(
-  context: CommandContext,
-  dependencies: InitDependencies,
-): Promise<ScopeSelectionMode> {
-  if (!context.interactive) {
-    return 'defaults';
-  }
-
-  const selection = await dependencies.selectWithAbort(
-    'Customize per-pack scope? (y/N)',
-    [
-      {
-        label: 'No, use recommended defaults',
-        value: 'no',
-        description: 'Apply per-pack defaults without extra prompts',
-      },
-      {
-        label: 'Yes, customize each pack',
-        value: 'yes',
-        description: 'Choose project, user, or both for each eligible pack',
-      },
-    ],
-    { interactive: context.interactive },
-  );
-
-  return selection === 'yes' ? 'interactive' : 'defaults';
-}
-
 async function promptForManualDocsConfig(
   projectRoot: string,
   context: CommandContext,
@@ -655,10 +627,12 @@ async function runGuidedSetupImpl(
   );
 
   context.logger.info('[1/5] Tool packs…');
-  const scopeSelection = await promptForScopeSelectionMode(
-    context,
-    dependencies,
-  );
+  // Defer the per-pack scope gate to the tools flow: `gate` asks the customize
+  // prompt after pack selection (and only when a user-eligible pack is
+  // selected). Non-interactive setup applies additive defaults with no prompt.
+  const scopeSelection: ScopeSelectionMode = context.interactive
+    ? 'gate'
+    : 'defaults';
   const guidedContext: CommandContext = { ...context, scopeSelection };
   const installedPacks = await dependencies.runToolPacks(guidedContext);
   const installedPackSet = new Set(installedPacks);

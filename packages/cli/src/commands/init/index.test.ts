@@ -1369,14 +1369,13 @@ config_file = "agents/reviewer.toml"
       expect(runToolPacks).toHaveBeenCalledTimes(1);
     });
 
-    it('guided setup gate yes keeps per-pack scope selection interactive without forcing project scope', async () => {
+    it('guided setup defers the per-pack scope gate to the tools flow without prompting upfront', async () => {
       const { command, runToolPacks, selectWithAbort } = createHarness({
         interactive: true,
         hookInstalled: true,
         oatDirExists: true,
         useDefaultGuidedSetup: true,
         providerSelectResponses: [['claude']],
-        singleSelectResponses: ['yes'],
         confirmResponses: [
           false, // "Do you have documentation?" — no
           false, // provider sync — skip
@@ -1389,43 +1388,18 @@ config_file = "agents/reviewer.toml"
         commandArgs: ['--setup'],
       });
 
-      expect(selectWithAbort).toHaveBeenCalledTimes(1);
-      expect(selectWithAbort.mock.calls[0]?.[0]).toBe(
+      // The gate is no longer shown before pack selection. Guided setup hands a
+      // deferred `gate` signal to the tools flow, which prompts the gate after
+      // packs (and the eligible subset) are known.
+      expect(selectWithAbort).not.toHaveBeenCalledWith(
         'Customize per-pack scope? (y/N)',
+        expect.anything(),
+        expect.anything(),
       );
       expect(runToolPacks).toHaveBeenCalledWith(
         expect.objectContaining({
           scope: 'all',
-          scopeSelection: 'interactive',
-        }),
-      );
-    });
-
-    it('guided setup gate no applies per-pack defaults without forcing project scope', async () => {
-      const { command, runToolPacks, selectWithAbort } = createHarness({
-        interactive: true,
-        hookInstalled: true,
-        oatDirExists: true,
-        useDefaultGuidedSetup: true,
-        providerSelectResponses: [['claude']],
-        singleSelectResponses: ['no'],
-        confirmResponses: [
-          false, // "Do you have documentation?" — no
-          false, // provider sync — skip
-        ],
-        selectResponses: [[]],
-      });
-
-      await runInitCommand(command, {
-        globalArgs: ['--scope', 'all'],
-        commandArgs: ['--setup'],
-      });
-
-      expect(selectWithAbort).toHaveBeenCalledTimes(1);
-      expect(runToolPacks).toHaveBeenCalledWith(
-        expect.objectContaining({
-          scope: 'all',
-          scopeSelection: 'defaults',
+          scopeSelection: 'gate',
         }),
       );
     });

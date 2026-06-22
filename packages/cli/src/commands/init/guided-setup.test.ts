@@ -133,16 +133,9 @@ function createGuidedSetupHarness(options: {
     inputWithDefault: vi.fn(
       async () => inputWithDefaultResponses.shift() ?? null,
     ),
-    selectWithAbort: vi.fn(async (message: string) => {
-      if (message === 'Customize per-pack scope? (y/N)') {
-        const next = selectWithAbortResponses[0];
-        if (next === 'yes' || next === 'no' || next === null) {
-          return selectWithAbortResponses.shift() ?? 'no';
-        }
-        return 'no';
-      }
-      return selectWithAbortResponses.shift() ?? null;
-    }),
+    selectWithAbort: vi.fn(
+      async () => selectWithAbortResponses.shift() ?? null,
+    ),
     runToolPacks,
     runProviderSync,
   });
@@ -205,6 +198,11 @@ describe('guided setup integration', () => {
     await runInit(command, { globalArgs: ['--scope', 'project'] });
 
     expect(runToolPacks).toHaveBeenCalledTimes(1);
+    // Interactive guided setup defers the per-pack scope gate to the tools
+    // flow via the `gate` signal instead of prompting before pack selection.
+    expect(runToolPacks).toHaveBeenCalledWith(
+      expect.objectContaining({ scopeSelection: 'gate' }),
+    );
     expect(addLocalPaths).toHaveBeenCalledWith('/tmp/workspace', [
       '.oat/**/analysis',
       '.oat/**/pr',

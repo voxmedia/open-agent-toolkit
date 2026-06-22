@@ -13,7 +13,16 @@ export interface GlobalOptions {
   cwd?: string;
 }
 
-export type ScopeSelectionMode = 'interactive' | 'defaults';
+/**
+ * How per-pack scope resolution behaves in the tools-install flow:
+ * - `interactive`: always run the per-pack `Where should X install?` radio.
+ * - `defaults`: apply additive per-pack defaults without prompting.
+ * - `gate`: deferred guided-setup signal — after pack selection, prompt the
+ *   `Customize per-pack scope? (y/N)` gate (yes -> interactive radio,
+ *   no/non-interactive -> defaults), and skip the gate entirely when no
+ *   user-eligible pack is selected.
+ */
+export type ScopeSelectionMode = 'interactive' | 'defaults' | 'gate';
 
 export interface CommandContext {
   scope: Scope;
