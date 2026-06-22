@@ -242,10 +242,11 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 **Summary:**
 
 - Phase 1: 3 tasks — scope-selection resolver mode, opt-in guided-setup gate, lockstep release closeout
+- Post-task verification hardening: docs index generation now uses the source CLI path to avoid rebundling shared CLI assets during concurrent Turbo verification.
 
 **Total: 3 tasks**
 
-Implementation tasks complete; awaiting final review.
+Implementation tasks and verification hardening complete; awaiting final review.
 
 ---
 

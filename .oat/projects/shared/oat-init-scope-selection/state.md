@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 7ba521e1
+oat_last_commit: 469a0dea
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-22T03:44:45.942Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-22T18:07:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-22T18:21:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation tasks complete; awaiting final review
+Implementation tasks and verification hardening complete; awaiting final review
 
 ## Artifacts
 
@@ -47,13 +47,14 @@ Implementation tasks complete; awaiting final review
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — straightforward fix)
 - **Plan:** `plan.md` (complete — 3 tasks, artifact review passed)
-- **Implementation:** `implementation.md` (tasks complete — awaiting final review)
+- **Implementation:** `implementation.md` (tasks and verification complete — awaiting final review)
 
 ## Progress
 
 - ✓ Discovery complete (opt-in scope-customization gate decided)
 - ✓ Plan generated + artifact review passed
 - ✓ Implementation tasks complete
+- ✓ Final verification command set passed
 - ⧗ Awaiting final review
 
 ## Blockers
