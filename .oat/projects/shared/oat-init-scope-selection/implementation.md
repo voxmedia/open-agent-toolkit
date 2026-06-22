@@ -24,12 +24,30 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/3 tasks completed (not yet started)
+
+---
+
+### Review Received: plan (artifact)
+
+**Date:** 2026-06-22
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-06-22.md`
+**Type:** artifact (manual) — findings resolved directly in `plan.md`, not converted to code-fix tasks. (Independent pass, separate from the inline auto-review during plan generation.)
+
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 0
+
+**Disposition map:**
+
+- `I1` (Important — p01-t01 file scope omitted the shared `CommandContext` owner) → resolve_in_artifact: added `packages/cli/src/app/command-context.ts` to p01-t01's Files so the task is independently committable.
+- `M1` (Medium — `## Implementation Complete` claimed "Ready for code review and merge" pre-implementation) → resolve_in_artifact: reworded to a plan-phase placeholder.
+
+No deferrals. No code/design drift (plan not yet implemented).
+
+**Next:** Execute the plan via `oat-project-implement` (first task `p01-t01`).
 
 ---
 

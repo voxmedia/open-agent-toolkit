@@ -54,6 +54,7 @@ while the pack-selection prompt stays interactive.
 
 **Files:**
 
+- Modify: `packages/cli/src/app/command-context.ts` (the `CommandContext` type owner — add the optional scope-selection field here; include `command-context.test.ts` only if `buildCommandContext` default behavior changes)
 - Modify: `packages/cli/src/commands/init/tools/index.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.test.ts`
 
@@ -217,11 +218,11 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                   |
-| ----- | -------- | -------- | ---------- | ------------------------------------------ |
-| p01   | code     | pending  | -          | -                                          |
-| final | code     | pending  | -          | -                                          |
-| plan  | artifact | received | 2026-06-22 | reviews/artifact-plan-review-2026-06-22.md |
+| Scope | Type     | Status  | Date       | Artifact                                            |
+| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01   | code     | pending | -          | -                                                   |
+| final | code     | pending | -          | -                                                   |
+| plan  | artifact | passed  | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -242,7 +243,7 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 **Total: 3 tasks**
 
-Ready for code review and merge.
+Ready for implementation; fill this section after p01-t01 through p01-t03 complete.
 
 ---
 
