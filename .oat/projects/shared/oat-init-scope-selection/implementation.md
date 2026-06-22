@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-06-22
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 1     | 1/1       |
 
-**Total:** 3/4 planned tasks completed (p02-t01 review fix pending)
+**Total:** 4/4 planned tasks completed
 
 ---
 
@@ -50,7 +50,9 @@ oat_generated: false
 
 No deferrals.
 
-**Next:** Execute `p02-t01` via `oat-project-implement`, then re-review `code final` and push to update PR #116.
+**Resolution:** `p02-t01` implemented in commit `817a600e` — extended `ScopeSelectionMode` with a `'gate'` value; guided setup threads `'gate'` (interactive) / `'defaults'` (non-interactive) with no upfront prompt; `resolveDeferredGate` inside `resolvePackScopes` (after the `eligiblePacks.length === 0` early return) presents the gate only when interactive + at least one user-eligible pack is selected. m2 comment trimmed. Re-review (oat-reviewer, opus): **pass**, m1+m2 resolved, zero findings. `final` row → passed. **Close backlog `bl-1b29`** (superseded by this fix).
+
+**Next:** push to update PR #116.
 
 ---
 
