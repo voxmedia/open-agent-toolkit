@@ -217,11 +217,11 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact                                      |
-| ----- | -------- | ------- | ---------- | --------------------------------------------- |
-| p01   | code     | pending | -          | -                                             |
-| final | code     | pending | -          | -                                             |
-| plan  | artifact | passed  | 2026-06-22 | auto-review: 2 important fixes applied, clean |
+| Scope | Type     | Status   | Date       | Artifact                                   |
+| ----- | -------- | -------- | ---------- | ------------------------------------------ |
+| p01   | code     | pending  | -          | -                                          |
+| final | code     | pending  | -          | -                                          |
+| plan  | artifact | received | 2026-06-22 | reviews/artifact-plan-review-2026-06-22.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
