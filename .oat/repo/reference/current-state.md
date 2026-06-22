@@ -4,7 +4,9 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 **Reference update:** 2026-06-01 (`pjm-init` shipped `oat pjm init` as the explicit instantiate step for project-management repo-reference docs. The project-management pack installs skills and template sources; `oat pjm init` materializes `.oat/repo/reference/{current-state,roadmap,decision-record}.md` plus the file-backed `backlog/` tree non-destructively. See ADR-020.)
 
-**Last Updated:** 2026-06-06 (`docs-authoring-skills` added `authoring-docs` as the provider-agnostic documentation baseline, `oat-docs-authoring` as the OAT/Fumadocs targeted-authoring wrapper, hardened `oat-docs-analyze` and `oat-docs-bootstrap` guidance, refreshed docs contract pages, synced provider views, bumped public packages to `0.1.22`, addressed final-review fixes, and passed final lifecycle review with no Critical or Important findings. Earlier, `skill-automation-and-review` added default-on generated-artifact quality gates, newest-review discovery, and model-invocation guardrails for selected lifecycle skills. Earlier, `archive-cli-updates` split the archive command surface: `oat project archive [project-path]` now creates the archive via the CLI-owned completion helper, `oat repo archive sync [project-name]` is the canonical S3 hydration command, and `oat project archive sync` remains only as a deprecated forwarding shim.)
+**Last Updated:** 2026-06-22 (`oat-init-scope-selection` shipped the `oat init --setup` opt-in scope-customization gate, prompt-safe non-interactive setup defaults, lockstep public package `0.1.30` metadata, and source-only OAT docs index generation via `cli:source` for local repo verification. Follow-up `bl-1b29` tracks moving the guided setup scope gate after pack selection.)
+
+**Previous baseline:** 2026-06-06 (`docs-authoring-skills` added `authoring-docs` as the provider-agnostic documentation baseline, `oat-docs-authoring` as the OAT/Fumadocs targeted-authoring wrapper, hardened `oat-docs-analyze` and `oat-docs-bootstrap` guidance, refreshed docs contract pages, synced provider views, bumped public packages to `0.1.22`, addressed final-review fixes, and passed final lifecycle review with no Critical or Important findings. Earlier, `skill-automation-and-review` added default-on generated-artifact quality gates, newest-review discovery, and model-invocation guardrails for selected lifecycle skills. Earlier, `archive-cli-updates` split the archive command surface: `oat project archive [project-path]` now creates the archive via the CLI-owned completion helper, `oat repo archive sync [project-name]` is the canonical S3 hydration command, and `oat project archive sync` remains only as a deprecated forwarding shim.)
 
 ## Canonical References
 
@@ -127,6 +129,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 - `oat-docs-bootstrap` (guided docs-app onramp wrapping `oat docs init`: preflight detection, input gathering with distinct site/app names, capability-gated post-patches for FP-11/12/13/15/16/17 gaps, build verification, config inspection, and a seven-section educational walkthrough)
 - `oat-docs-analyze` (evaluate documentation structure, navigation, generated-index freshness, Markdown hygiene, and content coverage against the OAT docs app contract; severity-rated analysis artifacts)
 - `oat-docs-apply` (apply approved docs analysis findings: branch, update docs, optionally open PR)
+- In this repo, the OAT docs app uses `pnpm -w run cli:source -- docs generate-index ...` in `predev`/`prebuild` so local Turborepo verification does not rebundle shared CLI assets while CLI tests are reading them. The docs-init scaffold emits the same source-only command for generated OAT-repo docs apps.
 
 ### Control Plane + Inspection Surfaces
 
@@ -206,6 +209,8 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat project archive sync`, `oat project archive sync <project-name>`
   - `oat review latest`
   - `oat tools list`, `oat tools outdated`, `oat tools info`, `oat tools update`, `oat tools remove`, `oat tools install` (packs: core, ideas, docs, workflows, utility, project-management, research, brainstorm)
+- Init guided setup:
+  - `oat init --setup` now has an opt-in scope-customization gate: interactive users can choose per-pack scope selection, while "no" and non-interactive setup use additive per-pack defaults without forcing every pack to project scope.
 - Provider config model:
   - Project provider enablement lives in `.oat/sync/config.json` (`providers.<name>.enabled`).
   - `oat init --scope project` prompts for provider selection in interactive mode.
