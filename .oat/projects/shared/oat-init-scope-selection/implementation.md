@@ -52,7 +52,7 @@ No deferrals.
 
 **Resolution:** `p02-t01` implemented in commit `817a600e` — extended `ScopeSelectionMode` with a `'gate'` value; guided setup threads `'gate'` (interactive) / `'defaults'` (non-interactive) with no upfront prompt; `resolveDeferredGate` inside `resolvePackScopes` (after the `eligiblePacks.length === 0` early return) presents the gate only when interactive + at least one user-eligible pack is selected. m2 comment trimmed. Re-review (oat-reviewer, opus): **pass**, m1+m2 resolved, zero findings. `final` row → passed. **Close backlog `bl-1b29`** (superseded by this fix).
 
-**Next:** push to update PR #116.
+**Next:** PR #116 is updated; await human review.
 
 ---
 
@@ -130,7 +130,7 @@ No deferrals. No code/design drift (plan not yet implemented).
 
 **Notes / Decisions:**
 
-- The phase accepted one non-blocking Medium review finding: the guided customization gate still appears before pack selection. It is recorded under Deferred Findings for final-review disposition.
+- The phase initially accepted one non-blocking Medium review finding about gate ordering. Independent final review v2 converted it into p02-t01, and the fix is now complete.
 - `packages/cli/src/commands/init/guided-setup.test.ts` was touched even though it was not named in the original plan because it is the existing integration harness for the changed guided setup prompt sequence.
 
 ### Task p01-t01: Scope-selection mode for the tools-install resolver
@@ -302,7 +302,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Consider follow-up work to move the scope-customization gate after pack selection and skip it when no user-eligible packs are selected.
+- Gate-ordering follow-up was completed in p02-t01 and backlog item `bl-1b29` was closed.
 
 **Blockers:**
 
@@ -321,11 +321,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p01-t02               | plan.md file list | Only `packages/cli/src/commands/init/index.ts` and `packages/cli/src/commands/init/index.test.ts` were listed | Also updated `packages/cli/src/commands/init/guided-setup.test.ts`            | Existing guided setup integration harness must reflect the changed prompt sequence                                     | implementation  | None      |
 | post-p01 verification | verification      | Default `pnpm test` should pass after implementation                                                          | Added source-only docs index command path and a focused scaffold-test timeout | Avoid shared CLI asset rebundling during concurrent Turbo verification and prevent a git-heavy test timeout under load | implementation  | None      |
 
-## Deferred Findings (p01 Review)
+## Deferred Findings (p01 Review; later resolved)
 
-| Finding                                             | Severity | Source                                        | Disposition                                                                                                  |
-| --------------------------------------------------- | -------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Customization gate still runs before pack selection | Medium   | `reviews/archived/final-review-2026-06-22.md` | Explicitly deferred as non-blocking follow-up; final review passed with 0 Critical and 0 Important findings. |
+| Finding                                             | Severity | Source                                        | Disposition                                                                                                                                                      |
+| --------------------------------------------------- | -------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Customization gate still runs before pack selection | Medium   | `reviews/archived/final-review-2026-06-22.md` | Initially deferred as non-blocking, then converted to p02-t01 by `reviews/archived/final-review-2026-06-22-v2.md`; fixed in `817a600e` and closed via `bl-1b29`. |
 
 ## Test Results
 
@@ -345,12 +345,15 @@ Track test execution during implementation.
 | post-p01 | `pnpm build`                                                                                                                                                                                              | pass                               | 0      | Workspace build excluding docs       |
 | post-p01 | `pnpm release:validate`                                                                                                                                                                                   | pass                               | 0      | Public package release policy        |
 | final    | Final reviewer verification suite (focused init/tools, docs scaffold, scaffold timeout, bundle consistency, release validation, plan validation, non-interactive smoke, CLI lint/type-check, `pnpm test`) | pass                               | 0      | Final review gate                    |
+| p02      | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts src/commands/init/tools/index.test.ts`                                      | 114                                | 0      | Gate-after-pack-selection coverage   |
+| p02      | `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check && pnpm release:validate`                                                                                 | pass                               | 0      | Review-fix verification              |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
 - Guided setup can opt into per-pack scope customization.
+- The customization gate now appears after pack selection and is skipped when no selected pack has user-scope choices.
 - Guided setup defaults apply per-pack additive placement without forcing project-only scope.
 - Non-interactive guided setup runs without interactive prompts.
 - Public package versions were bumped in lockstep to `0.1.30`.
@@ -358,7 +361,7 @@ Track test execution during implementation.
 
 **Behavioral changes (user-facing):**
 
-- `oat init --setup` asks whether to customize per-pack scope in interactive mode.
+- `oat init --setup` asks whether to customize per-pack scope in interactive mode after pack selection, when at least one selected pack is user-eligible.
 - `OAT_NON_INTERACTIVE=1 oat init --setup --no-hook` applies defaults without prompting.
 
 **Key files / modules:**
@@ -373,7 +376,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Focused init/guided/tools tests passed.
+- Focused init/guided/tools tests passed, including p02 gate-after-pack-selection coverage.
 - Full CLI test suite passed after the timeout and review fixes.
 - Default root `pnpm test` passed after verification hardening.
 - Format, lint, type-check, build, and release validation passed.
@@ -381,7 +384,7 @@ Track test execution during implementation.
 
 **Design deltas (if any):**
 
-- Quick mode has no design artifact. One Medium review finding remains deferred: the customization gate appears before pack selection, though the core yes/no/default behavior is implemented and non-blocking for the phase gate.
+- Quick mode has no design artifact. The earlier gate-ordering deviation was fixed by p02-t01 and re-reviewed as passing.
 
 ## References
 

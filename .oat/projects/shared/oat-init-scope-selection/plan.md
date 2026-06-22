@@ -307,7 +307,7 @@ git commit -m "fix(p02-t01): move guided-setup scope gate after pack selection (
 
 **Total: 4 tasks**
 
-Ready for the p02-t01 review fix; re-review and update PR #116 after it lands.
+PR #116 is updated with the p02-t01 review fix; await human review.
 
 ---
 
