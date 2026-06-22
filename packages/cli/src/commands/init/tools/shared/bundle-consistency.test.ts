@@ -23,6 +23,8 @@ import {
 } from '../workflows/install-workflows';
 import { BRAINSTORM_SKILLS, RESEARCH_AGENTS } from './skill-manifest';
 
+const BUNDLE_ASSETS_TEST_TIMEOUT_MS = 15_000;
+
 /**
  * Parse the SKILLS=(...) bash array from bundle-assets.sh.
  *
@@ -215,27 +217,31 @@ describe('bundle-assets.sh consistency', () => {
     ).toEqual(expect.arrayContaining(workflowLifecycleSkills));
   });
 
-  it('does not bundle skill test directories', () => {
-    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+  it(
+    'does not bundle skill test directories',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
 
-    try {
-      execFileSync('bash', [getBundleScriptPath()], {
-        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
-        stdio: 'pipe',
-      });
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
 
-      expect(
-        existsSync(
-          join(assetsRoot, 'skills', 'oat-project-implement', 'tests'),
-        ),
-      ).toBe(false);
-      expect(
-        existsSync(
-          join(assetsRoot, 'skills', 'oat-project-implement', 'SKILL.md'),
-        ),
-      ).toBe(true);
-    } finally {
-      rmSync(assetsRoot, { recursive: true, force: true });
-    }
-  });
+        expect(
+          existsSync(
+            join(assetsRoot, 'skills', 'oat-project-implement', 'tests'),
+          ),
+        ).toBe(false);
+        expect(
+          existsSync(
+            join(assetsRoot, 'skills', 'oat-project-implement', 'SKILL.md'),
+          ),
+        ).toBe(true);
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
 });
