@@ -6,6 +6,7 @@ import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
+  type ScopeSelectionMode,
 } from '@app/command-context';
 import {
   type ApplyOatCoreResult,
@@ -563,6 +564,34 @@ function normalizeDocumentationRoot(
     : normalizedRelative;
 }
 
+async function promptForScopeSelectionMode(
+  context: CommandContext,
+  dependencies: InitDependencies,
+): Promise<ScopeSelectionMode> {
+  if (!context.interactive) {
+    return 'defaults';
+  }
+
+  const selection = await dependencies.selectWithAbort(
+    'Customize per-pack scope? (y/N)',
+    [
+      {
+        label: 'No, use recommended defaults',
+        value: 'no',
+        description: 'Apply per-pack defaults without extra prompts',
+      },
+      {
+        label: 'Yes, customize each pack',
+        value: 'yes',
+        description: 'Choose project, user, or both for each eligible pack',
+      },
+    ],
+    { interactive: context.interactive },
+  );
+
+  return selection === 'yes' ? 'interactive' : 'defaults';
+}
+
 async function promptForManualDocsConfig(
   projectRoot: string,
   context: CommandContext,
@@ -626,7 +655,11 @@ async function runGuidedSetupImpl(
   );
 
   context.logger.info('[1/5] Tool packs…');
-  const guidedContext: CommandContext = { ...context, scope: 'project' };
+  const scopeSelection = await promptForScopeSelectionMode(
+    context,
+    dependencies,
+  );
+  const guidedContext: CommandContext = { ...context, scopeSelection };
   const installedPacks = await dependencies.runToolPacks(guidedContext);
   const installedPackSet = new Set(installedPacks);
 
@@ -999,7 +1032,7 @@ async function runInitCommand(
   process.exitCode = 0;
 
   const freshInit = projectRoot !== null && !oatDirExistedBefore;
-  if (context.interactive && (setupFlag || freshInit)) {
+  if (setupFlag || (context.interactive && freshInit)) {
     let shouldRunSetup = !!setupFlag;
     if (!shouldRunSetup && freshInit) {
       shouldRunSetup = await dependencies.confirmAction(

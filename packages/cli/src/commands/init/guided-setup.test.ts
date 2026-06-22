@@ -133,9 +133,16 @@ function createGuidedSetupHarness(options: {
     inputWithDefault: vi.fn(
       async () => inputWithDefaultResponses.shift() ?? null,
     ),
-    selectWithAbort: vi.fn(
-      async () => selectWithAbortResponses.shift() ?? null,
-    ),
+    selectWithAbort: vi.fn(async (message: string) => {
+      if (message === 'Customize per-pack scope? (y/N)') {
+        const next = selectWithAbortResponses[0];
+        if (next === 'yes' || next === 'no' || next === null) {
+          return selectWithAbortResponses.shift() ?? 'no';
+        }
+        return 'no';
+      }
+      return selectWithAbortResponses.shift() ?? null;
+    }),
     runToolPacks,
     runProviderSync,
   });
@@ -308,7 +315,7 @@ describe('guided setup integration', () => {
     ).toBe(true);
   });
 
-  it('non-interactive: guided setup is never triggered', async () => {
+  it('non-interactive: explicit setup skips prompts and applies tool defaults', async () => {
     const { command, runToolPacks, capture } = createGuidedSetupHarness({
       interactive: false,
       hookInstalled: true,
@@ -320,10 +327,14 @@ describe('guided setup integration', () => {
       commandArgs: ['--setup'],
     });
 
-    expect(runToolPacks).not.toHaveBeenCalled();
-    expect(capture.info.every((msg) => !msg.includes('Guided setup'))).toBe(
-      true,
+    expect(runToolPacks).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scopeSelection: 'defaults',
+      }),
     );
+    expect(
+      capture.info.some((msg) => msg.includes('Guided setup complete')),
+    ).toBe(true);
   });
 
   it('docs: auto-detected tooling is stored when user confirms', async () => {

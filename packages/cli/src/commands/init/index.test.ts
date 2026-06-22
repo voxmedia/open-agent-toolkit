@@ -33,6 +33,7 @@ interface HarnessOptions {
   strays?: InitStrayCandidate[];
   confirmResponses?: boolean[];
   selectResponses?: Array<string[] | null>;
+  singleSelectResponses?: Array<string | null>;
   providerSelectResponses?: Array<string[] | null>;
   hookInstalled?: boolean;
   useDefaultAdopt?: boolean;
@@ -97,6 +98,7 @@ function createHarness(options: HarnessOptions = {}): {
   collectStrays: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
+  selectWithAbort: ReturnType<typeof vi.fn>;
   selectProvidersWithAbort: ReturnType<typeof vi.fn>;
   loadSyncConfig: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
@@ -118,9 +120,13 @@ function createHarness(options: HarnessOptions = {}): {
   };
   const confirmResponses = [...(options.confirmResponses ?? [])];
   const selectResponses = [...(options.selectResponses ?? [])];
+  const singleSelectResponses = [...(options.singleSelectResponses ?? [])];
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
   const selectManyWithAbort = vi.fn(async () => selectResponses.shift() ?? []);
+  const selectWithAbort = vi.fn(
+    async () => singleSelectResponses.shift() ?? 'no',
+  );
   const selectProvidersWithAbort = vi.fn(
     async () => providerSelectResponses.shift() ?? [],
   );
@@ -212,6 +218,7 @@ function createHarness(options: HarnessOptions = {}): {
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
     confirmAction,
     selectManyWithAbort,
+    selectWithAbort,
     selectProvidersWithAbort,
     getAdapters: () => adapters,
     loadSyncConfig,
@@ -271,6 +278,7 @@ function createHarness(options: HarnessOptions = {}): {
     collectStrays,
     confirmAction,
     selectManyWithAbort,
+    selectWithAbort,
     selectProvidersWithAbort,
     loadSyncConfig,
     saveSyncConfig,
@@ -1345,6 +1353,67 @@ config_file = "agents/reviewer.toml"
       expect(runToolPacks).toHaveBeenCalledTimes(1);
     });
 
+    it('guided setup gate yes keeps per-pack scope selection interactive without forcing project scope', async () => {
+      const { command, runToolPacks, selectWithAbort } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        oatDirExists: true,
+        useDefaultGuidedSetup: true,
+        providerSelectResponses: [['claude']],
+        singleSelectResponses: ['yes'],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          false, // provider sync — skip
+        ],
+        selectResponses: [[]],
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'all'],
+        commandArgs: ['--setup'],
+      });
+
+      expect(selectWithAbort).toHaveBeenCalledTimes(1);
+      expect(selectWithAbort.mock.calls[0]?.[0]).toBe(
+        'Customize per-pack scope? (y/N)',
+      );
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'all',
+          scopeSelection: 'interactive',
+        }),
+      );
+    });
+
+    it('guided setup gate no applies per-pack defaults without forcing project scope', async () => {
+      const { command, runToolPacks, selectWithAbort } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        oatDirExists: true,
+        useDefaultGuidedSetup: true,
+        providerSelectResponses: [['claude']],
+        singleSelectResponses: ['no'],
+        confirmResponses: [
+          false, // "Do you have documentation?" — no
+          false, // provider sync — skip
+        ],
+        selectResponses: [[]],
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'all'],
+        commandArgs: ['--setup'],
+      });
+
+      expect(selectWithAbort).toHaveBeenCalledTimes(1);
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'all',
+          scopeSelection: 'defaults',
+        }),
+      );
+    });
+
     it('guided setup reports skipped when no tool packs selected', async () => {
       const { command, capture } = createHarness({
         interactive: true,
@@ -1677,19 +1746,26 @@ config_file = "agents/reviewer.toml"
       ).toBe(true);
     });
 
-    it('non-interactive mode never enters guided setup', async () => {
-      const { command, runGuidedSetup } = createHarness({
+    it('non-interactive setup skips the gate and applies per-pack defaults', async () => {
+      const { command, runToolPacks, selectWithAbort } = createHarness({
         interactive: false,
         hookInstalled: true,
         oatDirExists: false,
+        useDefaultGuidedSetup: true,
       });
 
       await runInitCommand(command, {
-        globalArgs: ['--scope', 'project'],
+        globalArgs: ['--scope', 'all'],
         commandArgs: ['--setup'],
       });
 
-      expect(runGuidedSetup).not.toHaveBeenCalled();
+      expect(selectWithAbort).not.toHaveBeenCalled();
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'all',
+          scopeSelection: 'defaults',
+        }),
+      );
     });
   });
 });
