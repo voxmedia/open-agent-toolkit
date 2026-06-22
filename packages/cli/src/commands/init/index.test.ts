@@ -16,6 +16,10 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
+import type {
+  MultiSelectChoice,
+  PromptContext,
+} from '@commands/shared/shared.prompts';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { CanonicalEntry } from '@engine/index';
 import { CliError } from '@errors/index';
@@ -44,6 +48,7 @@ interface HarnessOptions {
   loadedSyncConfig?: SyncConfig;
   oatDirExists?: boolean;
   useDefaultGuidedSetup?: boolean;
+  throwOnNonInteractiveSelectMany?: boolean;
   resolvedLocalPaths?: string[];
   toolPacksResult?: string[];
   hookInstallInfo?: {
@@ -123,7 +128,18 @@ function createHarness(options: HarnessOptions = {}): {
   const singleSelectResponses = [...(options.singleSelectResponses ?? [])];
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
-  const selectManyWithAbort = vi.fn(async () => selectResponses.shift() ?? []);
+  const selectManyWithAbort = vi.fn(
+    async (
+      _message: string,
+      _choices: MultiSelectChoice<string>[],
+      ctx: PromptContext,
+    ) => {
+      if (options.throwOnNonInteractiveSelectMany && !ctx.interactive) {
+        throw new CliError('Selection prompt requires interactive mode.', 1);
+      }
+      return selectResponses.shift() ?? [];
+    },
+  );
   const selectWithAbort = vi.fn(
     async () => singleSelectResponses.shift() ?? 'no',
   );
@@ -1766,6 +1782,35 @@ config_file = "agents/reviewer.toml"
           scopeSelection: 'defaults',
         }),
       );
+    });
+
+    it('non-interactive setup does not invoke the local-path prompt', async () => {
+      const {
+        command,
+        runToolPacks,
+        selectManyWithAbort,
+        addLocalPaths: addLocalPathsMock,
+      } = createHarness({
+        interactive: false,
+        hookInstalled: true,
+        oatDirExists: false,
+        useDefaultGuidedSetup: true,
+        throwOnNonInteractiveSelectMany: true,
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--setup', '--no-hook'],
+      });
+
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'project',
+          scopeSelection: 'defaults',
+        }),
+      );
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+      expect(addLocalPathsMock).not.toHaveBeenCalled();
     });
   });
 });

@@ -526,6 +526,31 @@ describe('createInitToolsCommand', () => {
     ]);
   });
 
+  it('guided interactive scope-selection overrides concrete --scope project', async () => {
+    const { command, selectWithAbort, installIdeas } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'interactive',
+      packSelection: [['ideas']],
+      scopeSelection: ['user'],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(selectWithAbort.mock.calls.map((call) => call[0])).toContain(
+      'Where should ideas install?',
+    );
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installIdeas).not.toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
   it('defaults both-scope installs to keep both and updates both roots when the user keeps them', async () => {
     const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
@@ -1330,6 +1355,32 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
+  it('guided defaults scope-selection overrides concrete --scope project', async () => {
+    PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
+
+    const { command, selectWithAbort, installIdeas } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'defaults',
+      packSelection: [['ideas']],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(selectWithAbort.mock.calls.map((call) => call[0])).not.toContain(
+      'Where should ideas install?',
+    );
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installIdeas).not.toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
   });

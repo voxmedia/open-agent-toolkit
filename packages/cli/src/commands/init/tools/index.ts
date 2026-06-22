@@ -525,10 +525,25 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Explicit --scope is additive: union the requested scope with the pack's
-  // current placement so installing at one scope never removes another. A pack
-  // currently at `user` installed with `--scope project` becomes `both`.
-  if (context.scope === 'project' || context.scope === 'user') {
+  const scopeSelection = context.scopeSelection;
+  if (scopeSelection === 'defaults') {
+    for (const pack of eligiblePacks) {
+      scopes[pack] = resolvePackDefaultEndState(
+        pack,
+        installedPackStates[pack].location,
+      );
+    }
+    return scopes as PackScopeMap;
+  }
+
+  // Explicit --scope is additive for regular tools installs: union the
+  // requested scope with the pack's current placement so installing at one
+  // scope never removes another. Guided setup passes `scopeSelection`, which
+  // intentionally takes precedence over this global init scope.
+  if (
+    scopeSelection !== 'interactive' &&
+    (context.scope === 'project' || context.scope === 'user')
+  ) {
     const requested: InstallScope = context.scope;
     for (const pack of eligiblePacks) {
       scopes[pack] = unionScopeWithCurrent(
@@ -547,8 +562,7 @@ async function resolvePackScopes(
   // migrates a user's prior install across scopes. Only when the pack is not
   // yet present do we consult PACK_METADATA[name]?.defaultScope (with absent
   // entries falling back to 'project' for backwards compatibility).
-  const scopeSelection = context.scopeSelection ?? 'interactive';
-  if (scopeSelection === 'defaults' || !context.interactive) {
+  if (!context.interactive) {
     for (const pack of eligiblePacks) {
       scopes[pack] = resolvePackDefaultEndState(
         pack,

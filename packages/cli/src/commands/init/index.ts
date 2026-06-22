@@ -676,14 +676,15 @@ async function runGuidedSetupImpl(
     checked: existingPaths.has(c.value) || c.checked,
   }));
 
-  const selectedPaths =
-    (await dependencies.selectManyWithAbort(
-      'Select local paths to add',
-      choices,
-      {
-        interactive: context.interactive,
-      },
-    )) ?? [];
+  const selectedPaths: string[] = context.interactive
+    ? ((await dependencies.selectManyWithAbort(
+        'Select local paths to add',
+        choices,
+        {
+          interactive: context.interactive,
+        },
+      )) ?? [])
+    : [];
 
   let addedCount = 0;
   const guidedPathValues = new Set(applicableChoices.map((c) => c.value));
