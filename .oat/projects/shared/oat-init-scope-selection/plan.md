@@ -220,11 +220,11 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact                                            |
-| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01   | code     | passed  | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
-| final | code     | pending | -          | -                                                   |
-| plan  | artifact | passed  | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
+| Scope | Type     | Status | Date       | Artifact                                            |
+| ----- | -------- | ------ | ---------- | --------------------------------------------------- |
+| p01   | code     | passed | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
+| final | code     | passed | 2026-06-22 | reviews/final-review-2026-06-22.md                  |
+| plan  | artifact | passed | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -246,7 +246,7 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 **Total: 3 tasks**
 
-Implementation tasks and verification hardening complete; awaiting final review.
+Implementation tasks, verification hardening, and final review are complete. Ready for documentation sync and PR preparation.
 
 ---
 

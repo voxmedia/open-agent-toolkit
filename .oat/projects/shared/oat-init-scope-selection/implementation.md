@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: null
+oat_ready_for: oat-project-document
 oat_blockers: []
 oat_last_updated: 2026-06-22
 oat_current_task_id: null
@@ -29,6 +29,22 @@ oat_generated: false
 | Phase 1 | complete | 3     | 3/3       |
 
 **Total:** 3/3 planned tasks completed
+
+---
+
+### Review Received: final
+
+**Date:** 2026-06-22
+**Review artifact:** `reviews/final-review-2026-06-22.md`
+**Type:** code — final review
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 0
+
+**Disposition map:**
+
+- `M1` (Medium — customization gate still runs before pack selection) → explicit_deferral: accepted as non-blocking for the final gate. The shipped behavior satisfies the Critical/Important release gate, and the remaining ordering refinement should be handled as follow-up work rather than blocking this implementation run.
+
+**Next:** Per `workflow.postImplementSequence=docs-pr`, run `oat-project-document` next, then `oat-project-pr-final`.
 
 ---
 
@@ -217,8 +233,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Medium deferred to final-review disposition: customization gate still runs before pack selection (`reviews/archived/p01-review-2026-06-22-v2.md`).
-- Final review should include the post-task verification hardening commit `469a0dea`.
+- None blocking. Final review accepted/deferred the remaining Medium finding about scope-gate ordering as non-blocking follow-up (`reviews/final-review-2026-06-22.md`).
 
 #### Artifact / Design Deltas
 
@@ -263,7 +278,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Final review should explicitly disposition the remaining Medium finding about gate ordering before pack selection.
+- Consider follow-up work to move the scope-customization gate after pack selection and skip it when no user-eligible packs are selected.
 
 **Blockers:**
 
@@ -284,27 +299,28 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Deferred Findings (p01 Review)
 
-| Finding                                             | Severity | Source                                         | Disposition                                                                                                      |
-| --------------------------------------------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Customization gate still runs before pack selection | Medium   | `reviews/archived/p01-review-2026-06-22-v2.md` | Deferred to final-review disposition; non-blocking for phase pass because no Critical/Important findings remain. |
+| Finding                                             | Severity | Source                               | Disposition                                                                                                  |
+| --------------------------------------------------- | -------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Customization gate still runs before pack selection | Medium   | `reviews/final-review-2026-06-22.md` | Explicitly deferred as non-blocking follow-up; final review passed with 0 Critical and 0 Important findings. |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase    | Tests Run                                                                                                                                                                       | Passed                             | Failed | Coverage                             |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------ | ------------------------------------ |
-| 1        | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts src/commands/init/tools/index.test.ts`            | 111                                | 0      | Focused init/guided/tools coverage   |
-| 1        | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                                    | 1845                               | 0      | Full CLI suite after review fix      |
-| 1        | `pnpm release:validate`                                                                                                                                                         | pass                               | 0      | Public package release policy        |
-| post-p01 | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/index.test.ts` | 27                                 | 0      | Docs scaffold command coverage       |
-| post-p01 | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts -t "commits only the scaffolded directory"`                                    | 1                                  | 0      | Git-heavy scaffold timeout coverage  |
-| post-p01 | `pnpm test`                                                                                                                                                                     | 1845 CLI tests; 10 workspace tasks | 0      | Default Turbo scheduler verification |
-| post-p01 | `pnpm format`                                                                                                                                                                   | pass                               | 0      | Formatting                           |
-| post-p01 | `pnpm lint`                                                                                                                                                                     | pass                               | 0      | Lint                                 |
-| post-p01 | `pnpm type-check`                                                                                                                                                               | pass                               | 0      | TypeScript                           |
-| post-p01 | `pnpm build`                                                                                                                                                                    | pass                               | 0      | Workspace build excluding docs       |
-| post-p01 | `pnpm release:validate`                                                                                                                                                         | pass                               | 0      | Public package release policy        |
+| Phase    | Tests Run                                                                                                                                                                                                 | Passed                             | Failed | Coverage                             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------ | ------------------------------------ |
+| 1        | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/init/guided-setup.test.ts src/commands/init/tools/index.test.ts`                                      | 111                                | 0      | Focused init/guided/tools coverage   |
+| 1        | `pnpm --filter @open-agent-toolkit/cli test`                                                                                                                                                              | 1845                               | 0      | Full CLI suite after review fix      |
+| 1        | `pnpm release:validate`                                                                                                                                                                                   | pass                               | 0      | Public package release policy        |
+| post-p01 | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/scaffold.test.ts src/commands/docs/init/integration.test.ts src/commands/docs/init/index.test.ts`                           | 27                                 | 0      | Docs scaffold command coverage       |
+| post-p01 | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts -t "commits only the scaffolded directory"`                                                              | 1                                  | 0      | Git-heavy scaffold timeout coverage  |
+| post-p01 | `pnpm test`                                                                                                                                                                                               | 1845 CLI tests; 10 workspace tasks | 0      | Default Turbo scheduler verification |
+| post-p01 | `pnpm format`                                                                                                                                                                                             | pass                               | 0      | Formatting                           |
+| post-p01 | `pnpm lint`                                                                                                                                                                                               | pass                               | 0      | Lint                                 |
+| post-p01 | `pnpm type-check`                                                                                                                                                                                         | pass                               | 0      | TypeScript                           |
+| post-p01 | `pnpm build`                                                                                                                                                                                              | pass                               | 0      | Workspace build excluding docs       |
+| post-p01 | `pnpm release:validate`                                                                                                                                                                                   | pass                               | 0      | Public package release policy        |
+| final    | Final reviewer verification suite (focused init/tools, docs scaffold, scaffold timeout, bundle consistency, release validation, plan validation, non-interactive smoke, CLI lint/type-check, `pnpm test`) | pass                               | 0      | Final review gate                    |
 
 ## Final Summary (for PR/docs)
 
