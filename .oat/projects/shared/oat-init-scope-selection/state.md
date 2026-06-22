@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling:
   preset: maximum
@@ -27,19 +27,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-22T03:44:45.942Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-22T03:44:45.942Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-22T17:03:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-init-scope-selection
 
-**Status:** Discovery
+**Status:** Implementation
 **Started:** 2026-06-22
 **Last Updated:** 2026-06-22
 
 ## Current Phase
 
-Plan complete (3 tasks, sequential) — ready for implementation
+Implementation in progress — current task `p01-t01`
 
 ## Artifacts
 
@@ -47,13 +47,13 @@ Plan complete (3 tasks, sequential) — ready for implementation
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — straightforward fix)
 - **Plan:** `plan.md` (complete — 3 tasks, artifact review passed)
-- **Implementation:** `implementation.md` (initialized — first task p01-t01)
+- **Implementation:** `implementation.md` (in progress — current task p01-t01)
 
 ## Progress
 
 - ✓ Discovery complete (opt-in scope-customization gate decided)
 - ✓ Plan generated + artifact review passed
-- ⧗ Awaiting implementation (`oat-project-implement`)
+- ⧗ Implementation in progress (`p01-t01`)
 
 ## Blockers
 
@@ -61,4 +61,4 @@ None
 
 ## Next Milestone
 
-Implement Phase 1 (opt-in scope gate) via `oat-project-implement`
+Complete Phase 1 task `p01-t01`

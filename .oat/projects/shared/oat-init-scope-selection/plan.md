@@ -10,6 +10,8 @@ oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
+oat_plan_hill_phases: ['p01']
+oat_auto_review_at_hill_checkpoints: true
 oat_generated: false
 oat_template: false
 ---

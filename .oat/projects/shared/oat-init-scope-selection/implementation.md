@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 3     | 0/3       |
 
-**Total:** 0/3 tasks completed (not yet started)
+**Total:** 0/3 tasks completed
 
 ---
 
@@ -75,9 +75,9 @@ No deferrals. No code/design drift (plan not yet implemented).
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Scope-selection mode for the tools-install resolver
 
-**Status:** completed / in_progress / pending / blocked
+**Status:** in_progress
 **Commit:** {sha} (if completed)
 
 **Outcome (required when completed):**
