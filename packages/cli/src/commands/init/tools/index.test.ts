@@ -8,7 +8,11 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildToolPacksSectionBody, createInitToolsCommand } from './index';
+import {
+  buildToolPacksSectionBody,
+  createInitToolsCommand,
+  formatReconcileSummary,
+} from './index';
 import { PACK_METADATA } from './shared/skill-manifest';
 
 interface HarnessOptions {
@@ -116,8 +120,10 @@ function createHarness(options: HarnessOptions = {}) {
     },
   );
   const selectWithAbort = vi.fn(
-    async (_message: string, _choices: SelectChoice<string>[]) => {
+    async (_message: string, choices: SelectChoice<string>[]) => {
       const next = scopeSelection.shift();
+      // Default to the first offered choice (the highlighted default in the
+      // real prompt) when the scripted queue is exhausted.
       return next === undefined ? (choices[0]?.value ?? null) : next;
     },
   );
@@ -338,8 +344,9 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command);
 
-    // First call is pack selection, second is per-pack scope selection
-    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
+    // Pack selection is the first (and only) multiselect; per-pack scope
+    // selection now uses single-selects via selectWithAbort.
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
       value: string;
       checked?: boolean;
@@ -395,10 +402,12 @@ describe('createInitToolsCommand', () => {
     ).toContain('(installed: project + user)');
   });
 
-  it('prechecks user-scope follow-up choices from current install location and labels both-scope packs clearly', async () => {
-    const { command, selectManyWithAbort } = createHarness({
+  it('offers a per-pack end-state selector defaulting to current placement', async () => {
+    const { command, selectWithAbort } = createHarness({
       interactive: true,
-      packSelection: [['ideas', 'docs', 'research'], ['docs']],
+      packSelection: [['ideas', 'docs', 'research']],
+      // Accept the default (first) option for each per-pack selector.
+      scopeSelection: [],
       toolsByScope: {
         project: [
           createScannedTool('oat-idea-new', 'ideas', 'project'),
@@ -414,29 +423,36 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
-      value: string;
-      label: string;
-      checked?: boolean;
-    }>;
-    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
-      expect.objectContaining({
-        label: 'ideas (current: project)',
-        checked: false,
-      }),
+    // One single-select per user-eligible pack, each offering project/user/both
+    // with the current placement listed first (the default).
+    const callsByMessage = new Map<
+      string,
+      Array<{ value: string; label: string }>
+    >();
+    for (const call of selectWithAbort.mock.calls) {
+      callsByMessage.set(
+        call[0] as string,
+        call[1] as Array<{ value: string; label: string }>,
+      );
+    }
+
+    const ideasChoices = callsByMessage.get('Where should ideas install?');
+    expect(ideasChoices?.map((c) => c.value)).toEqual([
+      'project',
+      'user',
+      'both',
+    ]);
+    expect(ideasChoices?.[0]?.label).toContain('current: project');
+
+    const docsChoices = callsByMessage.get('Where should docs install?');
+    expect(docsChoices?.[0]?.value).toBe('user');
+    expect(docsChoices?.[0]?.label).toContain('current: user');
+
+    const researchChoices = callsByMessage.get(
+      'Where should research install?',
     );
-    expect(choices.find((choice) => choice.value === 'docs')).toEqual(
-      expect.objectContaining({
-        label: 'docs (current: user)',
-        checked: true,
-      }),
-    );
-    expect(choices.find((choice) => choice.value === 'research')).toEqual(
-      expect.objectContaining({
-        label: 'research (current: project + user)',
-        checked: true,
-      }),
-    );
+    expect(researchChoices?.[0]?.value).toBe('both');
+    expect(researchChoices?.[0]?.label).toContain('current: project + user');
   });
 
   it('defaults both-scope installs to keep both and updates both roots when the user keeps them', async () => {
@@ -511,28 +527,26 @@ describe('createInitToolsCommand', () => {
     const {
       command,
       selectManyWithAbort,
-      selectWithAbort,
       installIdeas,
       installWorkflows,
       installUtility,
       installResearch,
     } = createHarness({
       interactive: true,
-      // 1st call: pack selection, 2nd call: which packs go to user scope
-      packSelection: [
-        ['ideas', 'workflows', 'utility', 'research'],
-        ['ideas', 'utility', 'research'],
-      ],
-      // Only the workflows local-paths prompt remains on selectWithAbort
-      scopeSelection: ['local'],
+      packSelection: [['ideas', 'workflows', 'utility', 'research']],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+      // Per-pack selectors for ideas/utility/research, then workflows
+      // local-paths prompt.
+      scopeSelection: ['user', 'user', 'user', 'local'],
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    // 2 selectManyWithAbort calls: pack selection + per-pack scope
-    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
-    // 1 selectWithAbort call: workflows local-paths prompt
-    expect(selectWithAbort).toHaveBeenCalledTimes(1);
+    // Pack selection is the only multiselect.
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     expect(installWorkflows).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
@@ -556,13 +570,18 @@ describe('createInitToolsCommand', () => {
       installResearch,
     } = createHarness({
       interactive: true,
-      // 1st call: pack selection, 2nd call: only ideas goes to user scope
-      packSelection: [['ideas', 'utility', 'research'], ['ideas']],
+      packSelection: [['ideas', 'utility', 'research']],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+      // Per-pack selectors: ideas → user, utility → project, research → project
+      scopeSelection: ['user', 'project', 'project'],
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(selectManyWithAbort).toHaveBeenCalledTimes(2);
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     expect(installIdeas).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
@@ -577,7 +596,9 @@ describe('createInitToolsCommand', () => {
   it('reports final per-pack scopes instead of a coarse shared scope label', async () => {
     const { command, capture } = createHarness({
       interactive: true,
-      packSelection: [['core', 'ideas', 'docs'], ['ideas']],
+      packSelection: [['core', 'ideas', 'docs']],
+      // Per-pack selectors: ideas → user, docs → project (unchanged)
+      scopeSelection: ['user', 'project'],
       toolsByScope: {
         project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
         user: [createScannedTool('oat-docs', 'core', 'user')],
@@ -591,38 +612,63 @@ describe('createInitToolsCommand', () => {
       'Installed tool packs: core (user), ideas (user), docs (project)',
     );
     expect(output).not.toContain('User-eligible pack scope:');
+    // Additive scoping: only changed scopes are surfaced for sync. core and
+    // ideas add to user; docs was already at project (unchanged), so project
+    // is not re-synced.
     expect(output).toContain('Run: oat sync --scope user');
-    expect(output).toContain('Also run: oat sync --scope project');
+    expect(output).not.toContain('oat sync --scope project');
   });
 
-  it('migrates user-eligible packs from project to user scope by removing project canonical content', async () => {
-    const { command, installIdeas, removeDirectory, removeFile } =
+  it('per-pack selector: pack at user choosing both installs project additively and leaves user untouched', async () => {
+    const { command, installResearch, removeDirectory, removeFile } =
       createHarness({
         interactive: true,
-        packSelection: [['ideas'], ['ideas']],
+        packSelection: [['research']],
+        // research currently at user; choose `both`.
+        scopeSelection: ['both'],
         toolsByScope: {
-          project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
-          user: [],
+          project: [],
+          user: [createScannedTool('analyze', 'research', 'user')],
         },
       });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(installIdeas).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    // Additive add: project receives the install; user is never removed.
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
-    expect(removeDirectory).toHaveBeenCalledWith(
-      '/tmp/workspace/.agents/skills/oat-idea-new',
-    );
-    expect(removeDirectory).toHaveBeenCalledTimes(4);
+    expect(removeDirectory).not.toHaveBeenCalled();
     expect(removeFile).not.toHaveBeenCalled();
   });
 
-  it('normalizes a both-scopes install to project by removing user canonical content and agents', async () => {
-    const { command, installResearch, removeDirectory, removeFile } =
+  it('per-pack selector: accepting all current-placement defaults is a no-op (zero removals)', async () => {
+    const { command, removeDirectory, removeFile, capture } = createHarness({
+      interactive: true,
+      packSelection: [['ideas', 'research']],
+      // Accept defaults (current placement) for every pack.
+      scopeSelection: [],
+      toolsByScope: {
+        project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+        user: [createScannedTool('analyze', 'research', 'user')],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    // Nothing changed scope, so no sync is needed.
+    expect(capture.info.join('\n')).toContain('No sync needed.');
+  });
+
+  it('batch-confirm gate: dropping user from a both-scope pack removes user on confirm', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
         interactive: true,
-        packSelection: [['research'], []],
+        packSelection: [['research']],
+        // research selector → project (drops user); gate → yes
+        scopeSelection: ['project', 'yes'],
         toolsByScope: {
           project: [createScannedTool('analyze', 'research', 'project')],
           user: [createScannedTool('analyze', 'research', 'user')],
@@ -631,17 +677,82 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(installResearch).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
-    );
+    // The dropped user scope is removed exactly once (skills + agents under
+    // the user root).
     expect(removeDirectory).toHaveBeenCalledWith(
       '/tmp/home/.agents/skills/analyze',
     );
-    expect(removeDirectory).toHaveBeenCalledTimes(5);
     expect(removeFile).toHaveBeenCalledWith(
       '/tmp/home/.agents/agents/skeptical-evaluator.md',
     );
+    // The change summary listed the removal.
+    expect(capture.info.join('\n')).toContain('- research@user');
+    // research stays at project (idempotent install), end-state project.
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    // user is the only changed scope surfaced for sync.
+    expect(capture.info.join('\n')).toContain('oat sync --scope user');
   });
+
+  it('batch-confirm gate: declining applies no installs and no removals', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research']],
+        // research selector → project (drops user); gate → no
+        scopeSelection: ['project', 'no'],
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    expect(installResearch).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('No changes applied.');
+  });
+
+  it('batch-confirm gate: a failed replacement add does not remove the preserved scope (review I1)', async () => {
+    const { command, installResearch, removeDirectory, removeFile } =
+      createHarness({
+        interactive: true,
+        packSelection: [['research']],
+        // research currently at user only; selector → project (a move:
+        // + research@project / - research@user); gate → yes.
+        scopeSelection: ['project', 'yes'],
+        toolsByScope: {
+          project: [],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    // The replacement install into the added scope (project) fails.
+    installResearch.mockRejectedValueOnce(new Error('install failed'));
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    // The add was attempted...
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    // ...but because it threw, the preserved user scope must NOT be deleted.
+    // Removals run only after additions succeed, so nothing under the user
+    // root is removed when the replacement add fails.
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
+  // NOTE: The former move-semantics tests ("migrates user-eligible packs from
+  // project to user scope by removing project canonical content" and
+  // "normalizes a both-scopes install to project by removing user canonical
+  // content and agents") were retired here. Under the additive model, a
+  // scope is only ever removed via the explicit, batch-confirmed interactive
+  // path — covered by the per-pack selector (p01-t02) and confirmation gate
+  // (p01-t03) tests below.
 
   it('bare oat init tools cancellation exits without installing packs', async () => {
     const {
@@ -886,7 +997,13 @@ describe('createInitToolsCommand', () => {
   it('install command dispatches to installBrainstorm when brainstorm pack is selected', async () => {
     const { command, installBrainstorm } = createHarness({
       interactive: true,
-      packSelection: [['brainstorm'], ['brainstorm']],
+      packSelection: [['brainstorm']],
+      // Accept the per-pack default (brainstorm defaults to user scope).
+      scopeSelection: [],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
     });
 
     await runCommand(command, [], ['--scope', 'all']);
@@ -960,6 +1077,87 @@ describe('createInitToolsCommand', () => {
   });
 });
 
+describe('additive non-interactive scope resolution', () => {
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
+  afterEach(() => {
+    process.exitCode = originalExitCode;
+  });
+
+  it('--scope project over a pack at user resolves to both and never removes user', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    // Additive: research now lives at project + user; the project scope
+    // received the new install and the preserved user scope is never removed.
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    // research becomes both — no longer surfaces only project; user is retained.
+    const output = capture.info.join('\n');
+    expect(output).toContain('research (project + user)');
+  });
+
+  it('--scope user over a pack at project resolves to both and never removes project', async () => {
+    const { command, installResearch, removeDirectory, removeFile, capture } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [createScannedTool('analyze', 'research', 'project')],
+          user: [],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'user']);
+
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+    const output = capture.info.join('\n');
+    expect(output).toContain('research (project + user)');
+  });
+
+  it('default non-interactive set preserves existing placement (no removals)', async () => {
+    const { command, installResearch, installIdeas, removeDirectory } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    // ideas stays project, research stays user — neither scope is added a
+    // second time and nothing is removed.
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+  });
+});
+
 describe('PACK_METADATA-driven default scope (interactive picker)', () => {
   // Snapshot real metadata entries so we can restore after each test
   // without nuking any production opt-ins that other tests depend on.
@@ -973,12 +1171,13 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
     }
   });
 
-  it('interactive picker prechecks user scope for packs with defaultScope=user when not yet installed', async () => {
+  it('per-pack selector defaults to user scope for packs with defaultScope=user when not yet installed', async () => {
     PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
 
-    const { command, selectManyWithAbort } = createHarness({
+    const { command, selectWithAbort } = createHarness({
       interactive: true,
-      packSelection: [['ideas'], ['ideas']],
+      packSelection: [['ideas']],
+      scopeSelection: [],
       toolsByScope: {
         project: [],
         user: [],
@@ -987,23 +1186,20 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
-      value: string;
-      label: string;
-      checked?: boolean;
-    }>;
-    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
-      expect.objectContaining({
-        checked: true,
-      }),
+    const ideasCall = selectWithAbort.mock.calls.find(
+      (call) => call[0] === 'Where should ideas install?',
     );
+    const choices = ideasCall?.[1] as Array<{ value: string; label: string }>;
+    // Default (first) option is user scope.
+    expect(choices?.[0]?.value).toBe('user');
   });
 
-  it('interactive picker uses default project scope when pack has no metadata entry', async () => {
+  it('per-pack selector defaults to project scope when pack has no metadata entry', async () => {
     // No PACK_METADATA entry for ideas → falls back to 'project' default.
-    const { command, selectManyWithAbort } = createHarness({
+    const { command, selectWithAbort } = createHarness({
       interactive: true,
-      packSelection: [['ideas'], []],
+      packSelection: [['ideas']],
+      scopeSelection: [],
       toolsByScope: {
         project: [],
         user: [],
@@ -1012,16 +1208,11 @@ describe('PACK_METADATA-driven default scope (interactive picker)', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
-      value: string;
-      label: string;
-      checked?: boolean;
-    }>;
-    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
-      expect.objectContaining({
-        checked: false,
-      }),
+    const ideasCall = selectWithAbort.mock.calls.find(
+      (call) => call[0] === 'Where should ideas install?',
     );
+    const choices = ideasCall?.[1] as Array<{ value: string; label: string }>;
+    expect(choices?.[0]?.value).toBe('project');
   });
 });
 
@@ -1112,12 +1303,13 @@ describe('PACK_METADATA-driven default scope (migration safety)', () => {
     expect(removedFromProjectIdeasDir).toBe(false);
   });
 
-  it('interactive: existing project-scope install pre-checks unchecked even when defaultScope=user', async () => {
+  it('interactive: existing project-scope install defaults to project even when defaultScope=user', async () => {
     PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
 
-    const { command, selectManyWithAbort } = createHarness({
+    const { command, selectWithAbort } = createHarness({
       interactive: true,
-      packSelection: [['ideas'], []],
+      packSelection: [['ideas']],
+      scopeSelection: [],
       toolsByScope: {
         project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
         user: [],
@@ -1126,19 +1318,37 @@ describe('PACK_METADATA-driven default scope (migration safety)', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    const choices = selectManyWithAbort.mock.calls[1]?.[1] as Array<{
-      value: string;
-      label: string;
-      checked?: boolean;
-    }>;
-    // Existing project-scope install — defaultScope=user must NOT cause the
-    // user-scope picker to default-check this pack. Existing install wins.
-    expect(choices.find((choice) => choice.value === 'ideas')).toEqual(
-      expect.objectContaining({
-        checked: false,
-        label: 'ideas (current: project)',
-      }),
+    const ideasCall = selectWithAbort.mock.calls.find(
+      (call) => call[0] === 'Where should ideas install?',
     );
+    const choices = ideasCall?.[1] as Array<{ value: string; label: string }>;
+    // Existing project-scope install — defaultScope=user must NOT override the
+    // current placement. The selector defaults to project (current).
+    expect(choices?.[0]?.value).toBe('project');
+    expect(choices?.[0]?.label).toContain('current: project');
+  });
+});
+
+describe('formatReconcileSummary', () => {
+  it('lists adds with + and removes with - under a review header', () => {
+    const summary = formatReconcileSummary(
+      [{ pack: 'research', scope: 'project' }],
+      [{ pack: 'research', scope: 'user' }],
+    );
+
+    expect(summary).toContain('Review pending changes:');
+    expect(summary).toContain('+ research@project');
+    expect(summary).toContain('- research@user');
+  });
+
+  it('renders a removes-only summary', () => {
+    const summary = formatReconcileSummary(
+      [],
+      [{ pack: 'docs', scope: 'user' }],
+    );
+
+    expect(summary).toContain('- docs@user');
+    expect(summary).not.toContain('+ ');
   });
 });
 

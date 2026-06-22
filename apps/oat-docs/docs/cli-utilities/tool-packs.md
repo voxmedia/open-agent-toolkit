@@ -104,14 +104,15 @@ Key behavior:
 - Same pack selection and install flow as `oat init tools`
 - Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`
 - Interactive installs show each pack's current install location in the picker so already-installed packs are visible before you submit
-- User-scope follow-up choices are prepopulated from the current install state for user-eligible packs (`ideas`, `docs`, `utility`, `research`, `brainstorm`)
-- The `brainstorm` pack defaults to user scope on fresh installs (driven by `PACK_METADATA[brainstorm].defaultScope = 'user'`); existing project-scope installs still take precedence on re-install so users do not get unexpected scope migrations
-- If a user-eligible pack is already installed in both project and user scope, the installer asks whether to keep both installs or normalize the pack to user scope before it makes any cleanup changes
-- Changing a user-eligible pack from project scope to user scope, or back again, is treated as a migration: the old canonical copy is removed so the pack ends in the selected scope instead of accumulating duplicate installs
+- Installing is **additive**: choosing a scope for a pack never removes it from another scope. A user-eligible pack installed at user scope plus a project install ends up at `project + user`, not moved
+- For each user-eligible pack (`ideas`, `docs`, `utility`, `research`, `brainstorm`), the interactive flow offers a per-pack end-state selector (`project`, `user`, or `both`) defaulting to the pack's current placement; leaving the default makes no changes for that pack
+- The `brainstorm` pack defaults to user scope on fresh installs (driven by `PACK_METADATA[brainstorm].defaultScope = 'user'`); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes
+- Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
+- Non-interactive installs (including `--scope project`, `--scope user`, and the default pack set) are strictly additive and never remove a pack from a scope. Removal is interactive-only
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
 - Interactive runs can prompt to update selected outdated skills
-- Successful installs report the final scope chosen for each pack, including `project + user` when both installs are preserved, and auto-sync every scope touched by the install or migration
+- Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views
 - Use `--no-sync` to skip auto-sync
 

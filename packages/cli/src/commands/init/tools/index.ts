@@ -287,8 +287,107 @@ const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
 type PackScopeMap = Record<ToolPack, PackInstallTarget>;
 type PackInstallStateMap = Record<ToolPack, PackInstallState>;
 
+interface ScopeReconcileResult {
+  adds: ConcreteScope[];
+  removes: ConcreteScope[];
+}
+
 function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
   return USER_ELIGIBLE_PACKS.has(pack);
+}
+
+/**
+ * Concrete scopes implied by a desired end-state placement.
+ */
+function scopesForEndState(end: PackInstallTarget): ConcreteScope[] {
+  switch (end) {
+    case 'project':
+      return ['project'];
+    case 'user':
+      return ['user'];
+    case 'both':
+      return ['project', 'user'];
+  }
+}
+
+/**
+ * Concrete scopes a pack is currently installed at.
+ */
+function scopesForLocation(
+  location: PackInstallState['location'],
+): ConcreteScope[] {
+  switch (location) {
+    case 'project':
+      return ['project'];
+    case 'user':
+      return ['user'];
+    case 'both':
+      return ['project', 'user'];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Pure diff of current placement vs a desired end-state into the set of
+ * scopes to add (install into) and remove (delete from). This is the single
+ * source of truth that the reconciliation loop drives off of, so installs and
+ * removals only ever touch scopes that actually change.
+ */
+function reconcilePackScope(
+  current: PackInstallState['location'],
+  desired: PackInstallTarget,
+): ScopeReconcileResult {
+  const currentScopes = new Set(scopesForLocation(current));
+  const desiredScopes = new Set(scopesForEndState(desired));
+  const adds = [...desiredScopes].filter((scope) => !currentScopes.has(scope));
+  const removes = [...currentScopes].filter(
+    (scope) => !desiredScopes.has(scope),
+  );
+  return { adds, removes };
+}
+
+interface PackScopeChange {
+  pack: ToolPack;
+  scope: ConcreteScope;
+}
+
+/**
+ * Render a batch change summary (`+ pack@scope` adds / `- pack@scope` removes)
+ * for the interactive removal-confirmation gate. Pure for snapshot-friendly
+ * testing.
+ */
+export function formatReconcileSummary(
+  adds: PackScopeChange[],
+  removes: PackScopeChange[],
+): string {
+  const lines = ['Review pending changes:'];
+  for (const { pack, scope } of adds) {
+    lines.push(`  + ${pack}@${scope}`);
+  }
+  for (const { pack, scope } of removes) {
+    lines.push(`  - ${pack}@${scope}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Additive union of a pack's current placement with a requested scope. Never
+ * returns a placement narrower than current — installing at one scope can
+ * never remove the pack from another scope.
+ */
+function unionScopeWithCurrent(
+  current: PackInstallState['location'],
+  requested: InstallScope,
+): PackInstallTarget {
+  const scopes = new Set<ConcreteScope>([
+    ...scopesForLocation(current),
+    requested,
+  ]);
+  if (scopes.has('project') && scopes.has('user')) {
+    return 'both';
+  }
+  return scopes.has('user') ? 'user' : 'project';
 }
 
 async function loadInstalledPackStates(
@@ -378,59 +477,6 @@ function buildPackChoices(
   ];
 }
 
-function buildUserScopeChoices(
-  packs: UserEligiblePack[],
-  installedPackStates: PackInstallStateMap,
-): MultiSelectChoice<UserEligiblePack>[] {
-  return packs.map((pack) => {
-    const location = installedPackStates[pack].location;
-    // Existing-install detection wins over PACK_METADATA defaultScope so
-    // re-installs of an already-placed pack do not silently migrate the
-    // user across scopes. When the pack is not yet installed at any
-    // scope, fall back to PACK_METADATA[pack]?.defaultScope (defaults
-    // to 'project' when absent).
-    const checked =
-      location === 'user' || location === 'both'
-        ? true
-        : location === 'not-installed'
-          ? resolvePackDefaultScope(pack) === 'user'
-          : false;
-    return {
-      label:
-        location === 'not-installed'
-          ? pack
-          : `${pack} (current: ${formatInstalledLocation(location)})`,
-      value: pack,
-      checked,
-    };
-  });
-}
-
-async function resolveBothScopeTarget(
-  pack: UserEligiblePack,
-  dependencies: InitToolsDependencies,
-  interactive: boolean,
-): Promise<'both' | 'user'> {
-  const selection = await dependencies.selectWithAbort(
-    `${pack} is currently installed in project and user scope. Keep both installs or normalize to user scope?`,
-    [
-      {
-        label: 'Keep project + user (recommended)',
-        value: 'both',
-        description: 'Preserve both installed copies',
-      },
-      {
-        label: 'User only',
-        value: 'user',
-        description: 'Remove the project-scoped copy',
-      },
-    ],
-    { interactive },
-  );
-
-  return selection ?? 'both';
-}
-
 export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
   const metadata = lastRunInitToolsMetadata;
   lastRunInitToolsMetadata = null;
@@ -479,17 +525,16 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Explicit --scope overrides per-pack selection
-  if (context.scope === 'project') {
+  // Explicit --scope is additive: union the requested scope with the pack's
+  // current placement so installing at one scope never removes another. A pack
+  // currently at `user` installed with `--scope project` becomes `both`.
+  if (context.scope === 'project' || context.scope === 'user') {
+    const requested: InstallScope = context.scope;
     for (const pack of eligiblePacks) {
-      scopes[pack] = 'project';
-    }
-    return scopes as PackScopeMap;
-  }
-
-  if (context.scope === 'user') {
-    for (const pack of eligiblePacks) {
-      scopes[pack] = 'user';
+      scopes[pack] = unionScopeWithCurrent(
+        installedPackStates[pack].location,
+        requested,
+      );
     }
     return scopes as PackScopeMap;
   }
@@ -519,28 +564,89 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Interactive: let user pick which packs go to user scope
-  const userScopePacks =
-    (await dependencies.selectManyWithAbort(
-      'Which packs should install at user scope? (unselected go to project scope)',
-      buildUserScopeChoices(eligiblePacks, installedPackStates),
-      { interactive: context.interactive },
-    )) ?? [];
-
-  const userScopeSet = new Set(userScopePacks);
+  // Interactive: for each user-eligible pack, choose its desired end-state
+  // placement (project / user / both). The default offered is the pack's
+  // current placement (or its default scope when not yet installed), so
+  // breezing through accepting defaults is a no-op and never removes a scope.
   for (const pack of eligiblePacks) {
-    if (!userScopeSet.has(pack)) {
-      scopes[pack] = 'project';
-      continue;
-    }
-
-    scopes[pack] =
-      installedPackStates[pack].location === 'both'
-        ? await resolveBothScopeTarget(pack, dependencies, context.interactive)
-        : 'user';
+    const currentLocation = installedPackStates[pack].location;
+    const defaultEndState = resolvePackDefaultEndState(pack, currentLocation);
+    const selection = await dependencies.selectWithAbort(
+      `Where should ${pack} install?`,
+      buildPackEndStateChoices(pack, currentLocation, defaultEndState),
+      { interactive: context.interactive },
+    );
+    scopes[pack] = selection ?? defaultEndState;
   }
 
   return scopes as PackScopeMap;
+}
+
+/**
+ * Default end-state offered for a pack in the interactive selector: its
+ * current placement when installed, or its configured default scope when not
+ * yet present.
+ */
+function resolvePackDefaultEndState(
+  pack: UserEligiblePack,
+  currentLocation: PackInstallState['location'],
+): PackInstallTarget {
+  switch (currentLocation) {
+    case 'project':
+      return 'project';
+    case 'user':
+      return 'user';
+    case 'both':
+      return 'both';
+    default:
+      return resolvePackDefaultScope(pack);
+  }
+}
+
+/**
+ * Per-pack end-state options (project / user / both) for the interactive
+ * selector. The default end-state is listed first so the underlying
+ * single-select highlights it.
+ */
+function buildPackEndStateChoices(
+  pack: UserEligiblePack,
+  currentLocation: PackInstallState['location'],
+  defaultEndState: PackInstallTarget,
+): SelectChoice<PackInstallTarget>[] {
+  const currentLabel =
+    currentLocation === 'not-installed'
+      ? 'not installed'
+      : `current: ${formatInstalledLocation(currentLocation)}`;
+  const baseChoices: SelectChoice<PackInstallTarget>[] = [
+    {
+      label: `Project scope (${pack})`,
+      value: 'project',
+      description: 'Install at project scope only',
+    },
+    {
+      label: `User scope (${pack})`,
+      value: 'user',
+      description: 'Install at user scope only',
+    },
+    {
+      label: `Project + user (${pack})`,
+      value: 'both',
+      description: 'Install at both scopes',
+    },
+  ];
+
+  // Annotate the option matching the default so the prompt communicates the
+  // current placement, and order it first so it is the highlighted default.
+  const annotated = baseChoices.map((choice) =>
+    choice.value === defaultEndState
+      ? { ...choice, label: `${choice.label} [${currentLabel}]` }
+      : choice,
+  );
+  const defaultChoice = annotated.find(
+    (choice) => choice.value === defaultEndState,
+  );
+  const rest = annotated.filter((choice) => choice.value !== defaultEndState);
+  return defaultChoice ? [defaultChoice, ...rest] : annotated;
 }
 
 function buildInstalledToolsConfig(
@@ -742,42 +848,113 @@ export async function runInitTools(
       dependencies,
     );
 
-    function packRoot(pack: ToolPack): string {
-      return packScopes[pack] === 'user' ? userRoot : projectRoot;
+    function scopeRoot(scope: ConcreteScope): string {
+      return scope === 'user' ? userRoot : projectRoot;
     }
 
-    function packTargets(pack: ToolPack): string[] {
-      return packScopes[pack] === 'both'
-        ? [projectRoot, userRoot]
-        : [packRoot(pack)];
-    }
-    const outdatedSkills: OutdatedSkillRecord[] = [];
-    const affectedScopes = new Set<ConcreteScope>();
-
+    // Reconcile current placement vs the desired end-state per user-eligible
+    // pack into adds/removes. Installs copy idempotently into the full desired
+    // end-state, but only the scopes that actually changed (an add or a
+    // confirmed remove) are recorded in `affectedScopes`, so auto-sync never
+    // prunes a preserved scope.
+    const reconciliationByPack = new Map<
+      UserEligiblePack,
+      ScopeReconcileResult
+    >();
     for (const pack of selectedPacks) {
       if (!isUserEligiblePack(pack)) {
         continue;
       }
+      reconciliationByPack.set(
+        pack,
+        reconcilePackScope(initialPackStates[pack].location, packScopes[pack]),
+      );
+    }
 
-      const desiredScope = packScopes[pack];
-      const currentLocation = initialPackStates[pack].location;
-      if (desiredScope === 'both') {
-        continue;
-      }
+    // Scopes a pack should install into (its full desired end-state for
+    // user-eligible packs; the resolved scope otherwise). Re-installing an
+    // already-present scope is an idempotent copy.
+    function packTargets(pack: ToolPack): string[] {
+      return packScopes[pack] === 'both'
+        ? [projectRoot, userRoot]
+        : [packScopes[pack] === 'user' ? userRoot : projectRoot];
+    }
 
-      if (desiredScope === 'user') {
-        if (currentLocation === 'project' || currentLocation === 'both') {
-          await removePackFromScope(pack, projectRoot, dependencies);
-          affectedScopes.add('project');
-        }
-        continue;
-      }
+    // Only scopes that received a new add for this pack should be auto-synced.
+    function addedScopes(pack: ToolPack): Set<ConcreteScope> {
+      return new Set(reconciliationByPack.get(pack as UserEligiblePack)?.adds);
+    }
+    const outdatedSkills: OutdatedSkillRecord[] = [];
+    const affectedScopes = new Set<ConcreteScope>();
 
-      if (currentLocation === 'user' || currentLocation === 'both') {
-        await removePackFromScope(pack, userRoot, dependencies);
-        affectedScopes.add('user');
+    // Collect all staged removals across packs. Removals are interactive-only
+    // and gated behind a single batch confirmation (added in p01-t03);
+    // non-interactive paths are strictly additive and can never remove.
+    const stagedRemovals: Array<{
+      pack: UserEligiblePack;
+      scope: ConcreteScope;
+    }> = [];
+    for (const [pack, reconciliation] of reconciliationByPack) {
+      for (const scope of reconciliation.removes) {
+        stagedRemovals.push({ pack, scope });
       }
     }
+
+    if (stagedRemovals.length > 0 && !context.interactive) {
+      // Strictly-additive guard: removals must never be applied
+      // non-interactively. This should be unreachable because non-interactive
+      // resolution unions with current placement, but we fail loud rather than
+      // silently delete a user's install.
+      throw new Error(
+        'Non-interactive install attempted to remove a pack from a scope; ' +
+          'install is strictly additive in non-interactive mode.',
+      );
+    }
+
+    // Interactive removal gate: if any pack would lose a scope, surface one
+    // batch change summary and require a single confirmation before mutating
+    // anything. Declining aborts with zero changes (no installs, no removals).
+    if (stagedRemovals.length > 0 && context.interactive) {
+      const stagedAdds: PackScopeChange[] = [];
+      for (const [pack, reconciliation] of reconciliationByPack) {
+        for (const scope of reconciliation.adds) {
+          stagedAdds.push({ pack, scope });
+        }
+      }
+
+      context.logger.info(formatReconcileSummary(stagedAdds, stagedRemovals));
+      const confirmation = await dependencies.selectWithAbort(
+        'Apply these changes? Removals will delete the listed scoped installs.',
+        [
+          {
+            label: 'No, cancel (recommended)',
+            value: 'no',
+            description: 'Make no changes',
+          },
+          {
+            label: 'Yes, apply adds and removals',
+            value: 'yes',
+            description: 'Install adds and delete the listed removals',
+          },
+        ],
+        { interactive: context.interactive },
+      );
+
+      if (confirmation !== 'yes') {
+        lastRunInitToolsMetadata = { affectedScopes: [] };
+        if (!context.json) {
+          context.logger.info('No changes applied.');
+        }
+        process.exitCode = 0;
+        return [];
+      }
+    }
+
+    // Removals are deferred until after the add phase below: for a confirmed
+    // move (e.g. user -> project), the replacement install must succeed before
+    // the preserved scope is deleted. If any installer throws, the catch
+    // handler aborts and these removals never run, so the pack is never left
+    // installed in neither scope (review I1; design.md:86/114).
 
     if (selectedPacks.includes('core')) {
       // Core pack always installs at user scope, regardless of userEligibleScope
@@ -796,8 +973,13 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('ideas')) {
+      const ideasAdded = addedScopes('ideas');
       for (const targetRoot of packTargets('ideas')) {
-        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (ideasAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
+        }
         const ideasResult = await dependencies.installIdeas({
           assetsRoot,
           targetRoot,
@@ -813,8 +995,13 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('docs')) {
+      const docsAdded = addedScopes('docs');
       for (const targetRoot of packTargets('docs')) {
-        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (docsAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
+        }
         const docsResult = await dependencies.installDocs({
           assetsRoot,
           targetRoot,
@@ -899,8 +1086,13 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('utility')) {
+      const utilityAdded = addedScopes('utility');
       for (const targetRoot of packTargets('utility')) {
-        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (utilityAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
+        }
         const utilityResult = await dependencies.installUtility({
           assetsRoot,
           targetRoot,
@@ -934,8 +1126,13 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('research')) {
+      const researchAdded = addedScopes('research');
       for (const targetRoot of packTargets('research')) {
-        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (researchAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
+        }
         const researchResult = await dependencies.installResearch({
           assetsRoot,
           targetRoot,
@@ -952,8 +1149,13 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('brainstorm')) {
+      const brainstormAdded = addedScopes('brainstorm');
       for (const targetRoot of packTargets('brainstorm')) {
-        affectedScopes.add(targetRoot === userRoot ? 'user' : 'project');
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (brainstormAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
+        }
         const brainstormResult = await dependencies.installBrainstorm({
           assetsRoot,
           targetRoot,
@@ -966,6 +1168,13 @@ export async function runInitTools(
           });
         }
       }
+    }
+
+    // Apply confirmed removals only after every add has succeeded, so a failed
+    // replacement install can never leave a pack uninstalled in both scopes.
+    for (const { pack, scope } of stagedRemovals) {
+      await removePackFromScope(pack, scopeRoot(scope), dependencies);
+      affectedScopes.add(scope);
     }
 
     if (outdatedSkills.length > 0) {

@@ -11,7 +11,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createToolsInstallCommand } from './index';
 
-function createHarness() {
+function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
+  const packScope = options.packScope ?? 'project';
   const capture = createLoggerCapture();
   const syncScopes: Scope[] = [];
   const selectManyWithAbort = vi.fn(
@@ -86,6 +87,8 @@ function createHarness() {
     updatedAgents: [],
     skippedAgents: [],
   }));
+  const removeDirectory = vi.fn(async () => {});
+  const removeFile = vi.fn(async () => {});
   const command = createToolsInstallCommand(
     {
       runSync: async ({ scope }) => {
@@ -107,12 +110,12 @@ function createHarness() {
       resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
       resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
       scanTools: vi.fn(async ({ scope }: { scope: 'project' | 'user' }) =>
-        scope === 'project'
+        scope === packScope
           ? [
               {
                 name: 'oat-docs-analyze',
                 type: 'skill' as const,
-                scope: 'project' as const,
+                scope: packScope,
                 version: '1.0.0',
                 bundledVersion: '1.0.0',
                 pack: 'docs' as const,
@@ -131,8 +134,8 @@ function createHarness() {
       installProjectManagement,
       installResearch,
       copyDirWithStatus: vi.fn(async () => 'skipped' as const),
-      removeDirectory: vi.fn(async () => {}),
-      removeFile: vi.fn(async () => {}),
+      removeDirectory,
+      removeFile,
       addLocalPaths: vi.fn(async (_repoRoot: string, paths: string[]) => ({
         added: paths,
         all: paths,
@@ -154,7 +157,7 @@ function createHarness() {
     },
   );
 
-  return { capture, command, syncScopes, installDocs };
+  return { capture, command, syncScopes, installDocs, removeDirectory };
 }
 
 async function runCommand(
@@ -224,17 +227,46 @@ describe('createToolsInstallCommand', () => {
     );
   });
 
-  it('auto-syncs both the removed scope and target scope for pack migrations', async () => {
-    const { capture, command, installDocs, syncScopes } = createHarness();
+  it('additive --scope user over a project pack syncs only the added scope (no prune)', async () => {
+    const { capture, command, installDocs, removeDirectory, syncScopes } =
+      createHarness();
 
     await runCommand(command, [], ['--scope', 'user']);
 
+    // docs was at project; --scope user is additive → end-state both, with no
+    // removal of the project install.
     expect(installDocs).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
+    expect(removeDirectory).not.toHaveBeenCalled();
     expect(capture.info.join('\n')).toContain(
-      'Installed tool packs: docs (user)',
+      'Installed tool packs: docs (project + user)',
     );
-    expect(syncScopes).toEqual(['project', 'user']);
+    // Only the newly-added user scope is auto-synced; the preserved project
+    // scope is never re-synced or pruned.
+    expect(syncScopes).toEqual(['user']);
+  });
+
+  it('additive --scope project over a user pack syncs only the added project scope (no prune)', async () => {
+    // Place docs at user so --scope project is a genuine additive add, not a
+    // no-op over the same scope.
+    const { capture, command, installDocs, removeDirectory, syncScopes } =
+      createHarness({ packScope: 'user' });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    // docs was at user; --scope project is additive → end-state both, with the
+    // new install landing at the project root and no removal of the user
+    // install.
+    expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain(
+      'Installed tool packs: docs (project + user)',
+    );
+    // Only the newly-added project scope is auto-synced; the preserved user
+    // scope is never re-synced or pruned.
+    expect(syncScopes).toEqual(['project']);
   });
 });
