@@ -17,6 +17,7 @@ import { PACK_METADATA } from './shared/skill-manifest';
 
 interface HarnessOptions {
   scope?: Scope;
+  contextScopeSelection?: 'interactive' | 'defaults';
   interactive?: boolean;
   packSelection?: Array<string[] | null>;
   scopeSelection?: Array<string | null>;
@@ -236,6 +237,7 @@ function createHarness(options: HarnessOptions = {}) {
       cwd: globalOptions.cwd ?? '/tmp/workspace',
       home: '/tmp/home',
       interactive: options.interactive ?? !(globalOptions.json ?? false),
+      scopeSelection: options.contextScopeSelection,
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
@@ -453,6 +455,75 @@ describe('createInitToolsCommand', () => {
     );
     expect(researchChoices?.[0]?.value).toBe('both');
     expect(researchChoices?.[0]?.label).toContain('current: project + user');
+  });
+
+  it('defaults-mode scope selection preserves current/default end-states without per-pack prompts', async () => {
+    const {
+      command,
+      selectWithAbort,
+      installIdeas,
+      installDocs,
+      installResearch,
+      installBrainstorm,
+      removeDirectory,
+      removeFile,
+    } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'defaults',
+      packSelection: [['ideas', 'docs', 'research', 'brainstorm']],
+      toolsByScope: {
+        project: [
+          createScannedTool('oat-idea-new', 'ideas', 'project'),
+          createScannedTool('analyze', 'research', 'project'),
+        ],
+        user: [
+          createScannedTool('oat-docs-analyze', 'docs', 'user'),
+          createScannedTool('analyze', 'research', 'user'),
+        ],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(selectWithAbort).not.toHaveBeenCalled();
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installResearch).toHaveBeenCalledTimes(2);
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installBrainstorm).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
+  it('default scope-selection mode keeps prompting per user-eligible pack in interactive sessions', async () => {
+    const { command, selectWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas', 'docs']],
+      scopeSelection: ['project', 'user'],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(selectWithAbort).toHaveBeenCalledTimes(2);
+    expect(selectWithAbort.mock.calls.map((call) => call[0])).toEqual([
+      'Where should ideas install?',
+      'Where should docs install?',
+    ]);
   });
 
   it('defaults both-scope installs to keep both and updates both roots when the user keeps them', async () => {

@@ -13,8 +13,11 @@ export interface GlobalOptions {
   cwd?: string;
 }
 
+export type ScopeSelectionMode = 'interactive' | 'defaults';
+
 export interface CommandContext {
   scope: Scope;
+  scopeSelection?: ScopeSelectionMode;
   dryRun: boolean;
   verbose: boolean;
   json: boolean;
