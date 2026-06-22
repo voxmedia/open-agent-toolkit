@@ -220,11 +220,11 @@ git commit -m "chore(p01-t03): lockstep public package version bump for oat init
 
 ## Reviews
 
-| Scope | Type     | Status | Date       | Artifact                                            |
-| ----- | -------- | ------ | ---------- | --------------------------------------------------- |
-| p01   | code     | passed | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
-| final | code     | passed | 2026-06-22 | reviews/archived/final-review-2026-06-22.md         |
-| plan  | artifact | passed | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
+| Scope | Type     | Status   | Date       | Artifact                                            |
+| ----- | -------- | -------- | ---------- | --------------------------------------------------- |
+| p01   | code     | passed   | 2026-06-22 | reviews/archived/p01-review-2026-06-22-v2.md        |
+| final | code     | received | 2026-06-22 | reviews/final-review-2026-06-22-v2.md               |
+| plan  | artifact | passed   | 2026-06-22 | reviews/archived/artifact-plan-review-2026-06-22.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
