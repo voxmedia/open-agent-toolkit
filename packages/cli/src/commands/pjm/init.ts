@@ -2,6 +2,7 @@ import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
+import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 
 export interface InitializeRepoReferenceOptions {
   referenceRoot: string;
@@ -84,28 +85,6 @@ async function resolveTemplateContent(
   throw new Error(
     `Template ${name} was not found in repo-local templates or bundled assets.`,
   );
-}
-
-function stripTemplateFrontmatter(content: string): string {
-  if (!content.startsWith('---\n')) {
-    return content;
-  }
-
-  const end = content.indexOf('\n---', 4);
-  if (end === -1) {
-    return content;
-  }
-
-  const frontmatter = content.slice(4, end);
-  if (
-    !/\boat_template\s*:/i.test(frontmatter) &&
-    !/\boat_template_name\s*:/i.test(frontmatter)
-  ) {
-    return content;
-  }
-
-  const afterFrontmatter = content.slice(end + '\n---'.length);
-  return afterFrontmatter.replace(/^\r?\n+/, '');
 }
 
 async function writeFileIfMissing(
