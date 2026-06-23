@@ -105,6 +105,12 @@ function assertSafeLegacyDelete(
   legacyIndexIds: string[],
   sections: LegacyDecisionSection[],
 ): void {
+  if (sections.length === 0) {
+    throw new Error(
+      'Refusing to delete legacy decision source because no legacy decision sections were parsed.',
+    );
+  }
+
   if (legacyIndexIds.length === 0) {
     return;
   }

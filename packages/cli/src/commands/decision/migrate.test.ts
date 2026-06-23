@@ -186,6 +186,40 @@ describe('migrateDecisionRecords', () => {
     );
   });
 
+  it('refuses to delete an unparseable legacy source with no decision sections', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      [
+        '# OAT Decision Record',
+        '',
+        'This legacy file has prose but no parseable ADR or DR sections.',
+        '',
+        'The migration must not delete it when no mappings are produced.',
+        '',
+      ].join('\n'),
+      {
+        encoding: 'utf8',
+        flag: 'wx',
+      },
+    );
+
+    await expect(
+      migrateDecisionRecords({ referenceRoot, deleteLegacy: true }),
+    ).rejects.toThrow(
+      'Refusing to delete legacy decision source because no legacy decision sections were parsed.',
+    );
+    await expect(
+      pathExists(join(referenceRoot, 'decision-record.md')),
+    ).resolves.toBe(true);
+    await expect(pathExists(join(referenceRoot, 'decisions'))).resolves.toBe(
+      false,
+    );
+  });
+
   it('is repeatable after a completed migration and can delete verified legacy source', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
     tempDirs.push(root);
