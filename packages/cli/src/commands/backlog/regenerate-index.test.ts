@@ -143,6 +143,60 @@ describe('regenerateBacklogIndex', () => {
     expect(index).toContain('| _No backlog items yet_ | - | - | - | - | - |');
   });
 
+  it('is byte-identical across repeated regenerations', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-repeat-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'bl-260622-alpha',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+
+    await regenerateBacklogIndex(backlogRoot);
+    const first = await readFile(join(backlogRoot, 'index.md'), 'utf8');
+    await regenerateBacklogIndex(backlogRoot);
+    const second = await readFile(join(backlogRoot, 'index.md'), 'utf8');
+
+    expect(second).toBe(first);
+  });
+
+  it('breaks equal priority and title ties by id', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-ties-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+
+    await writeBacklogItem(itemsDir, 'beta.md', {
+      id: 'bl-260622-beta',
+      title: '"Same"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'bl-260622-alpha',
+      title: '"Same"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+
+    await regenerateBacklogIndex(backlogRoot);
+
+    const index = await readFile(join(backlogRoot, 'index.md'), 'utf8');
+    expect(index.indexOf('| bl-260622-alpha | Same |')).toBeLessThan(
+      index.indexOf('| bl-260622-beta | Same |'),
+    );
+  });
+
   it('works with a freshly scaffolded backlog root and preserves curated overview content', async () => {
     const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-seeded-'));
     tempDirs.push(backlogRoot);

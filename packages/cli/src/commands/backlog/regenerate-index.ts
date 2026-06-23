@@ -59,7 +59,23 @@ function compareItems(a: BacklogIndexItem, b: BacklogIndexItem): number {
     return priorityDiff;
   }
 
-  return a.title.localeCompare(b.title);
+  if (a.title < b.title) {
+    return -1;
+  }
+
+  if (a.title > b.title) {
+    return 1;
+  }
+
+  if (a.id < b.id) {
+    return -1;
+  }
+
+  if (a.id > b.id) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function renderManagedSection(items: BacklogIndexItem[]): string {
@@ -88,7 +104,8 @@ export async function regenerateBacklogIndex(
 
   const entries = (await readdir(itemsDir, { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-    .map((entry) => entry.name);
+    .map((entry) => entry.name)
+    .sort();
 
   const items: BacklogIndexItem[] = [];
   for (const entry of entries) {
