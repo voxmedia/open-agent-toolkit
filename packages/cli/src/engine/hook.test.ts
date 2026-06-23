@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   lstat,
   mkdir,
@@ -210,6 +211,54 @@ describe('git hook', () => {
     expect(content).toContain('--scope project');
   });
 
+  it('installHook writes to Git active hooks directory from a linked worktree', async () => {
+    const mainRoot = await mkdtemp(join(tmpdir(), 'oat-hook-main-'));
+    tempDirs.push(mainRoot);
+    execFileSync('git', ['init'], { cwd: mainRoot, stdio: 'ignore' });
+    execFileSync('git', ['config', 'user.name', 'OAT Test'], {
+      cwd: mainRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'oat@example.test'], {
+      cwd: mainRoot,
+    });
+    await writeFile(join(mainRoot, 'README.md'), 'test\n', 'utf8');
+    execFileSync('git', ['add', 'README.md'], {
+      cwd: mainRoot,
+      stdio: 'ignore',
+    });
+    execFileSync('git', ['commit', '-m', 'initial'], {
+      cwd: mainRoot,
+      stdio: 'ignore',
+    });
+
+    const worktreeParent = await mkdtemp(join(tmpdir(), 'oat-hook-worktree-'));
+    tempDirs.push(worktreeParent);
+    const worktreeRoot = join(worktreeParent, 'feature');
+    execFileSync('git', ['worktree', 'add', '-b', 'feature', worktreeRoot], {
+      cwd: mainRoot,
+      stdio: 'ignore',
+    });
+
+    const hookPath = await installHook(worktreeRoot);
+    const activeHooksDir = execFileSync(
+      'git',
+      ['rev-parse', '--path-format=absolute', '--git-path', 'hooks'],
+      { cwd: worktreeRoot, encoding: 'utf8' },
+    ).trim();
+    const privateGitDir = execFileSync(
+      'git',
+      ['rev-parse', '--path-format=absolute', '--git-dir'],
+      { cwd: worktreeRoot, encoding: 'utf8' },
+    ).trim();
+
+    expect(hookPath).toBe(join(activeHooksDir, 'pre-commit'));
+    const content = await readFile(hookPath, 'utf8');
+    expect(content).toContain(HOOK_MARKER_START);
+    await expect(
+      readFile(join(privateGitDir, 'hooks', 'pre-commit'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   describe('core.hooksPath support', () => {
     async function createGitRepoRoot(prefix: string): Promise<string> {
       const root = await mkdtemp(join(tmpdir(), prefix));
@@ -265,8 +314,13 @@ describe('git hook', () => {
       );
 
       const info = await getHookInstallInfo(root);
+      const activeHooksDir = execFileSync(
+        'git',
+        ['rev-parse', '--path-format=absolute', '--git-path', 'hooks'],
+        { cwd: root, encoding: 'utf8' },
+      ).trim();
 
-      expect(info.hookPath).toBe(join(root, '.git', 'hooks', 'pre-commit'));
+      expect(info.hookPath).toBe(join(activeHooksDir, 'pre-commit'));
       expect(info.suggestedHooksPath).toBe('.githooks');
       expect(info.suggestedHookPath).toBe(
         join(root, '.githooks', 'pre-commit'),
