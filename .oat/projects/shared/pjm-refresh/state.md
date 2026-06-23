@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 5b4c935d
+oat_last_commit: a3cdc641
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -20,7 +20,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-23T01:57:38Z'
+oat_project_state_updated: '2026-06-23T02:10:16Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -38,7 +38,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 complete, next task p02-t01.
+Implementation - p01 review fixes complete; awaiting p01 re-review before
+continuing to p02-t01.
 
 ## Artifacts
 
@@ -59,7 +60,9 @@ Implementation - Phase 1 complete, next task p02-t01.
 - [x] Phase 1 task p01-t03 complete
 - [x] Phase 1 task p01-t04 complete
 - [x] Phase 1 task p01-t05 complete
-- [ ] Phase 2 task p02-t01 next
+- [x] Phase 1 review fixes complete
+- [ ] p01 code re-review next
+- [ ] Phase 2 task p02-t01 after p01 review passes
 
 ## Blockers
 
@@ -67,5 +70,5 @@ None
 
 ## Next Milestone
 
-Continue implementation with Tier 1 subagents. Pause after p04 and run the
-configured auto-review at that HiLL checkpoint.
+Rerun p01 code review for the fix commit. If p01 passes, continue
+implementation at p02-t01 with Tier 1 subagents.

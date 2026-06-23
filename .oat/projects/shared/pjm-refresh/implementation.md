@@ -352,6 +352,14 @@ No implementation orchestration runs yet.
 - [x] p01-t05: Add Templates, AGENTS Docs, PJM Init, and Doctor Core -
       5b4c935d
 - Phase 1 completed with focused verification passing.
+- [x] p01 review fixes - a3cdc641
+  - Hardened `decision new` so missing/invalid decision index scaffolds fail
+    before writing and regeneration failures roll back the new record.
+  - Hardened `decision migrate` so duplicate targets and conflicting existing
+    targets are rejected before writes, successful migrations are repeatable,
+    and `--delete-legacy` only runs after all migrated records verify.
+  - Focused decision tests, CLI type-check, and targeted decision lint pass
+    after fixes.
 
 **Session End:** ongoing.
 
@@ -363,19 +371,23 @@ No implementation orchestration runs yet.
 
 ## Test Results
 
-| Phase | Tests Run                                    | Passed | Failed | Coverage                                         |
-| ----- | -------------------------------------------- | ------ | ------ | ------------------------------------------------ |
-| 1     | shared helper + PJM init focused Vitest run  | 23     | 0      | helper and init unit coverage                    |
-| 1     | backlog command and index focused Vitest run | 22     | 0      | backlog ID and deterministic index unit coverage |
-| 1     | CLI package type check                       | -      | 0      | TypeScript compile coverage                      |
-| 1     | decision command + help focused Vitest run   | 63     | 0      | decision init/new/regenerate and help coverage   |
-| 1     | decision migration focused Vitest run        | 67     | 0      | migration plus decision command/help coverage    |
-| 1     | PJM + doctor focused Vitest run              | 31     | 0      | two-layer init and doctor command coverage       |
-| 1     | Phase 1 focused Vitest run                   | 98     | 0      | decision, PJM, doctor, help coverage             |
-| 1     | targeted oxlint                              | -      | 0      | decision/PJM/doctor lint coverage                |
-| 2     | -                                            | -      | -      | -                                                |
-| 3     | -                                            | -      | -      | -                                                |
-| 4     | -                                            | -      | -      | -                                                |
+| Phase | Tests Run                                    | Passed | Failed | Coverage                                          |
+| ----- | -------------------------------------------- | ------ | ------ | ------------------------------------------------- |
+| 1     | shared helper + PJM init focused Vitest run  | 23     | 0      | helper and init unit coverage                     |
+| 1     | backlog command and index focused Vitest run | 22     | 0      | backlog ID and deterministic index unit coverage  |
+| 1     | CLI package type check                       | -      | 0      | TypeScript compile coverage                       |
+| 1     | decision command + help focused Vitest run   | 63     | 0      | decision init/new/regenerate and help coverage    |
+| 1     | decision migration focused Vitest run        | 67     | 0      | migration plus decision command/help coverage     |
+| 1     | PJM + doctor focused Vitest run              | 31     | 0      | two-layer init and doctor command coverage        |
+| 1     | Phase 1 focused Vitest run                   | 98     | 0      | decision, PJM, doctor, help coverage              |
+| 1     | targeted oxlint                              | -      | 0      | decision/PJM/doctor lint coverage                 |
+| 1     | p01 review fix focused RED tests             | 6      | 5      | confirmed decision new/migrate safety failures    |
+| 1     | p01 review fix decision suite                | 72     | 0      | decision safety fixes plus help snapshot coverage |
+| 1     | p01 review fix CLI type-check                | -      | 0      | TypeScript compile coverage                       |
+| 1     | p01 review fix targeted decision oxlint      | -      | 0      | decision command lint coverage                    |
+| 2     | -                                            | -      | -      | -                                                 |
+| 3     | -                                            | -      | -      | -                                                 |
+| 4     | -                                            | -      | -      | -                                                 |
 
 ## Final Summary (for PR/docs)
 
