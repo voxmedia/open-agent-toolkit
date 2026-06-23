@@ -41,6 +41,7 @@ describe('help output snapshots', () => {
 
       Commands:
         backlog           Manage file-backed backlog items and indexes
+        decision          Manage file-backed decision records and indexes
         init [options]    Initialize canonical directories, manifest, and tool packs
         status [options]  Report provider sync and drift status
         sync [options]    Sync canonical content to provider views
@@ -93,12 +94,12 @@ describe('help output snapshots', () => {
       'generate-id',
     ]).helpInformation();
     expect(help).toMatchInlineSnapshot(`
-      "Usage: oat backlog generate-id [options] <filename>
+      "Usage: oat backlog generate-id [options] <title-or-slug>
 
-      Generate a backlog item identifier from a filename seed
+      Generate a backlog item identifier (\`bl-YYMMDD-slug\`) from a title or slug
 
       Arguments:
-        filename                  Filename or slug seed for the backlog item
+        title-or-slug             Title or slug seed for the backlog item
 
       Options:
         --created-at <timestamp>  Creation timestamp seed for reproducible ID
@@ -117,15 +118,59 @@ describe('help output snapshots', () => {
       Manage file-backed backlog items and indexes
 
       Options:
-        -h, --help                        display help for command
+        -h, --help                             display help for command
 
       Commands:
-        init [options]                    Scaffold the canonical backlog directory
-                                          structure and starter files
-        regenerate-index [options]        Regenerate the managed backlog index table
-        generate-id [options] <filename>  Generate a backlog item identifier from a
-                                          filename seed
-        help [command]                    display help for command
+        init [options]                         Scaffold the canonical backlog directory structure and starter files
+        regenerate-index [options]             Regenerate the managed backlog index table
+        generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`bl-YYMMDD-slug\`) from a title or slug
+        help [command]                         display help for command
+      "
+    `);
+  });
+
+  it('decision --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['decision']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat decision [options] [command]
+
+      Manage file-backed decision records and indexes
+
+      Options:
+        -h, --help             display help for command
+
+      Commands:
+        init [options]         Scaffold the canonical decision directory and index
+        regenerate [options]   Regenerate the managed decision index table
+        new [options] <title>  Create a new file-backed decision record
+        help [command]         display help for command
+      "
+    `);
+  });
+
+  it('decision new --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'decision',
+      'new',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat decision new [options] <title>
+
+      Create a new file-backed decision record
+
+      Arguments:
+        title                     Decision title
+
+      Options:
+        --decisions-root <path>   Decisions root directory (defaults to
+                                  .oat/repo/reference/decisions)
+        --status <status>         Decision status (default: "proposed")
+        --context <text>          Initial context body text
+        --created-at <timestamp>  Creation timestamp seed for reproducible ID
+                                  generation
+        -h, --help                display help for command
       "
     `);
   });
