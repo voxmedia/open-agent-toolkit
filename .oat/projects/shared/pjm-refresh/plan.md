@@ -715,7 +715,7 @@ git commit -m "chore(p04-t03): finalize PJM refresh tracking"
 | Scope  | Type     | Status  | Date       | Artifact                            |
 | ------ | -------- | ------- | ---------- | ----------------------------------- |
 | p01    | code     | passed  | 2026-06-23 | reviews/p01-review-2026-06-23-v4.md |
-| p02    | code     | pending | -          | -                                   |
+| p02    | code     | passed  | 2026-06-23 | reviews/p02-review-2026-06-23.md    |
 | p03    | code     | pending | -          | -                                   |
 | p04    | code     | pending | -          | -                                   |
 | final  | code     | pending | -          | -                                   |

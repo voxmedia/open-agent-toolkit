@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,11 +17,11 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 5     | 5/5       |
-| Phase 2 | pending   | 3     | 0/3       |
+| Phase 2 | completed | 3     | 3/3       |
 | Phase 3 | pending   | 3     | 0/3       |
 | Phase 4 | pending   | 3     | 0/3       |
 
-**Total:** 5/14 tasks completed
+**Total:** 8/14 tasks completed
 
 ## Phase 1: Additive Core
 
@@ -277,27 +277,107 @@ decision migration, two-layer PJM initialization, and PJM doctor checks.
 
 ## Phase 2: Path Move and Migration
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-06-23
+
+### Phase Summary
+
+Moved the live PJM working layer to `.oat/repo/pjm/` while preserving durable
+`reference/` destinations, added the `oat pjm migrate` repo-restructure command
+with a bundled migration prompt asset, and registered the new assets and pack
+manifest entries with matching release-contract coverage.
+
+- **Outcome:** Backlog defaults and cleanup guards now target `pjm/`;
+  `reference/external-plans` and `reference/project-summaries` remain protected.
+  `oat pjm migrate` performs safe, idempotent, lossless restructuring with
+  `--dry-run`, `--print-prompt`, and `legacy_id` preservation. Bundle script,
+  PM skill manifest, and the public-package contract include the new assets.
+- **Key files:** `packages/cli/src/commands/backlog/index.ts`,
+  `packages/cli/src/commands/cleanup/artifacts/artifacts.ts`,
+  `packages/cli/src/commands/pjm/migrate.ts`,
+  `packages/cli/assets/migration/pjm-restructure.md`,
+  `packages/cli/scripts/bundle-assets.sh`,
+  `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`,
+  `packages/cli/src/release/public-package-contract.ts`.
+- **Verification:** Focused Vitest across `backlog`, `pjm`, `cleanup`,
+  `init/tools`, and `release` (302 passed) plus CLI type-check; p02 code review
+  passed with 0 Critical / 0 Important findings.
+- **Notable decisions:** `oat-pjm-decision` manifest registration deferred to
+  p03-t01 (see Deviations). The force-tracked migration asset under the
+  otherwise-gitignored `assets/` directory is intentional and self-preserving
+  via the bundle script's temp-copy step.
 
 ### Task p02-t01: Move Live Backlog Defaults and Cleanup Guards to `pjm/`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 82a7b044
+
+**Outcome:**
+
+- Moved the default backlog root to `.oat/repo/pjm/backlog` and updated help
+  strings and command contracts.
+- Updated cleanup reference-guard scanning to cover the active `pjm/` layer
+  while preserving `reference/external-plans/` and `reference/project-summaries`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/backlog/index.ts` and `index.test.ts` - default
+  root resolution and coverage.
+- `packages/cli/src/commands/cleanup/artifacts/artifacts.ts` - reference-guard
+  scope move to `pjm/`.
+- `packages/cli/src/commands/cleanup/artifacts/reference-guards.test.ts`,
+  `cleanup/cleanup.integration.test.ts`, `help-snapshots.test.ts` - updated
+  expectations.
 
 ---
 
 ### Task p02-t02: Add `oat pjm migrate` and Migration Prompt Asset
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e0db9539
+
+**Outcome:**
+
+- Added `oat pjm migrate` with PJM-disabled no-op, `--dry-run`, idempotency
+  probe, mechanical move/re-ID/split, and `--print-prompt`.
+- Bundled the restructure migration prompt asset.
+
+**Files changed:**
+
+- `packages/cli/src/commands/pjm/migrate.ts` and `migrate.test.ts` - migration
+  orchestration and safety coverage.
+- `packages/cli/src/commands/pjm/index.ts` and `index.test.ts` - subcommand
+  wiring.
+- `packages/cli/assets/migration/pjm-restructure.md` - bundled migration prompt.
 
 ---
 
 ### Task p02-t03: Register Assets and Update Pack Manifests
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 16521fa4
+
+**Outcome:**
+
+- Registered the migration asset and repo AGENTS/decision templates in the
+  bundle script and PM skill manifest.
+- Updated the public-package contract and bundle-consistency coverage.
+
+**Files changed:**
+
+- `packages/cli/scripts/bundle-assets.sh` - migration asset bundling.
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` and
+  `install-project-management.test.ts` - PM pack registration.
+- `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts` -
+  migration asset bundle coverage.
+- `packages/cli/src/release/public-package-contract.ts` and `*.test.ts` -
+  release contract for new assets/templates.
+
+**Notes / Decisions:**
+
+- `oat-pjm-decision` skill manifest registration deferred to p03-t01 (the
+  canonical skill is created in Phase 3). Recorded as an accepted deviation;
+  the decision-skill PM manifest entry is added when the skill exists.
 
 ## Phase 3: Skills and Lifecycle Destinations
 
@@ -387,6 +467,49 @@ decision migration, two-layer PJM initialization, and PJM doctor checks.
 Run-scoped snapshot only. Durable deltas are recorded in
 `## Deviations from Plan / Design`.
 
+### Run 2 — 2026-06-23 22:00
+
+**Branch:** pjm-refresh
+**Tier:** 1
+**Policy:** merge-strategy=direct, retry-limit=5
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | pass   | 0/5            | accepted    |
+
+#### Parallel Groups
+
+- p02: sequential (no parallel groups in plan).
+
+#### Dispatch Notes
+
+- Resumed an interrupted Codex session: all three p02 tasks were already
+  implemented and committed (`82a7b044`, `e0db9539`, `16521fa4`) but the phase
+  review and bookkeeping had not run. Re-dispatched the p02 reviewer for the
+  committed HEAD.
+- Dispatch: p02 review used Claude `oat-reviewer` at `model=opus` under the
+  project maximum dispatch ceiling (enforced via model-arg).
+- Dispatch ceiling: opus (claude, enforced — model-arg).
+
+#### Outstanding Items
+
+- None blocking. p02 review returned 4 Minor findings (no Critical/Important):
+  `--print-prompt` test stubs the prompt reader (real-asset bundling covered by
+  the bundle-consistency test); no dedicated second-apply idempotency regression
+  test (verified manually during review); no standalone `pjm --help` snapshot
+  (root snapshot includes `pjm`); force-tracked migration asset documented here
+  and in the Phase 2 summary. Minor findings recorded, not converted to fix
+  tasks at the phase gate.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. Durable deltas are recorded in
+`## Deviations from Plan / Design`. The p02-t03 `oat-pjm-decision` deferral
+remains the only durable Phase 2 delta.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -440,6 +563,15 @@ Run-scoped snapshot only. Durable deltas are recorded in
     zero legacy decision sections are parsed.
   - p01 re-review v4 passed with 0 Critical, 0 Important, 0 Medium, and 0
     Minor findings.
+- [x] p02-t01: Move Live Backlog Defaults and Cleanup Guards to `pjm/` -
+      82a7b044
+- [x] p02-t02: Add `oat pjm migrate` and Migration Prompt Asset - e0db9539
+- [x] p02-t03: Register Assets and Update Pack Manifests - 16521fa4
+  - Deferred `oat-pjm-decision` manifest registration to p03-t01 (89f4aea9).
+- Phase 2 implemented by an interrupted Codex session; resumed in a Claude
+  session to run the p02 phase review and reconcile bookkeeping.
+- [x] p02 code review passed - reviews/p02-review-2026-06-23.md
+  - 0 Critical, 0 Important, 0 Medium, 4 Minor (non-blocking) findings.
 
 **Session End:** ongoing.
 
@@ -452,25 +584,27 @@ Run-scoped snapshot only. Durable deltas are recorded in
 
 ## Test Results
 
-| Phase | Tests Run                                    | Passed | Failed | Coverage                                          |
-| ----- | -------------------------------------------- | ------ | ------ | ------------------------------------------------- |
-| 1     | shared helper + PJM init focused Vitest run  | 23     | 0      | helper and init unit coverage                     |
-| 1     | backlog command and index focused Vitest run | 22     | 0      | backlog ID and deterministic index unit coverage  |
-| 1     | CLI package type check                       | -      | 0      | TypeScript compile coverage                       |
-| 1     | decision command + help focused Vitest run   | 63     | 0      | decision init/new/regenerate and help coverage    |
-| 1     | decision migration focused Vitest run        | 67     | 0      | migration plus decision command/help coverage     |
-| 1     | PJM + doctor focused Vitest run              | 31     | 0      | two-layer init and doctor command coverage        |
-| 1     | Phase 1 focused Vitest run                   | 98     | 0      | decision, PJM, doctor, help coverage              |
-| 1     | targeted oxlint                              | -      | 0      | decision/PJM/doctor lint coverage                 |
-| 1     | p01 review fix focused RED tests             | 6      | 5      | confirmed decision new/migrate safety failures    |
-| 1     | p01 review fix decision suite                | 72     | 0      | decision safety fixes plus help snapshot coverage |
-| 1     | p01 review fix CLI type-check                | -      | 0      | TypeScript compile coverage                       |
-| 1     | p01 review fix targeted decision oxlint      | -      | 0      | decision command lint coverage                    |
-| 1     | p01 zero-section fix migration test          | -      | 0      | destructive delete regression coverage            |
-| 1     | p01 re-review v4                             | -      | 0      | passed review, no findings                        |
-| 2     | -                                            | -      | -      | -                                                 |
-| 3     | -                                            | -      | -      | -                                                 |
-| 4     | -                                            | -      | -      | -                                                 |
+| Phase | Tests Run                                     | Passed | Failed | Coverage                                          |
+| ----- | --------------------------------------------- | ------ | ------ | ------------------------------------------------- |
+| 1     | shared helper + PJM init focused Vitest run   | 23     | 0      | helper and init unit coverage                     |
+| 1     | backlog command and index focused Vitest run  | 22     | 0      | backlog ID and deterministic index unit coverage  |
+| 1     | CLI package type check                        | -      | 0      | TypeScript compile coverage                       |
+| 1     | decision command + help focused Vitest run    | 63     | 0      | decision init/new/regenerate and help coverage    |
+| 1     | decision migration focused Vitest run         | 67     | 0      | migration plus decision command/help coverage     |
+| 1     | PJM + doctor focused Vitest run               | 31     | 0      | two-layer init and doctor command coverage        |
+| 1     | Phase 1 focused Vitest run                    | 98     | 0      | decision, PJM, doctor, help coverage              |
+| 1     | targeted oxlint                               | -      | 0      | decision/PJM/doctor lint coverage                 |
+| 1     | p01 review fix focused RED tests              | 6      | 5      | confirmed decision new/migrate safety failures    |
+| 1     | p01 review fix decision suite                 | 72     | 0      | decision safety fixes plus help snapshot coverage |
+| 1     | p01 review fix CLI type-check                 | -      | 0      | TypeScript compile coverage                       |
+| 1     | p01 review fix targeted decision oxlint       | -      | 0      | decision command lint coverage                    |
+| 1     | p01 zero-section fix migration test           | -      | 0      | destructive delete regression coverage            |
+| 1     | p01 re-review v4                              | -      | 0      | passed review, no findings                        |
+| 2     | backlog/pjm/cleanup/init-tools/release Vitest | 302    | 0      | path move, migration, asset registration coverage |
+| 2     | CLI package type check                        | -      | 0      | TypeScript compile coverage                       |
+| 2     | p02 code review                               | -      | 0      | passed review, 4 Minor (non-blocking) findings    |
+| 3     | -                                             | -      | -      | -                                                 |
+| 4     | -                                             | -      | -      | -                                                 |
 
 ## Final Summary (for PR/docs)
 
