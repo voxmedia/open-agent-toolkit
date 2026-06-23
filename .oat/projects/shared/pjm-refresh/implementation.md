@@ -825,7 +825,7 @@ review-fix corrected drifted docs to match the CLI; no artifact is now stale.
   - Deferred `oat-pjm-decision` manifest registration to p03-t01 (89f4aea9).
 - Phase 2 implemented by an interrupted Codex session; resumed in a Claude
   session to run the p02 phase review and reconcile bookkeeping.
-- [x] p02 code review passed - reviews/p02-review-2026-06-23.md
+- [x] p02 code review passed - reviews/archived/p02-review-2026-06-23.md
   - 0 Critical, 0 Important, 0 Medium, 4 Minor (non-blocking) findings.
 
 **Session End:** ongoing.
