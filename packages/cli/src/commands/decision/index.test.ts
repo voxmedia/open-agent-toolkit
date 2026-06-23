@@ -13,6 +13,7 @@ function createHarness(): {
   command: Command;
   createDecisionRecord: ReturnType<typeof vi.fn>;
   initializeDecisionRecords: ReturnType<typeof vi.fn>;
+  migrateDecisionRecords: ReturnType<typeof vi.fn>;
   regenerateDecisionIndex: ReturnType<typeof vi.fn>;
   resolveAssetsRoot: ReturnType<typeof vi.fn>;
   resolveProjectRoot: ReturnType<typeof vi.fn>;
@@ -28,6 +29,22 @@ function createHarness(): {
     id: 'dr-260622-adopt-pjm-split',
     decisionsRoot: options.decisionsRoot,
     filePath: `${options.decisionsRoot}/dr-260622-adopt-pjm-split.md`,
+  }));
+  const migrateDecisionRecords = vi.fn(async (options) => ({
+    referenceRoot: options.referenceRoot,
+    decisionsRoot: `${options.referenceRoot}/decisions`,
+    dryRun: options.dryRun ?? false,
+    deletedLegacy: false,
+    mappings: [
+      {
+        legacyId: 'ADR-001',
+        id: 'dr-260622-adopt-pjm-split',
+        title: 'Adopt PJM split',
+        date: '2026-06-22',
+        filePath: `${options.referenceRoot}/decisions/dr-260622-adopt-pjm-split.md`,
+      },
+    ],
+    written: [],
   }));
   const resolveProjectRoot = vi.fn(
     async (_cwd: string) => '/tmp/workspace/repo',
@@ -47,6 +64,7 @@ function createHarness(): {
     }),
     createDecisionRecord,
     initializeDecisionRecords,
+    migrateDecisionRecords,
     regenerateDecisionIndex,
     resolveAssetsRoot,
     resolveProjectRoot,
@@ -57,6 +75,7 @@ function createHarness(): {
     command,
     createDecisionRecord,
     initializeDecisionRecords,
+    migrateDecisionRecords,
     regenerateDecisionIndex,
     resolveAssetsRoot,
     resolveProjectRoot,
@@ -177,5 +196,26 @@ describe('createDecisionCommand', () => {
       message: 'collision',
     });
     expect(process.exitCode).toBe(1);
+  });
+
+  it('runs legacy decision migration and prints mappings', async () => {
+    const { command, capture, migrateDecisionRecords } = createHarness();
+
+    await runCommand(
+      command,
+      'migrate',
+      [],
+      ['--reference-root', 'custom/reference', '--dry-run'],
+    );
+
+    expect(migrateDecisionRecords).toHaveBeenCalledWith({
+      referenceRoot: '/tmp/workspace/custom/reference',
+      dryRun: true,
+      deleteLegacy: false,
+    });
+    expect(capture.info).toContain(
+      'ADR-001 -> dr-260622-adopt-pjm-split (/tmp/workspace/custom/reference/decisions/dr-260622-adopt-pjm-split.md)',
+    );
+    expect(process.exitCode).toBe(0);
   });
 });

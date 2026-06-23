@@ -7,6 +7,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import { initializeDecisionRecords } from './init';
+import { migrateDecisionRecords } from './migrate';
 import { createDecisionRecord } from './new';
 import { regenerateDecisionIndex } from './regenerate-index';
 
@@ -25,6 +26,12 @@ interface NewOptions {
   createdAt?: string;
 }
 
+interface MigrateOptions {
+  referenceRoot?: string;
+  dryRun?: boolean;
+  deleteLegacy?: boolean;
+}
+
 interface DecisionCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
@@ -32,6 +39,7 @@ interface DecisionCommandDependencies {
   initializeDecisionRecords: typeof initializeDecisionRecords;
   regenerateDecisionIndex: typeof regenerateDecisionIndex;
   createDecisionRecord: typeof createDecisionRecord;
+  migrateDecisionRecords: typeof migrateDecisionRecords;
 }
 
 const DEFAULT_DEPENDENCIES: DecisionCommandDependencies = {
@@ -41,6 +49,7 @@ const DEFAULT_DEPENDENCIES: DecisionCommandDependencies = {
   initializeDecisionRecords,
   regenerateDecisionIndex,
   createDecisionRecord,
+  migrateDecisionRecords,
 };
 
 async function resolveDecisionsRoot(
@@ -53,6 +62,18 @@ async function resolveDecisionsRoot(
   }
 
   return resolve(projectRoot, '.oat', 'repo', 'reference', 'decisions');
+}
+
+async function resolveReferenceRoot(
+  context: CommandContext,
+  projectRoot: string,
+  configuredRoot?: string,
+): Promise<string> {
+  if (configuredRoot) {
+    return resolve(context.cwd, configuredRoot);
+  }
+
+  return resolve(projectRoot, '.oat', 'repo', 'reference');
 }
 
 function reportError(context: CommandContext, error: unknown): void {
@@ -191,6 +212,58 @@ export function createDecisionCommand(
         } else {
           context.logger.info(`Created decision record ${result.id}`);
           context.logger.info(`Wrote ${result.filePath}`);
+        }
+        process.exitCode = 0;
+      } catch (error) {
+        reportError(context, error);
+      }
+    });
+
+  cmd
+    .command('migrate')
+    .description('Migrate legacy decision-record.md into decision records')
+    .option(
+      '--reference-root <path>',
+      'Reference root directory (defaults to .oat/repo/reference)',
+    )
+    .option('--dry-run', 'Print legacy-to-new mappings without writing files')
+    .option(
+      '--delete-legacy',
+      'Delete decision-record.md after a verified migration',
+    )
+    .action(async (options: MigrateOptions, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      try {
+        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const referenceRoot = await resolveReferenceRoot(
+          context,
+          projectRoot,
+          options.referenceRoot,
+        );
+        const result = await dependencies.migrateDecisionRecords({
+          referenceRoot,
+          dryRun: options.dryRun ?? false,
+          deleteLegacy: options.deleteLegacy ?? false,
+        });
+
+        if (context.json) {
+          context.logger.json({ status: 'ok', ...result });
+        } else {
+          context.logger.info(
+            result.dryRun
+              ? `Decision migration dry run for ${result.referenceRoot}`
+              : `Migrated decisions into ${result.decisionsRoot}`,
+          );
+          for (const mapping of result.mappings) {
+            context.logger.info(
+              `${mapping.legacyId} -> ${mapping.id} (${mapping.filePath})`,
+            );
+          }
+          if (result.deletedLegacy) {
+            context.logger.info('Deleted legacy decision-record.md');
+          }
         }
         process.exitCode = 0;
       } catch (error) {

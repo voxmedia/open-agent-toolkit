@@ -144,6 +144,8 @@ describe('help output snapshots', () => {
         init [options]         Scaffold the canonical decision directory and index
         regenerate [options]   Regenerate the managed decision index table
         new [options] <title>  Create a new file-backed decision record
+        migrate [options]      Migrate legacy decision-record.md into decision
+                               records
         help [command]         display help for command
       "
     `);
