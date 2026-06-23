@@ -55,6 +55,17 @@ function parseBundleAgents(): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+function parseBundleTemplates(): string[] {
+  const content = readFileSync(getBundleScriptPath(), 'utf8');
+  const match = content.match(/for template in ([\s\S]*?); do/);
+  if (!match)
+    throw new Error('Could not parse template list from bundle-assets.sh');
+  return match[1]
+    .split(/\s+/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 function getBundleScriptPath(): string {
   return join(import.meta.dirname, '../../../../../scripts/bundle-assets.sh');
 }
@@ -73,9 +84,14 @@ function isUserInvocableSkill(skillName: string): boolean {
 describe('bundle-assets.sh consistency', () => {
   const bundleSkills = parseBundleSkills();
   const bundleAgents = parseBundleAgents();
+  const bundleTemplates = parseBundleTemplates();
   const repoSkillsRoot = join(
     import.meta.dirname,
     '../../../../../../../.agents/skills',
+  );
+  const repoTemplatesRoot = join(
+    import.meta.dirname,
+    '../../../../../../../.oat/templates',
   );
   const workflowLifecycleSkills = readdirSync(repoSkillsRoot, {
     withFileTypes: true,
@@ -187,6 +203,28 @@ describe('bundle-assets.sh consistency', () => {
     expect(
       missing,
       `Missing from bundle-assets.sh agent list: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('bundles the current p01 template set', () => {
+    expect(bundleTemplates).toEqual(
+      expect.arrayContaining([
+        'decision.md',
+        'repo-agents.md',
+        'pjm-agents.md',
+        'reference-agents.md',
+      ]),
+    );
+    expect(bundleTemplates).not.toContain('decision-record.md');
+  });
+
+  it('only bundles templates that exist in the repo template root', () => {
+    const missing = bundleTemplates.filter(
+      (template) => !existsSync(join(repoTemplatesRoot, template)),
+    );
+    expect(
+      missing,
+      `Templates listed in bundle-assets.sh but missing from .oat/templates: ${missing.join(', ')}`,
     ).toEqual([]);
   });
 
