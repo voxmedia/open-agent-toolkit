@@ -13,15 +13,15 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-23T23:05:00Z'
+oat_project_state_updated: '2026-06-23T23:40:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,9 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete - all 14 plan tasks done, every phase passed code
-review, and the final lifecycle review passed. Paused at the p04 HiLL
-checkpoint for user approval before opening the PR.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -74,7 +72,10 @@ checkpoint for user approval before opening the PR.
 - [x] Phase 4 code review passed (after one docs-accuracy fix cycle)
 - [x] Local out-of-repo audit copies removed
 - [x] Final lifecycle review passed (auto-review at HiLL checkpoint)
-- [ ] User checkpoint approval → PR
+- [x] User checkpoint approval → docs + PR
+- [x] Documentation sync complete
+- [x] PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -82,6 +83,7 @@ None
 
 ## Next Milestone
 
-All implementation tasks complete and verified (full suite + release:validate
-green at 0.1.31). Running the final lifecycle review, then pausing at the p04
-HiLL checkpoint for user approval before PR.
+PR is open for review: https://github.com/voxmedia/open-agent-toolkit/pull/118
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`

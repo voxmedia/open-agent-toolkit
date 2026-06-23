@@ -920,6 +920,13 @@ failures), `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm build:docs`, and
 `pnpm release:validate` (all five public packages at 0.1.31) all passing. Each
 phase passed an independent code review (p04 after one docs-accuracy fix cycle).
 
+**Post-implementation note (PR closeout):** The p04-t02 verification gate did
+not include `pnpm format` (`oxfmt --check`), so three p02 `pjm/` command files
+(`index.ts`, `migrate.ts`, `migrate.test.ts`) carried formatting drift that the
+pre-push hook caught at PR time. Fixed mechanically with `oxfmt` (commit
+`294635f5`, no semantic change); workspace format and pjm tests re-verified
+green. Follow-up: add `pnpm format` to the standard full-suite gate.
+
 **Design deltas:** See `## Deviations from Plan / Design`. Notable: the p02-t03
 `oat-pjm-decision` manifest deferral (resolved in p03-t01) and docs-accuracy
 corrections in p04-t01 (`--repo-root` flag, `oat decision migrate` apply-default,
