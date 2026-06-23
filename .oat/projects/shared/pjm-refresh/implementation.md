@@ -12,160 +12,183 @@ oat_generated: false
 **Started:** 2026-06-23
 **Last Updated:** 2026-06-23
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
-
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 5     | 0/5       |
+| Phase 2 | pending     | 3     | 0/3       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/14 tasks completed
 
----
-
-## Phase 1: {Phase Name}
+## Phase 1: Additive Core
 
 **Status:** in_progress
 **Started:** 2026-06-23
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):**
+Pending.
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+### Task p01-t01: Add Shared ID and Template Helpers
 
-**Key files touched:**
+**Status:** pending
+**Commit:** -
 
-- `{path}` - {why}
+**Outcome:**
 
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
+- Pending.
 
 **Files changed:**
 
-- `{path}` - {why}
+- Pending.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Pending.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+- This task starts from the live-source validation that PJM init currently owns
+  a private `stripTemplateFrontmatter` helper and backlog ID generation has no
+  shared slug/date primitive.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Rewrite Backlog IDs and Harden Index Determinism
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t03: Add Decision Command Init/New/Regenerate
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t04: Add Decision Migration
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t05: Add Templates, AGENTS Docs, PJM Init, and Doctor Core
+
+**Status:** pending
+**Commit:** -
+
+## Phase 2: Path Move and Migration
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Move Live Backlog Defaults and Cleanup Guards to `pjm/`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Add `oat pjm migrate` and Migration Prompt Asset
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Register Assets and Update Pack Manifests
+
+**Status:** pending
+**Commit:** -
+
+## Phase 3: Skills and Lifecycle Destinations
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Rewrite PJM Skills and Add Decision Skill
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Repoint Lifecycle Decision and Reference Paths
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t03: Encode Content-Skill Destinations
+
+**Status:** pending
+**Commit:** -
+
+## Phase 4: Polish, Docs, Release, and Cleanup
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Update Docs, Templates, and Legacy Guidance
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Bump Public Packages and Run Full Verification
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t03: Final Sweep and Local Audit Cleanup
 
 **Status:** pending
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
----
+- Remove `/Users/tstang/code/oat-audit`.
+- Remove `/tmp/oat-audit`.
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+No implementation orchestration runs yet.
 
 <!-- orchestration-runs-end -->
 
----
-
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-06-23
 
-**Session Start:** {time}
+**Session Start:** project scaffolding and artifact authoring.
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- Scaffolded spec-driven OAT project `pjm-refresh`.
+- Copied audit bundle from `laptop` to `/Users/tstang/code/oat-audit` and
+  `/tmp/oat-audit` for local validation.
+- Validated live source claims before design:
+  - no `oat decision` command group exists;
+  - backlog IDs use hash plus local scan;
+  - backlog and PJM init still default to `.oat/repo/reference`;
+  - PM pack still ships `decision-record.md`;
+  - `oat-project-summary` and `oat-project-pr-final` do not create decision
+    records today.
+- Added cleanup requirement to remove local audit copies when done.
 
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-06-23
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+**Session End:** ongoing.
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +196,20 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+Pending implementation.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+- Discovery: `discovery.md`
