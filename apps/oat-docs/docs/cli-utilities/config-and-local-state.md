@@ -31,7 +31,7 @@ Use the `oat decision` group for file-per-record decisions under `.oat/repo/refe
 - `oat decision init` - scaffold `.oat/repo/reference/decisions/` and the managed decision index
 - `oat decision new <title>` - create a new decision record; supports `--status`, `--context`, and `--created-at`
 - `oat decision regenerate` - rebuild the managed decision index table from record frontmatter
-- `oat decision migrate` - convert a legacy single `decision-record.md` into file-per-record decisions, preserving each old `ADR-NNN`/`DR-NNN` ID as `legacy_id`; supports `--dry-run` (default) and `--delete-legacy`
+- `oat decision migrate` - convert a legacy single `decision-record.md` into file-per-record decisions, preserving each old `ADR-NNN`/`DR-NNN` ID as `legacy_id`; applies by default, so pass `--dry-run` to preview the legacy-to-new mappings without writing, and `--delete-legacy` to remove the source file after a verified migration (unlike `oat pjm migrate`, which defaults to dry-run)
 
 The decision index uses managed marker pairs and is deterministic, so an index merge conflict can be resolved by re-running `oat decision regenerate` and staging the result. Decision records replace the legacy single `decision-record.md`; repos still on the old layout migrate with `oat decision migrate` (or the broader `oat pjm migrate`).
 

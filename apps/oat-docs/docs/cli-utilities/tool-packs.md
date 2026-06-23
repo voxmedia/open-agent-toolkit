@@ -20,7 +20,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 - `workflows` - project lifecycle skills, wrap-up reporting, reviewer agents, and core project templates
 - `ideas` - lightweight ideation and promotion flows
 - `utility` - review and repo-maintenance helpers
-- `project-management` - file-backed backlog/reference skills plus backlog, roadmap, current-state, and decision-record templates
+- `project-management` - file-backed backlog/reference skills plus backlog, roadmap, current-state, file-per-record decision, and AGENTS-guide templates
 - `research` - research, analysis, comparison, and synthesis skills
 - `brainstorm` - always-on brainstorming entry point with visual companion
 
