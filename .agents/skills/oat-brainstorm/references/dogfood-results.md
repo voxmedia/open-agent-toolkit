@@ -7,7 +7,7 @@
 > sessions while writing this document. The fold-back commit safety contract
 > in particular has **not** been exercised against real working-tree state.
 > The follow-up live-dogfood task is tracked as a backlog item — see
-> `.oat/repo/reference/backlog/items/live-dogfood-oat-brainstorm.md`
+> `.oat/repo/pjm/backlog/items/live-dogfood-oat-brainstorm.md`
 > ("Live dogfood for `oat-brainstorm` — fold-back commit safety + 9
 > destination families"). Treat the contents below as a contract spec for
 > what live dogfood will assert, not as a record of completed runs.
@@ -401,8 +401,8 @@ Same as Scenario 2 through Step 8.
 
 **Artifact produced**
 
-- `.oat/repo/reference/backlog/items/<slug>.md` (e.g.,
-  `bl-XXXX-provider-view-sync-drift.md`) with full payload.
+- `.oat/repo/pjm/backlog/items/<bl-YYMMDD-slug>.md` (e.g.,
+  `bl-260622-provider-view-sync-drift.md`) with full payload.
 - Backlog index regenerated.
 
 **Verifiable from skill content**

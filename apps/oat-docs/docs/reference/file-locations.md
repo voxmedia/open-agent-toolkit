@@ -43,7 +43,8 @@ Config ownership note:
 - Templates: `.oat/templates/`
 - Runtime sync state: `.oat/sync/`
 - Repo knowledge: `.oat/repo/knowledge/`
-- Repo reference docs: `.oat/repo/reference/`
+- Active PJM operational layer: `.oat/repo/pjm/` (`current-state.md`, `roadmap.md`, `backlog/`)
+- Durable repo references: `.oat/repo/reference/` (file-per-record decisions under `decisions/`)
 - Repo reviews: `.oat/repo/reviews/`
 - Repo archive: `.oat/repo/archive/`
 
