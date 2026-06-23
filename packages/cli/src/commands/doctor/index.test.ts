@@ -6,6 +6,7 @@ import {
 import type { Manifest } from '@manifest/index';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
+import type { DoctorCheck } from '@ui/output';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,6 +46,7 @@ interface HarnessOptions {
     detected: boolean;
     version: string | null;
   }>;
+  pjmChecks?: DoctorCheck[];
 }
 
 interface RunDoctorArgs {
@@ -131,6 +133,7 @@ function createHarness(options: HarnessOptions = {}): {
         ]
       );
     }),
+    runPjmDoctorChecks: vi.fn(async () => options.pjmChecks ?? []),
     readFile: vi.fn(async (path: string) => {
       const content = fileContents[path];
       if (content === undefined) {
@@ -344,6 +347,30 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('Fix:');
     expect(capture.info[0]).toContain('canonical_directories');
+  });
+
+  it('includes PJM doctor checks for project scope when repo reference root exists', async () => {
+    const { command, capture } = createHarness({
+      pathExists: {
+        '/tmp/workspace/.agents/skills': true,
+        '/tmp/workspace/.agents/agents': true,
+        '/tmp/workspace/.oat/sync/manifest.json': true,
+        '/tmp/workspace/.oat/repo': true,
+      },
+      pjmChecks: [
+        {
+          name: 'pjm:canonical_files',
+          description: 'PJM canonical files',
+          status: 'pass',
+          message: 'Canonical PJM files are present.',
+        },
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('pjm:canonical_files');
+    expect(process.exitCode).toBe(0);
   });
 
   it('outputs JSON when --json set', async () => {

@@ -2,31 +2,47 @@ import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
+import { initializeDecisionRecords } from '@commands/decision/init';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 
 export interface InitializeRepoReferenceOptions {
-  referenceRoot: string;
+  repoRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
 }
 
 export interface RepoReferenceInitResult {
-  referenceRoot: string;
+  repoRoot: string;
   created: string[];
   skipped: string[];
 }
 
-const REFERENCE_TEMPLATES = [
-  'current-state.md',
-  'roadmap.md',
-  'decision-record.md',
-] as const;
+interface TemplateTarget {
+  template: string;
+  target: string;
+}
+
+const TEMPLATE_TARGETS = [
+  { template: 'repo-agents.md', target: 'AGENTS.md' },
+  { template: 'pjm-agents.md', target: 'pjm/AGENTS.md' },
+  { template: 'current-state.md', target: 'pjm/current-state.md' },
+  { template: 'roadmap.md', target: 'pjm/roadmap.md' },
+  { template: 'reference-agents.md', target: 'reference/AGENTS.md' },
+] as const satisfies readonly TemplateTarget[];
 
 const BACKLOG_PATHS = [
-  'backlog/index.md',
-  'backlog/completed.md',
-  'backlog/items/.gitkeep',
-  'backlog/archived/.gitkeep',
+  'pjm/backlog/index.md',
+  'pjm/backlog/completed.md',
+  'pjm/backlog/items/.gitkeep',
+  'pjm/backlog/archived/.gitkeep',
+] as const;
+
+const DECISION_PATHS = ['reference/decisions/index.md'] as const;
+
+export const CANONICAL_REPO_REFERENCE_PATHS = [
+  ...TEMPLATE_TARGETS.map((target) => target.target),
+  ...BACKLOG_PATHS,
+  ...DECISION_PATHS,
 ] as const;
 
 async function pathExists(path: string): Promise<boolean> {
@@ -65,7 +81,7 @@ async function readIfExists(path: string): Promise<string | null> {
 }
 
 async function resolveTemplateContent(
-  name: (typeof REFERENCE_TEMPLATES)[number],
+  name: string,
   options: InitializeRepoReferenceOptions,
 ): Promise<string> {
   if (options.templatesRoot) {
@@ -106,33 +122,33 @@ export async function initializeRepoReference(
   const created: string[] = [];
   const skipped: string[] = [];
 
-  for (const templateName of REFERENCE_TEMPLATES) {
-    const targetPath = join(options.referenceRoot, templateName);
+  for (const target of TEMPLATE_TARGETS) {
+    const targetPath = join(options.repoRoot, target.target);
     if (await pathExists(targetPath)) {
-      skipped.push(templateName);
+      skipped.push(target.target);
       continue;
     }
 
-    const template = await resolveTemplateContent(templateName, options);
+    const template = await resolveTemplateContent(target.template, options);
     const status = await writeFileIfMissing(
       targetPath,
       stripTemplateFrontmatter(template),
     );
     if (status === 'created') {
-      created.push(templateName);
+      created.push(target.target);
     } else {
-      skipped.push(templateName);
+      skipped.push(target.target);
     }
   }
 
   const existingBacklogPaths = new Set<string>();
   for (const relativePath of BACKLOG_PATHS) {
-    if (await pathExists(join(options.referenceRoot, relativePath))) {
+    if (await pathExists(join(options.repoRoot, relativePath))) {
       existingBacklogPaths.add(relativePath);
     }
   }
 
-  await initializeBacklog(join(options.referenceRoot, 'backlog'));
+  await initializeBacklog(join(options.repoRoot, 'pjm', 'backlog'));
 
   for (const relativePath of BACKLOG_PATHS) {
     if (existingBacklogPaths.has(relativePath)) {
@@ -142,8 +158,27 @@ export async function initializeRepoReference(
     }
   }
 
+  const existingDecisionPaths = new Set<string>();
+  for (const relativePath of DECISION_PATHS) {
+    if (await pathExists(join(options.repoRoot, relativePath))) {
+      existingDecisionPaths.add(relativePath);
+    }
+  }
+
+  await initializeDecisionRecords(
+    join(options.repoRoot, 'reference', 'decisions'),
+  );
+
+  for (const relativePath of DECISION_PATHS) {
+    if (existingDecisionPaths.has(relativePath)) {
+      skipped.push(relativePath);
+    } else {
+      created.push(relativePath);
+    }
+  }
+
   return {
-    referenceRoot: options.referenceRoot,
+    repoRoot: options.repoRoot,
     created,
     skipped,
   };

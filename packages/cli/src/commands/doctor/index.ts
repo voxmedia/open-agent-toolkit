@@ -15,6 +15,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { compareVersions } from '@commands/init/tools/shared/version';
+import { runPjmDoctorChecks } from '@commands/pjm/doctor';
 import { getSkillVersion } from '@commands/shared/frontmatter';
 import {
   readGlobalOptions,
@@ -49,6 +50,7 @@ interface DoctorDependencies {
   >;
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
+  runPjmDoctorChecks: (repoRoot: string) => Promise<DoctorCheck[]>;
   checkSkillVersions: (
     scopeRoot: string,
     assetsRoot: string,
@@ -202,6 +204,7 @@ function createDependencies(): DoctorDependencies {
     checkProviders: checkProvidersDefault,
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
+    runPjmDoctorChecks,
     // Default binding remains self-contained, but still honors the caller-
     // provided pathExists dependency from runChecksForScope when available.
     checkSkillVersions: (
@@ -459,6 +462,13 @@ async function runChecksForScope(
           });
         }
       }
+    }
+
+    const repoReferenceRoot = join(scopeRoot, '.oat', 'repo');
+    if (await dependencies.pathExists(repoReferenceRoot)) {
+      checks.push(
+        ...(await dependencies.runPjmDoctorChecks(repoReferenceRoot)),
+      );
     }
   }
 

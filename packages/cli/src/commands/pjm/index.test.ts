@@ -1,4 +1,11 @@
-import { access, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -15,18 +22,49 @@ interface CliResult {
 }
 
 const EXPECTED_FILES = [
+  'AGENTS.md',
+  'pjm/AGENTS.md',
+  'pjm/current-state.md',
+  'pjm/roadmap.md',
+  'reference/AGENTS.md',
+  'pjm/backlog/index.md',
+  'pjm/backlog/completed.md',
+  'pjm/backlog/items/.gitkeep',
+  'pjm/backlog/archived/.gitkeep',
+  'reference/decisions/index.md',
+] as const;
+
+const TEMPLATE_NAMES = [
   'current-state.md',
   'roadmap.md',
-  'decision-record.md',
-  'backlog/index.md',
-  'backlog/completed.md',
-  'backlog/items/.gitkeep',
-  'backlog/archived/.gitkeep',
+  'repo-agents.md',
+  'pjm-agents.md',
+  'reference-agents.md',
 ] as const;
+
+async function seedTemplate(root: string, name: string): Promise<void> {
+  await mkdir(root, { recursive: true });
+  await writeFile(
+    join(root, name),
+    [
+      '---',
+      'oat_template: true',
+      `oat_template_name: ${name.replace('.md', '')}`,
+      '---',
+      '',
+      `# ${name}`,
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+}
 
 async function createWorkspace(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-pjm-command-'));
   await mkdir(join(root, '.git'), { recursive: true });
+  for (const templateName of TEMPLATE_NAMES) {
+    await seedTemplate(join(root, '.oat', 'templates'), templateName);
+  }
   return root;
 }
 
@@ -77,7 +115,7 @@ async function runCli(
   };
 }
 
-describe('oat pjm init', () => {
+describe('oat pjm', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
@@ -87,7 +125,7 @@ describe('oat pjm init', () => {
     tempDirs.length = 0;
   });
 
-  it('is reachable from the registered program and initializes repo reference docs', async () => {
+  it('is reachable from the registered program and initializes the two-layer repo reference scaffold', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
 
@@ -96,25 +134,25 @@ describe('oat pjm init', () => {
     expect(result.exitCode).toBe(0);
     expect(result.stderr).toBe('');
     const payload = JSON.parse(result.stdout);
-    const referenceRoot = join(root, '.oat', 'repo', 'reference');
+    const repoRoot = join(root, '.oat', 'repo');
     expect(payload).toEqual({
       status: 'ok',
-      referenceRoot,
+      repoRoot,
       created: EXPECTED_FILES,
       skipped: [],
     });
 
     for (const relativePath of EXPECTED_FILES) {
       await expect(
-        access(join(referenceRoot, relativePath)),
+        access(join(repoRoot, relativePath)),
       ).resolves.toBeUndefined();
     }
     await expect(
-      readFile(join(referenceRoot, 'decision-record.md'), 'utf8'),
+      readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
     ).resolves.not.toContain('oat_template:');
   });
 
-  it('supports a reference root override', async () => {
+  it('supports a repo root override', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
 
@@ -122,17 +160,38 @@ describe('oat pjm init', () => {
       '--json',
       'pjm',
       'init',
-      '--reference-root',
-      'custom/reference',
+      '--repo-root',
+      'custom/repo',
     ]);
 
     expect(result.exitCode).toBe(0);
     const payload = JSON.parse(result.stdout);
-    const referenceRoot = join(root, 'custom', 'reference');
-    expect(payload.referenceRoot).toBe(referenceRoot);
+    const repoRoot = join(root, 'custom', 'repo');
+    expect(payload.repoRoot).toBe(repoRoot);
     await expect(
-      access(join(referenceRoot, 'current-state.md')),
+      access(join(repoRoot, 'pjm', 'current-state.md')),
     ).resolves.toBeUndefined();
+  });
+
+  it('runs focused PJM doctor checks with JSON output', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await runCli(root, ['--json', 'pjm', 'init']);
+
+    const result = await runCli(root, ['--json', 'pjm', 'doctor']);
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload).toMatchObject({
+      status: 'ok',
+      repoRoot: join(root, '.oat', 'repo'),
+      checks: expect.arrayContaining([
+        expect.objectContaining({
+          name: 'pjm:canonical_files',
+          status: 'pass',
+        }),
+      ]),
+    });
   });
 
   it('preserves JSON error output and exit code 1 when templates are missing', async () => {
