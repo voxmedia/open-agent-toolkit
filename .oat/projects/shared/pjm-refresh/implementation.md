@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -18,10 +18,10 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 5     | 5/5       |
 | Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | pending   | 3     | 0/3       |
+| Phase 3 | completed | 3     | 3/3       |
 | Phase 4 | pending   | 3     | 0/3       |
 
-**Total:** 8/14 tasks completed
+**Total:** 11/14 tasks completed
 
 ## Phase 1: Additive Core
 
@@ -381,27 +381,98 @@ manifest entries with matching release-contract coverage.
 
 ## Phase 3: Skills and Lifecycle Destinations
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-06-23
+
+### Phase Summary
+
+Rewrote PJM and content/lifecycle skills for the two-layer taxonomy: active
+operational guidance points at `.oat/repo/pjm/` (current-state, roadmap,
+backlog), decisions route through `oat decision new` into
+`.oat/repo/reference/decisions/`, and durable content destinations
+(brainstorms, research, external-plans) point under `reference/`. Added the new
+`oat-pjm-decision` skill and resolved the deferred p02-t03 PM-manifest
+registration. Every changed canonical skill received exactly one frontmatter
+version bump; the new skill starts at `1.0.0`.
 
 ### Task p03-t01: Rewrite PJM Skills and Add Decision Skill
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5d79119f
+
+**Outcome:**
+
+- Created `.agents/skills/oat-pjm-decision/SKILL.md` (v1.0.0) routing durable
+  decision capture through `oat decision init/new/regenerate`.
+- Registered `oat-pjm-decision` in `PROJECT_MANAGEMENT_SKILLS`
+  (skill-manifest single source of truth), the bundle script SKILLS array, and
+  the `install-project-management.test.ts` expectations — resolving the deferred
+  p02-t03 registration.
+- Repointed `oat-pjm-add-backlog-item`, `oat-pjm-review-backlog`, and
+  `oat-pjm-update-repo-reference` from `reference/{backlog,roadmap}` to `pjm/`
+  and routed decisions through `oat decision new`; bumped each version once.
+- Repointed the bundled `oat-pjm-review-backlog` review template example paths.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools`
+- Result: passed, 28 files, 247 tests.
+- Run: `rg -n "reference/(backlog|roadmap|current-state)|decision-record\.md" .agents/skills/oat-pjm-*`
+- Result: only legacy/migration-context matches remain.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
 
 ---
 
 ### Task p03-t02: Repoint Lifecycle Decision and Reference Paths
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 10f3ae03
+
+**Outcome:**
+
+- Repointed `oat-project-document` reference reads to `pjm/` (active) and
+  `reference/decisions/` (durable), with an explicit legacy-fallback note for
+  un-migrated repos; bumped version once.
+- Repointed `oat-project-complete` References backlog link to `pjm/backlog/`
+  (decision link already correct); bumped version once.
+- Audited `oat-project-summary` and `oat-project-pr-final`: neither references
+  `.oat/repo` operational paths nor creates decision records, so no edits or
+  version bumps were needed (recorded in Deviations).
+
+**Verification:**
+
+- Run: `rg -n "reference/(backlog|roadmap|current-state)|decision-record\.md" .agents/skills/oat-project-*`
+- Result: only the intentional legacy-fallback note in `oat-project-document` remains.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation`
+- Result: passed, 2 files, 43 tests.
 
 ---
 
 ### Task p03-t03: Encode Content-Skill Destinations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 79d329bf
+
+**Outcome:**
+
+- `oat-brainstorm` saved-doc destination now suggests
+  `reference/brainstorms/` by default at project-level OAT (created on demand)
+  and repointed its backlog handoff path to `pjm/backlog/items/`; bumped version.
+- `deep-research` project-level default output now `reference/research/`;
+  bumped version (user-level path kept at `~/.oat/research/`, see Deviations).
+- `oat-project-import-plan` retains `reference/external-plans/` and now cites
+  the `reference/AGENTS.md` durable-destination guide; bumped version. The
+  discovery script already resolved the correct path.
+
+**Verification:**
+
+- Run: `rg -n "repo/research|reference/brainstorms|reference/research|reference/external-plans" .agents/skills/oat-brainstorm .agents/skills/deep-research .agents/skills/oat-project-import-plan`
+- Result: destinations match design.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools src/validation src/release`
+- Result: passed, 31 files, 271 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
 
 ## Phase 4: Polish, Docs, Release, and Cleanup
 
@@ -510,6 +581,50 @@ Run-scoped snapshot only. Durable deltas are recorded in
 `## Deviations from Plan / Design`. The p02-t03 `oat-pjm-decision` deferral
 remains the only durable Phase 2 delta.
 
+### Run 3 — 2026-06-23 22:20
+
+**Branch:** pjm-refresh
+**Tier:** 1
+**Policy:** merge-strategy=direct, retry-limit=5
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p03   | DONE_WITH_CONCERNS | pass   | 0/5            | accepted    |
+
+#### Parallel Groups
+
+- p03: sequential (no parallel groups in plan).
+
+#### Dispatch Notes
+
+- Dispatch: p03 implementation and review used Claude `oat-phase-implementer`
+  and `oat-reviewer` at `model=opus` under the project maximum dispatch ceiling
+  (enforced via model-arg).
+- Implementer returned DONE_WITH_CONCERNS; all three concerns were advisory
+  (provider-view sync drift, a stale path in a historical dogfood transcript,
+  and the summary/pr-final audit), so the orchestrator proceeded to review.
+- Dispatch ceiling: opus (claude, enforced — model-arg).
+
+#### Outstanding Items
+
+- None blocking. p03 review returned 2 Minor findings (no Critical/Important):
+  a stale path in `.agents/skills/oat-brainstorm/references/dogfood-results.md`
+  (historical transcript, already an accepted p04 deferral) and an optional
+  wording nuance in the `oat-pjm-decision` skill. Both deferred to p04's final
+  sweep / left as-is; not converted to fix tasks at the phase gate.
+- Advisory for p04: run `oat sync --scope all` to refresh provider-linked skill
+  views after the new `oat-pjm-decision` skill and skill edits; sweep the
+  remaining historical old-path mention in the brainstorm dogfood transcript.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. Durable deltas are recorded in
+`## Deviations from Plan / Design` (rows p03-t01, p03-t02, p03-t03 added this
+run; p02-t03 marked RESOLVED).
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -577,10 +692,13 @@ remains the only durable Phase 2 delta.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented                                                               | Actual / Accepted                                        | Reason                                                                                                                        | Source of Truth                           | Follow-up                                                      |
-| ------------- | --------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------- |
-| p01-t04       | plan.md         | Task file list did not include `packages/cli/src/commands/help-snapshots.test.ts`. | Updated the decision help snapshot to include `migrate`. | Adding the p01-t04 command changed the p01-t03 snapshot; leaving it stale would create a known later test failure.            | p01-t04 command registration requirement. | None; snapshot is current.                                     |
-| p02-t03       | plan.md         | PM pack tests expect `oat-pjm-decision` during p02-t03 asset registration.         | Deferred `oat-pjm-decision` manifest registration.       | The canonical `oat-pjm-decision` skill is created by p03-t01, and this phase was explicitly bounded away from p03 skill work. | p03-t01 skill creation scope.             | Register the skill in p03-t01 when the canonical skill exists. |
+| Task / Review | Source Artifact     | Planned / Documented                                                                                    | Actual / Accepted                                                                                                                     | Reason                                                                                                                                                                                                                                               | Source of Truth                            | Follow-up                                                                                                                |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| p01-t04       | plan.md             | Task file list did not include `packages/cli/src/commands/help-snapshots.test.ts`.                      | Updated the decision help snapshot to include `migrate`.                                                                              | Adding the p01-t04 command changed the p01-t03 snapshot; leaving it stale would create a known later test failure.                                                                                                                                   | p01-t04 command registration requirement.  | None; snapshot is current.                                                                                               |
+| p02-t03       | plan.md             | PM pack tests expect `oat-pjm-decision` during p02-t03 asset registration.                              | Deferred `oat-pjm-decision` manifest registration.                                                                                    | The canonical `oat-pjm-decision` skill is created by p03-t01, and this phase was explicitly bounded away from p03 skill work.                                                                                                                        | p03-t01 skill creation scope.              | RESOLVED in p03-t01: `oat-pjm-decision` added to `PROJECT_MANAGEMENT_SKILLS`, bundle script, and install/contract tests. |
+| p03-t01       | plan.md             | Task file list names only the three existing PJM `SKILL.md` files for path edits.                       | Also repointed `oat-pjm-review-backlog/references/backlog-review-template.md` from `reference/backlog`/`reference/roadmap` to `pjm/`. | The bundled skill reference template carried live old-path examples an agent would copy; it is inside the skill's own directory boundary.                                                                                                            | design.md two-layer taxonomy.              | None; example paths now match `pjm/`.                                                                                    |
+| p03-t02       | plan.md / design.md | Plan asks to "record in comments or artifacts that summary and pr-final do not create decisions today." | Recorded here as artifact note; made no edits to those two skills.                                                                    | Audit confirmed `oat-project-summary` and `oat-project-pr-final` reference no `.oat/repo` PJM/reference operational paths and create no decision records, matching design's live-source finding. Editing them would force unnecessary version bumps. | Live skill source audit.                   | None unless a later change makes them create decision records.                                                           |
+| p03-t03       | plan.md / design.md | Plan/design specify project-level brainstorm/research durable defaults under `reference/`.              | Kept user-level (`~/.oat/`) suggestions at `~/.oat/research/` and `~/.oat/brainstorms/`, not under a `reference/` layer.              | The `reference/` taxonomy is the repo-reference (`.oat/repo/reference/`) layer; `~/.oat/` user scope has no `repo/reference` split, and deep-research's original user-level path was `~/.oat/research/`.                                             | design.md scoped reference guide decision. | None; project-level defaults match design.                                                                               |
 
 ## Test Results
 
@@ -603,7 +721,11 @@ remains the only durable Phase 2 delta.
 | 2     | backlog/pjm/cleanup/init-tools/release Vitest | 302    | 0      | path move, migration, asset registration coverage |
 | 2     | CLI package type check                        | -      | 0      | TypeScript compile coverage                       |
 | 2     | p02 code review                               | -      | 0      | passed review, 4 Minor (non-blocking) findings    |
-| 3     | -                                             | -      | -      | -                                                 |
+| 3     | p03-t01 validation + init/tools Vitest        | 247    | 0      | new decision skill, PM registration, bundle sync  |
+| 3     | p03-t02 validation Vitest                     | 43     | 0      | lifecycle skill path repointing                   |
+| 3     | p03-t03 init/tools + validation + release     | 271    | 0      | content-skill durable destinations                |
+| 3     | CLI package type check                        | -      | 0      | TypeScript compile coverage                       |
+| 3     | p03 code review                               | -      | 0      | passed review, 2 Minor (non-blocking) findings    |
 | 4     | -                                             | -      | -      | -                                                 |
 
 ## Final Summary (for PR/docs)
