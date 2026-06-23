@@ -250,12 +250,7 @@ describe('migratePjmRepo', () => {
     ).resolves.toContain('| bl-260622-streaming-cache | Streaming Cache |');
 
     const decisionRecord = await readFile(
-      join(
-        repoRoot,
-        'reference',
-        'decisions',
-        'dr-260622-adopt-pjm-split.md',
-      ),
+      join(repoRoot, 'reference', 'decisions', 'dr-260622-adopt-pjm-split.md'),
       'utf8',
     );
     expect(decisionRecord).toContain('legacy_id: ADR-001');

@@ -221,7 +221,9 @@ export function createPjmCommand(
 
   cmd
     .command('migrate')
-    .description('Migrate legacy PJM repo reference docs to the two-layer layout')
+    .description(
+      'Migrate legacy PJM repo reference docs to the two-layer layout',
+    )
     .option(
       '--repo-root <path>',
       'PJM repo reference root directory (defaults to .oat/repo)',

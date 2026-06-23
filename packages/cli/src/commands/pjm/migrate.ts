@@ -126,7 +126,9 @@ function stripMarkdownExtension(path: string): string {
 }
 
 function relativeToRepo(repoRoot: string, path: string): string {
-  return path.startsWith(`${repoRoot}/`) ? path.slice(repoRoot.length + 1) : path;
+  return path.startsWith(`${repoRoot}/`)
+    ? path.slice(repoRoot.length + 1)
+    : path;
 }
 
 function parseFrontmatter(
@@ -271,7 +273,9 @@ async function applyBacklogMigrations(
   return written;
 }
 
-async function planActiveMoves(repoRoot: string): Promise<PjmMigrationAction[]> {
+async function planActiveMoves(
+  repoRoot: string,
+): Promise<PjmMigrationAction[]> {
   const actions: PjmMigrationAction[] = [];
   for (const move of ACTIVE_MOVES) {
     const sourcePath = join(repoRoot, move.source);
@@ -337,10 +341,7 @@ async function collectJudgmentProposals(
   const referenceRoot = join(repoRoot, 'reference');
   for (const filePath of await listMarkdownFiles(referenceRoot)) {
     const name = basename(filePath);
-    if (
-      name !== 'roadmap.md' &&
-      name.toLowerCase().includes('roadmap')
-    ) {
+    if (name !== 'roadmap.md' && name.toLowerCase().includes('roadmap')) {
       actions.push({
         type: 'propose',
         source: relativeToRepo(repoRoot, filePath),
@@ -355,7 +356,9 @@ async function collectJudgmentProposals(
 
 async function isAlreadyMigrated(repoRoot: string): Promise<boolean> {
   const hasPjm = await pathExists(join(repoRoot, 'pjm'));
-  const hasDecisions = await pathExists(join(repoRoot, 'reference', 'decisions'));
+  const hasDecisions = await pathExists(
+    join(repoRoot, 'reference', 'decisions'),
+  );
   if (!hasPjm || !hasDecisions) {
     return false;
   }
@@ -448,8 +451,7 @@ export async function migratePjmRepo(
   const backlogRoot = (await pathExists(legacyBacklogRoot))
     ? legacyBacklogRoot
     : pjmBacklogRoot;
-  const preparedBacklogMigrations =
-    await prepareBacklogMigrations(backlogRoot);
+  const preparedBacklogMigrations = await prepareBacklogMigrations(backlogRoot);
   const decisionMappings = await collectDecisionMappings(options.repoRoot);
   const backlogMappings = preparedBacklogMigrations.map(
     (migration) => migration.mapping,
