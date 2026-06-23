@@ -356,7 +356,36 @@ decision migration, two-layer PJM initialization, and PJM doctor checks.
 
 <!-- orchestration-runs-start -->
 
-No implementation orchestration runs yet.
+### Run 1 — 2026-06-23 02:39
+
+**Branch:** pjm-refresh
+**Tier:** 1
+**Policy:** merge-strategy=direct, retry-limit=5
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 4/5            | accepted    |
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation and reviews used Codex
+  `oat-phase-implementer-xhigh` / `oat-reviewer-xhigh` under the project
+  maximum dispatch ceiling.
+- Review fixes addressed decision record rollback, migration repeatability and
+  collision preflight, bundle wrapper continuity after template changes, and
+  zero-section destructive delete safety.
+
+#### Outstanding Items
+
+- None for p01.
+
+#### Artifact / Design Deltas
+
+Run-scoped snapshot only. Durable deltas are recorded in
+`## Deviations from Plan / Design`.
 
 <!-- orchestration-runs-end -->
 
@@ -406,6 +435,11 @@ No implementation orchestration runs yet.
     when zero mappings were produced.
   - User authorized extending `oat_orchestration_retry_limit` to `5` and
     dispatching one more narrow p01 fix cycle before p02.
+- [x] p01 zero-section delete fix - 0fd1c481
+  - `decision migrate --delete-legacy` now rejects destructive migration when
+    zero legacy decision sections are parsed.
+  - p01 re-review v4 passed with 0 Critical, 0 Important, 0 Medium, and 0
+    Minor findings.
 
 **Session End:** ongoing.
 
@@ -431,6 +465,8 @@ No implementation orchestration runs yet.
 | 1     | p01 review fix decision suite                | 72     | 0      | decision safety fixes plus help snapshot coverage |
 | 1     | p01 review fix CLI type-check                | -      | 0      | TypeScript compile coverage                       |
 | 1     | p01 review fix targeted decision oxlint      | -      | 0      | decision command lint coverage                    |
+| 1     | p01 zero-section fix migration test          | -      | 0      | destructive delete regression coverage            |
+| 1     | p01 re-review v4                             | -      | 0      | passed review, no findings                        |
 | 2     | -                                            | -      | -      | -                                                 |
 | 3     | -                                            | -      | -      | -                                                 |
 | 4     | -                                            | -      | -      | -                                                 |
