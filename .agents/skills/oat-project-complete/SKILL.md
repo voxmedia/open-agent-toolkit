@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.4.9
+version: 1.5.0
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -329,7 +329,7 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
   - Use the **current/head branch** for the blob link (the same `{BRANCH}` value used by `oat-project-pr-final` Step 4 for every other reference). Step 8 creates the export on the current checkout and Step 10 commits + pushes it on the feature branch, so the link resolves immediately while the PR is open and continues to resolve after merge once the file lands on the base branch.
   - Anti-pattern: do **not** point this link at the base branch (`main` / resolved default branch). The export does not exist on the base branch until the PR merges, so a `blob/main/...` link 404s for the entire window the PR is open — the same class of broken link this whole step exists to prevent.
   - When `archive.summaryExportPath` is unset or `summary.md` is missing, omit this bullet rather than emit a broken link.
-- **Keep References bullets** that resolve independently of the archive: backlog item links under `.oat/repo/reference/backlog/`, decision-record links under `.oat/repo/reference/decisions/`, repo-reference docs, ticket URLs, and anything else under tracked paths outside the project directory.
+- **Keep References bullets** that resolve independently of the archive: backlog item links under `.oat/repo/pjm/backlog/`, decision record links under `.oat/repo/reference/decisions/`, repo-reference docs, ticket URLs, and anything else under tracked paths outside the project directory.
 - Apply the existing `localPaths`-based exclusion rule from `oat-project-pr-final` Step 4 on top of these rules — it already covers `.oat/**/pr` and `.oat/**/reviews/archived` and may catch additional patterns configured per repo.
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
