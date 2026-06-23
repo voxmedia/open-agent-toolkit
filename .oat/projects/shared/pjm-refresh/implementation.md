@@ -237,6 +237,44 @@ decision migration, two-layer PJM initialization, and PJM doctor checks.
   `pnpm --filter @open-agent-toolkit/cli exec oxlint src/commands/pjm src/commands/doctor src/commands/decision`
 - Result: passed.
 
+### p01 Review Fix: Bundle P01 Templates
+
+**Status:** completed
+**Commit:** e3916914
+
+**Outcome:**
+
+- Updated the CLI asset bundler to copy the current p01 template set by
+  replacing deleted `decision-record.md` with `decision.md`,
+  `repo-agents.md`, `pjm-agents.md`, and `reference-agents.md`.
+- Added focused bundle consistency coverage that rejects missing template
+  entries and verifies the p01 template additions remain in the bundler.
+- Ran the bundle script so local `packages/cli/assets/templates/` mirrors the
+  current p01 template copy set. The assets directory is ignored, so this
+  produced no tracked asset diff.
+
+**Files changed:**
+
+- `packages/cli/scripts/bundle-assets.sh` - copied p01 template list.
+- `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts` -
+  focused template consistency coverage.
+
+**Verification:**
+
+- Run: `bash packages/cli/scripts/bundle-assets.sh`
+- Result: passed.
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Result: passed, 1 file, 15 tests.
+- Run:
+  `pnpm run cli -- project status --project-path .oat/projects/shared/pjm-refresh --field project.phase`
+- Result: passed, returned `implement`.
+- Run: `bash -n packages/cli/scripts/bundle-assets.sh`
+- Result: passed.
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec oxlint src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Result: passed, 0 warnings and 0 errors.
+
 ## Phase 2: Path Move and Migration
 
 **Status:** pending
