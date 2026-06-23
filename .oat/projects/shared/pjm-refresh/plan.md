@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-06-23
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p01', 'p02', 'p03', 'p04']
+oat_plan_hill_phases: ['p04']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: []
 oat_plan_source: spec-driven
 oat_import_reference: null
@@ -30,12 +31,21 @@ guidance; templates and bundled assets seed consumer repos.
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user: pause after every implementation
-      phase (`p01`, `p02`, `p03`, `p04`).
+- [x] Confirmed HiLL checkpoints with user: pause after the final
+      implementation phase (`p04`) only.
 - [x] Set `oat_plan_hill_phases` in frontmatter.
+- [x] Enabled auto-review at HiLL checkpoints.
 - [x] Evaluated phases for parallelism opportunities.
 - [x] Set `oat_plan_parallel_groups` in frontmatter; fully sequential due
       overlapping CLI, asset, and test surfaces.
+
+## Execution Controls
+
+- Dispatch ceiling: maximum (`codex: xhigh`, `claude: opus`).
+- Subagent execution: Tier 1 is authorized for phase implementer and reviewer
+  dispatches.
+- Plan HiLL checkpoints: pause after `p04` only.
+- Auto-review at HiLL checkpoints: enabled.
 
 ## Parallelism
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -16,12 +16,12 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 1/5       |
+| Phase 1 | in_progress | 5     | 2/5       |
 | Phase 2 | pending     | 3     | 0/3       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 
-**Total:** 1/14 tasks completed
+**Total:** 2/14 tasks completed
 
 ## Phase 1: Additive Core
 
@@ -73,8 +73,49 @@ Pending.
 
 ### Task p01-t02: Rewrite Backlog IDs and Harden Index Determinism
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9c945de9
+
+**Outcome:**
+
+- Replaced hash-and-scan backlog IDs with allocator-free
+  `bl-YYMMDD-slug` generation.
+- Updated `oat backlog generate-id` to check item and archived filenames for
+  direct collisions and report a disambiguation error instead of probing
+  sequential candidates.
+- Made backlog index regeneration deterministic by sorting directory entries
+  before reading and using direct string comparisons with ID tie-breaks.
+
+**Files changed:**
+
+- `packages/cli/src/commands/backlog/shared/generate-id.ts` - date+slug
+  backlog ID generation.
+- `packages/cli/src/commands/backlog/shared/generate-id.test.ts` - UTC,
+  slug, and determinism coverage.
+- `packages/cli/src/commands/backlog/index.ts` - command contract and
+  collision checks.
+- `packages/cli/src/commands/backlog/index.test.ts` - CLI JSON/text and
+  collision coverage.
+- `packages/cli/src/commands/backlog/regenerate-index.ts` - stable filename
+  and row sort ordering.
+- `packages/cli/src/commands/backlog/regenerate-index.test.ts` - repeated
+  regeneration and ID tie-break coverage.
+- `packages/cli/src/commands/backlog/regenerate-index.readdir-order.test.ts` -
+  shuffled readdir determinism coverage.
+
+**Verification:**
+
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog`
+- Result: passed, 5 files, 22 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+
+**Notes / Decisions:**
+
+- A direct filename collision is now a user-facing ambiguity rather than an
+  allocator responsibility. This preserves the two-machine/no-scan design while
+  still warning when a same-day same-slug item already exists.
 
 ---
 
@@ -200,7 +241,14 @@ No implementation orchestration runs yet.
     records today.
 - Added cleanup requirement to remove local audit copies when done.
 - [x] p01-t01: Add Shared ID and Template Helpers - 3ade17eb
-- [ ] p01-t02: Rewrite Backlog IDs and Harden Index Determinism - next
+- [x] p01-t02: Rewrite Backlog IDs and Harden Index Determinism - 9c945de9
+- Updated execution controls per user direction:
+  - dispatch ceiling set to maximum (`codex: xhigh`, `claude: opus`);
+  - implementation HiLL checkpoint set to `p04` only;
+  - auto-review at HiLL checkpoints enabled;
+  - Tier 1 subagent implementation/review authorized for subsequent phase
+    execution.
+- [ ] p01-t03: Add Decision Command Init/New/Regenerate - next
 
 **Session End:** ongoing.
 
@@ -212,12 +260,14 @@ No implementation orchestration runs yet.
 
 ## Test Results
 
-| Phase | Tests Run                                   | Passed | Failed | Coverage                      |
-| ----- | ------------------------------------------- | ------ | ------ | ----------------------------- |
-| 1     | shared helper + PJM init focused Vitest run | 23     | 0      | helper and init unit coverage |
-| 2     | -                                           | -      | -      | -                             |
-| 3     | -                                           | -      | -      | -                             |
-| 4     | -                                           | -      | -      | -                             |
+| Phase | Tests Run                                    | Passed | Failed | Coverage                                         |
+| ----- | -------------------------------------------- | ------ | ------ | ------------------------------------------------ |
+| 1     | shared helper + PJM init focused Vitest run  | 23     | 0      | helper and init unit coverage                    |
+| 1     | backlog command and index focused Vitest run | 22     | 0      | backlog ID and deterministic index unit coverage |
+| 1     | CLI package type check                       | -      | 0      | TypeScript compile coverage                      |
+| 2     | -                                            | -      | -      | -                                                |
+| 3     | -                                            | -      | -      | -                                                |
+| 4     | -                                            | -      | -      | -                                                |
 
 ## Final Summary (for PR/docs)
 

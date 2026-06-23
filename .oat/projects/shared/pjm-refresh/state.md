@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t02
-oat_last_commit: 3ade17eb
+oat_current_task: p01-t03
+oat_last_commit: 9c945de9
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -20,12 +20,12 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-23T01:42:00.000Z'
+oat_project_state_updated: '2026-06-23T01:38:55Z'
 oat_dispatch_ceiling:
-  preset: balanced
+  preset: maximum
   providers:
-    codex: high
-    claude: sonnet
+    codex: xhigh
+    claude: opus
   source: project-state
 oat_generated: false
 ---
@@ -38,7 +38,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 in progress, next task p01-t02.
+Implementation - Phase 1 in progress, next task p01-t03.
 
 ## Artifacts
 
@@ -55,7 +55,8 @@ Implementation - Phase 1 in progress, next task p01-t02.
 - [x] Design complete
 - [x] Plan complete
 - [x] Phase 1 task p01-t01 complete
-- [ ] Phase 1 task p01-t02 next
+- [x] Phase 1 task p01-t02 complete
+- [ ] Phase 1 task p01-t03 next
 
 ## Blockers
 
@@ -63,4 +64,5 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 additive core, then pause for the configured HiLL checkpoint.
+Continue implementation with Tier 1 subagents. Pause after p04 and run the
+configured auto-review at that HiLL checkpoint.
