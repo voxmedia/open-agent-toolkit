@@ -38,6 +38,11 @@ interface LegacyDecisionSection {
   body: string;
 }
 
+interface PreparedDecisionMigration {
+  mapping: DecisionMigrationMapping;
+  content: string;
+}
+
 const LEGACY_HEADING_PATTERN = /^##\s+((?:ADR|DR)-\d+):\s+(.+?)\s*$/gim;
 const LEGACY_ID_PATTERN = /^(?:ADR|DR)-\d+$/i;
 
@@ -128,6 +133,95 @@ function renderMigratedRecord(
   return `---\n${frontmatter}\n---\n\n${section.body.trimEnd()}\n`;
 }
 
+function prepareDecisionMigrations(
+  sections: LegacyDecisionSection[],
+  decisionsRoot: string,
+): PreparedDecisionMigration[] {
+  return sections.map((section) => {
+    const id = generateDecisionId(section.title, section.date);
+    const mapping = {
+      legacyId: section.legacyId,
+      id,
+      title: section.title,
+      date: section.date,
+      filePath: join(decisionsRoot, `${id}.md`),
+    };
+
+    return {
+      mapping,
+      content: renderMigratedRecord(section, id),
+    };
+  });
+}
+
+function assertUniqueMigrationTargets(
+  preparedMigrations: PreparedDecisionMigration[],
+): void {
+  const seen = new Map<string, string>();
+  for (const prepared of preparedMigrations) {
+    const previousLegacyId = seen.get(prepared.mapping.filePath);
+    if (previousLegacyId) {
+      throw new Error(
+        `Duplicate decision migration target ${prepared.mapping.filePath} generated for ${previousLegacyId} and ${prepared.mapping.legacyId}. Use unique date/title combinations before rerunning migration.`,
+      );
+    }
+
+    seen.set(prepared.mapping.filePath, prepared.mapping.legacyId);
+  }
+}
+
+async function readExistingTarget(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String(error.code)
+        : null;
+
+    if (code !== 'ENOENT') {
+      throw error;
+    }
+
+    return null;
+  }
+}
+
+async function findPendingWrites(
+  preparedMigrations: PreparedDecisionMigration[],
+): Promise<PreparedDecisionMigration[]> {
+  const pendingWrites: PreparedDecisionMigration[] = [];
+
+  for (const prepared of preparedMigrations) {
+    const existingContent = await readExistingTarget(prepared.mapping.filePath);
+    if (existingContent === null) {
+      pendingWrites.push(prepared);
+      continue;
+    }
+
+    if (existingContent !== prepared.content) {
+      throw new Error(
+        `Decision migration target ${prepared.mapping.filePath} already exists with different content. Resolve or move the conflicting file before rerunning migration.`,
+      );
+    }
+  }
+
+  return pendingWrites;
+}
+
+async function verifyMigratedTargets(
+  preparedMigrations: PreparedDecisionMigration[],
+): Promise<void> {
+  for (const prepared of preparedMigrations) {
+    const existingContent = await readExistingTarget(prepared.mapping.filePath);
+    if (existingContent !== prepared.content) {
+      throw new Error(
+        `Decision migration target ${prepared.mapping.filePath} was not verified after migration. Rerun without --delete-legacy after resolving the target record.`,
+      );
+    }
+  }
+}
+
 export async function migrateDecisionRecords(
   options: DecisionMigrationOptions,
 ): Promise<DecisionMigrationResult> {
@@ -141,16 +235,9 @@ export async function migrateDecisionRecords(
     assertSafeLegacyDelete(legacyIndexIds, sections);
   }
 
-  const mappings = sections.map((section) => {
-    const id = generateDecisionId(section.title, section.date);
-    return {
-      legacyId: section.legacyId,
-      id,
-      title: section.title,
-      date: section.date,
-      filePath: join(decisionsRoot, `${id}.md`),
-    };
-  });
+  const preparedMigrations = prepareDecisionMigrations(sections, decisionsRoot);
+  assertUniqueMigrationTargets(preparedMigrations);
+  const mappings = preparedMigrations.map((prepared) => prepared.mapping);
 
   if (options.dryRun) {
     return {
@@ -163,23 +250,25 @@ export async function migrateDecisionRecords(
     };
   }
 
+  const pendingWrites = await findPendingWrites(preparedMigrations);
   await initializeDecisionRecords(decisionsRoot);
 
   const written: string[] = [];
-  for (const [index, section] of sections.entries()) {
-    const mapping = mappings[index]!;
-    await writeFile(
-      mapping.filePath,
-      renderMigratedRecord(section, mapping.id),
-      {
+  try {
+    for (const prepared of pendingWrites) {
+      await writeFile(prepared.mapping.filePath, prepared.content, {
         encoding: 'utf8',
         flag: 'wx',
-      },
-    );
-    written.push(mapping.filePath);
-  }
+      });
+      written.push(prepared.mapping.filePath);
+    }
 
-  await regenerateDecisionIndex(decisionsRoot);
+    await regenerateDecisionIndex(decisionsRoot);
+    await verifyMigratedTargets(preparedMigrations);
+  } catch (error) {
+    await Promise.all(written.map((path) => rm(path, { force: true })));
+    throw error;
+  }
 
   let deletedLegacy = false;
   if (options.deleteLegacy) {

@@ -75,6 +75,58 @@ function formatCell(value: string): string {
   return trimmed.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|');
 }
 
+function isMissingFileError(error: unknown): boolean {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === 'ENOENT'
+  );
+}
+
+async function readDecisionIndex(
+  decisionsRoot: string,
+): Promise<{ content: string; indexPath: string }> {
+  const indexPath = join(decisionsRoot, 'index.md');
+  try {
+    return {
+      content: await readFile(indexPath, 'utf8'),
+      indexPath,
+    };
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      throw new Error(
+        `Decision index scaffold is missing at ${indexPath}. Run \`oat decision init\` before creating or regenerating decision records.`,
+        { cause: error },
+      );
+    }
+
+    throw error;
+  }
+}
+
+function findManagedSectionBounds(
+  content: string,
+  indexPath: string,
+): { startIndex: number; endIndex: number } {
+  const startIndex = content.indexOf(DECISION_INDEX_START);
+  const endIndex = content.indexOf(DECISION_INDEX_END);
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+    throw new Error(
+      `Managed decision index markers missing in ${indexPath}. Expected the exact marker pair:\n${DECISION_INDEX_START}\n${DECISION_INDEX_END}\nRun \`oat decision init\` if the decision scaffold is missing, or restore those exact markers in \`decisions/index.md\` before rerunning \`oat decision regenerate\`.`,
+    );
+  }
+
+  return { startIndex, endIndex };
+}
+
+export async function assertDecisionIndexScaffold(
+  decisionsRoot: string,
+): Promise<void> {
+  const { content, indexPath } = await readDecisionIndex(decisionsRoot);
+  findManagedSectionBounds(content, indexPath);
+}
+
 export function renderDecisionManagedSection(
   records: DecisionIndexRecord[],
 ): string {
@@ -98,7 +150,8 @@ export function renderDecisionManagedSection(
 export async function regenerateDecisionIndex(
   decisionsRoot: string,
 ): Promise<void> {
-  const indexPath = join(decisionsRoot, 'index.md');
+  const { content, indexPath } = await readDecisionIndex(decisionsRoot);
+  const { startIndex, endIndex } = findManagedSectionBounds(content, indexPath);
   const entries = (await readdir(decisionsRoot, { withFileTypes: true }))
     .filter(
       (entry) =>
@@ -122,15 +175,6 @@ export async function regenerateDecisionIndex(
   }
 
   records.sort(compareRecords);
-
-  const content = await readFile(indexPath, 'utf8');
-  const startIndex = content.indexOf(DECISION_INDEX_START);
-  const endIndex = content.indexOf(DECISION_INDEX_END);
-  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-    throw new Error(
-      `Managed decision index markers missing in ${indexPath}. Expected the exact marker pair:\n${DECISION_INDEX_START}\n${DECISION_INDEX_END}\nRun \`oat decision init\` if the decision scaffold is missing, or restore those exact markers in \`decisions/index.md\` before rerunning \`oat decision regenerate\`.`,
-    );
-  }
 
   const before = content.slice(0, startIndex);
   const after = content.slice(endIndex + DECISION_INDEX_END.length);

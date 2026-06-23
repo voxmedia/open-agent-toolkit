@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -6,6 +13,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { initializeDecisionRecords } from './init';
 import { createDecisionRecord } from './new';
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function seedDecisionTemplate(root: string): Promise<void> {
   await mkdir(root, { recursive: true });
@@ -132,5 +148,60 @@ describe('createDecisionRecord', () => {
     ).rejects.toThrow(
       'Decision record dr-260622-collision already exists. Use a more specific title to disambiguate.',
     );
+  });
+
+  it('fails before writing when the decision index scaffold is missing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-new-'));
+    tempDirs.push(root);
+    const decisionsRoot = join(root, 'decisions');
+    const templatesRoot = join(root, '.oat', 'templates');
+    const assetsRoot = join(root, 'assets');
+    await mkdir(decisionsRoot, { recursive: true });
+    await seedDecisionTemplate(templatesRoot);
+
+    await expect(
+      createDecisionRecord({
+        decisionsRoot,
+        assetsRoot,
+        templatesRoot,
+        title: 'No Index',
+        createdAt: '2026-06-22T10:30:00Z',
+      }),
+    ).rejects.toThrow('Run `oat decision init`');
+
+    await expect(
+      pathExists(join(decisionsRoot, 'dr-260622-no-index.md')),
+    ).resolves.toBe(false);
+  });
+
+  it('rolls back the new record when index regeneration fails after writing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-new-'));
+    tempDirs.push(root);
+    const decisionsRoot = join(root, 'decisions');
+    const templatesRoot = join(root, '.oat', 'templates');
+    const assetsRoot = join(root, 'assets');
+    await mkdir(decisionsRoot, { recursive: true });
+    await initializeDecisionRecords(decisionsRoot);
+    await seedDecisionTemplate(templatesRoot);
+    await writeFile(
+      join(decisionsRoot, 'bad.md'),
+      ['---', 'title: [unterminated', '---', '', '# Bad'].join('\n'),
+      'utf8',
+    );
+
+    await expect(
+      createDecisionRecord({
+        decisionsRoot,
+        assetsRoot,
+        templatesRoot,
+        title: 'Rollback',
+        createdAt: '2026-06-22T10:30:00Z',
+      }),
+    ).rejects.toThrow();
+
+    await expect(
+      pathExists(join(decisionsRoot, 'dr-260622-rollback.md')),
+    ).resolves.toBe(false);
+    await expect(pathExists(join(decisionsRoot, 'bad.md'))).resolves.toBe(true);
   });
 });

@@ -1,10 +1,13 @@
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import YAML from 'yaml';
 
-import { regenerateDecisionIndex } from './regenerate-index';
+import {
+  assertDecisionIndexScaffold,
+  regenerateDecisionIndex,
+} from './regenerate-index';
 import { generateDecisionId } from './shared/generate-id';
 
 export interface CreateDecisionRecordOptions {
@@ -171,9 +174,20 @@ export async function createDecisionRecord(
     context: options.context ?? 'TODO',
   });
 
+  await assertDecisionIndexScaffold(options.decisionsRoot);
   await mkdir(dirname(filePath), { recursive: true });
-  await writeFile(filePath, content, { encoding: 'utf8', flag: 'wx' });
-  await regenerateDecisionIndex(options.decisionsRoot);
+  let wroteRecord = false;
+  try {
+    await writeFile(filePath, content, { encoding: 'utf8', flag: 'wx' });
+    wroteRecord = true;
+    await regenerateDecisionIndex(options.decisionsRoot);
+  } catch (error) {
+    if (wroteRecord) {
+      await rm(filePath, { force: true });
+    }
+
+    throw error;
+  }
 
   return {
     id,

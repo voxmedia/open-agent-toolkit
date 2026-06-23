@@ -185,4 +185,112 @@ describe('migrateDecisionRecords', () => {
       false,
     );
   });
+
+  it('is repeatable after a completed migration and can delete verified legacy source', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      LEGACY_DECISIONS,
+      {
+        encoding: 'utf8',
+        flag: 'wx',
+      },
+    );
+
+    await migrateDecisionRecords({ referenceRoot });
+    const rerun = await migrateDecisionRecords({
+      referenceRoot,
+      deleteLegacy: true,
+    });
+
+    expect(rerun.written).toEqual([]);
+    expect(rerun.deletedLegacy).toBe(true);
+    expect(rerun.mappings).toHaveLength(2);
+    await expect(
+      pathExists(join(referenceRoot, 'decision-record.md')),
+    ).resolves.toBe(false);
+  });
+
+  it('rejects duplicate target paths before writing migration output', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    const duplicateLegacy = [
+      '# OAT Decision Record',
+      '',
+      '## ADR-001: Same Title',
+      '',
+      '- Date: 2026-06-22',
+      '- Status: accepted',
+      '- Decision: First body.',
+      '',
+      '## DR-002: Same Title',
+      '',
+      '- Date: 2026-06-22',
+      '- Status: proposed',
+      '- Decision: Second body.',
+      '',
+    ].join('\n');
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      duplicateLegacy,
+      {
+        encoding: 'utf8',
+        flag: 'wx',
+      },
+    );
+
+    await expect(migrateDecisionRecords({ referenceRoot })).rejects.toThrow(
+      'Duplicate decision migration target',
+    );
+    await expect(pathExists(join(referenceRoot, 'decisions'))).resolves.toBe(
+      false,
+    );
+  });
+
+  it('rejects pre-existing conflicting target files before writing missing records', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    const decisionsRoot = join(referenceRoot, 'decisions');
+    await mkdir(decisionsRoot, { recursive: true });
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      LEGACY_DECISIONS,
+      {
+        encoding: 'utf8',
+        flag: 'wx',
+      },
+    );
+    await writeFile(
+      join(decisionsRoot, 'dr-260622-adopt-pjm-split.md'),
+      [
+        '---',
+        'id: dr-260622-adopt-pjm-split',
+        'title: Conflicting record',
+        'date: 2026-06-22',
+        'status: accepted',
+        'legacy_id: ADR-999',
+        '---',
+        '',
+        '# Conflicting record',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await expect(migrateDecisionRecords({ referenceRoot })).rejects.toThrow(
+      'already exists with different content',
+    );
+    await expect(
+      pathExists(join(decisionsRoot, 'dr-260623-add-decision-command.md')),
+    ).resolves.toBe(false);
+    await expect(pathExists(join(decisionsRoot, 'index.md'))).resolves.toBe(
+      false,
+    );
+  });
 });
