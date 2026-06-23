@@ -121,6 +121,23 @@ async function resolveHooksDirectory(
     return configuredPath;
   }
 
+  try {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['rev-parse', '--path-format=absolute', '--git-path', 'hooks'],
+      { cwd: projectRoot },
+    );
+    const gitHooksDir = stdout.trim();
+    if (gitHooksDir) {
+      if (shouldCreate) {
+        await ensureDir(gitHooksDir);
+      }
+      return gitHooksDir;
+    }
+  } catch {
+    // Fall back to filesystem resolution for tests and nonstandard fixtures.
+  }
+
   const gitDir = await resolveGitDirectory(projectRoot);
   const hooksDir = join(gitDir, 'hooks');
 
