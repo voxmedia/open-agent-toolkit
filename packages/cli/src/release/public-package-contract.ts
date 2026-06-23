@@ -39,7 +39,16 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     publicName: '@open-agent-toolkit/cli',
     role: 'cli',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'bin.oat'],
-    requiredPaths: ['dist/index.js', 'assets', 'README.md'],
+    requiredPaths: [
+      'dist/index.js',
+      'assets',
+      'assets/migration/pjm-restructure.md',
+      'assets/templates/decision.md',
+      'assets/templates/repo-agents.md',
+      'assets/templates/pjm-agents.md',
+      'assets/templates/reference-agents.md',
+      'README.md',
+    ],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [
       '.agents/skills',

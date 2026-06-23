@@ -282,4 +282,27 @@ describe('bundle-assets.sh consistency', () => {
     },
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
+
+  it(
+    'bundles the PJM migration prompt asset',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        const promptPath = join(assetsRoot, 'migration', 'pjm-restructure.md');
+        expect(existsSync(promptPath)).toBe(true);
+        expect(readFileSync(promptPath, 'utf8')).toContain(
+          'OAT PJM repo-reference migration',
+        );
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
 });

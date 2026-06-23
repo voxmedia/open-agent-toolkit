@@ -144,7 +144,10 @@ export const PROJECT_MANAGEMENT_TEMPLATES = [
   'backlog-item.md',
   'roadmap.md',
   'current-state.md',
-  'decision-record.md',
+  'decision.md',
+  'repo-agents.md',
+  'pjm-agents.md',
+  'reference-agents.md',
 ] as const;
 
 export const PROJECT_MANAGEMENT_SCRIPTS = [] as const;

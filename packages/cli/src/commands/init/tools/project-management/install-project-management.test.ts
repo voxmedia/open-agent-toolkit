@@ -49,6 +49,26 @@ async function seedAssets(assetsRoot: string): Promise<void> {
     '# decision record\n',
     'utf8',
   );
+  await writeFile(
+    join(assetsRoot, 'templates', 'decision.md'),
+    '# decision\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'templates', 'repo-agents.md'),
+    '# repo agents\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'templates', 'pjm-agents.md'),
+    '# pjm agents\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'templates', 'reference-agents.md'),
+    '# reference agents\n',
+    'utf8',
+  );
 }
 
 describe('installProjectManagement', () => {
@@ -76,7 +96,10 @@ describe('installProjectManagement', () => {
       'backlog-item.md',
       'roadmap.md',
       'current-state.md',
-      'decision-record.md',
+      'decision.md',
+      'repo-agents.md',
+      'pjm-agents.md',
+      'reference-agents.md',
     ]);
     expect(result.outdatedSkills).toEqual([]);
     await expect(
@@ -121,7 +144,10 @@ describe('installProjectManagement', () => {
       'backlog-item.md',
       'roadmap.md',
       'current-state.md',
-      'decision-record.md',
+      'decision.md',
+      'repo-agents.md',
+      'pjm-agents.md',
+      'reference-agents.md',
     ]);
   });
 
@@ -164,7 +190,10 @@ describe('installProjectManagement', () => {
       'backlog-item.md',
       'roadmap.md',
       'current-state.md',
-      'decision-record.md',
+      'decision.md',
+      'repo-agents.md',
+      'pjm-agents.md',
+      'reference-agents.md',
     ]);
     await expect(
       readFile(

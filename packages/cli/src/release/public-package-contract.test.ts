@@ -82,6 +82,11 @@ describe('getPublicPackageContracts', () => {
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
           'assets',
+          'assets/migration/pjm-restructure.md',
+          'assets/templates/decision.md',
+          'assets/templates/repo-agents.md',
+          'assets/templates/pjm-agents.md',
+          'assets/templates/reference-agents.md',
           'README.md',
         ]),
         versionPolicyAdditionalRoots: expect.arrayContaining([
@@ -172,6 +177,11 @@ describe('getPublicPackageContracts', () => {
     const packedPaths = [
       'dist/index.js',
       'assets/docs/index.md',
+      'assets/migration/pjm-restructure.md',
+      'assets/templates/decision.md',
+      'assets/templates/repo-agents.md',
+      'assets/templates/pjm-agents.md',
+      'assets/templates/reference-agents.md',
       'README.md',
       'src/index.ts',
       'tsconfig.tsbuildinfo',
