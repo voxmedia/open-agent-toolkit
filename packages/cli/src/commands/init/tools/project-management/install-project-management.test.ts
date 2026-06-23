@@ -17,6 +17,7 @@ async function makeTempDir(): Promise<string> {
 async function seedAssets(assetsRoot: string): Promise<void> {
   for (const skill of [
     'oat-pjm-add-backlog-item',
+    'oat-pjm-decision',
     'oat-pjm-update-repo-reference',
     'oat-pjm-review-backlog',
   ]) {
@@ -89,6 +90,7 @@ describe('installProjectManagement', () => {
 
     expect(result.copiedSkills).toEqual([
       'oat-pjm-add-backlog-item',
+      'oat-pjm-decision',
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);
@@ -135,6 +137,7 @@ describe('installProjectManagement', () => {
     expect(result.updatedSkills).toEqual([]);
     expect(result.skippedSkills).toEqual([
       'oat-pjm-add-backlog-item',
+      'oat-pjm-decision',
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);
@@ -183,6 +186,7 @@ describe('installProjectManagement', () => {
 
     expect(result.updatedSkills).toEqual([
       'oat-pjm-add-backlog-item',
+      'oat-pjm-decision',
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);

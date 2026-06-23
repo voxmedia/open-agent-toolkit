@@ -33,6 +33,7 @@ SKILLS=(
   oat-idea-scratchpad
   oat-idea-summarize
   oat-pjm-add-backlog-item
+  oat-pjm-decision
   oat-pjm-review-backlog
   oat-pjm-update-repo-reference
   oat-project-capture

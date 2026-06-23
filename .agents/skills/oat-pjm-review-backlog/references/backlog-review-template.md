@@ -1,8 +1,8 @@
 # Backlog & Roadmap Review
 
 **Date:** {YYYY-MM-DD}
-**Scope:** {Description of what was reviewed, e.g., "All active items under `.oat/repo/reference/backlog/items/`"}
-**Roadmap:** {Path to roadmap if included, e.g. `.oat/repo/reference/roadmap.md`, or "N/A"}
+**Scope:** {Description of what was reviewed, e.g., "All active items under `.oat/repo/pjm/backlog/items/`"}
+**Roadmap:** {Path to roadmap if included, e.g. `.oat/repo/pjm/roadmap.md`, or "N/A"}
 **Purpose:** Prioritize by value/effort, surface dependencies, and recommend an execution sequence
 
 > If a one-page execution companion exists in this directory, see [`priority-alignment.md`](./priority-alignment.md) — produced via the optional walkthrough at the end of `oat-pjm-review-backlog`. It is the short, ordered "what to do next" view of this full review.

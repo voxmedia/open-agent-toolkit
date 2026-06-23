@@ -136,6 +136,7 @@ export const UTILITY_SKILLS = [
 
 export const PROJECT_MANAGEMENT_SKILLS = [
   'oat-pjm-add-backlog-item',
+  'oat-pjm-decision',
   'oat-pjm-update-repo-reference',
   'oat-pjm-review-backlog',
 ] as const;
