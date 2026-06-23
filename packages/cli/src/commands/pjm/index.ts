@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { readOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { formatDoctorResults, type DoctorCheck } from '@ui/output';
@@ -9,6 +10,7 @@ import { Command } from 'commander';
 
 import { runPjmDoctorChecks } from './doctor';
 import { initializeRepoReference } from './init';
+import { migratePjmRepo, readPjmMigrationPrompt } from './migrate';
 
 interface InitOptions {
   repoRoot?: string;
@@ -18,20 +20,33 @@ interface DoctorOptions {
   repoRoot?: string;
 }
 
+interface MigrateOptions {
+  repoRoot?: string;
+  apply?: boolean;
+  dryRun?: boolean;
+  printPrompt?: boolean;
+}
+
 interface PjmCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
   resolveAssetsRoot: typeof resolveAssetsRoot;
+  readOatConfig: typeof readOatConfig;
   initializeRepoReference: typeof initializeRepoReference;
   runPjmDoctorChecks: typeof runPjmDoctorChecks;
+  migratePjmRepo: typeof migratePjmRepo;
+  readPjmMigrationPrompt: typeof readPjmMigrationPrompt;
 }
 
 const DEFAULT_DEPENDENCIES: PjmCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveAssetsRoot,
+  readOatConfig,
   initializeRepoReference,
   runPjmDoctorChecks,
+  migratePjmRepo,
+  readPjmMigrationPrompt,
 };
 
 async function resolveRepoRoot(
@@ -71,6 +86,47 @@ function doctorStatus(checks: DoctorCheck[]): 'ok' | 'warn' | 'fail' {
 function setDoctorExitCode(checks: DoctorCheck[]): void {
   const status = doctorStatus(checks);
   process.exitCode = status === 'fail' ? 2 : status === 'warn' ? 1 : 0;
+}
+
+function formatMigrationResult(
+  result: Awaited<ReturnType<typeof migratePjmRepo>>,
+): string {
+  const lines = [
+    `PJM migration ${result.dryRun ? 'dry run' : 'apply'} for ${result.repoRoot}`,
+    `status: ${result.status}`,
+  ];
+  if (result.reason) {
+    lines.push(`reason: ${result.reason}`);
+  }
+
+  if (result.actions.length > 0) {
+    lines.push('actions:');
+    for (const action of result.actions) {
+      const pathSummary =
+        action.source && action.target
+          ? `${action.source} -> ${action.target}`
+          : (action.source ?? action.target ?? '');
+      lines.push(
+        `- ${action.type} ${pathSummary} (${action.result}${action.reason ? `: ${action.reason}` : ''})`,
+      );
+    }
+  }
+
+  if (result.backlogMappings.length > 0) {
+    lines.push('backlog mappings:');
+    for (const mapping of result.backlogMappings) {
+      lines.push(`- ${mapping.legacyId} -> ${mapping.id}`);
+    }
+  }
+
+  if (result.decisionMappings.length > 0) {
+    lines.push('decision mappings:');
+    for (const mapping of result.decisionMappings) {
+      lines.push(`- ${mapping.legacyId} -> ${mapping.id}`);
+    }
+  }
+
+  return lines.join('\n');
 }
 
 export function createPjmCommand(
@@ -158,6 +214,61 @@ export function createPjmCommand(
           context.logger.info(formatDoctorResults(checks));
         }
         setDoctorExitCode(checks);
+      } catch (error) {
+        reportError(context, error);
+      }
+    });
+
+  cmd
+    .command('migrate')
+    .description('Migrate legacy PJM repo reference docs to the two-layer layout')
+    .option(
+      '--repo-root <path>',
+      'PJM repo reference root directory (defaults to .oat/repo)',
+    )
+    .option('--apply', 'Apply mechanical migration steps')
+    .option('--dry-run', 'Preview migration without applying (default)')
+    .option('--print-prompt', 'Print the bundled agent migration prompt')
+    .action(async (options: MigrateOptions, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      try {
+        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const repoRoot = await resolveRepoRoot(
+          context,
+          projectRoot,
+          options.repoRoot,
+        );
+        const assetsRoot = await dependencies.resolveAssetsRoot();
+
+        if (options.printPrompt) {
+          const prompt = await dependencies.readPjmMigrationPrompt(assetsRoot);
+          if (context.json) {
+            context.logger.json({ status: 'ok', prompt });
+          } else {
+            context.logger.info(prompt.trimEnd());
+          }
+          process.exitCode = 0;
+          return;
+        }
+
+        const config = await dependencies.readOatConfig(projectRoot);
+        const result = await dependencies.migratePjmRepo({
+          repoRoot,
+          assetsRoot,
+          templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          projectManagementEnabled:
+            config.tools?.['project-management'] === true,
+          apply: options.dryRun ? false : (options.apply ?? false),
+        });
+
+        if (context.json) {
+          context.logger.json(result);
+        } else {
+          context.logger.info(formatMigrationResult(result));
+        }
+        process.exitCode = 0;
       } catch (error) {
         reportError(context, error);
       }

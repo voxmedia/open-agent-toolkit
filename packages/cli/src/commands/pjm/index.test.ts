@@ -194,6 +194,31 @@ describe('oat pjm', () => {
     });
   });
 
+  it('prints the bundled migration prompt without running migration', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    const result = await runCli(
+      root,
+      ['pjm', 'migrate', '--print-prompt'],
+      (program) => {
+        program.addCommand(
+          createPjmCommand({
+            readPjmMigrationPrompt: async () =>
+              '# OAT PJM repo-reference migration\n',
+            migratePjmRepo: async () => {
+              throw new Error('migration should not run');
+            },
+          }),
+        );
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    expect(result.stdout).toContain('# OAT PJM repo-reference migration');
+  });
+
   it('preserves JSON error output and exit code 1 when templates are missing', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
