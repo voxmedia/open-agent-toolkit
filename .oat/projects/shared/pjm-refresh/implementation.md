@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -16,12 +16,12 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 0/5       |
+| Phase 1 | in_progress | 5     | 1/5       |
 | Phase 2 | pending     | 3     | 0/3       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 
-**Total:** 0/14 tasks completed
+**Total:** 1/14 tasks completed
 
 ## Phase 1: Additive Core
 
@@ -34,26 +34,40 @@ Pending.
 
 ### Task p01-t01: Add Shared ID and Template Helpers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3ade17eb
 
 **Outcome:**
 
-- Pending.
+- Added deterministic shared helpers for slug generation, UTC date prefixes,
+  and template-frontmatter stripping.
+- Updated PJM init to use the shared template-frontmatter stripping helper.
 
 **Files changed:**
 
-- Pending.
+- `packages/cli/src/commands/shared/slug.ts` - deterministic ASCII slug helper.
+- `packages/cli/src/commands/shared/slug.test.ts` - slug behavior coverage.
+- `packages/cli/src/commands/shared/date-id.ts` - UTC `YYMMDD` helper.
+- `packages/cli/src/commands/shared/date-id.test.ts` - date formatting coverage.
+- `packages/cli/src/commands/shared/strip-template-frontmatter.ts` - shared
+  template frontmatter stripping.
+- `packages/cli/src/commands/shared/strip-template-frontmatter.test.ts` -
+  frontmatter stripping coverage.
+- `packages/cli/src/commands/pjm/init.ts` - imports the shared stripper.
 
 **Verification:**
 
-- Pending.
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/slug.test.ts src/commands/shared/date-id.test.ts src/commands/shared/strip-template-frontmatter.test.ts src/commands/pjm/init.test.ts`
+- Result: passed, 4 files, 23 tests.
 
 **Notes / Decisions:**
 
-- This task starts from the live-source validation that PJM init currently owns
-  a private `stripTemplateFrontmatter` helper and backlog ID generation has no
-  shared slug/date primitive.
+- The first RED test run used package-relative Vitest paths and failed because
+  the helper modules did not exist yet.
+- `slugify` uses NFKD normalization, strips combining marks, lowercases, trims
+  separators, truncates to 48 characters, and falls back to `untitled`.
+- `yymmdd` uses UTC accessors to avoid local timezone drift.
 
 ---
 
@@ -185,6 +199,8 @@ No implementation orchestration runs yet.
   - `oat-project-summary` and `oat-project-pr-final` do not create decision
     records today.
 - Added cleanup requirement to remove local audit copies when done.
+- [x] p01-t01: Add Shared ID and Template Helpers - 3ade17eb
+- [ ] p01-t02: Rewrite Backlog IDs and Harden Index Determinism - next
 
 **Session End:** ongoing.
 
@@ -196,12 +212,12 @@ No implementation orchestration runs yet.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
+| Phase | Tests Run                                   | Passed | Failed | Coverage                      |
+| ----- | ------------------------------------------- | ------ | ------ | ----------------------------- |
+| 1     | shared helper + PJM init focused Vitest run | 23     | 0      | helper and init unit coverage |
+| 2     | -                                           | -      | -      | -                             |
+| 3     | -                                           | -      | -      | -                             |
+| 4     | -                                           | -      | -      | -                             |
 
 ## Final Summary (for PR/docs)
 
