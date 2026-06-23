@@ -32,6 +32,14 @@ Per-destination lookup that `oat-brainstorm` consults at destination-identificat
 **Required template fields:** `title`, `summary`, `approachesConsidered`, `chosenDirection` (or explicit "no direction"), `transcriptSessionNote`. Template: `templates/brainstorm-doc.md` (in this skill).
 **Optional template fields:** `motivation`, `vision`, `openQuestions`, `nextSteps`.
 **Confirmation pattern:** `minimal` (path only)
+**Default destination suggestion (OAT-aware):** When the user wants to save the doc into the repo but has not supplied an explicit path, suggest a durable default before prompting:
+
+1. Project-level OAT (`.oat/` at repo root) → suggest `.oat/repo/reference/brainstorms/<YYYY-MM-DD>-<topic>.md`. Create `reference/brainstorms/` on demand if it does not exist.
+2. User-level OAT (`~/.oat/`) → suggest `~/.oat/brainstorms/<YYYY-MM-DD>-<topic>.md`.
+3. Otherwise → fall back to the current directory.
+
+Always honor an explicit user-supplied path over the suggestion. Brainstorm docs are durable reference material, so they belong under `reference/brainstorms/`, never under the active `pjm/` operational layer.
+
 **Handoff target:** no downstream skill. Skill validates path (file not dir; parent exists or offer to create — explicit confirmation if outside repo; file already exists → ask overwrite vs different name; unwritable → surface OS error), renders `templates/brainstorm-doc.md` with payload values, writes the file. Reports the absolute path written.
 **If user wants to keep brainstorming after this is offered:** return to flow with destination = doc-to-path. Skill notes the user-supplied path and may proactively probe for `motivation`, `vision`, or richer `chosenDirection` if those template sections feel sparse.
 

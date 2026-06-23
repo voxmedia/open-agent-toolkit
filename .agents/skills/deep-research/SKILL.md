@@ -1,6 +1,6 @@
 ---
 name: deep-research
-version: 0.1.0
+version: 0.2.0
 description: Comprehensive research orchestrator that classifies topics, dispatches parallel research-angle workers, and produces structured artifacts using domain-specific schemas.
 argument-hint: 'topic [--depth surface|standard|exhaustive] [--focus angle] [--context path] [output-path]'
 user-invocable: true
@@ -239,7 +239,7 @@ If no competing options emerged, skip this step.
 
 **Otherwise**, determine a default suggestion using OAT-aware detection:
 
-1. Check for `.oat/` at repo root (project-level OAT) → suggest `.oat/repo/research/`
+1. Check for `.oat/` at repo root (project-level OAT) → suggest `.oat/repo/reference/research/`
 2. Check for `~/.oat/` (user-level OAT) → suggest `~/.oat/research/`
 3. Fall back to current directory
 
