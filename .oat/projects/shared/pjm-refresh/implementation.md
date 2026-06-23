@@ -398,6 +398,14 @@ No implementation orchestration runs yet.
     and `--delete-legacy` only runs after all migrated records verify.
   - Focused decision tests, CLI type-check, and targeted decision lint pass
     after fixes.
+- [x] p01 wrapper fix - e3916914
+  - Updated the bundle script template list so `pnpm run cli -- ...` remains
+    runnable after p01 removed `decision-record.md`.
+  - p01 re-review v3 found one remaining Important issue:
+    `decision migrate --delete-legacy` can delete an unparseable legacy file
+    when zero mappings were produced.
+  - User authorized extending `oat_orchestration_retry_limit` to `5` and
+    dispatching one more narrow p01 fix cycle before p02.
 
 **Session End:** ongoing.
 
