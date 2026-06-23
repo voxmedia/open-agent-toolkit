@@ -5,6 +5,7 @@ import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
+  type ScopeSelectionMode,
 } from '@app/command-context';
 import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
@@ -499,6 +500,51 @@ async function removePackFromScope(
   }
 }
 
+/**
+ * Resolve a possibly-deferred scope-selection signal into a concrete mode.
+ *
+ * The `gate` value is the guided-setup deferred signal: it must only be turned
+ * into a prompt once pack selection is complete and at least one user-eligible
+ * pack is in play (callers guard the empty case). In an interactive session it
+ * shows the `Customize per-pack scope? (y/N)` gate — yes -> `interactive`
+ * (per-pack radio), no -> `defaults` (additive per-pack defaults). A
+ * non-interactive `gate` never prompts and resolves to `defaults`. Any
+ * non-`gate` value passes through unchanged so `oat tools install` keeps its
+ * existing behavior (it always offers the per-pack radio).
+ */
+async function resolveDeferredGate(
+  scopeSelection: ScopeSelectionMode | undefined,
+  interactive: boolean,
+  dependencies: InitToolsDependencies,
+): Promise<ScopeSelectionMode | undefined> {
+  if (scopeSelection !== 'gate') {
+    return scopeSelection;
+  }
+
+  if (!interactive) {
+    return 'defaults';
+  }
+
+  const selection = await dependencies.selectWithAbort(
+    'Customize per-pack scope? (y/N)',
+    [
+      {
+        label: 'No, use recommended defaults',
+        value: 'no',
+        description: 'Apply per-pack defaults without extra prompts',
+      },
+      {
+        label: 'Yes, customize each pack',
+        value: 'yes',
+        description: 'Choose project, user, or both for each eligible pack',
+      },
+    ],
+    { interactive },
+  );
+
+  return selection === 'yes' ? 'interactive' : 'defaults';
+}
+
 async function resolvePackScopes(
   context: CommandContext,
   selections: ToolPack[],
@@ -522,13 +568,39 @@ async function resolvePackScopes(
   const eligiblePacks = selections.filter((pack) => isUserEligiblePack(pack));
 
   if (eligiblePacks.length === 0) {
+    // No user-eligible pack was selected, so the deferred guided-setup gate is
+    // skipped entirely — there is nothing whose scope a user could customize.
     return scopes as PackScopeMap;
   }
 
-  // Explicit --scope is additive: union the requested scope with the pack's
-  // current placement so installing at one scope never removes another. A pack
-  // currently at `user` installed with `--scope project` becomes `both`.
-  if (context.scope === 'project' || context.scope === 'user') {
+  // Deferred guided-setup gate: resolve `gate` into a concrete mode now that
+  // pack selection is done and at least one user-eligible pack exists. In an
+  // interactive session, prompt `Customize per-pack scope? (y/N)`: yes routes
+  // to the per-pack radio (`interactive`), no routes to additive defaults.
+  // Non-interactive sessions never prompt and always take defaults.
+  const scopeSelection = await resolveDeferredGate(
+    context.scopeSelection,
+    context.interactive,
+    dependencies,
+  );
+  if (scopeSelection === 'defaults') {
+    for (const pack of eligiblePacks) {
+      scopes[pack] = resolvePackDefaultEndState(
+        pack,
+        installedPackStates[pack].location,
+      );
+    }
+    return scopes as PackScopeMap;
+  }
+
+  // Explicit --scope is additive for regular tools installs: union the
+  // requested scope with the pack's current placement so installing at one
+  // scope never removes another. Guided setup passes `scopeSelection`, which
+  // intentionally takes precedence over this global init scope.
+  if (
+    scopeSelection !== 'interactive' &&
+    (context.scope === 'project' || context.scope === 'user')
+  ) {
     const requested: InstallScope = context.scope;
     for (const pack of eligiblePacks) {
       scopes[pack] = unionScopeWithCurrent(
@@ -539,27 +611,20 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Non-interactive resolution.
+  // Non-interactive resolution (`defaults` mode is already handled above).
   //
   // Migration-safety contract: existing-install detection wins over
   // PACK_METADATA defaultScope. If the pack is already installed at any
-  // scope, preserve that placement so re-running `oat init tools`
-  // non-interactively never silently migrates a user's prior install
-  // across scopes. Only when the pack is not yet present do we consult
-  // PACK_METADATA[name]?.defaultScope (with absent entries falling back
-  // to 'project' for backwards compatibility).
+  // scope, preserve that placement so non-prompting resolution never silently
+  // migrates a user's prior install across scopes. Only when the pack is not
+  // yet present do we consult PACK_METADATA[name]?.defaultScope (with absent
+  // entries falling back to 'project' for backwards compatibility).
   if (!context.interactive) {
     for (const pack of eligiblePacks) {
-      const currentLocation = installedPackStates[pack].location;
-      if (currentLocation === 'user') {
-        scopes[pack] = 'user';
-      } else if (currentLocation === 'both') {
-        scopes[pack] = 'both';
-      } else if (currentLocation === 'project') {
-        scopes[pack] = 'project';
-      } else {
-        scopes[pack] = resolvePackDefaultScope(pack);
-      }
+      scopes[pack] = resolvePackDefaultEndState(
+        pack,
+        installedPackStates[pack].location,
+      );
     }
     return scopes as PackScopeMap;
   }

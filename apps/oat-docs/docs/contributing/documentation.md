@@ -59,7 +59,7 @@ Documentation should ship with the code it explains. This page covers the core d
 - When you add, remove, or rename docs pages in this Fumadocs app, refresh the generated Fumadocs root index. It is a generated file-tree manifest that should be checked against authored `docs/**/index.md` maps, not hand-edited:
 
   ```bash
-  pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+  pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
   ```
 
 - In MkDocs apps, use `oat docs nav sync` to refresh `mkdocs.yml` instead. Do not use MkDocs nav sync as the Fumadocs regeneration step.

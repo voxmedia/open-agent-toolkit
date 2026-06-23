@@ -9,7 +9,7 @@ This page covers foundational CLI setup commands that prepare OAT structures and
 
 ## Quick Look
 
-- What it does: explains the initial `oat init` setup flow and the optional guided setup path that configures packs, local paths, and provider sync.
+- What it does: explains the initial `oat init` setup flow and the optional guided setup path that configures packs, local paths, documentation metadata, and provider sync.
 - When to use it: when you are first introducing OAT into a repo or need to re-run the guided setup path on an existing checkout.
 - Primary commands: `oat init`, `oat init --setup`, `oat init --scope project`
 
@@ -21,7 +21,7 @@ Purpose:
 - Detect and optionally adopt provider strays
 - Initialize sync configuration/manifest state
 - Optionally install drift warning hooks
-- Run guided setup to configure tool packs, local paths, and provider sync in one session
+- Run guided setup to configure tool packs, local paths, documentation metadata, and provider sync in one session
 
 Key behavior:
 
@@ -42,17 +42,21 @@ After core initialization completes, `oat init` can enter an interactive guided 
 
 **Steps (each independently skippable):**
 
-1. **Tool packs** — install OAT tool packs. The core pack (diagnostics, passive docs access) is checked by default and always installs at user scope. Other packs (`docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`) install at project scope.
+1. **Tool packs** — install OAT tool packs. The core pack (diagnostics, passive docs access) is checked by default and always installs at user scope. Guided setup asks whether to customize per-pack scope:
+   - choose **Yes** to run the per-pack scope selector for user-eligible packs (`ideas`, `docs`, `utility`, `research`, `brainstorm`)
+   - choose **No** to apply additive per-pack defaults without extra scope prompts
+   - project-only packs such as `workflows` and `project-management` remain project-scoped
 2. **Local paths** — multi-select from default gitignored artifact paths (analysis, PR, reviews, ideas). Pre-existing paths are pre-checked; only new paths are added.
-3. **Provider sync** — sync provider project views via `oat sync --scope project`.
-4. **Summary** — reports what was configured: active providers, tool packs status, local paths added/existing, and provider sync status. Includes suggested next steps.
+3. **Documentation** — detect or enter docs metadata for the repo when documentation exists.
+4. **Provider sync** — sync provider project views via `oat sync --scope project`.
+5. **Summary** — reports what was configured: active providers, tool packs status, local paths added/existing, and provider sync status. Includes suggested next steps.
 
 Hook install note:
 
 - The optional OAT pre-commit hook installs into Git's active hook directory.
 - If a repo uses a managed hook folder such as `.githooks/`, that path must already be configured in Git, or OAT must configure it during the prompt flow before hook install.
 
-**Non-interactive mode:** Guided setup is never triggered in non-interactive mode (`--json`, piped input, or non-TTY), even if `--setup` is passed.
+**Non-interactive mode:** Fresh-init guided setup offers are interactive-only. If `--setup` is passed in non-interactive mode (`--json`, piped input, non-TTY, or `OAT_NON_INTERACTIVE=1`), guided setup does not prompt: tool packs use additive defaults, local-path and documentation prompts are skipped unless already configured, and provider sync is skipped unless separately requested.
 
 ```bash
 # Explicit guided setup on an existing repo

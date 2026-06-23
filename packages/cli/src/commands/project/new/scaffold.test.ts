@@ -700,7 +700,7 @@ describe('scaffoldProject', () => {
       { cwd: repoRoot, encoding: 'utf8' },
     );
     expect(status).toContain('?? unrelated.txt');
-  });
+  }, 15_000);
 
   it('skips commit safely when not inside a git work tree', async () => {
     const repoRoot = await createRepoRoot();

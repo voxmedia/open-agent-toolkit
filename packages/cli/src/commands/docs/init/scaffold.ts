@@ -250,7 +250,7 @@ function buildFumaDevDependencies(
 
 function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
   if (isOatRepo) {
-    return `pnpm -w run cli -- docs generate-index --docs-dir ${targetDir}/docs --output ${targetDir}/index.md`;
+    return `pnpm -w run cli:source -- docs generate-index --docs-dir ${targetDir}/docs --output ${targetDir}/index.md`;
   }
   return 'oat docs generate-index --docs-dir docs --output index.md';
 }

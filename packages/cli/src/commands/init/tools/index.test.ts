@@ -17,6 +17,7 @@ import { PACK_METADATA } from './shared/skill-manifest';
 
 interface HarnessOptions {
   scope?: Scope;
+  contextScopeSelection?: 'interactive' | 'defaults' | 'gate';
   interactive?: boolean;
   packSelection?: Array<string[] | null>;
   scopeSelection?: Array<string | null>;
@@ -236,6 +237,7 @@ function createHarness(options: HarnessOptions = {}) {
       cwd: globalOptions.cwd ?? '/tmp/workspace',
       home: '/tmp/home',
       interactive: options.interactive ?? !(globalOptions.json ?? false),
+      scopeSelection: options.contextScopeSelection,
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
@@ -453,6 +455,207 @@ describe('createInitToolsCommand', () => {
     );
     expect(researchChoices?.[0]?.value).toBe('both');
     expect(researchChoices?.[0]?.label).toContain('current: project + user');
+  });
+
+  it('defaults-mode scope selection preserves current/default end-states without per-pack prompts', async () => {
+    const {
+      command,
+      selectWithAbort,
+      installIdeas,
+      installDocs,
+      installResearch,
+      installBrainstorm,
+      removeDirectory,
+      removeFile,
+    } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'defaults',
+      packSelection: [['ideas', 'docs', 'research', 'brainstorm']],
+      toolsByScope: {
+        project: [
+          createScannedTool('oat-idea-new', 'ideas', 'project'),
+          createScannedTool('analyze', 'research', 'project'),
+        ],
+        user: [
+          createScannedTool('oat-docs-analyze', 'docs', 'user'),
+          createScannedTool('analyze', 'research', 'user'),
+        ],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(selectWithAbort).not.toHaveBeenCalled();
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installResearch).toHaveBeenCalledTimes(2);
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installBrainstorm).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
+  it('default scope-selection mode keeps prompting per user-eligible pack in interactive sessions', async () => {
+    const { command, selectWithAbort } = createHarness({
+      interactive: true,
+      packSelection: [['ideas', 'docs']],
+      scopeSelection: ['project', 'user'],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(selectWithAbort).toHaveBeenCalledTimes(2);
+    expect(selectWithAbort.mock.calls.map((call) => call[0])).toEqual([
+      'Where should ideas install?',
+      'Where should docs install?',
+    ]);
+  });
+
+  it('guided interactive scope-selection overrides concrete --scope project', async () => {
+    const { command, selectWithAbort, installIdeas } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'interactive',
+      packSelection: [['ideas']],
+      scopeSelection: ['user'],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(selectWithAbort.mock.calls.map((call) => call[0])).toContain(
+      'Where should ideas install?',
+    );
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installIdeas).not.toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
+  it('deferred gate (yes): prompts the customize gate after pack selection then runs the per-pack radio', async () => {
+    const { command, selectWithAbort, selectManyWithAbort } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'gate',
+      packSelection: [['ideas', 'docs']],
+      // Gate answered 'yes' first, then the per-pack end-state for each pack.
+      scopeSelection: ['yes', 'project', 'user'],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const messages = selectWithAbort.mock.calls.map((call) => call[0]);
+    // The customize gate fires, and it fires after pack selection.
+    expect(messages).toContain('Customize per-pack scope? (y/N)');
+    const packSelectCall = selectManyWithAbort.mock.calls.find(
+      (call) => call[0] === 'Select tool packs to install',
+    );
+    expect(packSelectCall).toBeDefined();
+    // 'yes' routes to the existing per-pack radio for each eligible pack.
+    expect(messages).toEqual([
+      'Customize per-pack scope? (y/N)',
+      'Where should ideas install?',
+      'Where should docs install?',
+    ]);
+  });
+
+  it('deferred gate (no): skips the per-pack radio and applies additive per-pack defaults', async () => {
+    const {
+      command,
+      selectWithAbort,
+      installIdeas,
+      installDocs,
+      removeDirectory,
+      removeFile,
+    } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'gate',
+      packSelection: [['ideas', 'docs']],
+      scopeSelection: ['no'],
+      toolsByScope: {
+        project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+        user: [createScannedTool('oat-docs-analyze', 'docs', 'user')],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const messages = selectWithAbort.mock.calls.map((call) => call[0]);
+    expect(messages).toContain('Customize per-pack scope? (y/N)');
+    expect(messages).not.toContain('Where should ideas install?');
+    expect(messages).not.toContain('Where should docs install?');
+    // Defaults preserve current placement additively (no forced project, no
+    // removals).
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
+  it('deferred gate: not shown at all when no user-eligible pack is selected', async () => {
+    const { command, selectWithAbort } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'gate',
+      // Only project-only packs — no user-eligible packs in the selection.
+      packSelection: [['workflows', 'project-management']],
+      scopeSelection: [],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    const messages = selectWithAbort.mock.calls.map((call) => call[0]);
+    expect(messages).not.toContain('Customize per-pack scope? (y/N)');
+  });
+
+  it('deferred gate (non-interactive): never prompts and applies additive defaults', async () => {
+    const { command, selectWithAbort, installIdeas, removeDirectory } =
+      createHarness({
+        interactive: false,
+        contextScopeSelection: 'gate',
+        toolsByScope: {
+          project: [createScannedTool('oat-idea-new', 'ideas', 'project')],
+          user: [createScannedTool('analyze', 'research', 'user')],
+        },
+      });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(selectWithAbort).not.toHaveBeenCalled();
+    // Existing placement preserved additively; nothing removed.
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(removeDirectory).not.toHaveBeenCalled();
   });
 
   it('defaults both-scope installs to keep both and updates both roots when the user keeps them', async () => {
@@ -1259,6 +1462,32 @@ describe('PACK_METADATA-driven default scope (non-interactive resolver)', () => 
     await runCommand(command, [], ['--scope', 'all']);
 
     expect(installDocs).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
+  it('guided defaults scope-selection overrides concrete --scope project', async () => {
+    PACK_METADATA.ideas = { name: 'ideas', defaultScope: 'user' };
+
+    const { command, selectWithAbort, installIdeas } = createHarness({
+      interactive: true,
+      contextScopeSelection: 'defaults',
+      packSelection: [['ideas']],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(selectWithAbort.mock.calls.map((call) => call[0])).not.toContain(
+      'Where should ideas install?',
+    );
+    expect(installIdeas).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(installIdeas).not.toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
   });

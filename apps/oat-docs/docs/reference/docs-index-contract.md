@@ -43,7 +43,7 @@ For this Fumadocs app, rendered page routing and sidebar data come from the Fuma
 
 ```bash
 fumadocs-mdx
-pnpm -w run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 ```
 
 `oat docs generate-index` rewrites the generated root manifest from the docs source tree. It is the command to use after adding, removing, or retiring pages in this Fumadocs app. Do not use `oat docs nav sync` as the Fumadocs regeneration step.

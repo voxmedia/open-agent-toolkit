@@ -6,6 +6,7 @@ import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
+  type ScopeSelectionMode,
 } from '@app/command-context';
 import {
   type ApplyOatCoreResult,
@@ -626,7 +627,13 @@ async function runGuidedSetupImpl(
   );
 
   context.logger.info('[1/5] Tool packs…');
-  const guidedContext: CommandContext = { ...context, scope: 'project' };
+  // Defer the per-pack scope gate to the tools flow: `gate` asks the customize
+  // prompt after pack selection (and only when a user-eligible pack is
+  // selected). Non-interactive setup applies additive defaults with no prompt.
+  const scopeSelection: ScopeSelectionMode = context.interactive
+    ? 'gate'
+    : 'defaults';
+  const guidedContext: CommandContext = { ...context, scopeSelection };
   const installedPacks = await dependencies.runToolPacks(guidedContext);
   const installedPackSet = new Set(installedPacks);
 
@@ -643,14 +650,15 @@ async function runGuidedSetupImpl(
     checked: existingPaths.has(c.value) || c.checked,
   }));
 
-  const selectedPaths =
-    (await dependencies.selectManyWithAbort(
-      'Select local paths to add',
-      choices,
-      {
-        interactive: context.interactive,
-      },
-    )) ?? [];
+  const selectedPaths: string[] = context.interactive
+    ? ((await dependencies.selectManyWithAbort(
+        'Select local paths to add',
+        choices,
+        {
+          interactive: context.interactive,
+        },
+      )) ?? [])
+    : [];
 
   let addedCount = 0;
   const guidedPathValues = new Set(applicableChoices.map((c) => c.value));
@@ -999,7 +1007,7 @@ async function runInitCommand(
   process.exitCode = 0;
 
   const freshInit = projectRoot !== null && !oatDirExistedBefore;
-  if (context.interactive && (setupFlag || freshInit)) {
+  if (setupFlag || (context.interactive && freshInit)) {
     let shouldRunSetup = !!setupFlag;
     if (!shouldRunSetup && freshInit) {
       shouldRunSetup = await dependencies.confirmAction(

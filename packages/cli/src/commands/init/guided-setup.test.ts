@@ -198,6 +198,11 @@ describe('guided setup integration', () => {
     await runInit(command, { globalArgs: ['--scope', 'project'] });
 
     expect(runToolPacks).toHaveBeenCalledTimes(1);
+    // Interactive guided setup defers the per-pack scope gate to the tools
+    // flow via the `gate` signal instead of prompting before pack selection.
+    expect(runToolPacks).toHaveBeenCalledWith(
+      expect.objectContaining({ scopeSelection: 'gate' }),
+    );
     expect(addLocalPaths).toHaveBeenCalledWith('/tmp/workspace', [
       '.oat/**/analysis',
       '.oat/**/pr',
@@ -308,7 +313,7 @@ describe('guided setup integration', () => {
     ).toBe(true);
   });
 
-  it('non-interactive: guided setup is never triggered', async () => {
+  it('non-interactive: explicit setup skips prompts and applies tool defaults', async () => {
     const { command, runToolPacks, capture } = createGuidedSetupHarness({
       interactive: false,
       hookInstalled: true,
@@ -320,10 +325,14 @@ describe('guided setup integration', () => {
       commandArgs: ['--setup'],
     });
 
-    expect(runToolPacks).not.toHaveBeenCalled();
-    expect(capture.info.every((msg) => !msg.includes('Guided setup'))).toBe(
-      true,
+    expect(runToolPacks).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scopeSelection: 'defaults',
+      }),
     );
+    expect(
+      capture.info.some((msg) => msg.includes('Guided setup complete')),
+    ).toBe(true);
   });
 
   it('docs: auto-detected tooling is stored when user confirms', async () => {
