@@ -16,6 +16,7 @@ async function createRepoRoot(): Promise<string> {
     recursive: true,
   });
   await mkdir(join(root, '.oat', 'repo', 'reference'), { recursive: true });
+  await mkdir(join(root, '.oat', 'repo', 'pjm'), { recursive: true });
   await mkdir(join(root, '.oat', 'projects', 'shared', 'demo'), {
     recursive: true,
   });
@@ -85,7 +86,7 @@ describe('artifact stale-candidate discovery and reference guards', () => {
       'utf8',
     );
     await writeFile(
-      join(root, '.oat', 'repo', 'reference', 'backlog.md'),
+      join(root, '.oat', 'repo', 'pjm', 'current-state.md'),
       'See .oat/repo/reviews/r1.md for context.',
       'utf8',
     );

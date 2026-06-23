@@ -87,10 +87,10 @@ describe('createBacklogCommand', () => {
 
     expect(resolveProjectRoot).toHaveBeenCalledWith('/tmp/workspace');
     expect(initializeBacklog).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/reference/backlog',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog',
     );
     expect(capture.info).toContain(
-      'Initialized backlog scaffold at /tmp/workspace/repo/.oat/repo/reference/backlog',
+      'Initialized backlog scaffold at /tmp/workspace/repo/.oat/repo/pjm/backlog',
     );
     expect(process.exitCode).toBe(0);
   });
@@ -122,11 +122,11 @@ describe('createBacklogCommand', () => {
     await runCommand(command, 'init', ['--json']);
 
     expect(initializeBacklog).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/reference/backlog',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog',
     );
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'ok',
-      backlogRoot: '/tmp/workspace/repo/.oat/repo/reference/backlog',
+      backlogRoot: '/tmp/workspace/repo/.oat/repo/pjm/backlog',
     });
     expect(process.exitCode).toBe(0);
   });
@@ -142,10 +142,10 @@ describe('createBacklogCommand', () => {
     );
 
     expect(pathExists).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/reference/backlog/items/bl-260622-streaming-cache-layer.md',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog/items/bl-260622-streaming-cache-layer.md',
     );
     expect(pathExists).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/reference/backlog/archived/bl-260622-streaming-cache-layer.md',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/bl-260622-streaming-cache-layer.md',
     );
     expect(capture.info).toContain('bl-260622-streaming-cache-layer');
     expect(process.exitCode).toBe(0);

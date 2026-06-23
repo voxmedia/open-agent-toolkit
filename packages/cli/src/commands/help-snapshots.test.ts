@@ -190,7 +190,7 @@ describe('help output snapshots', () => {
 
       Options:
         --backlog-root <path>  Backlog root directory (defaults to
-                               .oat/repo/reference/backlog)
+                               .oat/repo/pjm/backlog)
         -h, --help             display help for command
       "
     `);

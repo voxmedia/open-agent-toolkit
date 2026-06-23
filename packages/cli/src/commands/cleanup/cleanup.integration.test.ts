@@ -25,6 +25,7 @@ async function createRepoRoot(): Promise<string> {
     recursive: true,
   });
   await mkdir(join(root, '.oat', 'repo', 'reference'), { recursive: true });
+  await mkdir(join(root, '.oat', 'repo', 'pjm'), { recursive: true });
   return root;
 }
 
@@ -101,7 +102,7 @@ describe('cleanup integration', () => {
       'utf8',
     );
     await writeFile(
-      join(root, '.oat', 'repo', 'reference', 'backlog.md'),
+      join(root, '.oat', 'repo', 'pjm', 'current-state.md'),
       'Uses .oat/repo/reference/external-plans/p1.md',
       'utf8',
     );

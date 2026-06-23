@@ -66,7 +66,7 @@ async function resolveBacklogRoot(
   }
 
   const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
-  return resolve(projectRoot, '.oat', 'repo', 'reference', 'backlog');
+  return resolve(projectRoot, '.oat', 'repo', 'pjm', 'backlog');
 }
 
 export function createBacklogCommand(
@@ -88,7 +88,7 @@ export function createBacklogCommand(
     )
     .option(
       '--backlog-root <path>',
-      'Backlog root directory (defaults to .oat/repo/reference/backlog)',
+      'Backlog root directory (defaults to .oat/repo/pjm/backlog)',
     )
     .action(async (options: InitOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
@@ -114,7 +114,7 @@ export function createBacklogCommand(
     .description('Regenerate the managed backlog index table')
     .option(
       '--backlog-root <path>',
-      'Backlog root directory (defaults to .oat/repo/reference/backlog)',
+      'Backlog root directory (defaults to .oat/repo/pjm/backlog)',
     )
     .action(async (options: RegenerateIndexOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
