@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -14,23 +14,24 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 2/5       |
-| Phase 2 | pending     | 3     | 0/3       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 3     | 0/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 5     | 5/5       |
+| Phase 2 | pending   | 3     | 0/3       |
+| Phase 3 | pending   | 3     | 0/3       |
+| Phase 4 | pending   | 3     | 0/3       |
 
-**Total:** 2/14 tasks completed
+**Total:** 5/14 tasks completed
 
 ## Phase 1: Additive Core
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-06-23
 
 ### Phase Summary
 
-Pending.
+Completed additive core support for deterministic decision records, legacy
+decision migration, two-layer PJM initialization, and PJM doctor checks.
 
 ### Task p01-t01: Add Shared ID and Template Helpers
 
@@ -121,22 +122,120 @@ Pending.
 
 ### Task p01-t03: Add Decision Command Init/New/Regenerate
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8af3c8ea
+
+**Outcome:**
+
+- Added `oat decision` with `init`, `new`, and `regenerate` subcommands.
+- Added deterministic `dr-YYMMDD-slug` decision ID generation.
+- Added file-per-record decision creation from `decision.md` templates and
+  deterministic decision index regeneration.
+- Registered the command group and updated command help snapshots.
+
+**Files changed:**
+
+- `packages/cli/src/commands/decision/shared/generate-id.ts` - decision ID
+  helper.
+- `packages/cli/src/commands/decision/init.ts` - decision index scaffold.
+- `packages/cli/src/commands/decision/regenerate-index.ts` - managed decision
+  index regeneration.
+- `packages/cli/src/commands/decision/new.ts` - file-per-record creation.
+- `packages/cli/src/commands/decision/index.ts` - command group.
+- `packages/cli/src/commands/index.ts` - root command registration.
+- `packages/cli/src/commands/help-snapshots.test.ts` - command help coverage.
+- Matching `*.test.ts` files under `packages/cli/src/commands/decision/`.
+
+**Verification:**
+
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision src/commands/help-snapshots.test.ts`
+- Result: passed, 6 files, 63 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+
+**Notes / Decisions:**
+
+- The plan's repo-root Vitest path form found no files under the CLI package
+  filter, matching the earlier p01-t01 note. Verification used package-relative
+  paths.
 
 ---
 
 ### Task p01-t04: Add Decision Migration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7215f93e
+
+**Outcome:**
+
+- Added `oat decision migrate` with dry-run, apply, and guarded
+  `--delete-legacy` behavior.
+- Parsed legacy ADR/DR sections from `decision-record.md`, preserved body text,
+  generated new decision IDs from original date/title, and wrote `legacy_id`.
+- Regenerated the decision index after migration and printed old-to-new
+  mappings.
+
+**Files changed:**
+
+- `packages/cli/src/commands/decision/migrate.ts` - legacy migration parser and
+  apply flow.
+- `packages/cli/src/commands/decision/migrate.test.ts` - migration safety
+  coverage.
+- `packages/cli/src/commands/decision/index.ts` - `migrate` subcommand.
+- `packages/cli/src/commands/decision/index.test.ts` - command wiring and
+  mapping output coverage.
+- `packages/cli/src/commands/help-snapshots.test.ts` - updated `decision`
+  command help for the new subcommand.
+
+**Verification:**
+
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision src/commands/help-snapshots.test.ts`
+- Result: passed, 7 files, 67 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
 
 ---
 
 ### Task p01-t05: Add Templates, AGENTS Docs, PJM Init, and Doctor Core
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5b4c935d
+
+**Outcome:**
+
+- Added `decision.md` and three PJM AGENTS templates, updated backlog item ID
+  placeholder, and removed the legacy `decision-record.md` template.
+- Updated `oat pjm init` to scaffold `.oat/repo` with `pjm/`,
+  `reference/decisions/`, and three AGENTS guides.
+- Added `runPjmDoctorChecks`, exposed `oat pjm doctor`, and shared the checks
+  with project-scope `oat doctor` when `.oat/repo` exists.
+
+**Files changed:**
+
+- `.oat/templates/*` - decision, AGENTS, backlog, and legacy template updates.
+- `packages/cli/src/commands/pjm/init.ts` - two-layer scaffold initialization.
+- `packages/cli/src/commands/pjm/doctor.ts` - PJM doctor checks.
+- `packages/cli/src/commands/pjm/index.ts` - `init` root update and
+  `doctor` subcommand.
+- `packages/cli/src/commands/doctor/index.ts` - project-scope PJM doctor
+  integration.
+- Matching PJM and doctor tests.
+
+**Verification:**
+
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/doctor`
+- Result: passed, 4 files, 31 tests.
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision src/commands/pjm src/commands/doctor src/commands/help-snapshots.test.ts`
+- Result: passed, 11 files, 98 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: passed.
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec oxlint src/commands/pjm src/commands/doctor src/commands/decision`
+- Result: passed.
 
 ## Phase 2: Path Move and Migration
 
@@ -248,15 +347,19 @@ No implementation orchestration runs yet.
   - auto-review at HiLL checkpoints enabled;
   - Tier 1 subagent implementation/review authorized for subsequent phase
     execution.
-- [ ] p01-t03: Add Decision Command Init/New/Regenerate - next
+- [x] p01-t03: Add Decision Command Init/New/Regenerate - 8af3c8ea
+- [x] p01-t04: Add Decision Migration - 7215f93e
+- [x] p01-t05: Add Templates, AGENTS Docs, PJM Init, and Doctor Core -
+      5b4c935d
+- Phase 1 completed with focused verification passing.
 
 **Session End:** ongoing.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                               | Actual / Accepted                                        | Reason                                                                                                             | Source of Truth                           | Follow-up                  |
+| ------------- | --------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | -------------------------- |
+| p01-t04       | plan.md         | Task file list did not include `packages/cli/src/commands/help-snapshots.test.ts`. | Updated the decision help snapshot to include `migrate`. | Adding the p01-t04 command changed the p01-t03 snapshot; leaving it stale would create a known later test failure. | p01-t04 command registration requirement. | None; snapshot is current. |
 
 ## Test Results
 
@@ -265,6 +368,11 @@ No implementation orchestration runs yet.
 | 1     | shared helper + PJM init focused Vitest run  | 23     | 0      | helper and init unit coverage                    |
 | 1     | backlog command and index focused Vitest run | 22     | 0      | backlog ID and deterministic index unit coverage |
 | 1     | CLI package type check                       | -      | 0      | TypeScript compile coverage                      |
+| 1     | decision command + help focused Vitest run   | 63     | 0      | decision init/new/regenerate and help coverage   |
+| 1     | decision migration focused Vitest run        | 67     | 0      | migration plus decision command/help coverage    |
+| 1     | PJM + doctor focused Vitest run              | 31     | 0      | two-layer init and doctor command coverage       |
+| 1     | Phase 1 focused Vitest run                   | 98     | 0      | decision, PJM, doctor, help coverage             |
+| 1     | targeted oxlint                              | -      | 0      | decision/PJM/doctor lint coverage                |
 | 2     | -                                            | -      | -      | -                                                |
 | 3     | -                                            | -      | -      | -                                                |
 | 4     | -                                            | -      | -      | -                                                |
