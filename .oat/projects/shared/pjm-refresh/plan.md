@@ -849,6 +849,91 @@ git add .agents/skills/oat-project-summary packages/cli/src/commands/init/tools
 git commit -m "feat(prev1-t02): auto-promote key decisions to dr- records in summary"
 ```
 
+## Phase p-rev2: Dogfood Fixes (post-#118 repo migration)
+
+Dogfooding `oat pjm migrate` on this repo's real legacy `.oat/repo/` surfaced ID
+cosmetics the user wants changed (A) and four genuine tooling bugs (B). All land
+in PR #118 (pre-release; no extra package bump). Decision/backlog command surfaces
+overlap, so tasks run sequentially.
+
+### Task prev2-t01: Uppercase ID prefixes + 30-char word-boundary slug
+
+**Files:** `packages/cli/src/commands/shared/slug.ts` (+ test),
+`packages/cli/src/commands/decision/shared/generate-id.ts`,
+`packages/cli/src/commands/backlog/shared/generate-id.ts` (+ their tests),
+`packages/cli/src/commands/{decision,backlog}/**` tests that assert IDs,
+`packages/cli/src/commands/help-snapshots.test.ts`.
+
+**Slug rule (new `slugify`):** lowercase → NFKD/ASCII-fold → collapse to hyphens →
+**truncate to ≤30 chars at the last whole-word (`-`) boundary** → **strip trailing
+stop-words** (`a, an, the, of, for, and, to, in, on, as, with`) → fall back to
+`untitled` if empty. Edge case: if the first word alone exceeds 30 chars, hard-cut
+to 30.
+
+**Prefix:** `generateDecisionId` → `DR-<YYMMDD>-<slug>`; `generateBacklogId` →
+`BL-<YYMMDD>-<slug>` (uppercase prefix; date digits + slug stay lowercase).
+
+Verify: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared src/commands/decision src/commands/backlog src/commands/help-snapshots.test.ts` + type-check.
+Commit: `refactor(prev2-t01): uppercase DR-/BL- ids and 30-char word-boundary slug`.
+
+### Task prev2-t02: Propagate scheme + slug-length guidance to prompt/skills/docs
+
+Update every `dr-`/`bl-` reference and the slug rule across:
+`packages/cli/assets/migration/pjm-restructure.md` (state the **30-char slug
+limit** explicitly so the agent picks meaningful titles within it; uppercase IDs;
+`DR-??????-<slug>.md` examples), `.agents/skills/oat-pjm-decision/SKILL.md`,
+`.agents/skills/oat-project-summary/SKILL.md` (dedup glob `DR-??????-<slug>.md`),
+and docs (`config-and-local-state.md`, `tool-packs.md`,
+`reference/oat-directory-structure.md`, `reference/file-locations.md`). Bump any
+changed skill `version:` once (skip if already changed in this PR). Run the bundle
+script. Verify with `pnpm build:docs` + a grep that no live `dr-`/`bl-` literal ID
+guidance remains (legacy/migration-source context excepted).
+Commit: `docs(prev2-t02): document uppercase ids and 30-char slug limit`.
+
+### Task prev2-t03: Fix `oat decision migrate` parser (B1)
+
+Real `decision-record.md` files use `### ADR-NNN`/`### DR-NNN` headings with bold
+`- **Date:** …` / `- **Status:** …` fields; the current parser returned **zero
+sections** on them. Fix the parser to handle that real-world shape; add fixtures
+mirroring this repo's actual format (heading + bold metadata + body). Cover ADR and
+DR prefixes, missing/extra fields, and preservation of body + `legacy_id`.
+Files: `packages/cli/src/commands/decision/migrate.ts` (+ `migrate.test.ts`).
+Verify: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision`.
+Commit: `fix(prev2-t03): parse real ADR/DR heading + bold-field decision records`.
+
+### Task prev2-t04: Make `pjm migrate --apply` atomic (B2)
+
+`--apply` partially moved files, then failed when decision parsing returned zero
+sections — leaving a half-migrated tree. Validate all steps (including a
+decision-parse preflight) **before** performing any mechanical move; on any step
+failure, abort with a clear error and no partial mutation (preflight-then-apply, or
+rollback). Add a test for the abort path (a failing step leaves the tree
+unchanged). Files: `packages/cli/src/commands/pjm/migrate.ts` (+ test).
+Commit: `fix(prev2-t04): make pjm migrate --apply atomic on failure`.
+
+### Task prev2-t05: Extend `pjm doctor` template-frontmatter check (B3)
+
+Doctor passed while migrated backlog items still carried `oat_template`
+frontmatter (a plain `rg` caught it). Extend `runPjmDoctorChecks` to scan migrated
+backlog items under `pjm/backlog/` and decision records under
+`reference/decisions/` for residual template frontmatter, not just the canonical
+PJM files. Add coverage. Files: `packages/cli/src/commands/pjm/doctor.ts` (+ test).
+Commit: `fix(prev2-t05): doctor flags template frontmatter in backlog/decisions`.
+
+### Task prev2-t06: Content-idempotent `regenerate-index` for both indexes (B4)
+
+External formatters re-pad the managed index tables, causing churn and breaking
+the "resolve a conflict by re-running regenerate" story. Make regenerate
+**content-idempotent**: parse the existing managed block's rows (trimming each
+cell), and if they equal the target rows built from the record files, **write
+nothing** (preserve the on-disk bytes); only rewrite on a genuine content change.
+Factor the compare into a shared helper used by **both**
+`packages/cli/src/commands/decision/regenerate-index.ts` and
+`packages/cli/src/commands/backlog/regenerate-index.ts`. Formatter-agnostic — no
+per-formatter assumptions. Add tests for each index: a reformatted-but-equivalent
+index → regenerate is a no-op (bytes unchanged); a real change → rewrite.
+Commit: `fix(prev2-t06): make regenerate-index content-idempotent (decision+backlog)`.
+
 ## Reviews
 
 | Scope  | Type     | Status  | Date       | Artifact                                       |
