@@ -114,7 +114,7 @@ oat backlog init
 
 ---
 
-## STEP 2 — Re-id backlog items to `bl-YYMMDD-slug` (MECHANICAL)
+## STEP 2 — Re-id backlog items to `BL-YYMMDD-slug` (MECHANICAL)
 
 For every file in `.oat/repo/pjm/backlog/items/*.md` and `.oat/repo/pjm/backlog/archived/*.md`:
 
@@ -124,11 +124,13 @@ For every file in `.oat/repo/pjm/backlog/items/*.md` and `.oat/repo/pjm/backlog/
      (`git log --diff-filter=A --format=%ad --date=short -1 -- <file>`), else file mtime.
      Record any fallback in the report.
 2. Determine `slug` = the current filename stem if it is already kebab-case, else kebab-case
-   of `title`.
-3. Compute new id `bl-<YYMMDD>-<slug>` and new filename `<new-id>.md` (**id == stem**).
-   - On collision (same `bl-YYMMDD-slug` already produced), append `-2`, `-3`, … to the slug
+   of `title`. The slug is **capped at 30 characters** at the last whole-word (`-`) boundary
+   with trailing stop-words (`a, an, the, of, for, and, to, in, on, as, with`) trimmed — so
+   prefer concise, meaningful titles that stay readable within 30 chars.
+3. Compute new id `BL-<YYMMDD>-<slug>` and new filename `<new-id>.md` (**id == stem**).
+   - On collision (same `BL-YYMMDD-slug` already produced), append `-2`, `-3`, … to the slug
      and note it.
-4. Edit frontmatter **in place** before moving: set `id: bl-<YYMMDD>-<slug>` and **add**
+4. Edit frontmatter **in place** before moving: set `id: BL-<YYMMDD>-<slug>` and **add**
    `legacy_id: <old-id>` (keep the old value, e.g. `legacy_id: bl-c745`). Leave `created`,
    `title`, every other field, and the body untouched.
 5. `git mv <old-file> .oat/repo/pjm/backlog/items/<new-id>.md`.
@@ -169,12 +171,14 @@ heading up to the next decision heading). Recover `Date`/`Status` from the recor
 Index table.
 
 For each record write `.oat/repo/reference/decisions/<new-id>.md` where
-`new-id = dr-<YYMMDD>-<slug>` (`YYMMDD` from the record's Date; `slug` = kebab-case of title,
-≤ ~6 words):
+`new-id = DR-<YYMMDD>-<slug>` (`YYMMDD` from the record's Date; `slug` = kebab-case of title,
+**capped at 30 characters** at the last whole-word boundary with trailing stop-words
+(`a, an, the, of, for, and, to, in, on, as, with`) trimmed — pick concise, meaningful titles
+that stay readable within that 30-char budget):
 
 ```markdown
 ---
-id: dr-<YYMMDD>-<slug>
+id: DR-<YYMMDD>-<slug>
 legacy_id: ADR-001
 title: '<original title>'
 date: 'YYYY-MM-DD'
@@ -190,9 +194,9 @@ Rules:
   frontmatter). Do not summarize or reformat.
 - `legacy_id` keeps the original `ADR-NNN`/`DR-NNN` so inbound references still resolve.
 - Because the id carries the ORIGINAL date, records sort chronologically by filename and in
-  the index (ADR-001 @ 2026-01-30 → `dr-260130-…` sorts before a June decision). Gaps in the
+  the index (ADR-001 @ 2026-01-30 → `DR-260130-…` sorts before a June decision). Gaps in the
   old numbering (e.g. stoa DR-033/035 missing) are irrelevant — date+slug needs no contiguity.
-- Collision (same `dr-YYMMDD-slug`): append `-2`/`-3` to the slug.
+- Collision (same `DR-YYMMDD-slug`): append `-2`/`-3` to the slug.
 
 Generate the committed index:
 
@@ -262,7 +266,7 @@ Targets if present: `.oat/repo/reference/backlog.md` (legacy flat) and
    `pjm/backlog/completed.md`.
 2. **PROPOSE:** list entries present ONLY in the legacy files (would be lost on delete). For
    each, propose either:
-   - fold into a new `pjm/backlog/items/<bl-YYMMDD-slug>.md` (re-id per STEP 2), or
+   - fold into a new `pjm/backlog/items/<BL-YYMMDD-slug>.md` (re-id per STEP 2), or
    - append to `pjm/backlog/completed.md` (for completion entries).
 3. After the user confirms the fold, write the folded items and then:
    ```bash
@@ -312,19 +316,21 @@ optional folders are created on demand, not pre-created.
 - `pjm/` — ACTIVE operational layer (read at project start, written at completion):
   - `current-state.md` (NON-NEGOTIABLE) — birdseye snapshot.
   - `roadmap.md` (NON-NEGOTIABLE) — Now / Next / Later.
-  - `backlog/` (NON-NEGOTIABLE): `items/<bl-YYMMDD-slug>.md`, `index.md` (generated, COMMITTED),
+  - `backlog/` (NON-NEGOTIABLE): `items/<BL-YYMMDD-slug>.md`, `index.md` (generated, COMMITTED),
     `completed.md`, `archived/`.
 - `reference/` — DURABLE refer-back library:
-  - `decisions/` (NON-NEGOTIABLE): `<dr-YYMMDD-slug>.md` file-per-record + `index.md`
+  - `decisions/` (NON-NEGOTIABLE): `<DR-YYMMDD-slug>.md` file-per-record + `index.md`
     (generated, COMMITTED).
   - `project-summaries/<YYMMDD-slug>.md` (NON-NEGOTIABLE).
   - `research/`, `brainstorms/`, `external-plans/`, `decks/` (RECOMMENDED — created on demand).
 - `knowledge/`, `analysis/`, `reviews/` — generated/review surfaces (unchanged).
 
 ## IDs
-- Decisions: `dr-YYMMDD-slug`. Backlog: `bl-YYMMDD-slug`. **ID == filename stem.** The `YYMMDD`
+- Decisions: `DR-YYMMDD-slug`. Backlog: `BL-YYMMDD-slug`. **ID == filename stem.** The `YYMMDD`
   prefix gives chronological + file-explorer ordering. Allocator-free (no scan, no counter):
   collision only on same-day + same-slug. Migrated records keep their original id in `legacy_id:`.
+- Slugs are **capped at 30 characters** at the last whole-word boundary with trailing stop-words
+  (`a, an, the, of, for, and, to, in, on, as, with`) trimmed, so choose concise, meaningful titles.
 
 ## Skill / content DESTINATIONS
 - `oat-brainstorm` → `reference/brainstorms/`
@@ -351,7 +357,7 @@ section order, one-item-per-line bullets, and the single managed `Last Updated:`
   `<!-- OAT BACKLOG-INDEX -->` … `<!-- END OAT BACKLOG-INDEX -->` block. Only the
   `## Curated Overview` section is hand-edited.
 - On a merge conflict in `index.md`: run `oat backlog regenerate-index`, then `git add`.
-- New backlog items: `bl-YYMMDD-slug`, one file per item under `backlog/items/`.
+- New backlog items: `BL-YYMMDD-slug`, one file per item under `backlog/items/`.
 ```
 
 **`.oat/repo/reference/AGENTS.md`** (scoped):
@@ -359,7 +365,7 @@ section order, one-item-per-line bullets, and the single managed `Last Updated:`
 ```markdown
 # reference/ — durable library
 
-- `decisions/` is FILE-PER-RECORD (`dr-YYMMDD-slug.md`). New decisions: `oat decision new`.
+- `decisions/` is FILE-PER-RECORD (`DR-YYMMDD-slug.md`). New decisions: `oat decision new`.
 - `decisions/index.md` is GENERATED and COMMITTED — do not hand-edit the managed block.
 - On a merge conflict in `decisions/index.md`: run `oat decision regenerate-index`, then `git add`.
 - Migrated decisions keep their old `ADR-NNN`/`DR-NNN` in `legacy_id:` frontmatter.
@@ -397,7 +403,7 @@ ls .oat/repo/reference/decisions/*.md 2>/dev/null | grep -v '/index.md$' | wc -l
 
 **Print the final migration report** covering:
 - files moved (old → new), backlog items re-id'd (old id → new id, any date fallback used),
-- decisions split (old ADR/DR → new `dr-YYMMDD-slug`, count parity),
+- decisions split (old ADR/DR → new `DR-YYMMDD-slug`, count parity),
 - ad-hoc folders reconciled (confirmed destinations),
 - legacy files retired (with folded-in entries), second-roadmap disposition,
 - version stamp before → after,

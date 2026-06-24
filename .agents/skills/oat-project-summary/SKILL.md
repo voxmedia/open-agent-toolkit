@@ -222,15 +222,15 @@ test -f .oat/repo/reference/decisions/index.md || oat decision init
 **6.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
 
 1. **Derive title + rationale.** The decision's bold lead-in / first clause becomes the **title** (a short noun phrase). The remaining explanatory text becomes the **rationale**, passed verbatim as `--context`.
-2. **Compute the slug the CLI would use.** The CLI generates the record ID as `dr-<YYMMDD>-<slug>`, where `<slug>` is the lowercased, ASCII-folded, hyphen-collapsed, 48-char-truncated form of the title (the same slug rule the CLI applies). Compute that `<slug>` for the title.
-3. **Dedup on the exact slug, ignoring only the date prefix.** A record ID is `dr-<YYMMDD>-<slug>`, where the date is exactly six digits. Check whether a record for this slug already exists by stripping that fixed `dr-<6 digits>-` prefix from existing record IDs and comparing the remaining slug for **exact equality**. Anchor the date to exactly six characters so the slug must match in full:
+2. **Compute the slug the CLI would use.** The CLI generates the record ID as `DR-<YYMMDD>-<slug>`, where `<slug>` is the lowercased, ASCII-folded, hyphen-collapsed form of the title, capped at 30 characters at the last whole-word boundary with trailing stop-words (`a, an, the, of, for, and, to, in, on, as, with`) trimmed (the same slug rule the CLI applies). Compute that `<slug>` for the title.
+3. **Dedup on the exact slug, ignoring only the date prefix.** A record ID is `DR-<YYMMDD>-<slug>`, where the date is exactly six digits. Check whether a record for this slug already exists by stripping that fixed `DR-<6 digits>-` prefix from existing record IDs and comparing the remaining slug for **exact equality**. Anchor the date to exactly six characters so the slug must match in full:
 
    ```bash
    # the six '?' pin the YYMMDD date, so <slug> must match exactly (not as a suffix)
-   ls .oat/repo/reference/decisions/dr-??????-"<slug>".md 2>/dev/null
+   ls .oat/repo/reference/decisions/DR-??????-"<slug>".md 2>/dev/null
    ```
 
-   Do **not** use a loose `dr-*-<slug>.md` glob: the greedy `*` would let a short slug (e.g. `layers`) falsely match a longer record (`dr-260623-two-layers.md`) and wrongly skip it. (Equivalently, scan the `ID` column of `reference/decisions/index.md`, strip each `dr-<6 digits>-` prefix, and compare the slug exactly.) This date-independent, exact-slug match is essential: the `dr-YYMMDD-` date prefix changes across re-runs, so a naive full-ID `dr-YYMMDD-<slug>` check would never dedup, while a loose suffix match would over-dedup.
+   Do **not** use a loose `DR-*-<slug>.md` glob: the greedy `*` would let a short slug (e.g. `layers`) falsely match a longer record (`DR-260623-two-layers.md`) and wrongly skip it. (Equivalently, scan the `ID` column of `reference/decisions/index.md`, strip each `DR-<6 digits>-` prefix, and compare the slug exactly.) This date-independent, exact-slug match is essential: the `DR-YYMMDD-` date prefix changes across re-runs, so a naive full-ID `DR-YYMMDD-<slug>` check would never dedup, while a loose suffix match would over-dedup.
 
 4. **Skip or create.**
    - If a matching record already exists (same slug) → **skip it.** It was already promoted on a prior run.
@@ -240,7 +240,7 @@ test -f .oat/repo/reference/decisions/index.md || oat decision init
      oat decision new "<title>" --status accepted --context "<rationale>"
      ```
 
-     The command generates the deterministic `dr-YYMMDD-slug` ID, seeds the body from `.oat/templates/decision.md`, and regenerates the managed index automatically — do not hand-edit `index.md`. Optionally pass `--created-at "<project completion date>"` when a project completion date is available, so the record's date reflects when the decision was made.
+     The command generates the deterministic `DR-YYMMDD-slug` ID, seeds the body from `.oat/templates/decision.md`, and regenerates the managed index automatically — do not hand-edit `index.md`. Optionally pass `--created-at "<project completion date>"` when a project completion date is available, so the record's date reflects when the decision was made.
 
 Because of the date-independent slug dedup, this step is **safe to run every time `summary.md` is (re)generated** — including the pr-final refresh and revision re-runs — without ever creating duplicate decision records. Already-promoted decisions are skipped; only genuinely new Key Decisions become new records.
 
@@ -250,7 +250,7 @@ Because of the date-independent slug dedup, this step is **safe to run every tim
 
 ```
 Promoted N key decision(s) to reference/decisions/:
-  - created: dr-YYMMDD-<slug> ("<title>")
+  - created: DR-YYMMDD-<slug> ("<title>")
   - skipped (already promoted): <slug>
 ```
 
@@ -263,7 +263,7 @@ git add "$PROJECT_PATH/summary.md"
 git commit -m "docs: generate summary for {project-name}"
 ```
 
-If decision records were promoted in Step 6, also stage `.oat/repo/reference/decisions/` so the new `dr-*.md` records and the regenerated `index.md` land with the summary.
+If decision records were promoted in Step 6, also stage `.oat/repo/reference/decisions/` so the new `DR-*.md` records and the regenerated `index.md` land with the summary.
 
 If this is a re-run (incremental update):
 
@@ -293,5 +293,5 @@ Summary tracks: last task {task_id}, {N} revision phases
 - Summary is under 200 lines for typical projects
 - Re-run after revisions updates only affected sections
 - Re-run with no changes produces no modifications
-- When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/dr-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
+- When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
 - When the PJM tool pack is not installed, decision promotion is skipped silently with no prompt

@@ -75,16 +75,20 @@ oat decision new "<title>" --status <status> --context "<context>"
 
 The CLI:
 
-- Generates a deterministic `dr-YYMMDD-slug` ID from the creation date and title.
+- Generates a deterministic `DR-YYMMDD-slug` ID from the creation date and title.
 - Writes one record file whose filename stem equals the ID.
 - Strips template frontmatter and seeds the body from `.oat/templates/decision.md`.
 - Regenerates the managed decision index.
+
+The slug is **capped at 30 characters** at the last whole-word boundary, with trailing
+stop-words (`a, an, the, of, for, and, to, in, on, as, with`) trimmed. Choose a concise,
+meaningful title that stays readable within that 30-character budget.
 
 If the command reports a filename collision (same-day same-slug), use a more specific title to disambiguate rather than overwriting an existing record. Never hand-author a decision file or edit `index.md` inside the managed markers.
 
 ### Step 4: Fill the Decision Body
 
-Open the created record at `.oat/repo/reference/decisions/<dr-YYMMDD-slug>.md` and complete the body sections that the template seeds as `TODO`:
+Open the created record at `.oat/repo/reference/decisions/<DR-YYMMDD-slug>.md` and complete the body sections that the template seeds as `TODO`:
 
 - `## Context`
 - `## Decision`
@@ -106,7 +110,7 @@ Confirm `.oat/repo/reference/decisions/index.md` lists the new record with colum
 
 Report:
 
-- Decision record path and generated `dr-YYMMDD-slug` ID
+- Decision record path and generated `DR-YYMMDD-slug` ID
 - Final status
 - Whether the managed decision index was regenerated
 - Any follow-up captured as a backlog item or roadmap note
@@ -119,7 +123,7 @@ Report:
 
 ## Success Criteria
 
-- New decision file exists under `.oat/repo/reference/decisions/` with a `dr-YYMMDD-slug` filename matching its `id`
+- New decision file exists under `.oat/repo/reference/decisions/` with a `DR-YYMMDD-slug` filename matching its `id`
 - Body includes Context, Decision, and Consequences
 - The managed decision index was refreshed via `oat decision new`/`oat decision regenerate-index`, not hand-edited
 - No new decision content was written into a legacy `decision-record.md` monolith

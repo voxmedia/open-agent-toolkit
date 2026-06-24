@@ -14,11 +14,11 @@ Use these commands when you need operational support around the toolkit rather t
 Use the `oat backlog` group when you want direct CLI support for the file-backed backlog under `.oat/repo/pjm/backlog/`.
 
 - `oat backlog init` - scaffold `.oat/repo/pjm/backlog/` with starter files and directories for a fresh repo
-- `oat backlog generate-id <title>` - generate a deterministic `bl-YYMMDD-slug` backlog ID from a title
+- `oat backlog generate-id <title>` - generate a deterministic `BL-YYMMDD-slug` backlog ID from a title
 - `oat backlog generate-id <title> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
 - `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
 
-Backlog IDs are deterministic date+slug identifiers (`bl-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
+Backlog IDs are deterministic date+slug identifiers (`BL-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. The slug is capped at 30 characters at the last whole-word boundary (with trailing stop-words trimmed), so prefer concise, meaningful titles. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
 
 Run `oat backlog init` first when the local backlog scaffold does not exist yet in a fresh repo. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
 
@@ -26,7 +26,7 @@ For full project-management repo-reference setup, use [`oat pjm init`](tool-pack
 
 ## `oat decision ...`
 
-Use the `oat decision` group for file-per-record decisions under `.oat/repo/reference/decisions/`. Each decision is its own file with a deterministic `dr-YYMMDD-slug` ID, and the human-facing index is a committed generated view.
+Use the `oat decision` group for file-per-record decisions under `.oat/repo/reference/decisions/`. Each decision is its own file with a deterministic `DR-YYMMDD-slug` ID (the slug is capped at 30 characters at the last whole-word boundary, with trailing stop-words trimmed), and the human-facing index is a committed generated view.
 
 - `oat decision init` - scaffold `.oat/repo/reference/decisions/` and the managed decision index
 - `oat decision new <title>` - create a new decision record; supports `--status`, `--context`, and `--created-at`
