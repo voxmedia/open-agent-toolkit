@@ -2,6 +2,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import { computeManagedIndexUpdate } from '@commands/shared/managed-index';
 import YAML from 'yaml';
 
 export const DECISION_INDEX_START = '<!-- OAT DECISION-INDEX -->';
@@ -176,11 +177,19 @@ export async function regenerateDecisionIndex(
 
   records.sort(compareRecords);
 
-  const before = content.slice(0, startIndex);
-  const after = content.slice(endIndex + DECISION_INDEX_END.length);
-  await writeFile(
-    indexPath,
-    `${before}${renderDecisionManagedSection(records)}${after}`,
-    'utf8',
+  // Content-idempotent gate: when the on-disk managed block is logically equal
+  // to the freshly rendered block (cells equal after trimming, so external
+  // formatter padding is ignored), preserve the existing bytes and skip the
+  // write. Only rewrite on a genuine content change.
+  const { content: updated } = computeManagedIndexUpdate(
+    content,
+    startIndex,
+    endIndex + DECISION_INDEX_END.length,
+    renderDecisionManagedSection(records),
   );
+  if (updated === null) {
+    return;
+  }
+
+  await writeFile(indexPath, updated, 'utf8');
 }

@@ -274,6 +274,119 @@ describe('regenerateBacklogIndex', () => {
     ).resolves.toBeUndefined();
   });
 
+  it('leaves the file bytes unchanged when a formatter re-pads the managed table', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-idem-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'BL-260623-alpha',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+
+    await regenerateBacklogIndex(backlogRoot);
+    const indexPath = join(backlogRoot, 'index.md');
+    const generated = await readFile(indexPath, 'utf8');
+
+    // Simulate an external formatter re-padding each managed table cell to a
+    // wider, aligned column width without changing logical content.
+    const reformatted = generated
+      .replace(
+        '| ID | Title | Status | Priority | Scope | Estimate |',
+        '| ID              | Title | Status | Priority | Scope | Estimate |',
+      )
+      .replace(
+        '| --- | --- | --- | --- | --- | --- |',
+        '| --------------- | ----- | ------ | -------- | ----- | -------- |',
+      )
+      .replace(
+        '| BL-260623-alpha | Alpha | open | high | task | S |',
+        '| BL-260623-alpha | Alpha | open   | high     | task  | S        |',
+      );
+    expect(reformatted).not.toBe(generated);
+    await writeFile(indexPath, reformatted, 'utf8');
+
+    await regenerateBacklogIndex(backlogRoot);
+
+    const afterRegen = await readFile(indexPath, 'utf8');
+    expect(afterRegen).toBe(reformatted);
+  });
+
+  it('rewrites the managed block to canonical form when an item is added', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-add-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'BL-260623-alpha',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+
+    await regenerateBacklogIndex(backlogRoot);
+    const indexPath = join(backlogRoot, 'index.md');
+    const beforeAdd = await readFile(indexPath, 'utf8');
+
+    await writeBacklogItem(itemsDir, 'beta.md', {
+      id: 'BL-260623-beta',
+      title: '"Beta"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'M',
+    });
+
+    await regenerateBacklogIndex(backlogRoot);
+
+    const afterAdd = await readFile(indexPath, 'utf8');
+    expect(afterAdd).not.toBe(beforeAdd);
+    expect(afterAdd).toContain(
+      '| BL-260623-beta | Beta | open | high | task | M |',
+    );
+  });
+
+  it('rewrites the managed block to canonical form when an item is removed', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-remove-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'BL-260623-alpha',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+    await writeBacklogItem(itemsDir, 'beta.md', {
+      id: 'BL-260623-beta',
+      title: '"Beta"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'M',
+    });
+
+    await regenerateBacklogIndex(backlogRoot);
+    const indexPath = join(backlogRoot, 'index.md');
+    const beforeRemove = await readFile(indexPath, 'utf8');
+
+    await rm(join(itemsDir, 'beta.md'));
+
+    await regenerateBacklogIndex(backlogRoot);
+
+    const afterRemove = await readFile(indexPath, 'utf8');
+    expect(afterRemove).not.toBe(beforeRemove);
+    expect(afterRemove).not.toContain('BL-260623-beta');
+  });
+
   it('reports the exact marker pair required when the index was hand-authored incorrectly', async () => {
     const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-markers-'));
     tempDirs.push(backlogRoot);

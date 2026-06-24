@@ -143,6 +143,112 @@ describe('regenerateDecisionIndex', () => {
     expect(reversed).toBe(normal);
   });
 
+  it('leaves the file bytes unchanged when a formatter re-pads the managed table', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-index-'));
+    const decisionsRoot = join(root, 'decisions');
+    tempDirs.push(root);
+    await mkdir(decisionsRoot, { recursive: true });
+    await initializeDecisionRecords(decisionsRoot);
+    await writeDecisionRecord(decisionsRoot, 'alpha.md', {
+      id: 'DR-260623-alpha',
+      title: '"Alpha"',
+      date: '2026-06-23',
+      status: 'accepted',
+    });
+
+    await regenerateDecisionIndex(decisionsRoot);
+    const indexPath = join(decisionsRoot, 'index.md');
+    const generated = await readFile(indexPath, 'utf8');
+
+    // Simulate an external formatter re-padding each managed table cell to a
+    // wider, aligned column width without changing logical content.
+    const reformatted = generated
+      .replace(
+        '| ID | Date | Status | Title | Legacy |',
+        '| ID            | Date       | Status   | Title | Legacy |',
+      )
+      .replace(
+        '| --- | --- | --- | --- | --- |',
+        '| ------------- | ---------- | -------- | ----- | ------ |',
+      )
+      .replace(
+        '| DR-260623-alpha | 2026-06-23 | accepted | Alpha | - |',
+        '| DR-260623-alpha | 2026-06-23 | accepted | Alpha | -      |',
+      );
+    expect(reformatted).not.toBe(generated);
+    await writeFile(indexPath, reformatted, 'utf8');
+
+    await regenerateDecisionIndex(decisionsRoot);
+
+    const afterRegen = await readFile(indexPath, 'utf8');
+    expect(afterRegen).toBe(reformatted);
+  });
+
+  it('rewrites the managed block to canonical form when a record is added', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-index-'));
+    const decisionsRoot = join(root, 'decisions');
+    tempDirs.push(root);
+    await mkdir(decisionsRoot, { recursive: true });
+    await initializeDecisionRecords(decisionsRoot);
+    await writeDecisionRecord(decisionsRoot, 'alpha.md', {
+      id: 'DR-260623-alpha',
+      title: '"Alpha"',
+      date: '2026-06-23',
+      status: 'accepted',
+    });
+
+    await regenerateDecisionIndex(decisionsRoot);
+    const indexPath = join(decisionsRoot, 'index.md');
+    const beforeAdd = await readFile(indexPath, 'utf8');
+
+    await writeDecisionRecord(decisionsRoot, 'beta.md', {
+      id: 'DR-260623-beta',
+      title: '"Beta"',
+      date: '2026-06-23',
+      status: 'proposed',
+    });
+
+    await regenerateDecisionIndex(decisionsRoot);
+
+    const afterAdd = await readFile(indexPath, 'utf8');
+    expect(afterAdd).not.toBe(beforeAdd);
+    expect(afterAdd).toContain(
+      '| DR-260623-beta | 2026-06-23 | proposed | Beta | - |',
+    );
+  });
+
+  it('rewrites the managed block to canonical form when a record is removed', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-index-'));
+    const decisionsRoot = join(root, 'decisions');
+    tempDirs.push(root);
+    await mkdir(decisionsRoot, { recursive: true });
+    await initializeDecisionRecords(decisionsRoot);
+    await writeDecisionRecord(decisionsRoot, 'alpha.md', {
+      id: 'DR-260623-alpha',
+      title: '"Alpha"',
+      date: '2026-06-23',
+      status: 'accepted',
+    });
+    await writeDecisionRecord(decisionsRoot, 'beta.md', {
+      id: 'DR-260623-beta',
+      title: '"Beta"',
+      date: '2026-06-23',
+      status: 'proposed',
+    });
+
+    await regenerateDecisionIndex(decisionsRoot);
+    const indexPath = join(decisionsRoot, 'index.md');
+    const beforeRemove = await readFile(indexPath, 'utf8');
+
+    await rm(join(decisionsRoot, 'beta.md'));
+
+    await regenerateDecisionIndex(decisionsRoot);
+
+    const afterRemove = await readFile(indexPath, 'utf8');
+    expect(afterRemove).not.toBe(beforeRemove);
+    expect(afterRemove).not.toContain('DR-260623-beta');
+  });
+
   it('throws an actionable error when managed markers are missing', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-decision-index-'));
     const decisionsRoot = join(root, 'decisions');

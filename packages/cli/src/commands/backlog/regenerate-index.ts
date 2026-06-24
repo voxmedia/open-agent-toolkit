@@ -2,6 +2,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import { computeManagedIndexUpdate } from '@commands/shared/managed-index';
 import YAML from 'yaml';
 
 const INDEX_START = '<!-- OAT BACKLOG-INDEX -->';
@@ -130,8 +131,19 @@ export async function regenerateBacklogIndex(
     );
   }
 
-  const before = content.slice(0, startIndex);
-  const after = content.slice(endIndex + INDEX_END.length);
-  const updated = `${before}${renderManagedSection(items)}${after}`;
+  // Content-idempotent gate: when the on-disk managed block is logically equal
+  // to the freshly rendered block (cells equal after trimming, so external
+  // formatter padding is ignored), preserve the existing bytes and skip the
+  // write. Only rewrite on a genuine content change.
+  const { content: updated } = computeManagedIndexUpdate(
+    content,
+    startIndex,
+    endIndex + INDEX_END.length,
+    renderManagedSection(items),
+  );
+  if (updated === null) {
+    return;
+  }
+
   await writeFile(indexPath, updated, 'utf8');
 }
