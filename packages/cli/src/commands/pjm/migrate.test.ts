@@ -13,6 +13,7 @@ import { join, relative } from 'node:path';
 import { initializeBacklog } from '@commands/backlog/init';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { runPjmDoctorChecks } from './doctor';
 import { migratePjmRepo } from './migrate';
 
 const TEMPLATE_NAMES = [
@@ -291,6 +292,70 @@ describe('migratePjmRepo', () => {
         id: 'BL-260622-streaming-cache',
       }),
     ]);
+  });
+
+  it('strips template frontmatter from migrated backlog records so doctor passes', async () => {
+    const { assetsRoot, repoRoot, root } = await createWorkspace();
+    tempDirs.push(root);
+    await seedLegacyPjm(repoRoot);
+
+    // A legacy backlog item that still carries raw template frontmatter
+    // (`oat_template`/`oat_template_name`) alongside its real fields. Dogfooding
+    // surfaced that migrate moved these through unchanged, so prev2-t05's doctor
+    // check then FAILED on the migrated record (F1).
+    await writeFile(
+      join(repoRoot, 'reference', 'backlog', 'items', 'bl-tmpl.md'),
+      [
+        '---',
+        'oat_template: true',
+        'oat_template_name: backlog-item',
+        'id: bl-tmpl',
+        'title: Template Leftover',
+        'status: open',
+        'priority: medium',
+        'scope: cli',
+        'scope_estimate: S',
+        'created: 2026-06-22T11:00:00Z',
+        '---',
+        '',
+        '# Template Leftover',
+        '',
+        'Body survives migration.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const result = await migratePjmRepo({
+      repoRoot,
+      assetsRoot,
+      projectManagementEnabled: true,
+      apply: true,
+    });
+
+    expect(result.status).toBe('migrated');
+
+    const migratedPath = join(
+      repoRoot,
+      'pjm',
+      'backlog',
+      'items',
+      'BL-260622-template-leftover.md',
+    );
+    const migrated = await readFile(migratedPath, 'utf8');
+    expect(migrated).not.toContain('oat_template:');
+    expect(migrated).not.toContain('oat_template_name:');
+    expect(migrated).toContain('id: BL-260622-template-leftover');
+    expect(migrated).toContain('legacy_id: bl-tmpl');
+    expect(migrated).toContain('Body survives migration.');
+
+    // The doctor template-frontmatter check (prev2-t05) must now pass on the
+    // migrated tree.
+    const checks = await runPjmDoctorChecks(repoRoot);
+    const templateCheck = checks.find(
+      (check) => check.name === 'pjm:template_frontmatter',
+    );
+    expect(templateCheck?.status).toBe('pass');
   });
 
   it('aborts --apply with no filesystem changes when a step would fail (unparseable decisions)', async () => {

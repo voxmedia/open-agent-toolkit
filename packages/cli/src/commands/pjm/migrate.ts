@@ -17,6 +17,7 @@ import {
   migrateDecisionRecords,
   type DecisionMigrationMapping,
 } from '@commands/decision/migrate';
+import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import YAML from 'yaml';
 
 import { initializeRepoReference } from './init';
@@ -236,14 +237,28 @@ async function prepareBacklogMigrations(
         ...parsed.frontmatter,
         id,
       };
+      // Migrated items are instantiated records, never raw templates. Drop the
+      // template-marker keys a legacy item may still carry so `pjm doctor`
+      // (prev2-t05) does not flag the migrated record. The shared
+      // `stripTemplateFrontmatter` defines which markers identify a raw
+      // template; mirror that key set here rather than re-parsing.
+      delete nextFrontmatter.oat_template;
+      delete nextFrontmatter.oat_template_name;
       if (nextFrontmatter.legacy_id === undefined) {
         nextFrontmatter.legacy_id = legacyId;
       }
 
+      // Defense-in-depth: run the rebuilt record through the shared helper so any
+      // residual template frontmatter is stripped with the same rules doctor and
+      // `decision new` use. It is a no-op once the marker keys above are removed.
+      const migratedContent = stripTemplateFrontmatter(
+        renderFrontmatterRecord(nextFrontmatter, parsed.body),
+      );
+
       prepared.push({
         sourcePath,
         targetPath,
-        content: renderFrontmatterRecord(nextFrontmatter, parsed.body),
+        content: migratedContent,
         mapping: {
           legacyId,
           id,
