@@ -113,7 +113,7 @@ function findManagedSectionBounds(
   const endIndex = content.indexOf(DECISION_INDEX_END);
   if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
     throw new Error(
-      `Managed decision index markers missing in ${indexPath}. Expected the exact marker pair:\n${DECISION_INDEX_START}\n${DECISION_INDEX_END}\nRun \`oat decision init\` if the decision scaffold is missing, or restore those exact markers in \`decisions/index.md\` before rerunning \`oat decision regenerate\`.`,
+      `Managed decision index markers missing in ${indexPath}. Expected the exact marker pair:\n${DECISION_INDEX_START}\n${DECISION_INDEX_END}\nRun \`oat decision init\` if the decision scaffold is missing, or restore those exact markers in \`decisions/index.md\` before rerunning \`oat decision regenerate-index\`.`,
     );
   }
 

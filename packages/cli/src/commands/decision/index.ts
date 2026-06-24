@@ -141,7 +141,7 @@ export function createDecisionCommand(
     });
 
   cmd
-    .command('regenerate')
+    .command('regenerate-index')
     .description('Regenerate the managed decision index table')
     .option(
       '--decisions-root <path>',

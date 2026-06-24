@@ -23,7 +23,7 @@ const STARTER_INDEX = [
   '## Notes',
   '',
   '- Decision records live as file-per-record Markdown files in this directory.',
-  '- Regenerate this index with `oat decision regenerate` after resolving conflicts.',
+  '- Regenerate this index with `oat decision regenerate-index` after resolving conflicts.',
   '',
 ].join('\n');
 

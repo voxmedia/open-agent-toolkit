@@ -97,7 +97,7 @@ Preserve the frontmatter (`id`, `title`, `date`, `status`, `legacy_id`). Do not 
 If you edited the body only, the index already reflects the record. If you changed any indexed frontmatter field (`status` or `title`), regenerate the managed index:
 
 ```bash
-oat decision regenerate
+oat decision regenerate-index
 ```
 
 Confirm `.oat/repo/reference/decisions/index.md` lists the new record with columns `ID | Date | Status | Title | Legacy` and that the managed marker section was refreshed by the CLI, not by hand.
@@ -121,5 +121,5 @@ Report:
 
 - New decision file exists under `.oat/repo/reference/decisions/` with a `dr-YYMMDD-slug` filename matching its `id`
 - Body includes Context, Decision, and Consequences
-- The managed decision index was refreshed via `oat decision new`/`oat decision regenerate`, not hand-edited
+- The managed decision index was refreshed via `oat decision new`/`oat decision regenerate-index`, not hand-edited
 - No new decision content was written into a legacy `decision-record.md` monolith

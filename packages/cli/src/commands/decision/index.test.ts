@@ -137,7 +137,12 @@ describe('createDecisionCommand', () => {
   it('regenerates the managed decision index', async () => {
     const { command, capture, regenerateDecisionIndex } = createHarness();
 
-    await runCommand(command, 'regenerate', [], ['--decisions-root', 'custom']);
+    await runCommand(
+      command,
+      'regenerate-index',
+      [],
+      ['--decisions-root', 'custom'],
+    );
 
     expect(regenerateDecisionIndex).toHaveBeenCalledWith(
       '/tmp/workspace/custom',

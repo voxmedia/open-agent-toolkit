@@ -197,7 +197,7 @@ Rules:
 Generate the committed index:
 
 ```bash
-oat decision regenerate   # builds reference/decisions/index.md managed table from the record files
+oat decision regenerate-index   # builds reference/decisions/index.md managed table from the record files
 ```
 
 `reference/decisions/index.md` mirrors the backlog index: managed markers + a deterministic
@@ -336,7 +336,7 @@ optional folders are created on demand, not pre-created.
 gitignored, no merge driver). They render deterministically from the record files. On a merge
 conflict: run the regenerate command, then `git add`:
 - backlog: `oat backlog regenerate-index`
-- decisions: `oat decision regenerate`
+- decisions: `oat decision regenerate-index`
 
 current-state.md and roadmap.md stay single narrative docs; minimize conflicts via stable
 section order, one-item-per-line bullets, and the single managed `Last Updated:` line.
@@ -361,7 +361,7 @@ section order, one-item-per-line bullets, and the single managed `Last Updated:`
 
 - `decisions/` is FILE-PER-RECORD (`dr-YYMMDD-slug.md`). New decisions: `oat decision new`.
 - `decisions/index.md` is GENERATED and COMMITTED — do not hand-edit the managed block.
-- On a merge conflict in `decisions/index.md`: run `oat decision regenerate`, then `git add`.
+- On a merge conflict in `decisions/index.md`: run `oat decision regenerate-index`, then `git add`.
 - Migrated decisions keep their old `ADR-NNN`/`DR-NNN` in `legacy_id:` frontmatter.
 ```
 

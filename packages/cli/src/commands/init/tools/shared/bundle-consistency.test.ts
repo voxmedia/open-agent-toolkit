@@ -85,7 +85,7 @@ function getMigrationPromptSourcePath(): string {
 /**
  * Extract the canonical decision-index header row from the live CLI render
  * logic, so the regression assertion below pins the migration prompt asset to
- * the same source of truth used by `oat decision regenerate` instead of a
+ * the same source of truth used by `oat decision regenerate-index` instead of a
  * hardcoded second copy of the header string.
  */
 function getCanonicalDecisionIndexHeader(): string {
@@ -348,7 +348,7 @@ describe('bundle-assets.sh consistency', () => {
     it('does not teach the stale plural DECISIONS-INDEX markers', () => {
       // The live CLI (regenerate-index.ts) uses the SINGULAR marker pair.
       // A manual fallback that emits the plural markers would build an index
-      // that `oat decision regenerate` cannot manage.
+      // that `oat decision regenerate-index` cannot manage.
       expect(promptContent).not.toContain('OAT DECISIONS-INDEX');
     });
 
