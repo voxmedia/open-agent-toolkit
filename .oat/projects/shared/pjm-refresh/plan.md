@@ -763,6 +763,49 @@ git add packages/cli/assets/migration/pjm-restructure.md packages/cli/src/comman
 git commit -m "fix(p04-t04): align migration prompt decision-index with CLI contract"
 ```
 
+## Phase p-rev1: PR Revision (post-#118 feedback)
+
+### Task prev1-t01: Rename `oat decision regenerate` → `regenerate-index`
+
+**Source:** PR #118 reviewer feedback — align the two index-rebuild verbs so
+`oat decision` matches `oat backlog regenerate-index` (eliminate the
+`regenerate` vs `regenerate-index` divergence). Canonical rename, no alias
+(`oat decision` is unreleased in this PR, so no back-compat surface to preserve).
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/decision/index.ts` (`.command('regenerate')`
+  → `.command('regenerate-index')`)
+- Modify: `packages/cli/src/commands/decision/index.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts` (decision help
+  snapshot line)
+- Modify in-product guidance strings emitting the old verb:
+  `packages/cli/src/commands/decision/regenerate-index.ts`,
+  `packages/cli/src/commands/decision/init.ts`,
+  `packages/cli/src/commands/decision/migrate.ts`,
+  `packages/cli/src/commands/decision/new.ts`,
+  `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+  (comments)
+- Modify shipped asset: `packages/cli/assets/migration/pjm-restructure.md`
+- Modify skill: `.agents/skills/oat-pjm-decision/SKILL.md`
+- Modify docs: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`,
+  `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Implement** — rename the subcommand and update every reference above to
+`regenerate-index`. Run `bash packages/cli/scripts/bundle-assets.sh` to refresh
+bundled mirrors.
+
+**Step 2: Verify** — full final-review gate: `pnpm format`, `pnpm lint`,
+`pnpm type-check`, `pnpm build`, `pnpm build:docs`, `pnpm test`,
+`pnpm release:validate`. All must pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli .agents/skills/oat-pjm-decision apps/oat-docs/docs
+git commit -m "refactor(prev1-t01): rename oat decision regenerate to regenerate-index"
+```
+
 ## Reviews
 
 | Scope  | Type     | Status  | Date       | Artifact                                       |

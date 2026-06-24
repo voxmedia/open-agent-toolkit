@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 88f5e4ec
+oat_current_task: prev1-t01
+oat_last_commit: b14e7f57
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T00:20:00Z'
+oat_project_state_updated: '2026-06-24T00:35:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,9 +39,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR #118 open, awaiting human review. The v2 final-review
-Important finding (migration prompt decision-index contract) is fixed (p04-t04)
-and re-review passed.
+Implementation — PR #118 revision (p-rev1) from reviewer feedback: renaming
+`oat decision regenerate` → `regenerate-index` to match `oat backlog
+regenerate-index`. Then re-verify and push to update the PR.
 
 ## Artifacts
 
@@ -80,7 +80,10 @@ and re-review passed.
 - [x] Manual v2 final review received (1 Important → fix task p04-t04)
 - [x] p04-t04 fix complete (commit 88f5e4ec, full gate green)
 - [x] Final re-review passed (0 findings; I1 resolved)
-- ⧗ Push to update PR #118; awaiting human review
+- [x] PR #118 updated with the p04-t04 fix
+- ⧗ p-rev1: rename decision regenerate verb (reviewer feedback #1)
+- ☐ Follow-up (#2, deferred): offer to promote project Key Decisions into
+  `dr-` records via the lifecycle skills
 
 ## Blockers
 
