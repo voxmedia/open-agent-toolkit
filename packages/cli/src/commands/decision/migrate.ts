@@ -43,11 +43,22 @@ interface PreparedDecisionMigration {
   content: string;
 }
 
-const LEGACY_HEADING_PATTERN = /^##\s+((?:ADR|DR)-\d+):\s+(.+?)\s*$/gim;
+// Real-world `decision-record.md` files use `### ADR-NNN: Title` headings (and
+// `## ADR-NNN: Title` in older fixtures), optionally without a trailing title.
+// The capture groups are: [1] legacy id (e.g. `ADR-001`), [2] optional title.
+const LEGACY_HEADING_PATTERN =
+  /^#{2,3}\s+((?:ADR|DR)-\d+)(?::\s*(.+?))?\s*$/gim;
 const LEGACY_ID_PATTERN = /^(?:ADR|DR)-\d+$/i;
 
-function parseLegacyIndexIds(content: string): string[] {
-  const ids: string[] = [];
+interface LegacyIndexRow {
+  id: string;
+  date?: string;
+  status?: string;
+  title?: string;
+}
+
+function parseLegacyIndexRows(content: string): LegacyIndexRow[] {
+  const rows: LegacyIndexRow[] = [];
 
   for (const line of content.split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -64,29 +75,52 @@ function parseLegacyIndexIds(content: string): string[] {
       continue;
     }
 
-    if (LEGACY_ID_PATTERN.test(id)) {
-      ids.push(id);
+    if (!LEGACY_ID_PATTERN.test(id)) {
+      continue;
     }
+
+    // The real-world Decision Index is `| ID | Date | Status | Title |`. We use
+    // it both as a parity check and as a fallback source for Date/Status/Title.
+    rows.push({
+      id,
+      date: cells[1] || undefined,
+      status: cells[2] || undefined,
+      title: cells[3] || undefined,
+    });
   }
 
-  return ids;
+  return rows;
 }
 
+function parseLegacyIndexIds(content: string): string[] {
+  return parseLegacyIndexRows(content).map((row) => row.id);
+}
+
+// Matches both the real-world bold form (`- **Date:** 2026-01-30`) and the
+// older plain form (`- Date: 2026-01-30`). The optional `**` markers wrap the
+// `Field:` label, so the colon stays inside the emphasis on the bold form.
 function parseLegacyField(section: string, field: string): string | null {
   const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`^-\\s*${escapedField}:\\s*(.+?)\\s*$`, 'im');
+  const regex = new RegExp(
+    `^-\\s*\\*{0,2}${escapedField}:\\*{0,2}\\s*(.+?)\\s*$`,
+    'im',
+  );
   return regex.exec(section)?.[1]?.trim() ?? null;
 }
 
 function parseLegacyDecisionSections(content: string): LegacyDecisionSection[] {
+  const indexRows = new Map(
+    parseLegacyIndexRows(content).map((row) => [row.id, row]),
+  );
   const matches = [...content.matchAll(LEGACY_HEADING_PATTERN)];
   return matches.map((match, index) => {
     const sectionStart = match.index ?? 0;
     const sectionEnd = matches[index + 1]?.index ?? content.length;
     const section = content.slice(sectionStart, sectionEnd).trim();
     const legacyId = match[1]!;
-    const title = match[2]!.trim();
-    const date = parseLegacyField(section, 'Date');
+    const indexRow = indexRows.get(legacyId);
+    const title = (match[2]?.trim() || indexRow?.title || legacyId).trim();
+    const date = parseLegacyField(section, 'Date') ?? indexRow?.date ?? null;
     if (!date) {
       throw new Error(`Legacy decision ${legacyId} is missing a Date field.`);
     }
@@ -95,7 +129,8 @@ function parseLegacyDecisionSections(content: string): LegacyDecisionSection[] {
       legacyId,
       title,
       date,
-      status: parseLegacyField(section, 'Status') ?? 'proposed',
+      status:
+        parseLegacyField(section, 'Status') ?? indexRow?.status ?? 'proposed',
       body: section,
     };
   });

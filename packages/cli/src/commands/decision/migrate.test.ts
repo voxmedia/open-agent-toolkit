@@ -41,6 +41,60 @@ const LEGACY_DECISIONS = [
   '',
 ].join('\n');
 
+// Mirrors this repo's real `.oat/repo/reference/decision-record.md` shape:
+// `### ADR-NNN: Title` / `### DR-NNN: Title` headings with bold `- **Date:**` /
+// `- **Status:**` metadata fields followed by a free-form body. The parser must
+// handle this real-world format (the headline B1 bug returned zero sections).
+const REAL_WORLD_DECISIONS = [
+  '# OAT Decision Record (Internal / Dogfood)',
+  '',
+  'Track notable decisions made while evolving OAT in this repo.',
+  '',
+  '## Decision Index',
+  '',
+  '| ID      | Date       | Status   | Title                         |',
+  '| ------- | ---------- | -------- | ----------------------------- |',
+  '| ADR-001 | 2026-01-30 | accepted | Keep active-project path-based |',
+  '| ADR-002 | 2026-01-31 | accepted | Standardize progress indicators |',
+  '| DR-003  | 2026-02-14 | proposed | Adopt skill-first invocation  |',
+  '',
+  '## Decisions',
+  '',
+  '### ADR-001: Keep active-project path-based',
+  '',
+  '- **Date:** 2026-01-30',
+  '- **Status:** accepted',
+  '- **Drivers:** Avoid breaking existing skills that assume a full path.',
+  '',
+  '#### Context',
+  '',
+  'We considered migrating to a name-only pointer but kept the path for v1.',
+  '',
+  '#### Decision',
+  '',
+  'Canonical write format stores a full path to the active project directory.',
+  '',
+  '### ADR-002: Standardize progress indicators',
+  '',
+  '- **Date:** 2026-01-31',
+  '- **Status:** accepted',
+  '',
+  '#### Decision',
+  '',
+  'OAT skills should provide lightweight, consistent progress feedback.',
+  '',
+  '### DR-003: Adopt skill-first invocation',
+  '',
+  '- **Date:** 2026-02-14',
+  '- **Status:** proposed',
+  '- **Drivers:** Reduce cross-client confusion and workflow drift.',
+  '',
+  '#### Decision',
+  '',
+  'Canonical invocation contract is skill names; slash commands are optional.',
+  '',
+].join('\n');
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -325,6 +379,151 @@ describe('migrateDecisionRecords', () => {
     ).resolves.toBe(false);
     await expect(pathExists(join(decisionsRoot, 'index.md'))).resolves.toBe(
       false,
+    );
+  });
+
+  it('parses the real-world `### ADR-NNN` + bold-field decision shape into a non-zero section count', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      REAL_WORLD_DECISIONS,
+      { encoding: 'utf8', flag: 'wx' },
+    );
+
+    const result = await migrateDecisionRecords({
+      referenceRoot,
+      dryRun: true,
+    });
+
+    // Regression for B1: the real-world heading + bold-field shape used to
+    // yield zero sections. It must now parse every record.
+    expect(result.mappings.length).toBeGreaterThan(0);
+    expect(result.mappings).toHaveLength(3);
+    expect(result.mappings).toEqual([
+      expect.objectContaining({
+        legacyId: 'ADR-001',
+        id: 'DR-260130-keep-active-project-path-based',
+        title: 'Keep active-project path-based',
+        date: '2026-01-30',
+      }),
+      expect.objectContaining({
+        legacyId: 'ADR-002',
+        id: 'DR-260131-standardize-progress',
+        title: 'Standardize progress indicators',
+        date: '2026-01-31',
+      }),
+      expect.objectContaining({
+        legacyId: 'DR-003',
+        id: 'DR-260214-adopt-skill-first-invocation',
+        title: 'Adopt skill-first invocation',
+        date: '2026-02-14',
+      }),
+    ]);
+  });
+
+  it('applies the real-world shape preserving body text, status, and legacy_id across ADR and DR prefixes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      REAL_WORLD_DECISIONS,
+      { encoding: 'utf8', flag: 'wx' },
+    );
+
+    const result = await migrateDecisionRecords({ referenceRoot });
+
+    expect(result.written).toHaveLength(3);
+
+    const adrRecord = await readFile(
+      join(
+        referenceRoot,
+        'decisions',
+        'DR-260130-keep-active-project-path-based.md',
+      ),
+      'utf8',
+    );
+    expect(adrRecord).toContain('legacy_id: ADR-001');
+    expect(adrRecord).toContain('status: accepted');
+    // Body (including the original heading and bold metadata) is preserved.
+    expect(adrRecord).toContain('### ADR-001: Keep active-project path-based');
+    expect(adrRecord).toContain('- **Date:** 2026-01-30');
+    expect(adrRecord).toContain(
+      'Canonical write format stores a full path to the active project directory.',
+    );
+
+    // The DR-prefixed record migrates the same way and keeps its DR legacy id.
+    const drRecord = await readFile(
+      join(
+        referenceRoot,
+        'decisions',
+        'DR-260214-adopt-skill-first-invocation.md',
+      ),
+      'utf8',
+    );
+    expect(drRecord).toContain('legacy_id: DR-003');
+    expect(drRecord).toContain('status: proposed');
+    expect(drRecord).toContain(
+      'Canonical invocation contract is skill names; slash commands are optional.',
+    );
+
+    const index = await readFile(
+      join(referenceRoot, 'decisions', 'index.md'),
+      'utf8',
+    );
+    expect(index).toContain(
+      '| DR-260130-keep-active-project-path-based | 2026-01-30 | accepted | Keep active-project path-based | ADR-001 |',
+    );
+    expect(index).toContain(
+      '| DR-260214-adopt-skill-first-invocation | 2026-02-14 | proposed | Adopt skill-first invocation | DR-003 |',
+    );
+  });
+
+  it('tolerates a real-world record missing an optional field (no Drivers line) and missing Status via index fallback', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    // ADR-002 has no `- **Drivers:**` line; ADR-100 has no inline Status and
+    // must recover Status from its Decision Index row.
+    const partialLegacy = [
+      '# OAT Decision Record',
+      '',
+      '## Decision Index',
+      '',
+      '| ID      | Date       | Status   | Title              |',
+      '| ------- | ---------- | -------- | ------------------ |',
+      '| ADR-100 | 2026-03-09 | accepted | Index status only  |',
+      '',
+      '## Decisions',
+      '',
+      '### ADR-100: Index status only',
+      '',
+      '- **Date:** 2026-03-09',
+      '',
+      '#### Decision',
+      '',
+      'Status is recovered from the decision index row.',
+      '',
+    ].join('\n');
+    await writeFile(join(referenceRoot, 'decision-record.md'), partialLegacy, {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
+
+    const result = await migrateDecisionRecords({ referenceRoot });
+
+    expect(result.mappings).toHaveLength(1);
+    const record = await readFile(result.written[0]!, 'utf8');
+    expect(record).toContain('legacy_id: ADR-100');
+    // Status fell back to the Decision Index row value.
+    expect(record).toContain('status: accepted');
+    expect(record).toContain(
+      'Status is recovered from the decision index row.',
     );
   });
 });
