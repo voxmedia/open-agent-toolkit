@@ -394,6 +394,30 @@ async function collectDecisionMappings(
   ).mappings;
 }
 
+/**
+ * Preflights the decision-migration step without mutating anything.
+ *
+ * Runs the same guards the apply step will run, including the destructive
+ * delete-safety guard (`deleteLegacy: true`), but in dry-run mode so it writes
+ * and deletes nothing. This is the failure-prone precondition surfaced by
+ * dogfooding: an unparseable `decision-record.md` previously aborted only after
+ * mechanical moves had already happened. Validating it up front keeps
+ * `--apply` atomic — any decision-parse problem fails before the tree changes.
+ */
+async function preflightDecisionMigration(repoRoot: string): Promise<void> {
+  const referenceRoot = join(repoRoot, 'reference');
+  const legacyPath = join(referenceRoot, 'decision-record.md');
+  if (!(await pathExists(legacyPath))) {
+    return;
+  }
+
+  await migrateDecisionRecords({
+    referenceRoot,
+    deleteLegacy: true,
+    dryRun: true,
+  });
+}
+
 async function migrateDecisions(
   repoRoot: string,
 ): Promise<{ mappings: DecisionMigrationMapping[]; written: string[] }> {
@@ -488,6 +512,13 @@ export async function migratePjmRepo(
       written: [],
     };
   }
+
+  // Preflight every failure-prone precondition BEFORE any mechanical mutation so
+  // `--apply` is atomic: if a step would fail, we abort here with the tree
+  // unchanged. The decision-record parse is the dogfood-surfaced failure mode —
+  // an unparseable source previously aborted only after files had already moved,
+  // leaving a half-migrated tree.
+  await preflightDecisionMigration(options.repoRoot);
 
   const written: string[] = [];
   written.push(...(await applyActiveMoves(options.repoRoot, activeMoves)));

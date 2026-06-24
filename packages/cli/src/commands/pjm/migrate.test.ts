@@ -2,12 +2,13 @@ import {
   access,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -48,6 +49,27 @@ async function pathExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Returns a deterministic map of repo-relative file path -> contents so a test
+// can assert the on-disk tree is byte-for-byte unchanged after an aborted run.
+async function snapshotTree(root: string): Promise<Record<string, string>> {
+  const snapshot: Record<string, string> = {};
+
+  async function walk(dir: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.isFile()) {
+        snapshot[relative(root, full)] = await readFile(full, 'utf8');
+      }
+    }
+  }
+
+  await walk(root);
+  return snapshot;
 }
 
 async function seedTemplate(root: string, name: string): Promise<void> {
@@ -182,13 +204,13 @@ describe('migratePjmRepo', () => {
     expect(result.backlogMappings).toEqual([
       expect.objectContaining({
         legacyId: 'bl-c745',
-        id: 'bl-260622-streaming-cache',
+        id: 'BL-260622-streaming-cache',
       }),
     ]);
     expect(result.decisionMappings).toEqual([
       expect.objectContaining({
         legacyId: 'ADR-001',
-        id: 'dr-260622-adopt-pjm-split',
+        id: 'DR-260622-adopt-pjm-split',
       }),
     ]);
     await expect(pathExists(join(repoRoot, 'pjm'))).resolves.toBe(false);
@@ -239,18 +261,18 @@ describe('migratePjmRepo', () => {
       'pjm',
       'backlog',
       'items',
-      'bl-260622-streaming-cache.md',
+      'BL-260622-streaming-cache.md',
     );
     const backlogRecord = await readFile(backlogRecordPath, 'utf8');
-    expect(backlogRecord).toContain('id: bl-260622-streaming-cache');
+    expect(backlogRecord).toContain('id: BL-260622-streaming-cache');
     expect(backlogRecord).toContain('legacy_id: bl-c745');
     expect(backlogRecord).toContain('Preserve this body.');
     await expect(
       readFile(join(repoRoot, 'pjm', 'backlog', 'index.md'), 'utf8'),
-    ).resolves.toContain('| bl-260622-streaming-cache | Streaming Cache |');
+    ).resolves.toContain('| BL-260622-streaming-cache | Streaming Cache |');
 
     const decisionRecord = await readFile(
-      join(repoRoot, 'reference', 'decisions', 'dr-260622-adopt-pjm-split.md'),
+      join(repoRoot, 'reference', 'decisions', 'DR-260622-adopt-pjm-split.md'),
       'utf8',
     );
     expect(decisionRecord).toContain('legacy_id: ADR-001');
@@ -266,8 +288,66 @@ describe('migratePjmRepo', () => {
     expect(result.backlogMappings).toEqual([
       expect.objectContaining({
         legacyId: 'bl-c745',
-        id: 'bl-260622-streaming-cache',
+        id: 'BL-260622-streaming-cache',
       }),
     ]);
+  });
+
+  it('aborts --apply with no filesystem changes when a step would fail (unparseable decisions)', async () => {
+    const { assetsRoot, repoRoot, root } = await createWorkspace();
+    tempDirs.push(root);
+    await seedLegacyPjm(repoRoot);
+
+    // Replace the legacy decision source with prose that yields zero parseable
+    // sections. The decision-migrate step would later refuse to delete this
+    // source, which previously aborted only AFTER files had already moved.
+    const referenceRoot = join(repoRoot, 'reference');
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      [
+        '# OAT Decision Record',
+        '',
+        'This legacy file has prose but no parseable ADR or DR sections.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    // Capture the full pre-apply tree so we can prove byte-for-byte that no
+    // mutation leaked when the migration aborts mid-flight.
+    const before = await snapshotTree(repoRoot);
+
+    await expect(
+      migratePjmRepo({
+        repoRoot,
+        assetsRoot,
+        projectManagementEnabled: true,
+        apply: true,
+      }),
+    ).rejects.toThrow(/decision/i);
+
+    // No mechanical move happened: legacy paths are untouched and the new
+    // destinations were never created.
+    await expect(
+      pathExists(join(repoRoot, 'reference', 'current-state.md')),
+    ).resolves.toBe(true);
+    await expect(
+      pathExists(join(repoRoot, 'reference', 'roadmap.md')),
+    ).resolves.toBe(true);
+    await expect(
+      pathExists(join(repoRoot, 'reference', 'backlog')),
+    ).resolves.toBe(true);
+    await expect(
+      pathExists(join(repoRoot, 'reference', 'decision-record.md')),
+    ).resolves.toBe(true);
+    await expect(pathExists(join(repoRoot, 'pjm'))).resolves.toBe(false);
+    await expect(
+      pathExists(join(repoRoot, 'reference', 'decisions')),
+    ).resolves.toBe(false);
+    await expect(pathExists(join(repoRoot, 'AGENTS.md'))).resolves.toBe(false);
+
+    // And the entire tree is byte-for-byte identical to the pre-apply state.
+    const after = await snapshotTree(repoRoot);
+    expect(after).toEqual(before);
   });
 });
