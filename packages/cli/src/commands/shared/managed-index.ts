@@ -19,7 +19,16 @@
 // A markdown table delimiter cell (e.g. `---`, `:---`, `:---:`, `-----`).
 // Formatters freely re-pad the dash count, so any delimiter cell normalizes to
 // a single canonical token and dash-width differences never count as a change.
-const DELIMITER_CELL = /^:?-+:?$/;
+//
+// Require at least three dashes so the single-`-` data placeholder (the empty
+// cell value rendered by the index formatters, e.g. `| - |`) is NOT collapsed to
+// the delimiter token. A real markdown delimiter cell always has >= 3 dashes
+// (the existing formatter-repad test uses `---` and `-----`), and formatters
+// only ever widen the dash count, never shrink it below three. Without the lower
+// bound, a data cell whose literal value is `-`/`--`/`:-:` would be
+// indistinguishable from a delimiter cell, so a genuine change between two
+// dash-shaped values could be masked as a no-op and the rewrite skipped.
+const DELIMITER_CELL = /^:?-{3,}:?$/;
 
 function normalizeCell(cell: string): string {
   const trimmed = cell.trim();

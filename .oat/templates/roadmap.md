@@ -8,22 +8,22 @@ oat_template_name: roadmap
 This file records prioritized direction and lives under `pjm/` (the operational
 layer). To reduce cross-worktree conflicts, prefer adding or moving single
 bullet lines over rewriting whole sections, and reference backlog records by ID
-(`bl-YYMMDD-slug`) rather than restating their detail here.
+(`BL-YYMMDD-slug`) rather than restating their detail here.
 
 ## Now (Active / Committed)
 
 <!-- Add active work here. Format:
-- **bl-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
+- **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
 ## Next (Planned)
 
 <!-- Add planned work here. Format:
-- **bl-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
+- **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
 ## Later (Directional Intent)
 
 <!-- Add directional work here. Format:
-- **bl-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
+- **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->

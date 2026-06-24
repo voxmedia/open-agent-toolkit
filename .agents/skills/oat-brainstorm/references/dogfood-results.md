@@ -401,8 +401,8 @@ Same as Scenario 2 through Step 8.
 
 **Artifact produced**
 
-- `.oat/repo/pjm/backlog/items/<bl-YYMMDD-slug>.md` (e.g.,
-  `bl-260622-provider-view-sync-drift.md`) with full payload.
+- `.oat/repo/pjm/backlog/items/<BL-YYMMDD-slug>.md` (e.g.,
+  `BL-260622-provider-view-sync-drift.md`) with full payload.
 - Backlog index regenerated.
 
 **Verifiable from skill content**

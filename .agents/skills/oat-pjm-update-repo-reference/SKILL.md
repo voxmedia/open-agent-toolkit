@@ -94,7 +94,7 @@ Update these files as applicable:
    - Add rich historical item files only when a completed item needs preserved detail.
 7. `.oat/repo/reference/decisions/`
    - Create new decisions with `oat decision new` (see `oat-pjm-decision`); the
-     command writes one `dr-YYMMDD-slug` record and regenerates the managed
+     command writes one `DR-YYMMDD-slug` record and regenerates the managed
      decision index. Do not hand-edit `reference/decisions/index.md` inside its
      managed markers.
 

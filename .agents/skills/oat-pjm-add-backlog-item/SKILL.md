@@ -72,7 +72,7 @@ Run:
 oat backlog generate-id "{title}"
 ```
 
-The CLI returns a deterministic `bl-YYMMDD-slug` value derived from the creation date and the title. It performs no scan, hash, counter, or random allocation.
+The CLI returns a deterministic `BL-YYMMDD-slug` value derived from the creation date and the title. It performs no scan, hash, counter, or random allocation.
 
 If the command reports a same-day same-slug filename collision against an existing `items/<id>.md` or `archived/<id>.md`, do not overwrite the existing record. Disambiguate by using a more specific title and re-running `oat backlog generate-id`.
 
@@ -145,7 +145,7 @@ Report:
 
 ## Success Criteria
 
-- New item file exists under `.oat/repo/pjm/backlog/items/` with a `bl-YYMMDD-slug` filename matching its `id`
+- New item file exists under `.oat/repo/pjm/backlog/items/` with a `BL-YYMMDD-slug` filename matching its `id`
 - Item includes populated frontmatter and both required body sections
 - `scope_estimate` was proposed and confirmed
 - `oat backlog regenerate-index` ran successfully
