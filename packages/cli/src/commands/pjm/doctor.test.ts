@@ -247,6 +247,39 @@ describe('runPjmDoctorChecks', () => {
     expect(templateCheck?.status).toBe('pass');
   });
 
+  it('allows a top-level README.md but still flags genuinely-unknown top-level files (F5)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    // A human-facing README at the repo-reference root is benign.
+    await writeFile(join(repoRoot, 'README.md'), '# Repo reference');
+
+    const passingChecks = await runPjmDoctorChecks(repoRoot);
+    const passingLayout = passingChecks.find(
+      (check) => check.name === 'pjm:top_level_layout',
+    );
+    expect(passingLayout?.status).toBe('pass');
+    expect(passingLayout?.message).not.toContain('README.md');
+
+    // An actually-unknown top-level file still trips the layout check, even
+    // alongside the now-allowed README.md.
+    await writeFile(join(repoRoot, 'stray.md'), '# Stray');
+
+    const failingChecks = await runPjmDoctorChecks(repoRoot);
+    expect(failingChecks).toContainEqual(
+      expect.objectContaining({
+        name: 'pjm:top_level_layout',
+        status: 'warn',
+        message: expect.stringContaining('stray.md'),
+      }),
+    );
+    const failingLayout = failingChecks.find(
+      (check) => check.name === 'pjm:top_level_layout',
+    );
+    // The allowed README.md is NOT listed among the unknown entries.
+    expect(failingLayout?.message).not.toContain('README.md');
+  });
+
   it('warns about legacy monoliths, loose reference files, second roadmaps, and unknown top-level folders', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
     tempDirs.push(root);

@@ -13,7 +13,9 @@ const ALLOWED_TOP_LEVEL_DIRECTORIES = new Set([
   'analysis',
   'reviews',
 ]);
-const ALLOWED_TOP_LEVEL_FILES = new Set(['AGENTS.md']);
+// A human-facing `README.md` at the repo-reference root is benign, so it is an
+// allowed top-level file alongside the canonical `AGENTS.md` (F5).
+const ALLOWED_TOP_LEVEL_FILES = new Set(['AGENTS.md', 'README.md']);
 const LEGACY_MONOLITHS = ['reference/decision-record.md'] as const;
 
 async function pathExists(path: string): Promise<boolean> {
