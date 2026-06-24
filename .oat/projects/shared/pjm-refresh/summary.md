@@ -35,8 +35,9 @@ project-summaries).
   index regeneration are deterministic — entries are sorted before reading and
   compared with locale-independent string comparison plus an ID tie-break.
 
-- **Decision command group.** New `oat decision` with `init`, `new`, `regenerate`,
-  and `migrate`. Decisions are file-per-record (`dr-YYMMDD-slug`) under
+- **Decision command group.** New `oat decision` with `init`, `new`,
+  `regenerate-index`, and `migrate`. Decisions are file-per-record
+  (`dr-YYMMDD-slug`) under
   `reference/decisions/`, created from a `decision.md` template with a committed,
   marker-managed generated index. `oat decision migrate` converts the legacy
   monolith into per-record files, preserving each old `ADR-NNN`/`DR-NNN` as
@@ -77,7 +78,8 @@ project-summaries).
   same-slug collisions surface as an explicit ambiguity instead of a silent counter.
 - **File-per-record decisions with a generated index.** Each decision is its own
   file with a marker-managed index, so an index merge conflict is resolved by
-  re-running `oat decision regenerate` rather than hand-merging a 60KB monolith.
+  re-running `oat decision regenerate-index` rather than hand-merging a 60KB
+  monolith.
 - **Migration is lossless and guarded.** Body text is preserved, old IDs become
   `legacy_id`, and destructive `--delete-legacy` only runs after migrated records
   verify and refuses zero-section deletes.
@@ -116,3 +118,11 @@ findings.
   `reference/current-state.md`). Running `oat pjm migrate` on this repo and then
   refreshing its repo-reference docs is a deliberate, separate follow-up — intentionally
   out of scope for this project, which built (not consumed) the new structure.
+- **Promote project "Key Decisions" into `dr-` records (decision-consistency
+  loop).** `oat-project-summary` captures a `## Key Decisions` prose section in
+  per-project `summary.md`, but those decisions never land in the canonical,
+  repo-wide `reference/decisions/` log — re-creating the silo the file-per-record
+  model is meant to remove. Follow-up: have `oat-project-complete` /
+  `oat-project-summary` / `oat-project-pr-final` **offer** (not auto) to promote
+  significant Key Decisions into `dr-` records via `oat decision new`. Raised in
+  PR #118 review (suggestion #2); deferred out of this PR by reviewer agreement.

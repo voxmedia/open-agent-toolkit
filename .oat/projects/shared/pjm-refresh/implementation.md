@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -634,6 +634,50 @@ context):**
 
 - Asset-accuracy fix only; no CLI behavior change. The force-tracked asset lives
   under the gitignored `packages/cli/assets/` and was staged with `git add -f`.
+
+## Phase p-rev1: PR Revision (post-#118 feedback)
+
+**Status:** completed
+
+### Task prev1-t01: Rename `oat decision regenerate` → `regenerate-index`
+
+**Status:** completed
+**Commit:** 39931b2d
+
+**Source:** PR #118 reviewer feedback (#1) — align the two index-rebuild verbs.
+`oat backlog` already used `regenerate-index`; `oat decision` used `regenerate`.
+The reviewer asked to make them uniform; user chose to make the decision verb
+canonical `regenerate-index`. Clean rename, **no alias** (`oat decision` is
+unreleased in this PR, so there's no back-compat surface and an alias on only one
+command would reintroduce the asymmetry).
+
+**Outcome:**
+
+- Renamed the decision subcommand `.command('regenerate')` →
+  `.command('regenerate-index')`; the internal `regenerateDecisionIndex` function
+  and `regenerate-index.ts` module name were already aligned.
+- Updated all references across 10 files: command + tests + decision help
+  snapshot, in-product guidance strings (`regenerate-index.ts` error message,
+  `init.ts` scaffold text), test comments, the shipped migration asset
+  (`pjm-restructure.md`), the `oat-pjm-decision` skill, and docs
+  (`config-and-local-state.md`, `cli-reference.md`).
+- `migrate.ts`/`new.ts` only call the internal function (no user-facing verb
+  string), so no change needed there.
+
+**Verification:**
+
+- Final grep: zero stray `oat decision regenerate` (without `-index`) outside
+  project artifacts.
+- Full gate: `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm build`,
+  `pnpm build:docs`, `pnpm test` (1891 CLI tests), `pnpm release:validate`
+  (5 packages @ 0.1.31) — all pass. Live `oat decision --help` shows
+  `regenerate-index`.
+
+**Notes / Decisions:**
+
+- No package version bump (changes are within the same PR already bumped to
+  0.1.31). No additional skill version bump (`oat-pjm-decision` is new in this PR;
+  PR-scoped one-bump rule already satisfied).
 
 ## Orchestration Runs
 
