@@ -150,7 +150,7 @@ note STEP 7 writes.
 Source: `.oat/repo/reference/decision-record.md` (single file). Records use headings
 `## ADR-NNN: Title` or `### ADR-NNN: Title` (or `DR-NNN`), each with a `- **Date:**
 YYYY-MM-DD` and `- **Status:** …` line and a body. There is also a top **Decision Index**
-table (`| ID | Date | Status | Decision | …`).
+table (`| ID | Date | Status | Title | …`).
 
 If `decision-record.md` is absent (sequence): skip the split; just create the empty
 `reference/decisions/` + generated `index.md` so the canonical surface exists. Note "no
@@ -201,7 +201,7 @@ oat decision regenerate   # builds reference/decisions/index.md managed table fr
 ```
 
 `reference/decisions/index.md` mirrors the backlog index: managed markers + a deterministic
-table `| ID | Date | Status | Title |` sorted by `date` then `id`. Committed;
+table `| ID | Date | Status | Title | Legacy |` sorted by `date` then `id`. Committed;
 regenerate-on-conflict.
 
 **Verify before retiring the source:** count decision headings in the original file == count
@@ -413,8 +413,8 @@ ls .oat/repo/reference/decisions/*.md 2>/dev/null | grep -v '/index.md$' | wc -l
 - Run independent read-only inventory commands together; gate every mutation behind approval.
 - If `oat decision new`/`regenerate` is not yet available in the installed CLI, perform the
   decision split + index generation manually following STEP 3 (write the files; build the
-  `| ID | Date | Status | Title |` table between
-  `<!-- OAT DECISIONS-INDEX -->` / `<!-- END OAT DECISIONS-INDEX -->` markers, sorted by date
+  `| ID | Date | Status | Title | Legacy |` table between
+  `<!-- OAT DECISION-INDEX -->` / `<!-- END OAT DECISION-INDEX -->` markers, sorted by date
   then id) and say so in the report.
 - Treat `.oat/projects/**` writes (project-scoped folder moves) as confirmed-only.
 - This prompt is safe to re-run: STEP 0's idempotency probe short-circuits an

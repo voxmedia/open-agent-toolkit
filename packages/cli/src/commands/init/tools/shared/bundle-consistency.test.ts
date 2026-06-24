@@ -9,6 +9,11 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import {
+  DECISION_INDEX_END,
+  DECISION_INDEX_START,
+  renderDecisionManagedSection,
+} from '@commands/decision/regenerate-index';
 import { describe, expect, it } from 'vitest';
 
 import { CORE_SKILLS } from '../core/install-core';
@@ -68,6 +73,32 @@ function parseBundleTemplates(): string[] {
 
 function getBundleScriptPath(): string {
   return join(import.meta.dirname, '../../../../../scripts/bundle-assets.sh');
+}
+
+function getMigrationPromptSourcePath(): string {
+  return join(
+    import.meta.dirname,
+    '../../../../../assets/migration/pjm-restructure.md',
+  );
+}
+
+/**
+ * Extract the canonical decision-index header row from the live CLI render
+ * logic, so the regression assertion below pins the migration prompt asset to
+ * the same source of truth used by `oat decision regenerate` instead of a
+ * hardcoded second copy of the header string.
+ */
+function getCanonicalDecisionIndexHeader(): string {
+  const managedSection = renderDecisionManagedSection([]);
+  const headerRow = managedSection
+    .split('\n')
+    .find((line) => line.startsWith('| ID '));
+  if (!headerRow) {
+    throw new Error(
+      'Could not derive decision-index header row from renderDecisionManagedSection.',
+    );
+  }
+  return headerRow;
 }
 
 function isUserInvocableSkill(skillName: string): boolean {
@@ -305,4 +336,28 @@ describe('bundle-assets.sh consistency', () => {
     },
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
+
+  describe('migration prompt decision-index contract', () => {
+    const promptContent = readFileSync(getMigrationPromptSourcePath(), 'utf8');
+
+    it('teaches the canonical singular decision-index markers', () => {
+      expect(promptContent).toContain(DECISION_INDEX_START);
+      expect(promptContent).toContain(DECISION_INDEX_END);
+    });
+
+    it('does not teach the stale plural DECISIONS-INDEX markers', () => {
+      // The live CLI (regenerate-index.ts) uses the SINGULAR marker pair.
+      // A manual fallback that emits the plural markers would build an index
+      // that `oat decision regenerate` cannot manage.
+      expect(promptContent).not.toContain('OAT DECISIONS-INDEX');
+    });
+
+    it('teaches the canonical 5-column decision-index header (incl. Legacy)', () => {
+      // Source the expected header from the live render logic so this asset
+      // cannot silently drift from the CLI contract. The 4-column variant that
+      // omits `Legacy` would drop migrated `legacy_id` values.
+      expect(promptContent).toContain(getCanonicalDecisionIndexHeader());
+      expect(promptContent).not.toContain('| ID | Date | Status | Decision |');
+    });
+  });
 });
