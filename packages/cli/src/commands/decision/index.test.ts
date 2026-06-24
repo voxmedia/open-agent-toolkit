@@ -45,6 +45,7 @@ function createHarness(): {
       },
     ],
     written: [],
+    legacyPresent: true,
   }));
   const resolveProjectRoot = vi.fn(
     async (_cwd: string) => '/tmp/workspace/repo',
@@ -221,6 +222,34 @@ describe('createDecisionCommand', () => {
     expect(capture.info).toContain(
       'ADR-001 -> DR-260622-adopt-pjm-split (/tmp/workspace/custom/reference/decisions/DR-260622-adopt-pjm-split.md)',
     );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints a friendly no-op and exits 0 when no legacy record is present (F4)', async () => {
+    const { command, capture, migrateDecisionRecords } = createHarness();
+    migrateDecisionRecords.mockResolvedValueOnce({
+      referenceRoot: '/tmp/workspace/custom/reference',
+      decisionsRoot: '/tmp/workspace/custom/reference/decisions',
+      dryRun: true,
+      deletedLegacy: false,
+      mappings: [],
+      written: [],
+      legacyPresent: false,
+      message: 'Nothing to migrate; no legacy decision-record.md found.',
+    });
+
+    await runCommand(
+      command,
+      'migrate',
+      [],
+      ['--reference-root', 'custom/reference', '--dry-run'],
+    );
+
+    expect(capture.info).toContain(
+      'Nothing to migrate; no legacy decision-record.md found.',
+    );
+    // No mapping lines are emitted for a clean no-op.
+    expect(capture.info.some((line) => line.includes('->'))).toBe(false);
     expect(process.exitCode).toBe(0);
   });
 });

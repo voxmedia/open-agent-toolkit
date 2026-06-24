@@ -28,7 +28,16 @@ export interface DecisionMigrationResult {
   deletedLegacy: boolean;
   mappings: DecisionMigrationMapping[];
   written: string[];
+  // Whether a legacy `decision-record.md` was found. When `false`, the run is a
+  // clean no-op (e.g. a standalone `decision migrate` after `pjm migrate`
+  // already migrated and removed the legacy file) rather than an ENOENT throw.
+  legacyPresent: boolean;
+  // Human-facing summary of the outcome, used by the CLI for non-JSON output.
+  message?: string;
 }
+
+const NOTHING_TO_MIGRATE_MESSAGE =
+  'Nothing to migrate; no legacy decision-record.md found.';
 
 interface LegacyDecisionSection {
   legacyId: string;
@@ -252,6 +261,28 @@ async function readExistingTarget(path: string): Promise<string | null> {
   }
 }
 
+// Reads the legacy `decision-record.md`, returning `null` when the file is
+// absent (rather than throwing ENOENT). The absent-file case is a legitimate
+// no-op: a prior `pjm migrate --apply` already migrated decisions end-to-end
+// and removed the legacy monolith, so a standalone `decision migrate` (or
+// `--dry-run`) afterward should degrade gracefully (F4).
+async function readLegacySource(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String(error.code)
+        : null;
+
+    if (code !== 'ENOENT') {
+      throw error;
+    }
+
+    return null;
+  }
+}
+
 async function findPendingWrites(
   preparedMigrations: PreparedDecisionMigration[],
 ): Promise<PreparedDecisionMigration[]> {
@@ -292,7 +323,25 @@ export async function migrateDecisionRecords(
 ): Promise<DecisionMigrationResult> {
   const legacyPath = join(options.referenceRoot, 'decision-record.md');
   const decisionsRoot = join(options.referenceRoot, 'decisions');
-  const legacyContent = await readFile(legacyPath, 'utf8');
+  const legacyContent = await readLegacySource(legacyPath);
+
+  // Absent-file no-op (F4): nothing to migrate. This is distinct from the
+  // present-but-empty/unparseable case (which still flows through parsing and
+  // keeps the zero-section delete-safety guard). Return a clean result for both
+  // dry-run and apply instead of throwing ENOENT.
+  if (legacyContent === null) {
+    return {
+      referenceRoot: options.referenceRoot,
+      decisionsRoot,
+      dryRun: options.dryRun ?? false,
+      deletedLegacy: false,
+      mappings: [],
+      written: [],
+      legacyPresent: false,
+      message: NOTHING_TO_MIGRATE_MESSAGE,
+    };
+  }
+
   const legacyIndexIds = parseLegacyIndexIds(legacyContent);
   const sections = parseLegacyDecisionSections(legacyContent);
 
@@ -312,6 +361,7 @@ export async function migrateDecisionRecords(
       deletedLegacy: false,
       mappings,
       written: [],
+      legacyPresent: true,
     };
   }
 
@@ -348,5 +398,6 @@ export async function migrateDecisionRecords(
     deletedLegacy,
     mappings,
     written,
+    legacyPresent: true,
   };
 }

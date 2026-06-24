@@ -585,6 +585,74 @@ describe('migrateDecisionRecords', () => {
     expect(firstRecord).not.toContain('## ADR Template');
   });
 
+  it('no-ops cleanly when no legacy decision-record.md is present (apply)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    // Intentionally do NOT create decision-record.md (F4): a prior
+    // `pjm migrate --apply` already migrated and removed it.
+
+    const result = await migrateDecisionRecords({ referenceRoot });
+
+    // Clean no-op: zero mappings, nothing written, friendly status/message.
+    expect(result.dryRun).toBe(false);
+    expect(result.mappings).toEqual([]);
+    expect(result.written).toEqual([]);
+    expect(result.deletedLegacy).toBe(false);
+    expect(result.legacyPresent).toBe(false);
+    expect(result.message).toBe(
+      'Nothing to migrate; no legacy decision-record.md found.',
+    );
+    // No decisions directory is created when there is nothing to migrate.
+    await expect(pathExists(join(referenceRoot, 'decisions'))).resolves.toBe(
+      false,
+    );
+  });
+
+  it('no-ops cleanly when no legacy decision-record.md is present (dry-run)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+
+    const result = await migrateDecisionRecords({
+      referenceRoot,
+      dryRun: true,
+    });
+
+    expect(result.dryRun).toBe(true);
+    expect(result.mappings).toEqual([]);
+    expect(result.written).toEqual([]);
+    expect(result.deletedLegacy).toBe(false);
+    expect(result.legacyPresent).toBe(false);
+    expect(result.message).toBe(
+      'Nothing to migrate; no legacy decision-record.md found.',
+    );
+    await expect(pathExists(join(referenceRoot, 'decisions'))).resolves.toBe(
+      false,
+    );
+  });
+
+  it('no-ops cleanly even with --delete-legacy when the legacy record is absent', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+
+    // The absent-file case must not trip the zero-section delete-safety guard:
+    // there is simply nothing to migrate and nothing to delete.
+    const result = await migrateDecisionRecords({
+      referenceRoot,
+      deleteLegacy: true,
+    });
+
+    expect(result.mappings).toEqual([]);
+    expect(result.written).toEqual([]);
+    expect(result.deletedLegacy).toBe(false);
+    expect(result.legacyPresent).toBe(false);
+  });
+
   it('tolerates a real-world record missing an optional field (no Drivers line) and missing Status via index fallback', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
     tempDirs.push(root);

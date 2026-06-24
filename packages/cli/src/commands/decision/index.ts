@@ -250,6 +250,13 @@ export function createDecisionCommand(
 
         if (context.json) {
           context.logger.json({ status: 'ok', ...result });
+        } else if (!result.legacyPresent) {
+          // Absent-file no-op (F4): a prior `pjm migrate` already migrated and
+          // removed decision-record.md. Report a friendly no-op, not a throw.
+          context.logger.info(
+            result.message ??
+              'Nothing to migrate; no legacy decision-record.md found.',
+          );
         } else {
           context.logger.info(
             result.dryRun
