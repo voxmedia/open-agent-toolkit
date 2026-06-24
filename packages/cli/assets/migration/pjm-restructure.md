@@ -10,6 +10,17 @@
 > "Run the OAT PJM migration." Default to a **dry run**. Only mutate after the user types
 > `apply` (or invokes you with `--apply`).
 >
+> **Preferred path — let the CLI do it end-to-end.** When the `oat` CLI has the PJM migration
+> support (see the version gate in STEP 0), `oat pjm migrate --apply` performs the entire
+> mechanical migration in **one atomic, preflight-guarded shot**: it moves the active layer
+> into `pjm/`, re-ids and strips template frontmatter from backlog items, **splits the
+> decisions into file-per-record AND removes the legacy `decision-record.md`**, and regenerates
+> both committed indexes. Do **not** run a separate `oat decision migrate` / `--delete-legacy`
+> afterward — the decision split and the legacy-file removal already happened inside
+> `pjm migrate --apply`, so a follow-on `decision migrate` is redundant and fails with ENOENT
+> (the legacy file is gone). The manual STEP 1-3 mechanics below are the **no-CLI fallback** for
+> when the installed CLI lacks the support; the JUDGMENT gates (STEP 4-6) always need you.
+>
 > **Non-negotiable safety rules — read before doing anything:**
 > 1. **Dry-run first, always.** Produce the full plan and the two judgment proposals BEFORE
 >    any write. Do not write/move/delete until the user explicitly approves.
@@ -47,9 +58,26 @@ test -d .oat/repo/pjm && test -d .oat/repo/reference/decisions \
   && echo "ALREADY MIGRATED (pjm/ and reference/decisions/ exist). Stop unless user forces re-run."
 ```
 
+**0e. Version gate — use a CLI build that HAS the fixes (do NOT pin a stale SHA).** If you are
+relying on the `oat` CLI (the preferred path) and especially if you are building it from source,
+build from the **current branch tip**, never a pinned/stale commit SHA. Then verify the build
+actually has the migration fixes BEFORE migrating, with a side-effect-free dry run:
+
+```bash
+# Side-effect-free. Look at the proposed ids in the output.
+oat decision migrate --dry-run    # or: oat pjm migrate --dry-run
+```
+
+The build is current **only if** the proposed ids are **uppercase** `DR-`/`BL-` with
+**≤30-char** slugs (e.g. `DR-260130-make-oat-tools-install`). If you instead see lowercase
+`dr-`/`bl-` ids, or 48-char (un-truncated) slugs, you are on a **pre-fix build** — **STOP**,
+rebuild from the current tip, and re-check. (A dogfood run was burned by migrating with a CLI
+built from a pre-fix commit.)
+
 If `0b` fails (honeycomb/duet class): **abort with** "PJM is disabled; nothing to migrate."
 If `0c` shows a dirty tree: ask the user to commit/stash or to confirm proceeding anyway.
 If `0d` reports already-migrated: stop unless the user says re-run.
+If `0e` shows lowercase ids or 48-char slugs: **stop** and rebuild from the current tip.
 
 Now build the **inventory** (read-only) and print it:
 
@@ -79,6 +107,9 @@ two judgment proposals (STEP 4 and STEP 5/6 tables) and ask:
 Do not proceed past here without approval.
 
 ---
+
+> The mechanics in STEP 1-3 (and STEP 7-8) are exactly what `oat pjm migrate --apply` does in
+> one atomic shot on a current CLI build. Run them by hand only on the **no-CLI fallback** path.
 
 ## STEP 1 — Move active layer into `pjm/` (MECHANICAL)
 
@@ -131,8 +162,12 @@ For every file in `.oat/repo/pjm/backlog/items/*.md` and `.oat/repo/pjm/backlog/
    - On collision (same `BL-YYMMDD-slug` already produced), append `-2`, `-3`, … to the slug
      and note it.
 4. Edit frontmatter **in place** before moving: set `id: BL-<YYMMDD>-<slug>` and **add**
-   `legacy_id: <old-id>` (keep the old value, e.g. `legacy_id: bl-c745`). Leave `created`,
-   `title`, every other field, and the body untouched.
+   `legacy_id: <old-id>` (keep the old value, e.g. `legacy_id: bl-c745`). If the legacy item
+   still carries `oat_template` / `oat_template_name` markers, **drop them** — a migrated record
+   is an instantiated item, never a raw template, and `pjm doctor` flags residual template
+   frontmatter. (On the preferred CLI path, `oat pjm migrate --apply` strips these markers from
+   every migrated record automatically; you only do this by hand on the no-CLI fallback.) Leave
+   `created`, `title`, every other field, and the body untouched.
 5. `git mv <old-file> .oat/repo/pjm/backlog/items/<new-id>.md`.
 
 After all items are re-id'd, regenerate the committed index:
@@ -148,6 +183,12 @@ note STEP 7 writes.
 ---
 
 ## STEP 3 — Split + re-id decisions to file-per-record (MECHANICAL)
+
+> **On the preferred CLI path this whole step — the split, the index, AND the
+> `git rm` of `decision-record.md` — is performed by `oat pjm migrate --apply` in one shot.**
+> Do not run a separate `oat decision migrate` afterward: the legacy file is already gone, so a
+> follow-on `decision migrate` is redundant and errors out (ENOENT). The manual mechanics below
+> are the no-CLI fallback.
 
 Source: `.oat/repo/reference/decision-record.md` (single file). Records use headings
 `## ADR-NNN: Title` or `### ADR-NNN: Title` (or `DR-NNN`), each with a `- **Date:**
@@ -257,6 +298,25 @@ Rules:
 
 ---
 
+## STEP 4.5 — Stale top-level `.oat/repo/README.md` (EXPECTED — not an error)
+
+A repo migrated from the old layout often has a top-level `.oat/repo/README.md` describing the
+**old** structure. This is **benign and allowed**: `pjm doctor`'s top-level layout check
+explicitly permits a top-level `README.md` (alongside `AGENTS.md`) — it does **not** fail the
+layout check. Don't be surprised by it and don't treat it as drift to delete. Call it out in
+the report and let the user pick one of:
+
+- **Leave it** — fine; doctor passes either way.
+- **Refresh it** — update its prose to describe the new two-layer (`pjm/` + `reference/`)
+  layout (the master `AGENTS.md` STEP 7 writes is the authoritative source to mirror).
+- **Archive it** — `git mv .oat/repo/README.md .oat/repo/reference/archive/README.md` (create
+  `reference/archive/` on demand) if you want the old-layout prose retained for history but out
+  of the top level.
+
+Default to **leave + flag**; only refresh/archive on explicit user confirmation.
+
+---
+
 ## STEP 5 — Retire legacy backlog files (JUDGMENT — fold, then delete)
 
 Targets if present: `.oat/repo/reference/backlog.md` (legacy flat) and
@@ -324,6 +384,9 @@ optional folders are created on demand, not pre-created.
   - `project-summaries/<YYMMDD-slug>.md` (NON-NEGOTIABLE).
   - `research/`, `brainstorms/`, `external-plans/`, `decks/` (RECOMMENDED — created on demand).
 - `knowledge/`, `analysis/`, `reviews/` — generated/review surfaces (unchanged).
+- Top-level `AGENTS.md` (this file) and an optional `README.md` are the only files allowed at
+  the `.oat/repo/` root; a leftover old-layout `README.md` is permitted by `pjm doctor` and may
+  be left, refreshed for the two-layer layout, or archived under `reference/archive/`.
 
 ## IDs
 - Decisions: `DR-YYMMDD-slug`. Backlog: `BL-YYMMDD-slug`. **ID == filename stem.** The `YYMMDD`
@@ -399,7 +462,12 @@ for f in reference/decision-record.md reference/backlog.md reference/backlog-com
   test -e ".oat/repo/$f" && echo "STILL PRESENT (folded?): $f" || echo "removed: $f"; done
 echo "=== decision count parity ==="
 ls .oat/repo/reference/decisions/*.md 2>/dev/null | grep -v '/index.md$' | wc -l
+echo "=== top-level README (allowed; not a failure) ==="
+test -f .oat/repo/README.md && echo "present: README.md (allowed by doctor; leave/refresh/archive per STEP 4.5)" || echo "absent: README.md"
 ```
+
+> A leftover top-level `.oat/repo/README.md` from the old layout is **not** a doctor failure
+> (see STEP 4.5) — report it, don't flag it as broken.
 
 **Print the final migration report** covering:
 - files moved (old → new), backlog items re-id'd (old id → new id, any date fallback used),
@@ -417,8 +485,12 @@ ls .oat/repo/reference/decisions/*.md 2>/dev/null | grep -v '/index.md$' | wc -l
 ## Notes for the running agent
 
 - Run independent read-only inventory commands together; gate every mutation behind approval.
-- If `oat decision new`/`regenerate` is not yet available in the installed CLI, perform the
-  decision split + index generation manually following STEP 3 (write the files; build the
+- **Prefer `oat pjm migrate --apply`** on a current CLI build (STEP 0e version gate): it runs
+  STEP 1-3 (+ 7-8) atomically — including splitting decisions and removing `decision-record.md`.
+  Never chase it with a standalone `oat decision migrate` / `--delete-legacy`; that legacy file
+  is already gone and the follow-on fails (ENOENT).
+- If `oat decision new`/`regenerate-index` is not yet available in the installed CLI, perform
+  the decision split + index generation manually following STEP 3 (write the files; build the
   `| ID | Date | Status | Title | Legacy |` table between
   `<!-- OAT DECISION-INDEX -->` / `<!-- END OAT DECISION-INDEX -->` markers, sorted by date
   then id) and say so in the report.
