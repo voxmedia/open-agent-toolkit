@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-23
+oat_last_updated: 2026-06-24
 oat_generated: true
-oat_summary_last_task: p04-t03
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev3-t05
+oat_summary_revision_count: 3
+oat_summary_includes_revisions: [p-rev1, p-rev2, p-rev3]
 ---
 
 # Summary: pjm-refresh
@@ -72,6 +72,15 @@ project-summaries).
   taxonomy; refreshed provider views via `oat sync`; and applied the lockstep
   public-package version bump `0.1.30 → 0.1.31` across all five public packages.
 
+- **Post-PR hardening.** Follow-up review and dogfood rounds renamed the decision
+  index verb to `regenerate-index`, promoted project Key Decisions into canonical
+  `DR-` records from `oat-project-summary`, finalized uppercase `DR-`/`BL-` IDs
+  with 30-character word-boundary slugs, fixed real-world decision migration
+  parsing, made `pjm migrate --apply` atomic, made index regeneration content-
+  idempotent, stripped template frontmatter during migration, handled absent
+  legacy decision files cleanly, allowed top-level `.oat/repo/README.md`, and
+  corrected the migration prompt's sequence and version-gate guidance.
+
 ## Key Decisions
 
 - **Two physical layers, not one.** Separating volatile operational state (`pjm/`)
@@ -100,11 +109,39 @@ project-summaries).
 - **p04-t01 docs accuracy:** Corrected drifted docs — the `oat pjm init` flag is
   `--repo-root` (not `--reference-root`), and `oat decision migrate` applies by
   default (docs had claimed dry-run-default; the CLI is correct, the docs were fixed).
-- **p03-t02:** `oat-project-summary` and `oat-project-pr-final` were audited and left
-  unedited — they reference no `.oat/repo` operational paths and create no decision
-  records today, so editing them would have forced unnecessary version bumps.
+- **p03-t02 → p-rev1:** `oat-project-summary` and `oat-project-pr-final` were first
+  audited and left unedited because neither wrote decisions at that point. PR
+  feedback later made the missing Key Decisions promotion a real product gap, so
+  p-rev1 added PJM-gated, idempotent promotion from `oat-project-summary` into
+  `reference/decisions/`; `oat-project-pr-final` still delegates through summary
+  refresh rather than creating decisions directly.
 
 No design artifact is left stale; all deltas are recorded in `implementation.md`.
+
+## Revision History
+
+- **p04-t04:** Final-review v2 found that the bundled migration prompt still taught
+  a plural decision-index marker and 4-column table. The asset was corrected to the
+  CLI's singular `<!-- OAT DECISION-INDEX -->` marker pair and 5-column `Legacy`
+  header, with bundle-consistency coverage pinned to the live renderer.
+- **p-rev1:** PR feedback aligned the decision index rebuild verb with backlog
+  (`oat decision regenerate-index`) and added PJM-gated Key Decisions promotion from
+  `oat-project-summary`, deduped by exact slug after stripping the fixed
+  `DR-<6 digits>-` prefix.
+- **p-rev2:** Dogfooding the real repo migration surfaced uppercase/slug contract
+  propagation gaps and tooling bugs. The fix set finalized uppercase IDs, fixed the
+  real ADR/DR parser shape, made `pjm migrate --apply` atomic before moves, widened
+  doctor template-frontmatter checks, and made both index regenerators content-
+  idempotent.
+- **p-rev3:** Corrected dogfood found migration polish gaps. The final pass strips
+  template markers from migrated backlog records, excludes trailing ADR template
+  boilerplate from the last decision record, turns absent legacy decision files into
+  a clean no-op, allows top-level `.oat/repo/README.md`, and updates the migration
+  prompt sequence to avoid stale pinned-SHA/tooling mistakes.
+- **Range/doc-gap cleanup:** A holistic range review over `619b9234..HEAD` passed
+  after the stale brainstorm backlog handoff wording was corrected. A final
+  documentation-gap pass also aligned backlog template/review examples and the
+  generated completed-backlog scaffold with `BL-YYMMDD-slug`.
 
 ## Verification
 
@@ -113,7 +150,9 @@ gate at p04-t02: `pnpm test` (1907 tests, 0 failures), `pnpm lint`, `pnpm type-c
 `pnpm build`, `pnpm build:docs`, and `pnpm release:validate` (all five public packages
 at 0.1.31) — all passing. Each phase passed an independent code review (p04 after one
 docs-accuracy fix cycle); the final holistic review passed with no Critical/Important
-findings.
+findings. After the final documentation-gap cleanup, the focused CLI/validation suite
+passed (88 tests), `pnpm release:validate` passed, and push hooks passed version bump
+checks, skill version validation, type-check, lint, and format.
 
 ## Follow-up Items
 
