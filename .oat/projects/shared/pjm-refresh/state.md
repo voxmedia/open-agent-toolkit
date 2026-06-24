@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t01
-oat_last_commit: 19973d44
+oat_current_task: null
+oat_last_commit: 3bea72e8
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T02:00:00Z'
+oat_project_state_updated: '2026-06-24T02:45:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,11 +39,11 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR #118 revision p-rev2 (dogfood fixes). Migrating this repo's
-real `.oat/repo/` with `oat pjm migrate` surfaced ID cosmetics + 4 tooling bugs.
-p-rev2 addresses them: uppercase `DR-`/`BL-` ids + 30-char word-boundary slug
-(A), decision-migrate parser fix (B1), atomic `pjm migrate` (B2), doctor
-template-frontmatter scope (B3), content-idempotent regenerate-index (B4).
+Implementation — PR #118 open, awaiting human review. Revision p-rev2 (dogfood
+fixes) complete: uppercase `DR-`/`BL-` ids + 30-char word-boundary slug (A),
+decision-migrate parser fix (B1), atomic `pjm migrate` (B2), doctor scope (B3),
+content-idempotent regenerate-index (B4). Review passed after one fix; full gate
+green. Pushed to update the PR.
 
 ## Artifacts
 
@@ -88,8 +88,10 @@ template-frontmatter scope (B3), content-idempotent regenerate-index (B4).
       oat-project-summary, PJM-gated + idempotent (feedback #2)
 - [x] Dogfood migration of this repo's `.oat/repo/` (worktree pjm-refresh-2) —
       surfaced ID cosmetics + 4 tooling bugs
-- ⧗ p-rev2: uppercase ids + 30-char slug (A), decision-migrate parser (B1),
-  atomic pjm migrate (B2), doctor scope (B3), idempotent regenerate (B4)
+- [x] p-rev2 (6 tasks): uppercase `DR-`/`BL-` ids + 30-char slug (A),
+      decision-migrate parser (B1), atomic pjm migrate (B2), doctor scope (B3),
+      idempotent regenerate (B4) — review passed after one fix; full gate green
+- ⧗ PR #118 updated; awaiting human review
 
 ## Blockers
 
@@ -97,10 +99,13 @@ None
 
 ## Next Milestone
 
-PR #118 is open for review (now includes the p04-t04 fix and the p-rev1 verb
-rename).
+PR #118 is open for review (now includes the p04-t04 fix, the p-rev1 verb rename
 
-- To incorporate further feedback: run `oat-project-revise`
-- When approved: run `oat-project-complete`
+- key-decision promotion, and the p-rev2 dogfood fixes — uppercase ids, 30-char
+  slug, decision-migrate parser, atomic migrate, doctor scope, idempotent
+  regenerate).
+
+* To incorporate further feedback: run `oat-project-revise`
+* When approved: run `oat-project-complete`
 
 PR: https://github.com/voxmedia/open-agent-toolkit/pull/118

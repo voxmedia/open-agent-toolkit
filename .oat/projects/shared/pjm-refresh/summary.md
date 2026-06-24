@@ -29,15 +29,16 @@ layer under `.oat/repo/reference/` (decisions, brainstorms, research, external-p
 project-summaries).
 
 - **Deterministic IDs and indexes.** Added shared `slugify` (NFKD-normalized, ASCII,
-  truncated, `untitled` fallback) and UTC `yymmdd` helpers. Backlog IDs moved from
-  hash-and-local-scan to allocator-free `bl-YYMMDD-slug`; direct filename collisions
+  ≤30 chars truncated at a whole-word boundary with trailing stop-words trimmed,
+  `untitled` fallback) and UTC `yymmdd` helpers. Backlog IDs moved from
+  hash-and-local-scan to allocator-free `BL-YYMMDD-slug`; direct filename collisions
   are now a surfaced ambiguity rather than a silent re-probe. Backlog and decision
   index regeneration are deterministic — entries are sorted before reading and
   compared with locale-independent string comparison plus an ID tie-break.
 
 - **Decision command group.** New `oat decision` with `init`, `new`,
   `regenerate-index`, and `migrate`. Decisions are file-per-record
-  (`dr-YYMMDD-slug`) under
+  (`DR-YYMMDD-slug`) under
   `reference/decisions/`, created from a `decision.md` template with a committed,
   marker-managed generated index. `oat decision migrate` converts the legacy
   monolith into per-record files, preserving each old `ADR-NNN`/`DR-NNN` as
@@ -62,7 +63,7 @@ project-summaries).
   the deprecated `update-repo-reference` and `review-backlog` skills with redirect
   banners. `oat-project-summary` now closes the decision-consistency loop: when
   the PJM pack is installed, it auto-promotes each `## Key Decisions` entry into a
-  canonical `dr-` record (idempotent — exact-slug dedup, date-prefix-independent —
+  canonical `DR-` record (idempotent — exact-slug dedup, date-prefix-independent —
   so regenerations never duplicate).
 
 - **Assets, docs, and release.** Registered the new templates, migration asset, and
@@ -76,7 +77,7 @@ project-summaries).
 - **Two physical layers, not one.** Separating volatile operational state (`pjm/`)
   from append-mostly durable history (`reference/`) is the core anti-conflict move;
   it lets cleanup guards and migration treat the two lifecycles differently.
-- **Allocator-free deterministic IDs.** `bl-`/`dr-YYMMDD-slug` avoids directory
+- **Allocator-free deterministic IDs.** `BL-`/`DR-YYMMDD-slug` avoids directory
   scans and hashing so two machines generate the same ID for the same input; same-day
   same-slug collisions surface as an explicit ambiguity instead of a silent counter.
 - **File-per-record decisions with a generated index.** Each decision is its own
@@ -116,13 +117,16 @@ findings.
 
 ## Follow-up Items
 
-- **Migrate this repo's own `.oat/repo/`.** The open-agent-toolkit repo still uses
-  the legacy flat `reference/` layout (legacy `decision-record.md`, `reference/backlog`,
-  `reference/current-state.md`). Running `oat pjm migrate` on this repo and then
-  refreshing its repo-reference docs is a deliberate, separate follow-up — intentionally
-  out of scope for this project, which built (not consumed) the new structure.
+- **Migrate this repo's own `.oat/repo/` with the fixed tooling.** The
+  open-agent-toolkit repo still uses the legacy flat `reference/` layout (legacy
+  `decision-record.md`, `reference/backlog`, `reference/current-state.md`). A
+  dogfood run (worktree `pjm-refresh-2`) validated the flow end-to-end but had to
+  hand-roll the decision mapping because `oat decision migrate`'s parser was broken
+  — now fixed in p-rev2 (`prev2-t03`). Redo the migration with the working tool
+  (it now parses the real `### ADR/DR` format, 0→21 sections) as a deliberate,
+  separate change once PR #118 merges.
 - **Broaden decision promotion to user-scoped/quick-mode projects (optional).**
-  The Key Decisions → `dr-` promotion shipped in `oat-project-summary` (PR #118
+  The Key Decisions → `DR-` promotion shipped in `oat-project-summary` (PR #118
   review suggestion #2) is gated on the PJM pack being installed and on a
   `## Key Decisions` section existing. A future enhancement could surface
   promotion in additional lifecycle entry points or for quick-mode projects that

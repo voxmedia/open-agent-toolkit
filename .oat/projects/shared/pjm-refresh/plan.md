@@ -943,6 +943,7 @@ Commit: `fix(prev2-t06): make regenerate-index content-idempotent (decision+back
 | p03    | code     | passed  | 2026-06-23 | reviews/archived/p03-review-2026-06-23.md      |
 | p04    | code     | passed  | 2026-06-23 | reviews/archived/p04-review-2026-06-23.md      |
 | final  | code     | passed  | 2026-06-23 | reviews/archived/final-review-2026-06-23-v2.md |
+| p-rev2 | code     | passed  | 2026-06-24 | reviews/archived/prev2-review-2026-06-24.md    |
 | spec   | artifact | pending | -          | -                                              |
 | design | artifact | pending | -          | -                                              |
 | plan   | artifact | pending | -          | -                                              |

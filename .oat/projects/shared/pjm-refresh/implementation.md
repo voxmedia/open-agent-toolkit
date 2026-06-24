@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-24
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -724,6 +724,39 @@ in the canonical `reference/decisions/` log.
 - Behavior is auto (not an interactive offer) per user direction, gated on PJM
   being installed.
 - No package version bump (same PR @ 0.1.31).
+
+## Phase p-rev2: Dogfood Fixes (post-#118 repo migration)
+
+**Status:** completed
+
+Dogfooding `oat pjm migrate` on this repo's real legacy `.oat/repo/` (worktree
+`pjm-refresh-2`) surfaced ID cosmetics the user wanted changed plus four genuine
+tooling bugs. All landed in PR #118 (pre-release; no package bump). p-rev2 review
+passed after one completeness fix.
+
+| Task      | Commit                    | What                                                                                                                                                                                                                                                                       |
+| --------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prev2-t01 | d7b17076                  | `slugify` cap 48→30 (word-boundary truncate + trailing-stopword trim); `generate-id` uppercase `DR-`/`BL-` prefixes; all dependent tests updated.                                                                                                                          |
+| prev2-t02 | 2b43f0d5 (+ fix 3bea72e8) | Propagated the new scheme + the 30-char slug limit to the bundled prompt, skills, templates, and docs. Fix 3bea72e8 completed the propagation (roadmap template, `oat-pjm-add-backlog-item`, `oat-pjm-update-repo-reference`, `oat-brainstorm` example) flagged by review. |
+| prev2-t03 | d0c64ea1                  | **B1:** fixed `oat decision migrate` parser to handle the real `### ADR-NNN`/`### DR-NNN` + bold `- **Date:**`/`- **Status:**` format. Verified 0→21 sections on the real `decision-record.md`; body + `legacy_id` preserved; safety guards intact.                        |
+| prev2-t04 | 530ab5e0                  | **B2:** made `pjm migrate --apply` atomic — preflights the decision parse (side-effect-free) before any mechanical move; abort leaves the tree byte-identical.                                                                                                             |
+| prev2-t05 | 51dabe64                  | **B3:** extended `pjm doctor` template-frontmatter check to scan migrated `pjm/backlog/` items + `reference/decisions/` records, not just canonical files.                                                                                                                 |
+| prev2-t06 | e4b41916, 3b897059        | **B4:** content-idempotent `regenerate-index` via shared `managed-index.ts` helper used by both decision + backlog; skips the write when logical rows match (formatter-agnostic). Fix 3bea72e8 also hardened the delimiter-cell normalization.                             |
+
+**ID scheme (final):** decisions `DR-<YYMMDD>-<slug>`, backlog `BL-<YYMMDD>-<slug>`;
+slug ≤30 chars truncated at the last whole-word boundary then trailing stop-words
+(`a/an/the/of/for/and/to/in/on/as/with`) stripped.
+
+### Review Received: p-rev2
+
+**Review artifact:** reviews/archived/prev2-review-2026-06-24.md
+
+First review (`fail`, 1 Important + 2 Minor) found prev2-t02 missed some live
+lowercase `dr-`/`bl-` guidance in templates/skills. Fixed in 3bea72e8; re-review
+**passed** (0 findings). Full gate green (CLI 1939 tests, `release:validate` 5
+packages @ 0.1.31, build/docs/format/lint/type-check). Reviewer independently
+verified the parser 0→21 on the real file and byte-no-op regenerate idempotency
+for both indexes.
 
 ## Orchestration Runs
 
