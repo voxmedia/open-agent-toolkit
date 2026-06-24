@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: p04-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,14 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 5     | 5/5       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 3     | 3/3       |
-| Phase 4 | in_progress | 4     | 3/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 5     | 5/5       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 3     | 3/3       |
+| Phase 4 | completed | 4     | 4/4       |
 
-**Total:** 14/15 tasks completed
+**Total:** 15/15 tasks completed
 
 ## Phase 1: Additive Core
 
@@ -601,6 +601,40 @@ context):**
   Verified absent: `test ! -e` passed for both paths.
 - Final tracking reconciliation committed here (Run 4 bookkeeping).
 
+---
+
+### Task p04-t04: (review) Fix migration prompt decision-index contract
+
+**Status:** completed
+**Commit:** 88f5e4ec
+
+**Outcome:**
+
+- Resolved final-review v2 finding I1: corrected the bundled
+  `oat pjm migrate --print-prompt` asset
+  (`packages/cli/assets/migration/pjm-restructure.md`) to teach the canonical
+  singular `<!-- OAT DECISION-INDEX -->` marker pair and the 5-column
+  `| ID | Date | Status | Title | Legacy |` index header (fixed lines 153, 204,
+  416-417; removed the stale plural marker and the `| Decision |` column name).
+- Added a regression assertion in
+  `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts` that
+  imports `DECISION_INDEX_START` and derives the canonical header from
+  `renderDecisionManagedSection`, then asserts the bundled asset contains the
+  singular markers + 5-column header and does NOT contain the stale plural
+  `OAT DECISIONS-INDEX` marker — pinning the asset to the CLI source of truth.
+
+**Verification:**
+
+- Focused: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools src/commands/decision` — 233 tests passed (suite grew 16 → 19 bundle-consistency tests).
+- Full final-review gate: `pnpm format`, `pnpm lint`, `pnpm type-check`,
+  `pnpm build`, `pnpm build:docs`, `pnpm test` (1891 CLI tests), and
+  `pnpm release:validate` (5 packages @ 0.1.31) — all passed.
+
+**Notes / Decisions:**
+
+- Asset-accuracy fix only; no CLI behavior change. The force-tracked asset lives
+  under the gitignored `packages/cli/assets/` and was staged with `git add -f`.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -907,9 +941,8 @@ Affects FR5, FR7, NFR3.
 supersedes the earlier passing v1 final review (which did not inspect the bundled
 prompt's index contract). The PR will be updated after the fix passes re-review.
 
-**Next:** Execute p04-t04 via the `oat-project-implement` flow, then re-run
-`oat-project-review-provide code final` + `oat-project-review-receive` to reach
-`passed`, and push to update PR #118.
+**Next:** ✓ p04-t04 implemented (commit `88f5e4ec`, full gate green). Re-running
+the final review to confirm I1 is resolved; on `passed`, push to update PR #118.
 
 ## Final Summary (for PR/docs)
 
