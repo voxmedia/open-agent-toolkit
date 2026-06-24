@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-24
-oat_current_task_id: prev3-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -757,6 +757,41 @@ lowercase `dr-`/`bl-` guidance in templates/skills. Fixed in 3bea72e8; re-review
 packages @ 0.1.31, build/docs/format/lint/type-check). Reviewer independently
 verified the parser 0→21 on the real file and byte-no-op regenerate idempotency
 for both indexes.
+
+## Phase p-rev3: Corrected-Dogfood Fixes (post-#118)
+
+**Status:** completed
+
+A second dogfood run from the fixed `pjm-refresh` tip (worktree
+`pjm-refresh-dogfood-fixed`) validated p-rev2 end-to-end (uppercase ids, 30-char
+slug, `### ADR` parse, atomic apply, idempotent regenerate, singular marker +
+5-col index) but surfaced four more tooling gaps plus a docs/sequence staleness.
+All landed in PR #118 (pre-release; no package bump). p-rev3 review passed (0
+Critical/Important; 2 non-blocking Minor doc nuances accepted).
+
+| Task      | Commit   | What                                                                                                                                                                                                                                                                                                                                                     |
+| --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prev3-t01 | 71530e1e | **F1:** `pjm migrate` strips `oat_template`/`oat_template_name` from migrated backlog records (deletes marker keys from the rebuilt frontmatter so real `id`/`title`/`legacy_id` survive; `stripTemplateFrontmatter` as defense-in-depth). Migrated decision records confirmed already template-free.                                                    |
+| prev3-t02 | b000fe40 | **F2:** decision parser bounds each section at the next level-2 (`^##\s+(?!#)`) heading as well as the next ADR/DR heading, so trailing `## ADR Template` boilerplate is excluded from the last record. `####` sub-headings stay in bodies.                                                                                                              |
+| prev3-t03 | 1812338c | **F4:** standalone `decision migrate`/`--dry-run` degrades to a clean no-op ("nothing to migrate") when `decision-record.md` is absent, instead of ENOENT. Present-but-zero-section delete-safety guard preserved (absent ≠ empty).                                                                                                                      |
+| prev3-t04 | 2c80b261 | **F5:** `pjm doctor` allows a top-level `README.md` (`ALLOWED_TOP_LEVEL_FILES += README.md`); genuinely-unknown files still warn.                                                                                                                                                                                                                        |
+| prev3-t05 | ac210d0b | **F3/F4/F5 docs:** corrected the bundled migration prompt — `pjm migrate --apply` is one-shot end-to-end (no redundant standalone `decision migrate`), added the version-gate / no-pinned-SHA guidance, documented the now-allowed stale README, and noted auto-strip of template frontmatter. Manual fallback keeps the singular marker + 5-col header. |
+
+### Review Received: p-rev3
+
+**Review artifact:** reviews/archived/prev3-review-2026-06-24.md
+
+Review **passed** (0 Critical/Important/Medium, 2 Minor). Reviewer independently
+confirmed: the level-2 bounding doesn't false-truncate canonical ADR bodies (and
+the count-parity delete guard catches contract violations), and the absent-file
+no-op preserves the zero-section delete guard. Full gate green (CLI suite +
+bundle-consistency, type-check, `release:validate` 5 packages @ 0.1.31). The 2
+Minors are accepted non-blocking prompt-wording nuances.
+
+**Process note (F3):** the first corrected-dogfood attempt ran a build from a
+stale pinned SHA (`19973d44`, pre-p-rev2) because an earlier hand-off prompt
+hard-coded that commit. No tool defect; the prompt now carries version-gate
+guidance (prev3-t05) so the build is verified before migrating.
 
 ## Orchestration Runs
 

@@ -1009,6 +1009,7 @@ Run the bundle script. Commit: `docs(prev3-t05): correct migration prompt sequen
 | p04    | code     | passed  | 2026-06-23 | reviews/archived/p04-review-2026-06-23.md      |
 | final  | code     | passed  | 2026-06-23 | reviews/archived/final-review-2026-06-23-v2.md |
 | p-rev2 | code     | passed  | 2026-06-24 | reviews/archived/prev2-review-2026-06-24.md    |
+| p-rev3 | code     | passed  | 2026-06-24 | reviews/archived/prev3-review-2026-06-24.md    |
 | spec   | artifact | pending | -          | -                                              |
 | design | artifact | pending | -          | -                                              |
 | plan   | artifact | pending | -          | -                                              |

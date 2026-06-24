@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev3-t01
-oat_last_commit: cdc7ed10
+oat_current_task: null
+oat_last_commit: ac210d0b
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T03:30:00Z'
+oat_project_state_updated: '2026-06-24T04:10:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,11 +39,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR #118 revision p-rev3 (corrected-dogfood fixes). A second
-dogfood from the fixed tip validated p-rev2 but surfaced 5 more items: template
-frontmatter migrated into backlog records (F1), trailing `## ADR Template`
-absorbed into the last decision (F2), stale migration sequence/prompt (F3/F4),
-and doctor flagging a top-level README (F5). p-rev3 addresses all five.
+Implementation — PR #118 open, awaiting human review. Revision p-rev3
+(corrected-dogfood fixes) complete: strip template frontmatter on backlog
+migration (F1), exclude trailing `## ADR Template` from last decision (F2),
+graceful `decision migrate` no-op (F4), doctor allows top-level README (F5), and
+corrected migration prompt/sequence + version-gate guidance (F3). Review passed;
+full gate green. Pushed to update the PR.
 
 ## Artifacts
 
@@ -91,6 +92,11 @@ and doctor flagging a top-level README (F5). p-rev3 addresses all five.
 - [x] p-rev2 (6 tasks): uppercase `DR-`/`BL-` ids + 30-char slug (A),
       decision-migrate parser (B1), atomic pjm migrate (B2), doctor scope (B3),
       idempotent regenerate (B4) — review passed after one fix; full gate green
+- [x] Corrected dogfood (worktree pjm-refresh-dogfood-fixed) validated p-rev2 end
+      to end; surfaced 5 more items
+- [x] p-rev3 (5 tasks): strip template fm on migration (F1), exclude trailing
+      template block (F2), graceful decision-migrate no-op (F4), doctor allows
+      README (F5), corrected migration prompt + version-gate (F3) — review passed
 - ⧗ PR #118 updated; awaiting human review
 
 ## Blockers
