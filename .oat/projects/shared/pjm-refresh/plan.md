@@ -1001,18 +1001,19 @@ Run the bundle script. Commit: `docs(prev3-t05): correct migration prompt sequen
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                       |
-| ------ | -------- | ------- | ---------- | ---------------------------------------------- |
-| p01    | code     | passed  | 2026-06-23 | reviews/archived/p01-review-2026-06-23-v4.md   |
-| p02    | code     | passed  | 2026-06-23 | reviews/archived/p02-review-2026-06-23.md      |
-| p03    | code     | passed  | 2026-06-23 | reviews/archived/p03-review-2026-06-23.md      |
-| p04    | code     | passed  | 2026-06-23 | reviews/archived/p04-review-2026-06-23.md      |
-| final  | code     | passed  | 2026-06-23 | reviews/archived/final-review-2026-06-23-v2.md |
-| p-rev2 | code     | passed  | 2026-06-24 | reviews/archived/prev2-review-2026-06-24.md    |
-| p-rev3 | code     | passed  | 2026-06-24 | reviews/archived/prev3-review-2026-06-24.md    |
-| spec   | artifact | pending | -          | -                                              |
-| design | artifact | pending | -          | -                                              |
-| plan   | artifact | pending | -          | -                                              |
+| Scope          | Type     | Status   | Date       | Artifact                                       |
+| -------------- | -------- | -------- | ---------- | ---------------------------------------------- |
+| p01            | code     | passed   | 2026-06-23 | reviews/archived/p01-review-2026-06-23-v4.md   |
+| p02            | code     | passed   | 2026-06-23 | reviews/archived/p02-review-2026-06-23.md      |
+| p03            | code     | passed   | 2026-06-23 | reviews/archived/p03-review-2026-06-23.md      |
+| p04            | code     | passed   | 2026-06-23 | reviews/archived/p04-review-2026-06-23.md      |
+| final          | code     | passed   | 2026-06-23 | reviews/archived/final-review-2026-06-23-v2.md |
+| 619b9234..HEAD | code     | received | 2026-06-24 | reviews/range-review-2026-06-24.md             |
+| p-rev2         | code     | passed   | 2026-06-24 | reviews/archived/prev2-review-2026-06-24.md    |
+| p-rev3         | code     | passed   | 2026-06-24 | reviews/archived/prev3-review-2026-06-24.md    |
+| spec           | artifact | pending  | -          | -                                              |
+| design         | artifact | pending  | -          | -                                              |
+| plan           | artifact | pending  | -          | -                                              |
 
 ## Implementation Complete
 
