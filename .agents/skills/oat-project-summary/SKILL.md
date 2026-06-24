@@ -1,10 +1,10 @@
 ---
 name: oat-project-summary
-version: 1.1.2
+version: 1.2.0
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Summary
@@ -36,22 +36,25 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[1/4] Resolving project + reading artifacts…`
-  - `[2/4] Checking for existing summary…`
-  - `[3/4] Generating / updating summary sections…`
-  - `[4/4] Committing…`
+  - `[1/5] Resolving project + reading artifacts…`
+  - `[2/5] Checking for existing summary…`
+  - `[3/5] Generating / updating summary sections…`
+  - `[4/5] Promoting key decisions to reference/decisions/ (if PJM installed)…`
+  - `[5/5] Committing…`
 
 **BLOCKED Activities:**
 
 - ❌ No implementation work
 - ❌ No changing project artifacts (other than summary.md)
 - ❌ No creating tasks or modifying plan
+- ❌ No hand-authoring decision files or editing `reference/decisions/index.md` inside its managed markers
 
 **ALLOWED Activities:**
 
 - ✅ Reading all project artifacts
 - ✅ Creating or updating summary.md
 - ✅ Committing summary.md changes
+- ✅ Promoting the summary's Key Decisions into canonical `reference/decisions/` records via `oat decision new` (Step 7), gated on the PJM tool pack being installed
 
 **Self-Correction Protocol:**
 If you catch yourself:
@@ -193,12 +196,73 @@ oat_summary_includes_revisions: [{ list of p-revN IDs reflected }]
 ---
 ```
 
-### Step 6: Commit
+### Step 6: Promote Key Decisions to Canonical Decision Records
+
+Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
+
+**6.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is installed:
+
+```bash
+PJM_ENABLED=$(oat config get tools.project-management 2>/dev/null || echo "")
+```
+
+- If `PJM_ENABLED` is `true` → perform the promotion automatically. Do NOT ask the user.
+- Otherwise (any other value, empty, or unset) → **skip this entire step silently.** Do not print a warning or prompt.
+
+**6.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
+
+**6.3 — Ensure the decisions surface exists.** The canonical decisions root is `.oat/repo/reference/decisions` (the `oat decision` default; pass `--decisions-root <path>` only for an explicit override). If its managed index is missing — i.e. `.oat/repo/reference/decisions/index.md` does not exist — initialize it first so `oat decision new` can succeed:
+
+```bash
+test -f .oat/repo/reference/decisions/index.md || oat decision init
+```
+
+`oat decision init` is idempotent; running it when the scaffold already exists is harmless.
+
+**6.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
+
+1. **Derive title + rationale.** The decision's bold lead-in / first clause becomes the **title** (a short noun phrase). The remaining explanatory text becomes the **rationale**, passed verbatim as `--context`.
+2. **Compute the slug the CLI would use.** The CLI generates the record ID as `dr-<YYMMDD>-<slug>`, where `<slug>` is the lowercased, ASCII-folded, hyphen-collapsed, 48-char-truncated form of the title (the same slug rule the CLI applies). Compute that `<slug>` for the title.
+3. **Dedup on the slug, ignoring the date prefix.** Check whether a decision record for this slug ALREADY exists by matching the `-<slug>` **suffix** of existing `reference/decisions/dr-*-<slug>.md` filenames (and/or the `ID` column rows in `reference/decisions/index.md`), **ignoring the `dr-YYMMDD-` date prefix.** For example:
+
+   ```bash
+   ls .oat/repo/reference/decisions/dr-*-"<slug>".md 2>/dev/null
+   ```
+
+   This date-independent match is essential: the `dr-YYMMDD-` date prefix changes across re-runs, so a naive full-ID `dr-YYMMDD-<slug>` existence check would NOT dedup and would create a duplicate record every time `summary.md` is regenerated.
+
+4. **Skip or create.**
+   - If a matching record already exists (same slug) → **skip it.** It was already promoted on a prior run.
+   - Otherwise → create it:
+
+     ```bash
+     oat decision new "<title>" --status accepted --context "<rationale>"
+     ```
+
+     The command generates the deterministic `dr-YYMMDD-slug` ID, seeds the body from `.oat/templates/decision.md`, and regenerates the managed index automatically — do not hand-edit `index.md`. Optionally pass `--created-at "<project completion date>"` when a project completion date is available, so the record's date reflects when the decision was made.
+
+Because of the date-independent slug dedup, this step is **safe to run every time `summary.md` is (re)generated** — including the pr-final refresh and revision re-runs — without ever creating duplicate decision records. Already-promoted decisions are skipped; only genuinely new Key Decisions become new records.
+
+**Status value:** use `--status accepted`. The decision template's status field (`.oat/templates/decision.md`) is free-form, and the canonical accepted/decided value in the decision vocabulary (`proposed` → `accepted` → `superseded`) is `accepted`. A Key Decision in a completed project's summary represents a decision that was made and shipped, so `accepted` is the correct status.
+
+**6.5 — Report, don't prompt.** After processing all Key Decisions, print a short informational summary, e.g.:
+
+```
+Promoted N key decision(s) to reference/decisions/:
+  - created: dr-YYMMDD-<slug> ("<title>")
+  - skipped (already promoted): <slug>
+```
+
+This is informational only. There is no interactive prompt anywhere in this step.
+
+### Step 7: Commit
 
 ```bash
 git add "$PROJECT_PATH/summary.md"
 git commit -m "docs: generate summary for {project-name}"
 ```
+
+If decision records were promoted in Step 6, also stage `.oat/repo/reference/decisions/` so the new `dr-*.md` records and the regenerated `index.md` land with the summary.
 
 If this is a re-run (incremental update):
 
@@ -206,7 +270,7 @@ If this is a re-run (incremental update):
 git commit -m "docs: update summary for {project-name}"
 ```
 
-### Step 7: Output Summary
+### Step 8: Output Summary
 
 ```
 Summary generated for {project-name}.
@@ -214,6 +278,7 @@ Summary generated for {project-name}.
 Sections: {list of non-empty sections included}
 Lines: {line count}
 Mode: {fresh | incremental update}
+Decisions promoted: {N created, M skipped as already promoted | skipped (PJM not installed)}
 
 Summary tracks: last task {task_id}, {N} revision phases
 ```
@@ -227,3 +292,5 @@ Summary tracks: last task {task_id}, {N} revision phases
 - Summary is under 200 lines for typical projects
 - Re-run after revisions updates only affected sections
 - Re-run with no changes produces no modifications
+- When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/dr-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
+- When the PJM tool pack is not installed, decision promotion is skipped silently with no prompt
