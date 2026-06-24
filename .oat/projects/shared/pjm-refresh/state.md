@@ -99,13 +99,12 @@ None
 
 ## Next Milestone
 
-PR #118 is open for review (now includes the p04-t04 fix, the p-rev1 verb rename
+PR #118 is open for review. It now includes the p04-t04 fix, the p-rev1 verb
+rename and key-decision promotion, and the p-rev2 dogfood fixes (uppercase ids,
+30-char slug, decision-migrate parser, atomic migrate, doctor scope, idempotent
+regenerate).
 
-- key-decision promotion, and the p-rev2 dogfood fixes — uppercase ids, 30-char
-  slug, decision-migrate parser, atomic migrate, doctor scope, idempotent
-  regenerate).
-
-* To incorporate further feedback: run `oat-project-revise`
-* When approved: run `oat-project-complete`
+- To incorporate further feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
 
 PR: https://github.com/voxmedia/open-agent-toolkit/pull/118
