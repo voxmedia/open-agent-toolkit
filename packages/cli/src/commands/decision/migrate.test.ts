@@ -95,6 +95,60 @@ const REAL_WORLD_DECISIONS = [
   '',
 ].join('\n');
 
+// Mirrors this repo's real `decision-record.md` tail: a `## Decisions` region
+// with `### ADR-NNN` records whose bodies use `#### Context`/`#### Decision`
+// sub-headings, followed by a trailing `## ADR Template` boilerplate block that
+// is NOT an ADR/DR heading. The parser used to run the LAST section's body to
+// EOF and absorb that template tail (F2).
+const TRAILING_TEMPLATE_DECISIONS = [
+  '# OAT Decision Record',
+  '',
+  '## Decision Index',
+  '',
+  '| ID      | Date       | Status   | Title                        |',
+  '| ------- | ---------- | -------- | ---------------------------- |',
+  '| ADR-020 | 2026-04-01 | accepted | Adopt deterministic ids      |',
+  '| DR-021  | 2026-04-02 | accepted | Make oat tools install        |',
+  '',
+  '## Decisions',
+  '',
+  '### ADR-020: Adopt deterministic ids',
+  '',
+  '- **Date:** 2026-04-01',
+  '- **Status:** accepted',
+  '',
+  '#### Context',
+  '',
+  'Hash ids collided across worktrees.',
+  '',
+  '#### Decision',
+  '',
+  'Use date plus slug ids everywhere.',
+  '',
+  '### DR-021: Make oat tools install',
+  '',
+  '- **Date:** 2026-04-02',
+  '- **Status:** accepted',
+  '',
+  '#### Context',
+  '',
+  'Installing tools by hand was error prone.',
+  '',
+  '#### Decision',
+  '',
+  'Ship an oat tools install command.',
+  '',
+  '## ADR Template',
+  '',
+  'Copy this block to add a new decision record.',
+  '',
+  '### ADR-NNN: Title',
+  '',
+  '- **Date:** YYYY-MM-DD',
+  '- **Status:** proposed',
+  '',
+].join('\n');
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -481,6 +535,54 @@ describe('migrateDecisionRecords', () => {
     expect(index).toContain(
       '| DR-260214-adopt-skill-first-invocation | 2026-02-14 | proposed | Adopt skill-first invocation | DR-003 |',
     );
+  });
+
+  it('excludes a trailing `## ADR Template` block from the last decision record body (F2)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-decision-migrate-'));
+    tempDirs.push(root);
+    const referenceRoot = join(root, 'reference');
+    await mkdir(referenceRoot, { recursive: true });
+    await writeFile(
+      join(referenceRoot, 'decision-record.md'),
+      TRAILING_TEMPLATE_DECISIONS,
+      { encoding: 'utf8', flag: 'wx' },
+    );
+
+    const result = await migrateDecisionRecords({ referenceRoot });
+
+    // Only the two real records migrate; the trailing template is not a record.
+    expect(result.written).toHaveLength(2);
+
+    const lastRecord = await readFile(
+      join(referenceRoot, 'decisions', 'DR-260402-make-oat-tools-install.md'),
+      'utf8',
+    );
+    // legacy_id is preserved on the last record.
+    expect(lastRecord).toContain('legacy_id: DR-021');
+    // The real body (including its level-4 sub-headings) stays in the record.
+    expect(lastRecord).toContain('### DR-021: Make oat tools install');
+    expect(lastRecord).toContain('#### Context');
+    expect(lastRecord).toContain('Ship an oat tools install command.');
+    // The trailing `## ADR Template` boilerplate is EXCLUDED from the body.
+    expect(lastRecord).not.toContain('## ADR Template');
+    expect(lastRecord).not.toContain(
+      'Copy this block to add a new decision record.',
+    );
+    expect(lastRecord).not.toContain('### ADR-NNN: Title');
+
+    // Body parity for the non-trailing record is unchanged: its body still ends
+    // at the next `### ADR/DR` heading and keeps its own sub-headings.
+    const firstRecord = await readFile(
+      join(referenceRoot, 'decisions', 'DR-260401-adopt-deterministic-ids.md'),
+      'utf8',
+    );
+    expect(firstRecord).toContain('legacy_id: ADR-020');
+    expect(firstRecord).toContain('### ADR-020: Adopt deterministic ids');
+    expect(firstRecord).toContain('#### Decision');
+    expect(firstRecord).toContain('Use date plus slug ids everywhere.');
+    // The first record must not bleed into the second.
+    expect(firstRecord).not.toContain('### DR-021: Make oat tools install');
+    expect(firstRecord).not.toContain('## ADR Template');
   });
 
   it('tolerates a real-world record missing an optional field (no Drivers line) and missing Status via index fallback', async () => {

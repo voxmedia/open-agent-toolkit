@@ -108,6 +108,22 @@ function parseLegacyField(section: string, field: string): string | null {
   return regex.exec(section)?.[1]?.trim() ?? null;
 }
 
+// A level-2 heading (exactly two `#`). Decision records are level-3
+// (`### ADR-NNN`) inside the `## Decisions` region and their bodies use level-4
+// (`#### …`) sub-headings, so any `^## ` heading after a record marks the end of
+// the decisions region — e.g. a trailing `## ADR Template` boilerplate block.
+const LEVEL_TWO_HEADING_PATTERN = /^##\s+(?!#)/gm;
+
+// Returns the offset of the first `^## ` (exactly two-hash) heading that starts
+// strictly after `afterIndex`, or `content.length` when none exists. Used to
+// bound a decision section's body at the end of the decisions region so trailing
+// `##`-level boilerplate is never absorbed into the last record.
+function nextLevelTwoHeadingIndex(content: string, afterIndex: number): number {
+  LEVEL_TWO_HEADING_PATTERN.lastIndex = afterIndex;
+  const match = LEVEL_TWO_HEADING_PATTERN.exec(content);
+  return match ? match.index : content.length;
+}
+
 function parseLegacyDecisionSections(content: string): LegacyDecisionSection[] {
   const indexRows = new Map(
     parseLegacyIndexRows(content).map((row) => [row.id, row]),
@@ -115,7 +131,15 @@ function parseLegacyDecisionSections(content: string): LegacyDecisionSection[] {
   const matches = [...content.matchAll(LEGACY_HEADING_PATTERN)];
   return matches.map((match, index) => {
     const sectionStart = match.index ?? 0;
-    const sectionEnd = matches[index + 1]?.index ?? content.length;
+    // Bound the body at whichever comes first after this section starts: the
+    // next ADR/DR heading, or the next `^## ` level-2 heading (which ends the
+    // decisions region, e.g. `## ADR Template`). Default to EOF when neither
+    // exists. This keeps trailing boilerplate out of the last record (F2).
+    const nextRecordStart = matches[index + 1]?.index ?? content.length;
+    const sectionEnd = Math.min(
+      nextRecordStart,
+      nextLevelTwoHeadingIndex(content, sectionStart + 1),
+    );
     const section = content.slice(sectionStart, sectionEnd).trim();
     const legacyId = match[1]!;
     const indexRow = indexRows.get(legacyId);
