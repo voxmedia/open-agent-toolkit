@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.2.0
+version: 1.3.0
 description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, and execution recommendations.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
@@ -10,7 +10,7 @@ user-invocable: true
 
 # Review Backlog
 
-Analyze the file-backed backlog under `.oat/repo/reference/backlog/` to produce a structured review with value-effort ratings, dependency graph, parallel work lanes, and a recommended execution sequence. Optionally cross-reference a roadmap to identify alignment gaps.
+Analyze the file-backed backlog under `.oat/repo/pjm/backlog/` to produce a structured review with value-effort ratings, dependency graph, parallel work lanes, and a recommended execution sequence. Optionally cross-reference a roadmap to identify alignment gaps.
 
 ## Mode Assertion
 
@@ -20,12 +20,12 @@ Analyze the file-backed backlog under `.oat/repo/reference/backlog/` to produce 
 
 ## Reference Format Convention
 
-Whenever a backlog item is referenced — in the written review document, in chat output, or in the inline summary at the end — it **must include both the ID and a human-readable title**. Bare IDs like `bl-281c` are not acceptable in user-facing output, because readers do not have a board lookup in front of them.
+Whenever a backlog item is referenced — in the written review document, in chat output, or in the inline summary at the end — it **must include both the ID and a human-readable title**. Bare IDs like `BL-260529-control-plane-state-read` are not acceptable in user-facing output, because readers do not have a board lookup in front of them.
 
 Use one of these formats:
 
-- **Inline / prose:** `` `bl-281c` (control-plane state-read migration) ``
-- **Tables / lists:** `**bl-281c** — Control-plane state-read migration`
+- **Inline / prose:** `` `BL-260529-control-plane-state-read` (control-plane state-read migration) ``
+- **Tables / lists:** `**BL-260529-control-plane-state-read** — Control-plane state-read migration`
 - **Compact lists where space is tight (e.g., dependency graphs):** an ID-only token is acceptable **only if** a legend in the same section maps every ID to its title.
 
 This convention applies equally to:
@@ -59,10 +59,10 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 Parse from `$ARGUMENTS`:
 
-- **backlog-root**: (optional) Path to the backlog root directory. Defaults to `.oat/repo/reference/backlog/`.
+- **backlog-root**: (optional) Path to the backlog root directory. Defaults to `.oat/repo/pjm/backlog/`.
 - **--roadmap=\<path\>**: (optional) Path to a roadmap document for alignment analysis.
-- **--output=\<path\>**: (optional) Where to write the living review. Defaults to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md`.
-- **--archive-dated**: (optional) Also write a dated snapshot alongside the living review at `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md`. Default: off.
+- **--output=\<path\>**: (optional) Where to write the living review. Defaults to `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`.
+- **--archive-dated**: (optional) Also write a dated snapshot alongside the living review at `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md`. Default: off.
 
 ## Process
 
@@ -71,7 +71,7 @@ Parse from `$ARGUMENTS`:
 **Backlog root:**
 
 1. If `backlog-root` is provided, use it directly.
-2. Otherwise, default to `.oat/repo/reference/backlog/`.
+2. Otherwise, default to `.oat/repo/pjm/backlog/`.
 3. Confirm these inputs exist:
    - `backlog/index.md`
    - `backlog/items/*.md`
@@ -81,18 +81,18 @@ Parse from `$ARGUMENTS`:
 **Roadmap document (optional):**
 
 1. If `--roadmap` is provided, use it directly.
-2. Otherwise, look for `.oat/repo/reference/roadmap.md`.
+2. Otherwise, look for `.oat/repo/pjm/roadmap.md`.
 3. Ask the user whether to include roadmap alignment if a roadmap is available.
 
 **Output path:**
 
 1. If `--output` is provided, use it directly.
-2. Otherwise, default to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md` (the living, single-file review co-located with the backlog).
+2. Otherwise, default to `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md` (the living, single-file review co-located with the backlog).
 3. If the `backlog/reviews/` directory does not exist yet, create it before writing. Do not fall back to `.oat/repo/reviews/` — backlog review artifacts now live under the file-backed backlog, not the repo-wide reviews directory.
 
 **Dated snapshot (optional):**
 
-If `--archive-dated` is passed, also write a copy to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md` in the **same directory** as the living review. Do not write dated snapshots to `.oat/repo/reviews/`.
+If `--archive-dated` is passed, also write a copy to `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review-YYYY-MM-DD.md` in the **same directory** as the living review. Do not write dated snapshots to `.oat/repo/reviews/`.
 
 ### Step 2: Read and Catalog Backlog Items
 
@@ -172,7 +172,7 @@ If a roadmap was provided:
 
 Use the template at `.agents/skills/oat-pjm-review-backlog/references/backlog-review-template.md`.
 
-Write the **living** review to the resolved output path (default `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md`). If `--archive-dated` was passed, also write a dated snapshot alongside it (`backlog-and-roadmap-review-YYYY-MM-DD.md` in the same directory). Never split living and dated outputs across different directories — they must live together under `backlog/reviews/`.
+Write the **living** review to the resolved output path (default `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`). If `--archive-dated` was passed, also write a dated snapshot alongside it (`backlog-and-roadmap-review-YYYY-MM-DD.md` in the same directory). Never split living and dated outputs across different directories — they must live together under `backlog/reviews/`.
 
 Ensure:
 
@@ -190,7 +190,7 @@ After writing the review, provide:
 - Top 3 recommended next actions
 - Key risks or gaps discovered
 
-When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `bl-XXXX` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
+When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `BL-YYMMDD-slug` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
 
 ### Step 9: Offer Priority Alignment Walkthrough (Optional, Collaborative)
 
@@ -204,7 +204,7 @@ After the summary, ask the operator:
 
 > Want to walk through the review together and produce a one-page execution view at `backlog/reviews/priority-alignment.md`? It captures phased order, parallelism, and a recommended kickoff stack — a faster reference than the full review.
 
-If `.oat/repo/reference/backlog/reviews/priority-alignment.md` already exists, frame it as an **update** to the existing document rather than a fresh create. Read the existing file first so the walkthrough builds on it.
+If `.oat/repo/pjm/backlog/reviews/priority-alignment.md` already exists, frame it as an **update** to the existing document rather than a fresh create. Read the existing file first so the walkthrough builds on it.
 
 If the operator declines, stop after the summary. Do not silently write or modify `priority-alignment.md`.
 
@@ -220,7 +220,7 @@ If the operator declines, stop after the summary. Do not silently write or modif
    - Are there calendar constraints (freezes, releases, time off) that affect ordering?
    - Does the operator want an optional axis like "planning investment" or "design effort" as a column? (Some repos find this useful; many don't. Default: omit unless operator opts in.)
 3. **Iterate on phase names, ordering, and the kickoff stack** until the operator is satisfied. Phase names should reflect the repo's actual initiatives, not generic placeholders.
-4. **Write or update** `.oat/repo/reference/backlog/reviews/priority-alignment.md` using the template at `.agents/skills/oat-pjm-review-backlog/references/priority-alignment-template.md`. Add a new Changelog entry summarizing what shifted in this pass.
+4. **Write or update** `.oat/repo/pjm/backlog/reviews/priority-alignment.md` using the template at `.agents/skills/oat-pjm-review-backlog/references/priority-alignment-template.md`. Add a new Changelog entry summarizing what shifted in this pass.
 5. **Confirm the result** with the operator: file path, top-of-doc Status line, and the kickoff stack.
 
 When referencing backlog items inside the priority-alignment doc, the **Reference Format Convention** still applies — link to the item file and pair the ID with a human-readable title.
@@ -232,6 +232,6 @@ When referencing backlog items inside the priority-alignment doc, the **Referenc
 - Parallel lanes and execution waves are actionable
 - Roadmap alignment gaps are surfaced when roadmap input is present
 - Output document follows the review template structure
-- Living review is written to `.oat/repo/reference/backlog/reviews/backlog-and-roadmap-review.md` (unless `--output` is explicitly overridden); dated snapshots, when emitted, live in the same `backlog/reviews/` directory and never under `.oat/repo/reviews/`
+- Living review is written to `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md` (unless `--output` is explicitly overridden); dated snapshots, when emitted, live in the same `backlog/reviews/` directory and never under `.oat/repo/reviews/`
 - The operator is offered (but never forced into) a collaborative walkthrough that produces or updates `backlog/reviews/priority-alignment.md`; if the operator accepts, the file is written using the priority-alignment template and includes a Changelog entry for this pass; if the operator declines, no file is created or modified
 - Every user-facing reference to a backlog item pairs the ID with a human-readable title (per the Reference Format Convention)

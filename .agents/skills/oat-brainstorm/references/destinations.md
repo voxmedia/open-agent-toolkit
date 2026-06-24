@@ -32,6 +32,14 @@ Per-destination lookup that `oat-brainstorm` consults at destination-identificat
 **Required template fields:** `title`, `summary`, `approachesConsidered`, `chosenDirection` (or explicit "no direction"), `transcriptSessionNote`. Template: `templates/brainstorm-doc.md` (in this skill).
 **Optional template fields:** `motivation`, `vision`, `openQuestions`, `nextSteps`.
 **Confirmation pattern:** `minimal` (path only)
+**Default destination suggestion (OAT-aware):** When the user wants to save the doc into the repo but has not supplied an explicit path, suggest a durable default before prompting:
+
+1. Project-level OAT (`.oat/` at repo root) → suggest `.oat/repo/reference/brainstorms/<YYYY-MM-DD>-<topic>.md`. Create `reference/brainstorms/` on demand if it does not exist.
+2. User-level OAT (`~/.oat/`) → suggest `~/.oat/brainstorms/<YYYY-MM-DD>-<topic>.md`.
+3. Otherwise → fall back to the current directory.
+
+Always honor an explicit user-supplied path over the suggestion. Brainstorm docs are durable reference material, so they belong under `reference/brainstorms/`, never under the active `pjm/` operational layer.
+
 **Handoff target:** no downstream skill. Skill validates path (file not dir; parent exists or offer to create — explicit confirmation if outside repo; file already exists → ask overwrite vs different name; unwritable → surface OS error), renders `templates/brainstorm-doc.md` with payload values, writes the file. Reports the absolute path written.
 **If user wants to keep brainstorming after this is offered:** return to flow with destination = doc-to-path. Skill notes the user-supplied path and may proactively probe for `motivation`, `vision`, or richer `chosenDirection` if those template sections feel sparse.
 
@@ -76,7 +84,7 @@ Per-destination lookup that `oat-brainstorm` consults at destination-identificat
 ### Destination: Scoped backlog item
 
 **Pack required:** `project-management` (i.e., `oat config get tools.project-management` returns `true`)
-**Trigger phrases:** "track this as a backlog item", "make a ticket", "log this", "open a backlog entry", "add this to the backlog", "create a bl-XXXX for this".
+**Trigger phrases:** "track this as a backlog item", "make a ticket", "log this", "open a backlog entry", "add this to the backlog", "create a backlog item for this".
 **Required template fields:** `title` (1-line summary), `description` (problem + proposed approach), `acceptance criteria` (bullet list), `scope` (xs / s / m / l / xl), `priority` (p0 / p1 / p2 / p3). Template: `.oat/templates/backlog-item.md` (consumed via `oat-pjm-add-backlog-item`).
 **Optional template fields:** related items, target release, owner.
 **Confirmation pattern:** `full`
@@ -94,7 +102,7 @@ I have what I need to track this as a backlog item. Here is the proposed payload
   Scope:      <xs|s|m|l|xl>
   Priority:   <p0|p1|p2|p3>
 
-Confirm to write this to a new bl-XXXX file, or tell me what to change.
+Confirm to write this to a new backlog item file, or tell me what to change.
 ```
 
 **Handoff target:** `oat-pjm-add-backlog-item` from its Step 1, with the confirmed payload pre-filling the early prompts. The downstream skill owns ID generation, file writing, and backlog-index regeneration.

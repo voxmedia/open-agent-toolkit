@@ -12,10 +12,12 @@ function createHarness(): {
   capture: LoggerCapture;
   command: Command;
   initializeBacklog: ReturnType<typeof vi.fn>;
+  pathExists: ReturnType<typeof vi.fn>;
   resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const initializeBacklog = vi.fn(async (_backlogRoot: string) => {});
+  const pathExists = vi.fn(async (_path: string) => false);
   const resolveProjectRoot = vi.fn(
     async (_cwd: string) => '/tmp/workspace/repo',
   );
@@ -32,6 +34,7 @@ function createHarness(): {
       logger: capture.logger,
     }),
     initializeBacklog,
+    pathExists,
     resolveProjectRoot,
   });
 
@@ -39,12 +42,14 @@ function createHarness(): {
     capture,
     command,
     initializeBacklog,
+    pathExists,
     resolveProjectRoot,
   };
 }
 
 async function runCommand(
   command: Command,
+  subcommand: string,
   globalArgs: string[] = [],
   cmdArgs: string[] = [],
 ): Promise<void> {
@@ -57,7 +62,7 @@ async function runCommand(
 
   program.addCommand(command);
 
-  await program.parseAsync([...globalArgs, 'backlog', 'init', ...cmdArgs], {
+  await program.parseAsync([...globalArgs, 'backlog', subcommand, ...cmdArgs], {
     from: 'user',
   });
 }
@@ -78,14 +83,14 @@ describe('createBacklogCommand', () => {
     const { command, capture, initializeBacklog, resolveProjectRoot } =
       createHarness();
 
-    await runCommand(command);
+    await runCommand(command, 'init');
 
     expect(resolveProjectRoot).toHaveBeenCalledWith('/tmp/workspace');
     expect(initializeBacklog).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/reference/backlog',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog',
     );
     expect(capture.info).toContain(
-      'Initialized backlog scaffold at /tmp/workspace/repo/.oat/repo/reference/backlog',
+      'Initialized backlog scaffold at /tmp/workspace/repo/.oat/repo/pjm/backlog',
     );
     expect(process.exitCode).toBe(0);
   });
@@ -96,6 +101,7 @@ describe('createBacklogCommand', () => {
 
     await runCommand(
       command,
+      'init',
       ['--cwd', '/tmp/override-workspace'],
       ['--backlog-root', 'custom/backlog'],
     );
@@ -113,15 +119,76 @@ describe('createBacklogCommand', () => {
   it('outputs structured JSON for backlog init', async () => {
     const { command, capture, initializeBacklog } = createHarness();
 
-    await runCommand(command, ['--json']);
+    await runCommand(command, 'init', ['--json']);
 
     expect(initializeBacklog).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/reference/backlog',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog',
     );
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'ok',
-      backlogRoot: '/tmp/workspace/repo/.oat/repo/reference/backlog',
+      backlogRoot: '/tmp/workspace/repo/.oat/repo/pjm/backlog',
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('generates a date slug id from a title', async () => {
+    const { command, capture, pathExists } = createHarness();
+
+    await runCommand(
+      command,
+      'generate-id',
+      [],
+      ['Streaming Cache Layer', '--created-at', '2026-06-22T10:00:00Z'],
+    );
+
+    expect(pathExists).toHaveBeenCalledWith(
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog/items/BL-260622-streaming-cache-layer.md',
+    );
+    expect(pathExists).toHaveBeenCalledWith(
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260622-streaming-cache-layer.md',
+    );
+    expect(capture.info).toContain('BL-260622-streaming-cache-layer');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('outputs structured JSON for generated ids', async () => {
+    const { command, capture } = createHarness();
+
+    await runCommand(
+      command,
+      'generate-id',
+      ['--json'],
+      ['Streaming Cache Layer', '--created-at', '2026-06-22T10:00:00Z'],
+    );
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'ok',
+      id: 'BL-260622-streaming-cache-layer',
+      titleOrSlug: 'Streaming Cache Layer',
+      createdAt: '2026-06-22T10:00:00Z',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a collision when the candidate item path exists', async () => {
+    const { command, capture, pathExists } = createHarness();
+    pathExists.mockImplementation(async (path: string) =>
+      path.endsWith('/items/BL-260622-streaming-cache-layer.md'),
+    );
+
+    await runCommand(
+      command,
+      'generate-id',
+      ['--json'],
+      ['Streaming Cache Layer', '--created-at', '2026-06-22T10:00:00Z'],
+    );
+
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      id: 'BL-260622-streaming-cache-layer',
+      message:
+        'Backlog item BL-260622-streaming-cache-layer already exists. Use a more specific title or slug to disambiguate.',
+    });
+    expect(process.exitCode).toBe(1);
   });
 });

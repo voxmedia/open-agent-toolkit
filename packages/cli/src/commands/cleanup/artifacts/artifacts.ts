@@ -145,9 +145,14 @@ export async function discoverArtifactCandidates(
 
 async function collectReferenceContents(repoRoot: string): Promise<string[]> {
   const contents: string[] = [];
-  const repoReferenceFiles = await collectMarkdownFiles(
-    join(repoRoot, '.oat/repo/reference'),
-  );
+  const repoReferenceFiles = (
+    await Promise.all(
+      [
+        join(repoRoot, '.oat/repo/pjm'),
+        join(repoRoot, '.oat/repo/reference'),
+      ].map((root) => collectMarkdownFiles(root)),
+    )
+  ).flat();
 
   let activeProjectFiles: string[] = [];
   try {

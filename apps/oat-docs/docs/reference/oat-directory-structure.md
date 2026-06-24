@@ -34,6 +34,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
   scripts/
   repo/
     knowledge/
+    pjm/
     reference/
     reviews/
     archive/
@@ -41,16 +42,16 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 ## Top-level entries
 
-| Path                     | Purpose                                          | Notes                                                                                                   |
-| ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `.oat/config.json`       | Shared repo runtime config for non-sync settings | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`, `archive.*`, and `documentation.*`     |
-| `.oat/config.local.json` | Local per-developer runtime state                | Gitignored; includes `activeProject`, `lastPausedProject`, `activeIdea`                                 |
-| `.oat/state.md`          | Generated repo state dashboard                   | Gitignored; rebuilt with `oat state refresh` from config, project artifacts, and knowledge metadata     |
-| `.oat/projects/`         | OAT project artifacts                            | `shared`, `local`, `archived` scopes                                                                    |
-| `.oat/ideas/`            | Project-level ideas store                        | Often gitignored                                                                                        |
-| `.oat/sync/`             | Interop sync state/config                        | See details below                                                                                       |
-| `.oat/templates/`        | Artifact templates used by OAT skills            | Source for scaffolding. Includes `docs-app-fuma/` (Fumadocs) and `docs-app-mkdocs/` (MkDocs) templates. |
-| `.oat/repo/`             | Repo-level knowledge/reference/review artifacts  | Durable operational records                                                                             |
+| Path                     | Purpose                                             | Notes                                                                                                   |
+| ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `.oat/config.json`       | Shared repo runtime config for non-sync settings    | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`, `archive.*`, and `documentation.*`     |
+| `.oat/config.local.json` | Local per-developer runtime state                   | Gitignored; includes `activeProject`, `lastPausedProject`, `activeIdea`                                 |
+| `.oat/state.md`          | Generated repo state dashboard                      | Gitignored; rebuilt with `oat state refresh` from config, project artifacts, and knowledge metadata     |
+| `.oat/projects/`         | OAT project artifacts                               | `shared`, `local`, `archived` scopes                                                                    |
+| `.oat/ideas/`            | Project-level ideas store                           | Often gitignored                                                                                        |
+| `.oat/sync/`             | Interop sync state/config                           | See details below                                                                                       |
+| `.oat/templates/`        | Artifact templates used by OAT skills               | Source for scaffolding. Includes `docs-app-fuma/` (Fumadocs) and `docs-app-mkdocs/` (MkDocs) templates. |
+| `.oat/repo/`             | Repo-level PJM/knowledge/reference/review artifacts | Active PJM state under `pjm/`; durable references (including decisions) under `reference/`              |
 
 ## `.oat/sync/` details
 
@@ -210,22 +211,34 @@ Not all workflow modes require every artifact:
 
 ## `.oat/repo/` structure
 
-| Path                   | Purpose                                                                                                                                 |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `.oat/repo/knowledge/` | Generated codebase knowledge indexes                                                                                                    |
-| `.oat/repo/reference/` | Repo-level reference docs, including the canonical PJM surface (`current-state.md`, `roadmap.md`, `decision-record.md`, and `backlog/`) |
-| `.oat/repo/reviews/`   | Repo-scoped review artifacts (ad-hoc/non-project)                                                                                       |
-| `.oat/repo/archive/`   | Archived repo-level artifacts                                                                                                           |
+| Path                   | Purpose                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `.oat/repo/knowledge/` | Generated codebase knowledge indexes                                                     |
+| `.oat/repo/pjm/`       | Active operational PJM layer (`current-state.md`, `roadmap.md`, and `backlog/`)          |
+| `.oat/repo/reference/` | Durable append-mostly references, including file-per-record decisions under `decisions/` |
+| `.oat/repo/reviews/`   | Repo-scoped review artifacts (ad-hoc/non-project)                                        |
+| `.oat/repo/archive/`   | Archived repo-level artifacts                                                            |
 
-Canonical project-management repo-reference surface:
+Canonical project-management repo-reference surface splits the active
+operational layer (`pjm/`) from durable references (`reference/`):
 
 ```text
-.oat/repo/reference/
-  current-state.md
-  roadmap.md
-  decision-record.md
-  backlog/
+.oat/repo/
+  AGENTS.md
+  pjm/
+    AGENTS.md
+    current-state.md
+    roadmap.md
+    backlog/
+  reference/
+    AGENTS.md
+    decisions/
 ```
+
+Decisions are file-per-record under `reference/decisions/` (managed with the
+`oat decision` command group), replacing the legacy single
+`reference/decision-record.md`. Repos still on the old single-`reference/`
+layout migrate with `oat pjm migrate`.
 
 ## User scope (`~/.oat/`)
 

@@ -1,5 +1,5 @@
 ---
-id: bl-{hash}
+id: BL-{YYMMDD-slug}
 title: '{title}'
 status: open # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none

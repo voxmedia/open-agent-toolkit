@@ -9,6 +9,11 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import {
+  DECISION_INDEX_END,
+  DECISION_INDEX_START,
+  renderDecisionManagedSection,
+} from '@commands/decision/regenerate-index';
 import { describe, expect, it } from 'vitest';
 
 import { CORE_SKILLS } from '../core/install-core';
@@ -55,8 +60,45 @@ function parseBundleAgents(): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+function parseBundleTemplates(): string[] {
+  const content = readFileSync(getBundleScriptPath(), 'utf8');
+  const match = content.match(/for template in ([\s\S]*?); do/);
+  if (!match)
+    throw new Error('Could not parse template list from bundle-assets.sh');
+  return match[1]
+    .split(/\s+/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 function getBundleScriptPath(): string {
   return join(import.meta.dirname, '../../../../../scripts/bundle-assets.sh');
+}
+
+function getMigrationPromptSourcePath(): string {
+  return join(
+    import.meta.dirname,
+    '../../../../../assets/migration/pjm-restructure.md',
+  );
+}
+
+/**
+ * Extract the canonical decision-index header row from the live CLI render
+ * logic, so the regression assertion below pins the migration prompt asset to
+ * the same source of truth used by `oat decision regenerate-index` instead of a
+ * hardcoded second copy of the header string.
+ */
+function getCanonicalDecisionIndexHeader(): string {
+  const managedSection = renderDecisionManagedSection([]);
+  const headerRow = managedSection
+    .split('\n')
+    .find((line) => line.startsWith('| ID '));
+  if (!headerRow) {
+    throw new Error(
+      'Could not derive decision-index header row from renderDecisionManagedSection.',
+    );
+  }
+  return headerRow;
 }
 
 function isUserInvocableSkill(skillName: string): boolean {
@@ -73,9 +115,14 @@ function isUserInvocableSkill(skillName: string): boolean {
 describe('bundle-assets.sh consistency', () => {
   const bundleSkills = parseBundleSkills();
   const bundleAgents = parseBundleAgents();
+  const bundleTemplates = parseBundleTemplates();
   const repoSkillsRoot = join(
     import.meta.dirname,
     '../../../../../../../.agents/skills',
+  );
+  const repoTemplatesRoot = join(
+    import.meta.dirname,
+    '../../../../../../../.oat/templates',
   );
   const workflowLifecycleSkills = readdirSync(repoSkillsRoot, {
     withFileTypes: true,
@@ -190,6 +237,28 @@ describe('bundle-assets.sh consistency', () => {
     ).toEqual([]);
   });
 
+  it('bundles the current p01 template set', () => {
+    expect(bundleTemplates).toEqual(
+      expect.arrayContaining([
+        'decision.md',
+        'repo-agents.md',
+        'pjm-agents.md',
+        'reference-agents.md',
+      ]),
+    );
+    expect(bundleTemplates).not.toContain('decision-record.md');
+  });
+
+  it('only bundles templates that exist in the repo template root', () => {
+    const missing = bundleTemplates.filter(
+      (template) => !existsSync(join(repoTemplatesRoot, template)),
+    );
+    expect(
+      missing,
+      `Templates listed in bundle-assets.sh but missing from .oat/templates: ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
   it('does not bundle skills that belong to no pack', () => {
     const allPackSkills = new Set<string>([
       ...CORE_SKILLS,
@@ -244,4 +313,51 @@ describe('bundle-assets.sh consistency', () => {
     },
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
+
+  it(
+    'bundles the PJM migration prompt asset',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        const promptPath = join(assetsRoot, 'migration', 'pjm-restructure.md');
+        expect(existsSync(promptPath)).toBe(true);
+        expect(readFileSync(promptPath, 'utf8')).toContain(
+          'OAT PJM repo-reference migration',
+        );
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  describe('migration prompt decision-index contract', () => {
+    const promptContent = readFileSync(getMigrationPromptSourcePath(), 'utf8');
+
+    it('teaches the canonical singular decision-index markers', () => {
+      expect(promptContent).toContain(DECISION_INDEX_START);
+      expect(promptContent).toContain(DECISION_INDEX_END);
+    });
+
+    it('does not teach the stale plural DECISIONS-INDEX markers', () => {
+      // The live CLI (regenerate-index.ts) uses the SINGULAR marker pair.
+      // A manual fallback that emits the plural markers would build an index
+      // that `oat decision regenerate-index` cannot manage.
+      expect(promptContent).not.toContain('OAT DECISIONS-INDEX');
+    });
+
+    it('teaches the canonical 5-column decision-index header (incl. Legacy)', () => {
+      // Source the expected header from the live render logic so this asset
+      // cannot silently drift from the CLI contract. The 4-column variant that
+      // omits `Legacy` would drop migrated `legacy_id` values.
+      expect(promptContent).toContain(getCanonicalDecisionIndexHeader());
+      expect(promptContent).not.toContain('| ID | Date | Status | Decision |');
+    });
+  });
 });

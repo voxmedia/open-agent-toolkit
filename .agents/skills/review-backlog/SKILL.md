@@ -1,7 +1,7 @@
 ---
 name: review-backlog
-version: 1.2.1
-description: Use when prioritizing backlog work or evaluating a roadmap. Produces value-effort ratings, dependency mapping, and execution recommendations.
+version: 1.3.0
+description: Retired. Use oat-pjm-review-backlog instead. The active backlog and roadmap moved from .oat/repo/reference/ to the two-layer .oat/repo/pjm/ taxonomy.
 argument-hint: '[backlog-path] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
@@ -10,7 +10,14 @@ user-invocable: true
 
 # Review Backlog
 
-> Deprecated: Use `oat-pjm-review-backlog` instead.
+> **Retired — do not follow the process below.** This skill predates the PJM
+> two-layer restructure and looks for the backlog and roadmap under the old
+> single `.oat/repo/reference/` layout. Use **`oat-pjm-review-backlog`**
+> instead, which targets the current taxonomy: the active backlog lives under
+> `.oat/repo/pjm/backlog/` and the roadmap under `.oat/repo/pjm/roadmap.md`.
+>
+> The location guidance in the sections below is **historical/legacy context
+> only**. It is kept for repos that have not yet run `oat pjm migrate`.
 
 Analyze a backlog document to produce a structured review with value/effort ratings, dependency graph, parallel work lanes, and a recommended execution sequence. Optionally cross-references a roadmap to identify alignment gaps.
 

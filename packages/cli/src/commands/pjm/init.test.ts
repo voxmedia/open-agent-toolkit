@@ -13,24 +13,30 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { initializeRepoReference } from './init';
 
-const REFERENCE_FILES = [
+const TEMPLATE_NAMES = [
   'current-state.md',
   'roadmap.md',
-  'decision-record.md',
+  'repo-agents.md',
+  'pjm-agents.md',
+  'reference-agents.md',
 ] as const;
 
-const BACKLOG_FILES = [
-  'backlog/index.md',
-  'backlog/completed.md',
-  'backlog/items/.gitkeep',
-  'backlog/archived/.gitkeep',
+const EXPECTED_FILES = [
+  'AGENTS.md',
+  'pjm/AGENTS.md',
+  'pjm/current-state.md',
+  'pjm/roadmap.md',
+  'reference/AGENTS.md',
+  'pjm/backlog/index.md',
+  'pjm/backlog/completed.md',
+  'pjm/backlog/items/.gitkeep',
+  'pjm/backlog/archived/.gitkeep',
+  'reference/decisions/index.md',
 ] as const;
-
-const ALL_REPORTED_FILES = [...REFERENCE_FILES, ...BACKLOG_FILES];
 
 async function seedTemplate(
   root: string,
-  name: (typeof REFERENCE_FILES)[number],
+  name: (typeof TEMPLATE_NAMES)[number],
   body = `# ${name}\n`,
 ): Promise<void> {
   await mkdir(root, { recursive: true });
@@ -49,7 +55,7 @@ async function seedTemplate(
 }
 
 async function seedTemplates(root: string): Promise<void> {
-  for (const name of REFERENCE_FILES) {
+  for (const name of TEMPLATE_NAMES) {
     await seedTemplate(root, name);
   }
 }
@@ -64,60 +70,66 @@ describe('initializeRepoReference', () => {
     tempDirs.length = 0;
   });
 
-  it('creates reference docs and the backlog scaffold for a fresh root', async () => {
+  it('creates the canonical two-layer PJM scaffold for a fresh root', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
-    const referenceRoot = join(root, 'repo', 'reference');
+    const repoRoot = join(root, 'repo');
     await seedTemplates(join(assetsRoot, 'templates'));
 
-    const result = await initializeRepoReference({ assetsRoot, referenceRoot });
+    const result = await initializeRepoReference({ assetsRoot, repoRoot });
 
-    expect(result.referenceRoot).toBe(referenceRoot);
-    expect(result.created).toEqual(ALL_REPORTED_FILES);
+    expect(result.repoRoot).toBe(repoRoot);
+    expect(result.created).toEqual(EXPECTED_FILES);
     expect(result.skipped).toEqual([]);
 
-    for (const relativePath of ALL_REPORTED_FILES) {
+    for (const relativePath of EXPECTED_FILES) {
       await expect(
-        access(join(referenceRoot, relativePath)),
+        access(join(repoRoot, relativePath)),
       ).resolves.toBeUndefined();
     }
+    await expect(
+      access(join(repoRoot, 'reference', 'decision-record.md')),
+    ).rejects.toThrow();
+    await expect(
+      access(join(repoRoot, 'reference', 'backlog')),
+    ).rejects.toThrow();
   });
 
-  it('does not overwrite existing reference docs and reports them as skipped', async () => {
+  it('does not overwrite existing canonical docs and reports them as skipped', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
-    const referenceRoot = join(root, 'repo', 'reference');
-    const sentinel = '# Curated decisions\n';
+    const repoRoot = join(root, 'repo');
+    const sentinel = '# Curated roadmap\n';
     await seedTemplates(join(assetsRoot, 'templates'));
-    await mkdir(referenceRoot, { recursive: true });
-    await writeFile(join(referenceRoot, 'decision-record.md'), sentinel, {
+    await mkdir(join(repoRoot, 'pjm'), { recursive: true });
+    await writeFile(join(repoRoot, 'pjm', 'roadmap.md'), sentinel, {
       encoding: 'utf8',
       flag: 'wx',
     });
 
-    const result = await initializeRepoReference({ assetsRoot, referenceRoot });
+    const result = await initializeRepoReference({ assetsRoot, repoRoot });
 
     await expect(
-      readFile(join(referenceRoot, 'decision-record.md'), 'utf8'),
+      readFile(join(repoRoot, 'pjm', 'roadmap.md'), 'utf8'),
     ).resolves.toBe(sentinel);
-    expect(result.skipped).toContain('decision-record.md');
-    expect(result.created).not.toContain('decision-record.md');
+    expect(result.skipped).toContain('pjm/roadmap.md');
+    expect(result.created).not.toContain('pjm/roadmap.md');
   });
 
   it('is idempotent on rerun', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
-    const referenceRoot = join(root, 'repo', 'reference');
+    const repoRoot = join(root, 'repo');
     await seedTemplates(join(assetsRoot, 'templates'));
 
-    await initializeRepoReference({ assetsRoot, referenceRoot });
-    const second = await initializeRepoReference({ assetsRoot, referenceRoot });
+    await initializeRepoReference({ assetsRoot, repoRoot });
+    const second = await initializeRepoReference({ assetsRoot, repoRoot });
 
     expect(second.created).toEqual([]);
-    expect(second.skipped).toEqual(ALL_REPORTED_FILES);
+    expect(second.skipped).toEqual(EXPECTED_FILES);
   });
 
   it('prefers repo-local templates and falls back to bundled assets', async () => {
@@ -125,7 +137,7 @@ describe('initializeRepoReference', () => {
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
     const templatesRoot = join(root, '.oat', 'templates');
-    const referenceRoot = join(root, 'repo', 'reference');
+    const repoRoot = join(root, 'repo');
     await seedTemplates(join(assetsRoot, 'templates'));
     await seedTemplate(
       templatesRoot,
@@ -133,48 +145,35 @@ describe('initializeRepoReference', () => {
       '# Local Current State\n',
     );
 
-    await initializeRepoReference({ assetsRoot, referenceRoot, templatesRoot });
+    await initializeRepoReference({ assetsRoot, repoRoot, templatesRoot });
 
     await expect(
-      readFile(join(referenceRoot, 'current-state.md'), 'utf8'),
+      readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
     ).resolves.toContain('# Local Current State');
     await expect(
-      readFile(join(referenceRoot, 'roadmap.md'), 'utf8'),
+      readFile(join(repoRoot, 'pjm', 'roadmap.md'), 'utf8'),
     ).resolves.toContain('# roadmap.md');
   });
 
-  it('strips template frontmatter from instantiated reference docs', async () => {
+  it('strips template frontmatter from instantiated docs and AGENTS guides', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
-    const referenceRoot = join(root, 'repo', 'reference');
+    const repoRoot = join(root, 'repo');
     await seedTemplates(join(assetsRoot, 'templates'));
 
-    await initializeRepoReference({ assetsRoot, referenceRoot });
+    await initializeRepoReference({ assetsRoot, repoRoot });
 
-    const currentState = await readFile(
-      join(referenceRoot, 'current-state.md'),
-      'utf8',
-    );
-    expect(currentState).not.toContain('oat_template:');
-    expect(currentState).not.toContain('oat_template_name:');
-    expect(currentState).toContain('# current-state.md');
-  });
-
-  it('instantiated reference docs start at the heading with no leading blank lines', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
-    tempDirs.push(root);
-    const assetsRoot = join(root, 'assets');
-    const referenceRoot = join(root, 'repo', 'reference');
-    await seedTemplates(join(assetsRoot, 'templates'));
-
-    await initializeRepoReference({ assetsRoot, referenceRoot });
-
-    const decisionRecord = await readFile(
-      join(referenceRoot, 'decision-record.md'),
-      'utf8',
-    );
-    expect(decisionRecord.startsWith('# ')).toBe(true);
+    for (const relativePath of [
+      'AGENTS.md',
+      'pjm/current-state.md',
+      'reference/AGENTS.md',
+    ]) {
+      const content = await readFile(join(repoRoot, relativePath), 'utf8');
+      expect(content).not.toContain('oat_template:');
+      expect(content).not.toContain('oat_template_name:');
+      expect(content.startsWith('# ')).toBe(true);
+    }
   });
 
   it('throws an actionable error when a template is missing from both sources', async () => {
@@ -182,14 +181,16 @@ describe('initializeRepoReference', () => {
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
     const templatesRoot = join(root, '.oat', 'templates');
-    const referenceRoot = join(root, 'repo', 'reference');
+    const repoRoot = join(root, 'repo');
     await seedTemplate(join(assetsRoot, 'templates'), 'current-state.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'roadmap.md');
+    await seedTemplate(join(assetsRoot, 'templates'), 'repo-agents.md');
+    await seedTemplate(join(assetsRoot, 'templates'), 'pjm-agents.md');
 
     await expect(
-      initializeRepoReference({ assetsRoot, referenceRoot, templatesRoot }),
+      initializeRepoReference({ assetsRoot, repoRoot, templatesRoot }),
     ).rejects.toThrow(
-      'Template decision-record.md was not found in repo-local templates or bundled assets.',
+      'Template reference-agents.md was not found in repo-local templates or bundled assets.',
     );
   });
 });

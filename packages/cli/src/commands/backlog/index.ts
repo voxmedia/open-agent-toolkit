@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { access } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
@@ -7,10 +8,7 @@ import { Command } from 'commander';
 
 import { initializeBacklog } from './init';
 import { regenerateBacklogIndex } from './regenerate-index';
-import {
-  generateUniqueBacklogId,
-  readExistingBacklogIds,
-} from './shared/generate-id';
+import { generateBacklogId } from './shared/generate-id';
 
 interface InitOptions {
   backlogRoot?: string;
@@ -29,6 +27,25 @@ interface BacklogCommandDependencies {
   resolveProjectRoot: typeof resolveProjectRoot;
   initializeBacklog: typeof initializeBacklog;
   regenerateBacklogIndex: typeof regenerateBacklogIndex;
+  pathExists: (path: string) => Promise<boolean>;
+}
+
+async function pathExistsDefault(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String(error.code)
+        : null;
+
+    if (code !== 'ENOENT') {
+      throw error;
+    }
+
+    return false;
+  }
 }
 
 const DEFAULT_DEPENDENCIES: BacklogCommandDependencies = {
@@ -36,6 +53,7 @@ const DEFAULT_DEPENDENCIES: BacklogCommandDependencies = {
   resolveProjectRoot,
   initializeBacklog,
   regenerateBacklogIndex,
+  pathExists: pathExistsDefault,
 };
 
 async function resolveBacklogRoot(
@@ -48,7 +66,7 @@ async function resolveBacklogRoot(
   }
 
   const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
-  return resolve(projectRoot, '.oat', 'repo', 'reference', 'backlog');
+  return resolve(projectRoot, '.oat', 'repo', 'pjm', 'backlog');
 }
 
 export function createBacklogCommand(
@@ -70,7 +88,7 @@ export function createBacklogCommand(
     )
     .option(
       '--backlog-root <path>',
-      'Backlog root directory (defaults to .oat/repo/reference/backlog)',
+      'Backlog root directory (defaults to .oat/repo/pjm/backlog)',
     )
     .action(async (options: InitOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
@@ -96,7 +114,7 @@ export function createBacklogCommand(
     .description('Regenerate the managed backlog index table')
     .option(
       '--backlog-root <path>',
-      'Backlog root directory (defaults to .oat/repo/reference/backlog)',
+      'Backlog root directory (defaults to .oat/repo/pjm/backlog)',
     )
     .action(async (options: RegenerateIndexOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
@@ -119,15 +137,17 @@ export function createBacklogCommand(
 
   cmd
     .command('generate-id')
-    .description('Generate a backlog item identifier from a filename seed')
-    .argument('<filename>', 'Filename or slug seed for the backlog item')
+    .description(
+      'Generate a backlog item identifier (`BL-YYMMDD-slug`) from a title or slug',
+    )
+    .argument('<title-or-slug>', 'Title or slug seed for the backlog item')
     .option(
       '--created-at <timestamp>',
       'Creation timestamp seed for reproducible ID generation',
     )
     .action(
       async (
-        filename: string,
+        titleOrSlug: string,
         options: GenerateIdOptions,
         command: Command,
       ) => {
@@ -140,11 +160,37 @@ export function createBacklogCommand(
           dependencies,
         );
         const createdAt = options.createdAt ?? new Date().toISOString();
-        const existingIds = await readExistingBacklogIds(backlogRoot);
-        const id = generateUniqueBacklogId(filename, createdAt, existingIds);
+        const id = generateBacklogId(titleOrSlug, createdAt);
+        const candidatePaths = [
+          join(backlogRoot, 'items', `${id}.md`),
+          join(backlogRoot, 'archived', `${id}.md`),
+        ];
+        const collides = (
+          await Promise.all(
+            candidatePaths.map((candidatePath) =>
+              dependencies.pathExists(candidatePath),
+            ),
+          )
+        ).some(Boolean);
+
+        if (collides) {
+          const message = `Backlog item ${id} already exists. Use a more specific title or slug to disambiguate.`;
+          if (context.json) {
+            context.logger.json({ status: 'error', id, message });
+          } else {
+            context.logger.error(message);
+          }
+          process.exitCode = 1;
+          return;
+        }
 
         if (context.json) {
-          context.logger.json({ status: 'ok', id, filename, createdAt });
+          context.logger.json({
+            status: 'ok',
+            id,
+            titleOrSlug,
+            createdAt,
+          });
         } else {
           context.logger.info(id);
         }

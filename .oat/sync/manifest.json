@@ -1401,7 +1401,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-06-06T00:07:57.848Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-decision",
+      "providerPath": ".claude/skills/oat-pjm-decision",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-06-23T03:28:27.725Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-decision",
+      "providerPath": ".cursor/skills/oat-pjm-decision",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-06-23T03:28:27.726Z"
     }
   ],
-  "lastUpdated": "2026-06-06T00:07:57.848Z"
+  "lastUpdated": "2026-06-23T03:28:27.726Z"
 }

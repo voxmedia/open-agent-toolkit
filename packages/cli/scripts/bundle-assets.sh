@@ -4,9 +4,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
+MIGRATION_PROMPT_SOURCE="${REPO_ROOT}/packages/cli/assets/migration/pjm-restructure.md"
+MIGRATION_PROMPT_TMP=""
+
+if [ -f "${MIGRATION_PROMPT_SOURCE}" ]; then
+  MIGRATION_PROMPT_TMP="$(mktemp)"
+  cp "${MIGRATION_PROMPT_SOURCE}" "${MIGRATION_PROMPT_TMP}"
+fi
 
 rm -rf "${ASSETS}"
-mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts" "${ASSETS}/docs"
+mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts" "${ASSETS}/docs" "${ASSETS}/migration"
 
 SKILLS=(
   authoring-docs
@@ -26,6 +33,7 @@ SKILLS=(
   oat-idea-scratchpad
   oat-idea-summarize
   oat-pjm-add-backlog-item
+  oat-pjm-decision
   oat-pjm-review-backlog
   oat-pjm-update-repo-reference
   oat-project-capture
@@ -79,7 +87,7 @@ for agent in oat-codebase-mapper.md oat-phase-implementer.md oat-reviewer.md ske
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 
-for template in backlog-item.md roadmap.md current-state.md decision-record.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md; do
+for template in backlog-item.md roadmap.md current-state.md decision.md repo-agents.md pjm-agents.md reference-agents.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md; do
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"
@@ -120,3 +128,8 @@ for script in generate-oat-state.sh generate-thin-index.sh resolve-tracking.sh; 
     cp "${SOURCE_SCRIPT}" "${ASSETS}/scripts/"
   fi
 done
+
+if [ -n "${MIGRATION_PROMPT_TMP}" ]; then
+  cp "${MIGRATION_PROMPT_TMP}" "${ASSETS}/migration/pjm-restructure.md"
+  rm -f "${MIGRATION_PROMPT_TMP}"
+fi

@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.3.3
+version: 1.4.0
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 disable-model-invocation: true
@@ -115,7 +115,7 @@ Inputs:
 
 If source path is not provided, discover likely recent plans first. The discovery script checks both provider plan directories and this repository's external plan directory by default:
 
-- `.oat/repo/reference/external-plans/`
+- `.oat/repo/reference/external-plans/` — the durable destination for imported provider/external plans, as documented in the repo reference guide (`.oat/repo/reference/AGENTS.md`). External plans are durable reference material and stay under `reference/`, never under the active `pjm/` operational layer.
 
 ```bash
 bash .agents/skills/oat-project-import-plan/scripts/find-recent-provider-plans.sh --hours 24

@@ -2,6 +2,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import { computeManagedIndexUpdate } from '@commands/shared/managed-index';
 import YAML from 'yaml';
 
 const INDEX_START = '<!-- OAT BACKLOG-INDEX -->';
@@ -59,7 +60,23 @@ function compareItems(a: BacklogIndexItem, b: BacklogIndexItem): number {
     return priorityDiff;
   }
 
-  return a.title.localeCompare(b.title);
+  if (a.title < b.title) {
+    return -1;
+  }
+
+  if (a.title > b.title) {
+    return 1;
+  }
+
+  if (a.id < b.id) {
+    return -1;
+  }
+
+  if (a.id > b.id) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function renderManagedSection(items: BacklogIndexItem[]): string {
@@ -88,7 +105,8 @@ export async function regenerateBacklogIndex(
 
   const entries = (await readdir(itemsDir, { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-    .map((entry) => entry.name);
+    .map((entry) => entry.name)
+    .sort();
 
   const items: BacklogIndexItem[] = [];
   for (const entry of entries) {
@@ -113,8 +131,19 @@ export async function regenerateBacklogIndex(
     );
   }
 
-  const before = content.slice(0, startIndex);
-  const after = content.slice(endIndex + INDEX_END.length);
-  const updated = `${before}${renderManagedSection(items)}${after}`;
+  // Content-idempotent gate: when the on-disk managed block is logically equal
+  // to the freshly rendered block (cells equal after trimming, so external
+  // formatter padding is ignored), preserve the existing bytes and skip the
+  // write. Only rewrite on a genuine content change.
+  const { content: updated } = computeManagedIndexUpdate(
+    content,
+    startIndex,
+    endIndex + INDEX_END.length,
+    renderManagedSection(items),
+  );
+  if (updated === null) {
+    return;
+  }
+
   await writeFile(indexPath, updated, 'utf8');
 }

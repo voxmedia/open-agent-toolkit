@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.4.1
+version: 1.5.0
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
@@ -260,8 +260,9 @@ Scan the repository for all documentation and instruction surfaces.
    - Note directories for new apps/packages that lack a README
 
 4. **Reference files:**
-   - Check `.oat/repo/reference/` directory
-   - Read: `current-state.md`, `backlog/index.md`, `backlog/completed.md`, `roadmap.md`, `decision-record.md`, and relevant `backlog/items/*.md` files as needed (whichever exist)
+   - Check the active PJM layer under `.oat/repo/pjm/` and the durable layer under `.oat/repo/reference/`
+   - Read (whichever exist): `pjm/current-state.md`, `pjm/roadmap.md`, `pjm/backlog/index.md`, `pjm/backlog/completed.md`, relevant `pjm/backlog/items/*.md` files, and `reference/decisions/index.md` plus relevant `reference/decisions/*.md` records
+   - Legacy repos may still have `reference/current-state.md`, `reference/roadmap.md`, `reference/backlog/`, or a `reference/decision-record.md` monolith until they run `oat pjm migrate`; read those only as a fallback when the `pjm/` and `reference/decisions/` equivalents are absent
 
 **4b. Instruction surfaces (secondary — strong signals only):**
 

@@ -1,14 +1,27 @@
 ---
 name: update-repo-reference
-version: 1.2.0
-description: Use when OAT implementation changes and repository reference docs must be synchronized. Updates .oat/repo/reference to match current behavior.
+version: 1.3.0
+description: Retired. Use oat-pjm-update-repo-reference instead. The repo reference layer moved from .oat/repo/reference/ to the two-layer .oat/repo/pjm/ + reference/ taxonomy.
 disable-model-invocation: true
 user-invocable: true
 ---
 
 # Update OAT Repo Reference
 
-> Deprecated: Use `oat-pjm-update-repo-reference` instead.
+> **Retired — do not follow the process below.** This skill predates the PJM
+> two-layer restructure and points at the old single `.oat/repo/reference/`
+> layout (live `current-state.md`/`roadmap.md`/`backlog/` and a single
+> `decision-record.md`). Use **`oat-pjm-update-repo-reference`** instead, which
+> targets the current taxonomy:
+>
+> - Active operational state under `.oat/repo/pjm/` (`current-state.md`,
+>   `roadmap.md`, `backlog/`).
+> - Durable references under `.oat/repo/reference/`, with file-per-record
+>   decisions created via `oat decision new` under `reference/decisions/`.
+>
+> The path guidance in the sections below is **historical/legacy context only**
+> and describes the pre-migration layout. It is kept for repos that have not yet
+> run `oat pjm migrate`.
 
 Keep this repo's OAT reference documentation consistent as implementation evolves.
 

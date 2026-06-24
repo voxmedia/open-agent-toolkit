@@ -20,7 +20,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 - `workflows` - project lifecycle skills, wrap-up reporting, reviewer agents, and core project templates
 - `ideas` - lightweight ideation and promotion flows
 - `utility` - review and repo-maintenance helpers
-- `project-management` - file-backed backlog/reference skills plus backlog, roadmap, current-state, and decision-record templates
+- `project-management` - file-backed backlog/reference skills plus backlog, roadmap, current-state, file-per-record decision, and AGENTS-guide templates
 - `research` - research, analysis, comparison, and synthesis skills
 - `brainstorm` - always-on brainstorming entry point with visual companion
 
@@ -33,7 +33,7 @@ The `oat tools` command group provides a unified interface for managing installe
 The `project-management` pack has two lifecycle steps:
 
 - **Install**: `oat tools install project-management` (or the legacy `oat init tools project-management`) copies project-management skills into `.agents/skills/` and template sources into `.oat/templates/`.
-- **Initialize**: `oat pjm init` instantiates the working repo-reference surface under `.oat/repo/reference/`.
+- **Initialize**: `oat pjm init` instantiates the two-layer working repo-reference surface under `.oat/repo/`.
 
 Installing the pack makes the skills and templates available; it does not create the repo's working project-management reference docs. Run `oat pjm init` when you want to scaffold the canonical PJM surface for a repo:
 
@@ -41,18 +41,23 @@ Installing the pack makes the skills and templates available; it does not create
 oat pjm init
 ```
 
-The command creates missing files and directories for:
+The canonical surface splits active operational state (under `pjm/`) from durable append-mostly references (under `reference/`). The command creates missing files and directories for:
 
-- `.oat/repo/reference/current-state.md`
-- `.oat/repo/reference/roadmap.md`
-- `.oat/repo/reference/decision-record.md`
-- `.oat/repo/reference/backlog/`
+- `.oat/repo/pjm/current-state.md`
+- `.oat/repo/pjm/roadmap.md`
+- `.oat/repo/pjm/backlog/`
+- `.oat/repo/reference/decisions/` (file-per-record decisions plus a generated index)
+- AGENTS guides at `.oat/repo/AGENTS.md`, `.oat/repo/pjm/AGENTS.md`, and `.oat/repo/reference/AGENTS.md`
+
+Decisions are now file-per-record under `reference/decisions/` (created and indexed with the [`oat decision`](config-and-local-state.md#oat-decision-) command group), replacing the legacy single `decision-record.md`. Repos still on the old `reference/` layout can migrate with `oat pjm migrate`.
 
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
 
+Run `oat pjm doctor` to check an existing surface: it reports missing canonical files, leftover template frontmatter, and legacy/loose/second-roadmap drift, and accepts `--json` for machine-readable output. The same checks also run under project-scope `oat doctor` when `.oat/repo` exists.
+
 Useful options:
 
-- `--reference-root <path>` - scaffold a different reference root instead of `.oat/repo/reference/`
+- `--repo-root <path>` - scaffold a different repo-reference root instead of `.oat/repo`
 - `--json` - emit a machine-readable result with created and skipped paths
 
 Backlog scaffolding is delegated to the lower-level [`oat backlog init`](config-and-local-state.md#oat-backlog-) helper. Use `oat pjm init` for the full PJM repo-reference surface, and use `oat backlog init` directly only when you need to create or repair the backlog sub-surface by itself.

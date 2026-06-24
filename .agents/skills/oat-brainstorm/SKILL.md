@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.0.4
+version: 1.1.0
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -366,7 +366,7 @@ The payload is staged in memory only — it is not persisted between conversatio
     Scope:      <xs|s|m|l|xl>
     Priority:   <p0|p1|p2|p3>
 
-  Confirm to write this to a new bl-XXXX file, or tell me what to change.
+  Confirm to write this to a new backlog item file, or tell me what to change.
   ```
 
   If the user requests changes, apply them to the in-memory payload and re-display the affected fields before continuing.
@@ -452,7 +452,7 @@ Read `.agents/skills/oat-pjm-add-backlog-item/SKILL.md` and execute its process 
 - `Priority` → user-confirmed priority (p0 / p1 / p2 / p3).
 - Optional fields (related items, target release, owner) → only if surfaced during synthesis.
 
-The downstream `oat-pjm-add-backlog-item` owns ID generation, file writing under `.oat/repo/reference/backlog/items/`, and backlog-index regeneration. Do not duplicate that logic here.
+The downstream `oat-pjm-add-backlog-item` owns ID generation, file writing under `.oat/repo/pjm/backlog/items/`, and backlog-index regeneration. Do not duplicate that logic here.
 
 End mode assertion when the backlog-add hands control back.
 

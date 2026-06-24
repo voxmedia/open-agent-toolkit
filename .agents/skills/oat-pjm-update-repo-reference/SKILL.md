@@ -1,7 +1,7 @@
 ---
 name: oat-pjm-update-repo-reference
-version: 1.1.1
-description: Use when repo reference artifacts need updating — roadmap, decision records, backlog status, or completed history. Frequently invoked at project completion, often chained from `oat-project-document`, to ensure `.oat/repo/reference/` state reflects what shipped.
+version: 1.2.0
+description: Use when repo reference artifacts need updating — roadmap, decision records, backlog status, or completed history. Frequently invoked at project completion, often chained from `oat-project-document`, to ensure active `.oat/repo/pjm/` state and durable `.oat/repo/reference/` records reflect what shipped.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -9,13 +9,13 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 # Update Repo Reference
 
-Keep this repo's OAT reference documentation consistent as implementation evolves, using the file-backed backlog structure under `.oat/repo/reference/backlog/`.
+Keep this repo's OAT reference documentation consistent as implementation evolves. Active operational state lives under `.oat/repo/pjm/` (current-state, roadmap, and the file-backed backlog); durable decision history lives under `.oat/repo/reference/decisions/`.
 
 ## Mode Assertion
 
 **OAT MODE: Repo Reference Sync**
 
-**Purpose:** Update backlog, roadmap, completed history, and decision records so repo reference docs stay trustworthy after implementation changes.
+**Purpose:** Update backlog, roadmap, completed history, and decision records so active `pjm/` state and durable `reference/` records stay trustworthy after implementation changes.
 
 ## Progress Indicators (User-Facing)
 
@@ -53,7 +53,7 @@ Before editing any backlog files or running backlog regeneration, run:
 oat backlog init
 ```
 
-This command is idempotent and ensures `.oat/repo/reference/backlog/index.md` exists with the exact managed markers required by the CLI:
+This command is idempotent and ensures `.oat/repo/pjm/backlog/index.md` exists with the exact managed markers required by the CLI:
 
 ```md
 <!-- OAT BACKLOG-INDEX -->
@@ -68,28 +68,35 @@ For recently completed or in-progress projects, read `discovery.md`, `spec.md`, 
 
 Promote notable findings into one of:
 
-- Backlog item files under `.oat/repo/reference/backlog/items/`
-- Completed summaries in `.oat/repo/reference/backlog/completed.md`
-- Decision record entries in `.oat/repo/reference/decision-record.md`
-- Roadmap updates in `.oat/repo/reference/roadmap.md`
+- Backlog item files under `.oat/repo/pjm/backlog/items/`
+- Completed summaries in `.oat/repo/pjm/backlog/completed.md`
+- Decision records under `.oat/repo/reference/decisions/`, created with
+  `oat decision new "<title>"` (delegate to `oat-pjm-decision` for a guided
+  capture). Do not hand-author decision files or write into a legacy
+  `decision-record.md` monolith.
+- Roadmap updates in `.oat/repo/pjm/roadmap.md`
 
 ### Step 4: Update Canonical Reference Docs
 
 Update these files as applicable:
 
-1. `.oat/repo/reference/current-state.md`
-2. `.oat/repo/reference/roadmap.md`
+1. `.oat/repo/pjm/current-state.md`
+2. `.oat/repo/pjm/roadmap.md`
    - Use the `Now / Next / Later` structure when editing roadmap priorities.
-3. `.oat/repo/reference/backlog/index.md`
+3. `.oat/repo/pjm/backlog/index.md`
    - Update only the `## Curated Overview` section by hand.
    - Do not hand-edit the managed marker section.
-4. `.oat/repo/reference/backlog/items/*.md`
+4. `.oat/repo/pjm/backlog/items/*.md`
    - Add or update active backlog items as file-backed records.
-5. `.oat/repo/reference/backlog/completed.md`
+5. `.oat/repo/pjm/backlog/completed.md`
    - Keep newest completed summaries first.
-6. `.oat/repo/reference/backlog/archived/*.md`
+6. `.oat/repo/pjm/backlog/archived/*.md`
    - Add rich historical item files only when a completed item needs preserved detail.
-7. `.oat/repo/reference/decision-record.md`
+7. `.oat/repo/reference/decisions/`
+   - Create new decisions with `oat decision new` (see `oat-pjm-decision`); the
+     command writes one `DR-YYMMDD-slug` record and regenerates the managed
+     decision index. Do not hand-edit `reference/decisions/index.md` inside its
+     managed markers.
 
 If you modify backlog item files or the completed archive structure, run:
 
@@ -101,15 +108,16 @@ oat backlog regenerate-index
 
 Use the `Grep` tool for focused searches:
 
-- Search for stale legacy references with pattern `backlog\.md|backlog-completed\.md|deferred-phases\.md` across `.oat/repo/reference`, `docs/oat`, `.agents/skills`, and `AGENTS.md`.
-- Search for the new file-backed paths with pattern `\.oat/repo/reference/backlog/(index|completed|items|archived)` across the same locations.
+- Search for stale legacy references with pattern `reference/backlog|reference/roadmap|reference/current-state|decision-record\.md` across `.oat/repo`, `docs/oat`, `.agents/skills`, and `AGENTS.md`. These indicate active state still pointing at the retired `reference/` operational layout (legacy/migration notes excepted).
+- Search for the active paths with pattern `\.oat/repo/pjm/backlog/(index|completed|items|archived)` and `\.oat/repo/reference/decisions/` across the same locations.
 
 Confirm that:
 
-- Active work lives in `backlog/items/`
-- Human narrative updates stay in `backlog/index.md` curated section
-- Completed summaries live in `backlog/completed.md`
-- Roadmap wording matches the current `Now / Next / Later` structure
+- Active work lives in `pjm/backlog/items/`
+- Human narrative updates stay in `pjm/backlog/index.md` curated section
+- Completed summaries live in `pjm/backlog/completed.md`
+- Roadmap wording matches the current `Now / Next / Later` structure in `pjm/roadmap.md`
+- Decisions are file-per-record under `reference/decisions/`, created via `oat decision new`
 
 ### Step 6: Output
 
@@ -123,6 +131,7 @@ Provide:
 ## Success Criteria
 
 - Repo reference docs reflect current OAT behavior
-- Backlog updates use the file-backed structure
-- Managed backlog index section is refreshed via CLI, not hand-edited
-- Stale references to retired backlog/deferred files are removed or called out
+- Active backlog, roadmap, and current-state updates live under `pjm/`
+- Decision history is captured as file-per-record decisions under `reference/decisions/` via `oat decision new`, not in a legacy monolith
+- Managed backlog and decision index sections are refreshed via CLI, not hand-edited
+- Stale references to the retired `reference/` operational layout are removed or called out

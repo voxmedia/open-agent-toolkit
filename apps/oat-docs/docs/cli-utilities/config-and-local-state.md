@@ -11,16 +11,29 @@ Use these commands when you need operational support around the toolkit rather t
 
 ## `oat backlog ...`
 
-Use the `oat backlog` group when you want direct CLI support for the file-backed backlog under `.oat/repo/reference/backlog/`.
+Use the `oat backlog` group when you want direct CLI support for the file-backed backlog under `.oat/repo/pjm/backlog/`.
 
-- `oat backlog init` - scaffold `.oat/repo/reference/backlog/` with starter files and directories for a fresh repo
-- `oat backlog generate-id <filename>` - generate a unique backlog ID from a filename seed
-- `oat backlog generate-id <filename> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
+- `oat backlog init` - scaffold `.oat/repo/pjm/backlog/` with starter files and directories for a fresh repo
+- `oat backlog generate-id <title>` - generate a deterministic `BL-YYMMDD-slug` backlog ID from a title
+- `oat backlog generate-id <title> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
 - `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
+
+Backlog IDs are deterministic date+slug identifiers (`BL-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. The slug is capped at 30 characters at the last whole-word boundary (with trailing stop-words trimmed), so prefer concise, meaningful titles. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
 
 Run `oat backlog init` first when the local backlog scaffold does not exist yet in a fresh repo. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
 
-For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds `current-state.md`, `roadmap.md`, `decision-record.md`, and delegates the backlog sub-surface to `oat backlog init`.
+For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds the two-layer PJM surface (`pjm/current-state.md`, `pjm/roadmap.md`, `reference/decisions/`, and AGENTS guides) and delegates the backlog sub-surface to `oat backlog init`.
+
+## `oat decision ...`
+
+Use the `oat decision` group for file-per-record decisions under `.oat/repo/reference/decisions/`. Each decision is its own file with a deterministic `DR-YYMMDD-slug` ID (the slug is capped at 30 characters at the last whole-word boundary, with trailing stop-words trimmed), and the human-facing index is a committed generated view.
+
+- `oat decision init` - scaffold `.oat/repo/reference/decisions/` and the managed decision index
+- `oat decision new <title>` - create a new decision record; supports `--status`, `--context`, and `--created-at`
+- `oat decision regenerate-index` - rebuild the managed decision index table from record frontmatter
+- `oat decision migrate` - convert a legacy single `decision-record.md` into file-per-record decisions, preserving each old `ADR-NNN`/`DR-NNN` ID as `legacy_id`; applies by default, so pass `--dry-run` to preview the legacy-to-new mappings without writing, and `--delete-legacy` to remove the source file after a verified migration (unlike `oat pjm migrate`, which defaults to dry-run)
+
+The decision index uses managed marker pairs and is deterministic, so an index merge conflict can be resolved by re-running `oat decision regenerate-index` and staging the result. Decision records replace the legacy single `decision-record.md`; repos still on the old layout migrate with `oat decision migrate` (or the broader `oat pjm migrate`).
 
 ## `oat local ...`
 

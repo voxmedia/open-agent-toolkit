@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-add-backlog-item
-version: 1.1.1
+version: 1.2.0
 description: Use when the user requests or confirms adding a new repo backlog item — e.g. "add a backlog item for X", "capture that as backlog", "track that follow-up", "file a backlog ticket", or confirms a previously offered backlog capture. Do NOT auto-invoke when a follow-up is mentioned. Creates the item file in the file-per-item backlog structure, regenerates the index, and prompts for curated overview updates.
 disable-model-invocation: false
 user-invocable: true
@@ -9,7 +9,7 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 # Add Backlog Item
 
-Create a new file-backed backlog item under `.oat/repo/reference/backlog/items/` and refresh the generated backlog index.
+Create a new file-backed backlog item under `.oat/repo/pjm/backlog/items/` and refresh the generated backlog index.
 
 ## Mode Assertion
 
@@ -64,28 +64,25 @@ Do not hand-create the managed marker block in `backlog/index.md`. The scaffold 
 <!-- END OAT BACKLOG-INDEX -->
 ```
 
-### Step 3: Prepare Paths and Filename
-
-1. Derive a kebab-case slug from the title.
-2. Set the output path:
-
-```bash
-ITEM_PATH=".oat/repo/reference/backlog/items/{slug}.md"
-```
-
-3. If the file already exists, ask the user whether to overwrite it or pick a different slug.
-
-### Step 4: Generate ID
+### Step 3: Generate ID
 
 Run:
 
 ```bash
-oat backlog generate-id "{slug}"
+oat backlog generate-id "{title}"
 ```
 
-Use the returned `bl-XXXX` value as the backlog item ID.
+The CLI returns a deterministic `BL-YYMMDD-slug` value derived from the creation date and the title. It performs no scan, hash, counter, or random allocation.
 
-If the initial hash collides with an existing backlog item ID, the CLI should retry with a disambiguated seed until it returns an unused ID. If the command reports a duplicate or collision issue, do not continue writing the item until the generated ID is unique across `backlog/items/*.md`.
+If the command reports a same-day same-slug filename collision against an existing `items/<id>.md` or `archived/<id>.md`, do not overwrite the existing record. Disambiguate by using a more specific title and re-running `oat backlog generate-id`.
+
+### Step 4: Prepare Output Path
+
+Set the output path using the returned ID so the filename stem equals the ID:
+
+```bash
+ITEM_PATH=".oat/repo/pjm/backlog/items/{id}.md"
+```
 
 ### Step 5: Copy Template and Fill Frontmatter
 
@@ -108,10 +105,10 @@ If the initial hash collides with an existing backlog item ID, the CLI should re
 
 ### Step 6: Write the Backlog Item
 
-Write the completed file to:
+Write the completed file to the path resolved in Step 4:
 
 ```bash
-.oat/repo/reference/backlog/items/{slug}.md
+.oat/repo/pjm/backlog/items/{id}.md
 ```
 
 Use the template field order from `.oat/templates/backlog-item.md`.
@@ -124,11 +121,11 @@ Run:
 oat backlog regenerate-index
 ```
 
-This refreshes the managed table inside `.oat/repo/reference/backlog/index.md`.
+This refreshes the managed table inside `.oat/repo/pjm/backlog/index.md`.
 
 ### Step 8: Update Curated Overview
 
-Read `.oat/repo/reference/backlog/index.md` and update the `## Curated Overview` section with a brief human-written note when helpful, for example:
+Read `.oat/repo/pjm/backlog/index.md` and update the `## Curated Overview` section with a brief human-written note when helpful, for example:
 
 - New theme added to the backlog
 - Priority or sequencing implications
@@ -148,8 +145,8 @@ Report:
 
 ## Success Criteria
 
-- New item file exists under `.oat/repo/reference/backlog/items/`
+- New item file exists under `.oat/repo/pjm/backlog/items/` with a `BL-YYMMDD-slug` filename matching its `id`
 - Item includes populated frontmatter and both required body sections
 - `scope_estimate` was proposed and confirmed
 - `oat backlog regenerate-index` ran successfully
-- `.oat/repo/reference/backlog/index.md` remains valid, with managed section untouched except by regeneration
+- `.oat/repo/pjm/backlog/index.md` remains valid, with managed section untouched except by regeneration

@@ -35,9 +35,9 @@ If the team doesn't find it useful, omit the column entirely.
 
 Items already started, in code review, or otherwise mid-flight. Close these out before — or alongside — the next phase.
 
-| Item                                             | Scope      | Notes                                        |
-| ------------------------------------------------ | ---------- | -------------------------------------------- |
-| [Item title](../items/{filename}.md) (`bl-XXXX`) | {S/M/L/XL} | {Status, blocker if any, next concrete step} |
+| Item                                                          | Scope      | Notes                                        |
+| ------------------------------------------------------------- | ---------- | -------------------------------------------- |
+| [Item title](../items/{BL-YYMMDD-slug}.md) (`BL-YYMMDD-slug`) | {S/M/L/XL} | {Status, blocker if any, next concrete step} |
 
 ---
 
@@ -50,9 +50,9 @@ Items already started, in code review, or otherwise mid-flight. Close these out 
 
 {One short paragraph: what this phase represents, how many tracks can run in parallel inside it, any kickoff constraints (e.g. "weekly pair is one combined kickoff").}
 
-| Item                                             | Scope      | {Optional column} | Parallel with        | Notes                                   |
-| ------------------------------------------------ | ---------- | ----------------- | -------------------- | --------------------------------------- |
-| [Item title](../items/{filename}.md) (`bl-XXXX`) | {S/M/L/XL} | {Low/Med/High}    | `bl-YYYY`, `bl-ZZZZ` | {One-line context — gotchas, decisions} |
+| Item                                                          | Scope      | {Optional column} | Parallel with                                  | Notes                                   |
+| ------------------------------------------------------------- | ---------- | ----------------- | ---------------------------------------------- | --------------------------------------- |
+| [Item title](../items/{BL-YYMMDD-slug}.md) (`BL-YYMMDD-slug`) | {S/M/L/XL} | {Low/Med/High}    | `BL-YYMMDD-other-slug`, `BL-YYMMDD-third-slug` | {One-line context — gotchas, decisions} |
 
 ---
 
@@ -60,10 +60,10 @@ Items already started, in code review, or otherwise mid-flight. Close these out 
 
 Quick lookup for "can I start X while Y is in flight?"
 
-| Can run together      | Keep sequential            |
-| --------------------- | -------------------------- |
-| `bl-XXXX` ∥ `bl-YYYY` | `bl-AAAA` before `bl-BBBB` |
-| {…}                   | {…}                        |
+| Can run together                            | Keep sequential                                       |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `BL-YYMMDD-one-slug` ∥ `BL-YYMMDD-two-slug` | `BL-YYMMDD-first-slug` before `BL-YYMMDD-second-slug` |
+| {…}                                         | {…}                                                   |
 
 ---
 
@@ -71,9 +71,9 @@ Quick lookup for "can I start X while Y is in flight?"
 
 Three concrete actions for the next development cycle. Not a ranked list of everything — just what to do _first_.
 
-1. **{Close|Kick off|Defer}** [`bl-XXXX`](../items/{filename}.md) — {one-line reason: why now, what it unblocks}
-2. **{Close|Kick off|Defer}** [`bl-YYYY`](../items/{filename}.md) — {one-line reason}
-3. **{Close|Kick off|Defer}** [`bl-ZZZZ`](../items/{filename}.md) — {one-line reason}
+1. **{Close|Kick off|Defer}** [`BL-YYMMDD-first-slug`](../items/{BL-YYMMDD-first-slug}.md) — {one-line reason: why now, what it unblocks}
+2. **{Close|Kick off|Defer}** [`BL-YYMMDD-second-slug`](../items/{BL-YYMMDD-second-slug}.md) — {one-line reason}
+3. **{Close|Kick off|Defer}** [`BL-YYMMDD-third-slug`](../items/{BL-YYMMDD-third-slug}.md) — {one-line reason}
 
 ---
 
