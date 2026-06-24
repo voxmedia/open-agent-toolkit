@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 299c87df
+oat_last_commit: c84ce81d
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T15:10:00Z'
+oat_project_state_updated: '2026-06-24T20:14:37Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -99,6 +99,8 @@ full gate green. Pushed to update the PR.
       README (F5), corrected migration prompt + version-gate (F3) — review passed
 - [x] Holistic range review (619b9234..HEAD, 30 commits) passed; 1 Minor fixed
       (uppercase `BL-` placeholders in brainstorm + review-backlog skills)
+- [x] Documentation-gap verification complete; stale backlog ID guidance fixed
+      in templates, backlog-review instructions, and backlog completed scaffold
 - ⧗ PR #118 updated; awaiting human review
 
 ## Blockers
