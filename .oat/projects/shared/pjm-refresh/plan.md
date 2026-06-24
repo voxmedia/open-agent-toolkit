@@ -710,18 +710,71 @@ git add .oat/projects/shared/pjm-refresh/implementation.md .oat/projects/shared/
 git commit -m "chore(p04-t03): finalize PJM refresh tracking"
 ```
 
+---
+
+### Task p04-t04: (review) Fix migration prompt decision-index contract
+
+**Files:**
+
+- Modify: `packages/cli/assets/migration/pjm-restructure.md`
+- Modify/Create: a bundle/asset regression test (e.g.
+  `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts` or a
+  focused asset test) asserting the migration prompt's decision-index contract
+  matches `packages/cli/src/commands/decision/regenerate-index.ts`.
+
+**Step 1: Understand the issue**
+
+Review finding (final v2, I1): The shipped `oat pjm migrate --print-prompt`
+asset documents an incompatible decision index in its manual fallback. It uses
+the plural marker pair `<!-- OAT DECISIONS-INDEX -->` /
+`<!-- END OAT DECISIONS-INDEX -->` and a 4-column `| ID | Date | Status | Title |`
+table (one spot uses `| Decision |`). The live CLI
+(`regenerate-index.ts:7-8,143`) uses the singular marker pair
+`<!-- OAT DECISION-INDEX -->` / `<!-- END OAT DECISION-INDEX -->` and a 5-column
+`| ID | Date | Status | Title | Legacy |` table. An agent following the manual
+fallback would produce an index incompatible with `oat decision regenerate` and
+omit migrated `legacy_id` values. Affects FR5, FR7, NFR3.
+
+**Step 2: Implement fix**
+
+- Update every decision-index reference in `pjm-restructure.md` (Step 3 and the
+  fallback notes, lines ~153, ~204, ~416-417) to the singular `OAT DECISION-INDEX`
+  marker pair and the 5-column `| ID | Date | Status | Title | Legacy |` table.
+- Source the canonical marker/column strings from `regenerate-index.ts`
+  constants (`DECISION_INDEX_START`/`DECISION_INDEX_END` and the header row) so
+  the asset matches reality.
+- Add a regression assertion that fails if the bundled asset's marker pair or
+  column header drifts from the `regenerate-index.ts` source of truth.
+- Run `bash packages/cli/scripts/bundle-assets.sh` to refresh any bundled mirror.
+
+**Step 3: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools src/commands/decision`
+Plus the final-review verification gate before re-review:
+`pnpm format && pnpm lint && pnpm type-check && pnpm build && pnpm build:docs && pnpm test && pnpm release:validate`
+Expected: New regression test passes; the asset's decision-index contract
+matches the CLI; full suite stays green.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/assets/migration/pjm-restructure.md packages/cli/src/commands/init/tools
+git commit -m "fix(p04-t04): align migration prompt decision-index with CLI contract"
+```
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                     |
-| ------ | -------- | -------- | ---------- | -------------------------------------------- |
-| p01    | code     | passed   | 2026-06-23 | reviews/archived/p01-review-2026-06-23-v4.md |
-| p02    | code     | passed   | 2026-06-23 | reviews/archived/p02-review-2026-06-23.md    |
-| p03    | code     | passed   | 2026-06-23 | reviews/archived/p03-review-2026-06-23.md    |
-| p04    | code     | passed   | 2026-06-23 | reviews/archived/p04-review-2026-06-23.md    |
-| final  | code     | received | 2026-06-23 | reviews/final-review-2026-06-23-v2.md        |
-| spec   | artifact | pending  | -          | -                                            |
-| design | artifact | pending  | -          | -                                            |
-| plan   | artifact | pending  | -          | -                                            |
+| Scope  | Type     | Status      | Date       | Artifact                                       |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------- |
+| p01    | code     | passed      | 2026-06-23 | reviews/archived/p01-review-2026-06-23-v4.md   |
+| p02    | code     | passed      | 2026-06-23 | reviews/archived/p02-review-2026-06-23.md      |
+| p03    | code     | passed      | 2026-06-23 | reviews/archived/p03-review-2026-06-23.md      |
+| p04    | code     | passed      | 2026-06-23 | reviews/archived/p04-review-2026-06-23.md      |
+| final  | code     | fixes_added | 2026-06-23 | reviews/archived/final-review-2026-06-23-v2.md |
+| spec   | artifact | pending     | -          | -                                              |
+| design | artifact | pending     | -          | -                                              |
+| plan   | artifact | pending     | -          | -                                              |
 
 ## Implementation Complete
 
@@ -730,9 +783,10 @@ git commit -m "chore(p04-t03): finalize PJM refresh tracking"
 - Phase 1: 5 tasks - Additive ID, decision, template, init, and doctor core.
 - Phase 2: 3 tasks - Path move defaults, migration, and asset registration.
 - Phase 3: 3 tasks - Skill and lifecycle destination updates.
-- Phase 4: 3 tasks - Docs, release validation, version bump, and cleanup.
+- Phase 4: 4 tasks - Docs, release validation, version bump, cleanup, and the
+  final-review migration-prompt fix (p04-t04).
 
-**Total: 14 tasks**
+**Total: 15 tasks**
 
 Ready for implementation.
 

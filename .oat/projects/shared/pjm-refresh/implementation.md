@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
-oat_current_task_id: null
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -14,14 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 5     | 5/5       |
-| Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | completed | 3     | 3/3       |
-| Phase 4 | completed | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 5     | 5/5       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | completed   | 3     | 3/3       |
+| Phase 4 | in_progress | 4     | 3/4       |
 
-**Total:** 14/14 tasks completed
+**Total:** 14/15 tasks completed
 
 ## Phase 1: Additive Core
 
@@ -875,6 +875,41 @@ review-fix corrected drifted docs to match the CLI; no artifact is now stale.
 | 4     | p04-t02 `pnpm build` (full)                   | -      | 0      | 5/5 turbo tasks                                   |
 | 4     | p04-t02 `pnpm release:validate`               | -      | 0      | 5 public packages validated at 0.1.31             |
 | 4     | p04 code review (fail → fix → pass)           | -      | 0      | 1 Important docs fix; re-review 0 findings        |
+
+## Review Received: final (v2)
+
+**Date:** 2026-06-23
+**Review artifact:** reviews/archived/final-review-2026-06-23-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p04-t04
+
+**Finding I1 (Important, verified):** The bundled `oat pjm migrate --print-prompt`
+asset (`packages/cli/assets/migration/pjm-restructure.md`) teaches an
+incompatible decision-index contract in its manual fallback — the plural
+`<!-- OAT DECISIONS-INDEX -->` marker pair and a 4-column
+`| ID | Date | Status | Title |` table (one spot `| Decision |`). The live CLI
+(`regenerate-index.ts:7-8,143`) uses the singular `<!-- OAT DECISION-INDEX -->`
+marker pair and the 5-column `| ID | Date | Status | Title | Legacy |` table. An
+agent following the manual fallback would build an index incompatible with
+`oat decision regenerate` and drop migrated `legacy_id` values. Disposition:
+`code_fix_required` → converted to fix task p04-t04 (fix the asset + add a
+bundle/asset regression assertion pinning it to the CLI source of truth).
+Affects FR5, FR7, NFR3.
+
+**Context:** This v2 final review was run manually after PR #118 was opened and
+supersedes the earlier passing v1 final review (which did not inspect the bundled
+prompt's index contract). The PR will be updated after the fix passes re-review.
+
+**Next:** Execute p04-t04 via the `oat-project-implement` flow, then re-run
+`oat-project-review-provide code final` + `oat-project-review-receive` to reach
+`passed`, and push to update PR #118.
 
 ## Final Summary (for PR/docs)
 

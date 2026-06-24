@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: f29f3df6
+oat_current_task: p04-t04
+oat_last_commit: 619b9234
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-23T23:40:00Z'
+oat_project_state_updated: '2026-06-23T23:55:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,7 +39,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open, awaiting human review.
+Implementation — PR #118 open; a manual v2 final review found one Important
+issue (migration prompt decision-index contract). Fixing p04-t04, then
+re-reviewing and updating the PR.
 
 ## Artifacts
 
@@ -74,8 +76,10 @@ Implementation — PR open, awaiting human review.
 - [x] Final lifecycle review passed (auto-review at HiLL checkpoint)
 - [x] User checkpoint approval → docs + PR
 - [x] Documentation sync complete
-- [x] PR created
-- ⧗ Awaiting human review
+- [x] PR created (#118)
+- [x] Manual v2 final review received (1 Important → fix task p04-t04)
+- ⧗ Fixing p04-t04 (migration prompt decision-index contract)
+- ⧗ Re-review final, then update PR
 
 ## Blockers
 
@@ -83,7 +87,7 @@ None
 
 ## Next Milestone
 
-PR is open for review: https://github.com/voxmedia/open-agent-toolkit/pull/118
+Execute p04-t04, then re-run `oat-project-review-provide code final` +
+`oat-project-review-receive` to reach `passed`, push to update PR #118.
 
-- To incorporate feedback: run `oat-project-revise`
-- When approved: run `oat-project-complete`
+PR: https://github.com/voxmedia/open-agent-toolkit/pull/118
