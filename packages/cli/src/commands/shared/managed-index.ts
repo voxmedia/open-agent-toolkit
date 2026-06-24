@@ -16,12 +16,6 @@
 // removed, reordered, or changed record) triggers a rewrite. It makes no
 // assumptions about any specific formatter.
 
-/**
- * Parse a managed block's text into a normalized list of rows, where each row
- * is a list of cells trimmed of surrounding whitespace. The marker lines and
- * any blank lines are ignored so that formatter-introduced blank lines or
- * column padding never count as a logical difference.
- */
 // A markdown table delimiter cell (e.g. `---`, `:---`, `:---:`, `-----`).
 // Formatters freely re-pad the dash count, so any delimiter cell normalizes to
 // a single canonical token and dash-width differences never count as a change.
@@ -32,6 +26,12 @@ function normalizeCell(cell: string): string {
   return DELIMITER_CELL.test(trimmed) ? '---' : trimmed;
 }
 
+/**
+ * Parse a managed block's text into a normalized list of rows, where each row
+ * is a list of cells trimmed of surrounding whitespace. The marker lines and
+ * any blank lines are ignored so that formatter-introduced blank lines or
+ * column padding never count as a logical difference.
+ */
 function parseManagedRows(blockText: string): string[][] {
   return blockText
     .split('\n')
