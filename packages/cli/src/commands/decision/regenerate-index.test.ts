@@ -82,20 +82,20 @@ describe('regenerateDecisionIndex', () => {
     await initializeDecisionRecords(decisionsRoot);
 
     await writeDecisionRecord(decisionsRoot, 'zeta.md', {
-      id: 'dr-260623-zeta',
+      id: 'DR-260623-zeta',
       title: '"Zeta"',
       date: '2026-06-23',
       status: 'accepted',
       legacy_id: 'ADR-002',
     });
     await writeDecisionRecord(decisionsRoot, 'alpha.md', {
-      id: 'dr-260623-alpha',
+      id: 'DR-260623-alpha',
       title: '"Alpha"',
       date: '2026-06-23',
       status: 'proposed',
     });
     await writeDecisionRecord(decisionsRoot, 'older.md', {
-      id: 'dr-260622-older',
+      id: 'DR-260622-older',
       title: '"Older"',
       date: '2026-06-22',
       status: 'superseded',
@@ -107,9 +107,9 @@ describe('regenerateDecisionIndex', () => {
     const index = await readFile(join(decisionsRoot, 'index.md'), 'utf8');
     expect(index).toContain(
       [
-        '| dr-260623-alpha | 2026-06-23 | proposed | Alpha | - |',
-        '| dr-260623-zeta | 2026-06-23 | accepted | Zeta | ADR-002 |',
-        '| dr-260622-older | 2026-06-22 | superseded | Older | DR-001 |',
+        '| DR-260623-alpha | 2026-06-23 | proposed | Alpha | - |',
+        '| DR-260623-zeta | 2026-06-23 | accepted | Zeta | ADR-002 |',
+        '| DR-260622-older | 2026-06-22 | superseded | Older | DR-001 |',
       ].join('\n'),
     );
   });
@@ -121,13 +121,13 @@ describe('regenerateDecisionIndex', () => {
     await mkdir(decisionsRoot, { recursive: true });
     await initializeDecisionRecords(decisionsRoot);
     await writeDecisionRecord(decisionsRoot, 'zeta.md', {
-      id: 'dr-260623-zeta',
+      id: 'DR-260623-zeta',
       title: '"Zeta"',
       date: '2026-06-23',
       status: 'accepted',
     });
     await writeDecisionRecord(decisionsRoot, 'alpha.md', {
-      id: 'dr-260623-alpha',
+      id: 'DR-260623-alpha',
       title: '"Alpha"',
       date: '2026-06-23',
       status: 'accepted',

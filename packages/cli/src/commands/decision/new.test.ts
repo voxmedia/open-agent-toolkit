@@ -82,9 +82,9 @@ describe('createDecisionRecord', () => {
       createdAt: '2026-06-22T10:30:00Z',
     });
 
-    expect(result.id).toBe('dr-260622-adopt-pjm-split');
+    expect(result.id).toBe('DR-260622-adopt-pjm-split');
     const record = await readFile(result.filePath, 'utf8');
-    expect(record).toContain('id: dr-260622-adopt-pjm-split');
+    expect(record).toContain('id: DR-260622-adopt-pjm-split');
     expect(record).toContain('date: 2026-06-22');
     expect(record).toContain('status: accepted');
     expect(record).toContain('title: Adopt PJM Split');
@@ -94,7 +94,7 @@ describe('createDecisionRecord', () => {
 
     const index = await readFile(join(decisionsRoot, 'index.md'), 'utf8');
     expect(index).toContain(
-      '| dr-260622-adopt-pjm-split | 2026-06-22 | accepted | Adopt PJM Split | - |',
+      '| DR-260622-adopt-pjm-split | 2026-06-22 | accepted | Adopt PJM Split | - |',
     );
   });
 
@@ -146,7 +146,7 @@ describe('createDecisionRecord', () => {
         createdAt: '2026-06-22T11:30:00Z',
       }),
     ).rejects.toThrow(
-      'Decision record dr-260622-collision already exists. Use a more specific title to disambiguate.',
+      'Decision record DR-260622-collision already exists. Use a more specific title to disambiguate.',
     );
   });
 
@@ -170,7 +170,7 @@ describe('createDecisionRecord', () => {
     ).rejects.toThrow('Run `oat decision init`');
 
     await expect(
-      pathExists(join(decisionsRoot, 'dr-260622-no-index.md')),
+      pathExists(join(decisionsRoot, 'DR-260622-no-index.md')),
     ).resolves.toBe(false);
   });
 
@@ -200,7 +200,7 @@ describe('createDecisionRecord', () => {
     ).rejects.toThrow();
 
     await expect(
-      pathExists(join(decisionsRoot, 'dr-260622-rollback.md')),
+      pathExists(join(decisionsRoot, 'DR-260622-rollback.md')),
     ).resolves.toBe(false);
     await expect(pathExists(join(decisionsRoot, 'bad.md'))).resolves.toBe(true);
   });

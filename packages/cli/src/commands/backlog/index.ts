@@ -138,7 +138,7 @@ export function createBacklogCommand(
   cmd
     .command('generate-id')
     .description(
-      'Generate a backlog item identifier (`bl-YYMMDD-slug`) from a title or slug',
+      'Generate a backlog item identifier (`BL-YYMMDD-slug`) from a title or slug',
     )
     .argument('<title-or-slug>', 'Title or slug seed for the backlog item')
     .option(

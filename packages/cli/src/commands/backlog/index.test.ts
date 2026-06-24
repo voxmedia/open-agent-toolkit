@@ -142,12 +142,12 @@ describe('createBacklogCommand', () => {
     );
 
     expect(pathExists).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/pjm/backlog/items/bl-260622-streaming-cache-layer.md',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog/items/BL-260622-streaming-cache-layer.md',
     );
     expect(pathExists).toHaveBeenCalledWith(
-      '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/bl-260622-streaming-cache-layer.md',
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260622-streaming-cache-layer.md',
     );
-    expect(capture.info).toContain('bl-260622-streaming-cache-layer');
+    expect(capture.info).toContain('BL-260622-streaming-cache-layer');
     expect(process.exitCode).toBe(0);
   });
 
@@ -163,7 +163,7 @@ describe('createBacklogCommand', () => {
 
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'ok',
-      id: 'bl-260622-streaming-cache-layer',
+      id: 'BL-260622-streaming-cache-layer',
       titleOrSlug: 'Streaming Cache Layer',
       createdAt: '2026-06-22T10:00:00Z',
     });
@@ -173,7 +173,7 @@ describe('createBacklogCommand', () => {
   it('reports a collision when the candidate item path exists', async () => {
     const { command, capture, pathExists } = createHarness();
     pathExists.mockImplementation(async (path: string) =>
-      path.endsWith('/items/bl-260622-streaming-cache-layer.md'),
+      path.endsWith('/items/BL-260622-streaming-cache-layer.md'),
     );
 
     await runCommand(
@@ -185,9 +185,9 @@ describe('createBacklogCommand', () => {
 
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'error',
-      id: 'bl-260622-streaming-cache-layer',
+      id: 'BL-260622-streaming-cache-layer',
       message:
-        'Backlog item bl-260622-streaming-cache-layer already exists. Use a more specific title or slug to disambiguate.',
+        'Backlog item BL-260622-streaming-cache-layer already exists. Use a more specific title or slug to disambiguate.',
     });
     expect(process.exitCode).toBe(1);
   });

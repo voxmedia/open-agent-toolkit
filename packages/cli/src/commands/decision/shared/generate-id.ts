@@ -5,5 +5,5 @@ export function generateDecisionId(
   title: string,
   createdAt: string | Date,
 ): string {
-  return `dr-${yymmdd(createdAt)}-${slugify(title)}`;
+  return `DR-${yymmdd(createdAt)}-${slugify(title)}`;
 }

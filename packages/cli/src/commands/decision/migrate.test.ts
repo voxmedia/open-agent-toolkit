@@ -83,24 +83,24 @@ describe('migrateDecisionRecords', () => {
     expect(result.mappings).toEqual([
       {
         legacyId: 'ADR-001',
-        id: 'dr-260622-adopt-pjm-split',
+        id: 'DR-260622-adopt-pjm-split',
         title: 'Adopt PJM split',
         date: '2026-06-22',
         filePath: join(
           referenceRoot,
           'decisions',
-          'dr-260622-adopt-pjm-split.md',
+          'DR-260622-adopt-pjm-split.md',
         ),
       },
       {
         legacyId: 'DR-002',
-        id: 'dr-260623-add-decision-command',
+        id: 'DR-260623-add-decision-command',
         title: 'Add decision command',
         date: '2026-06-23',
         filePath: join(
           referenceRoot,
           'decisions',
-          'dr-260623-add-decision-command.md',
+          'DR-260623-add-decision-command.md',
         ),
       },
     ]);
@@ -127,8 +127,8 @@ describe('migrateDecisionRecords', () => {
 
     expect(result.dryRun).toBe(false);
     expect(result.written).toEqual([
-      join(referenceRoot, 'decisions', 'dr-260622-adopt-pjm-split.md'),
-      join(referenceRoot, 'decisions', 'dr-260623-add-decision-command.md'),
+      join(referenceRoot, 'decisions', 'DR-260622-adopt-pjm-split.md'),
+      join(referenceRoot, 'decisions', 'DR-260623-add-decision-command.md'),
     ]);
     const firstRecord = await readFile(result.written[0]!, 'utf8');
     expect(firstRecord).toContain('legacy_id: ADR-001');
@@ -139,10 +139,10 @@ describe('migrateDecisionRecords', () => {
       'utf8',
     );
     expect(index).toContain(
-      '| dr-260623-add-decision-command | 2026-06-23 | proposed | Add decision command | DR-002 |',
+      '| DR-260623-add-decision-command | 2026-06-23 | proposed | Add decision command | DR-002 |',
     );
     expect(index).toContain(
-      '| dr-260622-adopt-pjm-split | 2026-06-22 | accepted | Adopt PJM split | ADR-001 |',
+      '| DR-260622-adopt-pjm-split | 2026-06-22 | accepted | Adopt PJM split | ADR-001 |',
     );
   });
 
@@ -301,10 +301,10 @@ describe('migrateDecisionRecords', () => {
       },
     );
     await writeFile(
-      join(decisionsRoot, 'dr-260622-adopt-pjm-split.md'),
+      join(decisionsRoot, 'DR-260622-adopt-pjm-split.md'),
       [
         '---',
-        'id: dr-260622-adopt-pjm-split',
+        'id: DR-260622-adopt-pjm-split',
         'title: Conflicting record',
         'date: 2026-06-22',
         'status: accepted',
@@ -321,7 +321,7 @@ describe('migrateDecisionRecords', () => {
       'already exists with different content',
     );
     await expect(
-      pathExists(join(decisionsRoot, 'dr-260623-add-decision-command.md')),
+      pathExists(join(decisionsRoot, 'DR-260623-add-decision-command.md')),
     ).resolves.toBe(false);
     await expect(pathExists(join(decisionsRoot, 'index.md'))).resolves.toBe(
       false,

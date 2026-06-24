@@ -26,9 +26,9 @@ function createHarness(): {
   }));
   const regenerateDecisionIndex = vi.fn(async (_decisionsRoot: string) => {});
   const createDecisionRecord = vi.fn(async (options) => ({
-    id: 'dr-260622-adopt-pjm-split',
+    id: 'DR-260622-adopt-pjm-split',
     decisionsRoot: options.decisionsRoot,
-    filePath: `${options.decisionsRoot}/dr-260622-adopt-pjm-split.md`,
+    filePath: `${options.decisionsRoot}/DR-260622-adopt-pjm-split.md`,
   }));
   const migrateDecisionRecords = vi.fn(async (options) => ({
     referenceRoot: options.referenceRoot,
@@ -38,10 +38,10 @@ function createHarness(): {
     mappings: [
       {
         legacyId: 'ADR-001',
-        id: 'dr-260622-adopt-pjm-split',
+        id: 'DR-260622-adopt-pjm-split',
         title: 'Adopt PJM split',
         date: '2026-06-22',
-        filePath: `${options.referenceRoot}/decisions/dr-260622-adopt-pjm-split.md`,
+        filePath: `${options.referenceRoot}/decisions/DR-260622-adopt-pjm-split.md`,
       },
     ],
     written: [],
@@ -182,10 +182,10 @@ describe('createDecisionCommand', () => {
     });
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'ok',
-      id: 'dr-260622-adopt-pjm-split',
+      id: 'DR-260622-adopt-pjm-split',
       decisionsRoot: '/tmp/workspace/repo/.oat/repo/reference/decisions',
       filePath:
-        '/tmp/workspace/repo/.oat/repo/reference/decisions/dr-260622-adopt-pjm-split.md',
+        '/tmp/workspace/repo/.oat/repo/reference/decisions/DR-260622-adopt-pjm-split.md',
     });
     expect(process.exitCode).toBe(0);
   });
@@ -219,7 +219,7 @@ describe('createDecisionCommand', () => {
       deleteLegacy: false,
     });
     expect(capture.info).toContain(
-      'ADR-001 -> dr-260622-adopt-pjm-split (/tmp/workspace/custom/reference/decisions/dr-260622-adopt-pjm-split.md)',
+      'ADR-001 -> DR-260622-adopt-pjm-split (/tmp/workspace/custom/reference/decisions/DR-260622-adopt-pjm-split.md)',
     );
     expect(process.exitCode).toBe(0);
   });

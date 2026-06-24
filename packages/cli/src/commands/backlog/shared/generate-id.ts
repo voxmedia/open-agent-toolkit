@@ -5,5 +5,5 @@ export function generateBacklogId(
   titleOrSlug: string,
   createdAt: string,
 ): string {
-  return `bl-${yymmdd(createdAt)}-${slugify(titleOrSlug)}`;
+  return `BL-${yymmdd(createdAt)}-${slugify(titleOrSlug)}`;
 }

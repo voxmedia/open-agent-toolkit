@@ -68,7 +68,7 @@ describe('regenerateBacklogIndex directory ordering', () => {
     await mkdir(itemsDir, { recursive: true });
 
     await writeBacklogItem(itemsDir, 'zeta.md', {
-      id: 'bl-260622-zeta',
+      id: 'BL-260622-zeta',
       title: '"Zeta"',
       status: 'open',
       priority: 'medium',
@@ -76,7 +76,7 @@ describe('regenerateBacklogIndex directory ordering', () => {
       scope_estimate: 'S',
     });
     await writeBacklogItem(itemsDir, 'alpha.md', {
-      id: 'bl-260622-alpha',
+      id: 'BL-260622-alpha',
       title: '"Alpha"',
       status: 'open',
       priority: 'medium',

@@ -150,7 +150,7 @@ describe('regenerateBacklogIndex', () => {
     const itemsDir = join(backlogRoot, 'items');
 
     await writeBacklogItem(itemsDir, 'alpha.md', {
-      id: 'bl-260622-alpha',
+      id: 'BL-260622-alpha',
       title: '"Alpha"',
       status: 'open',
       priority: 'high',
@@ -173,7 +173,7 @@ describe('regenerateBacklogIndex', () => {
     const itemsDir = join(backlogRoot, 'items');
 
     await writeBacklogItem(itemsDir, 'beta.md', {
-      id: 'bl-260622-beta',
+      id: 'BL-260622-beta',
       title: '"Same"',
       status: 'open',
       priority: 'high',
@@ -181,7 +181,7 @@ describe('regenerateBacklogIndex', () => {
       scope_estimate: 'S',
     });
     await writeBacklogItem(itemsDir, 'alpha.md', {
-      id: 'bl-260622-alpha',
+      id: 'BL-260622-alpha',
       title: '"Same"',
       status: 'open',
       priority: 'high',
@@ -192,8 +192,8 @@ describe('regenerateBacklogIndex', () => {
     await regenerateBacklogIndex(backlogRoot);
 
     const index = await readFile(join(backlogRoot, 'index.md'), 'utf8');
-    expect(index.indexOf('| bl-260622-alpha | Same |')).toBeLessThan(
-      index.indexOf('| bl-260622-beta | Same |'),
+    expect(index.indexOf('| BL-260622-alpha | Same |')).toBeLessThan(
+      index.indexOf('| BL-260622-beta | Same |'),
     );
   });
 

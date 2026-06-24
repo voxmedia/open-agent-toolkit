@@ -96,7 +96,7 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat backlog generate-id [options] <title-or-slug>
 
-      Generate a backlog item identifier (\`bl-YYMMDD-slug\`) from a title or slug
+      Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
 
       Arguments:
         title-or-slug             Title or slug seed for the backlog item
@@ -123,7 +123,7 @@ describe('help output snapshots', () => {
       Commands:
         init [options]                         Scaffold the canonical backlog directory structure and starter files
         regenerate-index [options]             Regenerate the managed backlog index table
-        generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`bl-YYMMDD-slug\`) from a title or slug
+        generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
         help [command]                         display help for command
       "
     `);
