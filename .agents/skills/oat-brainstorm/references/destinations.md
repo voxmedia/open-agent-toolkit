@@ -84,7 +84,7 @@ Always honor an explicit user-supplied path over the suggestion. Brainstorm docs
 ### Destination: Scoped backlog item
 
 **Pack required:** `project-management` (i.e., `oat config get tools.project-management` returns `true`)
-**Trigger phrases:** "track this as a backlog item", "make a ticket", "log this", "open a backlog entry", "add this to the backlog", "create a bl-XXXX for this".
+**Trigger phrases:** "track this as a backlog item", "make a ticket", "log this", "open a backlog entry", "add this to the backlog", "create a backlog item for this".
 **Required template fields:** `title` (1-line summary), `description` (problem + proposed approach), `acceptance criteria` (bullet list), `scope` (xs / s / m / l / xl), `priority` (p0 / p1 / p2 / p3). Template: `.oat/templates/backlog-item.md` (consumed via `oat-pjm-add-backlog-item`).
 **Optional template fields:** related items, target release, owner.
 **Confirmation pattern:** `full`
@@ -102,7 +102,7 @@ I have what I need to track this as a backlog item. Here is the proposed payload
   Scope:      <xs|s|m|l|xl>
   Priority:   <p0|p1|p2|p3>
 
-Confirm to write this to a new bl-XXXX file, or tell me what to change.
+Confirm to write this to a new backlog item file, or tell me what to change.
 ```
 
 **Handoff target:** `oat-pjm-add-backlog-item` from its Step 1, with the confirmed payload pre-filling the early prompts. The downstream skill owns ID generation, file writing, and backlog-index regeneration.

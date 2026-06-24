@@ -387,7 +387,7 @@ Same as Scenario 2 through Step 8.
      Scope:      m
      Priority:   p2
 
-   Confirm to write this to a new bl-XXXX file, or tell me what to change.
+   Confirm to write this to a new backlog item file, or tell me what to change.
    ```
 
    User confirms or revises field-by-field.

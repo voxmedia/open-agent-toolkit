@@ -37,7 +37,7 @@ Items already started, in code review, or otherwise mid-flight. Close these out 
 
 | Item                                             | Scope      | Notes                                        |
 | ------------------------------------------------ | ---------- | -------------------------------------------- |
-| [Item title](../items/{filename}.md) (`bl-XXXX`) | {S/M/L/XL} | {Status, blocker if any, next concrete step} |
+| [Item title](../items/{filename}.md) (`BL-XXXX`) | {S/M/L/XL} | {Status, blocker if any, next concrete step} |
 
 ---
 
@@ -52,7 +52,7 @@ Items already started, in code review, or otherwise mid-flight. Close these out 
 
 | Item                                             | Scope      | {Optional column} | Parallel with        | Notes                                   |
 | ------------------------------------------------ | ---------- | ----------------- | -------------------- | --------------------------------------- |
-| [Item title](../items/{filename}.md) (`bl-XXXX`) | {S/M/L/XL} | {Low/Med/High}    | `bl-YYYY`, `bl-ZZZZ` | {One-line context — gotchas, decisions} |
+| [Item title](../items/{filename}.md) (`BL-XXXX`) | {S/M/L/XL} | {Low/Med/High}    | `BL-YYYY`, `BL-ZZZZ` | {One-line context — gotchas, decisions} |
 
 ---
 
@@ -62,7 +62,7 @@ Quick lookup for "can I start X while Y is in flight?"
 
 | Can run together      | Keep sequential            |
 | --------------------- | -------------------------- |
-| `bl-XXXX` ∥ `bl-YYYY` | `bl-AAAA` before `bl-BBBB` |
+| `BL-XXXX` ∥ `BL-YYYY` | `BL-AAAA` before `BL-BBBB` |
 | {…}                   | {…}                        |
 
 ---
@@ -71,9 +71,9 @@ Quick lookup for "can I start X while Y is in flight?"
 
 Three concrete actions for the next development cycle. Not a ranked list of everything — just what to do _first_.
 
-1. **{Close|Kick off|Defer}** [`bl-XXXX`](../items/{filename}.md) — {one-line reason: why now, what it unblocks}
-2. **{Close|Kick off|Defer}** [`bl-YYYY`](../items/{filename}.md) — {one-line reason}
-3. **{Close|Kick off|Defer}** [`bl-ZZZZ`](../items/{filename}.md) — {one-line reason}
+1. **{Close|Kick off|Defer}** [`BL-XXXX`](../items/{filename}.md) — {one-line reason: why now, what it unblocks}
+2. **{Close|Kick off|Defer}** [`BL-YYYY`](../items/{filename}.md) — {one-line reason}
+3. **{Close|Kick off|Defer}** [`BL-ZZZZ`](../items/{filename}.md) — {one-line reason}
 
 ---
 

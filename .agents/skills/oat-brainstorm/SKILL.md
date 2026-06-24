@@ -366,7 +366,7 @@ The payload is staged in memory only — it is not persisted between conversatio
     Scope:      <xs|s|m|l|xl>
     Priority:   <p0|p1|p2|p3>
 
-  Confirm to write this to a new bl-XXXX file, or tell me what to change.
+  Confirm to write this to a new backlog item file, or tell me what to change.
   ```
 
   If the user requests changes, apply them to the in-memory payload and re-display the affected fields before continuing.

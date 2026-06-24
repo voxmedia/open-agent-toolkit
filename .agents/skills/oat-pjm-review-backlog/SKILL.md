@@ -190,7 +190,7 @@ After writing the review, provide:
 - Top 3 recommended next actions
 - Key risks or gaps discovered
 
-When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `bl-XXXX` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
+When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `BL-XXXX` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
 
 ### Step 9: Offer Priority Alignment Walkthrough (Optional, Collaborative)
 
