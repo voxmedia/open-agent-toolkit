@@ -806,6 +806,49 @@ git add packages/cli .agents/skills/oat-pjm-decision apps/oat-docs/docs
 git commit -m "refactor(prev1-t01): rename oat decision regenerate to regenerate-index"
 ```
 
+---
+
+### Task prev1-t02: Promote project Key Decisions into `dr-` records (oat-project-summary)
+
+**Source:** PR #118 reviewer feedback (#2). `oat-project-summary` writes a
+`## Key Decisions` prose section into `summary.md`, but those decisions never land
+in the canonical, repo-wide `reference/decisions/` log — re-creating the silo the
+file-per-record decision model removes. This closes the deferred p03-t02 item
+("summary/pr-final do not create decisions today … unless a later change makes
+them").
+
+**Design (per user direction):**
+
+- Owner: `oat-project-summary` (already responsible for synthesizing decisions).
+- Auto, no prompt: gated on the PJM tool pack being installed
+  (`oat config get tools.project-management` == `true`). If not installed, skip
+  silently.
+- **Idempotent:** for each Key Decision, derive a stable title/slug and promote it
+  via `oat decision new` ONLY if no existing record in `reference/decisions/`
+  already has that slug (date-independent dedup) — so regenerating `summary.md`
+  (pr-final refresh, revision re-runs) never creates duplicate records.
+- Ensure the decisions surface exists first (`oat decision init` if the
+  `reference/decisions/` index is missing); use a sensible `--status` (decided/
+  accepted) and pass the decision rationale as `--context`.
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-summary/SKILL.md` (add the PJM-gated,
+  idempotent decision-promotion step; bump frontmatter `version:` 1.1.2 → 1.2.0)
+- Refresh bundled mirror via `bash packages/cli/scripts/bundle-assets.sh`
+
+**Step 1: Implement** — add the step to the skill, version-bump once, bundle.
+
+**Step 2: Verify** — full gate: `pnpm format`, `pnpm lint`, `pnpm type-check`,
+`pnpm build`, `pnpm build:docs`, `pnpm test`, `pnpm release:validate`. All pass.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-summary packages/cli/src/commands/init/tools
+git commit -m "feat(prev1-t02): auto-promote key decisions to dr- records in summary"
+```
+
 ## Reviews
 
 | Scope  | Type     | Status  | Date       | Artifact                                       |
