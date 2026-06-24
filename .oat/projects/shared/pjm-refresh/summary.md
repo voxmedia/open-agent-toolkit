@@ -60,7 +60,10 @@ project-summaries).
   complete, brainstorm → `reference/brainstorms/`, deep-research →
   `reference/research/`, import-plan stays `reference/external-plans/`); retired
   the deprecated `update-repo-reference` and `review-backlog` skills with redirect
-  banners.
+  banners. `oat-project-summary` now closes the decision-consistency loop: when
+  the PJM pack is installed, it auto-promotes each `## Key Decisions` entry into a
+  canonical `dr-` record (idempotent — exact-slug dedup, date-prefix-independent —
+  so regenerations never duplicate).
 
 - **Assets, docs, and release.** Registered the new templates, migration asset, and
   `oat-pjm-decision` skill across the bundle script, PM skill manifest, and public
@@ -118,11 +121,9 @@ findings.
   `reference/current-state.md`). Running `oat pjm migrate` on this repo and then
   refreshing its repo-reference docs is a deliberate, separate follow-up — intentionally
   out of scope for this project, which built (not consumed) the new structure.
-- **Promote project "Key Decisions" into `dr-` records (decision-consistency
-  loop).** `oat-project-summary` captures a `## Key Decisions` prose section in
-  per-project `summary.md`, but those decisions never land in the canonical,
-  repo-wide `reference/decisions/` log — re-creating the silo the file-per-record
-  model is meant to remove. Follow-up: have `oat-project-complete` /
-  `oat-project-summary` / `oat-project-pr-final` **offer** (not auto) to promote
-  significant Key Decisions into `dr-` records via `oat decision new`. Raised in
-  PR #118 review (suggestion #2); deferred out of this PR by reviewer agreement.
+- **Broaden decision promotion to user-scoped/quick-mode projects (optional).**
+  The Key Decisions → `dr-` promotion shipped in `oat-project-summary` (PR #118
+  review suggestion #2) is gated on the PJM pack being installed and on a
+  `## Key Decisions` section existing. A future enhancement could surface
+  promotion in additional lifecycle entry points or for quick-mode projects that
+  skip a full summary; not required for the core loop, which is now closed.

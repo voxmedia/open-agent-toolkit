@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t02
-oat_last_commit: a3ce203d
+oat_current_task: null
+oat_last_commit: 84c27616
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T01:05:00Z'
+oat_project_state_updated: '2026-06-24T01:25:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,9 +39,10 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR #118 revision p-rev1 (reviewer feedback). prev1-t01 (verb
-rename) done and pushed. prev1-t02 in progress: auto-promote project Key
-Decisions into `dr-` records via `oat-project-summary` (PJM-gated, idempotent).
+Implementation — PR #118 open, awaiting human review. Revision p-rev1 complete:
+prev1-t01 (decision verb rename) and prev1-t02 (auto-promote Key Decisions →
+`dr-` records in `oat-project-summary`, PJM-gated + idempotent) both done; full
+gate green. Pushed to update the PR.
 
 ## Artifacts
 
@@ -82,8 +83,9 @@ Decisions into `dr-` records via `oat-project-summary` (PJM-gated, idempotent).
 - [x] Final re-review passed (0 findings; I1 resolved)
 - [x] PR #118 updated with the p04-t04 fix
 - [x] p-rev1/prev1-t01: decision verb renamed to `regenerate-index` (feedback #1)
-- ⧗ p-rev1/prev1-t02: auto-promote Key Decisions → `dr-` records in
-  oat-project-summary, PJM-gated + idempotent (feedback #2)
+- [x] p-rev1/prev1-t02: auto-promote Key Decisions → `dr-` records in
+      oat-project-summary, PJM-gated + idempotent (feedback #2)
+- ⧗ PR #118 updated; awaiting human review
 
 ## Blockers
 
