@@ -43,6 +43,10 @@ describe('initializeBacklog', () => {
     const completed = await readFile(join(backlogRoot, 'completed.md'), 'utf8');
     expect(completed).toContain('# OAT Backlog Completed');
     expect(completed).toContain('## Entry Format');
+    expect(completed).toContain(
+      '- `YYYY-MM-DD — BL-YYMMDD-slug — Title — one-line outcome summary`',
+    );
+    expect(completed).not.toContain('bl-XXXX');
     expect(completed).toContain('## Completed Items');
   });
 

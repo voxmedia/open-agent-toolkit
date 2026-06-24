@@ -20,12 +20,12 @@ Analyze the file-backed backlog under `.oat/repo/pjm/backlog/` to produce a stru
 
 ## Reference Format Convention
 
-Whenever a backlog item is referenced — in the written review document, in chat output, or in the inline summary at the end — it **must include both the ID and a human-readable title**. Bare IDs like `bl-281c` are not acceptable in user-facing output, because readers do not have a board lookup in front of them.
+Whenever a backlog item is referenced — in the written review document, in chat output, or in the inline summary at the end — it **must include both the ID and a human-readable title**. Bare IDs like `BL-260529-control-plane-state-read` are not acceptable in user-facing output, because readers do not have a board lookup in front of them.
 
 Use one of these formats:
 
-- **Inline / prose:** `` `bl-281c` (control-plane state-read migration) ``
-- **Tables / lists:** `**bl-281c** — Control-plane state-read migration`
+- **Inline / prose:** `` `BL-260529-control-plane-state-read` (control-plane state-read migration) ``
+- **Tables / lists:** `**BL-260529-control-plane-state-read** — Control-plane state-read migration`
 - **Compact lists where space is tight (e.g., dependency graphs):** an ID-only token is acceptable **only if** a legend in the same section maps every ID to its title.
 
 This convention applies equally to:
@@ -190,7 +190,7 @@ After writing the review, provide:
 - Top 3 recommended next actions
 - Key risks or gaps discovered
 
-When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `BL-XXXX` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
+When listing specific items in this summary, follow the **Reference Format Convention** above — every backlog item must appear as `` `BL-YYMMDD-slug` (human-readable title) `` (or the bold-with-em-dash variant in tables). Do not emit bare IDs.
 
 ### Step 9: Offer Priority Alignment Walkthrough (Optional, Collaborative)
 

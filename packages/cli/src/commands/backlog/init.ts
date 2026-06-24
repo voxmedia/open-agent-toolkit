@@ -41,7 +41,7 @@ const STARTER_COMPLETED = [
   '',
   '## Entry Format',
   '',
-  '- `YYYY-MM-DD — bl-XXXX — Title — one-line outcome summary`',
+  '- `YYYY-MM-DD — BL-YYMMDD-slug — Title — one-line outcome summary`',
   '',
   '## Completed Items',
   '',
