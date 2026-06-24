@@ -86,3 +86,54 @@ The final `rg` command should return no matches after the prompt is fixed.
 ## Recommended Next Step
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
+
+---
+
+## Re-review (after fix 88f5e4ec)
+
+**Re-reviewed:** 2026-06-23
+**Scope:** Fix-scoped re-review of finding I1 (Important) from v2 above
+**Fix commit:** `88f5e4ec` — `fix(p04-t04): align migration prompt decision-index with CLI contract`
+**Files in fix:** 2 (`packages/cli/assets/migration/pjm-restructure.md`, `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`)
+**Re-review verdict:** Pass
+
+### Outcome
+
+I1 is **resolved**. The bundled migration prompt now teaches the same decision-index contract the live CLI emits, and a CLI-sourced regression test pins the asset to that contract so it cannot drift again.
+
+### Verification of the fix
+
+1. **Asset correctness — confirmed.** Cross-checked against `packages/cli/src/commands/decision/regenerate-index.ts` (`DECISION_INDEX_START`/`DECISION_INDEX_END` lines 7-8 = singular markers; header row line 143 = `| ID | Date | Status | Title | Legacy |`).
+   - `rg "OAT DECISIONS-INDEX"` on the asset returns **no matches** (plural marker fully removed).
+   - Singular `<!-- OAT DECISION-INDEX -->` / `<!-- END OAT DECISION-INDEX -->` present at line 417 (manual fallback).
+   - 5-column `| ID | Date | Status | Title | Legacy |` header present at line 204 (output `index.md` description) and line 416 (manual fallback).
+   - No stray `| Decision |` output column anywhere (`rg "\| Decision \|"` returns no matches); line 153's `| Decision |` → `| Title |` correction was also applied.
+   - Line 153 (`| ID | Date | Status | Title | …`, trailing ellipsis) legitimately describes the **legacy input** `decision-record.md` source table being read, not the output contract — correct to remain 4-column-shaped with the ellipsis.
+
+2. **Regression-test soundness — confirmed.** `bundle-consistency.test.ts` adds a `migration prompt decision-index contract` describe block that:
+   - Imports `DECISION_INDEX_START`, `DECISION_INDEX_END`, and `renderDecisionManagedSection` from `@commands/decision/regenerate-index` (the live CLI source of truth) rather than hardcoding duplicate strings.
+   - Derives the expected header via `getCanonicalDecisionIndexHeader()` from `renderDecisionManagedSection([])`, so the asset is pinned to the CLI render logic.
+   - Reads the **real bundled asset** at `assets/migration/pjm-restructure.md` (path resolution verified to resolve to the actual file; `readFileSync` reads it).
+   - Asserts: contains the singular markers; contains the canonical 5-column header; does **not** contain `OAT DECISIONS-INDEX`; does **not** contain the stale `| ID | Date | Status | Decision |` variant.
+   - Would genuinely fail on regression because it reads the real on-disk asset and compares against CLI-exported symbols.
+
+3. **No CLI behavior change — confirmed.** The fix commit touched only the asset and the test file. `git show 88f5e4ec --name-only` lists no non-test CLI source files; no command handler, render logic, or contract code changed.
+
+### Re-review verification commands run
+
+```bash
+git show 88f5e4ec                                                          # 2 files: asset + test only
+rg -n "OAT DECISIONS-INDEX" packages/cli/assets/migration/pjm-restructure.md   # no matches (exit 1)
+rg -n "\| Decision \|" packages/cli/assets/migration/pjm-restructure.md        # no matches (exit 1)
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools  # 26 files, 207 tests PASS (incl. new contract block)
+pnpm release:validate                                                          # PASS — 5 public packages validated at 0.1.31
+```
+
+Did **not** re-run the full ~1900-test suite or the full lint/type-check/build/docs gate; the implementer ran those green and this fix is asset+test-only with no CLI source behavior change. Ran the focused `init/tools` suite (which contains the new regression test) plus `release:validate`, both green.
+
+### Re-review findings
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
