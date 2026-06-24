@@ -223,13 +223,14 @@ test -f .oat/repo/reference/decisions/index.md || oat decision init
 
 1. **Derive title + rationale.** The decision's bold lead-in / first clause becomes the **title** (a short noun phrase). The remaining explanatory text becomes the **rationale**, passed verbatim as `--context`.
 2. **Compute the slug the CLI would use.** The CLI generates the record ID as `dr-<YYMMDD>-<slug>`, where `<slug>` is the lowercased, ASCII-folded, hyphen-collapsed, 48-char-truncated form of the title (the same slug rule the CLI applies). Compute that `<slug>` for the title.
-3. **Dedup on the slug, ignoring the date prefix.** Check whether a decision record for this slug ALREADY exists by matching the `-<slug>` **suffix** of existing `reference/decisions/dr-*-<slug>.md` filenames (and/or the `ID` column rows in `reference/decisions/index.md`), **ignoring the `dr-YYMMDD-` date prefix.** For example:
+3. **Dedup on the exact slug, ignoring only the date prefix.** A record ID is `dr-<YYMMDD>-<slug>`, where the date is exactly six digits. Check whether a record for this slug already exists by stripping that fixed `dr-<6 digits>-` prefix from existing record IDs and comparing the remaining slug for **exact equality**. Anchor the date to exactly six characters so the slug must match in full:
 
    ```bash
-   ls .oat/repo/reference/decisions/dr-*-"<slug>".md 2>/dev/null
+   # the six '?' pin the YYMMDD date, so <slug> must match exactly (not as a suffix)
+   ls .oat/repo/reference/decisions/dr-??????-"<slug>".md 2>/dev/null
    ```
 
-   This date-independent match is essential: the `dr-YYMMDD-` date prefix changes across re-runs, so a naive full-ID `dr-YYMMDD-<slug>` existence check would NOT dedup and would create a duplicate record every time `summary.md` is regenerated.
+   Do **not** use a loose `dr-*-<slug>.md` glob: the greedy `*` would let a short slug (e.g. `layers`) falsely match a longer record (`dr-260623-two-layers.md`) and wrongly skip it. (Equivalently, scan the `ID` column of `reference/decisions/index.md`, strip each `dr-<6 digits>-` prefix, and compare the slug exactly.) This date-independent, exact-slug match is essential: the `dr-YYMMDD-` date prefix changes across re-runs, so a naive full-ID `dr-YYMMDD-<slug>` check would never dedup, while a loose suffix match would over-dedup.
 
 4. **Skip or create.**
    - If a matching record already exists (same slug) → **skip it.** It was already promoted on a prior run.
