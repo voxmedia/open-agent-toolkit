@@ -13,7 +13,7 @@ oat_hill_checkpoints: ['discovery', 'design']
 oat_hill_completed: ['discovery', 'design']
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_workflow_mode: spec-driven
 oat_workflow_origin: native
 oat_docs_updated: complete
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T00:10:00Z'
+oat_project_state_updated: '2026-06-24T00:20:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -39,9 +39,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR #118 open; a manual v2 final review found one Important
-issue (migration prompt decision-index contract). Fixing p04-t04, then
-re-reviewing and updating the PR.
+Implementation — PR #118 open, awaiting human review. The v2 final-review
+Important finding (migration prompt decision-index contract) is fixed (p04-t04)
+and re-review passed.
 
 ## Artifacts
 
@@ -79,7 +79,8 @@ re-reviewing and updating the PR.
 - [x] PR created (#118)
 - [x] Manual v2 final review received (1 Important → fix task p04-t04)
 - [x] p04-t04 fix complete (commit 88f5e4ec, full gate green)
-- ⧗ Re-review final, then update PR
+- [x] Final re-review passed (0 findings; I1 resolved)
+- ⧗ Push to update PR #118; awaiting human review
 
 ## Blockers
 

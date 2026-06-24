@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-23
@@ -941,8 +941,9 @@ Affects FR5, FR7, NFR3.
 supersedes the earlier passing v1 final review (which did not inspect the bundled
 prompt's index contract). The PR will be updated after the fix passes re-review.
 
-**Next:** ✓ p04-t04 implemented (commit `88f5e4ec`, full gate green). Re-running
-the final review to confirm I1 is resolved; on `passed`, push to update PR #118.
+**Next:** ✓ Resolved. p04-t04 implemented (commit `88f5e4ec`, full gate green);
+final re-review passed with 0 findings (I1 confirmed resolved). Final review row
+is `passed`. Pushing to update PR #118.
 
 ## Final Summary (for PR/docs)
 
