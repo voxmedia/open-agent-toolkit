@@ -793,6 +793,22 @@ stale pinned SHA (`19973d44`, pre-p-rev2) because an earlier hand-off prompt
 hard-coded that commit. No tool defect; the prompt now carries version-gate
 guidance (prev3-t05) so the build is verified before migrating.
 
+### Review Received: range (fixes since last final review)
+
+**Review artifact:** reviews/archived/range-review-2026-06-24.md
+**Scope:** `619b9234..HEAD` (30 commits — all of p-rev1/p-rev2/p-rev3)
+
+A manual holistic range review **passed** (0 Critical / 0 Important / 0 Medium,
+1 Minor) and independently re-confirmed every p-rev1/p-rev2/p-rev3 fix as
+implemented. The one Minor (stale `bl-XXXX` placeholder wording in the
+`oat-brainstorm` backlog handoff) was fixed directly per user direction (commit
+`299c87df`) — and the same stale-placeholder class in `oat-pjm-review-backlog`
+(priority-alignment template + SKILL.md) was swept at the same time for
+consistency: lowercase `bl-XXXX`/`bl-YYYY`/etc. → uppercase `BL-`, and the
+brainstorm confirmation prose → "a new backlog item file". No version bump needed
+(both skills already changed in this PR); bundle refreshed; build:docs + lint +
+bundle-consistency green. Review marked passed.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->

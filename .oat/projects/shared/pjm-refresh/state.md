@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: ac210d0b
+oat_last_commit: 299c87df
 oat_blockers: []
 oat_orchestration_retry_limit: 5
 associated_issues: []
@@ -21,7 +21,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/118'
 oat_project_created: '2026-06-23T01:20:08.730Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-06-24T04:10:00Z'
+oat_project_state_updated: '2026-06-24T15:10:00Z'
 oat_dispatch_ceiling:
   preset: maximum
   providers:
@@ -97,6 +97,8 @@ full gate green. Pushed to update the PR.
 - [x] p-rev3 (5 tasks): strip template fm on migration (F1), exclude trailing
       template block (F2), graceful decision-migrate no-op (F4), doctor allows
       README (F5), corrected migration prompt + version-gate (F3) — review passed
+- [x] Holistic range review (619b9234..HEAD, 30 commits) passed; 1 Minor fixed
+      (uppercase `BL-` placeholders in brainstorm + review-backlog skills)
 - ⧗ PR #118 updated; awaiting human review
 
 ## Blockers
