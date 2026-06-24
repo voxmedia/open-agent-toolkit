@@ -934,6 +934,71 @@ per-formatter assumptions. Add tests for each index: a reformatted-but-equivalen
 index → regenerate is a no-op (bytes unchanged); a real change → rewrite.
 Commit: `fix(prev2-t06): make regenerate-index content-idempotent (decision+backlog)`.
 
+## Phase p-rev3: Corrected-Dogfood Fixes (post-#118)
+
+A second dogfood run from the fixed `pjm-refresh` tip validated p-rev2 (uppercase
+ids, 30-char slug, `### ADR` parsing, atomic apply, idempotent regenerate) but
+surfaced four more tooling gaps plus a docs/sequence staleness. All land in PR
+#118 (pre-release; no package bump).
+
+### Task prev3-t01: Strip template frontmatter during backlog migration (F1)
+
+`pjm migrate --apply` moved legacy backlog items that still carried
+`oat_template`/`oat_template_name` frontmatter, so `pjm doctor` (prev2-t05) failed
+and the user stripped them by hand. Apply the existing `stripTemplateFrontmatter`
+helper to each migrated record so migrated items never carry template frontmatter.
+Files: `packages/cli/src/commands/pjm/migrate.ts` (the backlog `applyBacklogMigrations`
+path; also confirm migrated decision records are template-frontmatter-free) (+ test).
+Test: a legacy backlog item with `oat_template: true` → migrated item has it stripped,
+and `pjm doctor` passes.
+Commit: `fix(prev3-t01): strip template frontmatter from migrated records`.
+
+### Task prev3-t02: Exclude trailing boilerplate from last decision record (F2)
+
+The legacy `decision-record.md` ends with a `## ADR Template` block after ADR-021;
+the parser runs the last section's body to EOF (`migrate.ts:118
+sectionEnd = … ?? content.length`), absorbing the template tail into
+`DR-…-make-oat-tools-install`. Bound each decision section at the next level-2
+(`^## `) heading as well as the next ADR/DR heading, so trailing `##`-level
+boilerplate is excluded. Files: `packages/cli/src/commands/decision/migrate.ts`
+(+ test). Test: a fixture with a trailing `## ADR Template` block → the last
+record's body excludes it; body parity holds.
+Commit: `fix(prev3-t02): exclude trailing template block from last decision`.
+
+### Task prev3-t03: Graceful standalone `decision migrate` when nothing to migrate (F4)
+
+After `pjm migrate --apply` (which now migrates decisions end-to-end and removes
+`decision-record.md`), a standalone `decision migrate --dry-run` fails with ENOENT.
+Make standalone `decision migrate` (and `--dry-run`) degrade gracefully — report
+"nothing to migrate" / a clean no-op when `decision-record.md` is absent — instead
+of throwing ENOENT. Files: `packages/cli/src/commands/decision/migrate.ts` (+ test).
+Commit: `fix(prev3-t03): decision migrate no-ops when legacy record is absent`.
+
+### Task prev3-t04: Allow top-level `README.md` in doctor layout check (F5)
+
+doctor's `pjm:top_level_layout` flags `.oat/repo/README.md` as unknown
+(`ALLOWED_TOP_LEVEL_FILES = {'AGENTS.md'}`). A human-facing `README.md` at the
+repo-reference root is benign — add it to the allowed top-level files. Files:
+`packages/cli/src/commands/pjm/doctor.ts` (+ test).
+Commit: `fix(prev3-t04): doctor allows top-level README.md`.
+
+### Task prev3-t05: Correct the migration prompt + sequence (F3/F4/F5 docs)
+
+Update the bundled migration prompt and any docs/hand-off sequence to match the
+fixed CLI:
+
+- `pjm migrate --apply` is **one-shot end-to-end** (it migrates decisions and
+  removes `decision-record.md`) — drop the redundant follow-on `decision migrate`
+  / `--delete-legacy` steps from the sequence.
+- Add version-gate guidance: build from the current branch tip and verify the
+  build has the fixes (do NOT pin a stale SHA); the dry-run should show uppercase
+  `DR-`/`BL-` ids with ≤30-char slugs.
+- Document the stale top-level `README.md` case (now allowed by doctor; archive or
+  refresh it as desired).
+
+Files: `packages/cli/assets/migration/pjm-restructure.md` (+ any affected docs).
+Run the bundle script. Commit: `docs(prev3-t05): correct migration prompt sequence and guidance`.
+
 ## Reviews
 
 | Scope  | Type     | Status  | Date       | Artifact                                       |
