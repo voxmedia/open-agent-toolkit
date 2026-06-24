@@ -102,6 +102,151 @@ describe('runPjmDoctorChecks', () => {
     );
   });
 
+  it('fails when a migrated backlog item still carries template frontmatter', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await writeFile(
+      join(repoRoot, 'pjm', 'backlog', 'items', 'bl-260623-migrated.md'),
+      [
+        '---',
+        'oat_template: true',
+        'id: bl-260623-migrated',
+        'title: Migrated item',
+        '---',
+        '',
+        '## Description',
+        '',
+        'Body.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'pjm:template_frontmatter',
+        status: 'fail',
+        message: expect.stringContaining(
+          'pjm/backlog/items/bl-260623-migrated.md',
+        ),
+      }),
+    );
+  });
+
+  it('fails when an archived backlog item still carries template frontmatter', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await writeFile(
+      join(repoRoot, 'pjm', 'backlog', 'archived', 'bl-260601-old.md'),
+      [
+        '---',
+        'oat_template_name: backlog-item',
+        'id: bl-260601-old',
+        '---',
+        '',
+        '# Archived',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'pjm:template_frontmatter',
+        status: 'fail',
+        message: expect.stringContaining(
+          'pjm/backlog/archived/bl-260601-old.md',
+        ),
+      }),
+    );
+  });
+
+  it('fails when a migrated decision record still carries template frontmatter', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await writeFile(
+      join(repoRoot, 'reference', 'decisions', 'dr-260623-migrated.md'),
+      [
+        '---',
+        'oat_template: true',
+        'id: dr-260623-migrated',
+        'title: Migrated decision',
+        '---',
+        '',
+        '## Context',
+        '',
+        'Body.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'pjm:template_frontmatter',
+        status: 'fail',
+        message: expect.stringContaining(
+          'reference/decisions/dr-260623-migrated.md',
+        ),
+      }),
+    );
+  });
+
+  it('passes the template-frontmatter check when migrated records are clean', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await writeFile(
+      join(repoRoot, 'pjm', 'backlog', 'items', 'bl-260623-clean.md'),
+      [
+        '---',
+        'id: bl-260623-clean',
+        'title: Clean item',
+        'status: open',
+        '---',
+        '',
+        '## Description',
+        '',
+        'Body.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'reference', 'decisions', 'dr-260623-clean.md'),
+      [
+        '---',
+        'id: dr-260623-clean',
+        'title: Clean decision',
+        'date: 2026-06-23',
+        'status: accepted',
+        '---',
+        '',
+        '## Context',
+        '',
+        'Body.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    const templateCheck = checks.find(
+      (check) => check.name === 'pjm:template_frontmatter',
+    );
+    expect(templateCheck?.status).toBe('pass');
+  });
+
   it('warns about legacy monoliths, loose reference files, second roadmaps, and unknown top-level folders', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
     tempDirs.push(root);

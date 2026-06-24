@@ -71,6 +71,56 @@ async function listDirectoryNames(path: string): Promise<string[]> {
   }
 }
 
+async function listMarkdownFiles(path: string): Promise<string[]> {
+  try {
+    return (await readdir(path, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name)
+      .sort();
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String(error.code)
+        : null;
+
+    if (code !== 'ENOENT') {
+      throw error;
+    }
+
+    return [];
+  }
+}
+
+// Migrated record directories (relative to the repo-reference root) that hold
+// per-record markdown files and must not retain raw template frontmatter after
+// `oat pjm migrate`. `index.md` is the managed index, not an instantiated
+// record, so it is excluded.
+const MIGRATED_RECORD_DIRECTORIES = [
+  'pjm/backlog/items',
+  'pjm/backlog/archived',
+  'reference/decisions',
+] as const;
+
+async function collectMigratedTemplateFrontmatterFiles(
+  repoRoot: string,
+): Promise<string[]> {
+  const offenders: string[] = [];
+  for (const relativeDir of MIGRATED_RECORD_DIRECTORIES) {
+    const fileNames = await listMarkdownFiles(join(repoRoot, relativeDir));
+    for (const fileName of fileNames) {
+      if (fileName === 'index.md') {
+        continue;
+      }
+      const relativePath = `${relativeDir}/${fileName}`;
+      const content = await readIfExists(join(repoRoot, relativeDir, fileName));
+      if (content && containsTemplateFrontmatter(content)) {
+        offenders.push(relativePath);
+      }
+    }
+  }
+  return offenders;
+}
+
 function containsTemplateFrontmatter(content: string): boolean {
   const frontmatter = getFrontmatterBlock(content);
   return Boolean(
@@ -120,6 +170,17 @@ export async function runPjmDoctorChecks(
     }
     const content = await readIfExists(join(repoRoot, relativePath));
     if (content && containsTemplateFrontmatter(content)) {
+      templateFrontmatterFiles.push(relativePath);
+    }
+  }
+  // Also scan migrated per-record files (backlog items/archived, decision
+  // records). Dogfooding surfaced that `oat pjm migrate` could leave raw
+  // `oat_template` frontmatter on migrated records while doctor only inspected
+  // the canonical scaffold and reported a false `pass`.
+  const migratedTemplateFiles =
+    await collectMigratedTemplateFrontmatterFiles(repoRoot);
+  for (const relativePath of migratedTemplateFiles) {
+    if (!templateFrontmatterFiles.includes(relativePath)) {
       templateFrontmatterFiles.push(relativePath);
     }
   }
