@@ -87,7 +87,7 @@ Tool-pack installation state also lives here as shared repo config:
 - `tools.utility`
 - `tools.workflows`
 
-Use `oat config get tools.<pack>` when you need an explicit installed-capability signal for workflows or troubleshooting.
+Use `oat config get tools.<pack>` when you need an explicit installed-capability signal for workflows or troubleshooting. PJM diagnostics use `tools.project-management`; disabled or unset repos report PJM as skipped instead of treating absent `.oat/repo/pjm/` files as drift.
 
 Workflow automation preferences are also visible through `oat config` and can be set at local, shared, or user scope. Notable review-loop keys:
 

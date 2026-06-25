@@ -13,6 +13,7 @@ import { join, resolve } from 'node:path';
 
 import { computeFileHash } from '@manifest/hash';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import { OAT_VERSION } from '@shared/oat-version';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type {
@@ -367,6 +368,43 @@ description: React components
       provider: 'claude',
       strategy: 'symlink',
       contentHash: null,
+    });
+  });
+
+  it('refreshes a stale manifest oatVersion without changing entry sync metadata', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const lastSynced = '2026-06-24T20:00:00.000Z';
+    const manifest = {
+      ...createEmptyManifest(),
+      oatVersion: '0.0.1',
+      entries: [
+        {
+          canonicalPath: '.agents/skills/skill-one',
+          providerPath: '.claude/skills/skill-one',
+          provider: 'claude',
+          contentType: 'skill' as const,
+          strategy: 'copy' as const,
+          contentHash: 'deadbeef',
+          isFile: false,
+          lastSynced,
+        },
+      ],
+    };
+
+    const result = await executeSyncPlan(
+      createPlan([]),
+      manifest,
+      manifestPath,
+    );
+    const updated = await loadManifest(manifestPath);
+
+    expect(result).toEqual({ applied: 0, failed: 0, skipped: 0 });
+    expect(updated.oatVersion).toBe(OAT_VERSION);
+    expect(updated.entries[0]).toMatchObject({
+      contentHash: 'deadbeef',
+      lastSynced,
     });
   });
 

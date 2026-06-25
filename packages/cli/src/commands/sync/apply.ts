@@ -1,4 +1,5 @@
 import type { CommandContext } from '@app/command-context';
+import { OAT_VERSION } from '@shared/oat-version';
 
 import type {
   ScopeSyncPlan,
@@ -83,12 +84,18 @@ export async function runSyncApply(
       scopePlan.codexExtensionPlan?.operations.some(
         (operation) => operation.action !== 'skip',
       ) ?? false;
+    const shouldRefreshManifestVersion =
+      scopePlan.manifest.oatVersion !== OAT_VERSION;
 
-    if (!hasSyncEntries && !hasCodexPlannedOperations) {
+    if (
+      !hasSyncEntries &&
+      !hasCodexPlannedOperations &&
+      !shouldRefreshManifestVersion
+    ) {
       continue;
     }
 
-    if (hasSyncEntries) {
+    if (hasSyncEntries || shouldRefreshManifestVersion) {
       const result = await dependencies.executeSyncPlan(
         scopePlan.plan,
         scopePlan.manifest,

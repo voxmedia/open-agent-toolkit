@@ -82,7 +82,10 @@ export async function saveManifest(
   manifestPath: string,
   manifest: Manifest,
 ): Promise<void> {
-  const validated = ManifestSchema.parse(manifest);
+  const validated = ManifestSchema.parse({
+    ...manifest,
+    oatVersion: OAT_VERSION,
+  });
   const dir = dirname(manifestPath);
   const tempPath = `${manifestPath}.${randomUUID()}.tmp`;
 

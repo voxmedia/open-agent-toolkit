@@ -53,7 +53,7 @@ Decisions are now file-per-record under `reference/decisions/` (created and inde
 
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
 
-Run `oat pjm doctor` to check an existing surface: it reports missing canonical files, leftover template frontmatter, and legacy/loose/second-roadmap drift, and accepts `--json` for machine-readable output. The same checks also run under project-scope `oat doctor` when `.oat/repo` exists.
+Run `oat pjm doctor` to check an existing surface after the `project-management` pack is enabled: it reports missing canonical files, leftover template frontmatter, and legacy/loose/second-roadmap drift, and accepts `--json` for machine-readable output. When the pack is disabled or not configured, doctor reports PJM as disabled and skips drift checks. The same gated checks also run under project-scope `oat doctor`.
 
 Useful options:
 

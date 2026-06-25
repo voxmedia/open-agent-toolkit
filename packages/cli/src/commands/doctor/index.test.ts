@@ -3,6 +3,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { OatConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
@@ -46,6 +47,7 @@ interface HarnessOptions {
     detected: boolean;
     version: string | null;
   }>;
+  oatConfig?: OatConfig;
   pjmChecks?: DoctorCheck[];
 }
 
@@ -66,6 +68,7 @@ function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   checkSkillVersions: ReturnType<typeof vi.fn>;
+  runPjmDoctorChecks: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const scope = options.scope ?? 'project';
@@ -103,6 +106,7 @@ function createHarness(options: HarnessOptions = {}): {
       );
     },
   );
+  const runPjmDoctorChecks = vi.fn(async () => options.pjmChecks ?? []);
   const command = createDoctorCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? scope) as Scope,
@@ -133,7 +137,6 @@ function createHarness(options: HarnessOptions = {}): {
         ]
       );
     }),
-    runPjmDoctorChecks: vi.fn(async () => options.pjmChecks ?? []),
     readFile: vi.fn(async (path: string) => {
       const content = fileContents[path];
       if (content === undefined) {
@@ -141,6 +144,9 @@ function createHarness(options: HarnessOptions = {}): {
       }
       return content;
     }),
+    readOatConfig: vi.fn(
+      async () => options.oatConfig ?? ({ version: 1 } satisfies OatConfig),
+    ),
     resolveAssetsRoot: vi.fn(async () => {
       if (options.resolveAssetsRootThrows) {
         throw new Error('assets unavailable');
@@ -148,9 +154,10 @@ function createHarness(options: HarnessOptions = {}): {
       return '/tmp/assets';
     }),
     checkSkillVersions,
+    runPjmDoctorChecks,
   });
 
-  return { capture, command, checkSkillVersions };
+  return { capture, command, checkSkillVersions, runPjmDoctorChecks };
 }
 
 async function runDoctor(
@@ -351,6 +358,7 @@ describe('createDoctorCommand', () => {
 
   it('includes PJM doctor checks for project scope when repo reference root exists', async () => {
     const { command, capture } = createHarness({
+      oatConfig: { version: 1, tools: { 'project-management': true } },
       pathExists: {
         '/tmp/workspace/.agents/skills': true,
         '/tmp/workspace/.agents/agents': true,
@@ -371,6 +379,31 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('pjm:canonical_files');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('reports PJM disabled without drift when repo reference root exists but pack is not enabled', async () => {
+    const { command, capture, runPjmDoctorChecks } = createHarness({
+      pathExists: {
+        '/tmp/workspace/.agents/skills': true,
+        '/tmp/workspace/.agents/agents': true,
+        '/tmp/workspace/.oat/sync/manifest.json': true,
+        '/tmp/workspace/.oat/repo': true,
+      },
+      pjmChecks: [
+        {
+          name: 'pjm:canonical_files',
+          description: 'PJM canonical files',
+          status: 'fail',
+          message: 'Missing canonical PJM files.',
+        },
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(runPjmDoctorChecks).not.toHaveBeenCalled();
+    expect(capture.info[0]).toContain('pjm:disabled');
+    expect(capture.info[0]).not.toContain('pjm:canonical_files');
   });
 
   it('outputs JSON when --json set', async () => {

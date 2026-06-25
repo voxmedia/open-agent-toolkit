@@ -15,12 +15,17 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { compareVersions } from '@commands/init/tools/shared/version';
-import { runPjmDoctorChecks } from '@commands/pjm/doctor';
+import {
+  createPjmDisabledCheck,
+  runPjmDoctorChecks,
+  type PjmDoctorOptions,
+} from '@commands/pjm/doctor';
 import { getSkillVersion } from '@commands/shared/frontmatter';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
+import { readOatConfig, type OatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
@@ -50,7 +55,11 @@ interface DoctorDependencies {
   >;
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
-  runPjmDoctorChecks: (repoRoot: string) => Promise<DoctorCheck[]>;
+  readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  runPjmDoctorChecks: (
+    repoRoot: string,
+    options?: PjmDoctorOptions,
+  ) => Promise<DoctorCheck[]>;
   checkSkillVersions: (
     scopeRoot: string,
     assetsRoot: string,
@@ -204,6 +213,7 @@ function createDependencies(): DoctorDependencies {
     checkProviders: checkProvidersDefault,
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
+    readOatConfig,
     runPjmDoctorChecks,
     // Default binding remains self-contained, but still honors the caller-
     // provided pathExists dependency from runChecksForScope when available.
@@ -465,10 +475,17 @@ async function runChecksForScope(
     }
 
     const repoReferenceRoot = join(scopeRoot, '.oat', 'repo');
-    if (await dependencies.pathExists(repoReferenceRoot)) {
+    const config = await dependencies.readOatConfig(scopeRoot);
+    const projectManagementEnabled =
+      config.tools?.['project-management'] === true;
+    if (projectManagementEnabled) {
       checks.push(
-        ...(await dependencies.runPjmDoctorChecks(repoReferenceRoot)),
+        ...(await dependencies.runPjmDoctorChecks(repoReferenceRoot, {
+          projectManagementEnabled: true,
+        })),
       );
+    } else if (await dependencies.pathExists(repoReferenceRoot)) {
+      checks.push(createPjmDisabledCheck());
     }
   }
 

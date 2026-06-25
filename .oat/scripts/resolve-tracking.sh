@@ -100,6 +100,41 @@ resolve_root_commit_hash() {
   git rev-parse HEAD
 }
 
+is_agent_instructions_operation() {
+  local operation="${1:?Missing operation}"
+  [[ "$operation" == "agentInstructions" || "$operation" == "agentInstructionsApply" ]]
+}
+
+normalize_repo_relative_path() {
+  local path="${1:?Missing path}"
+
+  path="${path#./}"
+  if [[ "$path" == "$REPO_ROOT"/* ]]; then
+    path="${path#"$REPO_ROOT"/}"
+  fi
+
+  echo "$path"
+}
+
+artifact_path_is_tracked_and_present() {
+  local artifact_path="${1:?Missing artifact path}"
+  local relative_path absolute_path
+
+  relative_path="$(normalize_repo_relative_path "$artifact_path")"
+  absolute_path="${REPO_ROOT}/${relative_path}"
+
+  [[ -e "$absolute_path" ]] || return 1
+  git -C "$REPO_ROOT" ls-files --error-unmatch -- "$relative_path" >/dev/null 2>&1
+}
+
+remove_tracking_key() {
+  local operation="${1:?Missing operation}"
+  local existing="${2:?Missing existing tracking JSON}"
+
+  mkdir -p "$(dirname "$TRACKING_FILE")"
+  echo "$existing" | jq --arg op "$operation" 'del(.[$op])' > "$TRACKING_FILE"
+}
+
 cmd_init() {
   mkdir -p "$(dirname "$TRACKING_FILE")"
   if [[ ! -f "$TRACKING_FILE" ]] || ! jq empty "$TRACKING_FILE" 2>/dev/null; then
@@ -116,6 +151,16 @@ cmd_read() {
   if [[ ! -f "$TRACKING_FILE" ]]; then
     echo "{}"
     return 0
+  fi
+
+  if is_agent_instructions_operation "$operation"; then
+    local artifact_path
+    artifact_path="$(jq -r --arg op "$operation" '.[$op].artifactPath // empty' "$TRACKING_FILE")"
+    if [[ -n "$artifact_path" ]] && ! artifact_path_is_tracked_and_present "$artifact_path"; then
+      remove_tracking_key "$operation" "$(cat "$TRACKING_FILE")"
+      echo "{}"
+      return 0
+    fi
   fi
 
   jq -r --arg op "$operation" '.[$op] // empty' "$TRACKING_FILE"
@@ -170,6 +215,13 @@ cmd_write() {
   else
     mkdir -p "$(dirname "$TRACKING_FILE")"
     existing='{"version":1}'
+  fi
+
+  if is_agent_instructions_operation "$operation" && [[ -n "$artifact_path" ]] && ! artifact_path_is_tracked_and_present "$artifact_path"; then
+    remove_tracking_key "$operation" "$existing"
+    echo "Info: skipped $operation tracking because artifactPath is missing or untracked: $artifact_path" >&2
+    echo "Updated $TRACKING_FILE [$operation]"
+    return 0
   fi
 
   if [[ -n "$artifact_path" ]]; then

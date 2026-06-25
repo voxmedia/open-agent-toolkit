@@ -140,9 +140,28 @@ function warnStatus(items: string[]): 'pass' | 'warn' {
   return items.length === 0 ? 'pass' : 'warn';
 }
 
+export interface PjmDoctorOptions {
+  projectManagementEnabled?: boolean;
+}
+
+export function createPjmDisabledCheck(): DoctorCheck {
+  return {
+    name: 'pjm:disabled',
+    description: 'Project-management pack enablement',
+    status: 'pass',
+    message: 'Project-management pack is disabled; PJM checks skipped.',
+    fix: 'Run `oat init tools project-management` to install and enable PJM checks.',
+  };
+}
+
 export async function runPjmDoctorChecks(
   repoRoot: string,
+  options: PjmDoctorOptions = {},
 ): Promise<DoctorCheck[]> {
+  if (options.projectManagementEnabled === false) {
+    return [createPjmDisabledCheck()];
+  }
+
   const checks: DoctorCheck[] = [];
 
   const missingCanonical: string[] = [];
