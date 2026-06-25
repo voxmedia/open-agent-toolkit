@@ -29,6 +29,7 @@ interface HarnessOptions {
   codexExtensionApplyResults?: CodexExtensionApplyResult[];
   interactive?: boolean;
   loadedSyncConfig?: SyncConfig;
+  loadedManifests?: Manifest[];
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
   canonicalEntries?: CanonicalEntry[];
@@ -82,12 +83,13 @@ function createCodexAdapter(): ProviderAdapter {
   };
 }
 
-function createManifest(): Manifest {
+function createManifest(overrides: Partial<Manifest> = {}): Manifest {
   return {
     version: 1,
     oatVersion: OAT_VERSION,
     entries: [],
     lastUpdated: '2026-02-14T00:00:00.000Z',
+    ...overrides,
   };
 }
 
@@ -235,6 +237,7 @@ function createHarness(options: HarnessOptions = {}): {
       return config;
     },
   );
+  const manifestQueue = [...(options.loadedManifests ?? [])];
 
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -248,7 +251,7 @@ function createHarness(options: HarnessOptions = {}): {
       logger: capture.logger,
     }),
     resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
-    loadManifest: vi.fn(async () => createManifest()),
+    loadManifest: vi.fn(async () => manifestQueue.shift() ?? createManifest()),
     loadSyncConfig: vi.fn(
       async () =>
         options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
@@ -430,6 +433,26 @@ describe('createSyncCommand', () => {
     });
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+    expect(capture.info).toContain('\nNo changes required.');
+  });
+
+  it('apply no-op: refreshes stale manifest oatVersion even when no files changed', async () => {
+    const staleManifest = createManifest({ oatVersion: '0.0.1' });
+    const { capture, command, executeSyncPlan } = createHarness({
+      loadedManifests: [staleManifest],
+      plans: [createEmptyPlan()],
+      executeResults: [{ applied: 0, failed: 0, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(executeSyncPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ entries: [], removals: [] }),
+      staleManifest,
+      '/tmp/workspace/.oat/sync/manifest.json',
+    );
     expect(capture.info).toContain('\nNo changes required.');
   });
 

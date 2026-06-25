@@ -68,6 +68,19 @@ async function createWorkspace(): Promise<string> {
   return root;
 }
 
+async function enableProjectManagement(root: string): Promise<void> {
+  await mkdir(join(root, '.oat'), { recursive: true });
+  await writeFile(
+    join(root, '.oat', 'config.json'),
+    JSON.stringify(
+      { version: 1, tools: { 'project-management': true } },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+}
+
 async function runCli(
   root: string,
   args: string[],
@@ -176,6 +189,7 @@ describe('oat pjm', () => {
   it('runs focused PJM doctor checks with JSON output', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
+    await enableProjectManagement(root);
     await runCli(root, ['--json', 'pjm', 'init']);
 
     const result = await runCli(root, ['--json', 'pjm', 'doctor']);
@@ -192,6 +206,32 @@ describe('oat pjm', () => {
         }),
       ]),
     });
+  });
+
+  it('reports PJM disabled without missing-file drift when the pack is not enabled', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    const result = await runCli(root, ['--json', 'pjm', 'doctor']);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    const payload = JSON.parse(result.stdout);
+    expect(payload).toMatchObject({
+      status: 'ok',
+      repoRoot: join(root, '.oat', 'repo'),
+      checks: [
+        expect.objectContaining({
+          name: 'pjm:disabled',
+          status: 'pass',
+        }),
+      ],
+    });
+    expect(
+      payload.checks.some(
+        (check: { name: string }) => check.name === 'pjm:canonical_files',
+      ),
+    ).toBe(false);
   });
 
   it('prints the bundled migration prompt without running migration', async () => {

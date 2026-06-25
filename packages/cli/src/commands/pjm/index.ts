@@ -189,7 +189,7 @@ export function createPjmCommand(
 
   cmd
     .command('doctor')
-    .description('Run PJM repo reference diagnostics')
+    .description('Run PJM repo reference diagnostics when enabled')
     .option(
       '--repo-root <path>',
       'PJM repo reference root directory (defaults to .oat/repo)',
@@ -205,7 +205,11 @@ export function createPjmCommand(
           projectRoot,
           options.repoRoot,
         );
-        const checks = await dependencies.runPjmDoctorChecks(repoRoot);
+        const config = await dependencies.readOatConfig(projectRoot);
+        const checks = await dependencies.runPjmDoctorChecks(repoRoot, {
+          projectManagementEnabled:
+            config.tools?.['project-management'] === true,
+        });
         const status = doctorStatus(checks);
 
         if (context.json) {

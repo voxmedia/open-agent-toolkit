@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { CliError } from '@errors/index';
+import { OAT_VERSION } from '@shared/oat-version';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -91,6 +92,18 @@ describe('manifest manager', () => {
       const persisted = JSON.parse(await readFile(manifestPath, 'utf8'));
       expect(persisted.version).toBe(1);
       await expect(readFile(`${manifestPath}.tmp`, 'utf8')).rejects.toThrow();
+    });
+
+    it('restamps stale oatVersion to the running CLI version on every write', async () => {
+      const manifest = {
+        ...createEmptyManifest(),
+        oatVersion: '0.0.1',
+      };
+
+      await saveManifest(manifestPath, manifest);
+
+      const persisted = await loadManifest(manifestPath);
+      expect(persisted.oatVersion).toBe(OAT_VERSION);
     });
 
     it('creates parent directories if needed', async () => {
