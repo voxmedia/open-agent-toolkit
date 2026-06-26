@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-06-26
 oat_generated: false
@@ -10,133 +10,166 @@ oat_generated: false
 
 ## Phase Guardrails (Discovery)
 
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+Discovery captures outcomes and constraints. Implementation file names appear only where they clarify scope boundaries agreed in the prior release review.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Review Superpowers GitHub releases (currently through v6.0.3) for visual brainstorming functionality that OAT has largely ported one-to-one, identify gaps worth incorporating into the OAT brainstorm skillset, and execute the work via quick-start planning (discovery + plan, no full spec-driven workflow).
+
+Session context: OAT's visual companion bundle was ported from **Superpowers v5.0.7** (see repo `NOTICES.md` and the `independent-brainstorming` project summary). Superpowers v6.0.0 shipped a major visual-companion security and resilience rewrite; v5.0.6 shipped server lifecycle fixes OAT already has; v6.0.3 is SDD-only and out of scope here.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Workflow shape
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Proceed without OAT project tracking, or use quick-start to capture discovery and a plan?
+
+**A:** Use OAT quick start — capture discovery and write a plan.
+
+**Decision:** This project (`brainstorm-visual-companion-v6`) tracks the work; implementation follows `plan.md` via `oat-project-implement`.
+
+### Question 2: Scope boundary
+
+**Q:** What belongs in this project vs. other OAT skills?
+
+**A:** (Inferred from release review and user focus on visual brainstorming.)
+
+**Decision:** Primary scope is the **visual companion Node bundle** and its **skill/reference docs** under `oat-brainstorm`. Superpowers SDD, writing-plans, harness bootstraps, and brainstorming→writing-plans terminal flow are out of scope. Optional skill-content improvements (e.g. synthesis self-review) are deferred unless trivial.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+OAT already diverges productively from upstream: Activation Contract, pack-aware destinations, conditional visual offer, and OAT persistence paths (`.oat/brainstorm/`). The gap is **technical parity** with Superpowers v6.0.x for the local web server, not re-adopting Superpowers' single-pipeline brainstorm model.
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+### Approach 1: Full v6.0.3 bundle port with OAT path adaptations _(Recommended)_
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**Description:** Cherry-pick Superpowers v6.0.3 visual-companion scripts (`server.cjs`, `helper.js`, `start-server.sh`, `stop-server.sh`, `frame-template.html`) and adapt persistence/token paths from `.superpowers/brainstorm/` to OAT conventions (`.oat/brainstorm/.last-port`, `.last-token`, repo walk-up, user-scope fallback). Update `references/visual-companion.md` and `SKILL.md` step 3 for session keys, `--open`, restart semantics, and 4h idle default.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**When this is the right choice:** Security and reconnect behavior are the headline v6 changes; partial ports leave known vulnerabilities and brittle restarts.
 
-### Approach 2: {Strategy Name}
+**Tradeoffs:** Breaks byte-for-byte parity with v5.0.7 (document in `NOTICES.md`). Touches publishable bundled assets → lockstep public package version bump and `pnpm release:validate`.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 2: Security-only minimal patch
+
+**Description:** Port only session-key auth, file sandbox, and security headers into existing OAT files without full helper/start-server v6 features.
+
+**When this is the right choice:** If schedule is extremely tight and resilience features can wait.
+
+**Tradeoffs:** Leaves restart persistence, stop-server instance-ID guard, status pill/tombstone UI, and Windows hardening gaps; higher merge cost later.
+
+### Approach 3: Reimplement from scratch in OAT CLI
+
+**Description:** Move server into `packages/cli` as `oat brainstorm visual-server` with TypeScript.
+
+**When this is the right choice:** Long-term if the bash/Node bundle becomes unmaintainable.
+
+**Tradeoffs:** Large scope; contradicts "ported not reimplemented" decision in `independent-brainstorming`; not justified for this increment.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Full v6.0.3 bundle port with OAT path adaptations (Approach 1).
+
+**Rationale:** v6 security model closes real local/remote exposure; resilience features match how agents actually use long brainstorm sessions; upstream MIT code is battle-tested. OAT-specific path and offer semantics stay as-is.
+
+**User validated:** Yes — user chose quick-start to plan this work after the release review.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Pin upstream at v6.0.3 tag
 
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
+**Description:** Copy files from `obra/superpowers` tag `v6.0.3` and apply mechanical `.superpowers` → `.oat` substitutions plus repo/user persistence rules from current OAT `start-server.sh`.
 
 **Pros:**
 
-- {Benefit 1}
-- {Benefit 2}
+- Clear provenance line in `NOTICES.md`
+- Matches release notes the review was based on
 
 **Cons:**
 
-- {Drawback 1}
-- {Drawback 2}
+- Must re-apply OAT-only behaviors (repo walk-up, `~/.oat/brainstorm/` fallback, Codex foreground auto-detect)
 
-**Chosen:** {A/B/Neither}
+**Chosen:** A
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Summary:** Port from v6.0.3 tag; preserve OAT persistence resolution order from current bundle.
+
+### Option B: Skip Superpowers telemetry/branding
+
+**Description:** Omit upstream telemetry hooks and Superpowers logo URLs when adapting `server.cjs`.
+
+**Pros:** Keeps OAT neutral branding (frame template already says "Superpowers Brainstorming" — may rebrand to OAT in same pass)
+
+**Cons:** Minor diff from upstream
+
+**Chosen:** B for telemetry; rebrand frame header to OAT in the same implementation phase (cosmetic, low risk).
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Upstream version target:** Superpowers **v6.0.3** visual-companion scripts and docs (brainstorming skill server bundle only).
+2. **OAT persistence:** Keep three-tier resolution (`--project-dir` → repo `.oat/` walk-up → `~/.oat/brainstorm/`); store `.last-port` / `.last-token` under the same prefix as sessions (repo or user scope), not `.superpowers/`.
+3. **Skill behavior preserved:** Do not regress Activation Contract, conditional visual offer, or destination dispatcher — only update companion startup/usage prose and flags (`--open`, same `--project-dir` on restart).
+4. **Publishable guardrail:** Bundled skill asset changes require lockstep bump of all five public packages and `pnpm release:validate` before merge.
+5. **Testing:** Extend existing `visual-companion-smoke.test.ts` for session key, restart reuse, and stop-server instance-ID behavior.
+6. **Deferred:** Inline synthesis self-review in `oat-brainstorm` step 8 (Superpowers v5.0.6 brainstorming skill change) — already lives in `oat-project-design`; not required for visual parity.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Minimize scope: visual bundle + references + smoke tests + NOTICES/version/docs touchpoints only.
+- Do not reformat upstream script files for oxfmt (existing ignore patterns for bundled scripts).
+- Provider-linked skill views sync from `.agents/skills/oat-brainstorm/` via normal OAT sync — canonical edits under `.agents/skills/`.
+- Live dogfood (`bl-7d5b`) remains a follow-up; this project delivers the port and automated smoke coverage.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Visual companion requires session key on HTTP and WebSocket; file server rejects traversal/symlinks/dotfiles; security headers present.
+- Restart with same `--project-dir` (or same repo context) reuses port/key so browser tab reconnects.
+- Idle default 4 hours (configurable via `--idle-timeout-minutes`); stop-server verifies server instance ID before kill.
+- Client shows connection status and paused overlay after extended disconnect (v6 helper behavior).
+- `SKILL.md` and `visual-companion.md` document key URL, `--open`, restart, and idle semantics.
+- `pnpm test` visual-companion smoke passes; `pnpm release:validate` passes after version bump.
+- `NOTICES.md` updated to reference Superpowers v6.0.3 adapted port (no longer claims byte-for-byte v5.0.7 for all files).
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Superpowers subagent-driven development, writing-plans, task-reviewer, SDD workspace changes (v6.0.0–v6.0.3 non-visual release notes).
+- Harness-specific bootstrap/tool-mapping (Kimi, Pi, Antigravity, Copilot SessionStart).
+- Replacing OAT destination model with Superpowers design→spec→writing-plans pipeline.
+- `oat brainstorm visual-server` CLI wrapper (deferred in original project; raw scripts remain).
+- Live LLM dogfood scenarios (`bl-7d5b`) — separate backlog item.
+- Synthesis self-review checklist in `oat-brainstorm` step 8 (deferred).
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- **Synthesis self-review before handoff** — Superpowers v5.0.6 inline spec self-review adapted for `oat-brainstorm` step 8; low priority once visual parity ships.
+- **CLI wrapper for visual server** — convenience command; not needed for parity.
+- **Frame template full OAT visual rebrand** — beyond header text if design wants a distinct theme.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **User-scope token persistence:** When fallback is `~/.oat/brainstorm/`, should `.last-port`/`.last-token` live at `~/.oat/brainstorm/` root (mirroring repo layout)? **Assumption:** yes, for symmetric restart behavior outside a repo.
+- **Frame title branding:** Rename "Superpowers Brainstorming" to "OAT Brainstorm" in frame template during port? **Assumption:** yes, cosmetic alignment with OAT product.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Superpowers v6.0.3 `skills/brainstorming/scripts/*` is the canonical upstream source set.
+- Existing smoke test harness can assert keyed URLs and auth rejection without a full browser.
+- No breaking change to agent workflows beyond requiring agents to use the keyed URL from `server-started` JSON (already how v6 upstream works).
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Regression in OAT persistence paths**
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Preserve current smoke tests for repo/user/`--project-dir` paths; add restart/key tests.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Publishable release validation failure**
+  - **Likelihood:** Low
+  - **Impact:** High (blocks merge)
+  - **Mitigation:** Plan includes lockstep version bump + `pnpm release:validate` task.
+
+- **Provider skill sync drift**
+  - **Likelihood:** Low
+  - **Impact:** Low
+  - **Mitigation:** Bump `oat-brainstorm` skill `version:` in frontmatter; run `oat sync --scope all` before PR if needed.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Proceed to quick-start **plan generation** (straight to plan — architecture is understood from release review; lightweight design skipped by user intent).

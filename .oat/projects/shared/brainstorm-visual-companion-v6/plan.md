@@ -1,185 +1,335 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-06-26
 oat_phase: plan
-oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_phase_status: complete
+oat_plan_hill_phases: []
+oat_plan_parallel_groups: []
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
 ---
 
 # Implementation Plan: brainstorm-visual-companion-v6
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Bring OAT's `oat-brainstorm` visual companion to parity with Superpowers v6.0.3 security, resilience, and lifecycle behavior while preserving OAT persistence paths and conditional-offer skill semantics.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Replace the v5.0.7 Node/bash bundle under `.agents/skills/oat-brainstorm/scripts/` with an adapted Superpowers v6.0.3 port (session-key auth, sandboxed static serving, port/token persistence, resilient client UI, safe stop-server). Update skill/reference prose and integration smoke tests; bump bundled-asset version metadata and run release validation.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Node.js (server.cjs), bash (start/stop scripts), HTML/JS (frame + helper), Vitest integration smoke test, OAT skill frontmatter, lockstep npm packages.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `feat(pNN-tNN): {description}` for functional port tasks; `chore(pNN-tNN): {description}` for bookkeeping/docs/version tasks.
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Confirmed HiLL checkpoints with user (none — quick mode, empty `oat_plan_hill_phases`)
+- [x] Set `oat_plan_hill_phases` in frontmatter
+- [x] Evaluated phases for parallelism opportunities
+- [x] Set `oat_plan_parallel_groups` in frontmatter (sequential — shared skill directory)
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+All phases modify the same skill bundle or its tests/docs. Phases run **sequentially** (`oat_plan_parallel_groups: []`). Phase 1 must land before smoke tests in Phase 3 can assert v6 behavior.
 
 ---
 
-## Dispatch Profile
+## Phase 1: Port Superpowers v6 visual bundle
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model              | Codex effort                   | Rationale                     |
-| ----- | ------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them against the resolved OAT dispatch ceiling and maps selected efforts to pinned implementer variants. Codex provider default effort is informational for base/unpinned roles and is not an OAT ceiling.
-
----
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Import and adapt server.cjs
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `.agents/skills/oat-brainstorm/scripts/server.cjs`
 
-**Step 1: Write test (RED)**
+**Step 1: Baseline check (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Run: `pnpm exec vitest run packages/cli/src/integration/visual-companion-smoke.test.ts`
+Expected: Current tests pass on v5.0.7 baseline (establishes green before port).
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+**Step 2: Port v6 server (GREEN)**
 
-**Step 2: Implement (GREEN)**
+Copy `skills/brainstorming/scripts/server.cjs` from `obra/superpowers` tag `v6.0.3` and adapt:
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+- Session-key auth on HTTP + WebSocket (`?key=`, cookie bootstrap)
+- Sandboxed `/files/` serving (no symlinks, dotfiles, traversal)
+- Security headers (`Cache-Control: no-store`, `X-Frame-Options: DENY`)
+- Configurable idle timeout via `BRAINSTORM_IDLE_TIMEOUT_MS` (default 4h)
+- Port reuse via `BRAINSTORM_PORT_FILE`
+- WebSocket max frame size guard
+- Omit Superpowers telemetry/branding hooks
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
+Preserve OAT `CONTENT_DIR` / `STATE_DIR` layout and existing JSON log events consumed by agents.
 
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+**Step 3: Verify**
 
-**Step 3: Refactor**
+Run: `node --check .agents/skills/oat-brainstorm/scripts/server.cjs`
+Expected: Syntax OK.
 
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
+**Step 4: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+git add .agents/skills/oat-brainstorm/scripts/server.cjs
+git commit -m "feat(p01-t01): port v6 visual companion server with session auth"
 ```
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Port helper.js and frame-template.html
 
 **Files:**
 
-- {File list}
+- Modify: `.agents/skills/oat-brainstorm/scripts/helper.js`
+- Modify: `.agents/skills/oat-brainstorm/scripts/frame-template.html`
 
-**Step 1: Write test (RED)**
+**Step 1: Port client resilience (GREEN)**
 
-{Test code}
+From v6.0.3:
 
-**Step 2: Implement (GREEN)**
+- Session key in WebSocket URL from `sessionStorage`
+- Status pill states (connecting/connected/reconnecting/disconnected)
+- Exponential backoff reconnect + paused overlay after disconnect
+- Keyed reload after server recovery
 
-{Implementation code or signatures}
+Update frame template header branding to **OAT Brainstorm** (remove Superpowers title); ensure `.status` element matches helper expectations.
 
-**Step 3: Refactor**
+**Step 2: Verify**
 
-{Optional cleanup}
+Manual: grep frame for `.status` and helper for `setStatus` — both present.
 
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
+**Step 3: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+git add .agents/skills/oat-brainstorm/scripts/helper.js .agents/skills/oat-brainstorm/scripts/frame-template.html
+git commit -m "feat(p01-t02): port v6 companion client UI and OAT frame branding"
 ```
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Adapt start-server.sh for OAT persistence + v6 flags
 
-### Task p02-t01: {Task Name}
+**Files:**
 
-{Continue TDD pattern...}
+- Modify: `.agents/skills/oat-brainstorm/scripts/start-server.sh`
+
+**Step 1: Port v6 launcher behaviors (GREEN)**
+
+Merge v6.0.3 `start-server.sh` capabilities with OAT persistence resolution:
+
+1. `--project-dir` → `<path>/.oat/brainstorm/<session>/` and `<path>/.oat/brainstorm/.last-port` + `.last-token`
+2. Repo walk-up → `<repo>/.oat/brainstorm/...`
+3. Fallback → `~/.oat/brainstorm/...` with token files at `~/.oat/brainstorm/.last-port` / `.last-token`
+
+Add v6 flags: `--open`, `--idle-timeout-minutes`, `umask 077`, `server-instance-id`, Windows `is_windows_like_shell` + clear `OWNER_PID`, pass `--brainstorm-server-id` to node.
+
+**Step 2: Verify**
+
+Run: `bash -n .agents/skills/oat-brainstorm/scripts/start-server.sh`
+Expected: No syntax errors.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/scripts/start-server.sh
+git commit -m "feat(p01-t03): adapt v6 start-server for OAT paths and restart reuse"
+```
+
+---
+
+### Task p01-t04: Port stop-server.sh instance-ID guard
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/scripts/stop-server.sh`
+
+**Step 1: Port safe shutdown (GREEN)**
+
+From v6.0.3: verify PID carries matching `--brainstorm-server-id` before signaling; write `server-stopped` marker; keep OAT behavior of retaining persistent session dirs (not only `/tmp`).
+
+**Step 2: Verify**
+
+Run: `bash -n .agents/skills/oat-brainstorm/scripts/stop-server.sh`
+Expected: No syntax errors.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/scripts/stop-server.sh
+git commit -m "feat(p01-t04): port v6 stop-server instance verification"
+```
+
+---
+
+## Phase 2: Update skill and reference docs
+
+### Task p02-t01: Update visual-companion.md
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/references/visual-companion.md`
+
+**Step 1: Align reference with v6 behavior (GREEN)**
+
+Document:
+
+- Session key in URL and cookie auth requirement
+- `--open` after user accepts companion
+- Restart with same `--project-dir`/repo context reuses port/key (no new URL)
+- 4h idle default and `--idle-timeout-minutes`
+- Paused overlay / reconnect behavior
+- Pre-flight alive check before pushing screens
+
+Keep OAT persistence path examples (`.oat/brainstorm/`, user-scope fallback).
+
+**Step 2: Verify**
+
+Run: `pnpm oat:validate-skills` (or repo equivalent skill validation)
+Expected: Skill pack validates.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/references/visual-companion.md
+git commit -m "docs(p02-t01): document v6 visual companion behavior in reference"
+```
+
+---
+
+### Task p02-t02: Update oat-brainstorm SKILL.md step 3
+
+**Files:**
+
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md`
+
+**Step 1: Update activation/handoff prose (GREEN)**
+
+In Step 3 (visual companion offer/accept):
+
+- On accept, pass `--open` when starting server (after user approval)
+- Instruct agent to preserve keyed URL from JSON; restart with same path resolution
+- Note 4h idle / restart semantics
+- Bump skill frontmatter `version:` (required for skill change)
+
+Do **not** change Activation Contract or destination logic.
+
+**Step 2: Verify**
+
+Run: `pnpm oat:validate-skills`
+Expected: Pass including version/frontmatter checks.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-brainstorm/SKILL.md
+git commit -m "docs(p02-t02): align brainstorm skill with v6 companion startup"
+```
+
+---
+
+## Phase 3: Tests and release validation
+
+### Task p03-t01: Extend visual-companion smoke tests
+
+**Files:**
+
+- Modify: `packages/cli/src/integration/visual-companion-smoke.test.ts`
+
+**Step 1: Add failing assertions (RED)**
+
+Add cases for:
+
+- `server-started` JSON includes keyed URL (`?key=`)
+- Unauthenticated GET `/` returns 401/403 (per server behavior)
+- Restart with same `--project-dir` reuses port (read `.last-port`)
+- `stop-server.sh` refuses stale/wrong instance (mock or integration-safe check)
+
+**Step 2: Implement until green (GREEN)**
+
+Run: `pnpm exec vitest run packages/cli/src/integration/visual-companion-smoke.test.ts`
+Expected: All tests pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/integration/visual-companion-smoke.test.ts
+git commit -m "test(p03-t01): cover v6 visual companion auth and restart behavior"
+```
+
+---
+
+### Task p03-t02: NOTICES, lockstep versions, release validate
+
+**Files:**
+
+- Modify: `NOTICES.md`
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (version if not done in p02-t02)
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (lockstep bump)
+
+**Step 1: Update provenance (GREEN)**
+
+`NOTICES.md`: change referenced Superpowers version to v6.0.3; note adapted port (no longer byte-for-byte v5.0.7 for all script files).
+
+Bump all five public packages together per repo guardrail.
+
+**Step 2: Verify**
+
+Run: `pnpm release:validate`
+Expected: Pass.
+
+Run: `pnpm test --filter visual-companion-smoke` or full `pnpm test` if fast enough
+Expected: Pass.
+
+**Step 3: Commit**
+
+```bash
+git add NOTICES.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git commit -m "chore(p03-t02): record v6 port provenance and bump public packages"
+```
+
+---
+
+## Phase 4: Optional docs touchpoint
+
+### Task p04-t01: Update tool-packs docs if companion behavior changed materially
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (only if step 3 / security semantics need user-facing mention)
+
+**Step 1: Assess diff**
+
+If brainstorm pack section still accurate after p02 changes, skip with note in implementation log.
+
+**Step 2: Update if needed (GREEN)**
+
+Add brief note: session-key URL, `--open`, restart reuse — only if missing.
+
+Run: `pnpm build:docs` (if docs changed)
+Expected: Build passes.
+
+**Step 3: Commit (if changed)**
+
+```bash
+git add apps/oat-docs/docs/cli-utilities/tool-packs.md
+git commit -m "docs(p04-t01): note v6 visual companion security and restart behavior"
+```
+
+If skipped: record "skipped — no user-facing doc delta" in `implementation.md`.
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+| Cycle | Scope | Status  | Date       | Notes                                        |
+| ----- | ----- | ------- | ---------- | -------------------------------------------- |
+| plan  | plan  | pending | 2026-06-26 | Run artifact review before implement handoff |
 
 ---
 
@@ -187,18 +337,20 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 4 tasks — v6 server bundle port with OAT paths
+- Phase 2: 2 tasks — skill/reference doc alignment
+- Phase 3: 2 tasks — smoke tests + release validation
+- Phase 4: 1 task — optional docs touchpoint
 
-**Total: {N} tasks**
+**Total: 9 tasks**
 
-Ready for code review and merge.
+Ready for `oat-project-implement`.
 
 ---
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Upstream: https://github.com/obra/superpowers/releases (v6.0.0 visual companion notes; v6.0.3 tag for file source)
+- Prior OAT project: `.oat/repo/reference/project-summaries/20260507-independent-brainstorming.md`
+- Live dogfood follow-up: `.oat/repo/reference/backlog/items/live-dogfood-oat-brainstorm.md` (`bl-7d5b`)
