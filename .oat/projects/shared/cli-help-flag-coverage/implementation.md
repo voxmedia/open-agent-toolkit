@@ -220,6 +220,32 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 2 — 2026-06-27 (post-final polish)
+
+**Branch:** cli-help-flag-coverage
+**Tier:** 1 (oat-phase-implementer, claude sonnet)
+**Scope:** close 5 deferred Minor review nits (user-requested before PR). Test-only + comment changes; no shipped behavior change.
+
+**Commit:** `28245168` — `test(cli): close deferred review nits (help/scope + json contract)`
+**Verification:** vitest 1978 passed (220 files); lint clean; type-check clean.
+
+#### Outstanding Items — disposition update
+
+- p01/M1 → **resolved** (e2e `runCli` now guards `--scope` injection behind a `SCOPE_CONSUMER_COMMANDS` set).
+- p01/m2 → **resolved** (added snapshot asserting `oat init tools --help` has no local `--scope`).
+- p01/m3 → **resolved** (comment corrected — see deviation below).
+- p02/M1 → **resolved** (evaluate-signals "below threshold" content assertion added).
+- p02/m2 → **resolved** (added a `convertActiveDetectedParent` JSON-path test).
+- p01/m1 (feat vs fix commit type) → **accepted/closed** (historical; not rewriting committed history).
+- p02/m1 (triage stderr spy assertion) → **deferred** (minor test polish).
+- p02/m3 (P3-3 `process.stderr.write` in `printCommentSummary`) → **deferred** (TTY-only; belongs to the separate P2/P3 follow-up project).
+
+#### Artifact / Design Deltas
+
+| Task / Review      | Source Artifact        | Planned / Documented                                       | Actual / Accepted                                                                                                                                                               | Reason                                                        | Source of Truth                            | Follow-up                                                                 |
+| ------------------ | ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
+| Run 2 / nit p01/m3 | review finding (final) | Reviewer claimed `Global Options:` shows only ROOT options | Commander v12 also lists intermediate ancestor options in `Global Options:`; `--scope` from the `init` ancestor appears there for `init tools core` (but not as a local option) | Reviewer premise empirically wrong; verified by passing tests | implementation (actual Commander behavior) | None — comment corrected; contract tests assert the local Options section |
+
 <!-- orchestration-runs-end -->
 
 ---
