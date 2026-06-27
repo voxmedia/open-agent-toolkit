@@ -71,7 +71,7 @@ packages/cli/src/
 ## Runtime Bootstrap and Flags
 
 - Startup order: load runtime config -> validate env/input -> build command context -> register commands.
-- Register global flags early and consistently (`--json`, `--verbose`, `--scope`, `--cwd`).
+- Register global flags early and consistently (`--json`, `--verbose`, `--cwd`). Scope-aware commands take `--scope` as a per-command option (via the shared `withScopeOption` helper), not a global flag, so it appears in `--help` only on the commands that actually consume it.
 
 ## UX and Output Principles
 
