@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 624ce365
+oat_current_task: null
+oat_last_commit: 5b209dd5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,27 +27,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-27T17:26:57.994Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-27T19:15:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-27T19:35:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cli-help-flag-coverage
 
-**Status:** Plan complete — ready for implementation
+**Status:** Implementation tasks complete — awaiting final review
 **Started:** 2026-06-27
 **Last Updated:** 2026-06-27
 
 ## Current Phase
 
-Plan complete - quick workflow plan generated and ready for `oat-project-implement`
+Implementation - all 7 tasks complete across 3 phases; awaiting final review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — no architecture decisions required)
-- **Plan:** `plan.md` (complete — 7 tasks across 3 phases)
-- **Implementation:** `implementation.md` (initialized — next task p01-t01)
+- **Plan:** `plan.md` (complete — 7 tasks across 3 phases; p01/p02/p03 reviews passed)
+- **Implementation:** `implementation.md` (complete — 7/7 tasks)
 - **Audit:** `references/audit.md` (P0–P3 findings driving scope)
 
 ## Progress
@@ -55,7 +55,8 @@ Plan complete - quick workflow plan generated and ready for `oat-project-impleme
 - ✓ Audit completed (programmatic walk + 3 subagents)
 - ✓ Discovery captured (P0+P1 scope confirmed)
 - ✓ Quick plan generated (3 phases, 7 tasks)
-- ⧗ Awaiting implementation
+- ✓ Implementation complete (p01, p02, p03 — all phase reviews passed)
+- ⧗ Awaiting final review
 
 ## Blockers
 
@@ -63,4 +64,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to execute Phase 1 (global-flag visibility + `--scope` demotion)
+Final review (scope `final`), then PR via `oat-project-pr-final`.

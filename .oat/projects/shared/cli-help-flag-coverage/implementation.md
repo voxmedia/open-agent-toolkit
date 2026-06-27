@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-27
-oat_current_task_id: p03-t01
+oat_current_task_id: null # all plan tasks complete; awaiting final review
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | -------------------------- | -------- | ----- | --------- |
 | Phase 1 (visibility+scope) | complete | 3     | 3/3       |
 | Phase 2 (--json contract)  | complete | 3     | 3/3       |
-| Phase 3 (release bump)     | pending  | 1     | 0/1       |
+| Phase 3 (release bump)     | complete | 1     | 1/1       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -144,6 +144,28 @@ oat_generated: false
 
 ---
 
+## Phase 3: Release bookkeeping
+
+**Status:** complete
+**Started:** 2026-06-27
+
+### Phase Summary
+
+**Outcome:** Lockstep version bump of the five public packages (cli, control-plane, docs-config, docs-theme, docs-transforms) 0.1.33 → 0.1.34, plus `packages/cli/assets/public-package-versions.json`. `pnpm release:validate` passes.
+
+**Verification:** `pnpm release:validate` ✓, `pnpm lint` ✓, `pnpm type-check` ✓.
+
+**Review:** oat-reviewer (sonnet) verdict **pass** — 0 findings; diff shape matches prior release commit `bd64c937`.
+
+### Task p03-t01: Lockstep version bump + release validation
+
+**Status:** completed
+**Commit:** 5b209dd5
+
+**Outcome:** Five public packages bumped to 0.1.34; release validation green.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -161,7 +183,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** cli-help-flag-coverage
 **Tier:** 1 (subagents — oat-phase-implementer / oat-reviewer, claude sonnet)
 **Policy:** merge-strategy=sequential, retry-limit=2
-**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped
+**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
@@ -169,6 +191,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | DONE        | pass   | 0/2            | merged      |
 | p02   | DONE        | pass   | 0/2            | merged      |
+| p03   | DONE        | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
@@ -178,6 +201,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Dispatch: p01 implementation + review at model_axis=selected:sonnet (ceiling), effort_axis=not-applicable.
 - Dispatch: p02 implementation + review at model_axis=selected:sonnet (ceiling), effort_axis=not-applicable.
+- Dispatch: p03 implementation + review at model_axis=selected:sonnet (ceiling), effort_axis=not-applicable. Review clean (0 findings).
 
 #### Outstanding Items (recorded, non-blocking)
 
@@ -258,26 +282,30 @@ Track test execution during implementation.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**What shipped:** The CLI's `--help` is now honest about its flags, and one broken command is fixed.
 
-- {capability 1}
-- {capability 2}
+- Global options (`--json`, `--verbose`, `--cwd`) now render in a `Global Options:` section on every subcommand's `--help` via a recursive `applyHelpConfiguration` walk (needed because 89/99 commands register with `.addCommand()`, which doesn't inherit help config).
+- `--scope` is no longer a global option. It's a per-command option (`withScopeOption`) on the ~22 commands that actually consume it; non-consumers no longer silently accept it.
+- `oat providers set --enabled <x>` works on its default invocation (defaults to project scope) — previously it errored and pointed users at an undocumented flag.
+- The `--json` contract is now symmetric across five commands: `project validate-plan` and `project split run` emit JSON under `--json` (previously never); `project split evaluate-signals` and `project split validate-plan` only emit JSON under `--json` (previously always); `repo pr-comments triage-collection` has a real non-interactive/JSON path (previously threw).
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat sync --help` (and every other subcommand) now shows the global flags; `oat sync --help` shows `--scope` as a local option.
+- Non-consumer commands (e.g. `oat config set --scope user`) now reject `--scope` as an unknown option instead of silently ignoring it.
+- `oat providers set` no longer requires an explicit `--scope project`.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/app/create-program.ts`, `packages/cli/src/app/help-config.ts` (new) — global options + recursive help config
+- `packages/cli/src/commands/index.ts` — applies help config after registration
+- `packages/cli/src/commands/shared/scope-option.ts` (new) — `withScopeOption`
+- `packages/cli/src/commands/providers/set/index.ts` — P0 default-scope fix
+- `packages/cli/src/commands/project/{validate-plan,split/*}`, `repo/pr-comments/triage-collection/triage-comments.ts` — `--json` contract
 
-**Verification performed:**
+**Verification performed:** full `vitest` suite green (1976 tests), `pnpm lint`, `pnpm type-check`, `pnpm release:validate` all pass. Per-phase oat-reviewer gates: p01 pass, p02 pass, p03 pass.
 
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+**Design deltas:** None. Scope held to audit P0+P1; P2/P3 explicitly deferred (see `discovery.md` / `references/audit.md`). Non-blocking review nits recorded under Orchestration Runs → Outstanding Items.
 
 ## References
 
