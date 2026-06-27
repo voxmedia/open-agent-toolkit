@@ -287,12 +287,12 @@ git commit -m "chore(p03-t01): bump public packages for CLI help/flag changes"
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact |
-| ----- | -------- | ------- | ---------- | -------- |
-| plan  | artifact | pending | 2026-06-27 | -        |
-| p01   | code     | pending | -          | -        |
-| p02   | code     | pending | -          | -        |
-| final | code     | pending | -          | -        |
+| Scope | Type     | Status   | Date       | Artifact                                   |
+| ----- | -------- | -------- | ---------- | ------------------------------------------ |
+| plan  | artifact | received | 2026-06-27 | reviews/artifact-plan-review-2026-06-27.md |
+| p01   | code     | pending  | -          | -                                          |
+| p02   | code     | pending  | -          | -                                          |
+| final | code     | pending  | -          | -                                          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
