@@ -312,15 +312,75 @@ git commit -m "chore(p03-t01): bump public packages for CLI help/flag changes"
 
 ---
 
+## Phase p-rev1: Final-review fixes
+
+From final review `reviews/archived/final-review-2026-06-27-v2.md` (Important I1) and the failing CI run on PR #120.
+
+### Task prev1-t01: (review) Hardcoded tool-pack leaves must not false-accept `--scope`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/core/index.ts`, `packages/cli/src/commands/init/tools/project-management/index.ts` (and their `tools install` entry paths if separate)
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts` (or a sibling test)
+
+**Step 1: Understand the issue**
+
+Review finding I1: `init tools core`, `init tools project-management`, `tools install core`, and `tools install project-management` are hardcoded-scope leaves (core → always `user`; project-management → always `project`). Because the `init` and `tools install` parents carry `withScopeOption`, Commander v12 surfaces an inherited `--scope` in these leaves' `Global Options:`, and the leaves silently ignore it — leaving audit P1-3's false-accept unresolved for them.
+
+**Step 2: Implement fix**
+
+Make each hardcoded leaf **reject** an explicitly-passed `--scope` that conflicts with its fixed scope (instead of silently ignoring it). E.g. `oat init tools core --scope project` → clear error ("the core pack always installs at user scope; remove --scope or pass --scope user"); `oat init tools project-management --scope user` → analogous error. A matching explicit `--scope` (or none) proceeds. Prefer detecting whether `--scope` was explicitly provided vs. defaulted so the default path is unaffected. (The inherited _display_ in `Global Options:` is an unavoidable Commander artifact since `oat init` legitimately consumes scope; honesty is restored by rejecting conflicting values, not by hiding the flag.)
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init src/commands/tools src/commands/help-snapshots.test.ts`
+Expected: tests assert conflicting `--scope` is rejected on all four leaves; matching/absent scope still works.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev1-t01): reject conflicting --scope on hardcoded tool-pack leaves"
+```
+
+---
+
+### Task prev1-t02: (ci) Restore project-scoping in integration runCli so doctor is deterministic
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Understand the issue**
+
+CI fails at `commands.integration.test.ts:293` ("doctor on healthy setup reports all pass"). The polish pass removed the implicit global `--scope project` from this file's `runCli`, so `oat doctor` now defaults to `--scope all` and also checks the **user** scope. The test only sets up a project workspace, so user-scope checks `warn`. It passes where `$HOME` already has user-scope OAT state (local) and fails in CI's clean `$HOME`. Product behavior is correct; the test helper is the gap.
+
+**Step 2: Implement fix**
+
+Mirror the consumer-aware injection already added to `src/e2e/workflow.test.ts`: in `commands.integration.test.ts` `runCli`, inject `--scope project` (in-position, after the subcommand tokens) only when the target command is a scope consumer (`SCOPE_CONSUMER_COMMANDS` = init, sync, status, doctor, providers, tools, remove). This restores project-scoped `doctor`/`status`/`sync` runs and removes the dependency on the runner's `$HOME`. Confirm no call site that should be all-scoped is forced to project.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts`
+Expected: green, including "doctor on healthy setup reports all pass". Then full `pnpm test` to confirm no regressions.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev1-t02): scope integration runCli consumers to project (fix CI doctor test)"
+```
+
+---
+
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                            |
-| ----- | -------- | -------- | ---------- | --------------------------------------------------- |
-| plan  | artifact | passed   | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
-| p01   | code     | passed   | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
-| p02   | code     | passed   | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
-| p03   | code     | passed   | 2026-06-27 | in-memory (structured; verdict pass, 0 findings)    |
-| final | code     | received | 2026-06-27 | reviews/final-review-2026-06-27-v2.md               |
+| Scope | Type     | Status      | Date       | Artifact                                            |
+| ----- | -------- | ----------- | ---------- | --------------------------------------------------- |
+| plan  | artifact | passed      | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
+| p01   | code     | passed      | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
+| p02   | code     | passed      | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
+| p03   | code     | passed      | 2026-06-27 | in-memory (structured; verdict pass, 0 findings)    |
+| prev1 | code     | pending     | -          | -                                                   |
+| final | code     | fixes_added | 2026-06-27 | reviews/archived/final-review-2026-06-27-v2.md      |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -333,8 +393,9 @@ git commit -m "chore(p03-t01): bump public packages for CLI help/flag changes"
 - Phase 1: 3 tasks — global-flag visibility, `--scope` demotion, `providers set` fix
 - Phase 2: 3 tasks — `--json` contract pass across 5 commands
 - Phase 3: 1 task — lockstep version bump + release validation
+- Phase p-rev1: 2 tasks — final-review fix (I1: hardcoded leaves reject conflicting `--scope`) + CI fix (integration runCli scoping)
 
-**Total: 7 tasks**
+**Total: 9 tasks**
 
 Ready for code review and merge.
 

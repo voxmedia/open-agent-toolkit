@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-27
-oat_current_task_id: null # all plan tasks complete; final review passed
+oat_current_task_id: prev1-t01 # final-review fixes + CI fix queued
 oat_generated: false
 ---
 
@@ -24,13 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                      | Status   | Tasks | Completed |
-| -------------------------- | -------- | ----- | --------- |
-| Phase 1 (visibility+scope) | complete | 3     | 3/3       |
-| Phase 2 (--json contract)  | complete | 3     | 3/3       |
-| Phase 3 (release bump)     | complete | 1     | 1/1       |
+| Phase                      | Status      | Tasks | Completed |
+| -------------------------- | ----------- | ----- | --------- |
+| Phase 1 (visibility+scope) | complete    | 3     | 3/3       |
+| Phase 2 (--json contract)  | complete    | 3     | 3/3       |
+| Phase 3 (release bump)     | complete    | 1     | 1/1       |
+| Phase p-rev1 (review + CI) | in_progress | 2     | 0/2       |
 
-**Total:** 7/7 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
@@ -52,6 +53,26 @@ oat_generated: false
 **Disposition map:** I1 → resolve_in_artifact · m1 → resolve_in_artifact · m2 → resolve_in_artifact · m3 → resolve_in_artifact. No deferrals, rejections, or items needing user direction.
 
 **Next:** Plan review row marked `passed`. Proceed to `oat-project-implement` (next task p01-t01).
+
+---
+
+## Review Received: final (v2)
+
+**Date:** 2026-06-27
+**Review artifact:** `reviews/archived/final-review-2026-06-27-v2.md`
+**Type:** code (manual) · **Scope:** final · **Verdict:** CHANGES REQUESTED
+
+**Findings:** Critical 0 · Important 1 · Medium 0 · Minor 2
+
+**New tasks added:** `prev1-t01` (I1), `prev1-t02` (CI failure)
+
+- `I1` (Important) → **convert** (`prev1-t01`): hardcoded tool-pack leaves (`init tools core`, `init tools project-management`, `tools install core`, `tools install project-management`) still show an inherited `--scope` in `Global Options:` and silently ignore it (P1-3 unresolved for them). Fix: reject an explicitly-passed conflicting `--scope` on those leaves. The inherited _display_ is an unavoidable Commander v12 artifact (since `oat init` legitimately consumes scope), so honesty is restored by rejecting conflicting values, not by hiding the flag.
+- `m1` (Minor) → **deferred**: triage stderr-spy test strength (test-quality only).
+- `m2` (Minor) → **deferred**: `printCommentSummary` direct-stderr path — already tracked in `BL-260627-cli-flag-p2-p3-cleanup` (P3-3).
+
+**Also (not in review): CI failure on PR #120 → `prev1-t02`.** `commands.integration.test.ts:293` "doctor on healthy setup reports all pass" fails in CI. Root cause: the polish pass dropped the implicit global `--scope project` from this file's `runCli`, so `oat doctor` defaults to `--scope all` and checks the user scope, which is unhealthy in CI's clean `$HOME` (passes where `$HOME` has user-scope OAT state). Test-helper bug, not a product regression. Fix: consumer-aware `--scope project` injection (mirroring `e2e/workflow.test.ts`).
+
+**Next:** Execute `prev1-t01` + `prev1-t02` via `oat-project-implement`; re-review the fixes; push to update PR #120.
 
 ---
 
