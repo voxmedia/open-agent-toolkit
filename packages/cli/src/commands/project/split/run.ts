@@ -327,6 +327,13 @@ export function createProjectSplitRunCommand(
             );
             await dependencies.refreshDashboard({ repoRoot });
             context.logger.info('Split completed.');
+            if (context.json) {
+              context.logger.json({
+                status: 'ok',
+                parentSlug: document.plan.parentSlug,
+                children: document.plan.children.map((child) => child.slug),
+              });
+            }
             process.exitCode = 0;
             return;
           }
@@ -366,6 +373,13 @@ export function createProjectSplitRunCommand(
 
         await dependencies.refreshDashboard({ repoRoot });
         context.logger.info('Split completed.');
+        if (context.json) {
+          context.logger.json({
+            status: 'ok',
+            parentSlug: document.plan.parentSlug,
+            children: document.plan.children.map((child) => child.slug),
+          });
+        }
         process.exitCode = 0;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

@@ -90,6 +90,7 @@ function createHarness(
   repoRoot: string,
   overrides: {
     interactive?: boolean;
+    json?: boolean;
     processEnv?: NodeJS.ProcessEnv;
     confirmResponses?: boolean[];
   } = {},
@@ -101,15 +102,16 @@ function createHarness(
   const capture = createLoggerCapture();
   const confirmResponses = [...(overrides.confirmResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
+  const json = overrides.json ?? false;
   const command = createProjectSplitRunCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
       dryRun: false,
       verbose: false,
-      json: false,
+      json,
       cwd: repoRoot,
       home: join(repoRoot, 'home'),
-      interactive: overrides.interactive ?? true,
+      interactive: overrides.interactive ?? !json,
       logger: capture.logger,
     }),
     resolveProjectRoot: async () => repoRoot,
@@ -503,6 +505,23 @@ describe('oat project split run', () => {
     await expect(
       exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
     ).resolves.toBe(true);
+  });
+
+  it('emits JSON result under --json when split succeeds', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const planFile = await writePlanFile(repoRoot, document());
+    const { capture, command } = createHarness(repoRoot, { json: true });
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      parentSlug: 'umbrella',
+      children: expect.arrayContaining(['foundation', 'docs']),
+    });
+    expect(process.exitCode).toBe(0);
   });
 
   it('aborts non-interactive partial resume unless --resume confirms it', async () => {
