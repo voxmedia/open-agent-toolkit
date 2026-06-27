@@ -33,6 +33,27 @@ oat_generated: false
 
 ---
 
+## Review Received: plan (artifact)
+
+**Date:** 2026-06-27
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-06-27.md`
+**Type:** artifact (manual) · **Scope:** plan
+
+**Findings:** Critical 0 · Important 1 · Medium 0 · Minor 3
+
+**Resolution — all resolved directly in `plan.md`; no plan tasks added:**
+
+- `I1` (Important): Corrected p02-t03 source path to `repo/pr-comments/triage-collection/triage-comments.ts` (verified on disk) and added `triage-collection/index.ts` for the registration-wiring case.
+- `m1` (Minor): Normalized step numbering across all Phase 1–2 tasks to the canonical Step 1–5 shape (added Refactor/Verify stubs).
+- `m2` (Minor): Pinned the recursive `applyHelpConfiguration` helper to a dedicated `packages/cli/src/app/help-config.ts` in p01-t01.
+- `m3` (Minor): Clarified the P1-3 exclusion wording to cover both `init tools <pack>` and `tools install <pack>` entry paths.
+
+**Disposition map:** I1 → resolve_in_artifact · m1 → resolve_in_artifact · m2 → resolve_in_artifact · m3 → resolve_in_artifact. No deferrals, rejections, or items needing user direction.
+
+**Next:** Plan review row marked `passed`. Proceed to `oat-project-implement` (next task p01-t01).
+
+---
+
 ## Phase 1: {Phase Name}
 
 **Status:** in_progress

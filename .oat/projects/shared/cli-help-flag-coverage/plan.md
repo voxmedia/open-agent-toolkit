@@ -53,7 +53,7 @@ Resolves audit findings P1-1, P1-2, P1-3, P0-1.
 
 - Modify: `packages/cli/src/app/create-program.ts`
 - Modify: `packages/cli/src/commands/index.ts` (apply help config recursively after registration)
-- Modify: `packages/cli/src/commands/shared/shared.utils.ts` or new `packages/cli/src/app/help-config.ts` (recursive `applyHelpConfiguration`)
+- Create: `packages/cli/src/app/help-config.ts` (recursive `applyHelpConfiguration`) — dedicated module keeps `shared.utils.ts` focused on context/options
 
 **Step 1: Write test (RED)**
 
@@ -105,11 +105,15 @@ Expected: Fails (RED).
 **Step 2: Implement (GREEN)**
 
 - `withScopeOption` adds `new Option('--scope <scope>', 'Limit execution scope').choices(['project','user','all']).default('all')`.
-- Apply only to the consumer commands listed above. Do NOT apply to `init tools core`, `init tools project-management`, or `instructions validate`/`sync` (they hardcode scope — P1-3).
+- Apply only to the consumer commands listed above. Do NOT apply to the `core` or `project-management` pack registrations — this exclusion covers both the `init tools <pack>` and `tools install <pack>` entry paths, which share pack registrations — nor to `instructions validate`/`sync` (they hardcode scope — P1-3).
 - No change needed to `buildCommandContext`/`readGlobalOptions`: `optsWithGlobals()` already surfaces a per-command `--scope` into `context.scope`. Confirm non-consumers default to `'all'`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
 Expected: GREEN.
+
+**Step 3: Refactor**
+
+None needed — registration-only change.
 
 **Step 4: Verify**
 
@@ -143,6 +147,10 @@ Expected: Fails (RED).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/providers`
 Expected: GREEN.
+
+**Step 3: Refactor**
+
+None needed — localized handler change.
 
 **Step 4: Verify**
 
@@ -182,6 +190,10 @@ Add a `context.json` branch that emits the result as JSON; keep logger output fo
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project`
 Expected: GREEN.
 
+**Step 3: Refactor**
+
+None needed — adds a JSON branch alongside existing logger output.
+
 **Step 4: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
@@ -216,6 +228,15 @@ Branch on `context.json`; add a logger-based human summary for the non-JSON path
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split`
 Expected: GREEN.
 
+**Step 3: Refactor**
+
+None needed — adds a `context.json` branch plus a human summary path.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors.
+
 **Step 5: Commit**
 
 ```bash
@@ -228,7 +249,8 @@ git commit -m "fix(p02-t02): gate split evaluate-signals/validate-plan JSON outp
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/repo/pr-comments/triage-comments.ts`
+- Modify: `packages/cli/src/commands/repo/pr-comments/triage-collection/triage-comments.ts`
+- Modify (if registration wiring changes): `packages/cli/src/commands/repo/pr-comments/triage-collection/index.ts`
 
 **Step 1: Write test (RED)**
 
@@ -243,6 +265,10 @@ Provide a non-interactive code path: when `--json`/non-TTY, emit the collection'
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/repo`
 Expected: GREEN.
+
+**Step 3: Refactor**
+
+None needed — gates existing output behind interactivity/`--json`.
 
 **Step 4: Verify**
 
@@ -287,12 +313,12 @@ git commit -m "chore(p03-t01): bump public packages for CLI help/flag changes"
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                   |
-| ----- | -------- | -------- | ---------- | ------------------------------------------ |
-| plan  | artifact | received | 2026-06-27 | reviews/artifact-plan-review-2026-06-27.md |
-| p01   | code     | pending  | -          | -                                          |
-| p02   | code     | pending  | -          | -                                          |
-| final | code     | pending  | -          | -                                          |
+| Scope | Type     | Status  | Date       | Artifact                                            |
+| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
+| plan  | artifact | passed  | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
+| p01   | code     | pending | -          | -                                                   |
+| p02   | code     | pending | -          | -                                                   |
+| final | code     | pending | -          | -                                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
