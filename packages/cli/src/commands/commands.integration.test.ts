@@ -335,13 +335,9 @@ describe('CLI command integration', () => {
     const root = await createWorkspace();
     tempDirs.push(root);
 
-    // TODO(p01-t03): explicit --scope project can be removed once providers set
-    // defaults to project scope internally.
     const result = await runCli(root, [
       'providers',
       'set',
-      '--scope',
-      'project',
       '--enabled',
       'claude,cursor',
       '--disabled',

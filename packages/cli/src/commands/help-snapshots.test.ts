@@ -460,7 +460,7 @@ describe('help output snapshots', () => {
 
       Options:
         --scope <scope>         Limit execution scope (choices: "project", "user",
-                                "all", default: "all")
+                                "all", default: "project")
         --enabled <providers>   Comma-separated providers to enable
         --disabled <providers>  Comma-separated providers to disable
         -h, --help              display help for command

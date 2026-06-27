@@ -24,7 +24,7 @@ interface ProvidersSetOptions {
 }
 
 const PROJECT_SCOPE_ONLY_MESSAGE =
-  'oat providers set currently supports only --scope project. Re-run with --scope project.';
+  'oat providers set only supports project scope. Remove --scope or pass --scope project.';
 
 function parseCsvList(raw?: string): string[] {
   if (!raw) {
@@ -183,7 +183,10 @@ export function createProvidersSetCommand(
     ...overrides,
   };
 
-  return withScopeOption(new Command('set'))
+  // Default to 'project' scope: providers set only supports project scope, so
+  // a bare `oat providers set --enabled X` should succeed without requiring
+  // an explicit --scope project flag.
+  return withScopeOption(new Command('set'), 'project')
     .description('Enable or disable project providers in sync config')
     .option('--enabled <providers>', 'Comma-separated providers to enable')
     .option('--disabled <providers>', 'Comma-separated providers to disable')

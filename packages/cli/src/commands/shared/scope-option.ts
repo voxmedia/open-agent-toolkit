@@ -12,11 +12,20 @@ import { Option } from 'commander';
  * `readGlobalOptions` uses `command.optsWithGlobals()` which merges local and
  * parent options, so `context.scope` is populated correctly with no changes to
  * `buildCommandContext`.
+ *
+ * @param cmd - The Commander command to add the option to.
+ * @param defaultScope - The default scope value. Defaults to `'all'` for most
+ *   commands. Use `'project'` for commands that only support project scope
+ *   (e.g. `providers set`) so bare invocations succeed without requiring an
+ *   explicit `--scope project` flag.
  */
-export function withScopeOption(cmd: Command): Command {
+export function withScopeOption(
+  cmd: Command,
+  defaultScope: 'project' | 'user' | 'all' = 'all',
+): Command {
   return cmd.addOption(
     new Option('--scope <scope>', 'Limit execution scope')
       .choices(['project', 'user', 'all'])
-      .default('all'),
+      .default(defaultScope),
   );
 }

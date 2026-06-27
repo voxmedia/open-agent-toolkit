@@ -82,11 +82,12 @@ async function runCommand(
   command: Command,
   { globalArgs = [], commandArgs = [] }: RunArgs = {},
 ): Promise<void> {
+  // --scope is now a per-command option on the set command (via withScopeOption);
+  // it is no longer registered on the root program. Pass scope in commandArgs.
   const program = new Command()
     .name('oat')
     .option('--json')
     .option('--verbose')
-    .option('--scope <scope>')
     .option('--cwd <path>')
     .exitOverride();
 
@@ -121,6 +122,26 @@ describe('oat providers set', () => {
     tempDirs.length = 0;
   });
 
+  it('succeeds without --scope (defaults to project scope)', async () => {
+    // p01-t03: bare invocation should not require --scope project
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, {
+      commandArgs: ['--enabled', 'claude'],
+    });
+
+    // Command should succeed without explicit --scope
+    expect(process.exitCode).toBe(0);
+
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    expect(parsed.providers.claude.enabled).toBe(true);
+  });
+
   it('writes enabled and disabled providers to project config', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
@@ -128,8 +149,14 @@ describe('oat providers set', () => {
     const { command } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'project'],
-      commandArgs: ['--enabled', 'claude,cursor', '--disabled', 'codex'],
+      commandArgs: [
+        '--scope',
+        'project',
+        '--enabled',
+        'claude,cursor',
+        '--disabled',
+        'codex',
+      ],
     });
 
     const configPath = join(root, '.oat', 'sync', 'config.json');
@@ -149,8 +176,7 @@ describe('oat providers set', () => {
     const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'project'],
-      commandArgs: ['--enabled', 'claude,unknown'],
+      commandArgs: ['--scope', 'project', '--enabled', 'claude,unknown'],
     });
 
     expect(process.exitCode).toBe(1);
@@ -164,8 +190,14 @@ describe('oat providers set', () => {
     const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'project'],
-      commandArgs: ['--enabled', 'claude', '--disabled', 'claude'],
+      commandArgs: [
+        '--scope',
+        'project',
+        '--enabled',
+        'claude',
+        '--disabled',
+        'claude',
+      ],
     });
 
     expect(process.exitCode).toBe(1);
@@ -179,8 +211,7 @@ describe('oat providers set', () => {
     const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'project'],
-      commandArgs: [],
+      commandArgs: ['--scope', 'project'],
     });
 
     expect(process.exitCode).toBe(1);
@@ -194,12 +225,11 @@ describe('oat providers set', () => {
     const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'all'],
-      commandArgs: ['--enabled', 'claude'],
+      commandArgs: ['--scope', 'all', '--enabled', 'claude'],
     });
 
     expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('only --scope project');
+    expect(capture.error[0]).toContain('only supports project scope');
   });
 
   it('rejects user scope', async () => {
@@ -209,12 +239,11 @@ describe('oat providers set', () => {
     const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'user'],
-      commandArgs: ['--enabled', 'claude'],
+      commandArgs: ['--scope', 'user', '--enabled', 'claude'],
     });
 
     expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('only --scope project');
+    expect(capture.error[0]).toContain('only supports project scope');
   });
 
   it('preserves existing provider strategy when updating enabled', async () => {
@@ -232,8 +261,7 @@ describe('oat providers set', () => {
     const { command } = createHarness({ cwd: root });
 
     await runCommand(command, {
-      globalArgs: ['--scope', 'project'],
-      commandArgs: ['--enabled', 'claude'],
+      commandArgs: ['--scope', 'project', '--enabled', 'claude'],
     });
 
     const config = await defaultLoadSyncConfig(
