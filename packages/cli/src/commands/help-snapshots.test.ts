@@ -67,8 +67,10 @@ describe('help output snapshots', () => {
 
   it('init tools core does not have --scope as a local option', () => {
     // init tools core hardcodes user scope and should not advertise --scope
-    // in its own Options section. It may appear in Global Options because
-    // the `init` ancestor is a scope consumer, but that is inherited not local.
+    // in its own Options section. Commander v12 includes ancestor commands'
+    // options in the "Global Options:" section, so --scope (a local option on
+    // the `init` ancestor) will appear there — but NOT in the local Options
+    // section of `init tools core` itself, which is what we verify here.
     const program = createRegisteredProgram();
     const initToolsCoreHelp = getCommandByPath(program, [
       'init',
@@ -78,6 +80,24 @@ describe('help output snapshots', () => {
     // Local options section ends before "Global Options:" — split there and
     // verify --scope is not in the local section.
     const localSection = initToolsCoreHelp.split('Global Options:')[0] ?? '';
+    expect(localSection).not.toContain('--scope');
+  });
+
+  it('init tools --help does not list --scope as a local option', () => {
+    // `oat init tools` is intentionally NOT a scope consumer at the guided-runner
+    // level (asymmetric with `oat tools install` which does advertise --scope).
+    // Commander v12 includes ancestor commands' options in the "Global Options:"
+    // section, so --scope (from `init`) will appear there — but it must NOT
+    // appear in the local Options section of `init tools` itself. This test
+    // locks the absence so a future accidental local --scope add is caught.
+    const program = createRegisteredProgram();
+    const initToolsHelp = getCommandByPath(program, [
+      'init',
+      'tools',
+    ]).helpInformation();
+    // Local options section ends before "Global Options:" — split there and
+    // verify --scope is not in the local section.
+    const localSection = initToolsHelp.split('Global Options:')[0] ?? '';
     expect(localSection).not.toContain('--scope');
   });
 

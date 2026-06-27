@@ -119,6 +119,9 @@ describe('oat project split evaluate-signals', () => {
       await runCommand(command, ['--fired', 'independently-shippable']);
 
       expect(capture.jsonPayloads).toHaveLength(0);
+      // Verify actual below-threshold output so deleting the else-branch fails.
+      expect(capture.info.join('\n')).toContain('below threshold');
+      expect(capture.info.join('\n')).toContain('independently-shippable');
       expect(process.exitCode).toBe(0);
     });
   });
