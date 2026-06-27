@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-27
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,12 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                      | Status   | Tasks | Completed |
+| -------------------------- | -------- | ----- | --------- |
+| Phase 1 (visibility+scope) | complete | 3     | 3/3       |
+| Phase 2 (--json contract)  | pending  | 3     | 0/3       |
+| Phase 3 (release bump)     | pending  | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 3/7 tasks completed
 
 ---
 
@@ -54,66 +55,56 @@ oat_generated: false
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Global-flag visibility + `--scope` demotion
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-06-27
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- `--json`/`--verbose`/`--cwd` now appear in a `Global Options:` section on every subcommand's `--help` (recursive `applyHelpConfiguration` over the whole command tree).
+- `--scope` is no longer a global option; it is a per-command option present only on the ~22 commands that consume it. Non-consumer commands now reject `--scope` (unknown option) instead of silently ignoring it.
+- `oat providers set --enabled <x>` works on its default invocation (defaults to project scope); explicit non-project `--scope` is still rejected with an accurate message.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/app/create-program.ts`, `packages/cli/src/app/help-config.ts` (new) - global option set + recursive help config
+- `packages/cli/src/commands/index.ts` - calls `applyHelpConfiguration` after registration
+- `packages/cli/src/commands/shared/scope-option.ts` (new) - `withScopeOption(cmd, defaultScope?)`
+- 16 scope-consumer command registrations + `providers/set/index.ts`
+- `packages/cli/src/commands/help-snapshots.test.ts` - 3 behavioral tests + snapshot updates
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run` (+ lint + type-check)
+- Result: pass — 1962 tests
 
-**Notes / Decisions:**
+**Review:** oat-reviewer (sonnet) verdict **pass** — 0 Critical, 0 Important, 1 Medium, 3 Minor (recorded in Outstanding Items, non-blocking).
 
-- {trade-offs or deviations discovered during implementation}
+### Task p01-t01: Surface true globals; remove `--scope` from globals
 
-### Task p01-t01: {Task Name}
+**Status:** completed
+**Commit:** 9d98ed28
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Outcome:** Global options visible on every subcommand; `--scope` removed from root globals; recursive `applyHelpConfiguration` added.
 
-**Outcome (required when completed):**
+### Task p01-t02: Add `withScopeOption`; apply to scope consumers
 
-- {what materially changed (not “did task”, but “system now does X”)}
+**Status:** completed
+**Commit:** f811b09c
 
-**Files changed:**
+**Outcome:** `--scope` demoted to a per-command option on the 22 consumer commands; non-consumers reject it.
 
-- `{path}` - {why}
+**Notes:** Committed as `feat(...)` rather than the plan's `fix(...)` (review m1 — cosmetic).
 
-**Verification:**
+### Task p01-t03: Fix `oat providers set` broken default
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Status:** completed
+**Commit:** 847dfbf2
 
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
+**Outcome:** `withScopeOption` gained an optional `defaultScope`; `providers set` defaults to `project`; P0-1 resolved.
 
 ---
 
@@ -140,6 +131,40 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 — 2026-06-27
+
+**Branch:** cli-help-flag-coverage
+**Tier:** 1 (subagents — oat-phase-implementer / oat-reviewer, claude sonnet)
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | merged      |
+
+#### Parallel Groups
+
+- None (sequential schedule: p01 → p02 → p03)
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation + review at model_axis=selected:sonnet (ceiling), effort_axis=not-applicable.
+
+#### Outstanding Items (recorded, non-blocking)
+
+- M1 (Medium): `src/e2e/workflow.test.ts` `runCli` injects `--scope project` after the last token unconditionally; safe today (all calls target consumers) but would break if a future test call targets a non-consumer command. Consider an `isConsumer` guard.
+- m1 (Minor): p01-t02 committed as `feat(...)` instead of the plan's `fix(...)`.
+- m2 (Minor): no snapshot locks the absence of `--scope` on `oat init tools --help` (asymmetric with `oat tools install`).
+- m3 (Minor): misleading comment in `help-snapshots.test.ts` about Global Options showing ancestor (not just root) options.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
 
 <!-- orchestration-runs-end -->
 
