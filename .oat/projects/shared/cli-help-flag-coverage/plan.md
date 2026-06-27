@@ -314,13 +314,13 @@ git commit -m "chore(p03-t01): bump public packages for CLI help/flag changes"
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact                                            |
-| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
-| plan  | artifact | passed  | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
-| p01   | code     | passed  | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
-| p02   | code     | passed  | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
-| p03   | code     | passed  | 2026-06-27 | in-memory (structured; verdict pass, 0 findings)    |
-| final | code     | pending | -          | -                                                   |
+| Scope | Type     | Status | Date       | Artifact                                            |
+| ----- | -------- | ------ | ---------- | --------------------------------------------------- |
+| plan  | artifact | passed | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
+| p01   | code     | passed | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
+| p02   | code     | passed | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
+| p03   | code     | passed | 2026-06-27 | in-memory (structured; verdict pass, 0 findings)    |
+| final | code     | passed | 2026-06-27 | reviews/final-review-2026-06-27.md                  |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

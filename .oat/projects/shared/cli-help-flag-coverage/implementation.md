@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-27
-oat_current_task_id: null # all plan tasks complete; awaiting final review
+oat_current_task_id: null # all plan tasks complete; final review passed
 oat_generated: false
 ---
 
