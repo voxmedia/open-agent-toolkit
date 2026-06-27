@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import type { ProvidersSetDependencies } from '@commands/providers/providers.types';
+import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   DEFAULT_SYNC_CONFIG,
@@ -182,7 +183,7 @@ export function createProvidersSetCommand(
     ...overrides,
   };
 
-  return new Command('set')
+  return withScopeOption(new Command('set'))
     .description('Enable or disable project providers in sync config')
     .option('--enabled <providers>', 'Comma-separated providers to enable')
     .option('--disabled <providers>', 'Comma-separated providers to disable')

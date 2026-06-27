@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type PromptContext,
@@ -146,7 +147,7 @@ export function createInitToolsIdeasCommand(
     ...overrides,
   };
 
-  return new Command('ideas')
+  return withScopeOption(new Command('ideas'))
     .description('Install OAT ideas skills, templates, and idea workflow files')
     .option('--force', 'Overwrite existing files where applicable')
     .action(async (options: InitToolsIdeasOptions, command: Command) => {

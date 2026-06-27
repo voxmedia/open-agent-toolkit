@@ -4,6 +4,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { resolvePackDefaultScope } from '@commands/init/tools/shared/skill-manifest';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type PromptContext,
@@ -234,7 +235,7 @@ export function createInitToolsBrainstormCommand(
     ...overrides,
   };
 
-  return new Command('brainstorm')
+  return withScopeOption(new Command('brainstorm'))
     .description(
       'Install OAT brainstorm skill (always-on entry point with visual companion)',
     )

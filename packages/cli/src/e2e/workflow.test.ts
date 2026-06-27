@@ -67,10 +67,24 @@ async function runCli(
   });
 
   try {
-    await program.parseAsync(
-      ['--cwd', root, '--scope', 'project', ...globalArgs, ...args],
-      { from: 'user' },
-    );
+    // --scope is now a per-command option; insert it after the subcommand tokens
+    // (all tokens before the first flag) so it is parsed on the right command.
+    let insertAt = args.length;
+    for (let i = 0; i < args.length; i++) {
+      if (args[i]!.startsWith('-')) {
+        insertAt = i;
+        break;
+      }
+    }
+    const argsWithScope = [
+      ...args.slice(0, insertAt),
+      '--scope',
+      'project',
+      ...args.slice(insertAt),
+    ];
+    await program.parseAsync(['--cwd', root, ...globalArgs, ...argsWithScope], {
+      from: 'user',
+    });
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;

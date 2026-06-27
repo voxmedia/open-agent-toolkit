@@ -58,10 +58,11 @@ async function runCli(
   };
 
   try {
-    await program.parseAsync(
-      ['--cwd', root, '--scope', 'project', ...globalArgs, ...args],
-      { from: 'user' },
-    );
+    // --scope is now a per-command option; callers must include it in args
+    // in the correct position (after the subcommand tokens).
+    await program.parseAsync(['--cwd', root, ...globalArgs, ...args], {
+      from: 'user',
+    });
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;
@@ -334,9 +335,13 @@ describe('CLI command integration', () => {
     const root = await createWorkspace();
     tempDirs.push(root);
 
+    // TODO(p01-t03): explicit --scope project can be removed once providers set
+    // defaults to project scope internally.
     const result = await runCli(root, [
       'providers',
       'set',
+      '--scope',
+      'project',
       '--enabled',
       'claude,cursor',
       '--disabled',

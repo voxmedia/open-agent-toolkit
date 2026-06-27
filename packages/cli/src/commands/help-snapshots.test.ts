@@ -32,6 +32,55 @@ describe('help output snapshots', () => {
     expect(syncHelp).toContain('--cwd <path>');
   });
 
+  it('scope consumers show --scope as a local option', () => {
+    const program = createRegisteredProgram();
+
+    // sync is a scope consumer
+    const syncHelp = getCommandByPath(program, ['sync']).helpInformation();
+    expect(syncHelp).toContain('--scope <scope>');
+
+    // providers set is a scope consumer
+    const providersSetHelp = getCommandByPath(program, [
+      'providers',
+      'set',
+    ]).helpInformation();
+    expect(providersSetHelp).toContain('--scope <scope>');
+  });
+
+  it('scope non-consumers do not show --scope', () => {
+    const program = createRegisteredProgram();
+
+    // config set has no ancestor with --scope, so it should not appear at all
+    const configSetHelp = getCommandByPath(program, [
+      'config',
+      'set',
+    ]).helpInformation();
+    expect(configSetHelp).not.toContain('--scope');
+
+    // instructions sync has no ancestor with --scope; it hardcodes project scope
+    const instructionsSyncHelp = getCommandByPath(program, [
+      'instructions',
+      'sync',
+    ]).helpInformation();
+    expect(instructionsSyncHelp).not.toContain('--scope');
+  });
+
+  it('init tools core does not have --scope as a local option', () => {
+    // init tools core hardcodes user scope and should not advertise --scope
+    // in its own Options section. It may appear in Global Options because
+    // the `init` ancestor is a scope consumer, but that is inherited not local.
+    const program = createRegisteredProgram();
+    const initToolsCoreHelp = getCommandByPath(program, [
+      'init',
+      'tools',
+      'core',
+    ]).helpInformation();
+    // Local options section ends before "Global Options:" — split there and
+    // verify --scope is not in the local section.
+    const localSection = initToolsCoreHelp.split('Global Options:')[0] ?? '';
+    expect(localSection).not.toContain('--scope');
+  });
+
   it('root --help matches snapshot', () => {
     const help = createRegisteredProgram().helpInformation();
     expect(help).toMatchInlineSnapshot(`
@@ -59,7 +108,7 @@ describe('help output snapshots', () => {
         remove            Remove installed skills and managed provider views
         repo              Repository-level analysis and insight tools
         review            OAT review artifact commands
-        doctor            Run environment and setup diagnostics
+        doctor [options]  Run environment and setup diagnostics
         cleanup           Cleanup OAT project and artifact hygiene issues
         docs              OAT documentation bootstrap and maintenance commands
         instructions      Manage AGENTS.md and CLAUDE.md instruction file integrity
@@ -83,20 +132,22 @@ describe('help output snapshots', () => {
       Initialize canonical directories, manifest, and tool packs
 
       Options:
-        --hook         Install optional pre-commit hook
-        --no-hook      Skip optional pre-commit hook install
-        --setup        Run guided setup after initialization
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --hook           Install optional pre-commit hook
+        --no-hook        Skip optional pre-commit hook install
+        --setup          Run guided setup after initialization
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
 
       Commands:
-        tools          Install OAT tool packs (core, ideas, docs, workflows, utility,
-                       project-management, research, brainstorm)
+        tools            Install OAT tool packs (core, ideas, docs, workflows,
+                         utility, project-management, research, brainstorm)
       "
     `);
   });
@@ -250,15 +301,17 @@ describe('help output snapshots', () => {
       Report provider sync and drift status
 
       Options:
-        --hook         Emit a minimal pre-commit message: warn on managed drift, info
-                       on strays
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --hook           Emit a minimal pre-commit message: warn on managed drift,
+                         info on strays
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -272,14 +325,16 @@ describe('help output snapshots', () => {
       Sync canonical content to provider views
 
       Options:
-        --dry-run      Preview sync changes without applying
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --dry-run        Preview sync changes without applying
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -321,19 +376,20 @@ describe('help output snapshots', () => {
       Inspect provider capabilities and paths
 
       Options:
-        -h, --help          display help for command
+        -h, --help                    display help for command
 
       Global Options:
-        -V, --version       output the version number
-        --json              Output a single JSON document
-        --verbose           Enable verbose debug output
-        --cwd <path>        Override working directory
+        -V, --version                 output the version number
+        --json                        Output a single JSON document
+        --verbose                     Enable verbose debug output
+        --cwd <path>                  Override working directory
 
       Commands:
-        list                List provider adapters and sync summary
-        inspect <provider>  Inspect provider details and mapping state
-        set [options]       Enable or disable project providers in sync config
-        help [command]      display help for command
+        list [options]                List provider adapters and sync summary
+        inspect [options] <provider>  Inspect provider details and mapping state
+        set [options]                 Enable or disable project providers in sync
+                                      config
+        help [command]                display help for command
       "
     `);
   });
@@ -350,13 +406,15 @@ describe('help output snapshots', () => {
       List provider adapters and sync summary
 
       Options:
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -373,16 +431,18 @@ describe('help output snapshots', () => {
       Inspect provider details and mapping state
 
       Arguments:
-        provider       Provider name
+        provider         Provider name
 
       Options:
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -399,6 +459,8 @@ describe('help output snapshots', () => {
       Enable or disable project providers in sync config
 
       Options:
+        --scope <scope>         Limit execution scope (choices: "project", "user",
+                                "all", default: "all")
         --enabled <providers>   Comma-separated providers to enable
         --disabled <providers>  Comma-separated providers to disable
         -h, --help              display help for command
@@ -469,13 +531,15 @@ describe('help output snapshots', () => {
       Run environment and setup diagnostics
 
       Options:
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -527,17 +591,19 @@ describe('help output snapshots', () => {
       Remove a single installed skill by name
 
       Arguments:
-        name           Skill name (e.g., oat-idea-scratchpad)
+        name             Skill name (e.g., oat-idea-scratchpad)
 
       Options:
-        --dry-run      Preview removal without applying
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --dry-run        Preview removal without applying
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -554,15 +620,17 @@ describe('help output snapshots', () => {
       Remove installed skills by pack
 
       Options:
-        --pack <pack>  Skill pack to remove (ideas|docs|workflows|utility|research)
-        --dry-run      Preview removal without applying
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --pack <pack>    Skill pack to remove (ideas|docs|workflows|utility|research)
+        --dry-run        Preview removal without applying
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -1036,9 +1104,9 @@ describe('help output snapshots', () => {
         --cwd <path>             Override working directory
 
       Commands:
-        list                     List installed tools with version and status
-        outdated                 Show tools with available updates
-        info <name>              Show details for an installed tool
+        list [options]           List installed tools with version and status
+        outdated [options]       Show tools with available updates
+        info [options] <name>    Show details for an installed tool
         update [options] [name]  Update installed tools to bundled versions
         remove [options] [name]  Remove installed tools
         install [options]        Install OAT tool packs (core, ideas, docs,
@@ -1058,13 +1126,15 @@ describe('help output snapshots', () => {
       List installed tools with version and status
 
       Options:
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -1081,13 +1151,15 @@ describe('help output snapshots', () => {
       Show tools with available updates
 
       Options:
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -1105,6 +1177,8 @@ describe('help output snapshots', () => {
       project-management, research, brainstorm)
 
       Options:
+        --scope <scope>               Limit execution scope (choices: "project",
+                                      "user", "all", default: "all")
         --no-sync                     Skip auto-sync after install
         -h, --help                    display help for command
 
@@ -1143,21 +1217,23 @@ describe('help output snapshots', () => {
       Remove installed tools
 
       Arguments:
-        name           Tool name to remove
+        name             Tool name to remove
 
       Options:
-        --pack <pack>  Remove all tools in a pack
-                       (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
-        --all          Remove all installed tools
-        --dry-run      Preview removals without applying
-        --no-sync      Skip auto-sync after removal
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --pack <pack>    Remove all tools in a pack
+                         (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
+        --all            Remove all installed tools
+        --dry-run        Preview removals without applying
+        --no-sync        Skip auto-sync after removal
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -1174,21 +1250,23 @@ describe('help output snapshots', () => {
       Update installed tools to bundled versions
 
       Arguments:
-        name           Tool name to update
+        name             Tool name to update
 
       Options:
-        --pack <pack>  Update all tools in a pack
-                       (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
-        --all          Update all outdated tools
-        --dry-run      Preview updates without applying
-        --no-sync      Skip auto-sync after update
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        --pack <pack>    Update all tools in a pack
+                         (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
+        --all            Update all outdated tools
+        --dry-run        Preview updates without applying
+        --no-sync        Skip auto-sync after update
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });
@@ -1202,16 +1280,18 @@ describe('help output snapshots', () => {
       Show details for an installed tool
 
       Arguments:
-        name           Tool name
+        name             Tool name
 
       Options:
-        -h, --help     display help for command
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
 
       Global Options:
-        -V, --version  output the version number
-        --json         Output a single JSON document
-        --verbose      Enable verbose debug output
-        --cwd <path>   Override working directory
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
       "
     `);
   });

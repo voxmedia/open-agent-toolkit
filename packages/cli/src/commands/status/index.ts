@@ -14,6 +14,7 @@ import {
   detectCodexRoleStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type MultiSelectChoice,
@@ -656,7 +657,7 @@ export function createStatusCommand(
     ...overrides,
   };
 
-  return new Command('status')
+  return withScopeOption(new Command('status'))
     .description('Report provider sync and drift status')
     .option(
       '--hook',

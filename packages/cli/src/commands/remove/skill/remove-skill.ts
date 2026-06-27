@@ -2,6 +2,7 @@ import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -345,7 +346,7 @@ export function createRemoveSkillCommand(
     ...overrides,
   };
 
-  return new Command('skill')
+  return withScopeOption(new Command('skill'))
     .description('Remove a single installed skill by name')
     .argument('<name>', 'Skill name (e.g., oat-idea-scratchpad)')
     .option('--dry-run', 'Preview removal without applying')

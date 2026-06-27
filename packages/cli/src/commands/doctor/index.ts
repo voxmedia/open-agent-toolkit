@@ -21,6 +21,7 @@ import {
   type PjmDoctorOptions,
 } from '@commands/pjm/doctor';
 import { getSkillVersion } from '@commands/shared/frontmatter';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -523,7 +524,7 @@ export function createDoctorCommand(
     ...overrides,
   };
 
-  return new Command('doctor')
+  return withScopeOption(new Command('doctor'))
     .description('Run environment and setup diagnostics')
     .action(async (_options, command: Command) => {
       const context = dependencies.buildCommandContext(

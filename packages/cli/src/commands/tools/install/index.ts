@@ -6,6 +6,7 @@ import {
   createInitToolsCommand,
   type InitToolsDependencies,
 } from '@commands/init/tools';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -49,6 +50,7 @@ export function createToolsInstallCommand(
       ? createInitToolsCommand(initOverrides)
       : createBaseCommand();
   cmd.name('install');
+  withScopeOption(cmd);
   cmd.option('--no-sync', 'Skip auto-sync after install');
 
   cmd.hook('postAction', async (thisCommand, actionCommand) => {

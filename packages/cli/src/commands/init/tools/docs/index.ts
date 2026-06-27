@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type MultiSelectChoice,
@@ -186,7 +187,7 @@ export function createInitToolsDocsCommand(
     ...overrides,
   };
 
-  return new Command('docs')
+  return withScopeOption(new Command('docs'))
     .description('Install OAT docs workflow skills')
     .option('--force', 'Overwrite existing files where applicable')
     .action(async (options: InitToolsDocsOptions, command: Command) => {

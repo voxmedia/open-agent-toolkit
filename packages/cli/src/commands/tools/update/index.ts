@@ -7,6 +7,7 @@ import {
   copyDirWithStatus,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -93,7 +94,7 @@ export function createToolsUpdateCommand(
   dependencies: UpdateToolsDependencies = defaultDependencies,
   syncDependencies: AutoSyncDependencies = defaultSyncDependencies,
 ): Command {
-  return new Command('update')
+  return withScopeOption(new Command('update'))
     .description('Update installed tools to bundled versions')
     .argument('[name]', 'Tool name to update')
     .option(

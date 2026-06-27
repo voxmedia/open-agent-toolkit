@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { rm, unlink } from 'node:fs/promises';
 
 import { buildCommandContext } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -69,7 +70,7 @@ export function createToolsRemoveCommand(
   dependencies: RemoveToolsDependencies = defaultDependencies,
   syncDependencies: AutoSyncDependencies = defaultSyncDependencies,
 ): Command {
-  return new Command('remove')
+  return withScopeOption(new Command('remove'))
     .description('Remove installed tools')
     .argument('[name]', 'Tool name to remove')
     .option(

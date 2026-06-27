@@ -6,6 +6,7 @@ import type {
   ProviderListSummary,
   ProvidersListDependencies,
 } from '@commands/providers/providers.types';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -232,7 +233,7 @@ export function createProvidersListCommand(
     ...overrides,
   };
 
-  return new Command('list')
+  return withScopeOption(new Command('list'))
     .description('List provider adapters and sync summary')
     .action(async (_options, command: Command) => {
       const context = dependencies.buildCommandContext(

@@ -23,6 +23,7 @@ import {
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   inputWithDefault,
@@ -1029,7 +1030,7 @@ export function createInitCommand(
     ...overrides,
   };
 
-  return new Command('init')
+  return withScopeOption(new Command('init'))
     .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
     .option('--no-hook', 'Skip optional pre-commit hook install')

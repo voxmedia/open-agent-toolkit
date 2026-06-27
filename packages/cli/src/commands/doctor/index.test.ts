@@ -53,6 +53,7 @@ interface HarnessOptions {
 
 interface RunDoctorArgs {
   globalArgs?: string[];
+  scope?: string;
 }
 
 function defaultManifest(): Manifest {
@@ -162,18 +163,19 @@ function createHarness(options: HarnessOptions = {}): {
 
 async function runDoctor(
   command: Command,
-  { globalArgs = [] }: RunDoctorArgs = {},
+  { globalArgs = [], scope = 'project' }: RunDoctorArgs = {},
 ): Promise<void> {
+  // --scope is now a per-command option on the doctor command itself;
+  // it is no longer registered on the root program.
   const program = new Command()
     .name('oat')
     .option('--json')
     .option('--verbose')
-    .option('--scope <scope>')
     .option('--cwd <path>')
     .exitOverride();
 
   program.addCommand(command);
-  await program.parseAsync([...globalArgs, 'doctor'], {
+  await program.parseAsync([...globalArgs, 'doctor', '--scope', scope], {
     from: 'user',
   });
 }
