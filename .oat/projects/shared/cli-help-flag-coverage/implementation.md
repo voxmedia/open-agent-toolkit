@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-27
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase                      | Status   | Tasks | Completed |
 | -------------------------- | -------- | ----- | --------- |
 | Phase 1 (visibility+scope) | complete | 3     | 3/3       |
-| Phase 2 (--json contract)  | pending  | 3     | 0/3       |
+| Phase 2 (--json contract)  | complete | 3     | 3/3       |
 | Phase 3 (release bump)     | pending  | 1     | 0/1       |
 
-**Total:** 3/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ---
 
@@ -108,15 +108,39 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: `--json` contract pass
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-27
 
-### Task p02-t01: {Task Name}
+### Phase Summary
 
-**Status:** pending
-**Commit:** -
+**Outcome (what changed):** All five offending commands now honor `--json` symmetrically — JSON is emitted iff `context.json`, human output goes through the logger.
+
+- `project validate-plan`, `project split run`: now emit a structured JSON payload under `--json` (previously never did).
+- `project split evaluate-signals`, `project split validate-plan`: JSON now gated on `--json` with a human summary otherwise (previously emitted raw JSON unconditionally).
+- `repo pr-comments triage-collection`: real non-interactive/JSON path (previously threw; the `--json` block was unreachable). Dead post-interactive JSON block removed.
+
+**Key files touched:** `project/validate-plan/index.ts`, `project/split/{run,evaluate-signals,validate-plan}.ts`, `repo/pr-comments/triage-collection/triage-comments.ts` (+ tests).
+
+**Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run` → pass (1976 tests; 14 new). lint + type-check clean.
+
+**Review:** oat-reviewer (sonnet) verdict **pass** — 0 Critical, 0 Important, 1 Medium, 3 Minor (recorded in Outstanding Items).
+
+### Task p02-t01: validate-plan + split run honor `--json`
+
+**Status:** completed
+**Commit:** 168d8ac3
+
+### Task p02-t02: gate split evaluate-signals + validate-plan JSON on `--json`
+
+**Status:** completed
+**Commit:** 8f0c365d
+
+### Task p02-t03: triage-collection non-interactive/JSON path
+
+**Status:** completed
+**Commit:** 624ce365
 
 ---
 
@@ -137,13 +161,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** cli-help-flag-coverage
 **Tier:** 1 (subagents — oat-phase-implementer / oat-reviewer, claude sonnet)
 **Policy:** merge-strategy=sequential, retry-limit=2
-**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
 | Phase | Implementer | Review | Fix Iterations | Disposition |
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | DONE        | pass   | 0/2            | merged      |
+| p02   | DONE        | pass   | 0/2            | merged      |
 
 #### Parallel Groups
 
@@ -152,13 +177,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 #### Dispatch Notes
 
 - Dispatch: p01 implementation + review at model_axis=selected:sonnet (ceiling), effort_axis=not-applicable.
+- Dispatch: p02 implementation + review at model_axis=selected:sonnet (ceiling), effort_axis=not-applicable.
 
 #### Outstanding Items (recorded, non-blocking)
 
-- M1 (Medium): `src/e2e/workflow.test.ts` `runCli` injects `--scope project` after the last token unconditionally; safe today (all calls target consumers) but would break if a future test call targets a non-consumer command. Consider an `isConsumer` guard.
-- m1 (Minor): p01-t02 committed as `feat(...)` instead of the plan's `fix(...)`.
-- m2 (Minor): no snapshot locks the absence of `--scope` on `oat init tools --help` (asymmetric with `oat tools install`).
-- m3 (Minor): misleading comment in `help-snapshots.test.ts` about Global Options showing ancestor (not just root) options.
+- p01/M1 (Medium): `src/e2e/workflow.test.ts` `runCli` injects `--scope project` after the last token unconditionally; safe today (all calls target consumers) but would break if a future test call targets a non-consumer command. Consider an `isConsumer` guard.
+- p01/m1 (Minor): p01-t02 committed as `feat(...)` instead of the plan's `fix(...)`.
+- p01/m2 (Minor): no snapshot locks the absence of `--scope` on `oat init tools --help` (asymmetric with `oat tools install`).
+- p01/m3 (Minor): misleading comment in `help-snapshots.test.ts` about Global Options showing ancestor (not just root) options.
+- p02/M1 (Medium): evaluate-signals "threshold not met" human-mode test makes no content assertion (would pass even if the else branch were removed).
+- p02/m1 (Minor): triage-comments "does not write stderr" test asserts only the positive (no `process.stderr.write` spy).
+- p02/m2 (Minor): split run JSON not tested on the `convertActiveDetectedParent` branch (verbatim-identical to the covered fall-through).
+- p02/m3 (Minor): `printCommentSummary` still uses `process.stderr.write` (pre-existing audit P3-3; TTY-only, out of p02 scope).
 
 #### Artifact / Design Deltas
 
