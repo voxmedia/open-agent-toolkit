@@ -29,7 +29,11 @@ function createHarness(): {
   return { capture, command };
 }
 
-async function runCommand(command: Command, args: string[]): Promise<void> {
+async function runCommand(
+  command: Command,
+  args: string[],
+  globalArgs: string[] = [],
+): Promise<void> {
   const program = new Command().name('oat').option('--json').exitOverride();
   const project = new Command('project');
   const split = new Command('split');
@@ -37,9 +41,12 @@ async function runCommand(command: Command, args: string[]): Promise<void> {
   project.addCommand(split);
   program.addCommand(project);
 
-  await program.parseAsync(['project', 'split', 'evaluate-signals', ...args], {
-    from: 'user',
-  });
+  await program.parseAsync(
+    [...globalArgs, 'project', 'split', 'evaluate-signals', ...args],
+    {
+      from: 'user',
+    },
+  );
 }
 
 describe('oat project split evaluate-signals', () => {
@@ -54,20 +61,66 @@ describe('oat project split evaluate-signals', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('emits JSON with confidence: high when both load-bearing signals fire', async () => {
-    const { command, capture } = createHarness();
+  describe('--json mode', () => {
+    it('emits JSON with confidence: high when both load-bearing signals fire', async () => {
+      const { command, capture } = createHarness();
 
-    await runCommand(command, [
-      '--fired',
-      'independently-shippable,no-shared-design-surface',
-    ]);
+      await runCommand(
+        command,
+        ['--fired', 'independently-shippable,no-shared-design-surface'],
+        ['--json'],
+      );
 
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      fired: ['independently-shippable', 'no-shared-design-surface'],
-      triggered: true,
-      confidence: 'high',
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        fired: ['independently-shippable', 'no-shared-design-surface'],
+        triggered: true,
+        confidence: 'high',
+      });
+      expect(process.exitCode).toBe(0);
     });
-    expect(process.exitCode).toBe(0);
+
+    it('deduplicates repeated signals before evaluating threshold', async () => {
+      const { command, capture } = createHarness();
+
+      await runCommand(
+        command,
+        ['--fired', 'independently-shippable,independently-shippable'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        fired: ['independently-shippable'],
+        triggered: false,
+        confidence: 'below',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+  });
+
+  describe('human output mode', () => {
+    it('logs human-readable result without JSON payload', async () => {
+      const { command, capture } = createHarness();
+
+      await runCommand(command, [
+        '--fired',
+        'independently-shippable,no-shared-design-surface',
+      ]);
+
+      expect(capture.jsonPayloads).toHaveLength(0);
+      expect(
+        [...capture.info, ...capture.success, ...capture.warn].join('\n'),
+      ).toBeTruthy();
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('logs human-readable result when threshold is not met', async () => {
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--fired', 'independently-shippable']);
+
+      expect(capture.jsonPayloads).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
   });
 
   it('exits non-zero on invalid signal names', async () => {
@@ -77,21 +130,5 @@ describe('oat project split evaluate-signals', () => {
 
     expect(capture.error[0]).toContain('Invalid signal');
     expect(process.exitCode).toBe(1);
-  });
-
-  it('deduplicates repeated signals before evaluating threshold', async () => {
-    const { command, capture } = createHarness();
-
-    await runCommand(command, [
-      '--fired',
-      'independently-shippable,independently-shippable',
-    ]);
-
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      fired: ['independently-shippable'],
-      triggered: false,
-      confidence: 'below',
-    });
-    expect(process.exitCode).toBe(0);
   });
 });
