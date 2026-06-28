@@ -78,6 +78,14 @@ async function runCli(
     // the subcommand tokens (all tokens before the first flag) so it is parsed
     // on the right command. This makes doctor/status/sync tests deterministic
     // in CI where $HOME has no user-scope OAT state.
+    //
+    // NOTE: the injection targets the `init`/`tools` parent, which is visible
+    // to leaf subcommands via getOptionValueSourceWithGlobals. The hardcoded
+    // tool-pack leaves reject a conflicting explicit scope, so callers that
+    // invoke `init tools core` / `tools install core` (fixed: user) or
+    // `init tools project-management` / `tools install project-management`
+    // (fixed: project) directly via runCli must pass the matching `--scope`
+    // explicitly rather than relying on this `--scope project` auto-injection.
     const topLevelCommand = args[0];
     const isConsumer =
       topLevelCommand !== undefined &&
