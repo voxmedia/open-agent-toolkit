@@ -4,6 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-28
 oat_generated: false
+oat_template: false
 ---
 
 # Discovery: workflow-gate-improvements
@@ -12,131 +13,248 @@ oat_generated: false
 
 Discovery is for requirements and decisions, not implementation details.
 
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+- Prefer outcomes and constraints over concrete deliverables.
+- Capture implementation details only when they are needed to bound the plan.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Create a quick OAT project for a follow-up PR that addresses dogfood feedback from
+the workflow-gates feature. The user agrees with the general fix direction:
+semantic review-gate blocking, gate-aware quick/import planning paths, gate
+review handoff/provenance, explicit high-effort target configuration, and command
+reference polish.
+
+The user explicitly does not want a read-only review mode. A gate review should
+behave like running `oat-project-review-provide` in another terminal/provider:
+writing the review artifact, updating the plan Reviews row, and committing review
+bookkeeping are expected side effects.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Gate Review Side Effects
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should gate reviews avoid mutating the repo or committing artifacts?
+**A:** No. The provider following the normal review workflow is fine; creating
+files and commits is expected from `review-provide`.
+**Decision:** Do not add a read-only review mode. Treat stateful
+`oat-project-review-provide` behavior as the contract and improve handoff,
+provenance, and docs around it.
+
+### Question 2: Durable Gate Command References
+
+**Q:** Should gate config and docs use absolute dev-build or linked-binary paths?
+**A:** No. All durable references should use `oat`, except during local
+development of unmerged gate functionality. Once merged, even locally linked
+binaries should still be invoked as `oat`.
+**Decision:** Docs, examples, and durable user-level setup must reference
+`oat gate ...`; local PATH or shell setup is responsible for resolving the linked
+binary when relevant.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+The chosen direction is a focused follow-up PR rather than a broad Gates V2
+redesign. The project should repair defects in the shipped cross-runtime review
+workflow while preserving the useful dogfood signal: a different provider caught
+a real plan gap that same-runtime review missed.
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+### Approach 1: Gate Review Semantics + Lifecycle Handoff _(Recommended)_
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**Description:** Keep `cross-provider-exec` as the execution mechanism, but add
+a review-gate contract that can translate `oat-project-review-provide` verdicts
+into gate pass/fail semantics and leave a clear handoff to
+`oat-project-review-receive`.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**When this is the right choice:** Best when the primary defect is that review
+findings are semantically blocking but the child process exits 0.
 
-### Approach 2: {Strategy Name}
+**Tradeoffs:** Requires a small review-artifact or review-skill contract, but it
+avoids redesigning target selection or provider dispatch.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 2: Broad Gate Dispatch V2
+
+**Description:** Fold the dogfood feedback into the existing Gates V2
+same-target/target-detection backlog item.
+
+**When this is the right choice:** Best if the main problem were model/effort
+identity or same-runtime target switching.
+
+**Tradeoffs:** Too broad for the observed blocking bug. It delays fixes for
+quick/import gate coverage and review handoff behind harder target-detection
+work.
+
+### Approach 3: Documentation-Only Clarification
+
+**Description:** Document that V1 gates are exit-code-only and require users to
+configure review commands that exit nonzero themselves.
+
+**When this is the right choice:** Best if the current behavior were acceptable
+and only expectations were wrong.
+
+**Tradeoffs:** Insufficient. The advertised independent review gate use case
+should block on blocking review findings without users hand-building brittle
+parsing.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Gate Review Semantics + Lifecycle Handoff.
+**Rationale:** It fixes the real dogfood failure while keeping the deliberately
+thin V1 dispatch model and normal review workflow side effects.
+**User validated:** Yes.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Add Review Skill Gate Mode
 
-### Option A: {Option Name}
+**Description:** Add a gate-oriented mode to project/ad-hoc review-provide
+surfaces that exits nonzero when findings at or above a configured severity are
+present and emits or records enough structured metadata for the gate runner.
 
-**Description:** {What this option involves}
+**Chosen:** Possible implementation path.
 
-**Pros:**
+**Summary:** This keeps verdict ownership close to the review skill but may
+require touching skill instructions and any helper surfaces that parse review
+artifacts.
 
-- {Benefit 1}
-- {Benefit 2}
+### Option B: Add Dedicated Gate Review Wrapper
 
-**Cons:**
+**Description:** Add an `oat gate review ...` style command or wrapper that
+dispatches the review, inspects the resulting artifact, surfaces the artifact
+path, and maps findings to an exit code.
 
-- {Drawback 1}
-- {Drawback 2}
+**Chosen:** Possible implementation path.
 
-**Chosen:** {A/B/Neither}
+**Summary:** This centralizes gate semantics in the CLI and can preserve
+`cross-provider-exec` as a lower-level executor.
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+### Option C: Inspect Review Artifact After `cross-provider-exec`
+
+**Description:** Keep existing gate commands but have the Gate Execution step or
+CLI inspect the review artifact produced by the child runtime.
+
+**Chosen:** Possible implementation path, but only if artifact discovery is
+reliable.
+
+**Summary:** This may be the smallest behavioral change, but the plan should make
+the artifact-resolution and provenance rules explicit to avoid guessing.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Stateful Review Contract:** Gate reviews remain normal
+   `oat-project-review-provide` runs. Review artifact writes, Reviews-row
+   updates, and review bookkeeping commits are expected.
+2. **Semantic Blocking:** A gate configured with `onFailure: block` must fail
+   when the produced review has blocking findings, even if the child provider
+   process exits 0.
+3. **Gate Provenance:** Gate-produced review artifacts should be distinguishable
+   from manual and auto checkpoint reviews, for example with
+   `oat_review_invocation: gate`.
+4. **Receive Handoff:** The host workflow must surface the review artifact path
+   and make the required `oat-project-review-receive` handoff explicit, or route
+   automatically where the lifecycle can safely do so.
+5. **Gate Coverage:** `oat-project-quick-start` and `oat-project-import-plan`
+   should become gate-aware so configured plan gates fire regardless of how the
+   plan was authored.
+6. **Effort Configuration:** Do not infer gate effort from
+   `oat_dispatch_ceiling`. Gate effort/model should be explicit in gate target
+   config, with examples for high-effort review targets.
+7. **Command Reference Convention:** Durable docs and config examples use
+   `oat`, not absolute dev-build paths. Absolute paths are acceptable only while
+   developing unmerged local functionality.
+8. **Polish Warning:** Include the optional CLI/docs polish to warn or guide when
+   a configured gate command looks like a dev-build `node .../dist/index.js`
+   reference.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Keep the follow-up focused; do not implement same-target/model-level Gates V2.
+- Do not add read-only review mode.
+- Preserve normal `review-provide` side effects and commits.
+- Preserve the cross-provider benefit observed in dogfood.
+- Use repo-local CLI commands for this project planning session when needed
+  because the installed `oat` is older than the repo CLI, but planned user-facing
+  docs/config references must say `oat`.
+- Publishable package or bundled-skill changes may require lockstep public
+  package version bumps and `pnpm release:validate` before the final PR is done.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A cross-provider review gate can return nonzero or otherwise block when the
+  review artifact contains blocking findings.
+- Gate-produced review artifacts carry gate provenance and are discoverable by
+  receive/review-latest flows.
+- Gate Execution instructions tell the host what review artifact was produced
+  and how it must be received before proceeding.
+- `oat-project-quick-start` and `oat-project-import-plan` declare gate awareness
+  and include the Gate Execution step.
+- Workflow-gates docs explain stateful gate reviews, receive handoff, and
+  explicit high-effort target setup.
+- Docs/examples and durable config guidance use `oat gate ...`.
+- The CLI or docs surface a warning/guidance path for dev-build absolute gate
+  commands.
+- Tests cover review-gate verdict mapping, gate provenance/handoff behavior,
+  gateability validation for quick/import skills, and the command-reference
+  polish when implemented in CLI.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Read-only, inline-only, or no-commit review mode for gates.
+- Automatic dispatch-ceiling coupling for gate target selection.
+- Gates V2 same-target/model-level detection.
+- Codex hook parsing warnings unless investigation proves OAT owns the generated
+  hook payload.
+- Changing the fact that `cross-provider-exec` exits with the child status for
+  generic non-review commands.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Same-runtime but different-target gate dispatch belongs to the existing Gates
+  V2 follow-up.
+- Broader provider-effort adapters beyond Codex/Claude examples can remain
+  future work.
+- A richer machine-readable review artifact schema can be expanded later if the
+  minimal verdict contract is not enough.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Verdict Contract Shape:** Should the first implementation add a review-skill
+  gate mode, a dedicated `oat gate review` wrapper, or post-dispatch artifact
+  inspection?
+- **Automatic Receive:** Should a plan/implement gate automatically invoke
+  `oat-project-review-receive`, or should it stop and require explicit user
+  confirmation because receive mutates plan/implementation artifacts?
+- **Severity Threshold:** Should "blocking" mean Critical+Important only, or
+  include Medium for final reviews and artifact gates?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Existing review artifacts contain enough severity structure for a minimal
+  verdict parser or can be updated to do so with bounded changes.
+- Gate-aware skill validation can be extended to quick-start/import-plan without
+  changing non-gateable skills.
+- Docs and tests can be updated within one quick-mode PR.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Brittle Artifact Parsing:** If review artifacts are prose-only, verdict
+  parsing can be fragile.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Prefer a small structured verdict marker or explicit
+    review gate mode over broad prose parsing.
+- **Lifecycle Overreach:** Automatically receiving reviews could apply plan
+  mutations without a deliberate user checkpoint.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Start with explicit handoff unless a lifecycle-safe
+    receive route is clearly designed.
+- **Release Churn:** Skill/doc changes may trigger lockstep package bumps.
+  - **Likelihood:** High
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Include release validation and version-bump tasks in
+    the plan.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Proceed straight to plan after requirements confirmation. Lightweight design is
+not required because the user has already resolved the main product decisions
+and explicitly narrowed the scope.
