@@ -327,9 +327,9 @@ If skipped: record "skipped — no user-facing doc delta" in `implementation.md`
 
 ## Reviews
 
-| Cycle | Scope | Status  | Date       | Notes                                        |
-| ----- | ----- | ------- | ---------- | -------------------------------------------- |
-| plan  | plan  | pending | 2026-06-26 | Run artifact review before implement handoff |
+| Cycle | Scope | Status   | Date       | Notes                                                                     |
+| ----- | ----- | -------- | ---------- | ------------------------------------------------------------------------- |
+| plan  | plan  | received | 2026-06-28 | artifact review: 0C/1I/2M/3m — reviews/artifact-plan-review-2026-06-28.md |
 
 ---
 
