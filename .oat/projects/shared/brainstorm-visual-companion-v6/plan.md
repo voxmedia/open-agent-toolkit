@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-06-26
+oat_last_updated: 2026-06-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: []
@@ -49,9 +49,9 @@ All phases modify the same skill bundle or its tests/docs. Phases run **sequenti
 
 - Modify: `.agents/skills/oat-brainstorm/scripts/server.cjs`
 
-**Step 1: Baseline check (RED)**
+**Step 1: Baseline check (GREEN baseline)**
 
-Run: `pnpm exec vitest run packages/cli/src/integration/visual-companion-smoke.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/integration/visual-companion-smoke.test.ts`
 Expected: Current tests pass on v5.0.7 baseline (establishes green before port).
 
 **Step 2: Port v6 server (GREEN)**
@@ -104,6 +104,8 @@ Update frame template header branding to **OAT Brainstorm** (remove Superpowers 
 
 Manual: grep frame for `.status` and helper for `setStatus` — both present.
 
+Note: reconnect/status-pill/paused-overlay runtime behavior (SC#4) is verified manually in a browser and is intentionally outside automated smoke scope (the smoke harness cannot drive a browser).
+
 **Step 3: Commit**
 
 ```bash
@@ -128,6 +130,8 @@ Merge v6.0.3 `start-server.sh` capabilities with OAT persistence resolution:
 3. Fallback → `~/.oat/brainstorm/...` with token files at `~/.oat/brainstorm/.last-port` / `.last-token`
 
 Add v6 flags: `--open`, `--idle-timeout-minutes`, `umask 077`, `server-instance-id`, Windows `is_windows_like_shell` + clear `OWNER_PID`, pass `--brainstorm-server-id` to node.
+
+`--idle-timeout-minutes` must be converted to milliseconds and exported as `BRAINSTORM_IDLE_TIMEOUT_MS` so the launcher and `server.cjs` agree on units (server reads ms; default 4h).
 
 **Step 2: Verify**
 
@@ -215,7 +219,7 @@ In Step 3 (visual companion offer/accept):
 - On accept, pass `--open` when starting server (after user approval)
 - Instruct agent to preserve keyed URL from JSON; restart with same path resolution
 - Note 4h idle / restart semantics
-- Bump skill frontmatter `version:` (required for skill change)
+- Bump skill frontmatter `version:` here — this task is the sole owner of the skill version bump (required for the skill change; not repeated in p03-t02)
 
 Do **not** change Activation Contract or destination logic.
 
@@ -247,12 +251,14 @@ Add cases for:
 
 - `server-started` JSON includes keyed URL (`?key=`)
 - Unauthenticated GET `/` returns 401/403 (per server behavior)
+- Security headers present on responses: `Cache-Control: no-store` and `X-Frame-Options: DENY` (SC#1)
+- Sandboxed `/files/` rejects traversal/dotfile payloads: an authenticated `GET /files/../server.cjs?key=<key>` (or a dotfile path) returns 4xx (SC#1)
 - Restart with same `--project-dir` reuses port (read `.last-port`)
 - `stop-server.sh` refuses stale/wrong instance (mock or integration-safe check)
 
 **Step 2: Implement until green (GREEN)**
 
-Run: `pnpm exec vitest run packages/cli/src/integration/visual-companion-smoke.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/integration/visual-companion-smoke.test.ts`
 Expected: All tests pass.
 
 **Step 3: Commit**
@@ -269,7 +275,6 @@ git commit -m "test(p03-t01): cover v6 visual companion auth and restart behavio
 **Files:**
 
 - Modify: `NOTICES.md`
-- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (version if not done in p02-t02)
 - Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (lockstep bump)
 
 **Step 1: Update provenance (GREEN)**
@@ -283,7 +288,7 @@ Bump all five public packages together per repo guardrail.
 Run: `pnpm release:validate`
 Expected: Pass.
 
-Run: `pnpm test --filter visual-companion-smoke` or full `pnpm test` if fast enough
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/integration/visual-companion-smoke.test.ts` (or full `pnpm --filter @open-agent-toolkit/cli test`)
 Expected: Pass.
 
 **Step 3: Commit**
@@ -327,9 +332,9 @@ If skipped: record "skipped — no user-facing doc delta" in `implementation.md`
 
 ## Reviews
 
-| Cycle | Scope | Status   | Date       | Notes                                                                     |
-| ----- | ----- | -------- | ---------- | ------------------------------------------------------------------------- |
-| plan  | plan  | received | 2026-06-28 | artifact review: 0C/1I/2M/3m — reviews/artifact-plan-review-2026-06-28.md |
+| Cycle | Scope | Status          | Date       | Notes                                                                                                                                                 |
+| ----- | ----- | --------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| plan  | plan  | fixes_completed | 2026-06-28 | artifact review 0C/1I/2M/3m — all 6 resolved in-artifact (I1 tests added, M1/M2/m1/m2/m3 fixed) — reviews/archived/artifact-plan-review-2026-06-28.md |
 
 ---
 
