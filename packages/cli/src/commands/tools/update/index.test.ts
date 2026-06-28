@@ -164,7 +164,9 @@ describe('formatUpdatedToolMessage', () => {
 });
 
 describe('buildSyncSubprocessArgs', () => {
-  it('passes the target project through --cwd instead of relying on child process cwd', () => {
+  it('passes the target project through --cwd and places --scope after the sync subcommand', () => {
+    // `--scope` is a per-command option on `sync`, so it must follow the
+    // subcommand token; `--cwd` stays a global flag before it.
     expect(
       buildSyncSubprocessArgs(
         '/repo/packages/cli/src/index.ts',
@@ -180,9 +182,9 @@ describe('buildSyncSubprocessArgs', () => {
       '/repo/packages/cli/src/index.ts',
       '--cwd',
       '/tmp/project',
+      'sync',
       '--scope',
       'project',
-      'sync',
     ]);
   });
 });
