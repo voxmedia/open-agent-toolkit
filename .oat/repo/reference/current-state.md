@@ -4,7 +4,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
 
 **Reference update:** 2026-06-01 (`pjm-init` shipped `oat pjm init` as the explicit instantiate step for project-management repo-reference docs. The project-management pack installs skills and template sources; `oat pjm init` materializes `.oat/repo/reference/{current-state,roadmap,decision-record}.md` plus the file-backed `backlog/` tree non-destructively. See ADR-020.)
 
-**Last Updated:** 2026-06-22 (`oat-init-scope-selection` shipped the `oat init --setup` opt-in scope-customization gate, prompt-safe non-interactive setup defaults, lockstep public package `0.1.30` metadata, and source-only OAT docs index generation via `cli:source` for local repo verification. Follow-up `bl-1b29` — moving the guided setup scope gate after pack selection — was completed in the same project (p02-t01, PR #116): the gate now fires after pack selection and is skipped when no user-eligible pack is selected.)
+**Last Updated:** 2026-06-22 (`oat-init-scope-selection` shipped the `oat init --setup` opt-in scope-customization gate, prompt-safe non-interactive setup defaults, lockstep public package `0.1.30` metadata, and source-only OAT docs index generation via `cli:source` for local repo verification. Follow-up `bl-1b29` — moving the guided setup scope gate after pack selection — was completed in the same project (p02-t01, PR #116): the gate now fires after pack selection and is skipped when no user-eligible pack is selected. Earlier, `workflow-end-triggers` added V1 workflow gates: `workflow.gates.{skills,execTargets}` config, `oat gate resolve/set/unset/target/cross-provider-exec`, built-in Codex/Claude/Cursor runtime targets, `oat_gateable` validation, and Gate Execution steps for `oat-project-plan` and `oat-project-implement`. Same-target/model-level dispatch is deliberately deferred to `bl-e6fc`.)
 
 **Previous baseline:** 2026-06-06 (`docs-authoring-skills` added `authoring-docs` as the provider-agnostic documentation baseline, `oat-docs-authoring` as the OAT/Fumadocs targeted-authoring wrapper, hardened `oat-docs-analyze` and `oat-docs-bootstrap` guidance, refreshed docs contract pages, synced provider views, bumped public packages to `0.1.22`, addressed final-review fixes, and passed final lifecycle review with no Critical or Important findings. Earlier, `skill-automation-and-review` added default-on generated-artifact quality gates, newest-review discovery, and model-invocation guardrails for selected lifecycle skills. Earlier, `archive-cli-updates` split the archive command surface: `oat project archive [project-path]` now creates the archive via the CLI-owned completion helper, `oat repo archive sync [project-name]` is the canonical S3 hydration command, and `oat project archive sync` remains only as a deprecated forwarding shim.)
 
@@ -73,6 +73,13 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - Generated `plan.md` files and generated docs/agent-instructions analysis artifacts now run default-on bounded artifact-review loops before downstream workflows consume them. Gates are `workflow.autoArtifactReview.plan` and `workflow.autoArtifactReview.analysis`.
   - `oat-reviewer` supports `artifact: plan` and `analysis: docs|agent-instructions` structured review subjects for these loops.
   - `oat-project-review-provide`, `oat-project-review-receive`, `oat-project-discover`, and `oat-project-progress` are model-invokable only for explicit user asks with offer/confirm gating, not silent workflow jumps.
+- Workflow gates:
+  - `workflow.gates.skills` config attaches a thin final gate to gate-aware skills by skill name. A gate contains `command`, `onFailure` (`block`, `prompt`, or `warn`), optional `description`, and `maxAttempts`.
+  - `workflow.gates.execTargets` config defines runnable review targets by opaque id. Built-ins cover `codex-default`, `claude-default`, and `cursor-default`; user/shared/local config can partially override targets or disable them with `null`.
+  - `oat gate resolve <skill>` is the read surface used by Gate Execution steps. `oat gate set/unset` and `oat gate target set/unset` are the structured write surfaces.
+  - `oat gate cross-provider-exec` dispatches a prompt to a configured target while avoiding the current runtime by default (`--avoid same-runtime`). It detects built-in hosts with `CLAUDECODE`, `CODEX_THREAD_ID`/`CODEX_SESSION_ID`, and `CURSOR_AGENT`, supports `--target <id>` for explicit pinning, and exits with the child process status.
+  - `oat-project-plan` and `oat-project-implement` are currently gateable (`oat_gateable: true`) and include the standard Gate Execution step. `validate-oat-skills` warns when config targets a non-gateable or unknown skill.
+  - V1 is runtime-level only. Same-runtime/different-target model or effort dispatch is tracked as `bl-e6fc`.
 - PR skills:
   - `oat-project-pr-progress`
   - `oat-project-pr-final`
@@ -203,6 +210,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - `oat backlog init`, `oat backlog generate-id`, `oat backlog regenerate-index`
   - `oat pjm init`
   - `oat config get`, `oat config set`, `oat config list`, `oat config describe`, `oat config dump`
+  - `oat gate resolve`, `oat gate set`, `oat gate unset`, `oat gate target set`, `oat gate target unset`, `oat gate cross-provider-exec`
   - `oat project status`, `oat project list`, `oat project dispatch-ceiling resolve`
   - `oat project archive`, `oat project archive <project-path>`
   - `oat repo archive sync`, `oat repo archive sync <project-name>`
@@ -225,6 +233,7 @@ This document is a birdseye view of where OAT is _right now_ in `open-agent-tool
   - Tool-pack lifecycle commands now persist pack availability in `tools.<pack>` so workflows can use an explicit config signal instead of inferring installed capability from filesystem artifacts alone.
 - Workflow preferences (`workflow.*`):
   - Workflow preference keys skip repetitive prompts in project lifecycle skills when set: `workflow.hillCheckpointDefault`, `workflow.archiveOnComplete`, `workflow.createPrOnComplete`, `workflow.postImplementSequence`, `workflow.reviewExecutionModel`, `workflow.autoReviewAtHillCheckpoints`, `workflow.autoNarrowReReviewScope`, `workflow.autoArtifactReview.plan`, `workflow.autoArtifactReview.analysis`, `workflow.dispatchCeiling.preset`, `workflow.dispatchCeiling.providers.codex`, and `workflow.dispatchCeiling.providers.claude`.
+  - Workflow gate keys live under `workflow.gates.skills` and `workflow.gates.execTargets`; these are structured command/target objects managed by `oat gate`, not by the scalar `oat config set` surface.
   - Skills check the relevant preference before prompting. When set, they print `"<preference>: <value> (from <key>)"` so the user can see the preference was used; when unset, they prompt as before (backward compatible).
   - Skill integrations: `oat-project-implement` (hillCheckpoint, autoReviewAtHillCheckpoints, postImplementSequence, reviewExecutionModel), `oat-project-complete` (archive, createPr), `oat-project-review-provide` (autoNarrow).
   - Cross-surface guidance: preferences whose correctness depends on other per-repo settings (e.g., `postImplementSequence` depends on `documentation.requireForProjectCompletion`) belong at shared scope; purely personal preferences (e.g., `hillCheckpointDefault`) belong at user scope.

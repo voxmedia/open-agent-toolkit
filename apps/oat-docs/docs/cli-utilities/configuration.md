@@ -18,12 +18,12 @@ For the deep file-by-file reference, see:
 
 ## The four config surfaces
 
-| Surface              | File                     | Typical contents                                                                                                        | Primary CLI surface                        |
-| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Shared repo config   | `.oat/config.json`       | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, and `tools.*` | `oat config get/set/list/describe`         |
-| Repo-local config    | `.oat/config.local.json` | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, and repo-local `activeIdea`        | `oat config get/set/list/describe`         |
-| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback                                                                   | `oat config describe`                      |
-| Provider sync config | `.oat/sync/config.json`  | Provider enablement and sync strategy settings                                                                          | `oat providers set`, `oat config describe` |
+| Surface              | File                     | Typical contents                                                                                                                                      | Primary CLI surface                            |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Shared repo config   | `.oat/config.json`       | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/list/describe`, `oat gate` |
+| Repo-local config    | `.oat/config.local.json` | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/list/describe`, `oat gate` |
+| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback and personal `workflow.*` defaults                                                              | `oat config describe`, `oat gate`              |
+| Provider sync config | `.oat/sync/config.json`  | Provider enablement and sync strategy settings                                                                                                        | `oat providers set`, `oat config describe`     |
 
 The main split is:
 
@@ -86,6 +86,7 @@ Common keys in `.oat/config.json`:
 - `archive.awsProfile` — optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — whether a bundled tool pack is currently installed in the repo or user scopes after lifecycle reconciliation
+- `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 
 Tool-pack state example:
 
@@ -95,6 +96,10 @@ oat config set tools.project-management true
 ```
 
 The `tools.*` keys are primarily maintained by `oat tools install`, `oat tools update`, and `oat tools remove`, but they are intentionally visible through `oat config` so workflows and operators can inspect or override pack-state signals when needed.
+
+Workflow gate objects are structured config and use their own command group
+instead of the scalar `oat config set` surface. See
+[Workflow Gates](workflow-gates.md) for the full command surface and examples.
 
 Archive example:
 
@@ -149,6 +154,11 @@ Use `.oat/config.local.json` for checkout-specific workflow state:
 Use `~/.oat/config.json` for user fallback state when no repo-local value is set:
 
 - `activeIdea`
+
+Repo-local and user config can also hold workflow defaults, including
+`workflow.gates.*`. This is useful for personal runtime availability: for
+example, one user may prefer `claude -p` as a gate target while another prefers
+`codex exec`.
 
 In practice, you usually inspect these via:
 
@@ -260,6 +270,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.preset` — `balanced`, `maximum`, or `cost-conscious`. Convenience preset that compiles to per-provider values at write time. Setting this key is the recommended way to configure the ceiling.
 - `workflow.dispatchCeiling.providers.codex` — `low`, `medium`, `high`, or `xhigh`. Concrete Codex ceiling. Set automatically when a preset is selected; also settable directly for Advanced (no preset) configurations. Provider default effort is informational for base/unpinned roles and is not treated as this ceiling.
 - `workflow.dispatchCeiling.providers.claude` — `haiku`, `sonnet`, or `opus`. Concrete Claude ceiling. Set automatically when a preset is selected; also settable directly for Advanced configurations. Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
+- `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 
 ### Auto artifact-review preferences
 

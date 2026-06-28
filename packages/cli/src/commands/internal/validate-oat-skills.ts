@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -5,9 +7,14 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
+  resolveEffectiveConfig as defaultResolveEffectiveConfig,
+  type ResolvedConfig,
+} from '@config/resolve';
+import {
   validateOatSkills as defaultValidateOatSkills,
   type ValidateOatSkillsOptions,
   type ValidateOatSkillsResult,
+  type ValidationFinding,
 } from '@validation/index';
 import { Command } from 'commander';
 
@@ -17,12 +24,40 @@ interface ValidateOatSkillsDependencies {
     repoRoot: string,
     options?: ValidateOatSkillsOptions,
   ) => Promise<ValidateOatSkillsResult>;
+  resolveEffectiveConfig: (
+    repoRoot: string,
+    userConfigDir: string,
+    env?: NodeJS.ProcessEnv,
+  ) => Promise<ResolvedConfig>;
+  env?: NodeJS.ProcessEnv;
 }
 
 const DEFAULT_DEPENDENCIES: ValidateOatSkillsDependencies = {
   buildCommandContext,
   validateOatSkills: defaultValidateOatSkills,
+  resolveEffectiveConfig: defaultResolveEffectiveConfig,
 };
+
+function collectConfiguredGateSkillNames(effective: ResolvedConfig): string[] {
+  const names = new Set<string>();
+
+  for (const layer of [effective.shared, effective.local, effective.user]) {
+    const skills = layer.workflow?.gates?.skills;
+    if (!skills) {
+      continue;
+    }
+
+    for (const skillName of Object.keys(skills)) {
+      names.add(skillName);
+    }
+  }
+
+  return [...names].sort();
+}
+
+function isBlockingFinding(finding: ValidationFinding): boolean {
+  return finding.severity !== 'warning';
+}
 
 function reportFindings(
   context: CommandContext,
@@ -46,17 +81,56 @@ function reportFindings(
   );
 }
 
+function reportWarnings(
+  context: CommandContext,
+  result: ValidateOatSkillsResult,
+): void {
+  if (context.json) {
+    context.logger.json({
+      status: 'ok',
+      validatedSkillCount: result.validatedSkillCount,
+      findings: result.findings,
+    });
+    return;
+  }
+
+  context.logger.warn('OAT skill validation warnings:\n');
+  for (const finding of result.findings) {
+    context.logger.warn(`- ${finding.file}: ${finding.message}`);
+  }
+  context.logger.info(
+    `OK: validated ${result.validatedSkillCount} oat-* skills`,
+  );
+}
+
 async function runValidateOatSkills(
   context: CommandContext,
   options: ValidateOatSkillsOptions,
   dependencies: ValidateOatSkillsDependencies,
 ): Promise<void> {
   try {
-    const result = await dependencies.validateOatSkills(context.cwd, options);
+    const effectiveConfig = await dependencies.resolveEffectiveConfig(
+      context.cwd,
+      join(context.home, '.oat'),
+      dependencies.env ?? process.env,
+    );
+    const gateSkillNames = collectConfiguredGateSkillNames(effectiveConfig);
+    const validationOptions =
+      gateSkillNames.length > 0 ? { ...options, gateSkillNames } : options;
+    const result = await dependencies.validateOatSkills(
+      context.cwd,
+      validationOptions,
+    );
 
-    if (result.findings.length > 0) {
+    if (result.findings.some(isBlockingFinding)) {
       reportFindings(context, result);
       process.exitCode = 1;
+      return;
+    }
+
+    if (result.findings.length > 0) {
+      reportWarnings(context, result);
+      process.exitCode = 0;
       return;
     }
 

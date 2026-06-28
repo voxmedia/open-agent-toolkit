@@ -1,7 +1,8 @@
 ---
 name: oat-project-implement
-version: 2.0.20
+version: 2.0.21
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
+oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
 user-invocable: true
@@ -1418,6 +1419,27 @@ Final review:
 
 Next: Create PR or run the oat-project-pr-final skill (when available)
 ```
+
+### Gate Execution
+
+Before reporting this skill as complete, run the configured gate as the final step:
+
+1. Resolve the gate for this skill:
+
+   ```bash
+   oat gate resolve <this-skill> --json
+   ```
+
+   If the command returns JSON `null`, no gate is configured; the skill is complete.
+
+2. If a gate config is returned, run its `command` exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
+
+3. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+   - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
+   - `prompt`: surface the gate failure and ask the human how to proceed.
+   - `warn`: record the gate failure and continue.
+
+4. Runtime selection note (V1): the step runs the gate `command` as-is and reads no env var. By default, `oat gate cross-provider-exec` resolves the current host from built-in `hostDetectionCommand`s and avoids the same runtime with zero per-prompt input. It does not read or stamp `OAT_CURRENT_RUNTIME` or `OAT_GATE_EXEC_TARGET`. To pin a specific reviewer for this skill, set `--target <id>` once in that skill's gate `command`; this is the optional precision path and does not require per-prompt input.
 
 ## Success Criteria
 

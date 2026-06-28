@@ -2,10 +2,34 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
+import {
+  BUILTIN_EXEC_TARGETS,
+  type ExecTarget,
+  type GateConfig,
+  type OatConfig,
+  type OatLocalConfig,
+  type UserConfig,
+} from '@config/oat-config';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { resolveEffectiveConfig } from './resolve';
+import {
+  resolveEffectiveConfig,
+  resolveExecTargets,
+  resolveGate,
+  type ResolvedConfig,
+} from './resolve';
+
+function createResolvedConfig(
+  config: Partial<ResolvedConfig> = {},
+): ResolvedConfig {
+  return {
+    shared: { version: 1 },
+    local: { version: 1 },
+    user: { version: 1 },
+    resolved: {},
+    ...config,
+  };
+}
 
 describe('resolveEffectiveConfig', () => {
   const tempDirs: string[] = [];
@@ -76,6 +100,36 @@ describe('resolveEffectiveConfig', () => {
     expect(result.resolved['activeIdea']).toEqual({
       value: '.oat/ideas/user-idea',
       source: 'user',
+    });
+  });
+
+  it('preserves partial built-in exec target overrides loaded from config files', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await createUserConfigDir();
+
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': { priority: 80 },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const effective = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+    expect(
+      effective.shared.workflow?.gates?.execTargets?.['codex-default'],
+    ).toEqual({ priority: 80 });
+    expect(resolveExecTargets(effective)['codex-default']).toEqual({
+      ...BUILTIN_EXEC_TARGETS['codex-default'],
+      priority: 80,
     });
   });
 
@@ -872,6 +926,257 @@ describe('resolveEffectiveConfig', () => {
     expect(result.resolved['archive.awsRegion']).toEqual({
       value: 'us-east-1',
       source: 'shared',
+    });
+  });
+});
+
+describe('resolveGate', () => {
+  const userGate: GateConfig = {
+    command: 'pnpm test',
+    onFailure: 'block',
+    description: 'User-level gate',
+    maxAttempts: 4,
+  };
+  const sharedGate: GateConfig = {
+    command: 'pnpm lint',
+    onFailure: 'prompt',
+  };
+  const localGate: GateConfig = {
+    command: 'pnpm type-check',
+    onFailure: 'warn',
+  };
+
+  it('uses local over shared over user with a wholesale gate winner', () => {
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': sharedGate } } },
+      },
+      local: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': localGate } } },
+      },
+      user: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': userGate } } },
+      },
+    });
+
+    expect(resolveGate(effective, 'oat-project-plan')).toEqual(localGate);
+  });
+
+  it('treats a null higher-layer gate as disabled and does not fall through', () => {
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': sharedGate } } },
+      },
+      local: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': null } } },
+      },
+      user: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': userGate } } },
+      },
+    });
+
+    expect(resolveGate(effective, 'oat-project-plan')).toBeNull();
+  });
+
+  it('falls through to lower layers when higher layers do not mention the skill', () => {
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': sharedGate } } },
+      },
+      local: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-implement': localGate } } },
+      },
+      user: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': userGate } } },
+      },
+    });
+
+    expect(resolveGate(effective, 'oat-project-plan')).toEqual(sharedGate);
+  });
+
+  it('reads raw layers without merging sibling fields from flattened resolution', () => {
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': sharedGate } } },
+      },
+      user: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': userGate } } },
+      },
+      resolved: {
+        'workflow.gates.skills.oat-project-plan.command': {
+          value: sharedGate.command,
+          source: 'shared',
+        },
+        'workflow.gates.skills.oat-project-plan.onFailure': {
+          value: sharedGate.onFailure,
+          source: 'shared',
+        },
+        'workflow.gates.skills.oat-project-plan.description': {
+          value: userGate.description,
+          source: 'user',
+        },
+        'workflow.gates.skills.oat-project-plan.maxAttempts': {
+          value: userGate.maxAttempts,
+          source: 'user',
+        },
+      },
+    });
+
+    expect(resolveGate(effective, 'oat-project-plan')).toEqual(sharedGate);
+  });
+
+  it('returns null when no raw layer defines the skill gate', () => {
+    expect(
+      resolveGate(createResolvedConfig(), 'oat-project-implement'),
+    ).toBeNull();
+  });
+});
+
+describe('resolveExecTargets', () => {
+  it('includes built-in exec targets by default', () => {
+    expect(resolveExecTargets(createResolvedConfig())).toEqual(
+      BUILTIN_EXEC_TARGETS,
+    );
+  });
+
+  it('applies keyed partial target merges from user to shared to local', () => {
+    const customTarget: ExecTarget = {
+      runtime: 'custom',
+      baseCommand: ['custom-agent', '-p'],
+      hostDetectionCommand: ['sh', '-c', 'test -n "$CUSTOM_AGENT"'],
+      availabilityCommand: ['custom-agent', '--version'],
+      priority: 10,
+    };
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                availabilityCommand: ['codex', 'doctor'],
+                priority: 120,
+              },
+              'custom-target': {
+                priority: 50,
+              },
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
+              },
+            },
+          },
+        },
+      },
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': { priority: 80 },
+              'custom-target': customTarget,
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)['codex-default']).toEqual({
+      ...BUILTIN_EXEC_TARGETS['codex-default'],
+      baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
+      availabilityCommand: ['codex', 'doctor'],
+      priority: 120,
+    });
+    expect(resolveExecTargets(effective)['custom-target']).toEqual({
+      ...customTarget,
+      priority: 50,
+    });
+  });
+
+  it('lets higher-layer null entries delete built-ins and lower-layer custom targets', () => {
+    const effective = createResolvedConfig({
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'claude-default': null,
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'custom',
+                baseCommand: ['custom-agent'],
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const targets = resolveExecTargets(effective);
+    expect(targets['claude-default']).toBeUndefined();
+    expect(targets['custom-target']).toBeUndefined();
+  });
+
+  it('adds new complete targets from any layer', () => {
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'team-reviewer': {
+                runtime: 'team',
+                baseCommand: ['team-agent', 'review'],
+                priority: 90,
+              },
+              'default-priority-reviewer': {
+                runtime: 'team',
+                baseCommand: ['team-agent'],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)['team-reviewer']).toEqual({
+      runtime: 'team',
+      baseCommand: ['team-agent', 'review'],
+      priority: 90,
+    });
+    expect(resolveExecTargets(effective)['default-priority-reviewer']).toEqual({
+      runtime: 'team',
+      baseCommand: ['team-agent'],
+      priority: 0,
     });
   });
 });

@@ -15,6 +15,7 @@ Use this section when you want bootstrap guidance, tool-pack lifecycle details, 
 - [Tool Packs and Installed Assets](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
 - [Configuration](configuration.md) - OAT configuration guidance across shared, local, user, and provider-sync surfaces.
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
+- [Workflow Gates](workflow-gates.md) - Per-skill final commands and cross-runtime review dispatch with `oat gate`.
 
 ## What Lives Here
 
@@ -25,6 +26,7 @@ Examples include:
 - bootstrap and setup flows such as `oat init`
 - bundled pack management through `oat tools`
 - general configuration guidance
+- workflow gate commands for per-skill final checks and cross-runtime review dispatch
 - utility command groups for config, local state, diagnostics, and related inspection flows
 
 ## Who It's For
@@ -47,6 +49,7 @@ Use CLI Utilities when:
 - Use [CLI Bootstrap](bootstrap.md) when you are starting with `oat init`.
 - Go to [Tool Packs](tool-packs.md) when you are managing bundled OAT packs and installed assets.
 - Read [Configuration](configuration.md) for config semantics, or [Config and Local State](config-and-local-state.md) for inspection and diagnostic command groups.
+- Use [Workflow Gates](workflow-gates.md) when you want a skill to run a configured final command before it is considered done.
 
 ## Common Tasks
 
@@ -54,6 +57,7 @@ Use CLI Utilities when:
 - Manage installed packs in [Tool Packs](tool-packs.md).
 - Adjust settings in [Configuration](configuration.md).
 - Use [Config and Local State](config-and-local-state.md) for the utility command groups that support inspection and diagnostics.
+- Configure cross-runtime review gates in [Workflow Gates](workflow-gates.md).
 
 ## Go Deeper
 
@@ -61,3 +65,4 @@ Use CLI Utilities when:
 - [Tool Packs](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
 - [Configuration](configuration.md) - OAT configuration guidance.
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
+- [Workflow Gates](workflow-gates.md) - Per-skill final commands and cross-runtime review dispatch.

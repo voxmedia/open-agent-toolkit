@@ -41,6 +41,7 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - `disable-model-invocation`
 - `user-invocable`
 - `allowed-tools`
+- `oat_gateable`
 
 ## Practical Authoring Flow
 
@@ -75,6 +76,30 @@ At minimum, the skill contract should:
 - Document the fallback path and any quality or independence tradeoff.
 
 Use `create-agnostic-skill` or `create-oat-skill` as the starting point; both include the current delegation guidance and optional capability-detection template.
+
+## Gate-aware skills
+
+A skill that supports configured final gates must declare `oat_gateable: true`
+in frontmatter and include a final Gate Execution step in its process contract.
+Without both pieces, a configured `workflow.gates.skills.<skill>` entry is a
+validation warning rather than an executable contract.
+
+The Gate Execution step should:
+
+1. Run `oat gate resolve <this-skill> --json`.
+2. Treat `null` as "no gate configured."
+3. Run the resolved `command` as the skill's last step when a gate is present.
+4. Use the command exit code as the pass/fail signal.
+5. Follow the gate's `onFailure` policy:
+   - `block` - remediate and rerun up to `maxAttempts`, then escalate.
+   - `prompt` - surface the failure and ask the user.
+   - `warn` - record the failure and continue.
+
+For cross-runtime review gates, prefer putting
+`oat gate cross-provider-exec "<prompt>"` in the configured gate command rather
+than hard-coding a provider CLI directly in the skill. See
+[Workflow Gates](../cli-utilities/workflow-gates.md) for the config and command
+surface.
 
 ## Reading project state
 

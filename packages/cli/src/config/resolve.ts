@@ -1,7 +1,10 @@
 import {
+  BUILTIN_EXEC_TARGETS,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
+  type ExecTarget,
+  type GateConfig,
   type OatConfig,
   type OatLocalConfig,
   type UserConfig,
@@ -196,6 +199,145 @@ export async function resolveEffectiveConfig(
   };
 }
 
+export function resolveGate(
+  effective: ResolvedConfig,
+  skillName: string,
+): GateConfig | null {
+  for (const skills of [
+    effective.local.workflow?.gates?.skills,
+    effective.shared.workflow?.gates?.skills,
+    effective.user.workflow?.gates?.skills,
+  ]) {
+    if (!skills || !hasOwn(skills, skillName)) {
+      continue;
+    }
+
+    return skills[skillName] ?? null;
+  }
+
+  return null;
+}
+
+export function resolveExecTargets(
+  effective: ResolvedConfig,
+): Record<string, ExecTarget> {
+  const targets = cloneExecTargetRegistry(BUILTIN_EXEC_TARGETS);
+
+  for (const execTargets of [
+    effective.user.workflow?.gates?.execTargets,
+    effective.shared.workflow?.gates?.execTargets,
+    effective.local.workflow?.gates?.execTargets,
+  ]) {
+    mergeExecTargetLayer(targets, execTargets);
+  }
+
+  return targets;
+}
+
+type ExecTargetOverride = Partial<ExecTarget> | null;
+
+function mergeExecTargetLayer(
+  targets: Record<string, ExecTarget>,
+  layer: Record<string, ExecTargetOverride> | undefined,
+): void {
+  if (!layer) {
+    return;
+  }
+
+  for (const [id, override] of Object.entries(layer)) {
+    if (override === null) {
+      delete targets[id];
+      continue;
+    }
+
+    const existing = targets[id];
+    if (existing) {
+      targets[id] = cloneExecTarget({
+        runtime: override.runtime ?? existing.runtime,
+        baseCommand: override.baseCommand ?? existing.baseCommand,
+        hostDetectionCommand:
+          override.hostDetectionCommand ?? existing.hostDetectionCommand,
+        availabilityCommand:
+          override.availabilityCommand ?? existing.availabilityCommand,
+        priority: override.priority ?? existing.priority,
+      });
+      continue;
+    }
+
+    const completeTarget = toCompleteExecTarget(override);
+    if (completeTarget) {
+      targets[id] = completeTarget;
+    }
+  }
+}
+
+function cloneExecTargetRegistry(
+  registry: Readonly<Record<string, ExecTarget>>,
+): Record<string, ExecTarget> {
+  return Object.fromEntries(
+    Object.entries(registry).map(([id, target]) => [
+      id,
+      cloneExecTarget(target),
+    ]),
+  );
+}
+
+function cloneExecTarget(target: ExecTarget): ExecTarget {
+  const next: ExecTarget = {
+    runtime: target.runtime,
+    baseCommand: [...target.baseCommand],
+    priority: target.priority,
+  };
+
+  if (target.hostDetectionCommand) {
+    next.hostDetectionCommand = [...target.hostDetectionCommand];
+  }
+  if (target.availabilityCommand) {
+    next.availabilityCommand = [...target.availabilityCommand];
+  }
+
+  return next;
+}
+
+function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
+  const runtime =
+    typeof target.runtime === 'string' ? target.runtime.trim() : '';
+  if (!runtime || !isValidArgv(target.baseCommand)) {
+    return null;
+  }
+
+  const completeTarget: ExecTarget = {
+    runtime,
+    baseCommand: [...target.baseCommand],
+    priority:
+      typeof target.priority === 'number' && Number.isFinite(target.priority)
+        ? target.priority
+        : 0,
+  };
+
+  if (isValidArgv(target.hostDetectionCommand)) {
+    completeTarget.hostDetectionCommand = [...target.hostDetectionCommand];
+  }
+  if (isValidArgv(target.availabilityCommand)) {
+    completeTarget.availabilityCommand = [...target.availabilityCommand];
+  }
+
+  return completeTarget;
+}
+
+function isValidArgv(value: unknown): value is string[] {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every((part): part is string => typeof part === 'string')
+  ) {
+    return false;
+  }
+
+  const [executable] = value;
+  return executable !== undefined && executable.trim().length > 0;
+}
+
 function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
   if (!isRecord(value)) {
     return {};
@@ -234,6 +376,10 @@ function resolveEnvOverride(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasOwn(value: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function isResolvedValue(value: unknown): boolean {

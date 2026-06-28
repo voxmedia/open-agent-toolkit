@@ -45,6 +45,8 @@ export type WorkflowDispatchCeilingPreset =
   | 'balanced'
   | 'maximum'
   | 'cost-conscious';
+export type GateOnFailure = 'block' | 'prompt' | 'warn';
+export type GateAvoid = 'same-runtime' | 'none';
 
 export interface WorkflowDispatchCeiling {
   preset?: WorkflowDispatchCeilingPreset;
@@ -59,6 +61,28 @@ export interface WorkflowAutoArtifactReview {
   analysis?: boolean;
 }
 
+export interface GateConfig {
+  command: string;
+  onFailure: GateOnFailure;
+  description?: string;
+  maxAttempts?: number;
+}
+
+export interface ExecTarget {
+  runtime: string;
+  baseCommand: string[];
+  hostDetectionCommand?: string[];
+  availabilityCommand?: string[];
+  priority: number;
+}
+
+export type ExecTargetConfig = Partial<ExecTarget>;
+
+export interface WorkflowGatesConfig {
+  execTargets?: Record<string, ExecTargetConfig | null>;
+  skills?: Record<string, GateConfig | null>;
+}
+
 export interface OatWorkflowConfig {
   hillCheckpointDefault?: WorkflowHillCheckpointDefault;
   archiveOnComplete?: boolean;
@@ -70,6 +94,7 @@ export interface OatWorkflowConfig {
   autoArtifactReview?: WorkflowAutoArtifactReview;
   designMode?: WorkflowDesignMode;
   dispatchCeiling?: WorkflowDispatchCeiling;
+  gates?: WorkflowGatesConfig;
 }
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
@@ -92,6 +117,157 @@ export const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeil
   ['haiku', 'sonnet', 'opus'];
 export const VALID_DISPATCH_CEILING_PRESETS: readonly WorkflowDispatchCeilingPreset[] =
   ['balanced', 'maximum', 'cost-conscious'];
+const VALID_GATE_ON_FAILURES: readonly GateOnFailure[] = [
+  'block',
+  'prompt',
+  'warn',
+];
+
+export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
+  'codex-default': {
+    runtime: 'codex',
+    baseCommand: ['codex', 'exec'],
+    hostDetectionCommand: [
+      'sh',
+      '-c',
+      '[ -n "$CODEX_THREAD_ID" ] || [ -n "$CODEX_SESSION_ID" ]',
+    ],
+    availabilityCommand: ['codex', '--version'],
+    priority: 100,
+  },
+  'claude-default': {
+    runtime: 'claude',
+    baseCommand: ['claude', '-p'],
+    hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
+    availabilityCommand: ['claude', '--version'],
+    priority: 100,
+  },
+  'cursor-default': {
+    runtime: 'cursor',
+    baseCommand: ['cursor-agent', '-p', '--force'],
+    hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
+    availabilityCommand: ['cursor-agent', '--version'],
+    priority: 70,
+  },
+};
+
+function normalizeMaxAttempts(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 2;
+  }
+
+  const attempts = Math.trunc(value);
+  return attempts >= 1 ? attempts : 2;
+}
+
+function normalizeArgv(value: unknown): string[] | undefined {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every((item): item is string => typeof item === 'string')
+  ) {
+    return undefined;
+  }
+
+  const [executable] = value;
+  if (executable === undefined || !executable.trim()) {
+    return undefined;
+  }
+
+  return [...value];
+}
+
+function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const command = trimNonEmptyString(value.command);
+  if (
+    command === undefined ||
+    typeof value.onFailure !== 'string' ||
+    !(VALID_GATE_ON_FAILURES as readonly string[]).includes(value.onFailure)
+  ) {
+    return undefined;
+  }
+
+  const gate: GateConfig = {
+    command,
+    onFailure: value.onFailure as GateOnFailure,
+    maxAttempts: normalizeMaxAttempts(value.maxAttempts),
+  };
+  const description = trimNonEmptyString(value.description);
+  if (description !== undefined) {
+    gate.description = description;
+  }
+
+  return gate;
+}
+
+function normalizeExecTarget(
+  value: unknown,
+): ExecTargetConfig | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const target: ExecTargetConfig = {};
+
+  const runtime = trimNonEmptyString(value.runtime);
+  if (runtime !== undefined) {
+    target.runtime = runtime;
+  }
+
+  const baseCommand = normalizeArgv(value.baseCommand);
+  if (baseCommand !== undefined) {
+    target.baseCommand = baseCommand;
+  }
+
+  if ('priority' in value) {
+    if (typeof value.priority === 'number' && Number.isFinite(value.priority)) {
+      target.priority = value.priority;
+    }
+  }
+
+  const hostDetectionCommand = normalizeArgv(value.hostDetectionCommand);
+  if (hostDetectionCommand !== undefined) {
+    target.hostDetectionCommand = hostDetectionCommand;
+  }
+  const availabilityCommand = normalizeArgv(value.availabilityCommand);
+  if (availabilityCommand !== undefined) {
+    target.availabilityCommand = availabilityCommand;
+  }
+
+  return Object.keys(target).length > 0 ? target : undefined;
+}
+
+function normalizeRecordMap<T>(
+  value: unknown,
+  normalizeValue: (entry: unknown) => T | null | undefined,
+): Record<string, T | null> | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const next: Record<string, T | null> = {};
+  for (const [key, rawEntry] of Object.entries(value)) {
+    if (!key.trim()) {
+      continue;
+    }
+    const normalized = normalizeValue(rawEntry);
+    if (normalized !== undefined) {
+      next[key] = normalized;
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined;
+}
 
 function normalizeWorkflowConfig(
   parsed: unknown,
@@ -208,6 +384,26 @@ function normalizeWorkflowConfig(
 
     if (Object.keys(dispatchCeiling).length > 0) {
       next.dispatchCeiling = dispatchCeiling;
+    }
+  }
+
+  if (isRecord(parsed.gates)) {
+    const gates: WorkflowGatesConfig = {};
+    const execTargets = normalizeRecordMap(
+      parsed.gates.execTargets,
+      normalizeExecTarget,
+    );
+    if (execTargets !== undefined) {
+      gates.execTargets = execTargets;
+    }
+
+    const skills = normalizeRecordMap(parsed.gates.skills, normalizeGateConfig);
+    if (skills !== undefined) {
+      gates.skills = skills;
+    }
+
+    if (Object.keys(gates).length > 0) {
+      next.gates = gates;
     }
   }
 

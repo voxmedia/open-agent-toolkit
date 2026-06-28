@@ -6,6 +6,7 @@ import { createConfigCommand } from './config';
 import { createDecisionCommand } from './decision';
 import { createDocsCommand } from './docs';
 import { createDoctorCommand } from './doctor';
+import { createGateCommand } from './gate';
 import { createIndexCommand } from './index-cmd';
 import { createInitCommand } from './init';
 import { createInstructionsCommand } from './instructions';
@@ -29,6 +30,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createStatusCommand());
   program.addCommand(createSyncCommand());
   program.addCommand(createConfigCommand());
+  program.addCommand(createGateCommand());
   program.addCommand(createLocalCommand());
   program.addCommand(createProvidersCommand());
   program.addCommand(createRemoveCommand());
