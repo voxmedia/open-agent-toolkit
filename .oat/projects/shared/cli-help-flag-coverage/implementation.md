@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-27
-oat_current_task_id: prev1-t01 # final-review fixes + CI fix queued
+oat_current_task_id: null # all tasks complete incl. p-rev1; re-review passed
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                      | Status      | Tasks | Completed |
-| -------------------------- | ----------- | ----- | --------- |
-| Phase 1 (visibility+scope) | complete    | 3     | 3/3       |
-| Phase 2 (--json contract)  | complete    | 3     | 3/3       |
-| Phase 3 (release bump)     | complete    | 1     | 1/1       |
-| Phase p-rev1 (review + CI) | in_progress | 2     | 0/2       |
+| Phase                      | Status   | Tasks | Completed |
+| -------------------------- | -------- | ----- | --------- |
+| Phase 1 (visibility+scope) | complete | 3     | 3/3       |
+| Phase 2 (--json contract)  | complete | 3     | 3/3       |
+| Phase 3 (release bump)     | complete | 1     | 1/1       |
+| Phase p-rev1 (review + CI) | complete | 2     | 2/2       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -184,6 +184,34 @@ oat_generated: false
 **Commit:** 5b209dd5
 
 **Outcome:** Five public packages bumped to 0.1.34; release validation green.
+
+---
+
+## Phase p-rev1: Final-review fixes
+
+**Status:** complete
+**Started:** 2026-06-27
+
+### Phase Summary
+
+**Outcome:** Resolved final-review I1 and fixed the failing CI doctor test.
+
+- **I1:** the four hardcoded tool-pack leaves (`init tools core`/`project-management`, `tools install core`/`project-management`) now **reject** an explicitly-passed conflicting `--scope` (core → user, project-management → project) instead of silently ignoring it, using `getOptionValueSourceWithGlobals('scope')` to distinguish explicit from default. The inherited `--scope` _display_ in `Global Options:` is an unavoidable Commander v12 artifact; false-accept is what's now fixed. One shared registration covers both `init tools` and `tools install` entry paths.
+- **CI:** `commands.integration.test.ts` `runCli` restores consumer-aware in-position `--scope project` injection (mirrors `e2e/workflow.test.ts`), so `oat doctor` runs project-scoped and the "healthy setup reports all pass" test no longer depends on the runner's `$HOME`.
+
+**Verification:** full suite `pnpm --filter @open-agent-toolkit/cli exec vitest run` → 1986 pass; lint + type-check clean; doctor integration test green locally.
+
+**Review:** oat-reviewer (sonnet) re-review verdict **pass** — 0 Critical, 0 Important, 1 Minor (a future-footgun comment, added in `27c32a87`).
+
+### Task prev1-t01: (review I1) Hardcoded leaves reject conflicting `--scope`
+
+**Status:** completed
+**Commit:** 6772b539
+
+### Task prev1-t02: (ci) Project-scope injection in integration runCli
+
+**Status:** completed
+**Commit:** 9954d842 (+ `27c32a87` re-review comment)
 
 ---
 

@@ -373,14 +373,14 @@ git commit -m "fix(prev1-t02): scope integration runCli consumers to project (fi
 
 ## Reviews
 
-| Scope | Type     | Status      | Date       | Artifact                                            |
-| ----- | -------- | ----------- | ---------- | --------------------------------------------------- |
-| plan  | artifact | passed      | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
-| p01   | code     | passed      | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
-| p02   | code     | passed      | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
-| p03   | code     | passed      | 2026-06-27 | in-memory (structured; verdict pass, 0 findings)    |
-| prev1 | code     | pending     | -          | -                                                   |
-| final | code     | fixes_added | 2026-06-27 | reviews/archived/final-review-2026-06-27-v2.md      |
+| Scope | Type     | Status | Date       | Artifact                                            |
+| ----- | -------- | ------ | ---------- | --------------------------------------------------- |
+| plan  | artifact | passed | 2026-06-27 | reviews/archived/artifact-plan-review-2026-06-27.md |
+| p01   | code     | passed | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
+| p02   | code     | passed | 2026-06-27 | in-memory (structured; verdict pass, 1 Med/3 Min)   |
+| p03   | code     | passed | 2026-06-27 | in-memory (structured; verdict pass, 0 findings)    |
+| prev1 | code     | passed | 2026-06-27 | in-memory (re-review; verdict pass, 1 Min)          |
+| final | code     | passed | 2026-06-27 | reviews/archived/final-review-2026-06-27-v2.md      |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

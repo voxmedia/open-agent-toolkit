@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: 8d25119e
+oat_current_task: null
+oat_last_commit: 27c32a87
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling:
   preset: balanced
@@ -27,7 +27,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/120' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-27T17:26:57.994Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-27T21:10:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-27T21:40:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -46,8 +46,8 @@ Implementation — PR open, awaiting human review.
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode — no architecture decisions required)
-- **Plan:** `plan.md` (complete — 7 tasks across 3 phases; p01/p02/p03 reviews passed)
-- **Implementation:** `implementation.md` (complete — 7/7 tasks)
+- **Plan:** `plan.md` (complete — 9 tasks across 4 phases incl. p-rev1; all reviews passed)
+- **Implementation:** `implementation.md` (complete — 9/9 tasks)
 - **Audit:** `references/audit.md` (P0–P3 findings driving scope)
 
 ## Progress
@@ -56,10 +56,10 @@ Implementation — PR open, awaiting human review.
 - ✓ Discovery captured (P0+P1 scope confirmed)
 - ✓ Quick plan generated (3 phases, 7 tasks)
 - ✓ Implementation complete (p01, p02, p03 — all phase reviews passed)
-- ✓ Final review passed (0 Critical/Important)
-- ✓ Docs synced; P2/P3 backlog item captured
-- ✓ PR created
-- ⧗ Awaiting human review
+- ✓ Final review (v1) passed; v2 found I1 (Important) + CI failure
+- ✓ p-rev1 fixes: I1 (hardcoded-leaf scope rejection) + CI (integration runCli scoping); re-review passed
+- ✓ PR #120 created
+- ⧗ Awaiting human review (PR update pushed)
 
 ## Blockers
 
