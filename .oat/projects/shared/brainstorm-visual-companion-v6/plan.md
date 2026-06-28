@@ -332,9 +332,9 @@ If skipped: record "skipped — no user-facing doc delta" in `implementation.md`
 
 ## Reviews
 
-| Cycle | Scope | Status          | Date       | Notes                                                                                                                                                 |
-| ----- | ----- | --------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| plan  | plan  | fixes_completed | 2026-06-28 | artifact review 0C/1I/2M/3m — all 6 resolved in-artifact (I1 tests added, M1/M2/m1/m2/m3 fixed) — reviews/archived/artifact-plan-review-2026-06-28.md |
+| Cycle | Scope | Status   | Date       | Notes                                                                                                                                       |
+| ----- | ----- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| plan  | plan  | received | 2026-06-28 | artifact re-review 0C/1I/1M/0m - reviews/artifact-plan-review-2026-06-28-v2.md; prior fixed review remains archived under reviews/archived/ |
 
 ---
 
