@@ -38,7 +38,7 @@ A full audit (programmatic command-tree walk + three parallel subagents) found, 
 
 - Plan artifact review (manual): passed — 1 important (wrong source path) + 3 minor, all resolved in-plan.
 - p01 / p02 / p03 code reviews: passed.
-- Final review: passed (`reviews/final-review-2026-06-27.md`). 5 carried-forward Minor nits were closed in a post-final polish pass.
+- Final review: passed. The v1 auto-review flagged 5 Minor nits (closed in a post-final polish pass); the v2 manual review (`reviews/archived/final-review-2026-06-27-v2.md`) found Important I1, fixed in phase p-rev1, then re-review passed.
 
 ## Follow-ups
 
