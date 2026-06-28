@@ -62,7 +62,9 @@ async function runCli(root: string, args: string[]): Promise<CliResult> {
   };
 
   try {
-    await program.parseAsync(['--cwd', root, '--scope', 'project', ...args], {
+    // project list and state refresh do not consume scope; --scope is no
+    // longer a global option and must not be passed at the root level.
+    await program.parseAsync(['--cwd', root, ...args], {
       from: 'user',
     });
   } finally {

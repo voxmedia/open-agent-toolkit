@@ -59,9 +59,20 @@ export function createEvaluateSignalsCommand(
       );
 
       try {
-        context.logger.json(
-          evaluateSignals({ fired: parseFiredSignals(options.fired) }),
-        );
+        const result = evaluateSignals({
+          fired: parseFiredSignals(options.fired),
+        });
+        if (context.json) {
+          context.logger.json(result);
+        } else {
+          const status = result.triggered ? 'triggered' : 'below threshold';
+          context.logger.info(
+            `Signal evaluation: ${status} (confidence: ${result.confidence})`,
+          );
+          context.logger.info(
+            `Fired signals: ${result.fired.length > 0 ? result.fired.join(', ') : 'none'}`,
+          );
+        }
         process.exitCode = 0;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

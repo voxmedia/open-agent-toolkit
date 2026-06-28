@@ -51,6 +51,28 @@ export function createInitToolsProjectManagementCommand(
     .option('--force', 'Overwrite existing files where applicable')
     .action(
       async (options: InitToolsProjectManagementOptions, command: Command) => {
+        // project-management always installs at project scope. If the caller
+        // explicitly passed a conflicting --scope on an ancestor (init or tools
+        // install), reject it rather than silently ignoring it. A matching
+        // --scope project, or no explicit --scope, proceeds unchanged.
+        if (command.getOptionValueSourceWithGlobals('scope') === 'cli') {
+          const opts = command.optsWithGlobals() as { scope?: string };
+          if (opts.scope !== 'project') {
+            const context = dependencies.buildCommandContext(
+              readGlobalOptions(command),
+            );
+            const msg =
+              'the project-management pack always installs at project scope; remove --scope or pass --scope project';
+            if (context.json) {
+              context.logger.json({ status: 'error', message: msg });
+            } else {
+              context.logger.error(msg);
+            }
+            process.exitCode = 1;
+            return;
+          }
+        }
+
         let didInstall = false;
         try {
           const context = dependencies.buildCommandContext(

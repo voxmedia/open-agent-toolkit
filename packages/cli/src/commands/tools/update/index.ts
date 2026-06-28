@@ -7,6 +7,7 @@ import {
   copyDirWithStatus,
   copyFileWithStatus,
 } from '@commands/init/tools/shared/copy-helpers';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -48,14 +49,17 @@ export function buildSyncSubprocessArgs(
   execArgv: string[],
   options: { cwd: string; scope: 'project' | 'user' },
 ): string[] {
+  // `--scope` is a per-command option on `sync` (not a global flag), so it must
+  // come AFTER the `sync` subcommand token. `--cwd` remains a global flag and
+  // can precede the subcommand.
   return [
     ...execArgv,
     entrypoint,
     '--cwd',
     options.cwd,
+    'sync',
     '--scope',
     options.scope,
-    'sync',
   ];
 }
 
@@ -93,7 +97,7 @@ export function createToolsUpdateCommand(
   dependencies: UpdateToolsDependencies = defaultDependencies,
   syncDependencies: AutoSyncDependencies = defaultSyncDependencies,
 ): Command {
-  return new Command('update')
+  return withScopeOption(new Command('update'))
     .description('Update installed tools to bundled versions')
     .argument('[name]', 'Tool name to update')
     .option(

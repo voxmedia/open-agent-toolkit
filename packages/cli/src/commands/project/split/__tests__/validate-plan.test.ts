@@ -73,7 +73,11 @@ function createHarness(
   return { capture, command };
 }
 
-async function runCommand(command: Command, args: string[]): Promise<void> {
+async function runCommand(
+  command: Command,
+  args: string[],
+  globalArgs: string[] = [],
+): Promise<void> {
   const program = new Command().name('oat').option('--json').exitOverride();
   const project = new Command('project');
   const split = new Command('split');
@@ -81,9 +85,12 @@ async function runCommand(command: Command, args: string[]): Promise<void> {
   project.addCommand(split);
   program.addCommand(project);
 
-  await program.parseAsync(['project', 'split', 'validate-plan', ...args], {
-    from: 'user',
-  });
+  await program.parseAsync(
+    [...globalArgs, 'project', 'split', 'validate-plan', ...args],
+    {
+      from: 'user',
+    },
+  );
 }
 
 describe('oat project split validate-plan', () => {
@@ -111,103 +118,129 @@ describe('oat project split validate-plan', () => {
     return planFile;
   }
 
-  it('returns ok: true for a well-formed SplitPlanDocument', async () => {
-    const planFile = await writePlanFile(document());
-    const { command, capture } = createHarness();
+  describe('--json mode', () => {
+    it('returns ok: true for a well-formed SplitPlanDocument', async () => {
+      const planFile = await writePlanFile(document());
+      const { command, capture } = createHarness();
 
-    await runCommand(command, ['--plan-file', planFile]);
+      await runCommand(command, ['--plan-file', planFile], ['--json']);
 
-    expect(capture.jsonPayloads[0]).toEqual({ ok: true });
-    expect(process.exitCode).toBe(0);
-  });
-
-  it('returns errors[] when origin or interactive metadata is missing', async () => {
-    const planFile = await writePlanFile({ plan: document().plan });
-    const { command, capture } = createHarness();
-
-    await runCommand(command, ['--plan-file', planFile]);
-
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      ok: false,
-      errors: [
-        expect.objectContaining({ code: 'invalid-origin' }),
-        expect.objectContaining({ code: 'invalid-interactive' }),
-      ],
-    });
-    expect(process.exitCode).toBe(1);
-  });
-
-  it('returns errors[] for cycles in oat_depends_on', async () => {
-    const planFile = await writePlanFile(
-      document({
-        plan: {
-          parentSlug: 'umbrella',
-          children: [
-            {
-              slug: 'a',
-              inheritedContext: '',
-              knownDependencies: ['b'],
-              order: 1,
-            },
-            {
-              slug: 'b',
-              inheritedContext: '',
-              knownDependencies: ['a'],
-              order: 2,
-            },
-          ],
-          initialActiveChild: 'a',
-        },
-      }),
-    );
-    const { command, capture } = createHarness();
-
-    await runCommand(command, ['--plan-file', planFile]);
-
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      ok: false,
-      errors: [expect.objectContaining({ code: 'dependency-cycle' })],
-    });
-    expect(process.exitCode).toBe(1);
-  });
-
-  it('returns errors[] when a child slug already exists', async () => {
-    const planFile = await writePlanFile(document());
-    const { command, capture } = createHarness({
-      existingSlugs: ['feature'],
+      expect(capture.jsonPayloads[0]).toEqual({ ok: true });
+      expect(process.exitCode).toBe(0);
     });
 
-    await runCommand(command, ['--plan-file', planFile]);
+    it('returns errors[] when origin or interactive metadata is missing', async () => {
+      const planFile = await writePlanFile({ plan: document().plan });
+      const { command, capture } = createHarness();
 
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      ok: false,
-      errors: [
-        expect.objectContaining({
-          code: 'slug-collision-existing',
-          slug: 'feature',
+      await runCommand(command, ['--plan-file', planFile], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        ok: false,
+        errors: [
+          expect.objectContaining({ code: 'invalid-origin' }),
+          expect.objectContaining({ code: 'invalid-interactive' }),
+        ],
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('returns errors[] for cycles in oat_depends_on', async () => {
+      const planFile = await writePlanFile(
+        document({
+          plan: {
+            parentSlug: 'umbrella',
+            children: [
+              {
+                slug: 'a',
+                inheritedContext: '',
+                knownDependencies: ['b'],
+                order: 1,
+              },
+              {
+                slug: 'b',
+                inheritedContext: '',
+                knownDependencies: ['a'],
+                order: 2,
+              },
+            ],
+            initialActiveChild: 'a',
+          },
         }),
-      ],
+      );
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--plan-file', planFile], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        ok: false,
+        errors: [expect.objectContaining({ code: 'dependency-cycle' })],
+      });
+      expect(process.exitCode).toBe(1);
     });
-    expect(process.exitCode).toBe(1);
+
+    it('returns errors[] when a child slug already exists', async () => {
+      const planFile = await writePlanFile(document());
+      const { command, capture } = createHarness({
+        existingSlugs: ['feature'],
+      });
+
+      await runCommand(command, ['--plan-file', planFile], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        ok: false,
+        errors: [
+          expect.objectContaining({
+            code: 'slug-collision-existing',
+            slug: 'feature',
+          }),
+        ],
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('returns errors[] when the parent slug already exists', async () => {
+      const planFile = await writePlanFile(document());
+      const { command, capture } = createHarness({
+        existingSlugs: ['umbrella'],
+      });
+
+      await runCommand(command, ['--plan-file', planFile], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        ok: false,
+        errors: [
+          expect.objectContaining({
+            code: 'slug-collision-existing',
+            slug: 'umbrella',
+          }),
+        ],
+      });
+      expect(process.exitCode).toBe(1);
+    });
   });
 
-  it('returns errors[] when the parent slug already exists', async () => {
-    const planFile = await writePlanFile(document());
-    const { command, capture } = createHarness({
-      existingSlugs: ['umbrella'],
+  describe('human output mode', () => {
+    it('logs human-readable success without JSON payload for a valid plan', async () => {
+      const planFile = await writePlanFile(document());
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--plan-file', planFile]);
+
+      expect(capture.jsonPayloads).toHaveLength(0);
+      expect([...capture.info, ...capture.success].join('\n')).toBeTruthy();
+      expect(process.exitCode).toBe(0);
     });
 
-    await runCommand(command, ['--plan-file', planFile]);
+    it('logs human-readable errors without JSON payload for an invalid plan', async () => {
+      const planFile = await writePlanFile({ plan: document().plan });
+      const { command, capture } = createHarness();
 
-    expect(capture.jsonPayloads[0]).toMatchObject({
-      ok: false,
-      errors: [
-        expect.objectContaining({
-          code: 'slug-collision-existing',
-          slug: 'umbrella',
-        }),
-      ],
+      await runCommand(command, ['--plan-file', planFile]);
+
+      expect(capture.jsonPayloads).toHaveLength(0);
+      expect(capture.error.join('\n')).toBeTruthy();
+      expect(process.exitCode).toBe(1);
     });
-    expect(process.exitCode).toBe(1);
   });
 });

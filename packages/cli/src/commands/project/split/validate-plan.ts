@@ -84,7 +84,16 @@ export function createValidateSplitPlanCommand(
         const parsed: unknown = JSON.parse(raw);
         const shape = validateSplitPlanDocumentShape(parsed);
         if (!shape.ok) {
-          context.logger.json({ ok: false, errors: shape.errors });
+          if (context.json) {
+            context.logger.json({ ok: false, errors: shape.errors });
+          } else {
+            context.logger.error(
+              'Split plan document shape validation failed:',
+            );
+            for (const err of shape.errors) {
+              context.logger.error(`  - [${err.code}] ${err.message}`);
+            }
+          }
           process.exitCode = 1;
           return;
         }
@@ -94,14 +103,27 @@ export function createValidateSplitPlanCommand(
           dependencies,
         );
         const result = validateChildPlan(shape.document.plan, existingSlugs);
-        context.logger.json(result);
+        if (context.json) {
+          context.logger.json(result);
+        } else if (result.ok) {
+          context.logger.success('Split plan validation passed.');
+        } else {
+          context.logger.error('Split plan validation failed:');
+          for (const err of result.errors) {
+            context.logger.error(`  - [${err.code}] ${err.message}`);
+          }
+        }
         process.exitCode = result.ok ? 0 : 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        context.logger.json({
-          ok: false,
-          errors: [{ code: 'read-or-parse-failed', message }],
-        });
+        if (context.json) {
+          context.logger.json({
+            ok: false,
+            errors: [{ code: 'read-or-parse-failed', message }],
+          });
+        } else {
+          context.logger.error(`Failed to read or parse plan file: ${message}`);
+        }
         process.exitCode = 1;
       }
     });

@@ -1,4 +1,5 @@
 import { buildCommandContext } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -22,7 +23,7 @@ const defaultDependencies: OutdatedToolsDependencies = {
 export function createToolsOutdatedCommand(
   dependencies: OutdatedToolsDependencies = defaultDependencies,
 ): Command {
-  return new Command('outdated')
+  return withScopeOption(new Command('outdated'))
     .description('Show tools with available updates')
     .action(async (_opts, command) => {
       const globalOptions = readGlobalOptions(command);

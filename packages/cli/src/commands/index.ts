@@ -1,3 +1,4 @@
+import { applyHelpConfiguration } from '@app/help-config';
 import type { Command } from 'commander';
 
 import { createBacklogCommand } from './backlog';
@@ -46,4 +47,7 @@ export function registerCommands(program: Command): void {
   program.addCommand(createStateCommand());
   program.addCommand(createToolsCommand());
   program.addCommand(createInternalCommand());
+  // Commander's .addCommand() does not inherit help config from the parent.
+  // Apply showGlobalOptions recursively after all commands are registered.
+  applyHelpConfiguration(program);
 }

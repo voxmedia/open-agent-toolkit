@@ -23,14 +23,12 @@ describe('createProgram', () => {
     expect(optionNames).toContain('--verbose');
   });
 
-  it('registers --scope global option with choices', () => {
+  it('does not register --scope as a global option', () => {
+    // --scope is now a per-command option on scope-consuming commands only
     const program = createProgram();
 
-    const scopeOption = program.options.find(
-      (option) => option.long === '--scope',
-    );
-    expect(scopeOption).toBeDefined();
-    expect(scopeOption?.argChoices).toEqual(['project', 'user', 'all']);
+    const optionNames = program.options.map((option) => option.long);
+    expect(optionNames).not.toContain('--scope');
   });
 
   it('registers --cwd global option', () => {

@@ -1,4 +1,5 @@
 import { buildCommandContext } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -19,7 +20,7 @@ const defaultDependencies: ListToolsDependencies = {
 export function createToolsListCommand(
   dependencies: ListToolsDependencies = defaultDependencies,
 ): Command {
-  return new Command('list')
+  return withScopeOption(new Command('list'))
     .description('List installed tools with version and status')
     .action(async (_opts, command) => {
       const globalOptions = readGlobalOptions(command);

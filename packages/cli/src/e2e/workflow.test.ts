@@ -30,6 +30,20 @@ interface CliResult {
 const mockedConfirm = vi.mocked(confirm);
 const mockedCheckbox = vi.mocked(checkbox);
 
+// Commands that accept --scope as a local option. Only these get the
+// auto-injected `--scope project` in the e2e helper so that non-consumer
+// commands (e.g. `config set`, `instructions sync`) are not accidentally
+// passed a flag they do not recognise.
+const SCOPE_CONSUMER_COMMANDS = new Set([
+  'init',
+  'sync',
+  'status',
+  'doctor',
+  'providers',
+  'tools',
+  'remove',
+]);
+
 async function createWorkspace(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-cli-e2e-'));
   await mkdir(join(root, '.git'), { recursive: true });
@@ -67,10 +81,38 @@ async function runCli(
   });
 
   try {
-    await program.parseAsync(
-      ['--cwd', root, '--scope', 'project', ...globalArgs, ...args],
-      { from: 'user' },
-    );
+    // --scope is a per-command option on scope-consumer commands. Only inject
+    // it when the top-level command is a scope consumer so that non-consumer
+    // commands do not receive an unrecognised flag. Insert after the subcommand
+    // tokens (all tokens before the first flag) so it is parsed on the right
+    // command.
+    const topLevelCommand = args[0];
+    const isConsumer =
+      topLevelCommand !== undefined &&
+      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand);
+
+    let finalArgs: string[];
+    if (isConsumer) {
+      let insertAt = args.length;
+      for (let i = 0; i < args.length; i++) {
+        if (args[i]!.startsWith('-')) {
+          insertAt = i;
+          break;
+        }
+      }
+      finalArgs = [
+        ...args.slice(0, insertAt),
+        '--scope',
+        'project',
+        ...args.slice(insertAt),
+      ];
+    } else {
+      finalArgs = args;
+    }
+
+    await program.parseAsync(['--cwd', root, ...globalArgs, ...finalArgs], {
+      from: 'user',
+    });
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;

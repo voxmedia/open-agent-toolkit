@@ -7,6 +7,7 @@ import {
   getFrontmatterField,
   parseFrontmatterField,
 } from '@commands/shared/frontmatter';
+import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
@@ -81,7 +82,7 @@ const defaultDependencies: InfoToolDependencies = {
 export function createToolsInfoCommand(
   dependencies: InfoToolDependencies = defaultDependencies,
 ): Command {
-  return new Command('info')
+  return withScopeOption(new Command('info'))
     .description('Show details for an installed tool')
     .argument('<name>', 'Tool name')
     .action(async (name: string, _opts, command) => {

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   type MultiSelectChoice,
   type PromptContext,
@@ -360,7 +361,7 @@ export function createSyncCommand(
     ...overrides,
   };
 
-  return new Command('sync')
+  return withScopeOption(new Command('sync'))
     .description('Sync canonical content to provider views')
     .option('--dry-run', 'Preview sync changes without applying')
     .addOption(

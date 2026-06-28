@@ -118,6 +118,26 @@ export function createInitToolsCoreCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
+
+      // Core always installs at user scope. If the caller explicitly passed a
+      // conflicting --scope on an ancestor (init or tools install), reject it
+      // rather than silently ignoring it. A matching --scope user, or no
+      // explicit --scope, proceeds unchanged.
+      if (command.getOptionValueSourceWithGlobals('scope') === 'cli') {
+        const opts = command.optsWithGlobals() as { scope?: string };
+        if (opts.scope !== 'user') {
+          const msg =
+            'the core pack always installs at user scope; remove --scope or pass --scope user';
+          if (context.json) {
+            context.logger.json({ status: 'error', message: msg });
+          } else {
+            context.logger.error(msg);
+          }
+          process.exitCode = 1;
+          return;
+        }
+      }
+
       const didInstall = await runInitToolsCore(context, options, dependencies);
       if (didInstall) {
         setInstalledCanonicalPaths(command, canonicalPathsForPack('core'));

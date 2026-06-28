@@ -57,10 +57,11 @@ async function runCli(
   };
 
   try {
-    await program.parseAsync(
-      ['--cwd', root, '--scope', 'project', ...globalArgs, ...args],
-      { from: 'user' },
-    );
+    // instructions sync/validate hardcode project scope and do not accept
+    // --scope; it is no longer a global option so must not be passed here.
+    await program.parseAsync(['--cwd', root, ...globalArgs, ...args], {
+      from: 'user',
+    });
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;

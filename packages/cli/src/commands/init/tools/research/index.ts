@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type MultiSelectChoice,
@@ -193,7 +194,7 @@ export function createInitToolsResearchCommand(
     ...overrides,
   };
 
-  return new Command('research')
+  return withScopeOption(new Command('research'))
     .description('Install OAT research skills')
     .option('--force', 'Overwrite existing files where applicable')
     .action(async (options: InitToolsResearchOptions, command: Command) => {

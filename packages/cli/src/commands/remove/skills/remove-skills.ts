@@ -4,6 +4,7 @@ import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import { RESEARCH_SKILLS } from '@commands/init/tools/research/install-research';
 import { UTILITY_SKILLS } from '@commands/init/tools/utility/install-utility';
 import { WORKFLOW_SKILLS } from '@commands/init/tools/workflows/install-workflows';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type PromptContext,
@@ -73,7 +74,7 @@ export function createRemoveSkillsCommand(
     ...overrides,
   };
 
-  return new Command('skills')
+  return withScopeOption(new Command('skills'))
     .description('Remove installed skills by pack')
     .requiredOption(
       '--pack <pack>',

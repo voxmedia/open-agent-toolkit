@@ -14,6 +14,20 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from './index';
 
+// Commands that accept --scope as a local option. Only these get the
+// auto-injected `--scope project` in the integration helper so that
+// non-consumer commands (e.g. `cleanup`, `review`) are not accidentally passed
+// a flag they do not recognise. Mirrors the set in src/e2e/workflow.test.ts.
+const SCOPE_CONSUMER_COMMANDS = new Set([
+  'init',
+  'sync',
+  'status',
+  'doctor',
+  'providers',
+  'tools',
+  'remove',
+]);
+
 interface CliResult {
   stdout: string;
   stderr: string;
@@ -58,10 +72,47 @@ async function runCli(
   };
 
   try {
-    await program.parseAsync(
-      ['--cwd', root, '--scope', 'project', ...globalArgs, ...args],
-      { from: 'user' },
-    );
+    // --scope is a per-command option on scope-consumer commands. Inject
+    // `--scope project` only when the top-level command is a consumer so that
+    // non-consumer commands do not receive an unrecognised flag. Insert after
+    // the subcommand tokens (all tokens before the first flag) so it is parsed
+    // on the right command. This makes doctor/status/sync tests deterministic
+    // in CI where $HOME has no user-scope OAT state.
+    //
+    // NOTE: the injection targets the `init`/`tools` parent, which is visible
+    // to leaf subcommands via getOptionValueSourceWithGlobals. The hardcoded
+    // tool-pack leaves reject a conflicting explicit scope, so callers that
+    // invoke `init tools core` / `tools install core` (fixed: user) or
+    // `init tools project-management` / `tools install project-management`
+    // (fixed: project) directly via runCli must pass the matching `--scope`
+    // explicitly rather than relying on this `--scope project` auto-injection.
+    const topLevelCommand = args[0];
+    const isConsumer =
+      topLevelCommand !== undefined &&
+      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand);
+
+    let finalArgs: string[];
+    if (isConsumer) {
+      let insertAt = args.length;
+      for (let i = 0; i < args.length; i++) {
+        if (args[i]!.startsWith('-')) {
+          insertAt = i;
+          break;
+        }
+      }
+      finalArgs = [
+        ...args.slice(0, insertAt),
+        '--scope',
+        'project',
+        ...args.slice(insertAt),
+      ];
+    } else {
+      finalArgs = args;
+    }
+
+    await program.parseAsync(['--cwd', root, ...globalArgs, ...finalArgs], {
+      from: 'user',
+    });
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;

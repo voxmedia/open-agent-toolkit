@@ -171,7 +171,7 @@ The `core` pack contains foundational diagnostic and documentation skills:
 
 Key behavior:
 
-- Core pack always installs at **user scope** (`~/.agents/skills/`), regardless of the `--scope` flag. This ensures core skills are available in any directory.
+- Core pack always installs at **user scope** (`~/.agents/skills/`). It does not honor a different scope, and passing a conflicting explicit `--scope` (e.g. `oat init tools core --scope project`) is rejected with an error rather than silently ignored; omit `--scope` or pass `--scope user`. This ensures core skills are available in any directory.
 - Core is checked by default in the `oat init tools` guided setup.
 - Installation also bundles OAT documentation to `~/.oat/docs/` for the oat-docs skill.
 - `oat tools update --pack core` refreshes both skills and `~/.oat/docs/` documentation.

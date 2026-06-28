@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type PromptContext,
@@ -140,7 +141,7 @@ export function createInitToolsWorkflowsCommand(
     ...overrides,
   };
 
-  return new Command('workflows')
+  return withScopeOption(new Command('workflows'))
     .description('Install OAT workflows skills, agents, templates, and scripts')
     .option('--force', 'Overwrite existing files where applicable')
     .action(async (options: InitToolsWorkflowsOptions, command: Command) => {

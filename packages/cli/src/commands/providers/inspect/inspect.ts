@@ -6,6 +6,7 @@ import type {
   ProviderInspectResult,
   ProvidersInspectDependencies,
 } from '@commands/providers/providers.types';
+import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
   resolveConcreteScopes,
@@ -215,7 +216,7 @@ export function createProvidersInspectCommand(
     ...overrides,
   };
 
-  return new Command('inspect')
+  return withScopeOption(new Command('inspect'))
     .description('Inspect provider details and mapping state')
     .argument('<provider>', 'Provider name')
     .action(

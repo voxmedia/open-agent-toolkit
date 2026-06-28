@@ -19,6 +19,7 @@ export interface TriageOptions {
 
 export interface TriageDependencies {
   readJsonFile: (path: string) => Promise<CollectionChunk>;
+  fileExists: (path: string) => Promise<boolean>;
 }
 
 export const defaultTriageDependencies: TriageDependencies = {
@@ -26,6 +27,7 @@ export const defaultTriageDependencies: TriageDependencies = {
     const content = await readFile(path, 'utf8');
     return JSON.parse(content) as CollectionChunk;
   },
+  fileExists,
 };
 
 export async function runTriageComments(
@@ -37,23 +39,44 @@ export async function runTriageComments(
   const { inputDir, outputDir, month } = options;
 
   const inputPath = join(inputDir, `${month}.json`);
-  if (!(await fileExists(inputPath))) {
+  if (!(await deps.fileExists(inputPath))) {
     throw new CliError(`Collection file not found: ${inputPath}`);
   }
 
   const chunk = await deps.readJsonFile(inputPath);
 
   if (chunk.comments.length === 0) {
-    logger.warn(`No comments in ${month} to triage.`);
+    if (context.json) {
+      logger.json({ status: 'ok', month, total: 0, comments: [] });
+    } else {
+      logger.warn(`No comments in ${month} to triage.`);
+    }
     return;
   }
 
+  // Non-interactive path: emit collection state without prompting.
+  // This is the code path reached when --json is set or when running
+  // outside a TTY. Interactive triage is reserved for TTY sessions only.
   if (!context.interactive) {
-    throw new CliError(
-      'Triage requires an interactive terminal. Remove --json flag or run in a TTY.',
-    );
+    if (context.json) {
+      logger.json({
+        status: 'ok',
+        month,
+        total: chunk.comments.length,
+        comments: chunk.comments,
+      });
+    } else {
+      logger.info(
+        `Collection ${month}: ${chunk.comments.length} comment(s) pending triage.`,
+      );
+      logger.info(
+        'Re-run in an interactive terminal to triage, or pass --json to retrieve the collection state.',
+      );
+    }
+    return;
   }
 
+  // Interactive path: prompt for each comment (TTY sessions only).
   logger.info(`Triaging ${chunk.comments.length} comments from ${month}...`);
   logger.info('For each comment, enter [k]eep or [d]iscard (default: keep).\n');
 
@@ -91,17 +114,6 @@ export async function runTriageComments(
   logger.success(
     `Triage complete: kept ${kept.length}/${chunk.comments.length} comments → ${outputPath}`,
   );
-
-  if (context.json) {
-    logger.json({
-      status: 'ok',
-      month,
-      total: chunk.comments.length,
-      kept: kept.length,
-      discarded: chunk.comments.length - kept.length,
-      outputPath,
-    });
-  }
 }
 
 function printCommentSummary(comment: IndexedComment): void {

@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { buildCommandContext } from '@app/command-context';
+import {
+  buildCommandContext,
+  type CommandContext,
+  type GlobalOptions,
+} from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command } from 'commander';
 
@@ -11,7 +15,19 @@ import {
   validateParallelGroups,
 } from './validate-plan';
 
-export function createProjectValidatePlanCommand(): Command {
+interface ValidatePlanCommandDependencies {
+  buildCommandContext: (options: GlobalOptions) => CommandContext;
+}
+
+const DEFAULT_DEPENDENCIES: ValidatePlanCommandDependencies = {
+  buildCommandContext,
+};
+
+export function createProjectValidatePlanCommand(
+  overrides: Partial<ValidatePlanCommandDependencies> = {},
+): Command {
+  const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
+
   return new Command('validate-plan')
     .description(
       'Validate plan.md parallelism metadata against the plan phase list',
@@ -22,7 +38,9 @@ export function createProjectValidatePlanCommand(): Command {
       process.cwd(),
     )
     .action((options: { projectPath: string }, command: Command) => {
-      const context = buildCommandContext(readGlobalOptions(command));
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
       const planPath = join(options.projectPath, 'plan.md');
 
       let content: string;
@@ -30,7 +48,11 @@ export function createProjectValidatePlanCommand(): Command {
         content = readFileSync(planPath, 'utf-8');
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        context.logger.error(`Failed to read plan.md: ${message}`);
+        if (context.json) {
+          context.logger.json({ valid: false, errors: [message] });
+        } else {
+          context.logger.error(`Failed to read plan.md: ${message}`);
+        }
         process.exitCode = 2;
         return;
       }
@@ -38,7 +60,14 @@ export function createProjectValidatePlanCommand(): Command {
       const frontmatterResult = parseFrontmatterFromContent(content);
 
       if (frontmatterResult.kind === 'invalid') {
-        context.logger.error(frontmatterResult.message);
+        if (context.json) {
+          context.logger.json({
+            valid: false,
+            errors: [frontmatterResult.message],
+          });
+        } else {
+          context.logger.error(frontmatterResult.message);
+        }
         process.exitCode = 1;
         return;
       }
@@ -48,14 +77,22 @@ export function createProjectValidatePlanCommand(): Command {
       const result = validateParallelGroups(groups, phaseIds);
 
       if (result.valid) {
-        context.logger.success('Plan validation passed.');
+        if (context.json) {
+          context.logger.json({ valid: true });
+        } else {
+          context.logger.success('Plan validation passed.');
+        }
         process.exitCode = 0;
         return;
       }
 
-      context.logger.error('Plan validation failed:');
-      for (const err of result.errors) {
-        context.logger.error(`  - ${err}`);
+      if (context.json) {
+        context.logger.json({ valid: false, errors: result.errors });
+      } else {
+        context.logger.error('Plan validation failed:');
+        for (const err of result.errors) {
+          context.logger.error(`  - ${err}`);
+        }
       }
       process.exitCode = 1;
     });

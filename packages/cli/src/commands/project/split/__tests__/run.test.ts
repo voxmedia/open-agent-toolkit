@@ -90,6 +90,7 @@ function createHarness(
   repoRoot: string,
   overrides: {
     interactive?: boolean;
+    json?: boolean;
     processEnv?: NodeJS.ProcessEnv;
     confirmResponses?: boolean[];
   } = {},
@@ -101,15 +102,16 @@ function createHarness(
   const capture = createLoggerCapture();
   const confirmResponses = [...(overrides.confirmResponses ?? [])];
   const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
+  const json = overrides.json ?? false;
   const command = createProjectSplitRunCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
       dryRun: false,
       verbose: false,
-      json: false,
+      json,
       cwd: repoRoot,
       home: join(repoRoot, 'home'),
-      interactive: overrides.interactive ?? true,
+      interactive: overrides.interactive ?? !json,
       logger: capture.logger,
     }),
     resolveProjectRoot: async () => repoRoot,
@@ -403,6 +405,67 @@ describe('oat project split run', () => {
     expect(localConfig.activeProject).toBe('.oat/projects/shared/foundation');
   });
 
+  it('emits JSON result under --json when convertActiveDetectedParent path succeeds', async () => {
+    // This test exercises the second JSON emission branch inside `run.ts`:
+    // when an existing detected parent is converted in-place, JSON is emitted
+    // from within the `convertActiveDetectedParent` guard rather than the
+    // fall-through success path. Both branches must emit the same payload shape.
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
+    await mkdir(parentRoot, { recursive: true });
+    await writeFile(
+      join(parentRoot, 'state.md'),
+      [
+        '---',
+        'oat_phase: discovery',
+        'oat_phase_status: in_progress',
+        'oat_workflow_mode: quick',
+        '---',
+        '',
+        '# Project State: umbrella',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(parentRoot, 'discovery.md'),
+      '# Discovery: umbrella\n\nExisting detected discovery context.\n',
+      'utf8',
+    );
+    await writeFile(join(parentRoot, 'plan.md'), '# Plan\n', 'utf8');
+    await writeFile(
+      join(parentRoot, 'implementation.md'),
+      '# Implementation\n',
+      'utf8',
+    );
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/umbrella' })}\n`,
+      'utf8',
+    );
+    const planFile = await writePlanFile(
+      repoRoot,
+      document({ origin: 'detected-mid-stream', interactive: true }),
+    );
+    // Use json: true + interactive: true so the non-interactive detected-split
+    // guard is bypassed and the convertActiveDetectedParent branch emits JSON.
+    const { capture, command } = createHarness(repoRoot, {
+      json: true,
+      interactive: true,
+    });
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(process.exitCode).toBe(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      parentSlug: 'umbrella',
+      children: expect.arrayContaining(['foundation', 'docs']),
+    });
+  });
+
   it('rejects invalid origins before writing projects', async () => {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
     tempDirs.push(repoRoot);
@@ -503,6 +566,23 @@ describe('oat project split run', () => {
     await expect(
       exists(join(repoRoot, '.oat', 'projects', 'shared', 'docs')),
     ).resolves.toBe(true);
+  });
+
+  it('emits JSON result under --json when split succeeds', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const planFile = await writePlanFile(repoRoot, document());
+    const { capture, command } = createHarness(repoRoot, { json: true });
+
+    await runCommand(command, ['--plan-file', planFile]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      parentSlug: 'umbrella',
+      children: expect.arrayContaining(['foundation', 'docs']),
+    });
+    expect(process.exitCode).toBe(0);
   });
 
   it('aborts non-interactive partial resume unless --resume confirms it', async () => {
