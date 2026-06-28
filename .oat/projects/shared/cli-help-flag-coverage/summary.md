@@ -20,7 +20,7 @@ A full audit (programmatic command-tree walk + three parallel subagents) found, 
 - **`--scope` demotion (P1-2/P1-3):** `--scope` removed from the root globals and re-added via a shared `withScopeOption(cmd, defaultScope?)` helper on the ~22 commands that actually consume it; non-consumers no longer silently accept it. Worked with the existing `optsWithGlobals()` context wiring, so no change to the context builder.
 - **`oat providers set` default fix (P0-1):** now operates project-scoped by default instead of erroring and pointing at an undocumented global flag.
 - **`--json` contract pass (P1-4…P1-8):** `project validate-plan` and `project split run` now emit JSON under `--json`; `project split evaluate-signals` and `project split validate-plan` now gate JSON on `--json`; `repo pr-comments triage-collection` gained a real non-interactive/JSON path.
-- **Release:** lockstep version bump of the five public packages to 0.1.34.
+- **Release:** lockstep version bump of the five public packages to 0.1.35 (originally 0.1.34; re-bumped after rebasing over main's 0.1.34 release).
 - **Regression guard:** `help-snapshots.test.ts` extended to lock the globals-visible + scope-local-only contract.
 - **Docs:** `design-principles.md` corrected (`--scope` is per-command, not global).
 

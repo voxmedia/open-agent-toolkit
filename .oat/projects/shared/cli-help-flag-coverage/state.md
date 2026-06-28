@@ -27,7 +27,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/120' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-27T17:26:57.994Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-27T22:05:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-28T00:30:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -59,6 +59,8 @@ Implementation — PR open, awaiting human review.
 - ✓ Final review (v1) passed; v2 found I1 (Important) + CI failure
 - ✓ p-rev1 fixes: I1 (hardcoded-leaf scope rejection) + CI (integration runCli scoping); re-review passed
 - ✓ PR #120 created
+- ✓ Rebased over main's workflow-gates (#114) release: `gate` integrates with zero code changes; version re-bumped 0.1.34 → 0.1.35; 2026 tests green
+- ✓ Docs synced (design-principles + tool-packs core-scope rejection)
 - ⧗ Awaiting human review (PR update pushed)
 
 ## Blockers

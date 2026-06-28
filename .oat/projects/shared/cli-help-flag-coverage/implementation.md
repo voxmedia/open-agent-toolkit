@@ -172,7 +172,7 @@ oat_generated: false
 
 ### Phase Summary
 
-**Outcome:** Lockstep version bump of the five public packages (cli, control-plane, docs-config, docs-theme, docs-transforms) 0.1.33 → 0.1.34, plus `packages/cli/assets/public-package-versions.json`. `pnpm release:validate` passes.
+**Outcome:** Lockstep version bump of the five public packages (cli, control-plane, docs-config, docs-theme, docs-transforms) to 0.1.35, plus `packages/cli/assets/public-package-versions.json`. (Originally 0.1.33 → 0.1.34; after rebasing over main's 0.1.34 release the bump was dropped as redundant and re-applied as 0.1.34 → 0.1.35.) `pnpm release:validate` passes.
 
 **Verification:** `pnpm release:validate` ✓, `pnpm lint` ✓, `pnpm type-check` ✓.
 
@@ -183,7 +183,7 @@ oat_generated: false
 **Status:** completed
 **Commit:** 5b209dd5
 
-**Outcome:** Five public packages bumped to 0.1.34; release validation green.
+**Outcome:** Five public packages bumped to 0.1.35 (post-rebase; see phase summary); release validation green.
 
 ---
 
