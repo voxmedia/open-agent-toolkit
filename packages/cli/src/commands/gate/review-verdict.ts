@@ -133,8 +133,27 @@ function normalizeHeading(value: string): Severity | null {
   return null;
 }
 
+function parseFindingsSummaryCounts(
+  content: string,
+): ReviewGateVerdict['counts'] | null {
+  const match = content.match(
+    /^Findings:\s*(\d+)\s+critical,\s*(\d+)\s+important,\s*(\d+)\s+medium,\s*(\d+)\s+minor\s*$/im,
+  );
+  if (!match) {
+    return null;
+  }
+
+  return {
+    critical: Number.parseInt(match[1] ?? '0', 10),
+    important: Number.parseInt(match[2] ?? '0', 10),
+    medium: Number.parseInt(match[3] ?? '0', 10),
+    minor: Number.parseInt(match[4] ?? '0', 10),
+  };
+}
+
 function parseFindingsSectionCounts(
   content: string,
+  artifactPath: string,
 ): ReviewGateVerdict['counts'] | null {
   const headingMatches = [...content.matchAll(/^#{3,6}\s+(.+?)\s*#*\s*$/gm)];
   const severityHeadings = headingMatches
@@ -155,6 +174,18 @@ function parseFindingsSectionCounts(
 
   if (severityHeadings.length === 0) {
     return null;
+  }
+
+  const seenSeverities = new Set(
+    severityHeadings.map((heading) => heading.severity),
+  );
+  const missingSeverities = SEVERITIES.filter(
+    (severity) => !seenSeverities.has(severity),
+  );
+  if (missingSeverities.length > 0) {
+    throw new Error(
+      `Review artifact at ${artifactPath} has an incomplete Findings section; expected headings for Critical, Important, Medium, and Minor. Missing: ${missingSeverities.join(', ')}.`,
+    );
   }
 
   const counts: ReviewGateVerdict['counts'] = {
@@ -222,7 +253,9 @@ export async function parseReviewGateVerdict(
     ? parseFrontmatterObject(frontmatterBlock, artifactPath)
     : {};
   const counts =
-    readFrontmatterCounts(frontmatter) ?? parseFindingsSectionCounts(content);
+    readFrontmatterCounts(frontmatter) ??
+    parseFindingsSummaryCounts(content) ??
+    parseFindingsSectionCounts(content, artifactPath);
 
   if (!counts) {
     throw new Error(

@@ -186,6 +186,29 @@ None
     });
   });
 
+  it('parses a complete Findings count line as a standalone verdict source', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: plan
+oat_review_invocation: gate
+---
+
+# Review
+
+Findings: 0 critical, 1 important, 2 medium, 3 minor
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: {
+        critical: 0,
+        important: 1,
+        medium: 2,
+        minor: 3,
+      },
+      blocking: true,
+    });
+  });
+
   it('treats clean blocking sections as zero findings', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
@@ -210,7 +233,7 @@ None
 
 ### Minor
 
-   
+${'   '}
 `);
 
     await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
@@ -242,12 +265,45 @@ None
 ### Important
 
 1. Important finding
+
+### Medium
+
+None
+
+### Minor
+
+None
 `);
 
     const verdict = await parseReviewGateVerdict(artifactPath);
 
     expect(verdict.counts.important).toBe(1);
     expect(verdict.blocking).toBe(true);
+  });
+
+  it('returns an actionable parse error for partial Findings sections', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p02
+oat_review_invocation: gate
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Medium
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+      /incomplete Findings section.*Important.*Minor/i,
+    );
   });
 
   it('returns an actionable read error for missing artifacts', async () => {
