@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative } from 'node:path';
 
 import {
@@ -7,7 +7,11 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { findLatestReview, type LatestReview } from '@commands/review/latest';
+import type { LatestReview } from '@commands/review/latest';
+import {
+  getFrontmatterBlock,
+  getFrontmatterField,
+} from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   BUILTIN_EXEC_TARGETS,
@@ -126,6 +130,11 @@ type GateConfigMutation = (config: GateConfigContainer) => GateConfigContainer;
 export interface SelectedExecTarget {
   id: string;
   target: ExecTarget;
+}
+
+interface ReviewGateArtifactCandidate extends LatestReview {
+  generatedTime: number;
+  lifecycleRank: number;
 }
 
 const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
@@ -873,6 +882,135 @@ async function resolveReviewProject(options: {
   return candidates[0]!;
 }
 
+function reviewGateLifecycleRank(scope: string): number {
+  const normalizedScope = scope.trim().toLowerCase();
+  if (normalizedScope === 'final') {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const phases = [...normalizedScope.matchAll(/p(\d+)/g)].map((match) =>
+    Number.parseInt(match[1] ?? '0', 10),
+  );
+  if (phases.length === 0) {
+    return 0;
+  }
+
+  const tasks = [...normalizedScope.matchAll(/(?:^|[-_])t(\d+)/g)].map(
+    (match) => Number.parseInt(match[1] ?? '0', 10),
+  );
+  const latestPhase = Math.max(...phases);
+  const latestTask = tasks.length > 0 ? Math.max(...tasks) : 9999;
+
+  return latestPhase * 10_000 + latestTask;
+}
+
+async function readReviewGateArtifactCandidate(
+  repoRoot: string,
+  relativePath: string,
+): Promise<ReviewGateArtifactCandidate | null> {
+  const content = await readFile(join(repoRoot, relativePath), 'utf8');
+  const frontmatter = getFrontmatterBlock(content);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const generatedAt = getFrontmatterField(frontmatter, 'oat_generated_at');
+  if (!generatedAt) {
+    return null;
+  }
+
+  const generatedTime = Date.parse(generatedAt);
+  if (Number.isNaN(generatedTime)) {
+    return null;
+  }
+
+  const scope = getFrontmatterField(frontmatter, 'oat_review_scope') ?? '';
+
+  return {
+    path: relativePath,
+    scope,
+    generatedAt,
+    kind: 'project',
+    archived: false,
+    actionable: true,
+    generatedTime,
+    lifecycleRank: reviewGateLifecycleRank(scope),
+  };
+}
+
+function sortReviewGateArtifacts(
+  left: ReviewGateArtifactCandidate,
+  right: ReviewGateArtifactCandidate,
+): number {
+  if (left.generatedTime !== right.generatedTime) {
+    return right.generatedTime - left.generatedTime;
+  }
+  if (left.lifecycleRank !== right.lifecycleRank) {
+    return right.lifecycleRank - left.lifecycleRank;
+  }
+  return left.path.localeCompare(right.path);
+}
+
+async function findLatestActiveProjectReview(options: {
+  repoRoot: string;
+  projectPath: string;
+}): Promise<LatestReview | null> {
+  const projectPath = normalizeRepoRelativeProjectPath(
+    options.repoRoot,
+    options.projectPath,
+  );
+  const reviewsDir = `${projectPath}/reviews`;
+  let entries;
+
+  try {
+    entries = await readdir(join(options.repoRoot, reviewsDir), {
+      withFileTypes: true,
+    });
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return null;
+    }
+    throw error;
+  }
+
+  const candidates = (
+    await Promise.all(
+      entries
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+        .map((entry) =>
+          readReviewGateArtifactCandidate(
+            options.repoRoot,
+            normalizeToPosixPath(join(reviewsDir, entry.name)),
+          ),
+        ),
+    )
+  )
+    .filter(
+      (candidate): candidate is ReviewGateArtifactCandidate =>
+        candidate !== null,
+    )
+    .sort(sortReviewGateArtifacts);
+
+  const latest = candidates[0];
+  if (!latest) {
+    return null;
+  }
+
+  return {
+    path: latest.path,
+    scope: latest.scope,
+    generatedAt: latest.generatedAt,
+    kind: latest.kind,
+    archived: latest.archived,
+    actionable: latest.actionable,
+  };
+}
+
 function reviewArtifactChanged(
   before: LatestReview | null,
   after: LatestReview | null,
@@ -1130,7 +1268,10 @@ async function runReviewGate(
       dependencies,
     );
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
-    const before = await findLatestReview({ repoRoot, projectPath });
+    const before = await findLatestActiveProjectReview({
+      repoRoot,
+      projectPath,
+    });
     const reviewPrompt = [
       REVIEW_GATE_CONTEXT_NOTE,
       reviewGateProjectContext(projectPath),
@@ -1154,7 +1295,10 @@ async function runReviewGate(
       return;
     }
 
-    const after = await findLatestReview({ repoRoot, projectPath });
+    const after = await findLatestActiveProjectReview({
+      repoRoot,
+      projectPath,
+    });
     if (!reviewArtifactChanged(before, after)) {
       throw new Error(
         `No new review artifact was detected for project ${projectPath}. Ensure the review provider wrote a project review artifact before the gate exits.`,

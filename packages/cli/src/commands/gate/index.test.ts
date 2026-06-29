@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -309,9 +309,10 @@ describe('oat gate', () => {
     generatedAt?: string;
     finding?: 'important' | 'clean';
   }): Promise<string> {
-    const reviewsDir = join(options.root, options.projectPath, 'reviews');
-    await mkdir(reviewsDir, { recursive: true });
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
+    await mkdir(join(options.root, dirname(relativePath)), {
+      recursive: true,
+    });
     const importantContent =
       options.finding === 'important'
         ? ['- Important finding that should block.']
@@ -326,6 +327,49 @@ describe('oat gate', () => {
         'oat_review_scope: p01',
         'oat_review_invocation: gate',
         `oat_project: ${options.projectPath}`,
+        '---',
+        '',
+        '# Review',
+        '',
+        '## Findings',
+        '',
+        '### Critical',
+        '',
+        'None',
+        '',
+        '### Important',
+        '',
+        ...importantContent,
+      ].join('\n'),
+      'utf8',
+    );
+    return relativePath;
+  }
+
+  async function writeAdhocReviewArtifact(options: {
+    root: string;
+    fileName?: string;
+    generatedAt?: string;
+    finding?: 'important' | 'clean';
+  }): Promise<string> {
+    const relativePath = `.oat/repo/reviews/${options.fileName ?? 'ad-hoc-review.md'}`;
+    await mkdir(join(options.root, dirname(relativePath)), {
+      recursive: true,
+    });
+    const importantContent =
+      options.finding === 'important'
+        ? ['- Important finding that should not be accepted by project gate.']
+        : ['None.'];
+    await writeFile(
+      join(options.root, relativePath),
+      [
+        '---',
+        'oat_generated: true',
+        `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+        'oat_review_type: code',
+        'oat_review_scope: ad-hoc',
+        'oat_review_invocation: gate',
+        'oat_project: null',
         '---',
         '',
         '# Review',
@@ -1451,6 +1495,60 @@ describe('oat gate', () => {
       project: explicitProjectPath,
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects ad-hoc-only artifacts produced after gate dispatch', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeAdhocReviewArtifact({
+          root,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('No new review artifact was detected'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects archived-only project artifacts produced after gate dispatch', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'archived/p01-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('No new review artifact was detected'),
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('fails clearly before dispatch when no project can be resolved', async () => {
