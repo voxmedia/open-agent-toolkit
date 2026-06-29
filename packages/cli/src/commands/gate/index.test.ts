@@ -1306,6 +1306,9 @@ describe('oat gate', () => {
       'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
     );
     expect(runner.calls[0]?.args).toContain(
+      `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+    );
+    expect(runner.calls[0]?.args).toContain(
       'Use oat-project-review-provide artifact plan.',
     );
     expect(capture.jsonPayloads[0]).toMatchObject({
@@ -1396,9 +1399,56 @@ describe('oat gate', () => {
       args: ['--project', 'named', '--target', 'codex-default', 'Review'],
     });
 
+    expect(runner.calls[0]?.args).toContain(
+      `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+    );
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       project: projectPath,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('passes an explicit project path to the child even when a different active project is configured', async () => {
+    const { root, home } = await setup();
+    const activeProjectPath = await writeProject(
+      root,
+      '.oat/projects/shared/active',
+    );
+    const explicitProjectPath = await writeProject(
+      root,
+      '.oat/projects/shared/explicit',
+    );
+    await writeActiveProject(root, activeProjectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: explicitProjectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        explicitProjectPath,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls[0]?.args).toContain(
+      `Resolved OAT project path: ${explicitProjectPath}. Run the review for this project path.`,
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: explicitProjectPath,
     });
     expect(process.exitCode).toBe(0);
   });

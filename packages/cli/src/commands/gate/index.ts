@@ -161,6 +161,10 @@ const VALID_REVIEW_GATE_THRESHOLDS: readonly ReviewGateThreshold[] = [
 const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.';
 
+function reviewGateProjectContext(projectPath: string): string {
+  return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
+}
+
 async function runChildProcess(
   command: string,
   args: string[],
@@ -1129,6 +1133,7 @@ async function runReviewGate(
     const before = await findLatestReview({ repoRoot, projectPath });
     const reviewPrompt = [
       REVIEW_GATE_CONTEXT_NOTE,
+      reviewGateProjectContext(projectPath),
       ...(options.reviewType?.trim()
         ? [`Review type: ${options.reviewType.trim()}.`]
         : []),
