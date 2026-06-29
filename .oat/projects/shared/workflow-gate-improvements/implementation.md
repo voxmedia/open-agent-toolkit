@@ -199,6 +199,7 @@ most-recent-first within the file but append-only at the bottom of the log._
 - [x] Discovery captured and completed.
 - [x] Plan generated with inline structured plan review.
 - [x] Dispatch ceiling set to maximum: Codex `xhigh`, Claude `opus`.
+- [x] Independent plan artifact review received and resolved in `plan.md`.
 
 **What changed (high level):**
 
@@ -221,6 +222,69 @@ most-recent-first within the file but append-only at the bottom of the log._
 - None.
 
 **Session End:** planning complete
+
+---
+
+### Review Received: plan
+
+**Date:** 2026-06-28
+**Review artifact:** reviews/archived/artifact-plan-review-2026-06-28.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 3
+- Minor: 3
+- Additional user feedback items: 4
+
+**Artifact edits applied:**
+
+- Added explicit project-resolution and child-output surfacing requirements to
+  `oat gate review`.
+- Expanded review-provide/gate provenance instructions to preserve
+  `disable-model-invocation: false`, keep the prose Model Invocation Gate, and
+  account for broader tool permissions needed by stateful reviews.
+- Normalized gate-aware handoff requirements across quick-start, import-plan,
+  plan, and implement skills.
+- Reworded provider sync expectations for symlink-backed provider views.
+- Added trusted user-level target documentation requirements for Codex, Claude,
+  and Cursor permission/force flags without making those dangerous flags built-in
+  defaults.
+- Added missing final verification gates: `pnpm build` and skill version-bump
+  validation.
+- Marked the plan artifact review row as `passed` and pointed it at the archived
+  review artifact.
+
+**Finding disposition map:**
+
+- I1 -> resolve_in_artifact: gate handoff now covers all gate-aware lifecycle
+  skills.
+- M1 -> resolve_in_artifact: final validation now mirrors CI skill-version and
+  build gates.
+- M2 -> resolve_in_artifact: sync task now accounts for symlink-backed provider
+  views and empty diffs.
+- M3 -> resolve_in_artifact: `oat gate review` now has explicit project
+  resolution/error requirements.
+- m1 -> resolve_in_artifact: HiLL checkpoint frontmatter was removed and
+  deferred to implementation confirmation.
+- m2 -> resolve_in_artifact: gate target guidance now uses explicit trusted
+  user config, decoupled from dispatch ceilings.
+- m3 -> resolve_in_artifact: quick-mode spec/design review-row note added.
+- U1 -> resolve_in_artifact: trusted noninteractive provider flags are
+  documented as user config, not built-in defaults.
+- U2 -> resolve_in_artifact: child output/permission-denial surfacing is now in
+  CLI requirements and smoke tests.
+- U3 -> resolve_in_artifact: review-provide stays model-invokable with a prose
+  invocation gate.
+- U4 -> resolve_in_artifact: review-provide allowed-tools expansion is now in
+  the plan.
+
+**New tasks added:** None. The review was an artifact review, so findings were
+resolved by editing `plan.md` directly and refining existing tasks.
+
+**Next:** Re-review the plan artifact if desired, otherwise execute the plan via
+`oat-project-implement` starting at `p01-t01`.
 
 ---
 

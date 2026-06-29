@@ -5,7 +5,6 @@ oat_blockers: []
 oat_last_updated: 2026-06-28
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
@@ -22,8 +21,8 @@ oat_template: false
 
 **Goal:** Make cross-provider review gates enforce blocking review findings,
 carry review provenance/handoff state, run for quick/import plan paths, and
-document explicit high-effort target configuration without adding a read-only
-review mode.
+document explicit trusted-target configuration without adding a read-only review
+mode or making dangerous provider flags built-in defaults.
 
 **Architecture:** Add a review-specific gate command on top of the existing
 `oat gate cross-provider-exec` executor. The wrapper invokes the configured
@@ -40,8 +39,7 @@ and OAT release validation.
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user
-- [x] Set `oat_plan_hill_phases` in frontmatter
+- [x] Deferred HiLL checkpoint selection to `oat-project-implement`
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -165,6 +163,9 @@ git commit -m "feat(p01-t01): add review gate verdict parsing"
 Add `oat gate review` command tests covering:
 
 - dispatch uses the existing target registry/cross-provider execution behavior
+- project resolution is explicit: the command uses the active project when it is
+  unambiguous, accepts an explicit project path/name option, and errors clearly
+  when no project or multiple project candidates are resolvable
 - the review prompt is passed to the selected target
 - after a zero child exit, the command resolves the produced review artifact and
   returns exit `1` when Critical or Important findings exist
@@ -172,6 +173,8 @@ Add `oat gate review` command tests covering:
   the review provider to write `oat_review_invocation: gate`
 - clean review artifacts return exit `0`
 - nonzero child exits stay nonzero and are not masked by artifact parsing
+- child stdout/stderr from the selected provider is streamed or captured and
+  surfaced so permission denials do not look like silent hangs
 - output includes the produced review path and a handoff message to run
   `oat-project-review-receive`
 - command help snapshot includes the new subcommand
@@ -180,7 +183,7 @@ Recommended command shape for implementation:
 
 ```bash
 oat gate review \
-  --target codex-review-xhigh \
+  --target codex-5.5-xhigh \
   --review-scope plan \
   --review-type artifact \
   --exit-nonzero-on important \
@@ -202,13 +205,19 @@ Add a `review` subcommand that:
 - reuses the existing target registry, runtime detection, avoidance, and
   explicit `--target` behavior
 - defaults to `--avoid same-runtime`
+- resolves the project before dispatch using the same active-project semantics
+  as `oat review latest`; if no project or more than one plausible project can
+  be resolved, fail with an actionable error before running the provider
 - wraps or prefixes the user prompt with a concise gate context note:
   "This review is gate-originated. If you run `oat-project-review-provide`, set
   `oat_review_invocation: gate` in the review artifact."
 - executes the child target first and preserves nonzero child exit codes
-- records a before/after review-artifact discovery window using
-  `oat review latest --project <activeProject> --json` semantics or equivalent
-  internal scanning of active top-level project reviews
+- streams provider child output by default, or captures and prints buffered
+  output on failure, so Claude permission prompts and similar provider denials
+  are visible to the host
+- records a before/after review-artifact discovery window using the resolved
+  project and `oat review latest --project <PROJECT_PATH> --json` semantics or
+  equivalent internal scanning of active top-level project reviews
 - loads the newest active review artifact produced by the dispatch
 - parses the verdict with the parser from p01-t01
 - exits nonzero when the configured severity threshold is met
@@ -338,6 +347,13 @@ Add or update skill validation tests so:
 
 - `oat-project-review-provide` documents
   `oat_review_invocation: manual|auto|gate`
+- `oat-project-review-provide` remains model-invokable with
+  `disable-model-invocation: false` and retains its prose Model Invocation Gate
+  so Claude can invoke it only for explicit review requests
+- `oat-project-review-provide` has allowed-tools broad enough for its actual
+  workflow: reading files, writing review artifacts, running `oat` commands,
+  running verification commands such as `pnpm`, and committing review
+  bookkeeping
 - `oat-project-review-receive` recognizes `gate` review invocation
 - `oat-reviewer` documents that gate review artifacts should expose verdict
   counts or standard Findings sections compatible with the gate parser
@@ -355,6 +371,13 @@ Expected: tests fail until skill docs are updated.
 Update the review skills and reviewer agent:
 
 - Add `gate` as a first-class `oat_review_invocation` value.
+- Preserve `disable-model-invocation: false` on
+  `oat-project-review-provide`; do not re-disable model invocation.
+- Keep the existing prose Model Invocation Gate that restricts model invocation
+  to explicit review asks or confirmed review steps.
+- Expand `oat-project-review-provide` `allowed-tools` as needed so Claude gate
+  reviews can run the skill end-to-end without failing immediately after skill
+  invocation is allowed.
 - Specify that gate-originated reviews use normal stateful review-provide
   behavior: artifact write, Reviews row update, and bookkeeping commit.
 - Require the review artifact summary to include enough severity counts or
@@ -398,12 +421,14 @@ git commit -m "feat(p02-t01): tag gate review provenance"
 
 ---
 
-### Task p02-t02: Make Quick-Start and Import-Plan Gate-Aware
+### Task p02-t02: Normalize Gate-Aware Skill Handoff
 
 **Files:**
 
 - Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
 - Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 
 **Step 1: Write/adjust validation tests (RED)**
@@ -412,9 +437,14 @@ Add tests that assert:
 
 - `oat-project-quick-start` frontmatter includes `oat_gateable: true`
 - `oat-project-import-plan` frontmatter includes `oat_gateable: true`
-- both skills contain a Gate Execution step matching the standard semantics used
-  by `oat-project-plan`/`oat-project-implement`
-- quick-start/import-plan skill version expectations are bumped
+- quick-start and import-plan contain a Gate Execution step
+- all four gate-aware lifecycle skills (`oat-project-plan`,
+  `oat-project-implement`, `oat-project-quick-start`, and
+  `oat-project-import-plan`) surface the same review-artifact handoff contract:
+  when a gate reports a produced review artifact, the host must receive and
+  disposition it with `oat-project-review-receive` before treating the review as
+  consumed
+- changed skill version expectations are bumped
 
 Run:
 
@@ -426,11 +456,14 @@ Expected: tests fail before the skill updates.
 
 **Step 2: Implement (GREEN)**
 
-Update both skill files:
+Update the gate-aware skill files:
 
 - Add `oat_gateable: true` to frontmatter.
-- Add a final Gate Execution step after artifact review, state sync, dashboard
-  refresh, and artifact commit.
+- Add a final Gate Execution step to quick-start/import-plan after artifact
+  review, state sync, dashboard refresh, and artifact commit.
+- Update existing `oat-project-plan` and `oat-project-implement` Gate Execution
+  steps with the same review-artifact + `oat-project-review-receive` handoff
+  wording.
 - Ensure gate command examples use `oat gate review ...` or `oat gate ...`, not
   absolute dev-build paths.
 - Preserve existing quick-start/import-plan artifact review loops.
@@ -446,10 +479,9 @@ Expected: validation tests pass.
 
 **Step 3: Refactor**
 
-Keep the Gate Execution wording consistent with `oat-project-plan` and
-`oat-project-implement`, but mention the review gate handoff: if `oat gate
-review` reports a produced review artifact, the host must receive/disposition it
-before proceeding.
+Keep the Gate Execution wording consistent across all four gate-aware lifecycle
+skills. The command output owns the exact artifact path, while skill prose owns
+the lifecycle rule that gate-produced reviews must be received/dispositioned.
 
 **Step 4: Verify**
 
@@ -466,8 +498,10 @@ Expected: skill validation passes with no new gateability warnings.
 ```bash
 git add .agents/skills/oat-project-quick-start/SKILL.md \
   .agents/skills/oat-project-import-plan/SKILL.md \
+  .agents/skills/oat-project-plan/SKILL.md \
+  .agents/skills/oat-project-implement/SKILL.md \
   packages/cli/src/validation/skills.test.ts
-git commit -m "feat(p02-t02): make quick and import plan gates gate-aware"
+git commit -m "feat(p02-t02): normalize gate-aware handoff"
 ```
 
 ---
@@ -482,13 +516,19 @@ git commit -m "feat(p02-t02): make quick and import plan gates gate-aware"
 
 **Step 1: Run sync**
 
+Provider views in this repo are normally symlink-backed. Existing skill content
+edits may therefore produce no `.claude/`, `.cursor/`, or `.codex/` content
+diffs. This step is hygiene: refresh the manifest, catch added/removed entries,
+and verify sync health.
+
 Run:
 
 ```bash
 oat sync --scope all
 ```
 
-Expected: provider views update for changed canonical skills/agents.
+Expected: sync completes. Provider-view diffs are not required when existing
+views are symlinks.
 
 **Step 2: Inspect generated changes**
 
@@ -499,7 +539,8 @@ git status --short
 git diff -- .oat/sync/manifest.json .claude .cursor .codex
 ```
 
-Expected: generated changes correspond only to changed canonical skills/agents.
+Expected: any generated changes correspond only to changed canonical
+skills/agents; an empty diff is acceptable.
 
 **Step 3: Verify**
 
@@ -515,14 +556,14 @@ Expected: validation still passes after sync.
 
 ```bash
 git add .oat/sync/manifest.json .claude .cursor .codex
-git commit -m "chore(p02-t03): sync provider views"
+git diff --cached --quiet || git commit -m "chore(p02-t03): sync provider views"
 ```
 
 ---
 
 ## Phase 3: Documentation and Config Examples
 
-### Task p03-t01: Document Stateful Review Gates and Handoff
+### Task p03-t01: Document Stateful Review Gates and Trusted Targets
 
 **Files:**
 
@@ -544,26 +585,55 @@ Update docs to explain:
 - Gate-produced review artifacts use `oat_review_invocation: gate`.
 - After a gate review produces an artifact, the host must run or hand off to
   `oat-project-review-receive` before treating the review as dispositioned.
+- Built-in targets are conservative defaults. Trusted noninteractive gates that
+  need to run tools without hanging on provider approval prompts should be
+  configured by the user in `workflow.gates.execTargets`, not baked into OAT
+  built-ins.
+- Claude default permission mode can block on `Skill(oat-project-review-provide)`,
+  `oat`, `pnpm`, and shell/tool calls. Docs should show how a trusted user can
+  opt into `--dangerously-skip-permissions` or
+  `--permission-mode bypassPermissions`.
+- Codex examples should make sandbox/approval bypass explicit for trusted gate
+  automation with `--dangerously-bypass-approvals-and-sandbox`, even if the
+  user's default profile currently makes it work.
+- Cursor examples should show `--force` and mention `--yolo` as its documented
+  alias.
 
 Use `oat gate ...` in every durable command example.
 
-**Step 2: Add explicit high-effort target examples**
+**Step 2: Add explicit trusted-target examples**
 
-Document user-level target setup examples that express review effort/model in
-target config rather than dispatch ceiling inference. For Codex, prefer the
-generated reviewer variant/profile mechanism already used by OAT where possible,
-and include the locally verified CLI override shape only if it is accurate:
+Document user-level target setup examples that express review model, effort, and
+provider permission behavior in target config rather than dispatch ceiling
+inference or built-in defaults. Mark these as trusted-environment examples; users
+must choose them deliberately.
 
 ```bash
-oat gate target set codex-review-xhigh \
+oat gate target set codex-5.5-xhigh \
   --runtime codex \
-  --base-command-json '["codex","exec","-c","model_reasoning_effort=\"xhigh\""]' \
+  --base-command-json '["codex","exec","--model","gpt-5.5","-c","model_reasoning_effort=\"xhigh\"","--dangerously-bypass-approvals-and-sandbox"]' \
   --availability-json '["codex","--version"]' \
-  --priority 110 \
+  --priority 120 \
+  --layer user
+
+oat gate target set claude-opus-skip-permissions \
+  --runtime claude \
+  --base-command-json '["claude","-p","--model","opus","--dangerously-skip-permissions"]' \
+  --availability-json '["claude","--version"]' \
+  --priority 115 \
+  --layer user
+
+oat gate target set cursor-force \
+  --runtime cursor \
+  --base-command-json '["cursor-agent","-p","--force"]' \
+  --availability-json '["cursor-agent","--version"]' \
+  --priority 90 \
   --layer user
 ```
 
-Then show gate setup with `oat gate review --target codex-review-xhigh ...`.
+Then show gate setup with `oat gate review --target codex-5.5-xhigh ...`, and
+explain that leaving `--target` unset lets target priority choose the highest
+available non-host runtime.
 
 **Step 3: Verify docs locally**
 
@@ -605,6 +675,8 @@ handoff. Preserve the Gates V2 boundary:
 - V1 review-gate semantics and handoff are fixed here.
 - Same-target/model-level target detection stays deferred.
 - Dispatch ceilings remain separate from gate target config.
+- Trusted provider permission flags are user-level gate target configuration and
+  documentation guidance, not new built-in defaults.
 
 **Step 2: Verify**
 
@@ -706,8 +778,10 @@ Run:
 ```bash
 pnpm lint
 pnpm type-check
+pnpm build
 pnpm test
 pnpm build:docs
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
 pnpm release:validate
 ```
 
@@ -723,6 +797,10 @@ verify:
 - `oat gate review` exits `0` for a clean artifact.
 - `oat gate set` warns for a dev-build absolute command but accepts it.
 - `oat gate set` does not warn for `oat gate ...` commands.
+- A Claude trusted target using `--dangerously-skip-permissions` can invoke
+  `oat-project-review-provide` without stalling on permission prompts.
+- Provider permission-denial output is visible when a target cannot run the
+  requested gate.
 
 Do not leave temp fixtures in the repo.
 
@@ -737,19 +815,23 @@ git diff --cached --quiet || git commit -m "chore(p04-t02): record workflow gate
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                   |
-| ------ | -------- | -------- | ---------- | ------------------------------------------ |
-| p01    | code     | pending  | -          | -                                          |
-| p02    | code     | pending  | -          | -                                          |
-| p03    | code     | pending  | -          | -                                          |
-| p04    | code     | pending  | -          | -                                          |
-| final  | code     | pending  | -          | -                                          |
-| spec   | artifact | pending  | -          | -                                          |
-| design | artifact | pending  | -          | -                                          |
-| plan   | artifact | received | 2026-06-28 | reviews/artifact-plan-review-2026-06-28.md |
+| Scope  | Type     | Status  | Date       | Artifact                                            |
+| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                   |
+| p02    | code     | pending | -          | -                                                   |
+| p03    | code     | pending | -          | -                                                   |
+| p04    | code     | pending | -          | -                                                   |
+| final  | code     | pending | -          | -                                                   |
+| spec   | artifact | pending | -          | -                                                   |
+| design | artifact | pending | -          | -                                                   |
+| plan   | artifact | passed  | 2026-06-28 | reviews/archived/artifact-plan-review-2026-06-28.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
+
+Spec/design artifact review rows are retained for canonical table shape. They
+are not applicable in this quick-mode project unless a later workflow promotion
+adds those artifacts.
 
 **Meaning:**
 
@@ -766,9 +848,10 @@ git diff --cached --quiet || git commit -m "chore(p04-t02): record workflow gate
 
 - Phase 1: 3 tasks - add review verdict parsing, review-specific gate command,
   and dev-build command warning polish
-- Phase 2: 3 tasks - tag gate review provenance, make quick/import gate-aware,
+- Phase 2: 3 tasks - tag gate review provenance, normalize gate-aware handoff,
   and sync provider views
-- Phase 3: 2 tasks - update workflow gate docs and repo reference notes
+- Phase 3: 2 tasks - update workflow gate docs/trusted-target guidance and repo
+  reference notes
 - Phase 4: 2 tasks - apply release/version bumps and run final validation
 
 **Total: 10 tasks**
