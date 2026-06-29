@@ -397,7 +397,7 @@ most-recent-first within the file but append-only at the bottom of the log._
 | p04   | passed | reviews/archived/p04-review-2026-06-29.md    | Release metadata and full validation passed review with no findings.                 |
 
 **Parallel groups:** None
-**Outstanding items:** Await final implementation review.
+**Outstanding items:** Create final PR.
 
 <!-- orchestration-runs-end -->
 
