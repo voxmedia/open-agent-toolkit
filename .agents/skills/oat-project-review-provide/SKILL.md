@@ -4,7 +4,7 @@ version: 1.3.7
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash(git:*), AskUserQuestion
+allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 ---
 
 # Request Review
@@ -639,7 +639,7 @@ oat_generated: true
 oat_generated_at: { today }
 oat_review_scope: { scope }
 oat_review_type: { code|artifact }
-oat_review_invocation: { manual|auto }
+oat_review_invocation: { manual|auto|gate }
 oat_project: { PROJECT_PATH }
 ---
 
@@ -655,12 +655,20 @@ oat_project: { PROJECT_PATH }
 
 - `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, minors auto-deferred for non-final scopes).
 - `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: minors are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
+- `gate`: Review was spawned by `oat gate review`. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. `oat-project-review-receive` treats gate reviews with the same standard disposition behavior as manual reviews unless a future implementation explicitly designs autonomous receive.
 
-When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter. For all other invocations (user-triggered, fresh session), use `manual`.
+When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter. When `oat gate review` spawns this skill, set `oat_review_invocation: gate`. For all other invocations (user-triggered, fresh session), use `manual`.
+
+Gate parsing contract:
+
+- Include either the `Findings: {N} critical, {N} important, {N} medium, {N} minor` summary line or the standard `## Findings` section with `### Critical`, `### Important`, `### Medium`, and `### Minor` subsections populated with findings or `None`.
+- Do not omit severity headings merely because a severity has zero findings; `oat gate review` depends on counts or standard Findings sections to determine whether the review blocks.
 
 ## Summary
 
 {2-3 sentence summary}
+
+Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 ## Findings
 

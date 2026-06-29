@@ -93,6 +93,10 @@ function currentSkillContent(
   ].join('\n');
 }
 
+async function readRepoFile(relativePath: string): Promise<string> {
+  return readFile(join(process.cwd(), '..', '..', relativePath), 'utf8');
+}
+
 describe('validateOatSkills', () => {
   const tempDirs: string[] = [];
 
@@ -678,6 +682,67 @@ describe('validateOatSkills', () => {
     }
 
     expect(invalidVersions).toEqual([]);
+  });
+
+  it('documents gate review provenance in review-provide and keeps model invocation gated', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    expect(content).toMatch(/^disable-model-invocation:\s*false$/m);
+    expect(content).toMatch(/## Model Invocation Gate/);
+    expect(content).toMatch(/explicit review asks/i);
+    expect(content).toMatch(
+      /confirms? a previously offered project-review step/i,
+    );
+    expect(content).toMatch(
+      /oat_review_invocation:\s*\{\s*manual\|auto\|gate\s*\}/,
+    );
+    expect(content).toMatch(/`gate`/);
+    expect(content).toMatch(/normal stateful review-provide behavior/i);
+  });
+
+  it('allows review-provide to run the full stateful review workflow', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const allowedTools = content.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
+
+    for (const requiredTool of [
+      'Read',
+      'Glob',
+      'Grep',
+      'Write',
+      'Edit',
+      'Bash(git:*)',
+      'Bash(oat:*)',
+      'Bash(pnpm:*)',
+    ]) {
+      expect(allowedTools).toContain(requiredTool);
+    }
+  });
+
+  it('documents gate invocation as standard receive disposition', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+
+    expect(content).toMatch(/oat_review_invocation/);
+    expect(content).toMatch(/`gate`/);
+    expect(content).toMatch(/standard disposition behavior/i);
+  });
+
+  it('requires reviewer artifacts to expose gate-parseable findings counts or sections', async () => {
+    const content = await readRepoFile('.agents/agents/oat-reviewer.md');
+
+    expect(content).toMatch(
+      /oat_review_invocation:\s*\{\s*manual\|auto\|gate\s*\}/,
+    );
+    expect(content).toMatch(
+      /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
+    );
+    expect(content).toMatch(/standard `## Findings` sections/i);
+    expect(content).toMatch(/`oat gate review`/);
   });
 
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {

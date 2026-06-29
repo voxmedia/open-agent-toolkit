@@ -274,6 +274,8 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
     - **No user prompts for disposition decisions.** The auto-review path runs fully autonomously.
     - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
+- If `oat_review_type == code` AND `oat_review_invocation == gate`:
+  - **Gate review mode.** This review was spawned by `oat gate review`, but receive remains standard disposition behavior. Treat `gate` the same as manual for prompts, finding conversion, artifact archival, and bookkeeping unless a future implementation explicitly designs an autonomous receive path.
 - If `oat_review_type == code` (manual or `oat_review_invocation` absent):
   - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
 
