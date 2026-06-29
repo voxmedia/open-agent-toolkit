@@ -14,7 +14,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 - [CLI Bootstrap](../cli-utilities/bootstrap.md) - Bootstrap a repo with `oat init`, guided setup, and initial provider adoption.
 - [Tool Packs](../cli-utilities/tool-packs.md) - Install, update, inspect, and remove bundled OAT skills and agents.
 - [Config and Local State](../cli-utilities/config-and-local-state.md) - Config, backlog, local paths, diagnostics, and related utility commands.
-- [Workflow Gates](../cli-utilities/workflow-gates.md) - Per-skill final commands and cross-runtime review dispatch.
+- [Workflow Gates](../cli-utilities/workflow-gates.md) - Per-skill final commands, review gates, and cross-runtime prompt dispatch.
 - [Docs Tooling Commands](../docs-tooling/commands.md) - Docs app scaffolding, migration, index generation, and nav sync.
 - [Provider Sync](../provider-sync/index.md) - Sync behavior, provider capabilities, config, and drift management.
 - [Agentic Workflows](../workflows/index.md) - Tracked project execution, skills, ideas, and workflow routing.
@@ -46,7 +46,7 @@ The first practical expansion path is to keep improving the existing owners: [Do
 | `oat decision ...`                              | Create, index, and migrate file-per-record repo decisions under `reference/decisions/` (`init`, `new`, `regenerate-index`, `migrate`).                                                                                     | [Config and Local State](../cli-utilities/config-and-local-state.md#oat-decision-) |
 | `oat backlog ...` / `oat local ...`             | File-backed backlog helpers, local path sync, and local-only operational support.                                                                                                                                          | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
 | `oat config ...` / `oat instructions ...`       | Config discovery, source-aware config dumps, supported mutations, and instruction-integrity helpers.                                                                                                                       | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
-| `oat gate ...`                                  | Per-skill final gate config, exec-target registry writes, and cross-runtime prompt dispatch.                                                                                                                               | [Workflow Gates](../cli-utilities/workflow-gates.md)                               |
+| `oat gate ...`                                  | Per-skill final gate config, review-specific gate execution, exec-target registry writes, and cross-runtime prompt dispatch.                                                                                               | [Workflow Gates](../cli-utilities/workflow-gates.md)                               |
 | `oat state ...` / `oat index ...` / `internal`  | Repo dashboard refresh, repo indexing, validation helpers, and diagnostics.                                                                                                                                                | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
 | `oat docs ...`                                  | Docs app bootstrap, migration, index generation, nav sync, and docs workflow entrypoints.                                                                                                                                  | [Docs Tooling Commands](../docs-tooling/commands.md)                               |
 | `oat status` / `oat sync` / `oat providers ...` | Provider sync, drift inspection, provider configuration, and adoption behavior.                                                                                                                                            | [Provider Sync](../provider-sync/index.md)                                         |
@@ -68,7 +68,8 @@ Notable commands introduced in the current CLI surface:
 - `oat repo archive sync [project-name]` - hydrate archived project snapshots from the configured repo-scoped S3 archive into `.oat/projects/archived/`. The old `oat project archive sync` path remains as a deprecated shim.
 - `oat project validate-plan --project-path <path>` - validates `oat_plan_parallel_groups` metadata in `plan.md`; exits non-zero on invalid. See [Implementation Execution](../workflows/projects/implementation-execution.md#validating-plan-metadata).
 - `oat project set-mode` — deprecated no-op. Execution mode is no longer user-selectable; emits a deprecation warning and preserves the `--json` contract.
-- `oat gate cross-provider-exec <prompt...>` - choose an available exec target while avoiding the current runtime by default, then run the prompt with the chosen target's configured base command.
+- `oat gate review <prompt...>` - run a stateful OAT review through the target registry, parse the produced review artifact, and exit nonzero for configured blocking findings; produced gate reviews use `oat_review_invocation: gate` and still require `oat-project-review-receive` handoff before they are dispositioned.
+- `oat gate cross-provider-exec <prompt...>` - choose an available exec target while avoiding the current runtime by default, then run the prompt with the chosen target's configured base command and exit with the child status.
 
 ## `oat config` surface flags
 
