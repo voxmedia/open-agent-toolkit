@@ -101,7 +101,7 @@ oat gate target set claude-opus \
   --base-command-json '["claude","-p","--model","opus"]' \
   --availability-json '["claude","--version"]' \
   --priority 90 \
-  --user
+  --layer user
 ```
 
 JSON argv is intentional: provider commands often contain flags such as `-p` or
@@ -165,9 +165,9 @@ oat gate set oat-project-implement \
   --description "Run final review in another runtime" \
   --on-failure block \
   --max-attempts 2 \
-  --user
+  --layer user
 
-oat gate unset oat-project-implement --user
+oat gate unset oat-project-implement --layer user
 ```
 
 Set or clear an exec target:
@@ -178,9 +178,9 @@ oat gate target set codex-high \
   --base-command-json '["codex","exec","--model","gpt-5.5"]' \
   --availability-json '["codex","--version"]' \
   --priority 90 \
-  --user
+  --layer user
 
-oat gate target unset codex-high --user
+oat gate target unset codex-high --layer user
 ```
 
 Dispatch a review through the target registry:
