@@ -172,7 +172,7 @@ oat_generated: false
 - `oat sync --scope all`
 
 **Review:** Passed with no findings in
-`reviews/p02-review-2026-06-29.md`.
+`reviews/archived/p02-review-2026-06-29.md`.
 
 ### Task p02-t01: Tag Gate-Produced Review Artifacts
 
@@ -259,7 +259,7 @@ oat_generated: false
 
 **Review:** Initial review found one Important and one Medium issue. Fix commits
 resolved both; re-review passed with no findings in
-`reviews/p03-review-2026-06-29-v2.md`.
+`reviews/archived/p03-review-2026-06-29-v2.md`.
 
 ### Task p03-t01: Document Stateful Review Gates and Trusted Targets
 
@@ -339,7 +339,7 @@ resolved both; re-review passed with no findings in
   `pnpm release:validate`, and `git diff --check origin/main...HEAD`.
 
 **Review:** Passed with no findings in
-`reviews/p04-review-2026-06-29.md`.
+`reviews/archived/p04-review-2026-06-29.md`.
 
 ### Task p04-t01: Apply Required Version Bumps
 
@@ -389,12 +389,12 @@ most-recent-first within the file but append-only at the bottom of the log._
 **Dispatch ceiling:** xhigh (codex, enforced - pinned variants)
 **Policy:** sequential phases; HiLL checkpoint only after final phase p04
 
-| Phase | Status | Review                              | Notes                                                                                |
-| ----- | ------ | ----------------------------------- | ------------------------------------------------------------------------------------ |
-| p01   | passed | reviews/p01-review-2026-06-29-v2.md | Initial review found blocking findings; fix loop resolved them and re-review passed. |
-| p02   | passed | reviews/p02-review-2026-06-29.md    | Lifecycle skill integration passed review with no findings.                          |
-| p03   | passed | reviews/p03-review-2026-06-29-v2.md | Initial review found docs/config drift; fix loop resolved it and re-review passed.   |
-| p04   | passed | reviews/p04-review-2026-06-29.md    | Release metadata and full validation passed review with no findings.                 |
+| Phase | Status | Review                                       | Notes                                                                                |
+| ----- | ------ | -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| p01   | passed | reviews/archived/p01-review-2026-06-29-v2.md | Initial review found blocking findings; fix loop resolved them and re-review passed. |
+| p02   | passed | reviews/archived/p02-review-2026-06-29.md    | Lifecycle skill integration passed review with no findings.                          |
+| p03   | passed | reviews/archived/p03-review-2026-06-29-v2.md | Initial review found docs/config drift; fix loop resolved it and re-review passed.   |
+| p04   | passed | reviews/archived/p04-review-2026-06-29.md    | Release metadata and full validation passed review with no findings.                 |
 
 **Parallel groups:** None
 **Outstanding items:** Await final implementation review.
@@ -549,8 +549,8 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 ### Review Received: p01
 
 **Date:** 2026-06-29
-**Initial review artifact:** reviews/p01-review-2026-06-29.md
-**Passing re-review artifact:** reviews/p01-review-2026-06-29-v2.md
+**Initial review artifact:** reviews/archived/p01-review-2026-06-29.md
+**Passing re-review artifact:** reviews/archived/p01-review-2026-06-29-v2.md
 
 **Initial findings:**
 
@@ -577,7 +577,7 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 ### Review Received: p02
 
 **Date:** 2026-06-29
-**Review artifact:** reviews/p02-review-2026-06-29.md
+**Review artifact:** reviews/archived/p02-review-2026-06-29.md
 
 **Findings:**
 
@@ -595,8 +595,8 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 ### Review Received: p03
 
 **Date:** 2026-06-29
-**Initial review artifact:** reviews/p03-review-2026-06-29.md
-**Passing re-review artifact:** reviews/p03-review-2026-06-29-v2.md
+**Initial review artifact:** reviews/archived/p03-review-2026-06-29.md
+**Passing re-review artifact:** reviews/archived/p03-review-2026-06-29-v2.md
 
 **Initial findings:**
 
@@ -622,7 +622,7 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 ### Review Received: p04
 
 **Date:** 2026-06-29
-**Review artifact:** reviews/p04-review-2026-06-29.md
+**Review artifact:** reviews/archived/p04-review-2026-06-29.md
 
 **Findings:**
 
@@ -640,8 +640,8 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 ### Review Received: final
 
 **Date:** 2026-06-29
-**Initial review artifact:** reviews/final-review-2026-06-29.md
-**Passing re-review artifact:** reviews/final-review-2026-06-29-v2.md
+**Initial review artifact:** reviews/archived/final-review-2026-06-29.md
+**Passing re-review artifact:** reviews/archived/final-review-2026-06-29-v2.md
 
 **Initial findings:**
 
