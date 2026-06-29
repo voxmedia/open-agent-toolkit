@@ -516,12 +516,16 @@ Before reporting this skill as complete, run the configured gate as the final st
 
 2. If a gate config is returned, run its `command` exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
 
-3. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+3. Review-artifact handoff:
+   - If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.
+   - This applies to `oat gate review ...` outputs regardless of whether the gate ultimately exits zero or nonzero; the command output owns the exact artifact path, and receive-review owns disposition and archival.
+
+4. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
-4. Runtime selection note (V1): the step runs the gate `command` as-is and reads no env var. By default, `oat gate cross-provider-exec` resolves the current host from built-in `hostDetectionCommand`s and avoids the same runtime with zero per-prompt input. It does not read or stamp `OAT_CURRENT_RUNTIME` or `OAT_GATE_EXEC_TARGET`. To pin a specific reviewer for this skill, set `--target <id>` once in that skill's gate `command`; this is the optional precision path and does not require per-prompt input.
+5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no env var. By default, `oat gate cross-provider-exec` resolves the current host from built-in `hostDetectionCommand`s and avoids the same runtime with zero per-prompt input. It does not read or stamp `OAT_CURRENT_RUNTIME` or `OAT_GATE_EXEC_TARGET`. To pin a specific reviewer for this skill, set `--target <id>` once in that skill's gate `command`; this is the optional precision path and does not require per-prompt input.
 
 ## Success Criteria
 

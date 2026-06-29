@@ -3,6 +3,7 @@ name: oat-project-import-plan
 version: 1.4.0
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
+oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -56,14 +57,15 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[0/7] Checking inherited git state...`
-  - `[1/7] Resolving project + source plan…`
-  - `[2/7] Preserving imported source…`
-  - `[3/7] Normalizing plan to OAT task structure…`
-  - `[4/7] Updating plan metadata…`
-  - `[5/7] Running import-aware plan review…`
-  - `[6/7] Updating project state + dashboard…`
-  - `[7/7] Ensuring implementation tracker…`
+  - `[0/8] Checking inherited git state...`
+  - `[1/8] Resolving project + source plan…`
+  - `[2/8] Preserving imported source…`
+  - `[3/8] Normalizing plan to OAT task structure…`
+  - `[4/8] Updating plan metadata…`
+  - `[5/8] Running import-aware plan review…`
+  - `[6/8] Updating project state + dashboard…`
+  - `[7/8] Ensuring implementation tracker + committing…`
+  - `[8/8] Running configured gate…`
 
 ## Process
 
@@ -255,6 +257,46 @@ If missing, scaffold from template:
 
 Initialize pointer to first plan task ID.
 
+### Step 6.5: Commit Import Artifacts
+
+After the import-aware plan artifact review, project state sync, dashboard refresh, and implementation tracker setup, stage and commit the changed import artifacts before handing off to implementation or stopping.
+
+```bash
+git add "$PROJECT_PATH/references/"
+for path in \
+  "$PROJECT_PATH/plan.md" \
+  "$PROJECT_PATH/implementation.md" \
+  "$PROJECT_PATH/state.md"; do
+  [ -e "$path" ] && git add "$path"
+done
+git diff --cached --quiet || git commit -m "chore(oat): update imported plan artifacts for {project-name}"
+```
+
+### Gate Execution
+
+Before reporting this skill as complete, run the configured gate as the final step after artifact review, state sync, dashboard refresh, and the import artifact commit:
+
+1. Resolve the gate for this skill:
+
+   ```bash
+   oat gate resolve <this-skill> --json
+   ```
+
+   If the command returns JSON `null`, no gate is configured; the skill is complete.
+
+2. If a gate config is returned, run its `command` exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
+
+3. Review-artifact handoff:
+   - If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.
+   - This applies to `oat gate review ...` outputs regardless of whether the gate ultimately exits zero or nonzero; the command output owns the exact artifact path, and receive-review owns disposition and archival.
+
+4. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+   - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
+   - `prompt`: surface the gate failure and ask the human how to proceed.
+   - `warn`: record the gate failure and continue.
+
+5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no env var. By default, `oat gate cross-provider-exec` resolves the current host from built-in `hostDetectionCommand`s and avoids the same runtime with zero per-prompt input. It does not read or stamp `OAT_CURRENT_RUNTIME` or `OAT_GATE_EXEC_TARGET`. To pin a specific reviewer for this skill, set `--target <id>` once in that skill's gate `command`; this is the optional precision path and does not require per-prompt input.
+
 ### Step 7: Output Next Action
 
 Report:
@@ -280,3 +322,5 @@ Report:
 - ✅ `## Planning Checklist` items left unchecked (HiLL configuration deferred to implementation).
 - ✅ `activeProject` in `.oat/config.local.json` points to the imported project.
 - ✅ `.oat/state.md` has been refreshed locally after pointer update; it is not staged or committed.
+- ✅ Changed import artifacts are committed before handoff or pause.
+- ✅ Configured gate has run, and any produced review artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.

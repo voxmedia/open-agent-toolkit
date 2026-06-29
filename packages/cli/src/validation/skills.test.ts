@@ -97,6 +97,10 @@ async function readRepoFile(relativePath: string): Promise<string> {
   return readFile(join(process.cwd(), '..', '..', relativePath), 'utf8');
 }
 
+function getFrontmatterForTest(content: string): string {
+  return content.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+}
+
 describe('validateOatSkills', () => {
   const tempDirs: string[] = [];
 
@@ -743,6 +747,61 @@ describe('validateOatSkills', () => {
     );
     expect(content).toMatch(/standard `## Findings` sections/i);
     expect(content).toMatch(/`oat gate review`/);
+  });
+
+  it('marks quick-start and import-plan as gateable lifecycle skills', async () => {
+    for (const skillName of [
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const frontmatter = getFrontmatterForTest(content);
+
+      expect(frontmatter, `${skillName} frontmatter`).toMatch(
+        /^oat_gateable:\s*true$/m,
+      );
+    }
+  });
+
+  it('adds Gate Execution steps to quick-start and import-plan', async () => {
+    for (const skillName of [
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+
+      expect(content, `${skillName} gate section`).toMatch(
+        /^### Gate Execution$/m,
+      );
+      expect(content, `${skillName} gate command`).toMatch(/oat gate /);
+    }
+  });
+
+  it('keeps gate-aware lifecycle review handoff wording consistent', async () => {
+    const handoffSentence =
+      'If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.';
+
+    for (const skillName of [
+      'oat-project-plan',
+      'oat-project-implement',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+
+      expect(content, `${skillName} handoff contract`).toContain(
+        handoffSentence,
+      );
+      expect(content, `${skillName} durable gate examples`).not.toMatch(
+        /dist\/index\.js|node\s+.*\/dist\//,
+      );
+    }
   });
 
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
