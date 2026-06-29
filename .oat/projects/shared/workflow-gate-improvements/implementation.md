@@ -16,24 +16,28 @@ oat_generated: false
 >
 > Conventions:
 >
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+> - `oat_current_task_id` always points at the **next plan task to do** (not the
+>   last completed task).
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under
+>   `## Reviews`.
+> - Keep phase/task statuses consistent with the Progress Overview table so
+>   restarts resume correctly.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 2 | pending     | 3     | 0/3       |
+| Phase 3 | pending     | 2     | 0/2       |
+| Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/10 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Review Gate CLI Semantics
 
 **Status:** in_progress
 **Started:** 2026-06-28
@@ -42,66 +46,127 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Pending.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- Pending.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Pending.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Keep generic `cross-provider-exec` child-status behavior unchanged.
+- Add review-specific semantics through `oat gate review`.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add Review Artifact Verdict Parsing
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Pending.
 
 **Files changed:**
 
-- `{path}` - {why}
+- Pending.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Pending.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+- Parser should prefer machine-readable fields but support existing standard
+  Findings sections.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add Review-Specific Gate Command
 
 **Status:** pending
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- The command must propagate gate provenance into the dispatched prompt so
+  review artifacts can be tagged `oat_review_invocation: gate`.
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Add Dev-Build Command Warning Polish
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- Warning is advisory only; absolute dev-build commands remain accepted for
+  local development of unmerged behavior.
+
+---
+
+## Phase 2: Lifecycle Skill Integration
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Tag Gate-Produced Review Artifacts
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Make Quick-Start and Import-Plan Gate-Aware
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Sync Provider Views for Changed Skills and Agents
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Documentation and Config Examples
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Document Stateful Review Gates and Handoff
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Refresh Repo Reference Notes
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Release Readiness and Full Verification
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Apply Required Version Bumps
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Run Final Validation Sweep
 
 **Status:** pending
 **Commit:** -
@@ -118,7 +183,8 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_Orchestration runs from `oat-project-implement` are appended here,
+most-recent-first within the file but append-only at the bottom of the log._
 
 <!-- orchestration-runs-end -->
 
@@ -126,85 +192,58 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-06-28
 
-**Session Start:** {time}
+**Session Start:** quick-start planning
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] Discovery captured and completed.
+- [x] Plan generated with inline structured plan review.
+- [x] Dispatch ceiling set to maximum: Codex `xhigh`, Claude `opus`.
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Quick project scaffolded for workflow-gate improvements.
+- Plan defines review-gate semantics, lifecycle skill integration, docs/config
+  polish, and release validation.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Gate reviews remain normal stateful `review-provide` runs.
+- `oat gate review` owns review-specific verdict-to-exit-code behavior.
+- Durable docs/config examples use `oat`, not absolute dev-build paths.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Begin implementation at `p01-t01`.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-06-28
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** planning complete
 
 ---
-
-## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
-
-## Test Results
-
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+Fill this when implementation is complete.
 
-- {capability 1}
-- {capability 2}
+**Delivered capabilities:**
 
-**Behavioral changes (user-facing):**
+- Pending.
 
-- {bullet}
+**User-visible changes:**
 
-**Key files / modules:**
+- Pending.
 
-- `{path}` - {purpose}
+**Key files changed:**
+
+- Pending.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Pending.
 
-**Design deltas (if any):**
+**Design/plan deviations:**
 
-- {what changed vs design.md and why}
-
-## References
-
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Pending.
