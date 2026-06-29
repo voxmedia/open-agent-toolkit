@@ -256,9 +256,7 @@ Expected: gate, latest-review, help snapshot, and type-check verification pass.
 ```bash
 git add packages/cli/src/commands/gate/index.ts \
   packages/cli/src/commands/gate/index.test.ts \
-  packages/cli/src/commands/help-snapshots.test.ts \
-  packages/cli/src/commands/gate/review-verdict.ts \
-  packages/cli/src/commands/gate/review-verdict.test.ts
+  packages/cli/src/commands/help-snapshots.test.ts
 git commit -m "feat(p01-t02): add review gate command"
 ```
 
@@ -444,7 +442,8 @@ Add tests that assert:
   when a gate reports a produced review artifact, the host must receive and
   disposition it with `oat-project-review-receive` before treating the review as
   consumed
-- changed skill version expectations are bumped
+- skill version bump expectations remain untouched in this content task; p04-t01
+  owns every changed skill/agent `version:` bump and matching expectation update
 
 Run:
 
@@ -467,7 +466,8 @@ Update the gate-aware skill files:
 - Ensure gate command examples use `oat gate review ...` or `oat gate ...`, not
   absolute dev-build paths.
 - Preserve existing quick-start/import-plan artifact review loops.
-- Bump each changed skill's frontmatter `version:` once for this PR.
+- Do not bump skill versions in this task. p04-t01 is the single owner for all
+  skill/agent version bumps in this PR.
 
 Run:
 
@@ -725,7 +725,11 @@ current package version.
 **Step 2: Update versions**
 
 Update all five public package manifests and the generated public package
-versions asset. Update skill-version test expectations for any changed skills.
+versions asset. Bump every changed canonical skill/agent frontmatter `version:`
+exactly once for the final PR diff, including files changed by p02-t01 and
+p02-t02. Update skill-version test expectations for every bumped skill/agent.
+This is the single owner for skill/agent version bumps; earlier content tasks do
+not bump versions.
 
 **Step 3: Verify release metadata**
 
@@ -776,7 +780,7 @@ Expected: all scoped tests pass.
 Run:
 
 ```bash
-pnpm lint
+pnpm check
 pnpm type-check
 pnpm build
 pnpm test
@@ -815,16 +819,16 @@ git diff --cached --quiet || git commit -m "chore(p04-t02): record workflow gate
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                      |
-| ------ | -------- | -------- | ---------- | --------------------------------------------- |
-| p01    | code     | pending  | -          | -                                             |
-| p02    | code     | pending  | -          | -                                             |
-| p03    | code     | pending  | -          | -                                             |
-| p04    | code     | pending  | -          | -                                             |
-| final  | code     | pending  | -          | -                                             |
-| spec   | artifact | pending  | -          | -                                             |
-| design | artifact | pending  | -          | -                                             |
-| plan   | artifact | received | 2026-06-28 | reviews/artifact-plan-review-2026-06-28-v2.md |
+| Scope  | Type     | Status  | Date       | Artifact                                               |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | pending | -          | -                                                      |
+| p02    | code     | pending | -          | -                                                      |
+| p03    | code     | pending | -          | -                                                      |
+| p04    | code     | pending | -          | -                                                      |
+| final  | code     | pending | -          | -                                                      |
+| spec   | artifact | pending | -          | -                                                      |
+| design | artifact | pending | -          | -                                                      |
+| plan   | artifact | passed  | 2026-06-28 | reviews/archived/artifact-plan-review-2026-06-28-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

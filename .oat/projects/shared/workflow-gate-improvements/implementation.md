@@ -121,7 +121,7 @@ oat_generated: false
 
 ---
 
-### Task p02-t02: Make Quick-Start and Import-Plan Gate-Aware
+### Task p02-t02: Normalize Gate-Aware Skill Handoff
 
 **Status:** pending
 **Commit:** -
@@ -140,7 +140,7 @@ oat_generated: false
 **Status:** pending
 **Started:** -
 
-### Task p03-t01: Document Stateful Review Gates and Handoff
+### Task p03-t01: Document Stateful Review Gates and Trusted Targets
 
 **Status:** pending
 **Commit:** -
@@ -200,6 +200,7 @@ most-recent-first within the file but append-only at the bottom of the log._
 - [x] Plan generated with inline structured plan review.
 - [x] Dispatch ceiling set to maximum: Codex `xhigh`, Claude `opus`.
 - [x] Independent plan artifact review received and resolved in `plan.md`.
+- [x] Plan artifact re-review received and resolved in `plan.md`.
 
 **What changed (high level):**
 
@@ -285,6 +286,50 @@ resolved by editing `plan.md` directly and refining existing tasks.
 
 **Next:** Re-review the plan artifact if desired, otherwise execute the plan via
 `oat-project-implement` starting at `p01-t01`.
+
+---
+
+### Review Received: plan re-review v2
+
+**Date:** 2026-06-29
+**Review artifact:** reviews/archived/artifact-plan-review-2026-06-28-v2.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 2
+
+**Artifact edits applied:**
+
+- Changed the final workspace validation sweep from `pnpm lint` to `pnpm check`
+  so local verification mirrors CI's lint plus format-check gate.
+- Centralized every changed skill/agent `version:` bump and matching test
+  expectation update in p04-t01, avoiding duplicate bump ownership in content
+  tasks.
+- Synced implementation task headings for p02-t02 and p03-t01 to the current
+  plan task titles.
+- Removed p01-t01-owned `review-verdict` files from the p01-t02 commit command
+  so its staged files match its declared scope.
+- Marked the v2 plan review row as `passed` and pointed it at the archived
+  review artifact.
+
+**Finding disposition map:**
+
+- M-N1 -> resolve_in_artifact: final verification now uses `pnpm check` for CI
+  format-check parity.
+- M-N2 -> resolve_in_artifact: p04-t01 is now the single owner for all
+  skill/agent version bumps.
+- m-N1 -> resolve_in_artifact: implementation task headings now match plan task
+  titles.
+- m-N2 -> resolve_in_artifact: p01-t02 `git add` scope now matches its Files
+  list.
+
+**New tasks added:** None. The re-review was an artifact review, so findings
+were resolved by editing `plan.md` and `implementation.md` directly.
+
+**Next:** Execute the plan via `oat-project-implement` starting at `p01-t01`.
 
 ---
 
