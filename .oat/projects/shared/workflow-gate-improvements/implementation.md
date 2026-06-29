@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-29
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | pending  | 3     | 0/3       |
+| Phase 2 | complete | 3     | 3/3       |
 | Phase 3 | pending  | 2     | 0/2       |
 | Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 3/10 tasks completed
+**Total:** 6/10 tasks completed
 
 ---
 
@@ -136,27 +136,83 @@ oat_generated: false
 
 ## Phase 2: Lifecycle Skill Integration
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-29
+**Completed:** 2026-06-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added `gate` review provenance to project review provide/receive and reviewer
+  instructions.
+- Kept `oat-project-review-provide` model-invokable with a prose invocation
+  gate and expanded its allowed tools for stateful review execution.
+- Made quick-start and import-plan gate-aware and added aligned Gate Execution
+  handoff requirements across quick-start, import-plan, plan, and implement.
+- Refreshed generated Codex reviewer role views after canonical reviewer-agent
+  changes.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.agents/agents/oat-reviewer.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `.agents/skills/oat-project-import-plan/SKILL.md`
+- `.agents/skills/oat-project-plan/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `packages/cli/src/validation/skills.test.ts`
+- `.codex/agents/oat-reviewer*.toml`
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- `pnpm run oat:validate-skills`
+- `oat sync --scope all`
+
+**Review:** Passed with no findings in
+`reviews/p02-review-2026-06-29.md`.
 
 ### Task p02-t01: Tag Gate-Produced Review Artifacts
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 3d142ec9
+
+**Notes:**
+
+- `oat_review_invocation` now documents `manual|auto|gate`.
+- Gate-originated reviews remain normal stateful review-provide runs and are
+  received with standard/manual disposition semantics.
+- Review outputs must expose complete counts or standard Findings sections for
+  `oat gate review` parsing.
 
 ---
 
 ### Task p02-t02: Normalize Gate-Aware Skill Handoff
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** cb0e2ccd
+
+**Notes:**
+
+- Quick-start and import-plan now declare `oat_gateable: true`.
+- All four gate-aware lifecycle skills share the same produced-review handoff
+  rule: run `oat-project-review-receive` before treating the review as
+  consumed.
 
 ---
 
 ### Task p02-t03: Sync Provider Views for Changed Skills and Agents
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 70099404
+
+**Notes:**
+
+- Provider sync produced Codex reviewer role exports. Claude and Cursor reviewer
+  views remain symlink-backed.
+- No skill/agent or public package versions were bumped in p02; p04 owns that.
 
 ---
 
@@ -221,9 +277,10 @@ most-recent-first within the file but append-only at the bottom of the log._
 | Phase | Status | Review                              | Notes                                                                                |
 | ----- | ------ | ----------------------------------- | ------------------------------------------------------------------------------------ |
 | p01   | passed | reviews/p01-review-2026-06-29-v2.md | Initial review found blocking findings; fix loop resolved them and re-review passed. |
+| p02   | passed | reviews/p02-review-2026-06-29.md    | Lifecycle skill integration passed review with no findings.                          |
 
 **Parallel groups:** None
-**Outstanding items:** Continue with p02-t01.
+**Outstanding items:** Continue with p03-t01.
 
 <!-- orchestration-runs-end -->
 
@@ -397,6 +454,24 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 **Re-review result:** Passed with no findings.
 
 **Next:** Continue implementation at `p02-t01`.
+
+---
+
+### Review Received: p02
+
+**Date:** 2026-06-29
+**Review artifact:** reviews/p02-review-2026-06-29.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Result:** Passed. No fix tasks required.
+
+**Next:** Continue implementation at `p03-t01`.
 
 ---
 
