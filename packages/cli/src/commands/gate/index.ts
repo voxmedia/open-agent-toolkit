@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative } from 'node:path';
 
@@ -135,6 +136,7 @@ export interface SelectedExecTarget {
 interface ReviewGateArtifactCandidate extends LatestReview {
   generatedTime: number;
   lifecycleRank: number;
+  signature: string;
 }
 
 const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
@@ -935,6 +937,7 @@ async function readReviewGateArtifactCandidate(
     actionable: true,
     generatedTime,
     lifecycleRank: reviewGateLifecycleRank(scope),
+    signature: createHash('sha256').update(content).digest('hex'),
   };
 }
 
@@ -951,10 +954,10 @@ function sortReviewGateArtifacts(
   return left.path.localeCompare(right.path);
 }
 
-async function findLatestActiveProjectReview(options: {
+async function listActiveProjectReviewCandidates(options: {
   repoRoot: string;
   projectPath: string;
-}): Promise<LatestReview | null> {
+}): Promise<ReviewGateArtifactCandidate[]> {
   const projectPath = normalizeRepoRelativeProjectPath(
     options.repoRoot,
     options.projectPath,
@@ -973,12 +976,12 @@ async function findLatestActiveProjectReview(options: {
       'code' in error &&
       error.code === 'ENOENT'
     ) {
-      return null;
+      return [];
     }
     throw error;
   }
 
-  const candidates = (
+  return (
     await Promise.all(
       entries
         .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
@@ -995,33 +998,21 @@ async function findLatestActiveProjectReview(options: {
         candidate !== null,
     )
     .sort(sortReviewGateArtifacts);
-
-  const latest = candidates[0];
-  if (!latest) {
-    return null;
-  }
-
-  return {
-    path: latest.path,
-    scope: latest.scope,
-    generatedAt: latest.generatedAt,
-    kind: latest.kind,
-    archived: latest.archived,
-    actionable: latest.actionable,
-  };
 }
 
-function reviewArtifactChanged(
-  before: LatestReview | null,
-  after: LatestReview | null,
-): after is LatestReview {
-  if (!after) {
-    return false;
-  }
+function findProducedReviewArtifact(
+  before: readonly ReviewGateArtifactCandidate[],
+  after: readonly ReviewGateArtifactCandidate[],
+): ReviewGateArtifactCandidate | null {
+  const beforeSignatures = new Map(
+    before.map((candidate) => [candidate.path, candidate.signature]),
+  );
+
   return (
-    !before ||
-    before.path !== after.path ||
-    before.generatedAt !== after.generatedAt
+    after.find(
+      (candidate) =>
+        beforeSignatures.get(candidate.path) !== candidate.signature,
+    ) ?? null
   );
 }
 
@@ -1268,7 +1259,7 @@ async function runReviewGate(
       dependencies,
     );
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
-    const before = await findLatestActiveProjectReview({
+    const before = await listActiveProjectReviewCandidates({
       repoRoot,
       projectPath,
     });
@@ -1295,25 +1286,28 @@ async function runReviewGate(
       return;
     }
 
-    const after = await findLatestActiveProjectReview({
+    const after = await listActiveProjectReviewCandidates({
       repoRoot,
       projectPath,
     });
-    if (!reviewArtifactChanged(before, after)) {
+    const producedArtifact = findProducedReviewArtifact(before, after);
+    if (!producedArtifact) {
       throw new Error(
         `No new review artifact was detected for project ${projectPath}. Ensure the review provider wrote a project review artifact before the gate exits.`,
       );
     }
 
-    const verdict = await parseReviewGateVerdict(join(repoRoot, after.path));
+    const verdict = await parseReviewGateVerdict(
+      join(repoRoot, producedArtifact.path),
+    );
     const blocking = reviewBlocksAtThreshold(verdict, threshold);
-    const handoff = `Run oat-project-review-receive for ${after.path} before treating this gate review as consumed.`;
+    const handoff = `Run oat-project-review-receive for ${producedArtifact.path} before treating this gate review as consumed.`;
 
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
       target: selected.id,
       project: projectPath,
-      artifactPath: after.path,
+      artifactPath: producedArtifact.path,
       threshold,
       blocking,
       counts: verdict.counts,

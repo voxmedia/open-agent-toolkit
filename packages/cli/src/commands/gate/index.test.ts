@@ -307,6 +307,7 @@ describe('oat gate', () => {
     projectPath: string;
     fileName?: string;
     generatedAt?: string;
+    reviewScope?: string;
     finding?: 'important' | 'clean';
   }): Promise<string> {
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
@@ -324,7 +325,7 @@ describe('oat gate', () => {
         'oat_generated: true',
         `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
         'oat_review_type: code',
-        'oat_review_scope: p01',
+        `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
         'oat_review_invocation: gate',
         `oat_project: ${options.projectPath}`,
         '---',
@@ -340,6 +341,14 @@ describe('oat gate', () => {
         '### Important',
         '',
         ...importantContent,
+        '',
+        '### Medium',
+        '',
+        'None',
+        '',
+        '### Minor',
+        '',
+        'None',
       ].join('\n'),
       'utf8',
     );
@@ -1402,6 +1411,48 @@ describe('oat gate', () => {
       counts: { critical: 0, important: 0 },
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('detects a same-day lower-rank review produced when a higher-rank review already exists', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeReviewArtifact({
+      root,
+      projectPath,
+      fileName: 'final-review.md',
+      generatedAt: '2026-06-29',
+      reviewScope: 'final',
+      finding: 'clean',
+    });
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'p01-review.md',
+          generatedAt: '2026-06-29',
+          reviewScope: 'p01',
+          finding: 'important',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      project: projectPath,
+      artifactPath,
+      counts: { critical: 0, important: 1 },
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('preserves nonzero child exit codes without masking them with artifact parsing', async () => {
