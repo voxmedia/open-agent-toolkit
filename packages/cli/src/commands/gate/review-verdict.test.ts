@@ -103,6 +103,89 @@ None
     });
   });
 
+  it('parses findings when explicit frontmatter counts are partial', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+oat_review_critical_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+- Important body finding that must not be suppressed by partial counts
+
+### Medium
+
+None
+
+### Minor
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: {
+        critical: 0,
+        important: 1,
+        medium: 0,
+        minor: 0,
+      },
+      blocking: true,
+    });
+  });
+
+  it('counts only top-level findings in standard nested OAT sections', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+- **Review gate accepts archived artifacts** (\`packages/cli/src/commands/gate/index.ts:1129\`)
+  - Issue: The nested issue detail explains the finding.
+  - Fix: The nested fix detail explains the remediation.
+
+### Medium
+
+1. **Fallback parser overcounts nested findings** (\`packages/cli/src/commands/gate/review-verdict.ts:113\`)
+   - Issue: Nested bullets are details, not separate findings.
+   - Fix: Count only the top-level numbered item.
+
+### Minor
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: {
+        critical: 0,
+        important: 1,
+        medium: 1,
+        minor: 0,
+      },
+      blocking: true,
+    });
+  });
+
   it('treats clean blocking sections as zero findings', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code

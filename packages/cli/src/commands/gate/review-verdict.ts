@@ -71,7 +71,6 @@ function readFrontmatterCounts(
     medium: 0,
     minor: 0,
   };
-  let foundExplicitCount = false;
 
   for (const severity of SEVERITIES) {
     const candidateValues = [
@@ -79,19 +78,30 @@ function readFrontmatterCounts(
       ...(nestedCounts
         ? FRONTMATTER_COUNT_KEYS[severity].map((key) => nestedCounts[key])
         : []),
-    ];
+    ].filter((value) => value !== undefined && value !== null);
 
-    for (const value of candidateValues) {
-      const parsed = parseCountValue(value);
-      if (parsed !== null) {
-        counts[severity] = parsed;
-        foundExplicitCount = true;
-        break;
-      }
+    if (candidateValues.length === 0) {
+      return null;
     }
+
+    const parsedCount = candidateValues.reduce<number | null>(
+      (parsed, value) => {
+        if (parsed !== null) {
+          return parsed;
+        }
+        return parseCountValue(value);
+      },
+      null,
+    );
+
+    if (parsedCount === null) {
+      return null;
+    }
+
+    counts[severity] = parsedCount;
   }
 
-  return foundExplicitCount ? counts : null;
+  return counts;
 }
 
 function sectionContentIsEmpty(content: string): boolean {
@@ -112,7 +122,7 @@ function countFindingsInSection(content: string): number {
 
   return content
     .split('\n')
-    .filter((line) => /^(\s*[-*+]\s+\S|\s*\d+\.\s+\S)/.test(line)).length;
+    .filter((line) => /^([-*+]\s+\S|\d+\.\s+\S)/.test(line)).length;
 }
 
 function normalizeHeading(value: string): Severity | null {
