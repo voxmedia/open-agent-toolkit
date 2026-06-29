@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-29
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 1 | complete | 3     | 3/3       |
 | Phase 2 | complete | 3     | 3/3       |
 | Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | pending  | 2     | 0/2       |
+| Phase 4 | complete | 2     | 2/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -288,20 +288,78 @@ resolved both; re-review passed with no findings in
 
 ## Phase 4: Release Readiness and Full Verification
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-29
+**Completed:** 2026-06-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Bumped the lockstep public package set from `0.1.35` to `0.1.36`.
+- Bumped every changed canonical skill/agent version for the final PR diff.
+- Refreshed sync manifest metadata for `oatVersion: 0.1.36`.
+- Ran the scoped, workspace, release, docs, and gate smoke validations.
+
+**Key files touched:**
+
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+- `packages/cli/assets/public-package-versions.json`
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.agents/agents/oat-reviewer.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `.agents/skills/oat-project-import-plan/SKILL.md`
+- `.agents/skills/oat-project-plan/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.oat/sync/manifest.json`
+- `packages/cli/src/validation/skills.test.ts`
+
+**Verification:**
+
+- `pnpm release:check-versions`
+- `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts src/commands/review/__tests__/latest.test.ts src/validation/skills.test.ts src/commands/help-snapshots.test.ts`
+- `pnpm check`
+- `pnpm type-check`
+- `pnpm build`
+- `pnpm test`
+- `pnpm build:docs`
+- `pnpm release:validate`
+- Temp smoke tests for blocked/clean `oat gate review`, dev-build warning,
+  durable `oat gate ...` command acceptance, and simulated provider-denial
+  output.
+
+**Review:** Passed with no findings in
+`reviews/p04-review-2026-06-29.md`.
 
 ### Task p04-t01: Apply Required Version Bumps
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 46cd0d8c
+
+**Notes:**
+
+- Public packages and public-package asset are at `0.1.36`.
+- Changed canonical skill/agent versions were bumped exactly once for the final
+  PR diff.
 
 ---
 
 ### Task p04-t02: Run Final Validation Sweep
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 46cd0d8c
+
+**Notes:**
+
+- Full validation and planned smoke checks passed.
+- Live Claude review invocation smoke was skipped because it would start a
+  stateful external review with artifact and commit side effects.
 
 ---
 
@@ -330,9 +388,10 @@ most-recent-first within the file but append-only at the bottom of the log._
 | p01   | passed | reviews/p01-review-2026-06-29-v2.md | Initial review found blocking findings; fix loop resolved them and re-review passed. |
 | p02   | passed | reviews/p02-review-2026-06-29.md    | Lifecycle skill integration passed review with no findings.                          |
 | p03   | passed | reviews/p03-review-2026-06-29-v2.md | Initial review found docs/config drift; fix loop resolved it and re-review passed.   |
+| p04   | passed | reviews/p04-review-2026-06-29.md    | Release metadata and full validation passed review with no findings.                 |
 
 **Parallel groups:** None
-**Outstanding items:** Continue with p04-t01.
+**Outstanding items:** Await final implementation review.
 
 <!-- orchestration-runs-end -->
 
@@ -554,26 +613,80 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 
 ---
 
-## Final Summary (for PR/docs)
+### Review Received: p04
 
-Fill this when implementation is complete.
+**Date:** 2026-06-29
+**Review artifact:** reviews/p04-review-2026-06-29.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Result:** Passed. No fix tasks required.
+
+**Next:** Run final implementation review.
+
+---
+
+## Final Summary (for PR/docs)
 
 **Delivered capabilities:**
 
-- Pending.
+- `oat gate review` adds review-specific gate semantics on top of the target
+  registry: it runs a normal review, resolves the produced project review
+  artifact, parses findings, and returns blocking status for configured
+  severities.
+- Generic `oat gate cross-provider-exec` remains child-status based for
+  arbitrary non-review commands.
+- Gate-produced reviews are explicitly stateful, use
+  `oat_review_invocation: gate`, and require `oat-project-review-receive`
+  handoff before being treated as dispositioned.
+- Quick-start and import-plan now participate in configured gate execution.
+- Trusted provider permission/force flags are documented as user-configured gate
+  targets, not built-in defaults.
 
 **User-visible changes:**
 
-- Pending.
+- New `oat gate review` CLI surface with artifact handoff output and blocking
+  verdict mapping.
+- Built-in `cursor-default` now runs `cursor-agent -p`; force/yolo mode is an
+  explicit trusted user target.
+- Durable docs examples use `oat gate ...` and `--layer user` for gate writes.
+- Public packages move to `0.1.36`.
 
 **Key files changed:**
 
-- Pending.
+- `packages/cli/src/commands/gate/index.ts`
+- `packages/cli/src/commands/gate/review-verdict.ts`
+- `packages/cli/src/config/oat-config.ts`
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.agents/agents/oat-reviewer.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `.agents/skills/oat-project-import-plan/SKILL.md`
+- `.agents/skills/oat-project-plan/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
 
 **Verification performed:**
 
-- Pending.
+- Phase-level reviews passed for p01, p02, p03, and p04.
+- `pnpm check`
+- `pnpm type-check`
+- `pnpm build`
+- `pnpm test`
+- `pnpm build:docs`
+- `pnpm release:validate`
+- Scoped gate/review/latest/skills/help Vitest checks.
+- Release version checks and canonical skill-version bump validation.
+- Temp CLI gate smoke checks for blocking verdicts, clean verdicts, dev-build
+  warnings, durable command acceptance, and provider-denial output.
 
 **Design/plan deviations:**
 
-- Pending.
+- No accepted design deviations. The p03 fix removed `--force` from the built-in
+  Cursor target to align implementation with the selected user-configured
+  trusted-target contract.

@@ -826,7 +826,7 @@ git diff --cached --quiet || git commit -m "chore(p04-t02): record workflow gate
 | p01    | code     | passed  | 2026-06-29 | reviews/p01-review-2026-06-29-v2.md                    |
 | p02    | code     | passed  | 2026-06-29 | reviews/p02-review-2026-06-29.md                       |
 | p03    | code     | passed  | 2026-06-29 | reviews/p03-review-2026-06-29-v2.md                    |
-| p04    | code     | pending | -          | -                                                      |
+| p04    | code     | passed  | 2026-06-29 | reviews/p04-review-2026-06-29.md                       |
 | final  | code     | pending | -          | -                                                      |
 | spec   | artifact | pending | -          | -                                                      |
 | design | artifact | pending | -          | -                                                      |
