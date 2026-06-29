@@ -45,7 +45,7 @@ Cursor with runtime detection and availability commands:
 
 - `codex-default` runs `codex exec`
 - `claude-default` runs `claude -p`
-- `cursor-default` runs `cursor-agent -p --force`
+- `cursor-default` runs `cursor-agent -p`
 
 The new `oat gate` command group provides:
 

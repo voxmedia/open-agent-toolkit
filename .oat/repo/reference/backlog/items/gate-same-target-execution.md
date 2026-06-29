@@ -82,7 +82,7 @@ Builds on V1's config shape `workflow.gates.{ execTargets, skills }`.
     "claude-default":     { "runtime": "claude", "baseCommand": ["claude","-p"], "priority": 100 },
     "claude-opus":        { "runtime": "claude", "baseCommand": ["claude","-p","--model","opus"], "priority": 90 },
     "claude-opus-xhigh":  { "runtime": "claude", "baseCommand": ["claude","-p","--model","opus","--effort","xhigh"], "priority": 80 },
-    "cursor-default":     { "runtime": "cursor", "baseCommand": ["cursor-agent","-p","--force"], "priority": 70 }
+    "cursor-default":     { "runtime": "cursor", "baseCommand": ["cursor-agent","-p"], "priority": 70 }
   }
   ```
 
@@ -125,9 +125,11 @@ Builds on V1's config shape `workflow.gates.{ execTargets, skills }`.
   `composer-2.5` ≡ `composer-2.5-fast` without a tested rule; exact match → detected, else unknown
   → degrade. Prefer `oat internal cursor-current-target matches <slug>` over raw shell in config.
 
-- **Cursor dispatch semantics:** `cursor-agent -p --force --model <slug>` should be treated as a
-  fresh headless subprocess. Even when the runtime is still Cursor, the gate is not resuming the
-  current conversation; it is selecting a configured target for a new execution.
+- **Cursor dispatch semantics:** `cursor-agent -p --model <slug>` should be treated as a
+  fresh headless subprocess. Trusted targets that need noninteractive approval bypass can opt into
+  `--force` or `--yolo` in user-configured `workflow.gates.execTargets`. Even when the runtime is
+  still Cursor, the gate is not resuming the current conversation; it is selecting a configured
+  target for a new execution.
 
 ### Load-bearing rules (carried from V1, must hold in V2 too)
 

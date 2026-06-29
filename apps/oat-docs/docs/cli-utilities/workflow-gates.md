@@ -80,11 +80,11 @@ id.
 
 Built-in targets:
 
-| Target id        | Runtime  | Base command                        | Current-host detector                   |
-| ---------------- | -------- | ----------------------------------- | --------------------------------------- |
-| `codex-default`  | `codex`  | `["codex", "exec"]`                 | `CODEX_THREAD_ID` or `CODEX_SESSION_ID` |
-| `claude-default` | `claude` | `["claude", "-p"]`                  | `CLAUDECODE`                            |
-| `cursor-default` | `cursor` | `["cursor-agent", "-p", "--force"]` | `CURSOR_AGENT`                          |
+| Target id        | Runtime  | Base command             | Current-host detector                   |
+| ---------------- | -------- | ------------------------ | --------------------------------------- |
+| `codex-default`  | `codex`  | `["codex", "exec"]`      | `CODEX_THREAD_ID` or `CODEX_SESSION_ID` |
+| `claude-default` | `claude` | `["claude", "-p"]`       | `CLAUDECODE`                            |
+| `cursor-default` | `cursor` | `["cursor-agent", "-p"]` | `CURSOR_AGENT`                          |
 
 Built-in targets are conservative defaults. Trusted noninteractive gates that
 need to run tools without hanging on provider approval prompts should be
