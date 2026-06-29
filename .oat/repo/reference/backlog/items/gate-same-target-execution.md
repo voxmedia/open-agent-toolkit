@@ -8,7 +8,7 @@ scope_estimate: L # XS | S | M | L | XL | XXL
 labels: [gates, workflow-end-triggers, cross-provider, v2]
 assignee: null
 created: '2026-06-20T17:40:00Z'
-updated: '2026-06-21T00:00:00Z'
+updated: '2026-06-29T00:00:00Z'
 associated_issues: [{ type: project, ref: 'workflow-end-triggers' }]
 oat_template: false
 ---
@@ -56,6 +56,17 @@ target-detection machinery lands once it's worth the complexity.
 - **Deferred enhancement:** **authoritative current-runtime auto-stamping** by an external orchestrator (so
   even non-built-in / unknown hosts get reliable `same-runtime` avoidance). V1 does not need it — built-in
   detection covers the supported runtimes; an unknown host simply excludes nothing.
+
+### Boundary note (2026-06-29 workflow-gate-improvements)
+
+The `workflow-gate-improvements` follow-up narrows V1 repair to semantic review
+gates and lifecycle handoff: `oat gate review` interprets produced review
+artifacts, while `cross-provider-exec` stays a generic child-status executor.
+Trusted provider permission flags remain user-level `workflow.gates.execTargets`
+configuration, and dispatch ceilings remain separate from gate target config.
+
+This backlog item still owns same-target/model-level target detection. Do not
+fold that V2 target-identity work into V1 review-gate semantics.
 
 ### Design already settled (Codex session 2026-06-20)
 
