@@ -821,16 +821,16 @@ git diff --cached --quiet || git commit -m "chore(p04-t02): record workflow gate
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                               |
-| ------ | -------- | -------- | ---------- | ------------------------------------------------------ |
-| p01    | code     | passed   | 2026-06-29 | reviews/archived/p01-review-2026-06-29-v2.md           |
-| p02    | code     | passed   | 2026-06-29 | reviews/archived/p02-review-2026-06-29.md              |
-| p03    | code     | passed   | 2026-06-29 | reviews/archived/p03-review-2026-06-29-v2.md           |
-| p04    | code     | passed   | 2026-06-29 | reviews/archived/p04-review-2026-06-29.md              |
-| final  | code     | received | 2026-06-29 | reviews/final-review-2026-06-29-v3.md                  |
-| spec   | artifact | pending  | -          | -                                                      |
-| design | artifact | pending  | -          | -                                                      |
-| plan   | artifact | passed   | 2026-06-28 | reviews/archived/artifact-plan-review-2026-06-28-v2.md |
+| Scope  | Type     | Status  | Date       | Artifact                                               |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------ |
+| p01    | code     | passed  | 2026-06-29 | reviews/archived/p01-review-2026-06-29-v2.md           |
+| p02    | code     | passed  | 2026-06-29 | reviews/archived/p02-review-2026-06-29.md              |
+| p03    | code     | passed  | 2026-06-29 | reviews/archived/p03-review-2026-06-29-v2.md           |
+| p04    | code     | passed  | 2026-06-29 | reviews/archived/p04-review-2026-06-29.md              |
+| final  | code     | passed  | 2026-06-29 | reviews/archived/final-review-2026-06-29-v3.md         |
+| spec   | artifact | pending | -          | -                                                      |
+| design | artifact | pending | -          | -                                                      |
+| plan   | artifact | passed  | 2026-06-28 | reviews/archived/artifact-plan-review-2026-06-28-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
