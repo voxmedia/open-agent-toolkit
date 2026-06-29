@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: b493bc5b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-06-28T21:47:24.627Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-06-29T13:16:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-06-29T13:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -35,11 +35,11 @@ oat_generated: false
 
 **Status:** Implementation in progress
 **Started:** 2026-06-28
-**Last Updated:** 2026-06-28
+**Last Updated:** 2026-06-29
 
 ## Current Phase
 
-Implementation - Starting phase p01 at `p01-t01`
+Implementation - Phase p01 passed; next task is `p02-t01`
 
 ## Artifacts
 
@@ -56,7 +56,8 @@ Implementation - Starting phase p01 at `p01-t01`
 - ✓ Discovery complete
 - ✓ Plan artifact reviews received and resolved
 - ✓ Implementation tracker initialized
-- ⧗ Implementation started at `p01-t01`
+- ✓ Phase 1 implementation and review complete
+- ⧗ Next implementation task is `p02-t01`
 
 ## Blockers
 
@@ -64,4 +65,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1: Review Gate CLI Semantics
+Complete Phase 2: Lifecycle Skill Integration

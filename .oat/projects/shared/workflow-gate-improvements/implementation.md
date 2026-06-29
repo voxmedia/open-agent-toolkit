@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-28
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-06-29
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
 # Implementation: workflow-gate-improvements
 
 **Started:** 2026-06-28
-**Last Updated:** 2026-06-28
+**Last Updated:** 2026-06-29
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,81 +26,106 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 0/3       |
-| Phase 2 | pending     | 3     | 0/3       |
-| Phase 3 | pending     | 2     | 0/2       |
-| Phase 4 | pending     | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | pending  | 3     | 0/3       |
+| Phase 3 | pending  | 2     | 0/2       |
+| Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 0/10 tasks completed
+**Total:** 3/10 tasks completed
 
 ---
 
 ## Phase 1: Review Gate CLI Semantics
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-06-28
+**Completed:** 2026-06-29
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- Pending.
+- Added a review-specific `oat gate review` path that preserves generic
+  `cross-provider-exec` semantics while mapping review artifact findings to
+  blocking exit status.
+- Added review artifact verdict parsing for explicit complete count metadata
+  and standard Findings sections.
+- Added advisory warnings for obvious absolute dev-build `oat gate ...`
+  commands while keeping local development commands accepted.
+- Fixed p01 review findings by including the resolved project in the child
+  prompt, constraining gate artifact discovery to active top-level project
+  review artifacts, and hardening parser counts.
 
 **Key files touched:**
 
-- Pending.
+- `packages/cli/src/commands/gate/index.ts`
+- `packages/cli/src/commands/gate/index.test.ts`
+- `packages/cli/src/commands/gate/review-verdict.ts`
+- `packages/cli/src/commands/gate/review-verdict.test.ts`
+- `packages/cli/src/commands/help-snapshots.test.ts`
 
 **Verification:**
 
-- Pending.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts src/commands/gate/index.test.ts src/commands/help-snapshots.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/__tests__/latest.test.ts`
+- `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`
 
 **Notes / Decisions:**
 
 - Keep generic `cross-provider-exec` child-status behavior unchanged.
 - Add review-specific semantics through `oat gate review`.
+- Initial p01 review found three Important issues and one Medium issue. Fix
+  commits resolved all findings; p01 re-review passed with no findings.
 
 ### Task p01-t01: Add Review Artifact Verdict Parsing
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** 959da468, 3c8fac44, f8c82dc3
 
 **Outcome (required when completed):**
 
-- Pending.
+- Added a conservative review verdict parser with explicit count metadata
+  support and standard Findings-section fallback parsing.
 
 **Files changed:**
 
-- Pending.
+- `packages/cli/src/commands/gate/review-verdict.ts`
+- `packages/cli/src/commands/gate/review-verdict.test.ts`
 
 **Verification:**
 
-- Pending.
+- Parser and gate command Vitest suites passed.
 
 **Notes / Decisions:**
 
 - Parser should prefer machine-readable fields but support existing standard
   Findings sections.
+- Complete explicit counts are authoritative; partial explicit counts fall back
+  to body parsing rather than false-passing missing severities.
 
 ---
 
 ### Task p01-t02: Add Review-Specific Gate Command
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 75269b44, f9684297, 82ad6651
 
 **Notes:**
 
 - The command must propagate gate provenance into the dispatched prompt so
   review artifacts can be tagged `oat_review_invocation: gate`.
+- The command now also passes the normalized resolved project path in the child
+  prompt and accepts only active top-level project review artifacts as gate
+  outputs.
 
 ---
 
 ### Task p01-t03: Add Dev-Build Command Warning Polish
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 48347fca
 
 **Notes:**
 
@@ -185,6 +210,20 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here,
 most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 - 2026-06-29
+
+**Branch:** workflow-end-triggers-feedback
+**Tier:** 1 - Subagents
+**Dispatch ceiling:** xhigh (codex, enforced - pinned variants)
+**Policy:** sequential phases; HiLL checkpoint only after final phase p04
+
+| Phase | Status | Review                              | Notes                                                                                |
+| ----- | ------ | ----------------------------------- | ------------------------------------------------------------------------------------ |
+| p01   | passed | reviews/p01-review-2026-06-29-v2.md | Initial review found blocking findings; fix loop resolved them and re-review passed. |
+
+**Parallel groups:** None
+**Outstanding items:** Continue with p02-t01.
 
 <!-- orchestration-runs-end -->
 
@@ -330,6 +369,34 @@ resolved by editing `plan.md` directly and refining existing tasks.
 were resolved by editing `plan.md` and `implementation.md` directly.
 
 **Next:** Execute the plan via `oat-project-implement` starting at `p01-t01`.
+
+---
+
+### Review Received: p01
+
+**Date:** 2026-06-29
+**Initial review artifact:** reviews/p01-review-2026-06-29.md
+**Passing re-review artifact:** reviews/p01-review-2026-06-29-v2.md
+
+**Initial findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 1
+- Minor: 0
+
+**Fixes applied:**
+
+- Passed the normalized resolved project path to the child review provider.
+- Constrained review gate artifact discovery to active top-level project review
+  artifacts under the resolved project's `reviews/` directory.
+- Hardened explicit review count parsing so partial counts do not suppress body
+  findings.
+- Counted only top-level findings in standard nested OAT Findings sections.
+
+**Re-review result:** Passed with no findings.
+
+**Next:** Continue implementation at `p02-t01`.
 
 ---
 
