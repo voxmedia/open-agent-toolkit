@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-06-29
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 3     | 3/3       |
 | Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | pending  | 2     | 0/2       |
+| Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 6/10 tasks completed
+**Total:** 8/10 tasks completed
 
 ---
 
@@ -218,20 +218,71 @@ oat_generated: false
 
 ## Phase 3: Documentation and Config Examples
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-06-29
+**Completed:** 2026-06-29
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Documented `oat gate review` as the stateful review-specific gate path and
+  kept `cross-provider-exec` as a generic child-status executor.
+- Documented gate review provenance, expected stateful side effects, and the
+  required `oat-project-review-receive` handoff.
+- Added trusted user-level target examples for Codex, Claude, and Cursor without
+  making bypass/force flags built-in defaults.
+- Refreshed repo reference notes and ADR context for the V1/V2 boundary.
+- Fixed p03 review findings by removing `--force` from the built-in
+  `cursor-default` target and replacing unsupported gate `--user` examples with
+  `--layer user`.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- `.oat/repo/reference/current-state.md`
+- `.oat/repo/reference/decision-record.md`
+- `.oat/repo/reference/project-summaries/20260628-workflow-end-triggers.md`
+- `.oat/repo/reference/backlog/items/gate-same-target-execution.md`
+- `packages/cli/src/config/oat-config.ts`
+- `packages/cli/src/config/oat-config.test.ts`
+
+**Verification:**
+
+- `pnpm build:docs`
+- `pnpm run oat:validate-skills`
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/gate/index.test.ts`
+- `pnpm run cli -- gate set --help`
+- `pnpm run cli -- gate target set --help`
+
+**Review:** Initial review found one Important and one Medium issue. Fix commits
+resolved both; re-review passed with no findings in
+`reviews/p03-review-2026-06-29-v2.md`.
 
 ### Task p03-t01: Document Stateful Review Gates and Trusted Targets
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 1180c742, 52ebfaa5, f0f80e42
+
+**Notes:**
+
+- Durable gate examples use `oat` and gate writes use `--layer user`.
+- `cursor-force` remains a trusted user target example; `cursor-default` is no
+  longer a force-mode built-in.
 
 ---
 
 ### Task p03-t02: Refresh Repo Reference Notes
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** bd3530b5, 52ebfaa5
+
+**Notes:**
+
+- Same-target/model-level target detection remains deferred to Gates V2.
+- Dispatch ceilings remain separate from gate target config.
 
 ---
 
@@ -278,9 +329,10 @@ most-recent-first within the file but append-only at the bottom of the log._
 | ----- | ------ | ----------------------------------- | ------------------------------------------------------------------------------------ |
 | p01   | passed | reviews/p01-review-2026-06-29-v2.md | Initial review found blocking findings; fix loop resolved them and re-review passed. |
 | p02   | passed | reviews/p02-review-2026-06-29.md    | Lifecycle skill integration passed review with no findings.                          |
+| p03   | passed | reviews/p03-review-2026-06-29-v2.md | Initial review found docs/config drift; fix loop resolved it and re-review passed.   |
 
 **Parallel groups:** None
-**Outstanding items:** Continue with p03-t01.
+**Outstanding items:** Continue with p04-t01.
 
 <!-- orchestration-runs-end -->
 
@@ -472,6 +524,33 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 **Result:** Passed. No fix tasks required.
 
 **Next:** Continue implementation at `p03-t01`.
+
+---
+
+### Review Received: p03
+
+**Date:** 2026-06-29
+**Initial review artifact:** reviews/p03-review-2026-06-29.md
+**Passing re-review artifact:** reviews/p03-review-2026-06-29-v2.md
+
+**Initial findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Fixes applied:**
+
+- Removed `--force` from the built-in `cursor-default` target and aligned docs
+  and repo references with `cursor-agent -p`.
+- Kept Cursor `--force`/`--yolo` guidance in trusted user-configured target
+  examples.
+- Replaced unsupported `oat gate ... --user` examples with `--layer user`.
+
+**Re-review result:** Passed with no findings.
+
+**Next:** Continue implementation at `p04-t01`.
 
 ---
 
