@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.6
+version: 1.3.7
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true

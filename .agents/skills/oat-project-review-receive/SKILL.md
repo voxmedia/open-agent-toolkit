@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.3
+version: 1.5.4
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
