@@ -143,6 +143,15 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('gate --help lists the review subcommand', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['gate']).helpInformation();
+
+    expect(help).toContain(
+      'review [options] <prompt...>               Run a review gate and map review findings to exit status',
+    );
+  });
+
   it('init --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['init']).helpInformation();
