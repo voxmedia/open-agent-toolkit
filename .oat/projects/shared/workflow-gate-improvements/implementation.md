@@ -333,6 +333,10 @@ resolved both; re-review passed with no findings in
 - Temp smoke tests for blocked/clean `oat gate review`, dev-build warning,
   durable `oat gate ...` command acceptance, and simulated provider-denial
   output.
+- Post-final-review fix validation:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts src/commands/review/__tests__/latest.test.ts src/commands/help-snapshots.test.ts`,
+  `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`,
+  `pnpm release:validate`, and `git diff --check origin/main...HEAD`.
 
 **Review:** Passed with no findings in
 `reviews/p04-review-2026-06-29.md`.
@@ -360,6 +364,8 @@ resolved both; re-review passed with no findings in
 - Full validation and planned smoke checks passed.
 - Live Claude review invocation smoke was skipped because it would start a
   stateful external review with artifact and commit side effects.
+- Final review fix commits hardened same-day gate review artifact discovery and
+  partial Findings-section parsing.
 
 ---
 
@@ -631,6 +637,36 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-06-29
+**Initial review artifact:** reviews/final-review-2026-06-29.md
+**Passing re-review artifact:** reviews/final-review-2026-06-29-v2.md
+
+**Initial findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 1
+
+**Fixes applied:**
+
+- Replaced single-latest before/after review artifact comparison with full
+  active-project review snapshots and content signatures, so same-day lower-rank
+  reviews produced by a gate are detected even when higher-rank same-day
+  reviews already exist.
+- Required complete Findings-section severity coverage, while explicitly
+  parsing complete `Findings: N critical, N important, N medium, N minor`
+  summary lines as a valid count source.
+- Removed literal trailing whitespace from the whitespace-only parser fixture.
+
+**Re-review result:** Passed with no findings.
+
+**Next:** Create final PR.
+
+---
+
 ## Final Summary (for PR/docs)
 
 **Delivered capabilities:**
@@ -639,6 +675,12 @@ were resolved by editing `plan.md` and `implementation.md` directly.
   registry: it runs a normal review, resolves the produced project review
   artifact, parses findings, and returns blocking status for configured
   severities.
+- Produced artifact detection compares full active-review snapshots and content
+  signatures so same-day lifecycle rank ordering cannot hide a newly produced
+  gate review.
+- Review verdict parsing fails closed on incomplete Findings sections while
+  accepting complete count metadata, complete `Findings:` summary lines, or
+  complete four-severity Findings sections.
 - Generic `oat gate cross-provider-exec` remains child-status based for
   arbitrary non-review commands.
 - Gate-produced reviews are explicitly stateful, use
@@ -684,9 +726,12 @@ were resolved by editing `plan.md` and `implementation.md` directly.
 - Release version checks and canonical skill-version bump validation.
 - Temp CLI gate smoke checks for blocking verdicts, clean verdicts, dev-build
   warnings, durable command acceptance, and provider-denial output.
+- Final review and final re-review passed after the post-review gate-safety
+  fixes.
 
 **Design/plan deviations:**
 
 - No accepted design deviations. The p03 fix removed `--force` from the built-in
   Cursor target to align implementation with the selected user-configured
-  trusted-target contract.
+  trusted-target contract. The final review fix tightened gate artifact
+  discovery and parser validation without changing the planned behavior.
