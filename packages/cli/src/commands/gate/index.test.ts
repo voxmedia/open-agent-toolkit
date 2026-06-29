@@ -1011,4 +1011,50 @@ describe('oat gate', () => {
     });
     expect(process.exitCode).toBe(7);
   });
+
+  it('keeps cross-provider-exec generic and does not inspect review artifacts', async () => {
+    const { root, home } = await setup();
+    await mkdir(join(root, '.oat', 'projects', 'shared', 'demo', 'reviews'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'demo',
+        'reviews',
+        'p01-review.md',
+      ),
+      [
+        '---',
+        'oat_generated_at: 2026-06-01T00:00:00Z',
+        'oat_review_type: code',
+        'oat_review_scope: p01',
+        '---',
+        '',
+        '## Findings',
+        '',
+        '### Important',
+        '',
+        '- Blocking finding that generic execution must ignore.',
+      ].join('\n'),
+      'utf8',
+    );
+    const runner = createProcessRunner({ executeExitCode: 0 });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['Review', 'the', 'current', 'project'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      purpose: 'execute',
+      stdio: 'inherit',
+    });
+    expect(process.exitCode).toBe(0);
+  });
 });
