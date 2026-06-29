@@ -496,6 +496,97 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('does not warn for durable oat gate command references', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(
+      root,
+      home,
+      [
+        'set',
+        'oat-project-plan',
+        '--command',
+        'oat gate review --target codex-default Review the plan',
+        '--on-failure',
+        'block',
+      ],
+      [],
+    );
+
+    expect(capture.warn).toHaveLength(0);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not warn for unrelated absolute paths inside provider command strings', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(
+      root,
+      home,
+      [
+        'set',
+        'oat-project-plan',
+        '--command',
+        'claude -p "node /repo/packages/cli/dist/index.js gate review"',
+        '--on-failure',
+        'block',
+      ],
+      [],
+    );
+
+    expect(capture.warn).toHaveLength(0);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns non-fatally in human output for obvious dev-build absolute gate commands', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(
+      root,
+      home,
+      [
+        'set',
+        'oat-project-plan',
+        '--command',
+        'node /repo/packages/cli/dist/index.js gate review --target codex-default Review the plan',
+        '--on-failure',
+        'block',
+      ],
+      [],
+    );
+
+    expect(capture.warn[0]).toContain(
+      'Durable docs/config should reference `oat gate ...`',
+    );
+    expect(capture.warn[0]).toContain(
+      'absolute dev-build paths are reserved for local development of unmerged behavior',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('includes non-fatal warnings in JSON output for dev-build absolute gate commands', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(root, home, [
+      'set',
+      'oat-project-plan',
+      '--command',
+      'node /repo/packages/cli/dist/index.js gate review --target codex-default Review the plan',
+      '--on-failure',
+      'block',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      warnings: [
+        expect.stringContaining(
+          'Durable docs/config should reference `oat gate ...`',
+        ),
+      ],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('rejects invalid skill gate inputs with actionable errors', async () => {
     const { root, home } = await setup();
 

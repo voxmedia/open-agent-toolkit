@@ -341,6 +341,21 @@ function parseGateConfig(options: GateSetOptions): GateConfig | null {
   };
 }
 
+function detectDevBuildGateCommandWarnings(command: string): string[] {
+  const normalized = command.trim();
+  if (
+    !/^node\s+(?:"[^"]*\/packages\/cli\/dist\/index\.js"|'[^']*\/packages\/cli\/dist\/index\.js'|\S*\/packages\/cli\/dist\/index\.js)\s+gate(?:\s|$)/.test(
+      normalized,
+    )
+  ) {
+    return [];
+  }
+
+  return [
+    'Durable docs/config should reference `oat gate ...`; absolute dev-build paths are reserved for local development of unmerged behavior.',
+  ];
+}
+
 function parseExecTargetConfig(
   options: TargetSetOptions,
 ): ExecTargetConfig | null {
@@ -976,10 +991,23 @@ async function runGateSet(
     const layer = parseLayer(options.layer);
     const normalizedSkill = trimRequired(skillName, '<skill>');
     const gate = parseGateConfig(options);
+    const warnings = gate
+      ? detectDevBuildGateCommandWarnings(gate.command)
+      : [];
     await updateConfigLayer(context, layer, dependencies, (config) =>
       setSkillGate(config, normalizedSkill, gate),
     );
-    writeSuccess(context, { layer, skill: normalizedSkill, gate });
+    if (!context.json) {
+      for (const warning of warnings) {
+        context.logger.warn(warning);
+      }
+    }
+    writeSuccess(context, {
+      layer,
+      skill: normalizedSkill,
+      gate,
+      ...(warnings.length > 0 ? { warnings } : {}),
+    });
     process.exitCode = 0;
   } catch (error) {
     writeError(context, error);
