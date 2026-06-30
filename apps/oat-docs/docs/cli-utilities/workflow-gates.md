@@ -7,11 +7,14 @@ description: Configure per-skill final commands and cross-runtime review dispatc
 
 Workflow gates let a gate-aware skill run a configured final command before it
 is considered done. The common use is independent review: one runtime performs
-the work, then `oat gate cross-provider-exec` dispatches a prompt to another
-runtime such as Codex or Claude.
+the work, then `oat gate review` dispatches a normal OAT review to another
+runtime such as Codex or Claude and maps blocking review findings to the gate
+exit status.
 
-V1 gates are deliberately thin. A gate command passes or fails by exit code, and
-the skill owns what to do next.
+`oat gate cross-provider-exec` remains the generic child-status executor. It
+selects an exec target, runs the prompt, and exits with the child process
+status. Use `oat gate review` when the command is specifically an OAT review
+gate that should inspect the produced review artifact.
 
 ## Gate config
 
@@ -23,7 +26,7 @@ Gate config lives under `workflow.gates.skills` and is keyed by skill name.
     "gates": {
       "skills": {
         "oat-project-implement": {
-          "command": "oat gate cross-provider-exec \"Use oat-project-review-provide to review the current project\"",
+          "command": "oat gate review \"Use oat-project-review-provide code final to review the current project\"",
           "description": "Run a fresh-runtime final review before implementation is considered done.",
           "onFailure": "block",
           "maxAttempts": 2
@@ -41,10 +44,32 @@ Fields:
 - `description` - optional context for the agent running the gate.
 - `maxAttempts` - retry bound for `block`; defaults to `2`.
 
-`oat-project-plan` and `oat-project-implement` are currently gate-aware. Gate
-awareness is declared in skill frontmatter with `oat_gateable: true`, and
+`oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`, and
+`oat-project-import-plan` are currently gate-aware. Gate awareness is declared
+in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
+
+## Review gates
+
+`oat gate review` is intentionally stateful. It is equivalent to running
+`oat-project-review-provide` in another terminal or provider, so the normal
+review side effects are expected:
+
+- a review artifact is written under the project reviews directory
+- the plan Reviews row is updated
+- review bookkeeping commits are expected when the review workflow changes
+  tracked state
+
+Gate-produced review artifacts use `oat_review_invocation: gate` in
+frontmatter. After a gate review reports a produced artifact, the host must run
+or hand off to `oat-project-review-receive` before treating the review as
+dispositioned. Until receive runs, the artifact is only produced, not consumed.
+
+`oat gate review` parses the produced artifact and returns a blocking exit
+status when the configured threshold is met. `cross-provider-exec` does not do
+that interpretation; for generic prompts it still returns only the child process
+status.
 
 ## Exec targets
 
@@ -55,11 +80,16 @@ id.
 
 Built-in targets:
 
-| Target id        | Runtime  | Base command                        | Current-host detector                   |
-| ---------------- | -------- | ----------------------------------- | --------------------------------------- |
-| `codex-default`  | `codex`  | `["codex", "exec"]`                 | `CODEX_THREAD_ID` or `CODEX_SESSION_ID` |
-| `claude-default` | `claude` | `["claude", "-p"]`                  | `CLAUDECODE`                            |
-| `cursor-default` | `cursor` | `["cursor-agent", "-p", "--force"]` | `CURSOR_AGENT`                          |
+| Target id        | Runtime  | Base command             | Current-host detector                   |
+| ---------------- | -------- | ------------------------ | --------------------------------------- |
+| `codex-default`  | `codex`  | `["codex", "exec"]`      | `CODEX_THREAD_ID` or `CODEX_SESSION_ID` |
+| `claude-default` | `claude` | `["claude", "-p"]`       | `CLAUDECODE`                            |
+| `cursor-default` | `cursor` | `["cursor-agent", "-p"]` | `CURSOR_AGENT`                          |
+
+Built-in targets are conservative defaults. Trusted noninteractive gates that
+need to run tools without hanging on provider approval prompts should be
+configured deliberately in `workflow.gates.execTargets`; OAT should not bake
+dangerous provider permission flags into built-ins.
 
 Config layers can partially override a target or disable it with `null`. Use the
 dedicated target writer instead of `oat config set` because target commands are
@@ -71,11 +101,53 @@ oat gate target set claude-opus \
   --base-command-json '["claude","-p","--model","opus"]' \
   --availability-json '["claude","--version"]' \
   --priority 90 \
-  --user
+  --layer user
 ```
 
 JSON argv is intentional: provider commands often contain flags such as `-p` or
 `--model`, which would be ambiguous as variadic CLI options.
+
+### Trusted target examples
+
+Use these examples only in trusted environments where the provider process may
+read files, run tools, and write review bookkeeping without an interactive
+approval prompt. They are user-level target configuration, not built-in OAT
+defaults.
+
+Claude's default permission mode can block on
+`Skill(oat-project-review-provide)`, `oat`, `pnpm`, and shell or tool calls. A
+trusted user can opt into `--dangerously-skip-permissions` or the equivalent
+`--permission-mode bypassPermissions` behavior in their target command.
+
+Codex trusted gate automation should make sandbox and approval bypass explicit
+with `--dangerously-bypass-approvals-and-sandbox`, even when the user's current
+default profile already permits the needed commands.
+
+Cursor trusted automation should use `--force`; `--yolo` is the documented alias
+for the same behavior.
+
+```bash
+oat gate target set codex-5.5-xhigh \
+  --runtime codex \
+  --base-command-json '["codex","exec","--model","gpt-5.5","-c","model_reasoning_effort=\"xhigh\"","--dangerously-bypass-approvals-and-sandbox"]' \
+  --availability-json '["codex","--version"]' \
+  --priority 120 \
+  --layer user
+
+oat gate target set claude-opus-skip-permissions \
+  --runtime claude \
+  --base-command-json '["claude","-p","--model","opus","--dangerously-skip-permissions"]' \
+  --availability-json '["claude","--version"]' \
+  --priority 115 \
+  --layer user
+
+oat gate target set cursor-force \
+  --runtime cursor \
+  --base-command-json '["cursor-agent","-p","--force"]' \
+  --availability-json '["cursor-agent","--version"]' \
+  --priority 90 \
+  --layer user
+```
 
 ## Command surface
 
@@ -89,13 +161,13 @@ Set or clear a skill gate:
 
 ```bash
 oat gate set oat-project-implement \
-  --command 'oat gate cross-provider-exec "Use oat-project-review-provide to review the current project"' \
+  --command 'oat gate review --target codex-5.5-xhigh --review-type code --review-scope final "Use oat-project-review-provide code final to review the current project"' \
   --description "Run final review in another runtime" \
   --on-failure block \
   --max-attempts 2 \
-  --user
+  --layer user
 
-oat gate unset oat-project-implement --user
+oat gate unset oat-project-implement --layer user
 ```
 
 Set or clear an exec target:
@@ -106,12 +178,24 @@ oat gate target set codex-high \
   --base-command-json '["codex","exec","--model","gpt-5.5"]' \
   --availability-json '["codex","--version"]' \
   --priority 90 \
-  --user
+  --layer user
 
-oat gate target unset codex-high --user
+oat gate target unset codex-high --layer user
 ```
 
-Dispatch a prompt through the target registry:
+Dispatch a review through the target registry:
+
+```bash
+oat gate review --target codex-5.5-xhigh \
+  --review-type code \
+  --review-scope final \
+  "Use oat-project-review-provide code final to review the current project"
+```
+
+Leaving `--target` unset lets target priority choose the highest-priority
+available non-host runtime.
+
+Dispatch a generic prompt through the target registry:
 
 ```bash
 oat gate cross-provider-exec "Use oat-project-review-provide to review the current project"

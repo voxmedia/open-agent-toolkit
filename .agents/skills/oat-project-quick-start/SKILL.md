@@ -1,8 +1,9 @@
 ---
 name: oat-project-quick-start
-version: 2.1.6
+version: 2.1.7
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
+oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
@@ -57,14 +58,15 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[0/7] Checking inherited git state...`
-  - `[1/7] Scaffolding quick-mode project…`
-  - `[2/7] Exploring solution space + capturing discovery…`
-  - `[3/7] Decision point: design depth…`
-  - `[4/7] Generating execution plan…`
-  - `[5/7] Running plan artifact review…`
-  - `[6/7] Initializing implementation tracker…`
-  - `[7/7] Refreshing dashboard…`
+  - `[0/8] Checking inherited git state...`
+  - `[1/8] Scaffolding quick-mode project…`
+  - `[2/8] Exploring solution space + capturing discovery…`
+  - `[3/8] Decision point: design depth…`
+  - `[4/8] Generating execution plan…`
+  - `[5/8] Running plan artifact review…`
+  - `[6/8] Initializing implementation tracker…`
+  - `[7/8] Refreshing dashboard + committing…`
+  - `[8/8] Running configured gate…`
   - _(If lightweight design is chosen, insert design steps between 3 and 4)_
 
 ## Artifact Persistence (Required)
@@ -590,6 +592,31 @@ done
 git diff --cached --quiet || git commit -m "chore(oat): update quick-start artifacts for {project-name}"
 ```
 
+### Gate Execution
+
+Before reporting this skill as complete, run the configured gate as the final step after artifact review, state sync, dashboard refresh, and the quick-start artifact commit:
+
+1. Resolve the gate for this skill:
+
+   ```bash
+   oat gate resolve <this-skill> --json
+   ```
+
+   If the command returns JSON `null`, no gate is configured; the skill is complete.
+
+2. If a gate config is returned, run its `command` exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
+
+3. Review-artifact handoff:
+   - If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.
+   - This applies to `oat gate review ...` outputs regardless of whether the gate ultimately exits zero or nonzero; the command output owns the exact artifact path, and receive-review owns disposition and archival.
+
+4. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+   - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
+   - `prompt`: surface the gate failure and ask the human how to proceed.
+   - `warn`: record the gate failure and continue.
+
+5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no env var. By default, `oat gate cross-provider-exec` resolves the current host from built-in `hostDetectionCommand`s and avoids the same runtime with zero per-prompt input. It does not read or stamp `OAT_CURRENT_RUNTIME` or `OAT_GATE_EXEC_TARGET`. To pin a specific reviewer for this skill, set `--target <id>` once in that skill's gate `command`; this is the optional precision path and does not require per-prompt input.
+
 ### Step 7: Output Next Action
 
 Report:
@@ -611,3 +638,4 @@ Report:
 - ✅ `plan.md` records the plan artifact review row unless `workflow.autoArtifactReview.plan` was explicitly disabled.
 - ✅ `implementation.md` is initialized for resumable execution.
 - ✅ Changed quick-start artifacts are committed before handoff or pause; `.oat/state.md` is refreshed locally when available.
+- ✅ Configured gate has run, and any produced review artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.

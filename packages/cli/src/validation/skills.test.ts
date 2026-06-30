@@ -93,6 +93,14 @@ function currentSkillContent(
   ].join('\n');
 }
 
+async function readRepoFile(relativePath: string): Promise<string> {
+  return readFile(join(process.cwd(), '..', '..', relativePath), 'utf8');
+}
+
+function getFrontmatterForTest(content: string): string {
+  return content.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+}
+
 describe('validateOatSkills', () => {
   const tempDirs: string[] = [];
 
@@ -680,6 +688,122 @@ describe('validateOatSkills', () => {
     expect(invalidVersions).toEqual([]);
   });
 
+  it('documents gate review provenance in review-provide and keeps model invocation gated', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    expect(content).toMatch(/^disable-model-invocation:\s*false$/m);
+    expect(content).toMatch(/## Model Invocation Gate/);
+    expect(content).toMatch(/explicit review asks/i);
+    expect(content).toMatch(
+      /confirms? a previously offered project-review step/i,
+    );
+    expect(content).toMatch(
+      /oat_review_invocation:\s*\{\s*manual\|auto\|gate\s*\}/,
+    );
+    expect(content).toMatch(/`gate`/);
+    expect(content).toMatch(/normal stateful review-provide behavior/i);
+  });
+
+  it('allows review-provide to run the full stateful review workflow', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const allowedTools = content.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
+
+    for (const requiredTool of [
+      'Read',
+      'Glob',
+      'Grep',
+      'Write',
+      'Edit',
+      'Bash(git:*)',
+      'Bash(oat:*)',
+      'Bash(pnpm:*)',
+    ]) {
+      expect(allowedTools).toContain(requiredTool);
+    }
+  });
+
+  it('documents gate invocation as standard receive disposition', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+
+    expect(content).toMatch(/oat_review_invocation/);
+    expect(content).toMatch(/`gate`/);
+    expect(content).toMatch(/standard disposition behavior/i);
+  });
+
+  it('requires reviewer artifacts to expose gate-parseable findings counts or sections', async () => {
+    const content = await readRepoFile('.agents/agents/oat-reviewer.md');
+
+    expect(content).toMatch(
+      /oat_review_invocation:\s*\{\s*manual\|auto\|gate\s*\}/,
+    );
+    expect(content).toMatch(
+      /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
+    );
+    expect(content).toMatch(/standard `## Findings` sections/i);
+    expect(content).toMatch(/`oat gate review`/);
+  });
+
+  it('marks quick-start and import-plan as gateable lifecycle skills', async () => {
+    for (const skillName of [
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const frontmatter = getFrontmatterForTest(content);
+
+      expect(frontmatter, `${skillName} frontmatter`).toMatch(
+        /^oat_gateable:\s*true$/m,
+      );
+    }
+  });
+
+  it('adds Gate Execution steps to quick-start and import-plan', async () => {
+    for (const skillName of [
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+
+      expect(content, `${skillName} gate section`).toMatch(
+        /^### Gate Execution$/m,
+      );
+      expect(content, `${skillName} gate command`).toMatch(/oat gate /);
+    }
+  });
+
+  it('keeps gate-aware lifecycle review handoff wording consistent', async () => {
+    const handoffSentence =
+      'If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.';
+
+    for (const skillName of [
+      'oat-project-plan',
+      'oat-project-implement',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+
+      expect(content, `${skillName} handoff contract`).toContain(
+        handoffSentence,
+      );
+      expect(content, `${skillName} durable gate examples`).not.toMatch(
+        /dist\/index\.js|node\s+.*\/dist\//,
+      );
+    }
+  });
+
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const skillPath = join(
@@ -713,7 +837,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

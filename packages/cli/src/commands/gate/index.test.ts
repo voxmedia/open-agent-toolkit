@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -38,6 +38,10 @@ type ProcessRunner = (
     stdio: ProcessCall['stdio'];
   },
 ) => Promise<{ exitCode: number }>;
+
+type ProcessCallInput = ProcessCall & {
+  cwd: string;
+};
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
@@ -118,6 +122,7 @@ function createProcessRunner(
   options: {
     availableTargets?: Iterable<string>;
     executeExitCode?: number;
+    onExecute?: (call: ProcessCallInput) => Promise<void> | void;
   } = {},
 ): { calls: ProcessCall[]; runProcess: ProcessRunner } {
   const calls: ProcessCall[] = [];
@@ -178,6 +183,16 @@ function createProcessRunner(
       return { exitCode: targetId && availableTargets.has(targetId) ? 0 : 1 };
     }
 
+    if (runOptions.purpose === 'execute') {
+      await options.onExecute?.({
+        command,
+        args: [...args],
+        purpose: runOptions.purpose,
+        stdio: runOptions.stdio,
+        cwd: runOptions.cwd,
+      });
+    }
+
     return { exitCode: options.executeExitCode ?? 0 };
   };
 
@@ -205,6 +220,39 @@ async function runCrossProviderExec(options: {
   return capture;
 }
 
+async function runReviewGate(options: {
+  root: string;
+  home: string;
+  processEnv?: NodeJS.ProcessEnv;
+  runProcess: ProcessRunner;
+  args?: string[];
+  globalArgs?: string[];
+}): Promise<LoggerCapture> {
+  process.exitCode = undefined;
+  const { command, capture } = createHarness({
+    cwd: options.root,
+    home: options.home,
+    processEnv: options.processEnv,
+    runProcess: options.runProcess,
+  });
+  await runCommand(
+    command,
+    [
+      'review',
+      ...(options.args ?? [
+        '--target',
+        'codex-default',
+        'Review',
+        'the',
+        'current',
+        'project',
+      ]),
+    ],
+    options.globalArgs,
+  );
+  return capture;
+}
+
 describe('oat gate', () => {
   const tempDirs: string[] = [];
   let originalExitCode: number | undefined;
@@ -228,6 +276,126 @@ describe('oat gate', () => {
     tempDirs.push(root, home);
     await mkdir(join(root, '.oat'), { recursive: true });
     return { root, home };
+  }
+
+  async function writeProject(
+    root: string,
+    projectPath = '.oat/projects/shared/demo',
+  ): Promise<string> {
+    await mkdir(join(root, projectPath), { recursive: true });
+    await writeFile(
+      join(root, projectPath, 'state.md'),
+      ['---', 'oat_kind: implementation', '---', '', '# State'].join('\n'),
+      'utf8',
+    );
+    return projectPath;
+  }
+
+  async function writeActiveProject(
+    root: string,
+    projectPath: string,
+  ): Promise<void> {
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
+      'utf8',
+    );
+  }
+
+  async function writeReviewArtifact(options: {
+    root: string;
+    projectPath: string;
+    fileName?: string;
+    generatedAt?: string;
+    reviewScope?: string;
+    finding?: 'important' | 'clean';
+  }): Promise<string> {
+    const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
+    await mkdir(join(options.root, dirname(relativePath)), {
+      recursive: true,
+    });
+    const importantContent =
+      options.finding === 'important'
+        ? ['- Important finding that should block.']
+        : ['None.'];
+    await writeFile(
+      join(options.root, relativePath),
+      [
+        '---',
+        'oat_generated: true',
+        `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+        'oat_review_type: code',
+        `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
+        'oat_review_invocation: gate',
+        `oat_project: ${options.projectPath}`,
+        '---',
+        '',
+        '# Review',
+        '',
+        '## Findings',
+        '',
+        '### Critical',
+        '',
+        'None',
+        '',
+        '### Important',
+        '',
+        ...importantContent,
+        '',
+        '### Medium',
+        '',
+        'None',
+        '',
+        '### Minor',
+        '',
+        'None',
+      ].join('\n'),
+      'utf8',
+    );
+    return relativePath;
+  }
+
+  async function writeAdhocReviewArtifact(options: {
+    root: string;
+    fileName?: string;
+    generatedAt?: string;
+    finding?: 'important' | 'clean';
+  }): Promise<string> {
+    const relativePath = `.oat/repo/reviews/${options.fileName ?? 'ad-hoc-review.md'}`;
+    await mkdir(join(options.root, dirname(relativePath)), {
+      recursive: true,
+    });
+    const importantContent =
+      options.finding === 'important'
+        ? ['- Important finding that should not be accepted by project gate.']
+        : ['None.'];
+    await writeFile(
+      join(options.root, relativePath),
+      [
+        '---',
+        'oat_generated: true',
+        `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+        'oat_review_type: code',
+        'oat_review_scope: ad-hoc',
+        'oat_review_invocation: gate',
+        'oat_project: null',
+        '---',
+        '',
+        '# Review',
+        '',
+        '## Findings',
+        '',
+        '### Critical',
+        '',
+        'None',
+        '',
+        '### Important',
+        '',
+        ...importantContent,
+      ].join('\n'),
+      'utf8',
+    );
+    return relativePath;
   }
 
   it('resolves a configured gate as JSON and exits zero', async () => {
@@ -378,6 +546,97 @@ describe('oat gate', () => {
     expect(
       shared.workflow?.gates?.skills?.['oat-project-plan'],
     ).toBeUndefined();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not warn for durable oat gate command references', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(
+      root,
+      home,
+      [
+        'set',
+        'oat-project-plan',
+        '--command',
+        'oat gate review --target codex-default Review the plan',
+        '--on-failure',
+        'block',
+      ],
+      [],
+    );
+
+    expect(capture.warn).toHaveLength(0);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not warn for unrelated absolute paths inside provider command strings', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(
+      root,
+      home,
+      [
+        'set',
+        'oat-project-plan',
+        '--command',
+        'claude -p "node /repo/packages/cli/dist/index.js gate review"',
+        '--on-failure',
+        'block',
+      ],
+      [],
+    );
+
+    expect(capture.warn).toHaveLength(0);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns non-fatally in human output for obvious dev-build absolute gate commands', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(
+      root,
+      home,
+      [
+        'set',
+        'oat-project-plan',
+        '--command',
+        'node /repo/packages/cli/dist/index.js gate review --target codex-default Review the plan',
+        '--on-failure',
+        'block',
+      ],
+      [],
+    );
+
+    expect(capture.warn[0]).toContain(
+      'Durable docs/config should reference `oat gate ...`',
+    );
+    expect(capture.warn[0]).toContain(
+      'absolute dev-build paths are reserved for local development of unmerged behavior',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('includes non-fatal warnings in JSON output for dev-build absolute gate commands', async () => {
+    const { root, home } = await setup();
+
+    const capture = await runGateCommand(root, home, [
+      'set',
+      'oat-project-plan',
+      '--command',
+      'node /repo/packages/cli/dist/index.js gate review --target codex-default Review the plan',
+      '--on-failure',
+      'block',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      warnings: [
+        expect.stringContaining(
+          'Durable docs/config should reference `oat gate ...`',
+        ),
+      ],
+    });
     expect(process.exitCode).toBe(0);
   });
 
@@ -1010,5 +1269,376 @@ describe('oat gate', () => {
       stdio: 'inherit',
     });
     expect(process.exitCode).toBe(7);
+  });
+
+  it('keeps cross-provider-exec generic and does not inspect review artifacts', async () => {
+    const { root, home } = await setup();
+    await mkdir(join(root, '.oat', 'projects', 'shared', 'demo', 'reviews'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'demo',
+        'reviews',
+        'p01-review.md',
+      ),
+      [
+        '---',
+        'oat_generated_at: 2026-06-01T00:00:00Z',
+        'oat_review_type: code',
+        'oat_review_scope: p01',
+        '---',
+        '',
+        '## Findings',
+        '',
+        '### Important',
+        '',
+        '- Blocking finding that generic execution must ignore.',
+      ].join('\n'),
+      'utf8',
+    );
+    const runner = createProcessRunner({ executeExitCode: 0 });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['Review', 'the', 'current', 'project'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      purpose: 'execute',
+      stdio: 'inherit',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('runs gate review through an explicit target, annotates the prompt, and blocks on Important findings', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-scope',
+        'plan',
+        '--review-type',
+        'artifact',
+        '--exit-nonzero-on',
+        'important',
+        'Use oat-project-review-provide artifact plan.',
+      ],
+    });
+
+    expect(runner.calls).toHaveLength(1);
+    expect(runner.calls[0]).toMatchObject({
+      command: 'codex',
+      purpose: 'execute',
+      stdio: 'inherit',
+    });
+    expect(runner.calls[0]?.args).toContain(
+      'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+    );
+    expect(runner.calls[0]?.args).toContain(
+      `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+    );
+    expect(runner.calls[0]?.args).toContain(
+      'Use oat-project-review-provide artifact plan.',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      project: projectPath,
+      artifactPath,
+      threshold: 'important',
+      counts: { critical: 0, important: 1 },
+      handoff: expect.stringContaining('oat-project-review-receive'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('defaults to cross-provider target selection and returns zero for clean gate review artifacts', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['Review'],
+    });
+
+    expect(
+      runner.calls.filter((call) => call.purpose === 'host-detection'),
+    ).toHaveLength(1);
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      purpose: 'execute',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: projectPath,
+      blocking: false,
+      counts: { critical: 0, important: 0 },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('detects a same-day lower-rank review produced when a higher-rank review already exists', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeReviewArtifact({
+      root,
+      projectPath,
+      fileName: 'final-review.md',
+      generatedAt: '2026-06-29',
+      reviewScope: 'final',
+      finding: 'clean',
+    });
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'p01-review.md',
+          generatedAt: '2026-06-29',
+          reviewScope: 'p01',
+          finding: 'important',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      project: projectPath,
+      artifactPath,
+      counts: { critical: 0, important: 1 },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('preserves nonzero child exit codes without masking them with artifact parsing', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({ executeExitCode: 7 });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      purpose: 'execute',
+      stdio: 'inherit',
+    });
+    expect(process.exitCode).toBe(7);
+  });
+
+  it('accepts an explicit project name when no active project is configured', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root, '.oat/projects/shared/named');
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', 'named', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(runner.calls[0]?.args).toContain(
+      `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: projectPath,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('passes an explicit project path to the child even when a different active project is configured', async () => {
+    const { root, home } = await setup();
+    const activeProjectPath = await writeProject(
+      root,
+      '.oat/projects/shared/active',
+    );
+    const explicitProjectPath = await writeProject(
+      root,
+      '.oat/projects/shared/explicit',
+    );
+    await writeActiveProject(root, activeProjectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: explicitProjectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        explicitProjectPath,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls[0]?.args).toContain(
+      `Resolved OAT project path: ${explicitProjectPath}. Run the review for this project path.`,
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: explicitProjectPath,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects ad-hoc-only artifacts produced after gate dispatch', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeAdhocReviewArtifact({
+          root,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('No new review artifact was detected'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects archived-only project artifacts produced after gate dispatch', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'archived/p01-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('No new review artifact was detected'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('fails clearly before dispatch when no project can be resolved', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('No OAT project could be resolved'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('fails clearly before dispatch when multiple projects are plausible', async () => {
+    const { root, home } = await setup();
+    await writeProject(root, '.oat/projects/shared/alpha');
+    await writeProject(root, '.oat/projects/shared/beta');
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining(
+        'Multiple OAT projects could be resolved',
+      ),
+    });
+    expect(process.exitCode).toBe(1);
   });
 });

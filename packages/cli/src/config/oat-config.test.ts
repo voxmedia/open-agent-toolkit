@@ -976,12 +976,15 @@ describe('oat-config', () => {
         },
         'cursor-default': {
           runtime: 'cursor',
-          baseCommand: ['cursor-agent', '-p', '--force'],
+          baseCommand: ['cursor-agent', '-p'],
           hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
           availabilityCommand: ['cursor-agent', '--version'],
           priority: 70,
         },
       });
+      expect(BUILTIN_EXEC_TARGETS['cursor-default'].baseCommand).not.toContain(
+        '--force',
+      );
       expect(BUILTIN_EXEC_TARGETS['cursor-default'].baseCommand).not.toContain(
         '--model',
       );

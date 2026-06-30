@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.1.2
+version: 1.1.3
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write
 color: yellow
@@ -54,6 +54,7 @@ You will be given a "Review Scope" block including:
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
+- **oat_review_invocation**: Optional provenance selector for artifact-mode reviews. Use `manual`, `auto`, or `gate`; default to `manual` when absent.
 - **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
 - **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `provider-default`, `inherited`, `not-applicable`, or `host-auto`)
 - **dispatch_ceiling**: Optional resolved provider ceiling that capped/selected this review dispatch
@@ -264,6 +265,12 @@ Group findings by severity:
 - Missing tests for important paths
 - Stale spec/design/plan artifact that conflicts with a defensible implementation and should be aligned before closeout
 
+**Medium** (default fix before pass)
+
+- P2 requirements with meaningful behavior or quality impact
+- Moderate maintainability or testability issues
+- Contract gaps that can cause future regressions
+
 **Minor** (fix if time permits)
 
 - P2 requirements
@@ -295,6 +302,7 @@ oat_generated: true
 oat_generated_at: YYYY-MM-DD
 oat_review_scope: { scope }
 oat_review_type: { code|artifact|analysis }
+oat_review_invocation: { manual|auto|gate }
 oat_project: { project-path }
 ---
 
@@ -309,6 +317,8 @@ oat_project: { project-path }
 
 {2-3 sentence summary of findings}
 
+Findings: {N} critical, {N} important, {N} medium, {N} minor
+
 ## Findings
 
 ### Critical
@@ -321,6 +331,14 @@ oat_project: { project-path }
   - Requirement: {FR/NFR ID if applicable}
 
 ### Important
+
+{If none: "None"}
+
+- **{Finding title}** (`{file}:{line}`)
+  - Issue: {description}
+  - Fix: {specific guidance}
+
+### Medium
 
 {If none: "None"}
 
@@ -367,6 +385,8 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
 ```
 
+Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings: {N} critical, {N} important, {N} medium, {N} minor` count line or the standard `## Findings` sections shown above with every severity subsection present.
+
 
 ### Step 9: Return Confirmation
 
@@ -380,7 +400,7 @@ Format:
 ## Review Complete
 
 **Scope:** {scope}
-**Findings:** {N} critical, {N} important, {N} minor
+**Findings:** {N} critical, {N} important, {N} medium, {N} minor
 **Review artifact:** {path}
 
 Return to your main session and run the `oat-project-review-receive` skill.

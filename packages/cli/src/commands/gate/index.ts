@@ -1,11 +1,18 @@
 import { spawn } from 'node:child_process';
-import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { readdir, readFile } from 'node:fs/promises';
+import { basename, isAbsolute, join, relative } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import type { LatestReview } from '@commands/review/latest';
+import {
+  getFrontmatterBlock,
+  getFrontmatterField,
+} from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   BUILTIN_EXEC_TARGETS,
@@ -30,8 +37,14 @@ import {
   resolveGate,
   type ResolvedConfig,
 } from '@config/resolve';
-import { resolveProjectRoot } from '@fs/paths';
+import { dirExists, fileExists } from '@fs/io';
+import { normalizeToPosixPath, resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
+
+import {
+  parseReviewGateVerdict,
+  type ReviewGateVerdict,
+} from './review-verdict';
 
 interface GateCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -91,6 +104,13 @@ interface CrossProviderExecOptions {
   currentRuntime?: string;
 }
 
+interface ReviewGateOptions extends CrossProviderExecOptions {
+  project?: string;
+  reviewScope?: string;
+  reviewType?: string;
+  exitNonzeroOn?: string;
+}
+
 interface ProcessRunOptions {
   cwd: string;
   env: NodeJS.ProcessEnv;
@@ -104,12 +124,19 @@ interface ProcessRunResult {
 
 type CrossProviderAvoid = 'same-runtime' | 'none';
 type GateWriteLayer = 'shared' | 'local' | 'user';
+type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
 type GateConfigContainer = OatConfig | OatLocalConfig | UserConfig;
 type GateConfigMutation = (config: GateConfigContainer) => GateConfigContainer;
 
 export interface SelectedExecTarget {
   id: string;
   target: ExecTarget;
+}
+
+interface ReviewGateArtifactCandidate extends LatestReview {
+  generatedTime: number;
+  lifecycleRank: number;
+  signature: string;
 }
 
 const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
@@ -136,6 +163,18 @@ const VALID_CROSS_PROVIDER_AVOIDS: readonly CrossProviderAvoid[] = [
   'same-runtime',
   'none',
 ];
+const VALID_REVIEW_GATE_THRESHOLDS: readonly ReviewGateThreshold[] = [
+  'critical',
+  'important',
+  'medium',
+  'minor',
+];
+const REVIEW_GATE_CONTEXT_NOTE =
+  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.';
+
+function reviewGateProjectContext(projectPath: string): string {
+  return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
+}
 
 async function runChildProcess(
   command: string,
@@ -217,6 +256,20 @@ function parseCrossProviderAvoid(
     throw new Error('--avoid must be one of same-runtime | none.');
   }
   return avoid as CrossProviderAvoid;
+}
+
+function parseReviewGateThreshold(
+  value: string | undefined,
+): ReviewGateThreshold {
+  const threshold = value?.trim() || 'important';
+  if (
+    !(VALID_REVIEW_GATE_THRESHOLDS as readonly string[]).includes(threshold)
+  ) {
+    throw new Error(
+      '--exit-nonzero-on must be one of critical | important | medium | minor.',
+    );
+  }
+  return threshold as ReviewGateThreshold;
 }
 
 function parseOnFailure(value: string | undefined): GateOnFailure {
@@ -301,6 +354,21 @@ function parseGateConfig(options: GateSetOptions): GateConfig | null {
       ? { description: options.description.trim() }
       : {}),
   };
+}
+
+function detectDevBuildGateCommandWarnings(command: string): string[] {
+  const normalized = command.trim();
+  if (
+    !/^node\s+(?:"[^"]*\/packages\/cli\/dist\/index\.js"|'[^']*\/packages\/cli\/dist\/index\.js'|\S*\/packages\/cli\/dist\/index\.js)\s+gate(?:\s|$)/.test(
+      normalized,
+    )
+  ) {
+    return [];
+  }
+
+  return [
+    'Durable docs/config should reference `oat gate ...`; absolute dev-build paths are reserved for local development of unmerged behavior.',
+  ];
 }
 
 function parseExecTargetConfig(
@@ -553,6 +621,44 @@ async function selectAvailableExecTarget(
   return null;
 }
 
+async function resolveSelectedExecTarget(
+  targets: Readonly<Record<string, ExecTarget>>,
+  options: CrossProviderExecOptions,
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<SelectedExecTarget> {
+  const explicitTarget = options.target?.trim();
+
+  if (explicitTarget) {
+    const target = targets[explicitTarget];
+    if (!target) {
+      throw new Error(`Unknown exec target "${explicitTarget}".`);
+    }
+
+    return { id: explicitTarget, target: cloneExecTarget(target) };
+  }
+
+  const avoid = parseCrossProviderAvoid(options.avoid);
+  const currentRuntime = await resolveCurrentRuntime(
+    options.currentRuntime,
+    context,
+    dependencies,
+  );
+  const selected = await selectAvailableExecTarget(
+    targets,
+    currentRuntime,
+    avoid,
+    context,
+    dependencies,
+  );
+
+  if (!selected) {
+    throw new Error(noEligibleTargetMessage(currentRuntime, avoid));
+  }
+
+  return selected;
+}
+
 async function executeTarget(
   selected: SelectedExecTarget,
   prompt: string[],
@@ -590,6 +696,377 @@ function noEligibleTargetMessage(
   avoid: CrossProviderAvoid,
 ): string {
   return `No eligible gate exec target found for current runtime "${currentRuntime}" with --avoid ${avoid}. Install or configure an alternate runtime, rerun with --avoid none, or pin a target with --target <id>.`;
+}
+
+function normalizeRepoRelativeProjectPath(
+  repoRoot: string,
+  pathValue: string,
+): string {
+  const trimmed = pathValue.trim().replace(/\/+$/, '');
+  const withoutState = trimmed.endsWith('/state.md')
+    ? trimmed.slice(0, -'/state.md'.length)
+    : trimmed;
+  const repoRelative = isAbsolute(withoutState)
+    ? relative(repoRoot, withoutState)
+    : withoutState;
+
+  const normalized = normalizeToPosixPath(repoRelative).replace(/^\.\//, '');
+  if (normalized === '..' || normalized.startsWith('../')) {
+    throw new Error(
+      `Project path must resolve inside the current repository: ${pathValue}`,
+    );
+  }
+  return normalized;
+}
+
+async function listProjectCandidates(
+  repoRoot: string,
+  projectsRoot: string,
+): Promise<string[]> {
+  const normalizedProjectsRoot = normalizeRepoRelativeProjectPath(
+    repoRoot,
+    projectsRoot,
+  );
+  const absoluteProjectsRoot = join(repoRoot, normalizedProjectsRoot);
+  let scopeEntries;
+
+  try {
+    scopeEntries = await readdir(absoluteProjectsRoot, { withFileTypes: true });
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return [];
+    }
+    throw error;
+  }
+
+  const candidates = (
+    await Promise.all(
+      scopeEntries
+        .filter((entry) => entry.isDirectory())
+        .map(async (scopeEntry) => {
+          const directProjectPath = normalizeToPosixPath(
+            join(normalizedProjectsRoot, scopeEntry.name),
+          );
+          if (await fileExists(join(repoRoot, directProjectPath, 'state.md'))) {
+            return [directProjectPath];
+          }
+
+          const scopePath = join(absoluteProjectsRoot, scopeEntry.name);
+          const projectEntries = await readdir(scopePath, {
+            withFileTypes: true,
+          });
+          return Promise.all(
+            projectEntries
+              .filter((entry) => entry.isDirectory())
+              .map(async (projectEntry) => {
+                const projectPath = normalizeToPosixPath(
+                  join(
+                    normalizedProjectsRoot,
+                    scopeEntry.name,
+                    projectEntry.name,
+                  ),
+                );
+                return (await fileExists(
+                  join(repoRoot, projectPath, 'state.md'),
+                ))
+                  ? projectPath
+                  : null;
+              }),
+          );
+        }),
+    )
+  )
+    .flat()
+    .filter((candidate): candidate is string => candidate !== null)
+    .sort();
+
+  return candidates;
+}
+
+async function assertProjectPath(
+  repoRoot: string,
+  projectPath: string,
+  source: string,
+): Promise<string> {
+  const normalizedPath = normalizeRepoRelativeProjectPath(
+    repoRoot,
+    projectPath,
+  );
+  const absolutePath = join(repoRoot, normalizedPath);
+  if (
+    !(await dirExists(absolutePath)) ||
+    !(await fileExists(join(absolutePath, 'state.md')))
+  ) {
+    throw new Error(
+      `${source} project "${projectPath}" does not resolve to a project directory containing state.md.`,
+    );
+  }
+
+  return normalizedPath;
+}
+
+async function resolveExplicitReviewProject(
+  repoRoot: string,
+  projectsRoot: string,
+  projectValue: string,
+): Promise<string> {
+  const trimmed = projectValue.trim();
+  if (!trimmed) {
+    throw new Error('--project must be a non-empty project path or name.');
+  }
+
+  const looksLikePath =
+    trimmed.includes('/') || trimmed.startsWith('.') || isAbsolute(trimmed);
+  if (looksLikePath) {
+    return assertProjectPath(repoRoot, trimmed, '--project');
+  }
+
+  const candidates = await listProjectCandidates(repoRoot, projectsRoot);
+  const matches = candidates.filter(
+    (candidate) => basename(candidate) === trimmed,
+  );
+  if (matches.length === 1) {
+    return matches[0]!;
+  }
+  if (matches.length > 1) {
+    throw new Error(
+      `Multiple OAT projects match --project "${trimmed}": ${matches.join(', ')}. Pass a full project path instead.`,
+    );
+  }
+
+  return assertProjectPath(repoRoot, `${projectsRoot}/${trimmed}`, '--project');
+}
+
+async function resolveReviewProject(options: {
+  repoRoot: string;
+  effective: ResolvedConfig;
+  project?: string;
+}): Promise<string> {
+  const projectsRoot = String(
+    options.effective.resolved['projects.root']?.value ??
+      options.effective.shared.projects?.root ??
+      '.oat/projects/shared',
+  );
+
+  if (options.project !== undefined) {
+    return resolveExplicitReviewProject(
+      options.repoRoot,
+      projectsRoot,
+      options.project,
+    );
+  }
+
+  const activeProject = options.effective.local.activeProject?.trim();
+  if (activeProject) {
+    return assertProjectPath(options.repoRoot, activeProject, 'Active');
+  }
+
+  const candidates = await listProjectCandidates(
+    options.repoRoot,
+    projectsRoot,
+  );
+  if (candidates.length === 0) {
+    throw new Error(
+      'No OAT project could be resolved for gate review. Set an active project or pass --project <path-or-name>.',
+    );
+  }
+  if (candidates.length > 1) {
+    throw new Error(
+      `Multiple OAT projects could be resolved for gate review: ${candidates.join(', ')}. Pass --project <path-or-name>.`,
+    );
+  }
+
+  return candidates[0]!;
+}
+
+function reviewGateLifecycleRank(scope: string): number {
+  const normalizedScope = scope.trim().toLowerCase();
+  if (normalizedScope === 'final') {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const phases = [...normalizedScope.matchAll(/p(\d+)/g)].map((match) =>
+    Number.parseInt(match[1] ?? '0', 10),
+  );
+  if (phases.length === 0) {
+    return 0;
+  }
+
+  const tasks = [...normalizedScope.matchAll(/(?:^|[-_])t(\d+)/g)].map(
+    (match) => Number.parseInt(match[1] ?? '0', 10),
+  );
+  const latestPhase = Math.max(...phases);
+  const latestTask = tasks.length > 0 ? Math.max(...tasks) : 9999;
+
+  return latestPhase * 10_000 + latestTask;
+}
+
+async function readReviewGateArtifactCandidate(
+  repoRoot: string,
+  relativePath: string,
+): Promise<ReviewGateArtifactCandidate | null> {
+  const content = await readFile(join(repoRoot, relativePath), 'utf8');
+  const frontmatter = getFrontmatterBlock(content);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const generatedAt = getFrontmatterField(frontmatter, 'oat_generated_at');
+  if (!generatedAt) {
+    return null;
+  }
+
+  const generatedTime = Date.parse(generatedAt);
+  if (Number.isNaN(generatedTime)) {
+    return null;
+  }
+
+  const scope = getFrontmatterField(frontmatter, 'oat_review_scope') ?? '';
+
+  return {
+    path: relativePath,
+    scope,
+    generatedAt,
+    kind: 'project',
+    archived: false,
+    actionable: true,
+    generatedTime,
+    lifecycleRank: reviewGateLifecycleRank(scope),
+    signature: createHash('sha256').update(content).digest('hex'),
+  };
+}
+
+function sortReviewGateArtifacts(
+  left: ReviewGateArtifactCandidate,
+  right: ReviewGateArtifactCandidate,
+): number {
+  if (left.generatedTime !== right.generatedTime) {
+    return right.generatedTime - left.generatedTime;
+  }
+  if (left.lifecycleRank !== right.lifecycleRank) {
+    return right.lifecycleRank - left.lifecycleRank;
+  }
+  return left.path.localeCompare(right.path);
+}
+
+async function listActiveProjectReviewCandidates(options: {
+  repoRoot: string;
+  projectPath: string;
+}): Promise<ReviewGateArtifactCandidate[]> {
+  const projectPath = normalizeRepoRelativeProjectPath(
+    options.repoRoot,
+    options.projectPath,
+  );
+  const reviewsDir = `${projectPath}/reviews`;
+  let entries;
+
+  try {
+    entries = await readdir(join(options.repoRoot, reviewsDir), {
+      withFileTypes: true,
+    });
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return [];
+    }
+    throw error;
+  }
+
+  return (
+    await Promise.all(
+      entries
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+        .map((entry) =>
+          readReviewGateArtifactCandidate(
+            options.repoRoot,
+            normalizeToPosixPath(join(reviewsDir, entry.name)),
+          ),
+        ),
+    )
+  )
+    .filter(
+      (candidate): candidate is ReviewGateArtifactCandidate =>
+        candidate !== null,
+    )
+    .sort(sortReviewGateArtifacts);
+}
+
+function findProducedReviewArtifact(
+  before: readonly ReviewGateArtifactCandidate[],
+  after: readonly ReviewGateArtifactCandidate[],
+): ReviewGateArtifactCandidate | null {
+  const beforeSignatures = new Map(
+    before.map((candidate) => [candidate.path, candidate.signature]),
+  );
+
+  return (
+    after.find(
+      (candidate) =>
+        beforeSignatures.get(candidate.path) !== candidate.signature,
+    ) ?? null
+  );
+}
+
+function reviewBlocksAtThreshold(
+  verdict: ReviewGateVerdict,
+  threshold: ReviewGateThreshold,
+): boolean {
+  if (verdict.counts.critical > 0) {
+    return true;
+  }
+  if (threshold === 'critical') {
+    return false;
+  }
+  if (verdict.counts.important > 0) {
+    return true;
+  }
+  if (threshold === 'important') {
+    return false;
+  }
+  if (verdict.counts.medium > 0) {
+    return true;
+  }
+  if (threshold === 'medium') {
+    return false;
+  }
+  return verdict.counts.minor > 0;
+}
+
+function writeReviewGateResult(
+  context: CommandContext,
+  payload: {
+    status: 'ok' | 'blocked';
+    target: string;
+    project: string;
+    artifactPath: string;
+    threshold: ReviewGateThreshold;
+    blocking: boolean;
+    counts: ReviewGateVerdict['counts'];
+    reviewType: ReviewGateVerdict['reviewType'];
+    scope: string | null;
+    invocation: string | null;
+    handoff: string;
+  },
+): void {
+  if (context.json) {
+    context.logger.json(payload);
+    return;
+  }
+
+  context.logger.info(`Review artifact: ${payload.artifactPath}`);
+  context.logger.info(
+    `Verdict: ${payload.status} (critical=${payload.counts.critical}, important=${payload.counts.important}, medium=${payload.counts.medium}, minor=${payload.counts.minor})`,
+  );
+  context.logger.info(payload.handoff);
 }
 
 async function updateConfigLayer(
@@ -647,10 +1124,23 @@ async function runGateSet(
     const layer = parseLayer(options.layer);
     const normalizedSkill = trimRequired(skillName, '<skill>');
     const gate = parseGateConfig(options);
+    const warnings = gate
+      ? detectDevBuildGateCommandWarnings(gate.command)
+      : [];
     await updateConfigLayer(context, layer, dependencies, (config) =>
       setSkillGate(config, normalizedSkill, gate),
     );
-    writeSuccess(context, { layer, skill: normalizedSkill, gate });
+    if (!context.json) {
+      for (const warning of warnings) {
+        context.logger.warn(warning);
+      }
+    }
+    writeSuccess(context, {
+      layer,
+      skill: normalizedSkill,
+      gate,
+      ...(warnings.length > 0 ? { warnings } : {}),
+    });
     process.exitCode = 0;
   } catch (error) {
     writeError(context, error);
@@ -724,40 +1214,12 @@ async function runCrossProviderExec(
   try {
     const effective = await readEffectiveConfig(context, dependencies);
     const targets = resolveExecTargets(effective);
-    const explicitTarget = options.target?.trim();
-
-    if (explicitTarget) {
-      const target = targets[explicitTarget];
-      if (!target) {
-        throw new Error(`Unknown exec target "${explicitTarget}".`);
-      }
-
-      process.exitCode = await executeTarget(
-        { id: explicitTarget, target: cloneExecTarget(target) },
-        prompt,
-        context,
-        dependencies,
-      );
-      return;
-    }
-
-    const avoid = parseCrossProviderAvoid(options.avoid);
-    const currentRuntime = await resolveCurrentRuntime(
-      options.currentRuntime,
-      context,
-      dependencies,
-    );
-    const selected = await selectAvailableExecTarget(
+    const selected = await resolveSelectedExecTarget(
       targets,
-      currentRuntime,
-      avoid,
+      options,
       context,
       dependencies,
     );
-
-    if (!selected) {
-      throw new Error(noEligibleTargetMessage(currentRuntime, avoid));
-    }
 
     process.exitCode = await executeTarget(
       selected,
@@ -765,6 +1227,96 @@ async function runCrossProviderExec(
       context,
       dependencies,
     );
+  } catch (error) {
+    writeError(context, error);
+  }
+}
+
+async function runReviewGate(
+  prompt: string[],
+  options: ReviewGateOptions,
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<void> {
+  try {
+    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
+    const effective = await dependencies.resolveEffectiveConfig(
+      repoRoot,
+      userConfigDir,
+      dependencies.processEnv,
+    );
+    const projectPath = await resolveReviewProject({
+      repoRoot,
+      effective,
+      project: options.project,
+    });
+    const targets = resolveExecTargets(effective);
+    const selected = await resolveSelectedExecTarget(
+      targets,
+      options,
+      context,
+      dependencies,
+    );
+    const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
+    const before = await listActiveProjectReviewCandidates({
+      repoRoot,
+      projectPath,
+    });
+    const reviewPrompt = [
+      REVIEW_GATE_CONTEXT_NOTE,
+      reviewGateProjectContext(projectPath),
+      ...(options.reviewType?.trim()
+        ? [`Review type: ${options.reviewType.trim()}.`]
+        : []),
+      ...(options.reviewScope?.trim()
+        ? [`Review scope: ${options.reviewScope.trim()}.`]
+        : []),
+      ...prompt,
+    ];
+    const childExitCode = await executeTarget(
+      selected,
+      reviewPrompt,
+      context,
+      dependencies,
+    );
+
+    if (childExitCode !== 0) {
+      process.exitCode = childExitCode;
+      return;
+    }
+
+    const after = await listActiveProjectReviewCandidates({
+      repoRoot,
+      projectPath,
+    });
+    const producedArtifact = findProducedReviewArtifact(before, after);
+    if (!producedArtifact) {
+      throw new Error(
+        `No new review artifact was detected for project ${projectPath}. Ensure the review provider wrote a project review artifact before the gate exits.`,
+      );
+    }
+
+    const verdict = await parseReviewGateVerdict(
+      join(repoRoot, producedArtifact.path),
+    );
+    const blocking = reviewBlocksAtThreshold(verdict, threshold);
+    const handoff = `Run oat-project-review-receive for ${producedArtifact.path} before treating this gate review as consumed.`;
+
+    writeReviewGateResult(context, {
+      status: blocking ? 'blocked' : 'ok',
+      target: selected.id,
+      project: projectPath,
+      artifactPath: producedArtifact.path,
+      threshold,
+      blocking,
+      counts: verdict.counts,
+      reviewType: verdict.reviewType,
+      scope: verdict.scope,
+      invocation: verdict.invocation,
+      handoff,
+    });
+    process.exitCode = blocking ? 1 : 0;
   } catch (error) {
     writeError(context, error);
   }
@@ -850,6 +1402,42 @@ export function createGateCommand(
           readGlobalOptions(command),
         );
         await runCrossProviderExec(prompt, options, context, dependencies);
+      },
+    );
+
+  cmd
+    .command('review')
+    .description('Run a review gate and map review findings to exit status')
+    .option('--target <id>', 'Run this exact exec target')
+    .option('--avoid <mode>', 'Avoidance mode: same-runtime or none')
+    .option(
+      '--current-runtime <runtime>',
+      'Override detected runtime for testing or manual routing',
+    )
+    .option(
+      '--project <path-or-name>',
+      'Project path or name to review; defaults to the active project',
+    )
+    .option('--review-scope <scope>', 'Review scope hint for the provider')
+    .option('--review-type <type>', 'Review type hint for the provider')
+    .option(
+      '--exit-nonzero-on <severity>',
+      'Lowest severity that exits nonzero: critical, important, medium, or minor',
+    )
+    .argument(
+      '<prompt...>',
+      'Review prompt arguments appended to the target command',
+    )
+    .action(
+      async (
+        prompt: string[],
+        options: ReviewGateOptions,
+        command: Command,
+      ) => {
+        const context = dependencies.buildCommandContext(
+          readGlobalOptions(command),
+        );
+        await runReviewGate(prompt, options, context, dependencies);
       },
     );
 

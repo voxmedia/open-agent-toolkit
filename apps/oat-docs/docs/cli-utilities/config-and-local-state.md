@@ -113,13 +113,19 @@ Available commands:
 - `oat gate resolve <skill>` - inspect the resolved gate config for one skill
 - `oat gate set <skill>` / `oat gate unset <skill>` - write or clear a skill gate
 - `oat gate target set <id>` / `oat gate target unset <id>` - write or clear an exec target
+- `oat gate review <prompt...>` - run a review-specific gate and map blocking review findings to exit status
 - `oat gate cross-provider-exec <prompt...>` - select an available exec target and run the prompt there
 
-The most common command is `oat gate cross-provider-exec`, which avoids the
-current runtime by default so a review gate can run in a fresh Codex, Claude, or
-Cursor runtime. Target commands are stored as JSON argv arrays, so configure
-them with `oat gate target set --base-command-json ...` rather than
-`oat config set`.
+Use `oat gate review` for OAT review gates. It keeps the normal stateful
+review-provider workflow: the review artifact, Reviews row update, and review
+bookkeeping commits are expected, and the produced review must be received with
+`oat-project-review-receive` before the host treats it as dispositioned.
+
+Use `oat gate cross-provider-exec` for generic cross-runtime execution. It
+avoids the current runtime by default, chooses a fresh Codex, Claude, or Cursor
+target when available, and exits with the child process status. Target commands
+are stored as JSON argv arrays, so configure them with
+`oat gate target set --base-command-json ...` rather than `oat config set`.
 
 For schema, examples, and current V1 limits, see [Workflow Gates](workflow-gates.md).
 

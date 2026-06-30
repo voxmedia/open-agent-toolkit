@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-21
+oat_last_updated: 2026-06-29
 oat_generated: true
 oat_summary_last_task: p07-t01
 oat_summary_revision_count: 0
@@ -18,6 +18,21 @@ skills. The project started from the need for independent cross-runtime
 verification: for example, one runtime implements or plans, then another runtime
 runs a review before the skill is considered done.
 
+The 2026-06-29 `workflow-gate-improvements` follow-up narrowed the V1 repair to
+semantic review gates and lifecycle handoff. `oat gate review` is now the
+review-specific path that maps blocking review findings to gate status, while
+`oat gate cross-provider-exec` remains the generic child-status executor.
+Gate reviews remain stateful `oat-project-review-provide` runs: review
+artifacts, Reviews row updates, and bookkeeping commits are expected, produced
+artifacts use `oat_review_invocation: gate`, and the host must run or hand off
+to `oat-project-review-receive` before treating the review as dispositioned.
+
+The follow-up did not change the Gates V2 boundary. Same-target/model-level
+target detection stays deferred to `bl-e6fc`; dispatch ceilings remain separate
+from gate target config; trusted provider permission flags are user-level
+`workflow.gates.execTargets` configuration and documentation guidance, not new
+built-in defaults.
+
 ## What Was Implemented
 
 The CLI now supports `workflow.gates.skills`, a per-skill gate map keyed by skill
@@ -30,13 +45,14 @@ Cursor with runtime detection and availability commands:
 
 - `codex-default` runs `codex exec`
 - `claude-default` runs `claude -p`
-- `cursor-default` runs `cursor-agent -p --force`
+- `cursor-default` runs `cursor-agent -p`
 
 The new `oat gate` command group provides:
 
 - `oat gate resolve <skill>`
 - `oat gate set/unset <skill>`
 - `oat gate target set/unset <id>`
+- `oat gate review <prompt...>`
 - `oat gate cross-provider-exec <prompt...>`
 
 `cross-provider-exec` avoids the current runtime by default, chooses the
@@ -56,12 +72,18 @@ file-location, directory-structure, and skill-authoring updates.
 ## Key Decisions
 
 - **Thin gate mechanism:** Gate pass/fail is the command exit code. OAT does not
-  define a verdict schema; richer interpretation belongs to the invoked command
-  or skill.
+  define a verdict schema for generic `cross-provider-exec`; richer review
+  interpretation belongs to `oat gate review`.
+- **Stateful review gates:** `oat gate review` is a normal review-provider
+  workflow with expected artifact, Reviews row, and bookkeeping side effects.
+  Gate artifacts use `oat_review_invocation: gate` and require receive handoff.
 - **Skill opt-in:** Gates are only executable contracts for skills that declare
   `oat_gateable: true` and carry the Gate Execution step.
 - **Runtime-level V1:** `cross-provider-exec` avoids the current runtime, not the
   current model or effort setting. Same-target/model-level dispatch is deferred.
+- **Explicit target config:** Gate model/effort and trusted provider permission
+  flags live in `workflow.gates.execTargets`, not dispatch ceilings or built-in
+  defaults.
 - **Opaque target ids:** OAT treats target ids and model slugs as opaque strings.
   It does not infer model family, effort, or provider semantics from names.
 - **Structured target commands:** `oat gate target set` accepts JSON argv arrays
