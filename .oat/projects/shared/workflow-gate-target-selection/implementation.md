@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-01
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 4/6       |
+| Phase 1 | in_progress | 6     | 5/6       |
 
-**Total:** 4/6 tasks completed
+**Total:** 5/6 tasks completed
 
 ---
 
@@ -111,8 +111,19 @@ Pending.
 
 ### Task p01-t05: Bump Release Metadata For Shipped CLI And Bundled Assets
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2368d28f
+
+**Outcome:**
+
+- Bumped the lockstep public package manifests from `0.1.36` to `0.1.37`.
+- Updated `packages/cli/assets/public-package-versions.json` to match the
+  shipped CLI/docs package versions.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: passed for all five public packages at `0.1.37`.
 
 ### Task p01-t06: Update Live Gate Config And Verify Provider CLI Commands
 
@@ -141,7 +152,7 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 - [x] p01-t02: Assemble review gate metadata into one provider prompt - 1f992d85
 - [x] p01-t03: Align gate-aware lifecycle skill guidance - 9a17314d
 - [x] p01-t04: Update workflow-gate docs and repo reference notes - a85f63ef
-- [ ] p01-t05: Bump release metadata for shipped CLI and bundled assets
+- [x] p01-t05: Bump release metadata for shipped CLI and bundled assets - 2368d28f
 - [ ] p01-t06: Update live gate config and verify provider CLI commands
 
 **What changed (high level):**
@@ -174,6 +185,6 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                         | Passed | Failed | Notes                            |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------------- |
-| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs` | 5      | 0      | p01-t01 through p01-t04 complete |
+| Phase | Tests Run                                                                                                                                                                                                                  | Passed | Failed | Notes                            |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------------- |
+| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate` | 6      | 0      | p01-t01 through p01-t05 complete |
