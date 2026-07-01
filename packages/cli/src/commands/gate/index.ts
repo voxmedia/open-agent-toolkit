@@ -176,6 +176,13 @@ function reviewGateProjectContext(projectPath: string): string {
   return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
 }
 
+function assembleReviewGatePrompt(segments: string[]): string {
+  return segments
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+    .join('\n\n');
+}
+
 async function runChildProcess(
   command: string,
   args: string[],
@@ -1263,7 +1270,7 @@ async function runReviewGate(
       repoRoot,
       projectPath,
     });
-    const reviewPrompt = [
+    const reviewPrompt = assembleReviewGatePrompt([
       REVIEW_GATE_CONTEXT_NOTE,
       reviewGateProjectContext(projectPath),
       ...(options.reviewType?.trim()
@@ -1272,11 +1279,11 @@ async function runReviewGate(
       ...(options.reviewScope?.trim()
         ? [`Review scope: ${options.reviewScope.trim()}.`]
         : []),
-      ...prompt,
-    ];
+      prompt.join(' '),
+    ]);
     const childExitCode = await executeTarget(
       selected,
-      reviewPrompt,
+      [reviewPrompt],
       context,
       dependencies,
     );

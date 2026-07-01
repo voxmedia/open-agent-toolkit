@@ -1584,7 +1584,7 @@ describe('oat gate', () => {
       args: ['--project', 'named', '--target', 'codex-default', 'Review'],
     });
 
-    expect(runner.calls[0]?.args).toContain(
+    expect(runner.calls[0]?.args.at(-1)).toContain(
       `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
     );
     expect(capture.jsonPayloads[0]).toMatchObject({
@@ -1628,7 +1628,7 @@ describe('oat gate', () => {
       ],
     });
 
-    expect(runner.calls[0]?.args).toContain(
+    expect(runner.calls[0]?.args.at(-1)).toContain(
       `Resolved OAT project path: ${explicitProjectPath}. Run the review for this project path.`,
     );
     expect(capture.jsonPayloads[0]).toMatchObject({
