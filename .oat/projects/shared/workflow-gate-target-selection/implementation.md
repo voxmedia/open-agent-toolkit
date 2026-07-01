@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-01
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 1/6       |
+| Phase 1 | in_progress | 6     | 2/6       |
 
-**Total:** 1/6 tasks completed
+**Total:** 2/6 tasks completed
 
 ---
 
@@ -54,7 +54,21 @@ Pending.
 ### Task p01-t02: Assemble Review Gate Metadata Into One Provider Prompt
 
 **Status:** pending
-**Commit:** -
+**Commit:** 1f992d85
+
+**Outcome:**
+
+- `oat gate review` now assembles gate metadata, project context, review hints,
+  and the user prompt into one provider prompt argument.
+- `oat gate cross-provider-exec` remains unchanged and continues to append
+  prompt argv entries generically.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: passed, 39 tests.
+- Run: `pnpm type-check`
+- Result: passed.
 
 ### Task p01-t03: Align Gate-Aware Lifecycle Skill Guidance
 
@@ -95,7 +109,7 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 **Session Start:** 2026-07-01T02:13:54Z
 
 - [x] p01-t01: Add CLI regression coverage for review gate prompt assembly - 21b400a6
-- [ ] p01-t02: Assemble review gate metadata into one provider prompt
+- [x] p01-t02: Assemble review gate metadata into one provider prompt - 1f992d85
 - [ ] p01-t03: Align gate-aware lifecycle skill guidance
 - [ ] p01-t04: Update workflow-gate docs and repo reference notes
 - [ ] p01-t05: Bump release metadata for shipped CLI and bundled assets
