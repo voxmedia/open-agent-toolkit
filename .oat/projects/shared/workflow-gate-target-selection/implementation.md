@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-01
@@ -35,9 +35,10 @@ Completed review-gate prompt assembly, gate-aware lifecycle skill guidance,
 workflow-gate docs/reference alignment, lockstep public package release
 metadata, and live user-level gate config cleanup on both the mini and laptop.
 
-Verification so far covers gate prompt assembly tests, type-check, skill
-validation, provider-view sync, docs build, release validation, mini/laptop gate
-config resolves, and Codex/Claude/Cursor shimmed CLI smoke checks.
+Verification covers gate prompt assembly tests, type-check, skill validation,
+provider-view sync, docs build, release validation, mini/laptop gate config
+resolves, Codex/Claude/Cursor shimmed CLI smoke checks, and full workspace
+lint/type/test/build validation.
 
 ### Task p01-t01: Add CLI Regression Coverage For Review Gate Prompt Assembly
 
@@ -227,6 +228,32 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Passed | Failed | Notes                                          |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------- |
-| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate`; mini/laptop `oat gate resolve`; temp-repo `oat gate review --target codex-default`; temp-repo `oat gate review --target claude-default`; temp-repo `oat gate review --target cursor-default`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` | 11     | 0      | p01 tasks complete; final verification pending |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Passed | Failed | Notes                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | --------------------------------------------- |
+| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate`; mini/laptop `oat gate resolve`; temp-repo `oat gate review --target codex-default`; temp-repo `oat gate review --target claude-default`; temp-repo `oat gate review --target cursor-default`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm lint`; `pnpm test`; `pnpm build` | 14     | 0      | p01 tasks complete; final verification passed |
+
+## Final Summary (for PR/docs)
+
+**What shipped:**
+
+- `oat gate review` now sends one assembled provider prompt containing gate
+  context, resolved project path, review type/scope hints, and the user prompt.
+- Gate-aware lifecycle skills now tell reusable gate commands to omit exact
+  target pins by default.
+- Workflow-gate docs and repo reference notes now distinguish trusted target
+  definitions from lifecycle gate command selection.
+- Mini and laptop user-level lifecycle gates were updated to remove
+  `--target codex-5.5-xhigh`.
+- Public package metadata was bumped to `0.1.37`.
+
+**Verification performed:**
+
+- Focused gate tests: 49 passing tests across `gate/index` and
+  `gate/review-verdict`.
+- Skill validation: 53 oat-\* skills validated.
+- Provider smoke checks: `codex-default`, `claude-default`, and
+  `cursor-default` passed with provider shims asserting one assembled prompt.
+- Full repo verification: `pnpm lint`, `pnpm type-check`, `pnpm test`,
+  `pnpm build`, `pnpm build:docs`, and `pnpm release:validate` passed.
+
+**Design deltas:** None.
