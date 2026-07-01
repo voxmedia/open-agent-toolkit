@@ -1050,7 +1050,7 @@ V1 workflow gates ship with a runtime-level execution model:
 - `workflow.gates.execTargets` stores keyed target definitions with opaque ids, `runtime`, argv-form `baseCommand`, optional detection/availability commands, and priority.
 - `oat gate cross-provider-exec` defaults to `--avoid same-runtime`, detects the current built-in runtime by host detection command, chooses the highest-priority available non-current runtime, and exits with the child status.
 - Built-in runtime detectors are intentionally concrete: `CLAUDECODE` for Claude, `CODEX_THREAD_ID`/`CODEX_SESSION_ID` for Codex, and `CURSOR_AGENT` for Cursor.
-- `--target <id>` is the V1 precision escape hatch when a skill should pin a specific configured target.
+- `--target <id>` is the V1 precision escape hatch for manual dispatch, debugging, or deliberately local/user-specific overrides that should pin a specific configured target.
 - Config-driven `execPolicy`, `avoid: same-target`, target-level detection, model/effort identity, and `onUnknownTarget` semantics are deferred to `bl-e6fc`.
 
 #### Consequences
@@ -1128,6 +1128,13 @@ Gate target model/effort config remains explicit. OAT does not infer gate target
 selection from `workflow.dispatchCeiling` or phase dispatch ceilings; those
 ceilings remain implementation/review dispatch controls. Same-target and
 model-level target detection remain deferred to `bl-e6fc`.
+
+Reusable lifecycle gate commands should normally omit exact `--target <id>` pins
+so `oat gate review` and `cross-provider-exec` can avoid the current runtime.
+Target definitions remain explicit user/shared/local config, but bundled skill
+guidance and shared lifecycle examples should not hardcode provider or model
+targets. Exact target pins are reserved for manual dispatch, debugging, or a
+deliberate local/user-specific override.
 
 #### Consequences
 

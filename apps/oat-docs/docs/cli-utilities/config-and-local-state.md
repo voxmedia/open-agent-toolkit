@@ -119,7 +119,10 @@ Available commands:
 Use `oat gate review` for OAT review gates. It keeps the normal stateful
 review-provider workflow: the review artifact, Reviews row update, and review
 bookkeeping commits are expected, and the produced review must be received with
-`oat-project-review-receive` before the host treats it as dispositioned.
+`oat-project-review-receive` before the host treats it as dispositioned. Keep
+reusable lifecycle gate commands target-neutral by omitting `--target <id>`; use
+explicit target pins only for manual dispatch, debugging, or deliberately local
+overrides.
 
 Use `oat gate cross-provider-exec` for generic cross-runtime execution. It
 avoids the current runtime by default, chooses a fresh Codex, Claude, or Cursor

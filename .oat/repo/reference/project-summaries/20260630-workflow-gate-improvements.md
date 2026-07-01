@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-29
+oat_last_updated: 2026-07-01
 oat_generated: true
 oat_summary_last_task: p04-t02
 oat_summary_revision_count: 0
@@ -51,6 +51,9 @@ review findings actually fail the gate.
 - Gate target effort/model and trusted provider permission flags are explicit
   user configuration, not inferred from `oat_dispatch_ceiling` and not built
   into the default targets.
+- Reusable lifecycle gate commands should normally omit exact target pins.
+  Explicit `--target <id>` belongs to manual dispatch, debugging, or deliberate
+  local/user-specific overrides.
 - Durable docs and config examples use `oat gate ...`; absolute dev-build paths
   are only for local development of unmerged functionality.
 - Same-target/model-level gate dispatch remains deferred to the existing Gates

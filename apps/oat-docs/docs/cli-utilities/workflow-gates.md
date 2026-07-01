@@ -112,7 +112,8 @@ JSON argv is intentional: provider commands often contain flags such as `-p` or
 Use these examples only in trusted environments where the provider process may
 read files, run tools, and write review bookkeeping without an interactive
 approval prompt. They are user-level target configuration, not built-in OAT
-defaults.
+defaults. Defining a trusted target makes it available to the dispatcher; it
+does not mean shared lifecycle gate commands should pin that target.
 
 Claude's default permission mode can block on
 `Skill(oat-project-review-provide)`, `oat`, `pnpm`, and shell or tool calls. A
@@ -161,7 +162,7 @@ Set or clear a skill gate:
 
 ```bash
 oat gate set oat-project-implement \
-  --command 'oat gate review --target codex-5.5-xhigh --review-type code --review-scope final "Use oat-project-review-provide code final to review the current project"' \
+  --command 'oat gate review --review-type code --review-scope final "Use oat-project-review-provide code final to review the current project"' \
   --description "Run final review in another runtime" \
   --on-failure block \
   --max-attempts 2 \
@@ -169,6 +170,11 @@ oat gate set oat-project-implement \
 
 oat gate unset oat-project-implement --layer user
 ```
+
+Lifecycle gate commands should normally omit `--target <id>`. Leaving the
+target unset lets the dispatcher avoid the current runtime and choose the
+highest-priority available non-host target. Pin a target only for manual
+dispatch, debugging, or a deliberate local/user-specific override.
 
 Set or clear an exec target:
 
@@ -186,7 +192,7 @@ oat gate target unset codex-high --layer user
 Dispatch a review through the target registry:
 
 ```bash
-oat gate review --target codex-5.5-xhigh \
+oat gate review \
   --review-type code \
   --review-scope final \
   "Use oat-project-review-provide code final to review the current project"
@@ -194,6 +200,16 @@ oat gate review --target codex-5.5-xhigh \
 
 Leaving `--target` unset lets target priority choose the highest-priority
 available non-host runtime.
+
+For manual or debug dispatch, use `--target <id>` to pin one target and skip
+detection/avoidance:
+
+```bash
+oat gate review --target codex-5.5-xhigh \
+  --review-type code \
+  --review-scope final \
+  "Use oat-project-review-provide code final to review the current project"
+```
 
 Dispatch a generic prompt through the target registry:
 
@@ -242,6 +258,7 @@ OAT does not try another target after a failed review.
 
 V1 gates avoid the current runtime, not the current model or effort setting.
 Same-runtime but different-target dispatch, such as using Cursor again with a
-different model slug, is future work. Until that exists, use `--target <id>` when
-you need an explicit reviewer target, or rely on the default `same-runtime`
-avoidance for cross-runtime review.
+different model slug, is future work. Until that exists, reusable lifecycle
+gates should rely on default `same-runtime` avoidance for cross-runtime review;
+manual and local overrides can pin an explicit reviewer target with
+`--target <id>`.
