@@ -79,13 +79,15 @@ config resolves, and Codex/Claude/Cursor shimmed CLI smoke checks.
 ### Task p01-t03: Align Gate-Aware Lifecycle Skill Guidance
 
 **Status:** completed
-**Commit:** 9a17314d
+**Commit:** 9a17314d; c3b9cea8
 
 **Outcome:**
 
 - Updated all four gate-aware lifecycle skills to say reusable lifecycle gate
   commands should normally omit exact `--target <id>` pins.
 - Bumped changed skill versions once each.
+- Updated the quick-start skill version contract test after final verification
+  caught the expected `2.1.7` -> `2.1.8` mismatch.
 
 **Verification:**
 
@@ -93,6 +95,8 @@ config resolves, and Codex/Claude/Cursor shimmed CLI smoke checks.
 - Result: passed, 53 oat-\* skills validated.
 - Run: `pnpm run cli -- sync --scope all`
 - Result: no provider-view changes required.
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- Result: passed, 38 tests.
 
 ### Task p01-t04: Update Workflow-Gate Docs And Repo Reference Notes
 
@@ -202,6 +206,8 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 - Lifecycle skill-gate commands should omit exact provider/model targets by
   default; exact target IDs are reserved for manual/debug or explicitly local
   preferences.
+- Skill version contract tests must be updated in the same branch when a
+  guarded skill version changes.
 
 **Follow-ups / TODO:**
 
@@ -221,6 +227,6 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                | Passed | Failed | Notes                                          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | ---------------------------------------------- |
-| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate`; mini/laptop `oat gate resolve`; temp-repo `oat gate review --target codex-default`; temp-repo `oat gate review --target claude-default`; temp-repo `oat gate review --target cursor-default` | 10     | 0      | p01 tasks complete; final verification pending |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Passed | Failed | Notes                                          |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------- |
+| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate`; mini/laptop `oat gate resolve`; temp-repo `oat gate review --target codex-default`; temp-repo `oat gate review --target claude-default`; temp-repo `oat gate review --target cursor-default`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` | 11     | 0      | p01 tasks complete; final verification pending |
