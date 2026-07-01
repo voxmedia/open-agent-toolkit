@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-01
-oat_current_task_id: p01-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,22 +16,28 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 5/6       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
 
-**Total:** 5/6 tasks completed
+**Total:** 6/6 tasks completed
 
 ---
 
 ## Phase 1: Review Gate Target Selection And Provider Prompt Repair
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-01
 
 ### Phase Summary
 
-Pending.
+Completed review-gate prompt assembly, gate-aware lifecycle skill guidance,
+workflow-gate docs/reference alignment, lockstep public package release
+metadata, and live user-level gate config cleanup on both the mini and laptop.
+
+Verification so far covers gate prompt assembly tests, type-check, skill
+validation, provider-view sync, docs build, release validation, mini/laptop gate
+config resolves, and Codex/Claude/Cursor shimmed CLI smoke checks.
 
 ### Task p01-t01: Add CLI Regression Coverage For Review Gate Prompt Assembly
 
@@ -127,8 +133,35 @@ Pending.
 
 ### Task p01-t06: Update Live Gate Config And Verify Provider CLI Commands
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** external config and verification only
+
+**Outcome:**
+
+- Updated mini user-level gates for `oat-project-plan`,
+  `oat-project-quick-start`, `oat-project-import-plan`, and
+  `oat-project-implement` to remove `--target codex-5.5-xhigh`.
+- Updated the same four laptop user-level gates over SSH in
+  `/Users/thomas.stang/Code/vox/open-agent-toolkit`.
+- Verified both machines resolve unpinned `oat gate review` lifecycle commands.
+- Ran temp-repo CLI smoke checks for `codex-default`, `claude-default`, and
+  `cursor-default`; each provider shim asserted the expected base arg plus
+  exactly one assembled review prompt and produced a non-blocking gate review
+  artifact.
+
+**Verification:**
+
+- Run: `pnpm run cli -- gate resolve <skill> --json` for all four lifecycle
+  gates on the mini.
+- Result: all resolved commands omitted `--target`.
+- Run: `ssh laptop '... oat gate resolve <skill> --json ...'` for all four
+  lifecycle gates on the laptop.
+- Result: all resolved commands omitted `--target`.
+- Run: temp-repo `pnpm run cli -- --cwd <tmp> --json gate review --target
+codex-default|claude-default|cursor-default --review-type artifact
+--review-scope plan --exit-nonzero-on important ...` with provider shims.
+- Result: all three targets returned `status: ok`, `blocking: false`, and
+  `oat_review_invocation: gate`.
 
 ---
 
@@ -153,13 +186,16 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 - [x] p01-t03: Align gate-aware lifecycle skill guidance - 9a17314d
 - [x] p01-t04: Update workflow-gate docs and repo reference notes - a85f63ef
 - [x] p01-t05: Bump release metadata for shipped CLI and bundled assets - 2368d28f
-- [ ] p01-t06: Update live gate config and verify provider CLI commands
+- [x] p01-t06: Update live gate config and verify provider CLI commands
 
 **What changed (high level):**
 
 - Review gates now assemble one provider prompt, gate-aware lifecycle skills and
   docs avoid hardcoded target pins by default, and target IDs remain an explicit
   user/shared/local configuration surface for trusted or manual dispatch.
+- User-level lifecycle gate config on both machines now follows the unpinned
+  command shape, and the CLI was smoke-tested against Codex, Claude, and Cursor
+  target command shapes.
 
 **Decisions:**
 
@@ -185,6 +221,6 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                  | Passed | Failed | Notes                            |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------------- |
-| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate` | 6      | 0      | p01-t01 through p01-t05 complete |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                | Passed | Failed | Notes                                          |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | ---------------------------------------------- |
+| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs`; `pnpm release:validate`; mini/laptop `oat gate resolve`; temp-repo `oat gate review --target codex-default`; temp-repo `oat gate review --target claude-default`; temp-repo `oat gate review --target cursor-default` | 10     | 0      | p01 tasks complete; final verification pending |
