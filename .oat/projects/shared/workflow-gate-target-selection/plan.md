@@ -312,8 +312,8 @@ git diff --cached --quiet || git commit -m "chore(oat): record workflow gate ver
 
 | Scope  | Type     | Status  | Date       | Artifact                           |
 | ------ | -------- | ------- | ---------- | ---------------------------------- |
-| p01    | code     | pending | -          | -                                  |
-| final  | code     | pending | -          | -                                  |
+| p01    | code     | passed  | 2026-07-01 | reviews/final-review-2026-07-01.md |
+| final  | code     | passed  | 2026-07-01 | reviews/final-review-2026-07-01.md |
 | spec   | artifact | pending | -          | -                                  |
 | design | artifact | pending | -          | -                                  |
 | plan   | artifact | passed  | 2026-07-01 | inline quick-start artifact review |
