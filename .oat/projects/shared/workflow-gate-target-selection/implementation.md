@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-01
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 3/6       |
+| Phase 1 | in_progress | 6     | 4/6       |
 
-**Total:** 3/6 tasks completed
+**Total:** 4/6 tasks completed
 
 ---
 
@@ -35,7 +35,7 @@ Pending.
 
 ### Task p01-t01: Add CLI Regression Coverage For Review Gate Prompt Assembly
 
-**Status:** pending
+**Status:** completed
 **Commit:** 21b400a6
 
 **Outcome:**
@@ -53,7 +53,7 @@ Pending.
 
 ### Task p01-t02: Assemble Review Gate Metadata Into One Provider Prompt
 
-**Status:** pending
+**Status:** completed
 **Commit:** 1f992d85
 
 **Outcome:**
@@ -72,7 +72,7 @@ Pending.
 
 ### Task p01-t03: Align Gate-Aware Lifecycle Skill Guidance
 
-**Status:** pending
+**Status:** completed
 **Commit:** 9a17314d
 
 **Outcome:**
@@ -90,8 +90,24 @@ Pending.
 
 ### Task p01-t04: Update Workflow-Gate Docs And Repo Reference Notes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a85f63ef
+
+**Outcome:**
+
+- Updated workflow-gate docs so lifecycle gate examples use unpinned
+  `oat gate review` commands.
+- Preserved trusted target setup examples while clarifying that target
+  definitions do not imply shared lifecycle commands should pin exact targets.
+- Refreshed repo reference notes and prior project summaries to reserve
+  `--target <id>` for manual/debug dispatch or deliberate local overrides.
+
+**Verification:**
+
+- Run: `rg -n -- "oat gate set .*--target|--command 'oat gate review --target|workflow gate commands should.*--target|when a skill should pin" ...`
+- Result: no stale pinned lifecycle-gate wording found in the touched docs.
+- Run: `pnpm build:docs`
+- Result: passed.
 
 ### Task p01-t05: Bump Release Metadata For Shipped CLI And Bundled Assets
 
@@ -124,13 +140,15 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 - [x] p01-t01: Add CLI regression coverage for review gate prompt assembly - 21b400a6
 - [x] p01-t02: Assemble review gate metadata into one provider prompt - 1f992d85
 - [x] p01-t03: Align gate-aware lifecycle skill guidance - 9a17314d
-- [ ] p01-t04: Update workflow-gate docs and repo reference notes
+- [x] p01-t04: Update workflow-gate docs and repo reference notes - a85f63ef
 - [ ] p01-t05: Bump release metadata for shipped CLI and bundled assets
 - [ ] p01-t06: Update live gate config and verify provider CLI commands
 
 **What changed (high level):**
 
-- Pending.
+- Review gates now assemble one provider prompt, gate-aware lifecycle skills and
+  docs avoid hardcoded target pins by default, and target IDs remain an explicit
+  user/shared/local configuration surface for trusted or manual dispatch.
 
 **Decisions:**
 
@@ -156,6 +174,6 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Notes   |
-| ----- | --------- | ------ | ------ | ------- |
-| p01   | -         | -      | -      | Pending |
+| Phase | Tests Run                                                                                                                                                                                         | Passed | Failed | Notes                            |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------------- |
+| p01   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`; `pnpm type-check`; `pnpm run oat:validate-skills`; `pnpm run cli -- sync --scope all`; `pnpm build:docs` | 5      | 0      | p01-t01 through p01-t04 complete |
