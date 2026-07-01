@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.1
+version: 1.4.2
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -295,7 +295,7 @@ Before reporting this skill as complete, run the configured gate as the final st
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
-5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no env var. By default, `oat gate cross-provider-exec` resolves the current host from built-in `hostDetectionCommand`s and avoids the same runtime with zero per-prompt input. It does not read or stamp `OAT_CURRENT_RUNTIME` or `OAT_GATE_EXEC_TARGET`. To pin a specific reviewer for this skill, set `--target <id>` once in that skill's gate `command`; this is the optional precision path and does not require per-prompt input.
+5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands should normally omit `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
 
 ### Step 7: Output Next Action
 
