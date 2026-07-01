@@ -310,13 +310,13 @@ git diff --cached --quiet || git commit -m "chore(oat): record workflow gate ver
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                       |
-| ------ | -------- | ------- | ---------- | ---------------------------------------------- |
-| p01    | code     | passed  | 2026-07-01 | reviews/archived/final-review-2026-07-01.md    |
-| final  | code     | passed  | 2026-07-01 | reviews/archived/final-review-2026-07-01-v2.md |
-| spec   | artifact | pending | -          | -                                              |
-| design | artifact | pending | -          | -                                              |
-| plan   | artifact | passed  | 2026-07-01 | inline quick-start artifact review             |
+| Scope  | Type     | Status   | Date       | Artifact                                    |
+| ------ | -------- | -------- | ---------- | ------------------------------------------- |
+| p01    | code     | passed   | 2026-07-01 | reviews/archived/final-review-2026-07-01.md |
+| final  | code     | received | 2026-07-01 | reviews/final-review-2026-07-01-v3.md       |
+| spec   | artifact | pending  | -          | -                                           |
+| design | artifact | pending  | -          | -                                           |
+| plan   | artifact | passed   | 2026-07-01 | inline quick-start artifact review          |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
