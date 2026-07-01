@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-01
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -18,9 +18,9 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 0/6       |
+| Phase 1 | in_progress | 6     | 1/6       |
 
-**Total:** 0/6 tasks completed
+**Total:** 1/6 tasks completed
 
 ---
 
@@ -36,7 +36,20 @@ Pending.
 ### Task p01-t01: Add CLI Regression Coverage For Review Gate Prompt Assembly
 
 **Status:** pending
-**Commit:** -
+**Commit:** 21b400a6
+
+**Outcome:**
+
+- Added regression coverage proving `oat gate review` currently passes review
+  metadata and user prompt as separate provider argv entries.
+- Added provider-matrix coverage for `codex-default`, `claude-default`, and
+  `cursor-default`.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/gate/index.test.ts`
+- Result: failed as expected with four assertions showing multiple prompt argv
+  entries instead of one assembled prompt.
 
 ### Task p01-t02: Assemble Review Gate Metadata Into One Provider Prompt
 
@@ -81,7 +94,7 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 **Session Start:** 2026-07-01T02:13:54Z
 
-- [ ] p01-t01: Add CLI regression coverage for review gate prompt assembly
+- [x] p01-t01: Add CLI regression coverage for review gate prompt assembly - 21b400a6
 - [ ] p01-t02: Assemble review gate metadata into one provider prompt
 - [ ] p01-t03: Align gate-aware lifecycle skill guidance
 - [ ] p01-t04: Update workflow-gate docs and repo reference notes
