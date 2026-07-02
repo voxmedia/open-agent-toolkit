@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 7a4dc223
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: "2026-07-02T18:13:17.156Z" # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-07-02T19:02:48Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-07-02T19:16:08Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Starting task p01-t01
+Implementation - Phase 1 complete; starting p02-t01
 
 ## Artifacts
 
@@ -55,7 +55,8 @@ Implementation - Starting task p01-t01
 - ✓ Dispatch ceiling set to maximum
 - ✓ Plan generated
 - ✓ Execution artifacts scaffolded
-- ⧗ Implementing p01-t01
+- ✓ Phase 1 complete
+- ⧗ Implementing p02-t01
 
 ## Blockers
 
@@ -63,4 +64,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 config model and resolution tasks
+Complete Phase 2 status and init command behavior

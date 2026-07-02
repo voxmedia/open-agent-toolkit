@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-02
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,81 +26,109 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
-| Phase 2 | pending     | 2     | 0/2       |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | in_progress | 2     | 0/2       |
 | Phase 3 | pending     | 1     | 0/1       |
 
-**Total:** 0/5 tasks completed
+**Total:** 2/5 tasks completed
 
 ---
 
 ## Phase 1: Config Model and Resolution
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-02
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Sync config now accepts normalized, de-duplicated project-level `knownStrays`.
+- User config now accepts normalized, de-duplicated user-level `knownStrays`.
+- A shared drift helper can filter known stray reports and adoption candidates
+  using exact normalized provider-path matching.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/sync-config.ts` - project sync config schema,
+  defaults, and normalization.
+- `packages/cli/src/config/oat-config.ts` - user config type and
+  normalization.
+- `packages/cli/src/drift/known-strays.ts` - shared known-stray filter.
+- `packages/cli/src/drift/index.ts` - drift barrel export.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/config/resolve.test.ts src/drift/known-strays.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`
+- Result: Passed during p01 implementation and p01 review.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- `knownStrays` matching is exact path matching, not glob matching. This keeps
+  suppression conservative and preserves unrelated stray detection.
+- TypeScript verification needed the workspace `@open-agent-toolkit/control-plane`
+  package built first; generated build output was not committed.
 
 ### Task p01-t01: Add known strays config schema
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b6b0c8da
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Project sync config and user config can now carry normalized known provider
+  stray paths.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/sync-config.ts` - added schema/default/normalization
+  support for project sync `knownStrays`.
+- `packages/cli/src/config/oat-config.ts` - added user config support for
+  `knownStrays`.
+- `packages/cli/src/config/sync-config.test.ts` - added sync config coverage.
+- `packages/cli/src/config/resolve.test.ts` - added user config resolution
+  coverage.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/config/resolve.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`
+- Result: Passed.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Sync config rejects invalid `knownStrays` values through the existing Zod
+  validation path. User config filters invalid entries, matching the local
+  normalizer style for optional arrays.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- Initial TypeScript verification needed control-plane build output; resolved by
+  building the workspace dependency before rerunning the planned check.
 
 ---
 
 ### Task p01-t02: Add shared known stray resolution helper
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7a4dc223
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Added `filterKnownStrays` in `packages/cli/src/drift/known-strays.ts` and
+  exported it from `packages/cli/src/drift/index.ts`.
+- Tests cover project/user source merging, exact-match suppression, sibling path
+  preservation, and empty config behavior.
 
 ---
 
 ## Phase 2: Status and Init Behavior
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-02
 
 ### Task p02-t01: Suppress known strays in `oat status`
 
@@ -138,7 +166,39 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 - 2026-07-02 19:16
+
+**Branch:** feat/known-strays-config
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p01 implementation used Codex `effort_axis=selected:xhigh`
+  under project-state maximum ceiling.
+- Dispatch: p01 review used Codex `effort_axis=selected:xhigh`; review passed
+  with 0 Critical, 0 Important, 0 Minor findings.
+
+#### Outstanding Items
+
+- None
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
 
 <!-- orchestration-runs-end -->
 
@@ -150,28 +210,32 @@ Chronological log of implementation progress.
 
 ### 2026-07-02
 
-**Session Start:** {time}
+**Session Start:** 19:02 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Add known strays config schema - b6b0c8da
+- [x] p01-t02: Add shared known stray resolution helper - 7a4dc223
+- [ ] p02-t01: Suppress known strays in `oat status` - next
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Added config support for project and user known strays.
+- Added shared exact-match filtering helper for reports and adoption
+  candidates.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Keep known-stray matching exact for now to avoid hiding unrelated unmanaged
+  provider files.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Wire the shared helper into `oat status` and `oat init` in Phase 2.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None
 
-**Session End:** {time}
+**Session End:** 19:16 UTC
 
 ---
 
@@ -197,7 +261,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
+| 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/config/resolve.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit` | yes    | 0      | Focused config/helper tests plus CLI type-check |
 | 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
