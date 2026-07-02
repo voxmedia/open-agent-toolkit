@@ -32,6 +32,7 @@ It is read by:
 {
   "version": 1,
   "defaultStrategy": "auto",
+  "knownStrays": [".cursor/skills/cloud-environment-setup"],
   "providers": {
     "claude": {
       "enabled": true,
@@ -50,9 +51,40 @@ It is read by:
 | --------------------------- | ------------------------------------- | ---------------------------------------------------------- |
 | `version`                   | yes                                   | Config schema version (currently `1`)                      |
 | `defaultStrategy`           | yes                                   | Global default sync strategy: `auto`, `symlink`, or `copy` |
+| `knownStrays`               | no                                    | Exact provider paths to suppress from stray reporting      |
 | `providers`                 | no (persisted), normalized at runtime | Provider-specific overrides keyed by adapter name          |
 | `providers.<name>.enabled`  | no                                    | Explicit provider activation (`true` / `false`)            |
 | `providers.<name>.strategy` | no                                    | Per-provider strategy override (`auto`, `symlink`, `copy`) |
+
+### Known strays
+
+Use `knownStrays` for provider-local files that should remain unmanaged by OAT.
+Entries are exact provider-path matches after path normalization; they are not
+globs and do not suppress sibling paths.
+
+Project-level config in `.oat/sync/config.json` applies to everyone using the
+repository:
+
+```json
+{
+  "version": 1,
+  "defaultStrategy": "auto",
+  "knownStrays": [".cursor/skills/cloud-environment-setup"]
+}
+```
+
+User-level config in `~/.oat/config.json` is useful for personal provider-local
+files that should not be committed to the repository:
+
+```json
+{
+  "knownStrays": [".cursor/skills/cloud-environment-setup"]
+}
+```
+
+The common Cursor-only skill case is a good fit: the skill may intentionally
+exist in `.cursor/skills/cloud-environment-setup` while remaining outside the
+canonical `.agents/skills` inventory.
 
 ## Behavior notes
 
