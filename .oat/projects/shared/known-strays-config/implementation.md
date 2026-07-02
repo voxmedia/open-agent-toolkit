@@ -26,14 +26,15 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/5 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Config Model and Resolution
 
 **Status:** in_progress
 **Started:** 2026-07-02
@@ -57,10 +58,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add known strays config schema
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** pending
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,7 +86,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add shared known stray resolution helper
 
 **Status:** pending
 **Commit:** -
@@ -96,12 +97,31 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Status and Init Behavior
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Suppress known strays in `oat status`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Suppress known strays in `oat init`
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Documentation, Versions, and Validation
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Document known strays and bump shipped package versions
 
 **Status:** pending
 **Commit:** -
