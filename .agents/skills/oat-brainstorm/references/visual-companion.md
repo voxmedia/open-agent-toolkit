@@ -40,24 +40,40 @@ The bundled `start-server.sh` resolves session paths through OAT-managed prefixe
 
 OAT's repo-root `.gitignore` already covers `.oat/` so repo-scoped sessions are not tracked by default.
 
+The same resolved root also stores `.last-port` and `.last-token` (sibling to the session directories). See **Session Authentication and the Companion URL** below for how those get reused on restart.
+
+## Session Authentication and the Companion URL
+
+Every request to the companion server requires the session key. `start-server.sh` embeds it in the returned URL as `?key=<session-key>` — always hand the user the **full URL from the JSON response, verbatim**. Do not strip or shorten the query string.
+
+- **First load:** the keyed URL bootstraps the browser and mirrors the key into an `HttpOnly` session cookie, so subsequent same-origin requests (page assets, `/files/*`, the WebSocket upgrade) authenticate via the cookie without repeating the key in the address bar.
+- **Unauthenticated requests** (missing/incorrect key and no valid cookie) get a `403` response — the server never serves content to an unkeyed request.
+- **Restarting the server** with the same `--project-dir` (or the same repo/user-scope context) reuses the previously bound port and session key, persisted at `.last-port` / `.last-token` under the resolved OAT root (see Persistence Paths above). If a browser tab from the prior session is still open, it reconnects automatically and does not need a new URL — see **Connection Status and Reconnection** below. Only give the user a new URL if the port or key actually changed (for example, a different `--project-dir` or a fresh user-scope session with no prior state).
+
 ## Starting a Session
 
 The scripts ship inside the skill directory. Invoke them via paths relative to the installed skill location (`.agents/skills/oat-brainstorm/scripts/` or the user-scope equivalent `~/.agents/skills/oat-brainstorm/scripts/`).
 
 ```bash
-# Start server with project-dir override (paths land under that directory)
-.agents/skills/oat-brainstorm/scripts/start-server.sh --project-dir /path/to/project
+# Start server with project-dir override (paths land under that directory).
+# Pass --open only after the user has already accepted the visual-companion
+# offer — it auto-opens the keyed URL in their browser on the first screen.
+.agents/skills/oat-brainstorm/scripts/start-server.sh --project-dir /path/to/project --open
 
-# Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
+# Returns: {"type":"server-started","port":52341,
+#           "url":"http://localhost:52341/?key=3f9c1a7b2e...",
 #           "screen_dir":"/path/to/project/.oat/brainstorm/12345-1706000000/content",
-#           "state_dir":"/path/to/project/.oat/brainstorm/12345-1706000000/state"}
+#           "state_dir":"/path/to/project/.oat/brainstorm/12345-1706000000/state",
+#           "idle_timeout_ms":14400000}
 ```
 
-Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
+Save `screen_dir` and `state_dir` from the response. Tell the user to open the full `url` value exactly as returned — the `?key=...` suffix is required; a bare `http://localhost:<port>/` gets a `403`.
 
 **Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. Inside an OAT repo (without `--project-dir`), the session lives under `<repo-root>/.oat/brainstorm/`. Outside an OAT repo, check `~/.oat/brainstorm/`.
 
 **Note:** Repo-scoped sessions persist under `.oat/brainstorm/` (covered by OAT's default `.gitignore` for `.oat/`). User-scope fallback sessions persist under `~/.oat/brainstorm/`. There is no `/tmp` default — sessions are always recoverable.
+
+**Idle timeout:** the server shuts itself down after **4 hours** of inactivity by default (`idle_timeout_ms` in the startup JSON). Pass `--idle-timeout-minutes <n>` to `start-server.sh` to override — useful for deliberately short-lived sessions or for extending past 4 hours on a long-running brainstorm.
 
 **Launching the server by platform:**
 
@@ -108,10 +124,20 @@ If the URL is unreachable from your browser (common in remote/containerized setu
 
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
+## Connection Status and Reconnection
+
+The browser page shows a connection-status indicator (`connecting` / `connected` / `reconnecting` / `disconnected`) driven by the WebSocket link back to the server. This runs automatically in the client — no agent action needed:
+
+- **Brief disconnects reconnect automatically** using exponential backoff.
+- **Extended disconnects** (roughly 15+ seconds) show a "Companion paused" overlay telling the user the agent will bring it back. Expect this during a deliberate restart — it is not an error condition to react to.
+- **After the server comes back** on the same port (for example, you restarted it with the same `--project-dir`/repo context per Session Authentication above), the page detects the recovery and reloads through the keyed bootstrap automatically, so the open tab keeps working without a new URL.
+
+Because reconnection is automatic, you do not need to tell the user to refresh after a restart. Only send a new URL if the port or key actually changed.
+
 ## The Loop
 
-1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
+1. **Pre-flight alive check**, then **write HTML** to a new file in `screen_dir`:
+   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. Restarting with the same `--project-dir`/repo context reuses the last bound port and session key (see Session Authentication above), so an already-open browser tab reconnects on its own — see Connection Status and Reconnection. The server auto-exits after 4 hours of inactivity by default (override with `--idle-timeout-minutes`).
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
