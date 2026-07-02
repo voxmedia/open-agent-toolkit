@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-02
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -12,7 +12,7 @@ oat_generated: false
 **Started:** 2026-07-02
 **Last Updated:** 2026-07-02
 
-> Resume pointer: `oat_current_task_id: p03-t01`
+> Resume pointer: `oat_current_task_id: p04-t01`
 
 ## Progress Overview
 
@@ -20,10 +20,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | pending  | 2     | 0/2       |
+| Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | pending  | 1     | 0/1       |
 
-**Total:** 6/9 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -89,6 +89,31 @@ Updated Step 3 accept branch (pass `--open`, preserve keyed `url`, restart reuse
 
 ---
 
+## Phase 3: Tests and release validation
+
+**Status:** complete
+
+### Task p03-t01: Extend visual-companion smoke tests
+
+**Status:** completed (`test(p03-t01)` — e1ea29bd; hardened in fix 1f1e623f)
+
+Added 5 v6-hardening smoke tests (keyed URL, unauth 403 + security headers, `/files/` traversal+dotfile 4xx, `/files/` symlink-escape 4xx, restart port+key reuse, stop-server stale-instance guard). Review found the traversal/dotfile assertions were initially vacuous (payloads hit nonexistent files); fix `1f1e623f` replaced them with real fixtures (sentinel above `CONTENT_DIR`, real `.hidden.html`) asserting 4xx + no content leak, and added the restart key-reuse assertion. RED/GREEN verified by removing the server guard (test fails) and restoring (test passes). Verify: 10/10 tests pass.
+
+### Task p03-t02: NOTICES, lockstep versions, release validate, provider sync
+
+**Status:** completed (`chore(p03-t02)` — 4f993aa8)
+
+`NOTICES.md` updated to v6.0.3 adapted-port provenance (per-file adaptation notes, no longer byte-for-byte v5.0.7). Lockstep bump of all 5 public packages to `0.1.34` (branch already carried 0.1.33) + `public-package-versions.json`. Ran `pnpm run cli -- sync --scope all` (provider views: "No changes required"; only `.oat/sync/manifest.json` `oatVersion` changed). Verify: `pnpm release:validate` PASSED (5 packages).
+
+### Phase 3 Summary
+
+- **Outcome:** Automated regression coverage for the v6 security/resilience/lifecycle guarantees (auth, headers, traversal/dotfile/symlink sandbox, restart port+key reuse, stop-server instance guard) — now genuinely load-bearing after the fix — plus release provenance and a validated lockstep version bump.
+- **Key files:** `packages/cli/src/integration/visual-companion-smoke.test.ts`, `NOTICES.md`, 5 `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`
+- **Verification:** 10/10 smoke tests pass; `pnpm release:validate` passes (5 packages @ 0.1.34); traversal/dotfile/symlink tests RED/GREEN-proven; lint + format clean.
+- **Notable decisions/deviations:** version landed on 0.1.34 (branch pre-carried 0.1.33); 1 fix iteration to make traversal/dotfile tests real.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -98,14 +123,15 @@ Updated Step 3 accept branch (pass `--open`, preserve keyed `url`, restart reuse
 **Branch:** parity-check
 **Tier:** 1 (subagents)
 **Policy:** merge-strategy=sequential, retry-limit=2, dispatch-ceiling=sonnet
-**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped (p03–p04 pending)
+**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped (p04 pending)
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review | Fix Iterations | Disposition |
-| ----- | ----------- | ------ | -------------- | ----------- |
-| p01   | DONE        | pass   | 0/2            | committed   |
-| p02   | DONE        | pass   | 0/2            | committed   |
+| Phase | Implementer | Review    | Fix Iterations | Disposition |
+| ----- | ----------- | --------- | -------------- | ----------- |
+| p01   | DONE        | pass      | 0/2            | committed   |
+| p02   | DONE        | pass      | 0/2            | committed   |
+| p03   | DONE        | fail→pass | 1/2            | committed   |
 
 #### Parallel Groups
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 60740f71
+oat_current_task: p04-t01
+oat_last_commit: 1f1e623f
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -20,7 +20,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-26T19:52:43.792Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-02T01:05:00.000Z'
+oat_project_state_updated: '2026-07-02T01:20:00.000Z'
 oat_dispatch_ceiling:
   preset: balanced
   providers:
@@ -56,7 +56,8 @@ Implementation — in progress. Executing plan phases sequentially (Tier 1 subag
 - ✓ Plan artifact review (fixes_completed; v2 re-review folded into p03 tasks)
 - ✓ Phase 1 complete (v6 bundle port) — gate review passed
 - ✓ Phase 2 complete (skill + reference docs) — gate review passed
-- ⧗ Phase 3 next (tests + release validation)
+- ✓ Phase 3 complete (tests + release validation) — gate passed after 1 fix; release:validate green
+- ⧗ Phase 4 next (optional docs touchpoint) — HiLL checkpoint + final review
 
 ## Blockers
 
