@@ -254,6 +254,7 @@ Add cases for:
 - Unauthenticated GET `/` returns 401/403 (per server behavior)
 - Security headers present on responses: `Cache-Control: no-store` and `X-Frame-Options: DENY` (SC#1)
 - Sandboxed `/files/` rejects traversal/dotfile payloads: an authenticated `GET /files/../server.cjs?key=<key>` (or a dotfile path) returns 4xx (SC#1)
+- Sandboxed `/files/` rejects symlink escape: create a symlink fixture inside the served area pointing outside it, then assert an authenticated `GET /files/<symlink>?key=<key>` returns 4xx (SC#1). If symlink rejection is platform-limited, state that explicitly here and reconcile the success criterion.
 - Restart with same `--project-dir` reuses port (read `.last-port`)
 - `stop-server.sh` refuses stale/wrong instance (mock or integration-safe check)
 
@@ -277,12 +278,20 @@ git commit -m "test(p03-t01): cover v6 visual companion auth and restart behavio
 
 - Modify: `NOTICES.md`
 - Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (lockstep bump)
+- Sync (generated): provider views + `.oat/sync/manifest.json` (`.claude/`, `.cursor/`, etc.) if `oat sync` reports changes after the skill edits
 
 **Step 1: Update provenance (GREEN)**
 
 `NOTICES.md`: change referenced Superpowers version to v6.0.3; note adapted port (no longer byte-for-byte v5.0.7 for all script files).
 
 Bump all five public packages together per repo guardrail.
+
+**Step 1b: Refresh provider views (required — canonical skill changed)**
+
+The canonical `oat-brainstorm` skill/bundle changed in p01–p02, so provider-linked views must be refreshed per AGENTS.md.
+
+Run: `pnpm run cli -- sync --scope all`
+Then stage and commit any resulting provider-view / `.oat/sync/manifest.json` changes alongside this task's release bookkeeping.
 
 **Step 2: Verify**
 
@@ -296,6 +305,8 @@ Expected: Pass.
 
 ```bash
 git add NOTICES.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+# Also stage provider-view/sync outputs if `oat sync --scope all` changed them:
+git add .oat/sync/manifest.json .claude .cursor 2>/dev/null || true
 git commit -m "chore(p03-t02): record v6 port provenance and bump public packages"
 ```
 
@@ -333,9 +344,10 @@ If skipped: record "skipped — no user-facing doc delta" in `implementation.md`
 
 ## Reviews
 
-| Cycle | Scope | Status   | Date       | Notes                                                                                                                                       |
-| ----- | ----- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| plan  | plan  | received | 2026-06-28 | artifact re-review 0C/1I/1M/0m - reviews/artifact-plan-review-2026-06-28-v2.md; prior fixed review remains archived under reviews/archived/ |
+| Cycle | Scope | Status          | Date       | Notes                                                                                                                                                      |
+| ----- | ----- | --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| plan  | plan  | fixes_completed | 2026-07-02 | artifact re-review 0C/1I/1M/0m resolved in-plan (symlink test → p03-t01; provider sync → p03-t02) — reviews/archived/artifact-plan-review-2026-06-28-v2.md |
+| p01   | code  | passed          | 2026-07-02 | phase gate 0C/0I/0M/2m (minors non-blocking, carried to final) — reviews/p01-review-2026-07-02.md                                                          |
 
 ---
 
