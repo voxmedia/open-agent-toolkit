@@ -226,6 +226,7 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 - `reviews/archived/final-review-2026-07-01.md`
 - `reviews/archived/final-review-2026-07-01-v2.md`
+- `reviews/archived/final-review-2026-07-01-v3.md`
 
 **Findings:**
 
@@ -238,8 +239,8 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 
 **Design drift / artifact alignment notes:**
 
-- None. Manual final review and configured gate final review both passed with
-  no findings and no deferred Medium or Minor items.
+- None. Manual final reviews and the configured gate final review all passed
+  with no findings and no deferred Medium or Minor items.
 
 **Next:** PR handoff when ready.
 
@@ -287,5 +288,5 @@ _Manual quick-workflow implementation in this session; task outcomes are recorde
 ## Final Review
 
 **Status:** passed
-**Artifact:** `reviews/final-review-2026-07-01.md`
+**Artifact:** `reviews/archived/final-review-2026-07-01-v3.md`
 **Findings:** 0 critical, 0 important, 0 medium, 0 minor
