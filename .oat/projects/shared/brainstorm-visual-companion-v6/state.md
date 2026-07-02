@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: null
 oat_last_commit: 1f1e623f
 oat_blockers: []
 associated_issues: []
@@ -20,7 +20,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-06-26T19:52:43.792Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-02T01:20:00.000Z'
+oat_project_state_updated: '2026-07-02T01:35:00.000Z'
 oat_dispatch_ceiling:
   preset: balanced
   providers:
@@ -38,7 +38,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — in progress. Executing plan phases sequentially (Tier 1 subagents, ceiling: sonnet).
+Implementation — all 9 tasks resolved across 4 phases (Tier 1 subagents, ceiling: sonnet). Awaiting final review (scope: final) at the p04 HiLL checkpoint.
 
 ## Artifacts
 
@@ -57,7 +57,9 @@ Implementation — in progress. Executing plan phases sequentially (Tier 1 subag
 - ✓ Phase 1 complete (v6 bundle port) — gate review passed
 - ✓ Phase 2 complete (skill + reference docs) — gate review passed
 - ✓ Phase 3 complete (tests + release validation) — gate passed after 1 fix; release:validate green
-- ⧗ Phase 4 next (optional docs touchpoint) — HiLL checkpoint + final review
+- ✓ Phase 4 complete (docs touchpoint — skipped, no delta)
+- ✓ All 9 implementation tasks resolved
+- ⧗ Awaiting final review (HiLL checkpoint, scope: final)
 
 ## Blockers
 
@@ -65,4 +67,4 @@ None
 
 ## Next Milestone
 
-Implement phases p01→p04; final review at p04 checkpoint
+Final review (scope: final); then summary → PR

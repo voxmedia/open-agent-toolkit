@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-02
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -12,7 +12,7 @@ oat_generated: false
 **Started:** 2026-07-02
 **Last Updated:** 2026-07-02
 
-> Resume pointer: `oat_current_task_id: p04-t01`
+> Resume pointer: all tasks complete — awaiting final review.
 
 ## Progress Overview
 
@@ -21,9 +21,9 @@ oat_generated: false
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 2     | 2/2       |
 | Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | pending  | 1     | 0/1       |
+| Phase 4 | complete | 1     | 1/1       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks resolved (p04-t01 intentionally skipped — no user-facing doc delta)
 
 ---
 
@@ -114,6 +114,25 @@ Added 5 v6-hardening smoke tests (keyed URL, unauth 403 + security headers, `/fi
 
 ---
 
+## Phase 4: Optional docs touchpoint
+
+**Status:** complete (skipped — no delta)
+
+### Task p04-t01: Update tool-packs docs if companion behavior changed materially
+
+**Status:** skipped — no user-facing doc delta
+
+Assessed `apps/oat-docs/docs/cli-utilities/tool-packs.md` (Brainstorm pack "Visual companion" bullet). It is a high-level pack-lifecycle description that already defers operational/security details (session-key auth, `--open`, restart reuse, idle) to `.agents/skills/oat-brainstorm/references/visual-companion.md` (updated in p02-t01) and its persistence-path claims remain accurate under v6. No stale or missing user-facing content, so per the plan's explicit conditional-skip path no edit was made. No commit.
+
+### Phase 4 Summary
+
+- **Outcome:** No docs change required — the tool-packs overview already points to the (now v6-accurate) reference doc; forcing a duplicate note would add redundancy, not coverage.
+- **Key files:** none.
+- **Verification:** read-only assessment of `tool-packs.md` vs the shipped v6 behavior and the updated reference doc.
+- **Notable decisions/deviations:** intentional no-op skip per plan Phase 4 design.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -123,15 +142,16 @@ Added 5 v6-hardening smoke tests (keyed URL, unauth 403 + security headers, `/fi
 **Branch:** parity-check
 **Tier:** 1 (subagents)
 **Policy:** merge-strategy=sequential, retry-limit=2, dispatch-ceiling=sonnet
-**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped (p04 pending)
+**Phases:** 4 executed, 4 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review    | Fix Iterations | Disposition |
-| ----- | ----------- | --------- | -------------- | ----------- |
-| p01   | DONE        | pass      | 0/2            | committed   |
-| p02   | DONE        | pass      | 0/2            | committed   |
-| p03   | DONE        | fail→pass | 1/2            | committed   |
+| Phase | Implementer | Review        | Fix Iterations | Disposition        |
+| ----- | ----------- | ------------- | -------------- | ------------------ |
+| p01   | DONE        | pass          | 0/2            | committed          |
+| p02   | DONE        | pass          | 0/2            | committed          |
+| p03   | DONE        | fail→pass     | 1/2            | committed          |
+| p04   | DONE (skip) | n/a (no diff) | 0/2            | skipped (no delta) |
 
 #### Parallel Groups
 
@@ -157,6 +177,24 @@ Run-scoped snapshot only. Durable record is `## Deviations` below.
 | p01-t02       | plan.md p01-t02 / v6.0.3 frame-template.html | v6 upstream removes `.indicator-bar` selection-summary UI | OAT indicator-bar retained alongside v6 status pill | plan only asked to add v6 resilience + rebrand, not remove OAT UI | implementation  | none (deliberate; documented in Deviations) |
 
 <!-- orchestration-runs-end -->
+
+---
+
+## Final Summary (for PR/docs)
+
+**What shipped:** OAT's `oat-brainstorm` visual companion is now at Superpowers v6.0.3 security/resilience/lifecycle parity while preserving OAT's persistence paths and conditional-offer skill semantics:
+
+- **Security:** session-key auth on HTTP + WebSocket (`?key=` + cookie bootstrap); sandboxed `/files/` serving that rejects path traversal, dotfiles, and symlink escape; security headers (`Cache-Control: no-store`, `X-Frame-Options: DENY`, plus additive `Referrer-Policy` / CSP `frame-ancestors 'none'` / `Cross-Origin-Resource-Policy`); WebSocket max-frame guard.
+- **Resilience (client):** exponential-backoff reconnect, status-pill states, paused/tombstone overlay, keyed reload after server recovery; frame rebranded "OAT Brainstorm". OAT's existing selection-summary indicator bar retained alongside the v6 status pill.
+- **Lifecycle:** OAT three-tier persistence (`--project-dir` → repo walk-up → `~/.oat/brainstorm/`) with `.last-port`/`.last-token`; restart with the same `--project-dir` reuses port + key; `--open`; configurable idle timeout (`--idle-timeout-minutes` → `BRAINSTORM_IDLE_TIMEOUT_MS`, 4h default); `umask 077`; instance-verified `stop-server` (matches `--brainstorm-server-id` before signaling, writes `server-stopped`).
+- **Docs/provenance:** `references/visual-companion.md` + `SKILL.md` step 3 document the v6 behavior; SKILL.md `version` 1.1.0 → 1.2.0; `NOTICES.md` updated to v6.0.3 adapted-port provenance.
+- **Release:** lockstep bump of all 5 public packages to 0.1.34; provider views synced (no drift); `pnpm release:validate` passes.
+
+**Key files/modules:** `.agents/skills/oat-brainstorm/scripts/{server.cjs,helper.js,frame-template.html,start-server.sh,stop-server.sh}`, `.agents/skills/oat-brainstorm/{SKILL.md,references/visual-companion.md}`, `packages/cli/src/integration/visual-companion-smoke.test.ts`, `NOTICES.md`, 5 public `package.json` + `public-package-versions.json`.
+
+**Verification performed:** 10/10 visual-companion smoke tests pass (auth/headers, traversal/dotfile/symlink sandbox — RED/GREEN-proven load-bearing, restart port+key reuse, stop-server instance guard); `pnpm release:validate` passes (5 packages @ 0.1.34); `pnpm oat:validate-skills` passes; lint + format clean; implementer + reviewer both ran live end-to-end server exercises.
+
+**Design deltas:** OAT indicator-bar UI retained vs v6 upstream removal (see Deviations). Carried non-blocking minors for final-review disposition: p01 — plaintext-HTTP WS assumption for an unsupported HTTPS-tunnel mode (fails closed) + a pre-existing dead "kill existing server" block; p02 — WS-auth doc wording nit.
 
 ---
 
