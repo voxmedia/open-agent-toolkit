@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_ceiling:
   preset: maximum
@@ -23,23 +23,23 @@ oat_dispatch_ceiling:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: "https://github.com/voxmedia/open-agent-toolkit/pull/123" # null | string — tracked PR URL when a PR exists
 oat_project_created: "2026-07-02T18:13:17.156Z" # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-07-02T19:56:20Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-07-02T20:00:01Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: known-strays-config
 
-**Status:** Implementation complete
+**Status:** PR open
 **Started:** 2026-07-02
 **Last Updated:** 2026-07-02
 
 ## Current Phase
 
-Implementation complete.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -60,6 +60,8 @@ Implementation complete.
 - ✓ Phase 3 complete
 - ✓ Final verification complete
 - ✓ Final review passed
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -67,4 +69,7 @@ None
 
 ## Next Milestone
 
-Generate final PR artifacts
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
