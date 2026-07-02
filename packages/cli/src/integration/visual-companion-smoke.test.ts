@@ -12,8 +12,16 @@
  *   - fallback to $HOME/.oat/brainstorm/
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -127,6 +135,93 @@ async function stopServer(sessionDir: string): Promise<void> {
     child.on('error', reject);
     child.on('close', () => resolve());
   });
+}
+
+interface StopServerResult {
+  status: string;
+  error?: string;
+}
+
+// Like stopServer(), but captures and parses stop-server.sh's JSON stdout so
+// tests can assert on the reported status (e.g. "stale_pid") instead of only
+// observing side effects.
+async function runStopServer(sessionDir: string): Promise<StopServerResult> {
+  return await new Promise((resolve, reject) => {
+    let stdout = '';
+    const child = spawn(
+      'bash',
+      [join(SCRIPTS_DIR, 'stop-server.sh'), sessionDir],
+      { stdio: ['ignore', 'pipe', 'ignore'] },
+    );
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString('utf8');
+    });
+    child.on('error', reject);
+    child.on('close', () => {
+      try {
+        resolve(JSON.parse(stdout.trim()) as StopServerResult);
+      } catch (err) {
+        reject(
+          new Error(
+            `stop-server.sh output not JSON-parsable: ${stdout} (${(err as Error).message})`,
+          ),
+        );
+      }
+    });
+  });
+}
+
+interface RawHttpResponse {
+  status: number;
+  headers: Record<string, string | string[] | undefined>;
+  body: string;
+}
+
+// Issues a GET with an explicit request-target (pathOverride), bypassing the
+// WHATWG URL parser's dot-segment normalization that `fetch()`/`new URL()`
+// would otherwise apply. This lets tests send a literal `/files/../x` or
+// dotfile path to exercise server.cjs's own sandboxing logic rather than
+// having the client silently rewrite the path before it is sent.
+async function rawHttpGet(
+  baseUrl: string,
+  pathOverride: string,
+): Promise<RawHttpResponse> {
+  const target = new URL(baseUrl);
+  return await new Promise((resolve, reject) => {
+    const req = httpRequest(
+      {
+        hostname: target.hostname,
+        port: target.port,
+        path: pathOverride,
+        method: 'GET',
+      },
+      (res) => {
+        let body = '';
+        res.on('data', (chunk: Buffer) => {
+          body += chunk.toString('utf8');
+        });
+        res.on('end', () => {
+          resolve({
+            status: res.statusCode ?? 0,
+            headers: res.headers,
+            body,
+          });
+        });
+      },
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function keyFromServerUrl(url: string): string {
+  const key = new URL(url).searchParams.get('key');
+  if (!key) {
+    throw new Error(
+      `expected server-started URL to include ?key=, got: ${url}`,
+    );
+  }
+  return key;
 }
 
 describe('visual-companion server smoke test', () => {
@@ -276,6 +371,188 @@ describe('start-server.sh persistence-path resolution', () => {
     } finally {
       const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
       await stopServer(sessionDir);
+    }
+  }, 30_000);
+});
+
+describe('visual-companion server v6 security hardening', () => {
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('issues a session-keyed server-started URL and enforces auth + security headers on /', async () => {
+    const projectDir = await makeTempProjectDir();
+    const { info } = await startServer({ projectDir });
+    const key = keyFromServerUrl(info.url);
+
+    try {
+      // server-started JSON must carry the session key on the URL so the
+      // agent can hand a working link straight to the user.
+      expect(new URL(info.url).searchParams.get('key')).toBe(key);
+
+      // Unauthenticated root request: the shipped server rejects with 403
+      // (not 401 — there is no WWW-Authenticate challenge, just a gate).
+      const unauth = await rawHttpGet(info.url, '/');
+      expect(unauth.status).toBe(403);
+      expect(unauth.headers['cache-control']).toBe('no-store');
+      expect(unauth.headers['x-frame-options']).toBe('DENY');
+
+      // Authenticated request succeeds and still carries the same security
+      // headers (they're applied uniformly via securityHeaders()).
+      const auth = await rawHttpGet(info.url, `/?key=${key}`);
+      expect(auth.status).toBe(200);
+      expect(auth.headers['cache-control']).toBe('no-store');
+      expect(auth.headers['x-frame-options']).toBe('DENY');
+    } finally {
+      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+
+  it('sandboxes /files/ against path traversal and dotfile access', async () => {
+    const projectDir = await makeTempProjectDir();
+    const { info } = await startServer({ projectDir });
+    const key = keyFromServerUrl(info.url);
+
+    try {
+      // http.request with an explicit `path` preserves the literal ".." —
+      // unlike fetch()/new URL(), it does not collapse dot-segments before
+      // the request is sent — so this exercises server.cjs's own
+      // path.basename()-based sandboxing of /files/ rather than relying on
+      // client-side URL normalization to do the job.
+      const traversal = await rawHttpGet(
+        info.url,
+        `/files/../server.cjs?key=${key}`,
+      );
+      expect(traversal.status).toBeGreaterThanOrEqual(400);
+      expect(traversal.status).toBeLessThan(500);
+
+      const dotfile = await rawHttpGet(info.url, `/files/.hidden?key=${key}`);
+      expect(dotfile.status).toBeGreaterThanOrEqual(400);
+      expect(dotfile.status).toBeLessThan(500);
+    } finally {
+      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+
+  it('sandboxes /files/ against symlink escape out of the content dir', async () => {
+    const projectDir = await makeTempProjectDir();
+    const { info } = await startServer({ projectDir });
+    const key = keyFromServerUrl(info.url);
+
+    // Fixture living outside the served content dir (screen_dir).
+    const secretPath = join(projectDir, 'secret-outside-content-dir.txt');
+    writeFileSync(secretPath, 'outside-content-dir\n');
+    const symlinkPath = join(info.screen_dir, 'escape-link.html');
+
+    try {
+      // Real symlink-escape fixture: a symlink living *inside* the served
+      // content dir that resolves to a file *outside* it. server.cjs's
+      // isRegularFileInsideContentDir() rejects any lstat().isSymbolicLink()
+      // before ever resolving the real path, so this is a genuine assertion
+      // of the sandbox rejecting the escape (not merely a 404 for a missing
+      // file) on the platform this suite runs on (macOS/Linux). If symlink
+      // creation itself is unsupported in a given CI sandbox (e.g. Windows
+      // without developer mode), fs.symlinkSync throws before the HTTP
+      // assertion runs, which fails the test loudly rather than silently
+      // skipping the security assertion.
+      symlinkSync(secretPath, symlinkPath);
+
+      const response = await rawHttpGet(
+        info.url,
+        `/files/escape-link.html?key=${key}`,
+      );
+      expect(response.status).toBeGreaterThanOrEqual(400);
+      expect(response.status).toBeLessThan(500);
+      expect(response.body).not.toContain('outside-content-dir');
+    } finally {
+      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+});
+
+describe('visual-companion server v6 lifecycle', () => {
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => {
+        await rm(dir, { recursive: true, force: true });
+      }),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('reuses the recorded port on restart with the same --project-dir (reads .last-port)', async () => {
+    const projectDir = await makeTempProjectDir();
+    const lastPortFile = join(projectDir, '.oat', 'brainstorm', '.last-port');
+
+    const first = await startServer({ projectDir });
+    try {
+      expect(existsSync(lastPortFile)).toBe(true);
+      expect(readFileSync(lastPortFile, 'utf8').trim()).toBe(
+        String(first.info.port),
+      );
+    } finally {
+      const sessionDir = first.info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+
+    // Give the OS a moment to free the bound port before restarting, so the
+    // second server actually reclaims it instead of falling back.
+    await sleep(500);
+
+    const second = await startServer({ projectDir });
+    try {
+      expect(second.info.port).toBe(first.info.port);
+      expect(readFileSync(lastPortFile, 'utf8').trim()).toBe(
+        String(second.info.port),
+      );
+    } finally {
+      const sessionDir = second.info.state_dir.replace(/\/state\/?$/, '');
+      await stopServer(sessionDir);
+    }
+  }, 30_000);
+
+  it('stop-server.sh refuses to signal a process whose recorded server-instance-id no longer matches (fails closed)', async () => {
+    const projectDir = await makeTempProjectDir();
+    const { info } = await startServer({ projectDir });
+    const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+    const pidFile = join(info.state_dir, 'server.pid');
+    const serverIdFile = join(info.state_dir, 'server-instance-id');
+    const realPid = readFileSync(pidFile, 'utf8').trim();
+
+    try {
+      // Corrupt the recorded instance id so it no longer matches the running
+      // process's --brainstorm-server-id argv. stop-server.sh must fail
+      // closed rather than trust the pid file alone (guards against a stale
+      // pid file pointing at an unrelated process after reuse/wraparound).
+      writeFileSync(serverIdFile, '0'.repeat(40));
+
+      const result = await runStopServer(sessionDir);
+      expect(result.status).toBe('stale_pid');
+
+      // The real server process must still be alive and serving — the guard
+      // refused to signal it rather than killing an unverified pid.
+      const stillUp = await rawHttpGet(
+        info.url,
+        `/?key=${keyFromServerUrl(info.url)}`,
+      );
+      expect(stillUp.status).toBe(200);
+    } finally {
+      // The guard intentionally left the real process running (and removed
+      // the pid file), so stop-server.sh can no longer prove ownership after
+      // the tampering above. Clean up the still-running process directly.
+      try {
+        process.kill(Number(realPid), 'SIGTERM');
+      } catch {
+        /* already gone */
+      }
     }
   }, 30_000);
 });
