@@ -349,6 +349,7 @@ Track test execution during implementation.
 | 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/config/resolve.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit` | yes    | 0      | Focused config/helper tests plus CLI type-check |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/status/index.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`; `git diff --check e73b9e41..5646d890` | yes    | 0      | Focused status/init/helper tests, CLI type-check, whitespace check |
 | 3     | `pnpm release:validate`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/drift/known-strays.test.ts src/commands/status/index.test.ts src/commands/init/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`; `pnpm build:docs` | yes    | 0      | Release guardrail, focused CLI regression tests, CLI type-check, docs build |
+| final | `pnpm test`; `pnpm lint`; `pnpm type-check`; `pnpm build`; `pnpm release:validate` | yes    | 0      | Full workspace test/lint/type-check/build gate plus release validation |
 
 ## Final Summary (for PR/docs)
 
@@ -384,9 +385,12 @@ Track test execution during implementation.
 
 - Focused CLI tests for config, known-stray filtering, status, and init passed.
 - CLI TypeScript check passed.
+- `pnpm test` passed.
+- `pnpm lint` passed.
+- `pnpm type-check` passed.
+- `pnpm build` passed.
 - `pnpm release:validate` passed.
 - `pnpm build:docs` passed.
-- Project-wide final verification is next before final review.
 
 **Design deltas (if any):**
 
