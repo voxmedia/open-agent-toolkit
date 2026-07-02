@@ -95,9 +95,13 @@ The Gate Execution step should:
    - `prompt` - surface the failure and ask the user.
    - `warn` - record the failure and continue.
 
-For cross-runtime review gates, prefer putting
-`oat gate cross-provider-exec "<prompt>"` in the configured gate command rather
-than hard-coding a provider CLI directly in the skill. See
+For OAT review gates, prefer putting `oat gate review "<prompt>"` in the
+configured gate command rather than hard-coding a provider CLI directly in the
+skill. Use `oat gate cross-provider-exec "<prompt>"` for generic cross-runtime
+commands that should report only the child process status, not review findings.
+Reusable lifecycle gate commands should normally omit `--target <id>` so the
+dispatcher can avoid the current runtime; reserve explicit targets for
+manual/debug commands or deliberate local/user-specific overrides. See
 [Workflow Gates](../cli-utilities/workflow-gates.md) for the config and command
 surface.
 

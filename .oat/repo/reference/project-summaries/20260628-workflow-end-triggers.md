@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-06-29
+oat_last_updated: 2026-07-01
 oat_generated: true
 oat_summary_last_task: p07-t01
 oat_summary_revision_count: 0
@@ -128,8 +128,10 @@ Workflow gate objects are structured config and should be managed with
 
 `cross-provider-exec` uses built-in runtime detectors for Codex, Claude, and
 Cursor. Unknown hosts exclude nothing under default `same-runtime` avoidance, so
-users who need a precise target in an unsupported host should configure and pin a
-target with `--target <id>`.
+users who need a precise target in an unsupported host can configure and pin a
+target with `--target <id>` for manual dispatch or a deliberately local
+override. Reusable lifecycle gate commands should normally stay unpinned so the
+dispatcher can choose an available non-host runtime.
 
 ## Follow-up Items
 

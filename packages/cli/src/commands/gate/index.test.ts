@@ -398,6 +398,29 @@ describe('oat gate', () => {
     return relativePath;
   }
 
+  function expectSingleReviewPrompt(
+    call: ProcessCall | undefined,
+    expected: {
+      command: string;
+      baseArgs: string[];
+      promptSnippets: string[];
+    },
+  ): void {
+    expect(call).toMatchObject({
+      command: expected.command,
+      purpose: 'execute',
+      stdio: 'inherit',
+    });
+    expect(call?.args.slice(0, expected.baseArgs.length)).toEqual(
+      expected.baseArgs,
+    );
+    expect(call?.args).toHaveLength(expected.baseArgs.length + 1);
+    const prompt = call?.args.at(-1) ?? '';
+    for (const snippet of expected.promptSnippets) {
+      expect(prompt).toContain(snippet);
+    }
+  }
+
   it('resolves a configured gate as JSON and exits zero', async () => {
     const { root, home } = await setup();
     await writeFile(
@@ -1350,20 +1373,17 @@ describe('oat gate', () => {
     });
 
     expect(runner.calls).toHaveLength(1);
-    expect(runner.calls[0]).toMatchObject({
+    expectSingleReviewPrompt(runner.calls[0], {
       command: 'codex',
-      purpose: 'execute',
-      stdio: 'inherit',
+      baseArgs: ['exec'],
+      promptSnippets: [
+        'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+        `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+        'Review type: artifact.',
+        'Review scope: plan.',
+        'Use oat-project-review-provide artifact plan.',
+      ],
     });
-    expect(runner.calls[0]?.args).toContain(
-      'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
-    );
-    expect(runner.calls[0]?.args).toContain(
-      `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
-    );
-    expect(runner.calls[0]?.args).toContain(
-      'Use oat-project-review-provide artifact plan.',
-    );
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
       project: projectPath,
@@ -1374,6 +1394,76 @@ describe('oat gate', () => {
     });
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([
+    {
+      target: 'codex-default',
+      command: 'codex',
+      baseArgs: ['exec'],
+    },
+    {
+      target: 'claude-default',
+      command: 'claude',
+      baseArgs: ['-p'],
+    },
+    {
+      target: 'cursor-default',
+      command: 'cursor-agent',
+      baseArgs: ['-p'],
+    },
+  ])(
+    'passes one assembled review prompt to $target',
+    async ({ target, command, baseArgs }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--target',
+          target,
+          '--review-scope',
+          'plan',
+          '--review-type',
+          'artifact',
+          '--exit-nonzero-on',
+          'important',
+          'Use oat-project-review-provide artifact plan.',
+        ],
+      });
+
+      expect(runner.calls).toHaveLength(1);
+      expectSingleReviewPrompt(runner.calls[0], {
+        command,
+        baseArgs,
+        promptSnippets: [
+          'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+          `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+          'Review type: artifact.',
+          'Review scope: plan.',
+          'Use oat-project-review-provide artifact plan.',
+        ],
+      });
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        project: projectPath,
+        blocking: false,
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
 
   it('defaults to cross-provider target selection and returns zero for clean gate review artifacts', async () => {
     const { root, home } = await setup();
@@ -1494,7 +1584,7 @@ describe('oat gate', () => {
       args: ['--project', 'named', '--target', 'codex-default', 'Review'],
     });
 
-    expect(runner.calls[0]?.args).toContain(
+    expect(runner.calls[0]?.args.at(-1)).toContain(
       `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
     );
     expect(capture.jsonPayloads[0]).toMatchObject({
@@ -1538,7 +1628,7 @@ describe('oat gate', () => {
       ],
     });
 
-    expect(runner.calls[0]?.args).toContain(
+    expect(runner.calls[0]?.args.at(-1)).toContain(
       `Resolved OAT project path: ${explicitProjectPath}. Run the review for this project path.`,
     );
     expect(capture.jsonPayloads[0]).toMatchObject({
