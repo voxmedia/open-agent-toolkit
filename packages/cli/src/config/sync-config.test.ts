@@ -60,6 +60,33 @@ describe('loadSyncConfig', () => {
     });
   });
 
+  it('loads and normalizes known strays from disk', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        defaultStrategy: 'copy',
+        knownStrays: [
+          ' .cursor\\skills\\cloud-environment-setup ',
+          './.cursor/skills/cloud-environment-setup',
+          '.cursor/skills/local-only',
+        ],
+      }),
+      'utf8',
+    );
+
+    const config = await loadSyncConfig(configPath);
+
+    expect(config.knownStrays).toEqual([
+      '.cursor/skills/cloud-environment-setup',
+      '.cursor/skills/local-only',
+    ]);
+  });
+
   it('loads config with trailing commas', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
     tempDirs.push(root);
@@ -135,6 +162,24 @@ describe('loadSyncConfig', () => {
     await expect(loadSyncConfig(configPath)).rejects.toBeInstanceOf(CliError);
   });
 
+  it('rejects non-string known stray entries', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        defaultStrategy: 'copy',
+        knownStrays: ['.cursor/skills/local-only', 42],
+      }),
+      'utf8',
+    );
+
+    await expect(loadSyncConfig(configPath)).rejects.toBeInstanceOf(CliError);
+  });
+
   it('saveSyncConfig creates parent directory and writes valid json', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
     tempDirs.push(root);
@@ -143,6 +188,7 @@ describe('loadSyncConfig', () => {
     await saveSyncConfig(configPath, {
       version: 1,
       defaultStrategy: 'copy',
+      knownStrays: [],
       providers: {
         claude: { enabled: true },
       },
@@ -152,6 +198,7 @@ describe('loadSyncConfig', () => {
     expect(JSON.parse(raw)).toEqual({
       version: 1,
       defaultStrategy: 'copy',
+      knownStrays: [],
       providers: {
         claude: { enabled: true },
       },
