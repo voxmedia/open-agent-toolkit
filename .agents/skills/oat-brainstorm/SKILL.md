@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.1.0
+version: 1.2.0
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -198,7 +198,11 @@ command -v node >/dev/null 2>&1 && echo "available" || echo "missing"
 
 Wait for the user's response.
 
-- **Accept** → start the visual companion via `${SKILL_DIR}/scripts/start-server.sh` and read `${SKILL_DIR}/references/visual-companion.md` for the detailed usage guide before serving any content. Set `VISUAL_COMPANION = "active"`. Persistence paths follow the bundled `start-server.sh` resolution (repo-scope `.oat/brainstorm/<session>/`, user-scope `~/.oat/brainstorm/<session>/`, or `--project-dir <path>` override).
+- **Accept** → start the visual companion via `${SKILL_DIR}/scripts/start-server.sh --open` (pass `--open` now that the user has explicitly approved the companion — it auto-opens the keyed URL in their browser on the first screen) and read `${SKILL_DIR}/references/visual-companion.md` for the detailed usage guide before serving any content. Set `VISUAL_COMPANION = "active"`. Persistence paths follow the bundled `start-server.sh` resolution (repo-scope `.oat/brainstorm/<session>/`, user-scope `~/.oat/brainstorm/<session>/`, or `--project-dir <path>` override).
+
+  **Preserve the keyed URL.** The startup JSON's `url` field carries the session key as `?key=...`. Always hand the user that exact `url` value — never strip the query string — and re-share the full keyed URL any time you remind them where to look; a bare `http://localhost:<port>/` is rejected by the server. See `references/visual-companion.md` for the full usage loop.
+
+  **Restart semantics.** If the server needs to restart mid-session (it exited, was stopped, or the idle timeout fired — 4 hours by default), re-invoke `start-server.sh` with the **same** `--project-dir`/repo-context path resolution used the first time. That reuses the previously bound port and session key, so an already-open browser tab reconnects on its own and no new URL needs to be issued. `--open` is not required on a mid-session restart; only pass it again if you need to force the browser open.
 
   **Resolving `${SKILL_DIR}`:** the brainstorm pack defaults to user scope, so a fresh install puts the bundled scripts under `~/.agents/skills/oat-brainstorm/`, not the current repo. Resolve the loaded skill directory before invoking any script. In order:
   1. If your provider exposes the loaded skill's resolved path (for example via a `${SKILL_DIR}` environment variable, `Skill` invocation context, or equivalent), use it directly.
