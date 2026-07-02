@@ -351,6 +351,7 @@ If skipped: record "skipped — no user-facing doc delta" in `implementation.md`
 | p02   | code  | passed          | 2026-07-02 | phase gate 0C/0I/0M/1m (doc wording nit, carried to final) — reviews/p02-review-2026-07-02.md                                                              |
 | p03   | code  | passed          | 2026-07-02 | gate 1I/1M (vacuous traversal/dotfile test + restart key-reuse) fixed in 1f1e623f, re-review pass — reviews/p03-review-2026-07-02-v2.md                    |
 | p04   | code  | passed          | 2026-07-02 | no-op skip (docs touchpoint, no diff) — no gate review needed                                                                                              |
+| final | code  | passed          | 2026-07-02 | 0C/0I/4m; SC#1–SC#7 all implemented (live-verified); 4 minors accept-deferred w/ rationale — reviews/final-review-2026-07-02.md                            |
 
 ---
 

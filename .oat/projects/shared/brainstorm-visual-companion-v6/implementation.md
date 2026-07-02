@@ -165,8 +165,7 @@ Assessed `apps/oat-docs/docs/cli-utilities/tool-packs.md` (Brainstorm pack "Visu
 
 #### Outstanding Items
 
-- 2 Minor findings from p01 review (plaintext-HTTP WS assumption for unsupported HTTPS-tunnel mode; pre-existing dead "kill existing server" block) — non-blocking, carried to final review.
-- 1 Minor from p02 review (WS-auth wording implies cookie-only reliance; client actually re-sends `?key=` on WS URL) — non-blocking doc precision nit, carried to final review.
+- All carried minors (p01×2, p02×1) plus 1 new final-review minor were dispositioned at final review as **accept-defer** with rationale — see `## Review Received: final` → Deferred Findings. None blocking; final review passed.
 
 #### Artifact / Design Deltas
 
@@ -195,6 +194,27 @@ Run-scoped snapshot only. Durable record is `## Deviations` below.
 **Verification performed:** 10/10 visual-companion smoke tests pass (auth/headers, traversal/dotfile/symlink sandbox — RED/GREEN-proven load-bearing, restart port+key reuse, stop-server instance guard); `pnpm release:validate` passes (5 packages @ 0.1.34); `pnpm oat:validate-skills` passes; lint + format clean; implementer + reviewer both ran live end-to-end server exercises.
 
 **Design deltas:** OAT indicator-bar UI retained vs v6 upstream removal (see Deviations). Carried non-blocking minors for final-review disposition: p01 — plaintext-HTTP WS assumption for an unsupported HTTPS-tunnel mode (fails closed) + a pre-existing dead "kill existing server" block; p02 — WS-auth doc wording nit.
+
+---
+
+## Review Received: final
+
+**Date:** 2026-07-02
+**Review artifact:** reviews/final-review-2026-07-02.md
+**Verdict:** passed (0 Critical, 0 Important, 4 Minor)
+
+All 7 discovery Success Criteria (SC#1–SC#7) confirmed implemented via code reading + live spot-check (start-server → curl unauth/authed/traversal/dotfile → stop-server). Tests 10/10; `release:validate` passes (5 packages @ 0.1.34); `oat:validate-skills` OK. No Critical/Important findings; no fix tasks created.
+
+### Deferred Findings (Minor — accept-defer, auto-disposition)
+
+All four minors were dispositioned as **accept-defer** with rationale (not converted to fix tasks — converting would be scope creep on a passing implementation; several are explicitly outside declared success criteria):
+
+- **p01-m1** — WebSocket Origin check + client `ws://` URL assume plaintext HTTP. Defer: fails closed, HTTPS-tunnel deployment is not a stated success criterion, no current use. Follow-up trigger: if an HTTPS/tunnel deployment mode is ever added.
+- **p01-m2** — vestigial dead "kill any existing server" block in `start-server.sh`. Defer: unreachable by construction and pre-existing before this project (not introduced here); zero functional impact. Follow-up: opportunistic cleanup.
+- **p02-m1** — WS-auth doc wording implies cookie-only reliance. Defer: doc-precision nit; does not misstate security behavior. Follow-up: tidy on next docs pass.
+- **final-m (new)** — `nextReconnectDelay` exported "for unit tests" but has no test. Defer: SC#4 client runtime behavior is explicitly manual-scope per plan; low value. Follow-up: add if a client unit-test harness is introduced.
+
+**Next:** implementation complete and final review passed → generate summary / open PR (`oat-project-summary` → `oat-project-pr-final`).
 
 ---
 
