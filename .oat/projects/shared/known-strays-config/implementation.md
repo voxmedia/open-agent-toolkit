@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-02
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 1     | 0/1       |
+| Phase 3 | complete    | 1     | 1/1       |
 
-**Total:** 4/5 tasks completed
+**Total:** 5/5 tasks completed
 
 ---
 
@@ -169,13 +169,63 @@ oat_generated: false
 
 ## Phase 3: Documentation, Versions, and Validation
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-02
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Provider-sync docs now document project-level and user-level `knownStrays`
+  examples, exact provider-path matching, and the representative Cursor-only
+  skill use case.
+- Drift docs explain that `oat status` and `oat init` suppress configured
+  known strays while leaving unconfigured strays reportable and adoptable.
+- All five lockstep public packages were bumped to `0.1.22`, and the bundled
+  public-package version metadata was regenerated.
+- The p03 review found one minor docs consistency issue; `af1c254c` fixed the
+  command-consumer list to include `oat status`.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/provider-sync/config.md` - `knownStrays` schema,
+  examples, and command-consumer docs.
+- `apps/oat-docs/docs/provider-sync/manifest-and-drift.md` - known-stray drift
+  and adoption behavior.
+- `packages/*/package.json` - lockstep public package version bumps.
+- `packages/cli/assets/public-package-versions.json` - regenerated CLI
+  release metadata.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/drift/known-strays.test.ts src/commands/status/index.test.ts src/commands/init/index.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`
+- Run: `pnpm build:docs`
+- Result: Passed during p03 implementation, p03 review, and the p03 review-fix
+  check.
 
 ### Task p03-t01: Document known strays and bump shipped package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bd2b17a2; review fix af1c254c
+
+**Outcome:**
+
+- Documented `knownStrays` for project and user config.
+- Bumped the lockstep public package set to `0.1.22`.
+- Regenerated public package version metadata.
+- Fixed the p03 review's minor docs consumer-list finding.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/drift/known-strays.test.ts src/commands/status/index.test.ts src/commands/init/index.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`
+- Run: `pnpm build:docs`
+- Result: Passed.
 
 ---
 
@@ -194,7 +244,7 @@ _- Outstanding Items_
 **Branch:** feat/known-strays-config
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped
+**Phases:** 3 executed, 3 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
@@ -202,11 +252,13 @@ _- Outstanding Items_
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | DONE        | pass   | 0/2            | passed      |
 | p02   | DONE        | pass   | 0/2            | passed      |
+| p03   | DONE        | pass   | 1/2            | passed      |
 
 #### Parallel Groups
 
 - p01: sequential
 - p02: sequential
+- p03: sequential
 
 #### Dispatch Notes
 
@@ -218,6 +270,11 @@ _- Outstanding Items_
   under project-state maximum ceiling.
 - Dispatch: p02 review used Codex `effort_axis=selected:xhigh`; review passed
   with 0 Critical, 0 Important, 0 Minor findings.
+- Dispatch: p03 implementation used Codex `effort_axis=selected:xhigh`
+  under project-state maximum ceiling.
+- Dispatch: p03 review used Codex `effort_axis=selected:xhigh`; review passed
+  with 0 Critical and 0 Important findings. One Minor docs consistency finding
+  was fixed in `af1c254c`.
 
 #### Outstanding Items
 
@@ -245,7 +302,8 @@ Chronological log of implementation progress.
 - [x] p01-t02: Add shared known stray resolution helper - 7a4dc223
 - [x] p02-t01: Suppress known strays in `oat status` - 7d12797a
 - [x] p02-t02: Suppress known strays in `oat init` - 5646d890
-- [ ] p03-t01: Document known strays and bump shipped package versions - next
+- [x] p03-t01: Document known strays and bump shipped package versions - bd2b17a2
+- [x] p03 review fix: Add `oat status` to the sync config consumer list - af1c254c
 
 **What changed (high level):**
 
@@ -254,6 +312,8 @@ Chronological log of implementation progress.
   candidates.
 - Wired the helper into `oat status` and `oat init` while preserving unknown
   stray reporting/adoption.
+- Documented known-stray configuration and behavior in provider-sync docs.
+- Bumped and validated the lockstep public package set.
 
 **Decisions:**
 
@@ -262,21 +322,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Document the config surfaces and bump shipped package versions in Phase 3.
+- Final project-wide verification and final code review.
 
 **Blockers:**
 
 - None
 
-**Session End:** 19:29 UTC
-
----
-
-### 2026-07-02
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** 19:41 UTC
 
 ---
 
@@ -296,29 +348,50 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/config/resolve.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit` | yes    | 0      | Focused config/helper tests plus CLI type-check |
 | 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/status/index.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`; `git diff --check e73b9e41..5646d890` | yes    | 0      | Focused status/init/helper tests, CLI type-check, whitespace check |
+| 3     | `pnpm release:validate`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/drift/known-strays.test.ts src/commands/status/index.test.ts src/commands/init/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`; `pnpm build:docs` | yes    | 0      | Release guardrail, focused CLI regression tests, CLI type-check, docs build |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Project sync config supports `knownStrays` in `.oat/sync/config.json`.
+- User config supports `knownStrays` in `~/.oat/config.json`.
+- Shared drift filtering suppresses exact known provider strays while preserving
+  unconfigured sibling strays.
+- `oat status` and `oat init` apply the same known-stray suppression before
+  reports, remediation, JSON output, and adoption prompts.
+- Provider-sync docs and lockstep public package versions were updated.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Intentional provider-local files, such as a Cursor-only skill, can be listed
+  once and no longer appear as strays or adoption candidates.
+- Unknown strays in the same provider tree still report normally.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/config/sync-config.ts` - project sync config schema and
+  normalization.
+- `packages/cli/src/config/oat-config.ts` - user config normalization.
+- `packages/cli/src/drift/known-strays.ts` - shared exact-match filtering.
+- `packages/cli/src/commands/status/index.ts` - status report suppression.
+- `packages/cli/src/commands/init/index.ts` - init adoption suppression.
+- `apps/oat-docs/docs/provider-sync/config.md` - config reference docs.
+- `apps/oat-docs/docs/provider-sync/manifest-and-drift.md` - drift behavior
+  docs.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused CLI tests for config, known-stray filtering, status, and init passed.
+- CLI TypeScript check passed.
+- `pnpm release:validate` passed.
+- `pnpm build:docs` passed.
+- Project-wide final verification is next before final review.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None. This quick workflow has no design artifact; implementation followed the
+  approved plan.
 
 ## References
 
