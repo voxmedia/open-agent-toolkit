@@ -2,14 +2,14 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Superpowers Brainstorming</title>
+  <title>OAT Brainstorm</title>
   <style>
     /*
      * BRAINSTORM COMPANION FRAME TEMPLATE
      *
      * This template provides a consistent frame with:
      * - OS-aware light/dark theming
-     * - Fixed header and selection indicator bar
+     * - Fixed header with connection status pill
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
@@ -63,21 +63,25 @@
     }
 
     /* ===== FRAME STRUCTURE ===== */
-    .header {
-      background: var(--bg-secondary);
-      padding: 0.5rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .header h1 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
-    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; }
-    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+    .status { font-size: 0.7rem; color: var(--status-color, var(--success)); display: flex; align-items: center; gap: 0.4rem; justify-self: end; white-space: nowrap; line-height: 1; }
+    .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color, var(--success)); border-radius: 50%; }
 
     .main { flex: 1; overflow-y: auto; }
     #claude-content { padding: 2rem; min-height: 100%; }
+
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1.5rem;
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      min-height: 42px;
+    }
+    .header h1 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); justify-self: start; }
+    .header .status { grid-column: 2; line-height: 1; }
 
     .indicator-bar {
       background: var(--bg-secondary);
@@ -196,8 +200,8 @@
 </head>
 <body>
   <div class="header">
-    <h1><a href="https://github.com/obra/superpowers" style="color: inherit; text-decoration: none;">Superpowers Brainstorming</a></h1>
-    <div class="status">Connected</div>
+    <h1>OAT Brainstorm</h1>
+    <div class="status">Connecting…</div>
   </div>
 
   <div class="main">
