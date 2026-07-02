@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-07-02
 oat_generated: false
@@ -17,15 +17,16 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-Add a project-scoped way to configure known provider strays so OAT does not
-report or prompt for intentionally local provider files. The concrete example is
-`.cursor/skills/cloud-environment-setup`, which is expected to exist only in
-Cursor and should not be adopted into canonical OAT skills.
+Add a project-scoped and user-scoped way to configure known provider strays so
+OAT does not report or prompt for intentionally local provider files. The
+concrete example is `.cursor/skills/cloud-environment-setup`, which is expected
+to exist only in Cursor and should not be adopted into canonical OAT skills.
 
 ## Clarifying Questions
 
-No blocking clarification is needed. The user selected quick workflow mode and
-gave a representative known stray path.
+No blocking clarification is needed. The user selected quick workflow mode, gave
+a representative known stray path, and added that known strays should be
+supported by both project-level and user-level config.
 
 ## Solution Space
 
@@ -37,9 +38,10 @@ provider-specific exceptions or Git ignore state.
 
 ### Approach 1: Sync Config Known Strays _(Recommended)_
 
-**Description:** Add a structured config field to `.oat/sync/config.json` for
-paths that are intentionally unmanaged provider-view files. Provider sync status
-and adoption prompts filter those entries out before reporting strays.
+**Description:** Add a structured config field to sync config for paths that are
+intentionally unmanaged provider-view files, resolving entries from both
+project-level and user-level config. Provider sync status and adoption prompts
+filter those entries out before reporting strays.
 **When this is the right choice:** Use when a file is intentionally local to a
 provider but still lives under a provider directory that OAT scans for strays.
 **Tradeoffs:** Requires users to maintain a small allowlist when local provider
@@ -79,12 +81,15 @@ recommended config-level approach was presented.
 
 **Description:** Add a concise sync-config field, tentatively named
 `knownStrays`, containing provider paths to suppress from stray reporting and
-adoption prompts.
+adoption prompts. It should work in project-level sync config and user-level
+config.
 
 **Pros:**
 
 - Keeps intentional provider-local files documented in the same config surface
   that controls provider sync.
+- Allows user-specific provider-local files to be ignored without requiring a
+  repo-level config change.
 - Can apply consistently to `oat status` and `oat init` stray handling.
 
 **Cons:**
@@ -108,11 +113,16 @@ stray workflow while preserving unrelated stray detection.
 3. **Behavior:** Known strays should not count toward stray summaries, should
    not trigger adoption prompts, and should not cause project status to look
    actionable when all other managed files are in sync.
+4. **Config Scope:** Known strays should resolve from both project-level and
+   user-level configuration so personal provider-local files do not need to be
+   committed to a repository.
 
 ## Constraints
 
 - Preserve detection and adoption behavior for unrelated unmanaged provider
   files.
+- Merge or otherwise resolve known-stray entries from project and user config
+  without making user config mandatory.
 - Cover both project status reporting and init/adoption surfaces if both use
   stray detection.
 - Document the config shape in provider-sync docs.
@@ -124,6 +134,7 @@ stray workflow while preserving unrelated stray detection.
 
 - A configured known stray such as `.cursor/skills/cloud-environment-setup` is
   omitted from `oat status --scope project` stray output and prompts.
+- The same suppression can be configured at project level or user level.
 - Unconfigured strays still report normally and remain adoptable.
 - Tests cover at least one suppressed stray and one unsuppressed stray.
 - Provider-sync docs describe the config field and example usage.
@@ -155,7 +166,8 @@ stray workflow while preserving unrelated stray detection.
 ## Assumptions
 
 - `.oat/sync/config.json` is the right project-scoped home because this is
-  provider-sync behavior.
+  provider-sync behavior, with user config support used for personal known
+  strays.
 - Existing status/init stray paths can share one helper so suppression behavior
   stays consistent.
 
