@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 0/2       |
-| Phase 3 | pending     | 1     | 0/1       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 1     | 0/1       |
 
-**Total:** 2/5 tasks completed
+**Total:** 4/5 tasks completed
 
 ---
 
@@ -127,27 +127,50 @@ oat_generated: false
 
 ## Phase 2: Status and Init Behavior
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-02
 
 ### Task p02-t01: Suppress known strays in `oat status`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7d12797a
+
+**Outcome:**
+
+- `oat status` now suppresses configured project/user known strays before
+  summaries, JSON payloads, hook output, remediation, and adoption prompts.
+
+**Verification:**
+
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/status/index.test.ts src/drift/known-strays.test.ts`
+- Result: Passed.
 
 ---
 
 ### Task p02-t02: Suppress known strays in `oat init`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5646d890
+
+**Outcome:**
+
+- `oat init` now filters known stray adoption candidates before warnings, JSON
+  counts, prompts, and adoption loops.
+
+**Verification:**
+
+- Run:
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/status/index.test.ts src/drift/known-strays.test.ts`
+- Run: `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`
+- Result: Passed.
 
 ---
 
 ## Phase 3: Documentation, Versions, and Validation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-02
 
 ### Task p03-t01: Document known strays and bump shipped package versions
 
@@ -171,23 +194,29 @@ _- Outstanding Items_
 **Branch:** feat/known-strays-config
 **Tier:** 1
 **Policy:** merge-strategy=merge, retry-limit=2
-**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped
 
 #### Phase Outcomes
 
 | Phase | Implementer | Review | Fix Iterations | Disposition |
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | DONE        | pass   | 0/2            | passed      |
+| p02   | DONE        | pass   | 0/2            | passed      |
 
 #### Parallel Groups
 
 - p01: sequential
+- p02: sequential
 
 #### Dispatch Notes
 
 - Dispatch: p01 implementation used Codex `effort_axis=selected:xhigh`
   under project-state maximum ceiling.
 - Dispatch: p01 review used Codex `effort_axis=selected:xhigh`; review passed
+  with 0 Critical, 0 Important, 0 Minor findings.
+- Dispatch: p02 implementation used Codex `effort_axis=selected:xhigh`
+  under project-state maximum ceiling.
+- Dispatch: p02 review used Codex `effort_axis=selected:xhigh`; review passed
   with 0 Critical, 0 Important, 0 Minor findings.
 
 #### Outstanding Items
@@ -214,13 +243,17 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Add known strays config schema - b6b0c8da
 - [x] p01-t02: Add shared known stray resolution helper - 7a4dc223
-- [ ] p02-t01: Suppress known strays in `oat status` - next
+- [x] p02-t01: Suppress known strays in `oat status` - 7d12797a
+- [x] p02-t02: Suppress known strays in `oat init` - 5646d890
+- [ ] p03-t01: Document known strays and bump shipped package versions - next
 
 **What changed (high level):**
 
 - Added config support for project and user known strays.
 - Added shared exact-match filtering helper for reports and adoption
   candidates.
+- Wired the helper into `oat status` and `oat init` while preserving unknown
+  stray reporting/adoption.
 
 **Decisions:**
 
@@ -229,13 +262,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Wire the shared helper into `oat status` and `oat init` in Phase 2.
+- Document the config surfaces and bump shipped package versions in Phase 3.
 
 **Blockers:**
 
 - None
 
-**Session End:** 19:16 UTC
+**Session End:** 19:29 UTC
 
 ---
 
@@ -262,7 +295,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/sync-config.test.ts src/config/resolve.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit` | yes    | 0      | Focused config/helper tests plus CLI type-check |
-| 2     | -         | -      | -      | -        |
+| 2     | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/status/index.test.ts src/drift/known-strays.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit`; `git diff --check e73b9e41..5646d890` | yes    | 0      | Focused status/init/helper tests, CLI type-check, whitespace check |
 
 ## Final Summary (for PR/docs)
 

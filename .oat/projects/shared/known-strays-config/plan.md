@@ -384,7 +384,7 @@ git commit -m "docs(p03-t01): document known strays config"
 | Scope  | Type     | Status  | Date       | Artifact |
 | ------ | -------- | ------- | ---------- | -------- |
 | p01    | code     | passed  | 2026-07-02 | reviews/p01-review-2026-07-02.md |
-| p02    | code     | pending | -          | -        |
+| p02    | code     | passed  | 2026-07-02 | reviews/p02-review-2026-07-02.md |
 | p03    | code     | pending | -          | -        |
 | final  | code     | pending | -          | -        |
 | spec   | artifact | pending | -          | -        |
