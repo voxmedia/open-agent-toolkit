@@ -270,7 +270,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.preset` — `balanced`, `maximum`, or `cost-conscious`. Convenience preset that compiles to per-provider values at write time. Setting this key is the recommended way to configure the ceiling.
 - `workflow.dispatchCeiling.providers.codex` — `low`, `medium`, `high`, or `xhigh`. Concrete Codex ceiling. Set automatically when a preset is selected; also settable directly for Advanced (no preset) configurations. Provider default effort is informational for base/unpinned roles and is not treated as this ceiling.
 - `workflow.dispatchCeiling.providers.claude` — `haiku`, `sonnet`, or `opus`. Concrete Claude ceiling. Set automatically when a preset is selected; also settable directly for Advanced configurations. Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
-- `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
+- `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 
 ### Auto artifact-review preferences
 
