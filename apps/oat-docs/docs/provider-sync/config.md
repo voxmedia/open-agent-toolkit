@@ -23,6 +23,7 @@ Discovery note:
 It is read by:
 
 - `oat init` (provider selection and defaults)
+- `oat status` (known-stray suppression in drift reports and remediation)
 - `oat sync` (active provider resolution and mismatch handling)
 - `oat providers set` (explicit provider enable/disable updates)
 
