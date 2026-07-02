@@ -348,6 +348,7 @@ If skipped: record "skipped — no user-facing doc delta" in `implementation.md`
 | ----- | ----- | --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | plan  | plan  | fixes_completed | 2026-07-02 | artifact re-review 0C/1I/1M/0m resolved in-plan (symlink test → p03-t01; provider sync → p03-t02) — reviews/archived/artifact-plan-review-2026-06-28-v2.md |
 | p01   | code  | passed          | 2026-07-02 | phase gate 0C/0I/0M/2m (minors non-blocking, carried to final) — reviews/p01-review-2026-07-02.md                                                          |
+| p02   | code  | passed          | 2026-07-02 | phase gate 0C/0I/0M/1m (doc wording nit, carried to final) — reviews/p02-review-2026-07-02.md                                                              |
 
 ---
 

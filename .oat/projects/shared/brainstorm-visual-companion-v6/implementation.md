@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -12,18 +12,18 @@ oat_generated: false
 **Started:** 2026-07-02
 **Last Updated:** 2026-07-02
 
-> Resume pointer: `oat_current_task_id: p02-t01`
+> Resume pointer: `oat_current_task_id: p03-t01`
 
 ## Progress Overview
 
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | pending  | 2     | 0/2       |
+| Phase 2 | complete | 2     | 2/2       |
 | Phase 3 | pending  | 2     | 0/2       |
 | Phase 4 | pending  | 1     | 0/1       |
 
-**Total:** 4/9 tasks completed
+**Total:** 6/9 tasks completed
 
 ---
 
@@ -64,6 +64,31 @@ Ported v6 instance-ID guard: verifies PID cmdline carries matching `--brainstorm
 
 ---
 
+## Phase 2: Update skill and reference docs
+
+**Status:** complete
+
+### Task p02-t01: Update visual-companion.md
+
+**Status:** completed (`docs(p02-t01)` — 5ea69291)
+
+Documented v6 session-key URL/cookie auth (403 on unauth), `--open`, restart port/key reuse, 4h idle default + `--idle-timeout-minutes`, status-pill/paused-overlay/backoff-reconnect behavior. Fixed a stale "30 minutes" idle claim to the actual 4h default. OAT persistence-path examples preserved. Verify: `pnpm oat:validate-skills` → OK (53 skills).
+
+### Task p02-t02: Update oat-brainstorm SKILL.md step 3
+
+**Status:** completed (`docs(p02-t02)` — 60740f71)
+
+Updated Step 3 accept branch (pass `--open`, preserve keyed `url`, restart reuse, 4h idle note). Activation Contract + destination logic untouched (diff-verified). Bumped frontmatter `version: 1.1.0 → 1.2.0` (sole owner of the skill version bump per plan). Verify: `pnpm oat:validate-skills` → OK.
+
+### Phase 2 Summary
+
+- **Outcome:** Skill reference + activation prose now describe the v6 companion (keyed URL, `--open`, restart reuse, idle) accurately against shipped code; canonical skill version bumped for the release guardrail.
+- **Key files:** `.agents/skills/oat-brainstorm/references/visual-companion.md`, `.agents/skills/oat-brainstorm/SKILL.md`
+- **Verification:** `pnpm oat:validate-skills` (OK); docs fact-checked against `server.cjs`/`start-server.sh`/`helper.js`; Activation Contract preserved.
+- **Notable decisions/deviations:** none.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -73,13 +98,14 @@ Ported v6 instance-ID guard: verifies PID cmdline carries matching `--brainstorm
 **Branch:** parity-check
 **Tier:** 1 (subagents)
 **Policy:** merge-strategy=sequential, retry-limit=2, dispatch-ceiling=sonnet
-**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped (p02–p04 pending)
+**Phases:** 2 executed, 2 passed, 0 failed, 0 stopped (p03–p04 pending)
 
 #### Phase Outcomes
 
 | Phase | Implementer | Review | Fix Iterations | Disposition |
 | ----- | ----------- | ------ | -------------- | ----------- |
 | p01   | DONE        | pass   | 0/2            | committed   |
+| p02   | DONE        | pass   | 0/2            | committed   |
 
 #### Parallel Groups
 
@@ -94,6 +120,7 @@ Ported v6 instance-ID guard: verifies PID cmdline carries matching `--brainstorm
 #### Outstanding Items
 
 - 2 Minor findings from p01 review (plaintext-HTTP WS assumption for unsupported HTTPS-tunnel mode; pre-existing dead "kill existing server" block) — non-blocking, carried to final review.
+- 1 Minor from p02 review (WS-auth wording implies cookie-only reliance; client actually re-sends `?key=` on WS URL) — non-blocking doc precision nit, carried to final review.
 
 #### Artifact / Design Deltas
 
