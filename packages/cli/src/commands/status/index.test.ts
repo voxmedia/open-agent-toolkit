@@ -4,6 +4,8 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import type { CodexRoleStray } from '@commands/shared/codex-strays';
+import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
+import type { UserConfig } from '@config/oat-config';
 import type { DriftReport } from '@drift/index';
 import type { CanonicalEntry } from '@engine/index';
 import { CliError } from '@errors/index';
@@ -23,6 +25,8 @@ interface TestHarnessOptions {
   driftReports?: DriftReport[];
   strayReports?: DriftReport[];
   codexRoleStrays?: CodexRoleStray[];
+  syncConfigKnownStrays?: string[];
+  userKnownStrays?: string[];
   codexExtensionPlan?: CodexExtensionPlan;
   canonicalEntries?: CanonicalEntry[];
   interactive?: boolean;
@@ -118,7 +122,7 @@ function formatReports(reports: DriftReport[]): string {
         report.state.status === 'drifted'
           ? `drifted:${report.state.reason}`
           : report.state.status;
-      return `${report.provider}:${label}`;
+      return `${report.provider}:${label}:${report.providerPath}`;
     })
     .join('\n');
 }
@@ -164,6 +168,16 @@ function createHarness(options: TestHarnessOptions = {}): {
     return manifest;
   });
   const saveManifest = vi.fn(async () => undefined);
+  const syncConfig: SyncConfig = {
+    ...DEFAULT_SYNC_CONFIG,
+    knownStrays: options.syncConfigKnownStrays ?? [],
+  };
+  const userConfig: UserConfig = {
+    version: 1,
+    ...(options.userKnownStrays
+      ? { knownStrays: options.userKnownStrays }
+      : {}),
+  };
   const detectCodexRoleStrays = vi.fn(
     async () => options.codexRoleStrays ?? [],
   );
@@ -196,6 +210,8 @@ function createHarness(options: TestHarnessOptions = {}): {
     }),
     resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
+    loadSyncConfig: vi.fn(async () => syncConfig),
+    readUserConfig: vi.fn(async () => userConfig),
     saveManifest,
     scanCanonical: vi.fn(async () => canonicalEntries),
     getAdapters: () => adapters,
@@ -423,6 +439,138 @@ describe('createStatusCommand', () => {
         stray: 1,
       },
     });
+  });
+
+  it('suppresses project-level known strays from text and JSON status', async () => {
+    const knownStray: DriftReport = {
+      canonical: null,
+      provider: 'claude',
+      providerPath: '.claude/skills/local-only',
+      state: { status: 'stray' },
+    };
+    const { capture, command, selectManyWithAbort } = createHarness({
+      interactive: false,
+      driftReports: [],
+      strayReports: [knownStray],
+      syncConfigKnownStrays: ['.claude/skills/local-only'],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).not.toContain('.claude/skills/local-only');
+    expect(capture.warn).not.toContain(REMEDIATION_TEXT);
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+
+    const jsonHarness = createHarness({
+      interactive: false,
+      driftReports: [],
+      strayReports: [knownStray],
+      syncConfigKnownStrays: ['.claude/skills/local-only'],
+    });
+
+    await runStatusCommand(jsonHarness.command, [
+      '--scope',
+      'project',
+      '--json',
+    ]);
+
+    expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+      summary: {
+        total: 0,
+        stray: 0,
+      },
+      reports: [],
+    });
+    expect(jsonHarness.capture.jsonPayloads[0]).not.toHaveProperty(
+      'remediation',
+    );
+  });
+
+  it('suppresses user-level known strays from prompts', async () => {
+    const { capture, command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'claude',
+          providerPath: '.claude/skills/user-local',
+          state: { status: 'stray' },
+        },
+      ],
+      userKnownStrays: ['.claude/skills/user-local'],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).not.toContain('.claude/skills/user-local');
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps unconfigured strays reportable and adoptable', async () => {
+    const { capture, command, selectManyWithAbort, adoptStray } = createHarness(
+      {
+        interactive: true,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/local-only',
+            state: { status: 'stray' },
+          },
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/actionable',
+            state: { status: 'stray' },
+          },
+        ],
+        syncConfigKnownStrays: ['.claude/skills/local-only'],
+        selectManyResponses: [['0']],
+      },
+    );
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).not.toContain('.claude/skills/local-only');
+    expect(capture.info[0]).toContain('.claude/skills/actionable');
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      description?: string;
+    }>;
+    expect(choices).toHaveLength(1);
+    expect(choices[0]?.label).toContain('actionable');
+    expect(choices[0]?.description).toContain('.claude/skills/actionable');
+    expect(adoptStray.mock.calls[0]?.[1].report.providerPath).toBe(
+      '.claude/skills/actionable',
+    );
+  });
+
+  it('suppresses configured Codex role strays', async () => {
+    const { capture, command, selectManyWithAbort } = createHarness({
+      adapters: [createCodexAdapter()],
+      interactive: true,
+      manifestEntries: [],
+      driftReports: [],
+      codexRoleStrays: [
+        {
+          roleName: 'reviewer',
+          providerPath: '.codex/agents/reviewer.toml',
+          description: 'Reviewer role',
+        },
+      ],
+      syncConfigKnownStrays: ['.codex/agents/reviewer.toml'],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).not.toContain('.codex/agents/reviewer.toml');
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
   });
 
   it('does not prompt in non-interactive mode', async () => {
@@ -735,6 +883,28 @@ describe('createStatusCommand', () => {
       await runStatusCommand(command, ['--scope', 'project', '--hook']);
 
       expect(capture.info).toContain(STRAY_INFO);
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('does not emit stray info when only known strays exist', async () => {
+      const { capture, command } = createHarness({
+        interactive: false,
+        driftReports: [],
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/local-only',
+            state: { status: 'stray' },
+          },
+        ],
+        syncConfigKnownStrays: ['.claude/skills/local-only'],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--hook']);
+
+      expect(capture.info).toHaveLength(0);
       expect(capture.warn).toHaveLength(0);
       expect(process.exitCode).toBe(0);
     });

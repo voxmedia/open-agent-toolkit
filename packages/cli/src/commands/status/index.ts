@@ -26,10 +26,17 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  DEFAULT_SYNC_CONFIG,
+  loadSyncConfig,
+  type SyncConfig,
+} from '@config/index';
+import { readUserConfig, type UserConfig } from '@config/oat-config';
+import {
   type CopyTransform,
   type DriftReport,
   detectDrift,
   detectStrays,
+  filterKnownStrays,
 } from '@drift/index';
 import {
   type CanonicalEntry,
@@ -93,6 +100,8 @@ interface StatusDependencies {
     context: CommandContext,
   ) => Promise<string>;
   loadManifest: (manifestPath: string) => Promise<Manifest>;
+  loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
+  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
   saveManifest: (manifestPath: string, manifest: Manifest) => Promise<void>;
   scanCanonical: (
     scopeRoot: string,
@@ -174,6 +183,10 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
     return resolveScopeRoot(scope, context.cwd, context.home);
   },
   loadManifest,
+  async loadSyncConfig(configPath) {
+    return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+  },
+  readUserConfig,
   saveManifest,
   scanCanonical,
   getAdapters() {
@@ -300,8 +313,15 @@ async function collectScopeReports(
 ): Promise<ScopeReportCollection> {
   const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
   const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
-  const manifest = await dependencies.loadManifest(manifestPath);
-  const canonicalEntries = await dependencies.scanCanonical(scopeRoot, scope);
+  const syncConfigPath = join(scopeRoot, '.oat', 'sync', 'config.json');
+  const userConfigDir = join(context.home, '.oat');
+  const [manifest, canonicalEntries, syncConfig, userConfig] =
+    await Promise.all([
+      dependencies.loadManifest(manifestPath),
+      dependencies.scanCanonical(scopeRoot, scope),
+      dependencies.loadSyncConfig(syncConfigPath),
+      dependencies.readUserConfig(userConfigDir),
+    ]);
   const adapters = dependencies.getAdapters();
   const activeAdapters = await dependencies.getActiveAdapters(
     adapters,
@@ -469,13 +489,22 @@ async function collectScopeReports(
     }
   }
 
+  const filtered = filterKnownStrays({
+    reports,
+    candidates: strayCandidates,
+    knownStrays: {
+      project: syncConfig.knownStrays,
+      user: userConfig.knownStrays,
+    },
+  });
+
   return {
     scope,
     scopeRoot,
     manifestPath,
     manifest,
-    reports,
-    strayCandidates,
+    reports: filtered.reports,
+    strayCandidates: filtered.candidates,
   };
 }
 
