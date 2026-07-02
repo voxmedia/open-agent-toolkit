@@ -418,6 +418,18 @@ describe('visual-companion server v6 security hardening', () => {
     const projectDir = await makeTempProjectDir();
     const { info } = await startServer({ projectDir });
     const key = keyFromServerUrl(info.url);
+    const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
+
+    // Real fixtures the guard would actually leak if it were absent: a
+    // marker one level above CONTENT_DIR (screen_dir) that a `..` traversal
+    // would reach, and a real dotfile *inside* CONTENT_DIR. Targeting files
+    // that never exist (e.g. `../server.cjs`, `.hidden`) 404s whether or
+    // not the guard exists and proves nothing — mirror the real-fixture
+    // technique the symlink-escape test below already uses.
+    const traversalMarker = join(sessionDir, 'sentinel.html');
+    writeFileSync(traversalMarker, 'traversal-should-be-blocked\n');
+    const dotfileMarker = join(info.screen_dir, '.hidden.html');
+    writeFileSync(dotfileMarker, 'dotfile-should-be-hidden\n');
 
     try {
       // http.request with an explicit `path` preserves the literal ".." —
@@ -427,16 +439,20 @@ describe('visual-companion server v6 security hardening', () => {
       // client-side URL normalization to do the job.
       const traversal = await rawHttpGet(
         info.url,
-        `/files/../server.cjs?key=${key}`,
+        `/files/../sentinel.html?key=${key}`,
       );
       expect(traversal.status).toBeGreaterThanOrEqual(400);
       expect(traversal.status).toBeLessThan(500);
+      expect(traversal.body).not.toContain('traversal-should-be-blocked');
 
-      const dotfile = await rawHttpGet(info.url, `/files/.hidden?key=${key}`);
+      const dotfile = await rawHttpGet(
+        info.url,
+        `/files/.hidden.html?key=${key}`,
+      );
       expect(dotfile.status).toBeGreaterThanOrEqual(400);
       expect(dotfile.status).toBeLessThan(500);
+      expect(dotfile.body).not.toContain('dotfile-should-be-hidden');
     } finally {
-      const sessionDir = info.state_dir.replace(/\/state\/?$/, '');
       await stopServer(sessionDir);
     }
   }, 30_000);
@@ -512,6 +528,13 @@ describe('visual-companion server v6 lifecycle', () => {
       expect(second.info.port).toBe(first.info.port);
       expect(readFileSync(lastPortFile, 'utf8').trim()).toBe(
         String(second.info.port),
+      );
+      // SC#2 also requires the session key (not just the port) to survive a
+      // restart, so an already-open browser tab's cookie keeps validating.
+      // The key is persisted via BRAINSTORM_TOKEN_FILE (.last-token) and
+      // re-read on the next start (see server.cjs initialToken()).
+      expect(keyFromServerUrl(second.info.url)).toBe(
+        keyFromServerUrl(first.info.url),
       );
     } finally {
       const sessionDir = second.info.state_dir.replace(/\/state\/?$/, '');
