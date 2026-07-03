@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -308,7 +315,14 @@ describe('oat gate', () => {
     fileName?: string;
     generatedAt?: string;
     reviewScope?: string;
-    finding?: 'important' | 'clean';
+    finding?: 'important' | 'minor' | 'clean';
+    omitMediumSection?: boolean;
+    counts?: {
+      critical: number;
+      important: number;
+      medium: number;
+      minor: number;
+    };
   }): Promise<string> {
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
     await mkdir(join(options.root, dirname(relativePath)), {
@@ -318,6 +332,21 @@ describe('oat gate', () => {
       options.finding === 'important'
         ? ['- Important finding that should block.']
         : ['None.'];
+    const minorContent =
+      options.finding === 'minor'
+        ? ['- Minor finding that still needs disposition.']
+        : ['None.'];
+    const countLines = options.counts
+      ? [
+          `oat_review_critical_count: ${options.counts.critical}`,
+          `oat_review_important_count: ${options.counts.important}`,
+          `oat_review_medium_count: ${options.counts.medium}`,
+          `oat_review_minor_count: ${options.counts.minor}`,
+        ]
+      : [];
+    const mediumSection = options.omitMediumSection
+      ? []
+      : ['### Medium', '', 'None', ''];
     await writeFile(
       join(options.root, relativePath),
       [
@@ -328,6 +357,7 @@ describe('oat gate', () => {
         `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
         'oat_review_invocation: gate',
         `oat_project: ${options.projectPath}`,
+        ...countLines,
         '---',
         '',
         '# Review',
@@ -342,13 +372,10 @@ describe('oat gate', () => {
         '',
         ...importantContent,
         '',
-        '### Medium',
-        '',
-        'None',
-        '',
+        ...mediumSection,
         '### Minor',
         '',
-        'None',
+        ...minorContent,
       ].join('\n'),
       'utf8',
     );
@@ -1503,6 +1530,221 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('normalizes a gate review artifact missing only a zero-count Medium heading', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+          omitMediumSection: true,
+          counts: {
+            critical: 0,
+            important: 0,
+            medium: 0,
+            minor: 0,
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-scope',
+        'final',
+        '--review-type',
+        'code',
+        '--exit-nonzero-on',
+        'important',
+        'Use oat-project-review-provide code final.',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      outcome: 'review_completed_artifact_normalized_gate_passed',
+      artifactPath,
+      blocking: false,
+      counts: {
+        critical: 0,
+        important: 0,
+        medium: 0,
+        minor: 0,
+      },
+      normalization: {
+        insertedSeverities: ['medium'],
+      },
+    });
+    const artifactContent = await readFile(join(root, artifactPath), 'utf8');
+    expect(artifactContent).toMatch(
+      /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
+    );
+    await expect(readdir(join(root, projectPath, 'reviews'))).resolves.toEqual([
+      'p01-review.md',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports artifact validation failure when a missing severity has nonzero findings', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+          omitMediumSection: true,
+          counts: {
+            critical: 0,
+            important: 0,
+            medium: 1,
+            minor: 0,
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      outcome: 'review_completed_artifact_validation_failed',
+      artifactPath,
+      message: expect.stringContaining('cannot be safely normalized'),
+      recovery: expect.stringContaining('oat-project-review-receive'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps final-scope Minor-only gate success tied to review-receive disposition', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'minor',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-scope',
+        'final',
+        '--review-type',
+        'code',
+        '--exit-nonzero-on',
+        'important',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      outcome: 'review_completed_gate_passed',
+      artifactPath,
+      blocking: false,
+      counts: {
+        critical: 0,
+        important: 0,
+        medium: 0,
+        minor: 1,
+      },
+      handoff: expect.stringContaining(
+        'final review still contains non-blocking findings',
+      ),
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      handoff: expect.stringContaining(
+        'before marking the final review row passed',
+      ),
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps final-scope Important findings in handoff text when only Critical blocks', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'important',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-scope',
+        'final',
+        '--review-type',
+        'code',
+        '--exit-nonzero-on',
+        'critical',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      outcome: 'review_completed_gate_passed',
+      artifactPath,
+      blocking: false,
+      counts: {
+        critical: 0,
+        important: 1,
+        medium: 0,
+        minor: 0,
+      },
+      handoff: expect.stringContaining('important=1'),
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      handoff: expect.stringContaining(
+        'before marking the final review row passed',
+      ),
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('detects a same-day lower-rank review produced when a higher-rank review already exists', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -1658,7 +1900,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'error',
+      status: 'artifact_validation_failed',
+      outcome: 'review_completed_artifact_validation_failed',
       message: expect.stringContaining('No new review artifact was detected'),
     });
     expect(process.exitCode).toBe(1);
@@ -1686,7 +1929,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'error',
+      status: 'artifact_validation_failed',
+      outcome: 'review_completed_artifact_validation_failed',
       message: expect.stringContaining('No new review artifact was detected'),
     });
     expect(process.exitCode).toBe(1);
