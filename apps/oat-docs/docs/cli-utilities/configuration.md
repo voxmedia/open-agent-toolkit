@@ -22,7 +22,7 @@ For the deep file-by-file reference, see:
 | -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Shared repo config   | `.oat/config.json`       | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/list/describe`, `oat gate` |
 | Repo-local config    | `.oat/config.local.json` | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/list/describe`, `oat gate` |
-| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback, personal `workflow.*` defaults, and personal known provider strays                            | `oat config describe`, `oat gate`              |
+| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback, personal `workflow.*` defaults, and personal known provider strays                             | `oat config describe`, `oat gate`              |
 | Provider sync config | `.oat/sync/config.json`  | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`     |
 
 The main split is:
