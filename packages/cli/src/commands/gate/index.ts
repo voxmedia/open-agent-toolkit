@@ -43,6 +43,7 @@ import { Command } from 'commander';
 
 import {
   parseReviewGateVerdict,
+  severityDisplayName,
   type ReviewGateVerdict,
 } from './review-verdict';
 
@@ -170,7 +171,7 @@ const VALID_REVIEW_GATE_THRESHOLDS: readonly ReviewGateThreshold[] = [
   'minor',
 ];
 const REVIEW_GATE_CONTEXT_NOTE =
-  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.';
+  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
 
 function reviewGateProjectContext(projectPath: string): string {
   return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
@@ -1048,6 +1049,51 @@ function reviewBlocksAtThreshold(
   return verdict.counts.minor > 0;
 }
 
+function buildReviewGateHandoff(options: {
+  artifactPath: string;
+  verdict: ReviewGateVerdict;
+  threshold: ReviewGateThreshold;
+  blocking: boolean;
+}): string {
+  const receiveInstruction = `Run oat-project-review-receive for ${options.artifactPath} before treating this gate review as consumed.`;
+  const thresholdIndex = VALID_REVIEW_GATE_THRESHOLDS.indexOf(
+    options.threshold,
+  );
+  const nonBlockingSeverities = VALID_REVIEW_GATE_THRESHOLDS.slice(
+    thresholdIndex + 1,
+  ).filter((severity) => options.verdict.counts[severity] > 0);
+  const hasFinalNonBlockingFindings =
+    options.verdict.scope === 'final' &&
+    !options.blocking &&
+    nonBlockingSeverities.length > 0;
+
+  if (!hasFinalNonBlockingFindings) {
+    return receiveInstruction;
+  }
+
+  const counts = nonBlockingSeverities
+    .map((severity) => `${severity}=${options.verdict.counts[severity]}`)
+    .join(', ');
+
+  return `Gate passed at the ${options.threshold} threshold, but the final review still contains non-blocking findings (${counts}). Run oat-project-review-receive for ${options.artifactPath} to disposition them before marking the final review row passed.`;
+}
+
+function reviewGateOutcome(payload: {
+  blocking: boolean;
+  normalization?: ReviewGateVerdict['normalization'];
+}):
+  | 'review_completed_blocking_findings'
+  | 'review_completed_artifact_normalized_gate_passed'
+  | 'review_completed_gate_passed' {
+  if (payload.blocking) {
+    return 'review_completed_blocking_findings';
+  }
+  if (payload.normalization) {
+    return 'review_completed_artifact_normalized_gate_passed';
+  }
+  return 'review_completed_gate_passed';
+}
+
 function writeReviewGateResult(
   context: CommandContext,
   payload: {
@@ -1061,19 +1107,88 @@ function writeReviewGateResult(
     reviewType: ReviewGateVerdict['reviewType'];
     scope: string | null;
     invocation: string | null;
+    normalization?: ReviewGateVerdict['normalization'];
     handoff: string;
   },
 ): void {
+  const outcome = reviewGateOutcome(payload);
   if (context.json) {
-    context.logger.json(payload);
+    context.logger.json({ outcome, ...payload });
     return;
   }
 
+  if (outcome === 'review_completed_blocking_findings') {
+    context.logger.info('Review completed and found blocking issues.');
+  } else if (outcome === 'review_completed_artifact_normalized_gate_passed') {
+    context.logger.info(
+      'Review completed, artifact was normalized, and gate passed.',
+    );
+  } else {
+    context.logger.info('Review completed and gate passed.');
+  }
   context.logger.info(`Review artifact: ${payload.artifactPath}`);
+  if (payload.normalization) {
+    context.logger.info(
+      `Artifact normalized: inserted ${payload.normalization.insertedSeverities.map((severity) => severityDisplayName(severity)).join(', ')} empty Findings section(s).`,
+    );
+  }
   context.logger.info(
     `Verdict: ${payload.status} (critical=${payload.counts.critical}, important=${payload.counts.important}, medium=${payload.counts.medium}, minor=${payload.counts.minor})`,
   );
   context.logger.info(payload.handoff);
+}
+
+function writeReviewGateExecutionFailure(
+  context: CommandContext,
+  payload: {
+    target: string;
+    project: string;
+    exitCode: number;
+  },
+): void {
+  const message = `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
+  if (context.json) {
+    context.logger.json({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      target: payload.target,
+      project: payload.project,
+      exitCode: payload.exitCode,
+      message,
+    });
+    return;
+  }
+
+  context.logger.error(message);
+}
+
+function writeReviewGateArtifactValidationFailure(
+  context: CommandContext,
+  payload: {
+    target: string;
+    project: string;
+    artifactPath: string | null;
+    message: string;
+    recovery: string;
+  },
+): void {
+  if (context.json) {
+    context.logger.json({
+      status: 'artifact_validation_failed',
+      outcome: 'review_completed_artifact_validation_failed',
+      target: payload.target,
+      project: payload.project,
+      artifactPath: payload.artifactPath,
+      message: payload.message,
+      recovery: payload.recovery,
+    });
+    return;
+  }
+
+  context.logger.error(
+    `Review completed but artifact validation failed: ${payload.message}`,
+  );
+  context.logger.error(payload.recovery);
 }
 
 async function updateConfigLayer(
@@ -1289,6 +1404,11 @@ async function runReviewGate(
     );
 
     if (childExitCode !== 0) {
+      writeReviewGateExecutionFailure(context, {
+        target: selected.id,
+        project: projectPath,
+        exitCode: childExitCode,
+      });
       process.exitCode = childExitCode;
       return;
     }
@@ -1299,16 +1419,45 @@ async function runReviewGate(
     });
     const producedArtifact = findProducedReviewArtifact(before, after);
     if (!producedArtifact) {
-      throw new Error(
-        `No new review artifact was detected for project ${projectPath}. Ensure the review provider wrote a project review artifact before the gate exits.`,
-      );
+      writeReviewGateArtifactValidationFailure(context, {
+        target: selected.id,
+        project: projectPath,
+        artifactPath: null,
+        message: `No new review artifact was detected for project ${projectPath}.`,
+        recovery:
+          'Ensure the review provider wrote a project review artifact. If it did, fix or attach that artifact and run oat-project-review-receive before treating the review as consumed.',
+      });
+      process.exitCode = 1;
+      return;
     }
 
-    const verdict = await parseReviewGateVerdict(
-      join(repoRoot, producedArtifact.path),
-    );
+    let verdict: ReviewGateVerdict;
+    try {
+      verdict = await parseReviewGateVerdict(
+        join(repoRoot, producedArtifact.path),
+        {
+          normalizeMissingEmptySeveritySections: true,
+        },
+      );
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      writeReviewGateArtifactValidationFailure(context, {
+        target: selected.id,
+        project: projectPath,
+        artifactPath: producedArtifact.path,
+        message: detail,
+        recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then run oat-project-review-receive for ${producedArtifact.path}; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
+      });
+      process.exitCode = 1;
+      return;
+    }
     const blocking = reviewBlocksAtThreshold(verdict, threshold);
-    const handoff = `Run oat-project-review-receive for ${producedArtifact.path} before treating this gate review as consumed.`;
+    const handoff = buildReviewGateHandoff({
+      artifactPath: producedArtifact.path,
+      verdict,
+      threshold,
+      blocking,
+    });
 
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
@@ -1321,6 +1470,7 @@ async function runReviewGate(
       reviewType: verdict.reviewType,
       scope: verdict.scope,
       invocation: verdict.invocation,
+      normalization: verdict.normalization,
       handoff,
     });
     process.exitCode = blocking ? 1 : 0;

@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -186,6 +186,55 @@ None
     });
   });
 
+  it('ignores markdown headings inside fenced code blocks while finding severity sections', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+- Critical finding with a fenced reproduction.
+  ~~~bash
+  # reproduce the issue
+  ## this is not a markdown section
+  ~~~
+
+### Important
+
+- Important finding
+
+### Medium
+
+None
+
+### Minor
+
+- Minor finding
+
+## Verification Commands
+
+~~~bash
+# still not part of Findings
+~~~
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: {
+        critical: 1,
+        important: 1,
+        medium: 0,
+        minor: 1,
+      },
+      blocking: true,
+    });
+  });
+
   it('parses a complete Findings count line as a standalone verdict source', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
@@ -279,6 +328,163 @@ None
 
     expect(verdict.counts.important).toBe(1);
     expect(verdict.blocking).toBe(true);
+  });
+
+  it('normalizes a missing zero-count severity heading when explicit counts are available', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+oat_review_critical_count: 0
+oat_review_important_count: 0
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+None
+
+### Minor
+
+None
+`);
+
+    const verdict = await parseReviewGateVerdict(artifactPath, {
+      normalizeMissingEmptySeveritySections: true,
+    });
+
+    expect(verdict).toMatchObject({
+      counts: {
+        critical: 0,
+        important: 0,
+        medium: 0,
+        minor: 0,
+      },
+      blocking: false,
+      normalization: {
+        insertedSeverities: ['medium'],
+      },
+    });
+    const normalizedContent = await readFile(artifactPath, 'utf8');
+    expect(normalizedContent).toMatch(
+      /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
+    );
+  });
+
+  it('does not insert duplicate severity headings when fenced code contains markdown headings', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+oat_review_critical_count: 1
+oat_review_important_count: 0
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+- Critical finding with a fenced reproduction.
+  ~~~bash
+  # reproduce the issue
+  ## this is not a markdown section
+  ~~~
+
+### Important
+
+None
+
+### Medium
+
+None
+
+### Minor
+
+None
+`);
+    const before = await readFile(artifactPath, 'utf8');
+
+    const verdict = await parseReviewGateVerdict(artifactPath, {
+      normalizeMissingEmptySeveritySections: true,
+    });
+
+    expect(verdict.normalization).toBeUndefined();
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(before);
+  });
+
+  it('refuses to normalize missing severity headings without a Findings section', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+oat_review_critical_count: 0
+oat_review_important_count: 0
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+Findings: 0 critical, 0 important, 0 medium, 0 minor
+
+## Summary
+
+The review completed but did not render canonical Findings sections.
+`);
+
+    await expect(
+      parseReviewGateVerdict(artifactPath, {
+        normalizeMissingEmptySeveritySections: true,
+      }),
+    ).rejects.toThrow(/does not contain a ## Findings section/i);
+  });
+
+  it('does not normalize a missing severity heading when explicit counts report findings', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+oat_review_critical_count: 0
+oat_review_important_count: 0
+oat_review_medium_count: 1
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+None
+
+### Minor
+
+None
+`);
+
+    await expect(
+      parseReviewGateVerdict(artifactPath, {
+        normalizeMissingEmptySeveritySections: true,
+      }),
+    ).rejects.toThrow(/cannot be safely normalized/i);
   });
 
   it('returns an actionable parse error for partial Findings sections', async () => {

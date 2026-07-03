@@ -1,6 +1,6 @@
 ---
 name: oat-review-provide
-version: 1.2.1
+version: 1.2.2
 description: Use when you need an ad-hoc review outside an active OAT project lifecycle. Reviews code or artifacts without project phase state, unlike oat-project-review-provide.
 argument-hint: '[unstaged|staged|base_branch=<branch>|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]'
 disable-model-invocation: true
@@ -183,7 +183,7 @@ If the file already exists (same scope reviewed twice in one day), suffix with `
 
 Use the same severity model and checklist as project reviews:
 
-- Critical / Important / Minor findings
+- Critical / Important / Medium / Minor findings
 - file:line references
 - actionable fix guidance
 - verification commands

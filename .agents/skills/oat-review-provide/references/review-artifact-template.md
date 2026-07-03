@@ -23,19 +23,25 @@ oat_review_mode: ad_hoc
 
 {2-3 sentence summary}
 
+Findings: {N} critical, {N} important, {N} medium, {N} minor
+
 ## Findings
 
 ### Critical
 
-{None or list}
+{If none: "None"}
 
 ### Important
 
-{None or list}
+{If none: "None"}
+
+### Medium
+
+{If none: "None"}
 
 ### Minor
 
-{None or list}
+{If none: "None"}
 
 ## Verification Commands
 
