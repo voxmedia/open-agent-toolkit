@@ -12,15 +12,15 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: pr_open
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/125'
 oat_project_created: '2026-06-26T19:52:43.792Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-02T02:05:00.000Z'
+oat_project_state_updated: '2026-07-02T02:20:00.000Z'
 oat_dispatch_ceiling:
   preset: balanced
   providers:
@@ -38,7 +38,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — complete. All 9 tasks resolved across 4 phases (Tier 1 subagents, ceiling: sonnet); final review passed (0C/0I/4m deferred). Ready for summary → PR.
+Implementation — PR open, awaiting human review. PR #125 (parity-check → main).
 
 ## Artifacts
 
@@ -60,6 +60,9 @@ Implementation — complete. All 9 tasks resolved across 4 phases (Tier 1 subage
 - ✓ Phase 4 complete (docs touchpoint — skipped, no delta)
 - ✓ All 9 implementation tasks resolved
 - ✓ Final review passed (0C/0I/4m deferred; SC#1–SC#7 all met)
+- ✓ Docs sync (no delta) + summary generated
+- ✓ PR created (#125)
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -67,4 +70,7 @@ None
 
 ## Next Milestone
 
-Final review (scope: final); then summary → PR
+PR is open for review (#125).
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
