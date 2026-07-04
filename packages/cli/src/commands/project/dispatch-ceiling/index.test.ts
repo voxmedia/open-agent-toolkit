@@ -531,5 +531,235 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       });
     });
+
+    it('selects the lower preferred Codex effort under a higher ceiling', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'xhigh' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'medium',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        value: 'xhigh',
+        providers: {
+          codex: {
+            value: 'xhigh',
+            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            selection: {
+              role: 'implementer',
+              preferredValue: 'medium',
+              selectedValue: 'medium',
+              capped: false,
+            },
+          },
+        },
+      });
+    });
+
+    it('caps implementer dispatch args down when preferred exceeds the Codex ceiling', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        value: 'medium',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            selection: {
+              role: 'implementer',
+              preferredValue: 'xhigh',
+              selectedValue: 'medium',
+              capped: true,
+            },
+          },
+        },
+      });
+    });
+
+    it('reports an error for invalid preferred Codex effort', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'xhigh' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'bogus',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+      });
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('Invalid preferred dispatch value "bogus" for codex');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('keeps preferred effort informational when the Codex ceiling is unresolved', async () => {
+      const { root, home } = await setup();
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'medium',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'unresolved',
+        value: null,
+        providers: {
+          codex: {
+            value: null,
+            dispatchArgs: null,
+            selection: {
+              role: 'implementer',
+              preferredValue: 'medium',
+              selectedValue: null,
+              capped: false,
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('ignores preferred values for unsupported providers', async () => {
+      const { root, home } = await setup();
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'cursor',
+        '--role',
+        'implementer',
+        '--preferred',
+        'medium',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'unresolved',
+        provider: 'cursor',
+        providers: {
+          cursor: {
+            value: null,
+            mode: 'unsupported',
+            dispatchArgs: null,
+            selection: {
+              role: 'implementer',
+              preferredValue: null,
+              selectedValue: null,
+              capped: false,
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('caps Claude implementer dispatch args down when preferred exceeds the ceiling', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { claude: 'sonnet' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--role',
+        'implementer',
+        '--preferred',
+        'opus',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        value: 'sonnet',
+        providers: {
+          claude: {
+            dispatchArgs: { model: 'sonnet' },
+            selection: {
+              role: 'implementer',
+              preferredValue: 'opus',
+              selectedValue: 'sonnet',
+              capped: true,
+            },
+          },
+        },
+      });
+    });
+
+    it('keeps reviewer dispatch args at the Codex ceiling even with a preferred value', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'xhigh' } } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'reviewer',
+        '--preferred',
+        'medium',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-reviewer-xhigh' },
+            selection: {
+              role: 'reviewer',
+              preferredValue: 'medium',
+              selectedValue: 'xhigh',
+              capped: false,
+            },
+          },
+        },
+      });
+    });
   });
 });

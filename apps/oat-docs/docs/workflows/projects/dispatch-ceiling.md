@@ -61,11 +61,20 @@ Before dispatching a subagent, the orchestrator calls:
 oat project dispatch-ceiling resolve --provider <provider> --role <implementer|reviewer> --preflight --json
 ```
 
+For implementer or fix dispatch, pass the runtime classification too. In Codex
+this is the preferred effort; in Claude it is the preferred model tier:
+
+```bash
+oat project dispatch-ceiling resolve --provider codex --role implementer --preferred medium --json
+oat project dispatch-ceiling resolve --provider claude --role implementer --preferred sonnet --json
+```
+
 The resolver:
 
 1. reads the concrete `providers.<provider>` value (config precedence, then project state) — **never the preset label**;
 2. looks up that provider's **adapter** in the provider ceiling registry;
-3. returns a per-provider result: `{ value, mode, mechanism, dispatchArgs }`.
+3. applies `--preferred` for implementer/fix dispatch, capping it against the ceiling;
+4. returns a per-provider result: `{ value, mode, mechanism, dispatchArgs, selection }`.
 
 `mode` is the honest enforcement status, computed right there and never persisted:
 
@@ -89,8 +98,8 @@ The same ceiling intent produces different — but honest — behavior per provi
 
 ### Why the mechanisms differ
 
-- **Codex** dispatches through **pinned, sync-time role variants**. Per-call reasoning-effort proved unreliable in practice, so OAT generates committed `oat-phase-implementer-{low..xhigh}` / `oat-reviewer-{low..xhigh}` role files and dispatches the variant matching the resolved effort.
-- **Claude** uses the **per-call Task `model` parameter**, which is reliable and bidirectional (a Sonnet orchestrator can dispatch an Opus subagent and vice-versa) and overrides agent frontmatter — so OAT simply passes `model` at dispatch and needs no variant files.
+- **Codex** dispatches through **pinned, sync-time role variants**. Per-call reasoning-effort proved unreliable in practice, so OAT generates committed `oat-phase-implementer-{low..xhigh}` / `oat-reviewer-{low..xhigh}` role files. Implementer/fix dispatch passes `--preferred` so `dispatchArgs.variant` matches the selected capped effort; reviewer dispatch uses the variant matching the resolved ceiling.
+- **Claude** uses the **per-call Task `model` parameter**, which is reliable and bidirectional (a Sonnet orchestrator can dispatch an Opus subagent and vice-versa) and overrides agent frontmatter. Implementer/fix dispatch passes `--preferred` as the preferred model tier and receives the capped selected `model`; reviewer dispatch uses the ceiling model. OAT needs no variant files.
 - **Unsupported providers** (any without a registered adapter) resolve to `unsupported` with `dispatchArgs: null`. The resolve command **returns cleanly and never blocks** — the ceiling is recorded as intent and applied if/when an adapter ships, while the provider runs at its own capabilities.
 
 A **provider adapter registry** is what lets these genuinely different mechanisms sit behind one resolver, so the lifecycle skills consume `dispatchArgs` without ever branching on provider.
@@ -103,6 +112,8 @@ The ceiling means slightly different things for the two dispatch roles:
 - **Reviewer** runs **at** the ceiling — a **target** — so quality gates are deterministic.
 
 Both providers honor this distinction (Codex selects the matching variant; Claude passes the matching model).
+
+Generic sidecars such as built-in `explorer` are outside this implementer/reviewer/fix contract. They may run at provider default when they are read-only advisory helpers. In that case, dispatch logs should say `Preferred effort: provider-default`, `Selected effort: provider-default`, and `Effort axis: provider-default`; only log a concrete selected effort when the actual sidecar payload pins a reliable provider control.
 
 ## Verify-on-upgrade
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.23
+version: 2.0.24
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -204,7 +204,13 @@ Resolution order:
       "mode": "enforced",
       "mechanism": "pinned-variant",
       "dispatchArgs": { "variant": "oat-phase-implementer-high" },
-      "verifyOnDispatch": false
+      "verifyOnDispatch": false,
+      "selection": {
+        "role": "implementer",
+        "preferredValue": null,
+        "selectedValue": "high",
+        "capped": false
+      }
     }
   }
 }
@@ -212,8 +218,10 @@ Resolution order:
 
 Read `providers.<active-provider>` for the concrete dispatch controls. The
 `dispatchArgs` field carries the provider-specific argument to pass through
-(Codex: `variant` name; Claude: `model` string). Never re-derive these from the
-preset label — the resolver is the single compilation/join point.
+(Codex: `variant` name; Claude: `model` string). For implementer/fix dispatch,
+pass `--preferred <preferred-effort>` and use `selection.selectedValue` as the
+selected axis value. Never re-derive these from the preset label or a ceiling-only
+variant — the resolver is the single compilation/join point.
 
 Print before phase work:
 
@@ -311,7 +319,7 @@ Codex rules:
    - `high`: broad architecture, security/auth/redaction boundaries, subtle state behavior, or repeated substantive review failures
    - `xhigh`: highest-risk work that requires the configured ceiling to allow xhigh
 3. Selected effort is `min(preferred, resolved_ceiling)` for implementer/fix work.
-4. For implementer/fix dispatch: call `oat project dispatch-ceiling resolve --provider codex --role implementer`; read `providers.codex.dispatchArgs.variant` for the role name (e.g., `oat-phase-implementer-high`). Pass that variant name directly — do not re-derive it from the ceiling value.
+4. For implementer/fix dispatch: call `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <preferred-effort>`; read `providers.codex.selection.selectedValue` and `providers.codex.dispatchArgs.variant` for the selected role name (e.g., `oat-phase-implementer-medium`). The resolver caps the preferred effort against the ceiling; never pass a ceiling-only implementer variant when `selection.selectedValue` is lower.
 5. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer`; read `providers.codex.dispatchArgs.variant` for the reviewer role name (e.g., `oat-reviewer-high`). Reviewer always targets the ceiling for deterministic quality gate behavior.
 6. Use base/unpinned Codex roles only as a fallback or explicit provider-default choice. Log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as parent-ceiling inheritance.
 7. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
@@ -319,9 +327,9 @@ Codex rules:
 Claude rules:
 
 - Claude ceiling is model-based: `haiku < sonnet < opus`.
-- Implementer dispatch: select the lowest sufficient model capped by the resolved Claude ceiling (`min(preferred, ceiling)`).
+- Implementer/fix dispatch: classify the preferred model (`haiku`, `sonnet`, or `opus`) and pass it to the resolver as `--preferred <preferred-model>`. The resolver selects the lowest sufficient model capped by the resolved Claude ceiling (`min(preferred, ceiling)`).
 - Review dispatch: target the resolved Claude ceiling directly.
-- Call `oat project dispatch-ceiling resolve --provider claude --role implementer --orchestrator-tier <current-orchestrator-tier>` (or `--role reviewer`); read `providers.claude.dispatchArgs.model` for the model string to pass. Pass `--orchestrator-tier` so the resolver can flag above-orchestrator upgrade requests and set `verifyOnDispatch` correctly.
+- For implementer/fix dispatch, call `oat project dispatch-ceiling resolve --provider claude --role implementer --preferred <preferred-model> --orchestrator-tier <current-orchestrator-tier>`; for review dispatch, call the same resolver with `--role reviewer` and no `--preferred`. Read `providers.claude.selection.selectedValue` and `providers.claude.dispatchArgs.model` for the selected model string to pass. Pass `--orchestrator-tier` so the resolver can flag above-orchestrator upgrade requests and set `verifyOnDispatch` correctly.
 - Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
 - Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
 
@@ -336,7 +344,7 @@ Structured dispatch log:
 ```text
 OAT Dispatch: Phase {phase_id} {implementation | fix | review}
 Host: {Claude Code | Codex | Cursor | other host}
-Preferred effort: {low | medium | high | xhigh | not-applicable}
+Preferred effort: {low | medium | high | xhigh | provider-default | not-applicable}
 Dispatch ceiling: {resolved ceiling value}
 Selected effort: {low | medium | high | xhigh | provider-default | not-applicable}
 Ceiling source: {repo config | project state | preflight prompt}
@@ -393,6 +401,29 @@ Model axis: inherited
 Effort axis: provider-default
 Dispatch target: oat-reviewer
 Rationale: base unpinned role fallback; effective effort follows Codex provider default.
+```
+
+Generic sidecar/explorer dispatch:
+
+- Built-in or generic sidecars such as `explorer` are not OAT-managed implementer, reviewer, or fix roles.
+- If a sidecar spawn payload does not explicitly pin a reliable effort/model control, log `Preferred effort: provider-default`, `Selected effort: provider-default`, and `Effort axis: provider-default`.
+- Do not classify a generic sidecar as `Preferred effort: low|medium|high|xhigh` unless the actual host invocation contains the corresponding reliable selection. If the host has no reliable effort control for that sidecar, use provider-default wording instead.
+- Sidecar outputs are advisory context only. Implementation work and review/fix gates still follow the OAT-managed dispatch rules above.
+
+Codex generic explorer example:
+
+```text
+OAT Dispatch: p02-t10 sidecar exploration
+Host: Codex
+Preferred effort: provider-default
+Dispatch ceiling: xhigh
+Selected effort: provider-default
+Ceiling source: project state
+Provider default effort: xhigh
+Model axis: inherited
+Effort axis: provider-default
+Dispatch target: explorer
+Rationale: read-only sidecar exploration; generic explorer payload does not pin an OAT-managed effort variant.
 ```
 
 Include resolved dispatch context in scope packets when known:
@@ -740,8 +771,8 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
 
 2. Perform a pre-dispatch assertion against the host invocation parameters. The Phase Scope fields are audit/context fields; selected axes must also be represented in the actual host dispatch call.
    - Codex implementer/fix dispatch:
-     - Before building the `spawn_agent` argument map, classify the phase complexity and choose preferred effort (`low`, `medium`, `high`, or `xhigh`), then cap it to the resolved Codex dispatch ceiling.
-     - Build the `spawn_agent` argument map before logging the dispatch. If `effort_axis=selected:low|medium|high|xhigh`, the argument map MUST use the matching `agent_type`: `"oat-phase-implementer-low"`, `"oat-phase-implementer-medium"`, `"oat-phase-implementer-high"`, or `"oat-phase-implementer-xhigh"`. Then derive the `OAT Dispatch:` block `Effort axis:` field from that same argument map.
+     - Before building the `spawn_agent` argument map, classify the phase complexity and choose preferred effort (`low`, `medium`, `high`, or `xhigh`), then call `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <preferred-effort>`.
+     - Build the `spawn_agent` argument map from `providers.codex.selection.selectedValue` and `providers.codex.dispatchArgs.variant` before logging the dispatch. If `effort_axis=selected:low|medium|high|xhigh`, the argument map MUST use the matching `agent_type`: `"oat-phase-implementer-low"`, `"oat-phase-implementer-medium"`, `"oat-phase-implementer-high"`, or `"oat-phase-implementer-xhigh"`. Then derive the `OAT Dispatch:` block `Effort axis:` field from that same argument map.
      - Example selected low payload shape: `agent_type: "oat-phase-implementer-low"` and a Phase Scope message containing `effort_axis: selected:low`.
      - Immediately after spawning, compare the returned Codex status line with the selected effort before waiting on the agent. If the spawned status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
      - If `effort_axis=provider-default`, use base `agent_type: "oat-phase-implementer"` and omit `reasoning_effort`. The dispatch rationale MUST say this is a base/unpinned fallback and include provider default effort when known.
