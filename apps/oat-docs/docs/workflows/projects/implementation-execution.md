@@ -108,9 +108,9 @@ Model and effort are separate axes. Each axis logs one of these states:
 - `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
 - `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
 
-In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, or `xhigh`) and select `min(preferred, resolved_ceiling)`. The selected effort maps to the matching pinned role: `oat-phase-implementer-low`, `oat-phase-implementer-medium`, `oat-phase-implementer-high`, or `oat-phase-implementer-xhigh`. Reviewer dispatch uses the reviewer variant matching the resolved ceiling (`oat-reviewer-low|medium|high|xhigh`) for deterministic quality gates. Base/unpinned Codex roles are provider-default fallbacks; they should be logged as `provider-default`, not as inherited parent-session ceiling.
+In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, or `xhigh`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. The resolver selects `min(preferred, resolved_ceiling)` and returns the matching pinned role: `oat-phase-implementer-low`, `oat-phase-implementer-medium`, `oat-phase-implementer-high`, or `oat-phase-implementer-xhigh`. Reviewer dispatch uses the reviewer variant matching the resolved ceiling (`oat-reviewer-low|medium|high|xhigh`) for deterministic quality gates. Base/unpinned Codex roles are provider-default fallbacks; they should be logged as `provider-default`, not as inherited parent-session ceiling.
 
-In Claude Code, subagent model selection is a model axis when available and is capped by `workflow.dispatchCeiling.providers.claude` (or the compiled concrete value from a preset) or project `oat_dispatch_ceiling`. The separate effort axis is `not-applicable`.
+In Claude Code, implementation and fix dispatch classify a preferred model tier (`haiku`, `sonnet`, or `opus`) and pass it to `oat project dispatch-ceiling resolve --provider claude --role implementer --preferred <model> --orchestrator-tier <current-orchestrator-tier>`. The resolver selects `min(preferred, resolved_ceiling)` and returns the `model` argument to pass at dispatch. Reviewer dispatch targets the resolved Claude ceiling directly. The separate effort axis is `not-applicable`.
 
 Dispatch logs use a consistent structured block so provider behavior is comparable without flattening the model and effort axes:
 
@@ -151,9 +151,23 @@ Model axis: host-auto
 Effort axis: host-auto
 Dispatch target: host default
 Rationale: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
+
+OAT Dispatch: p02-t10 sidecar exploration
+Host: Codex
+Preferred effort: provider-default
+Dispatch ceiling: xhigh
+Selected effort: provider-default
+Ceiling source: project state
+Provider default effort: xhigh
+Model axis: inherited
+Effort axis: provider-default
+Dispatch target: explorer
+Rationale: read-only sidecar exploration; generic explorer payload does not pin an OAT-managed effort variant.
 ```
 
 Phase and review scope packets include dispatch context when the orchestrator has resolved it: `model_axis`, `effort_axis`, `dispatch_ceiling`, `ceiling_source`, `provider_default_effort`, and `dispatch_rationale`.
+
+Generic sidecars such as built-in `explorer` are not OAT-managed implementer, reviewer, or fix roles. If a sidecar payload does not pin a reliable effort/model control, log it as provider-default rather than classifying the task complexity as a selected effort. Sidecar results are advisory context; implementation and review/fix gates still follow the OAT-managed dispatch rules above.
 
 ### Dispatch Profile overrides
 

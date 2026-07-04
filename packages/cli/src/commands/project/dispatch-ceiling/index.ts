@@ -53,6 +53,7 @@ interface ProviderResolution {
   mechanism: EnforcementMechanism;
   dispatchArgs: CeilingDispatchArgs;
   verifyOnDispatch: boolean;
+  selection: DispatchSelection;
 }
 
 interface DispatchCeilingDependencies {
@@ -73,6 +74,7 @@ interface DispatchCeilingResolveOptions {
   provider?: string;
   role?: string;
   orchestratorTier?: string;
+  preferred?: string;
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
@@ -104,6 +106,13 @@ const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
   'sonnet',
   'opus',
 ];
+
+interface DispatchSelection {
+  role: CeilingRole;
+  preferredValue: DispatchCeilingValue | null;
+  selectedValue: DispatchCeilingValue | null;
+  capped: boolean;
+}
 
 const DEFAULT_DEPENDENCIES: DispatchCeilingDependencies = {
   buildCommandContext,
@@ -307,6 +316,82 @@ function normalizeRole(value: string | undefined): CeilingRole {
   return value === 'reviewer' ? 'reviewer' : 'implementer';
 }
 
+function providerValueOrder(
+  provider: DispatchCeilingProvider,
+): readonly DispatchCeilingValue[] | null {
+  if (provider === 'codex') {
+    return CODEX_VALUES;
+  }
+  if (provider === 'claude') {
+    return CLAUDE_VALUES;
+  }
+  return null;
+}
+
+function normalizePreferredValue(
+  provider: DispatchCeilingProvider,
+  value: string | undefined,
+): DispatchCeilingValue | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const order = providerValueOrder(provider);
+  if (!order) {
+    return null;
+  }
+
+  if (!isValidProviderValue(provider, normalized)) {
+    const validValues = order.join(', ');
+    throw new Error(
+      `Invalid preferred dispatch value "${normalized}" for ${provider}. Valid values: ${validValues}.`,
+    );
+  }
+
+  return normalized;
+}
+
+function selectDispatchValue(
+  provider: DispatchCeilingProvider,
+  role: CeilingRole,
+  ceilingValue: DispatchCeilingValue,
+  preferredValue: DispatchCeilingValue | null,
+): DispatchSelection {
+  if (role === 'reviewer' || preferredValue === null) {
+    return {
+      role,
+      preferredValue,
+      selectedValue: ceilingValue,
+      capped: false,
+    };
+  }
+
+  const order = providerValueOrder(provider);
+  const preferredIndex = order?.indexOf(preferredValue) ?? -1;
+  const ceilingIndex = order?.indexOf(ceilingValue) ?? -1;
+  if (!order || preferredIndex < 0 || ceilingIndex < 0) {
+    return {
+      role,
+      preferredValue,
+      selectedValue: ceilingValue,
+      capped: false,
+    };
+  }
+
+  const selectedIndex = Math.min(preferredIndex, ceilingIndex);
+  return {
+    role,
+    preferredValue,
+    selectedValue: order[selectedIndex]!,
+    capped: preferredIndex > ceilingIndex,
+  };
+}
+
 /**
  * Join a resolved ceiling value with the active provider's adapter to compute
  * the enforcement mode, mechanism, dispatch args, and verify-on-upgrade flag.
@@ -317,6 +402,7 @@ function buildProviderResolution(
   value: DispatchCeilingValue | null,
   role: CeilingRole,
   orchestratorTier: string | undefined,
+  preferredValue: DispatchCeilingValue | null,
 ): ProviderResolution {
   const adapter = getCeilingAdapter(provider);
 
@@ -327,10 +413,18 @@ function buildProviderResolution(
       mechanism: adapter.mechanism,
       dispatchArgs: null,
       verifyOnDispatch: false,
+      selection: {
+        role,
+        preferredValue,
+        selectedValue: null,
+        capped: false,
+      },
     };
   }
 
-  const dispatchArgs = adapter.compileToDispatchArgs(value, role, {
+  const selection = selectDispatchValue(provider, role, value, preferredValue);
+  const dispatchValue = selection.selectedValue ?? value;
+  const dispatchArgs = adapter.compileToDispatchArgs(dispatchValue, role, {
     orchestratorTier,
   });
 
@@ -348,7 +442,10 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
-    verifyOnDispatch: adapter.verifyOnDispatch(value, { orchestratorTier }),
+    verifyOnDispatch: adapter.verifyOnDispatch(dispatchValue, {
+      orchestratorTier,
+    }),
+    selection,
   };
 }
 
@@ -421,6 +518,7 @@ async function resolveDispatchCeiling(
     provider === 'codex'
       ? await resolveCodexProviderDefaultEffort(repoRoot, context, dependencies)
       : 'not-applicable';
+  const preferredValue = normalizePreferredValue(provider, options.preferred);
 
   const resolvedValue = await resolveCeilingValue(
     provider,
@@ -434,6 +532,7 @@ async function resolveDispatchCeiling(
     resolvedValue?.value ?? null,
     role,
     orchestratorTier,
+    preferredValue,
   );
   const providers: Record<string, ProviderResolution> = {
     [provider]: providerResolution,
@@ -544,8 +643,24 @@ function writeHumanResolution(
     context.logger.info(
       `Note: OAT will use pinned subagent variants up to ${resolution.value ?? 'the resolved ceiling'}. Base/unpinned roles resolve through the provider default.`,
     );
+    if (
+      providerResolution?.selection.selectedValue &&
+      providerResolution.selection.preferredValue
+    ) {
+      context.logger.info(
+        `Selected Codex effort: ${providerResolution.selection.selectedValue}`,
+      );
+    }
   } else {
     context.logger.info('Effort axis: not-applicable');
+    if (
+      providerResolution?.selection.selectedValue &&
+      providerResolution.selection.preferredValue
+    ) {
+      context.logger.info(
+        `Selected dispatch value: ${providerResolution.selection.selectedValue}`,
+      );
+    }
   }
 }
 
@@ -605,6 +720,10 @@ export function createProjectDispatchCeilingCommand(
       .option(
         '--orchestrator-tier <tier>',
         'Orchestrator tier, used to flag verify-on-upgrade for above-orchestrator requests',
+      )
+      .option(
+        '--preferred <value>',
+        'Preferred implementer/fix dispatch value before capping by the resolved ceiling',
       )
       .option(
         '--project-path <path>',

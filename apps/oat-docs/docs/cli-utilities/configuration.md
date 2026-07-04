@@ -232,6 +232,8 @@ reading config keys directly:
 
 ```bash
 oat project dispatch-ceiling resolve --provider codex --json
+oat project dispatch-ceiling resolve --provider codex --role implementer --preferred medium --json
+oat project dispatch-ceiling resolve --provider claude --role implementer --preferred sonnet --orchestrator-tier sonnet --json
 oat project dispatch-ceiling resolve --provider claude --orchestrator-tier sonnet --json
 ```
 
