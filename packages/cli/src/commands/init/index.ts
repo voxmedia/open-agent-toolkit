@@ -47,11 +47,17 @@ import {
   detectDefaultBranch,
   type OatConfig,
   type OatDocumentationConfig,
+  readUserConfig,
   readOatConfig,
   resolveLocalPaths,
+  type UserConfig,
   writeOatConfig,
 } from '@config/oat-config';
-import { type DriftReport, detectStrays } from '@drift/index';
+import {
+  type DriftReport,
+  detectStrays,
+  filterKnownStrays,
+} from '@drift/index';
 import {
   configureLocalHooksPath,
   type CanonicalEntry,
@@ -186,6 +192,7 @@ interface InitDependencies {
   uninstallHook: (projectRoot: string) => Promise<void>;
   getAdapters: () => ProviderAdapter[];
   loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
+  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
   saveSyncConfig: (
     configPath: string,
     config: SyncConfig,
@@ -372,6 +379,7 @@ function createDependencies(): InitDependencies {
     async loadSyncConfig(configPath) {
       return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
     },
+    readUserConfig,
     saveSyncConfig,
     getConfigAwareAdapters,
     applyOatCoreGitignore,
@@ -810,15 +818,18 @@ async function runInitCommand(
 
   for (const scope of scopes) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
+    const syncConfigPath = join(scopeRoot, '.oat', 'sync', 'config.json');
+    const userConfigDir = join(context.home, '.oat');
+    let syncConfig = await dependencies.loadSyncConfig(syncConfigPath);
+    const userConfig = await dependencies.readUserConfig(userConfigDir);
     let activeAdaptersForStrays: ProviderAdapter[] | undefined;
     if (scope === 'project') {
       projectRoot = scopeRoot;
       oatDirExistedBefore = await dependencies.dirExists(
         join(scopeRoot, '.oat'),
       );
-      const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
       const adapters = dependencies.getAdapters();
-      let config = await dependencies.loadSyncConfig(configPath);
+      let config = syncConfig;
       let resolution = await dependencies.getConfigAwareAdapters(
         adapters,
         scopeRoot,
@@ -857,10 +868,11 @@ async function runInitCommand(
             };
           }
 
-          config = await dependencies.saveSyncConfig(configPath, {
+          config = await dependencies.saveSyncConfig(syncConfigPath, {
             ...config,
             providers,
           });
+          syncConfig = config;
         }
 
         resolution = await dependencies.getConfigAwareAdapters(
@@ -886,13 +898,21 @@ async function runInitCommand(
     }
 
     const canonicalEntries = await dependencies.scanCanonical(scopeRoot, scope);
-    const strays = await dependencies.collectStrays(
+    const collectedStrays = await dependencies.collectStrays(
       scopeRoot,
       scope,
       manifest,
       canonicalEntries,
       activeAdaptersForStrays,
     );
+    const { candidates: strays } = filterKnownStrays({
+      reports: collectedStrays.map((stray) => stray.report),
+      candidates: collectedStrays,
+      knownStrays: {
+        project: syncConfig.knownStrays,
+        user: userConfig.knownStrays,
+      },
+    });
     let straysAdopted = 0;
 
     if (!context.interactive && strays.length > 0) {

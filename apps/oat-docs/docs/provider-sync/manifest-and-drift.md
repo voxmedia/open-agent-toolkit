@@ -53,6 +53,12 @@ Rendered rule files participate in the same drift states as other managed copies
 
 Provider files ignored by Git are treated as intentionally local runtime files and are not reported as strays. This includes files covered by tracked `.gitignore`, repo-local `.git/info/exclude`, or other standard Git exclude mechanisms.
 
+Provider files listed in sync config `knownStrays` are also omitted from stray
+summaries and adoption prompts. Known strays can be configured at project scope
+in `.oat/sync/config.json` or user scope in `~/.oat/config.json`; entries use
+exact provider-path matching, so `.cursor/skills/cloud-environment-setup` does
+not suppress `.cursor/skills/cloud-environment-setup-extra`.
+
 For rules, adoption maps provider-native files back into `.agents/rules/*.md`:
 
 - Claude: `.claude/rules/*.md`

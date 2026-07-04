@@ -21,6 +21,7 @@ import type {
   PromptContext,
 } from '@commands/shared/shared.prompts';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
+import type { UserConfig } from '@config/oat-config';
 import type { CanonicalEntry } from '@engine/index';
 import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
@@ -46,6 +47,7 @@ interface HarnessOptions {
   adapters?: ProviderAdapter[];
   configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
+  userKnownStrays?: string[];
   oatDirExists?: boolean;
   useDefaultGuidedSetup?: boolean;
   throwOnNonInteractiveSelectMany?: boolean;
@@ -189,6 +191,14 @@ function createHarness(options: HarnessOptions = {}): {
   const loadSyncConfig = vi.fn(
     async () => options.loadedSyncConfig ?? DEFAULT_SYNC_CONFIG,
   );
+  const readUserConfig = vi.fn(async (): Promise<UserConfig> => {
+    return {
+      version: 1,
+      ...(options.userKnownStrays
+        ? { knownStrays: options.userKnownStrays }
+        : {}),
+    };
+  });
   const adapters =
     options.adapters ??
     ([
@@ -238,6 +248,7 @@ function createHarness(options: HarnessOptions = {}): {
     selectProvidersWithAbort,
     getAdapters: () => adapters,
     loadSyncConfig,
+    readUserConfig,
     saveSyncConfig,
     getConfigAwareAdapters: vi.fn(async () => ({
       activeAdapters: adapters.filter((adapter) =>
@@ -533,6 +544,68 @@ describe('createInitCommand', () => {
     expect(selectManyWithAbort.mock.calls[0]?.[0]).toContain(
       'Select stray entries to adopt',
     );
+  });
+
+  it('does not offer project-level known strays for adoption', async () => {
+    const { command, selectManyWithAbort, adoptStray } = createHarness({
+      interactive: true,
+      strays: [createStray('.cursor/skills/cloud-environment-setup', 'cursor')],
+      hookInstalled: true,
+      loadedSyncConfig: {
+        ...DEFAULT_SYNC_CONFIG,
+        knownStrays: ['.cursor/skills/cloud-environment-setup'],
+      },
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(adoptStray).not.toHaveBeenCalled();
+  });
+
+  it('prompts only for unknown strays when known and unknown strays are mixed', async () => {
+    const { command, selectManyWithAbort, adoptStray } = createHarness({
+      interactive: true,
+      strays: [
+        createStray('.cursor/skills/cloud-environment-setup', 'cursor'),
+        createStray('.cursor/skills/actionable', 'cursor'),
+      ],
+      hookInstalled: true,
+      loadedSyncConfig: {
+        ...DEFAULT_SYNC_CONFIG,
+        knownStrays: ['.cursor/skills/cloud-environment-setup'],
+      },
+      selectResponses: [['0']],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      description?: string;
+    }>;
+    expect(choices).toHaveLength(1);
+    expect(choices[0]?.label).toContain('actionable');
+    expect(choices[0]?.description).toContain('.cursor/skills/actionable');
+    expect(adoptStray).toHaveBeenCalledTimes(1);
+    expect(adoptStray.mock.calls[0]?.[1].report.providerPath).toBe(
+      '.cursor/skills/actionable',
+    );
+  });
+
+  it('does not offer user-level known strays for adoption', async () => {
+    const { command, selectManyWithAbort, adoptStray } = createHarness({
+      interactive: true,
+      strays: [createStray('.cursor/skills/cloud-environment-setup', 'cursor')],
+      hookInstalled: true,
+      userKnownStrays: ['.cursor/skills/cloud-environment-setup'],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(adoptStray).not.toHaveBeenCalled();
   });
 
   it('detects codex role strays via default collector and includes codex adoption metadata', async () => {

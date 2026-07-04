@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { CliError } from '@errors/index';
 import { atomicWriteJson } from '@fs/io';
+import { normalizeToPosixPath } from '@fs/paths';
 import { SyncStrategySchema } from '@shared/types';
 import { z } from 'zod';
 
@@ -15,18 +16,21 @@ const ProviderConfigSchema = z.object({
 export const SyncConfigSchema = z.object({
   version: z.literal(1),
   defaultStrategy: SyncStrategySchema,
+  knownStrays: z.array(z.string()).optional(),
   providers: z.record(ProviderConfigSchema).optional(),
 });
 
 export type ProviderSyncConfig = z.infer<typeof ProviderConfigSchema>;
 // `providers` is optional in persisted JSON but always populated after normalization.
 export type SyncConfig = z.infer<typeof SyncConfigSchema> & {
+  knownStrays: string[];
   providers: Record<string, ProviderSyncConfig>;
 };
 
 export const DEFAULT_SYNC_CONFIG: SyncConfig = {
   version: 1,
   defaultStrategy: 'auto',
+  knownStrays: [],
   providers: {},
 };
 
@@ -46,6 +50,27 @@ function mergeProviderConfigs(
   return merged;
 }
 
+function normalizeKnownStrayPath(pathValue: string): string | undefined {
+  const trimmed = pathValue.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const normalized = normalizeToPosixPath(trimmed)
+    .replace(/\/+$/, '')
+    .replace(/^\.\//, '');
+
+  return normalized && normalized !== '.' ? normalized : undefined;
+}
+
+function normalizeKnownStrays(paths: string[] | undefined): string[] {
+  const normalized = paths
+    ?.map((pathValue) => normalizeKnownStrayPath(pathValue))
+    .filter((pathValue): pathValue is string => pathValue !== undefined);
+
+  return [...new Set(normalized ?? [])].sort();
+}
+
 function normalizeConfig(
   config: z.infer<typeof SyncConfigSchema>,
   defaults: SyncConfig,
@@ -53,6 +78,10 @@ function normalizeConfig(
   return {
     version: 1,
     defaultStrategy: config.defaultStrategy ?? defaults.defaultStrategy,
+    knownStrays: normalizeKnownStrays([
+      ...defaults.knownStrays,
+      ...(config.knownStrays ?? []),
+    ]),
     providers: mergeProviderConfigs(defaults.providers, config.providers ?? {}),
   };
 }
@@ -96,6 +125,7 @@ export async function loadSyncConfig(
     ) {
       return {
         ...defaults,
+        knownStrays: [...defaults.knownStrays],
         providers: { ...defaults.providers },
       };
     }

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import {
   BUILTIN_EXEC_TARGETS,
+  readUserConfig,
   type ExecTarget,
   type GateConfig,
   type OatConfig,
@@ -228,6 +229,54 @@ describe('resolveEffectiveConfig', () => {
     expect(result.resolved['autoReviewAtCheckpoints']).toEqual({
       value: false,
       source: 'default',
+    });
+  });
+
+  it('normalizes user-level known strays from config.json', async () => {
+    const userConfigDir = await createUserConfigDir();
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        knownStrays: [
+          ' .cursor\\skills\\cloud-environment-setup ',
+          './.cursor/skills/cloud-environment-setup',
+          '',
+          42,
+          '.cursor/skills/local-only/',
+        ],
+      })}\n`,
+      'utf8',
+    );
+
+    const config = await readUserConfig(userConfigDir);
+
+    expect(config.knownStrays).toEqual([
+      '.cursor/skills/cloud-environment-setup',
+      '.cursor/skills/local-only',
+    ]);
+  });
+
+  it('resolves user-level known strays with source attribution', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () =>
+          ({
+            version: 1,
+            knownStrays: ['.cursor/skills/cloud-environment-setup'],
+          }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['knownStrays']).toEqual({
+      value: ['.cursor/skills/cloud-environment-setup'],
+      source: 'user',
     });
   });
 
