@@ -40,7 +40,7 @@ oat_template: false
 
 `oat_plan_parallel_groups: [['p01', 'p02']]`
 
-- **p01 (backlog core)** writes only `packages/cli/src/commands/backlog/**`; **p02 (instructions carve-in)** writes only `packages/cli/src/commands/instructions/**`. Write sets are disjoint, tests are file-scoped, and neither imports the other — they run concurrently in isolated worktrees and merge in plan order.
+- **p01 (backlog core)** writes `packages/cli/src/commands/backlog/**` plus `packages/cli/src/commands/help-snapshots.test.ts` (a file p02 does not touch); **p02 (instructions carve-in)** writes only `packages/cli/src/commands/instructions/**`. Write sets are disjoint, tests are file-scoped, and neither imports the other — they run concurrently in isolated worktrees and merge in plan order.
 - **p03 (doctor checks)** imports the p01 status module and must follow the group.
 - **p04 (templates + init)** modifies `pjm/doctor.test.ts`, which p03 also modifies, and its doctor coverage depends on p03's checks landing — sequential after p03. (The canonical path list lives in `init.ts` and flows into doctor via import; doctor production code is untouched by p04.)
 - **p05 (skills + docs)** documents the command and checks shipped in p01–p04 — sequential.
@@ -318,14 +318,14 @@ git commit -m "feat(p03-t01): detect backlog lifecycle drift in pjm doctor"
 
 **Step 1: Write test (RED)**
 
-Extend `packages/cli/src/commands/pjm/init.test.ts` content assertions for template content only: scaffolded `pjm/AGENTS.md` contains the `## Backlog Lifecycle` and `## Project Kickoff Handoffs` headings and references `oat backlog archive`; `reference/AGENTS.md` defers to `../pjm/AGENTS.md`. (README/handoffs emission assertions belong to p04-t02 — do not write them here.)
+Extend `packages/cli/src/commands/pjm/init.test.ts` with content assertions that read the repo template files directly (`.oat/templates/pjm-agents.md`, `reference-agents.md`, `repo-readme.md`, `pjm-handoffs-readme.md`) — the existing `seedTemplate` fixture writes synthetic stub bodies, so scaffold-output assertions can never see real template content. Assert: `pjm-agents.md` contains the `## Backlog Lifecycle` and `## Project Kickoff Handoffs` headings and references `oat backlog archive`; `reference-agents.md` defers to `../pjm/AGENTS.md`. (README/handoffs _emission_ assertions belong to p04-t02 and stay on the synthetic fixture — do not write them here.)
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/init.test.ts`
 Expected: New content assertions fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Author the template content and append the two new templates to the `for template in ...` list in `packages/cli/scripts/bundle-assets.sh`. Re-run the bundled-asset build so the CLI sees the new/changed templates.
+Author the template content and append the two new templates to the `for template in ...` list in `packages/cli/scripts/bundle-assets.sh` (the bundle edit doesn't affect these tests — they read repo templates — but it is what makes installed CLIs ship them; Step 4's bundle run smoke-checks the copy list).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/init.test.ts`
 Expected: This task's content assertions pass (GREEN)
@@ -357,7 +357,7 @@ git commit -m "feat(p04-t01): bake backlog lifecycle and kickoff-handoff guidanc
 
 **Step 1: Write test (RED)**
 
-Cover: fresh `oat pjm init` writes `README.md` with the layout table and `pjm/handoffs/README.md` with the convention doc; re-run backfills a deleted `README.md`/handoffs README without touching existing files; init output contains the sync hint; `pjm doctor` on a scaffold missing `README.md` or `pjm/handoffs/README.md` fails the canonical-files check with the `oat pjm init` fix.
+Cover (on the existing synthetic-template fixture — these are emission/structure assertions, not content assertions): fresh `oat pjm init` writes `README.md` and `pjm/handoffs/README.md`; re-run backfills a deleted `README.md`/handoffs README without touching existing files; init output contains the sync hint; `pjm doctor` on a scaffold missing `README.md` or `pjm/handoffs/README.md` fails the canonical-files check with the `oat pjm init` fix.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/init.test.ts src/commands/pjm/doctor.test.ts`
 Expected: New tests fail (RED)
@@ -477,7 +477,7 @@ Expected: 0 today — the skill has no handoff awareness; this task ends with th
 
 **Step 2: Implement (GREEN)**
 
-Add the Project Kickoff Handoffs workflow to the skill, mirroring the template section from p04-t01: when a priority-alignment pass concludes, generate/refresh one handoff per agreed kickoff-stack item under `pjm/handoffs/` (required content list: item reference with ID + title + path, recommended mode with artifact pre-population guidance, authoritative input pointers, repo conventions/verification gates, close-out requiring lifecycle execution and handoff deletion in the shipping PR); delete stale handoffs for items reprioritized out; pair every backlog item reference with its human-readable title (no bare IDs) across review output, alignment docs, and handoffs. Lane count and kickoff-stack selection are explicit human decisions — the skill must present, not choose. Bump the skill's `version:`.
+Add the Project Kickoff Handoffs workflow to the skill, mirroring the template section from p04-t01: when a priority-alignment pass concludes, generate/refresh one handoff per agreed kickoff-stack item under `pjm/handoffs/` (required content list: item reference with ID + title + path, recommended mode with artifact pre-population guidance, authoritative input pointers, repo conventions/verification gates, close-out requiring lifecycle execution and handoff deletion in the shipping PR); delete stale handoffs for items reprioritized out; pair every backlog item reference with its human-readable title (no bare IDs) across review output, alignment docs, and handoffs. Lane count and kickoff-stack selection are explicit human decisions — the skill must present, not choose. Bump the skill's `version:` only if p05-t01 did not already bump it in this PR (the rule is one PR-scoped bump per changed skill; this skill is in the p05-t01 sweep set).
 
 Run: `pnpm run cli -- sync --scope all && git diff --stat`
 Expected: provider views regenerate; only the intended skill (plus provider mirrors) changed
@@ -516,7 +516,7 @@ Expected: fails today — this repo has no pjm directory
 **Step 2: Implement (GREEN)**
 
 Run: `pnpm run cli -- pjm init` from the repo root, then `pnpm run cli -- pjm doctor` and `pnpm run cli -- instructions sync --dry-run`.
-Expected: scaffold created (including `pjm/handoffs/README.md` with the convention doc); doctor passes the canonical-files check (pre-existing non-canonical directories like `analysis/`, `knowledge/`, `reviews/` may surface top-level-layout warnings — record, don't chase); sync dry-run lists the new `.oat/repo/**` instruction files. Apply `pnpm run cli -- instructions sync` to create the CLAUDE.md shims under the default pointer strategy.
+Expected: scaffold created (including `pjm/handoffs/README.md` with the convention doc); doctor passes the canonical-files check, and `pjm:top_level_layout` passes cleanly too — `analysis/`, `knowledge/`, `reviews/`, and `README.md` are already in doctor's allowed top-level sets; sync dry-run lists the new `.oat/repo/**` instruction files. Apply `pnpm run cli -- instructions sync` to create the CLAUDE.md shims under the default pointer strategy.
 
 **Step 3: Refactor**
 
@@ -576,18 +576,18 @@ git commit -m "chore(p06-t02): lockstep public package bump for backlog lifecycl
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| p06    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact                                                                                                                      |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                                                                                             |
+| p02    | code     | pending | -          | -                                                                                                                             |
+| p03    | code     | pending | -          | -                                                                                                                             |
+| p04    | code     | pending | -          | -                                                                                                                             |
+| p05    | code     | pending | -          | -                                                                                                                             |
+| p06    | code     | pending | -          | -                                                                                                                             |
+| final  | code     | pending | -          | -                                                                                                                             |
+| spec   | artifact | pending | -          | -                                                                                                                             |
+| design | artifact | pending | -          | -                                                                                                                             |
+| plan   | artifact | passed  | 2026-07-05 | structured (in-memory, oat-reviewer ×2: round 1 → 7 findings fixed; round 2 → 0 Critical/Important, 4 accuracy fixes applied) |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
