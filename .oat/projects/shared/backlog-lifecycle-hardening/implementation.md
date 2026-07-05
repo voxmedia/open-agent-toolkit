@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,10 +30,10 @@ oat_generated: false
 | Phase 2: Instructions scan carve-in | passed  | 2     | 2/2       |
 | Phase 3: Doctor drift checks        | passed  | 1     | 1/1       |
 | Phase 4: Templates + pjm init       | passed  | 2     | 2/2       |
-| Phase 5: Skills + docs propagation  | pending | 3     | 0/3       |
+| Phase 5: Skills + docs propagation  | passed  | 3     | 3/3       |
 | Phase 6: Dogfood + release          | pending | 2     | 0/2       |
 
-**Total:** 8/13 tasks completed
+**Total:** 11/13 tasks completed
 
 Execution: p01/p02 declared as a parallel worktree group but run sequentially per user direction (see Deviations). HiLL pause: after p06 only. Dispatch ceiling: maximum (Claude: opus, enforced).
 
@@ -81,6 +81,16 @@ Sequential Tier-1 opus dispatch. Commits `824fc3de` (t01 template content + bund
 - **Outcome:** `pjm-agents.md` gains the Backlog Lifecycle section (built around `oat backlog archive` as primary, manual fallback retained, "never invent variants like `done`" clause, wont_do-entry-only-with-`--summary`) and the Project Kickoff Handoffs section (full required-content list, kickoff-stack-only, ID+title no bare IDs). New `repo-readme.md` and `pjm-handoffs-readme.md` templates; both appended to `bundle-assets.sh`. `pjm init` scaffolds `README.md` + `pjm/handoffs/README.md` (write-if-missing, nested parent created), flows into `CANONICAL_REPO_REFERENCE_PATHS` so `pjm doctor` nudges when they're missing (no doctor.ts production change), and prints an `oat instructions sync` hint. Init never writes CLAUDE.md.
 - **Verification:** pjm suite (init/index/doctor/migrate, 48 tests) + full CLI suite (2154) + lint + type-check + `pnpm format` clean.
 - **Review (opus, in-memory):** PASS, 0C/0I, 1 Minor — plan's p04-t02 file list under-specified the necessary touches to `pjm/index.ts` (emit the hint on the non-JSON path; JSON payload unchanged) and `index.test.ts`/`migrate.test.ts` (fixtures asserting init's created-file list). Mechanical, no regression; recorded here as plan-artifact drift rather than a code fix.
+
+### Phase p05 — Skills + docs propagation (complete, review passed)
+
+Sequential Tier-1 opus dispatch. Commits `a053dbde` (t01 skills sweep), `5d53a71c` (t02 docs), `d6ad0ed6` (t03 kickoff-handoff encoding).
+
+- **Sweep result (deviation from plan's "~14 skills" framing):** the grep matches 14 skills, but applying the "narrates the manual close-out sequence" qualifier rigorously, only **`oat-pjm-update-repo-reference`** actually did — re-pointed to `oat backlog archive <id>` as primary (manual regenerate-index kept as hand-edit fallback), v1.2.0→1.3.0. The other 13 match for benign reasons (project review-artifact `reviews/archived/`, reading completed.md as context, `oat repo archive sync`, item-add index regen, legacy `reference/backlog.md` checklist). Full triage enumerated in the implementer report; reviewer **independently verified** all 12 "no-change" calls plus a broader close-out-narration grep — no missed skill.
+- **p05-t02 docs:** new `apps/oat-docs/docs/cli-utilities/backlog-lifecycle.md` (item states, close-out flow, four doctor checks) + `oat backlog archive` reference in `config-and-local-state.md` (flags/exit-codes/JSON payload, verified against `archive.ts`/`index.ts`); `index.md` regenerated via generate-index; `pnpm build:docs` green.
+- **p05-t03:** `oat-pjm-review-backlog` gained the Project Kickoff Handoffs workflow mirroring the p04 template (generate/refresh at priority-alignment conclusion, human-owned lane count/order, ID+title no bare IDs, close-out = lifecycle + `git rm` handoff in same PR, stale-handoff deletion). v1.3.0→1.4.0, bumped exactly once (not in the t01 sweep).
+- **Review (opus, in-memory):** PASS, 0C/0I/0M, 1 Minor — cosmetic missing comma in one re-pointed sentence; left unfixed to avoid a version re-bump for prose (reviewer-endorsed).
+- **Note:** provider mirrors under `.claude`/`.codex`/`.cursor` are symlinks/generated, so skill edits need no separate staged files.
 
 ### Review Received: plan (artifact, gate)
 

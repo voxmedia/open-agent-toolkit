@@ -584,7 +584,7 @@ git commit -m "chore(p06-t02): lockstep public package bump for backlog lifecycl
 | p02    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 1 Minor (symlinked-.oat edge, no fix needed)                                     |
 | p03    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; m1 (status-less items) fixed in 31e4643e, m2 accepted best-effort                |
 | p04    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 1 Minor (plan file-list under-specified index.ts/test fixtures) noted only       |
-| p05    | code     | pending         | -          | -                                                                                                                           |
+| p05    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; sweep completeness independently verified; 1 cosmetic Minor left (avoid re-bump) |
 | p06    | code     | pending         | -          | -                                                                                                                           |
 | final  | code     | pending         | -          | -                                                                                                                           |
 | spec   | artifact | pending         | -          | -                                                                                                                           |
