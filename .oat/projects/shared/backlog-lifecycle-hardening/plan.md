@@ -576,18 +576,18 @@ git commit -m "chore(p06-t02): lockstep public package bump for backlog lifecycl
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                            |
-| ------ | -------- | ------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                   |
-| p02    | code     | pending | -          | -                                                   |
-| p03    | code     | pending | -          | -                                                   |
-| p04    | code     | pending | -          | -                                                   |
-| p05    | code     | pending | -          | -                                                   |
-| p06    | code     | pending | -          | -                                                   |
-| final  | code     | pending | -          | -                                                   |
-| spec   | artifact | pending | -          | -                                                   |
-| design | artifact | pending | -          | -                                                   |
-| plan   | artifact | passed  | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05.md |
+| Scope  | Type     | Status   | Date       | Artifact                                      |
+| ------ | -------- | -------- | ---------- | --------------------------------------------- |
+| p01    | code     | pending  | -          | -                                             |
+| p02    | code     | pending  | -          | -                                             |
+| p03    | code     | pending  | -          | -                                             |
+| p04    | code     | pending  | -          | -                                             |
+| p05    | code     | pending  | -          | -                                             |
+| p06    | code     | pending  | -          | -                                             |
+| final  | code     | pending  | -          | -                                             |
+| spec   | artifact | pending  | -          | -                                             |
+| design | artifact | pending  | -          | -                                             |
+| plan   | artifact | received | 2026-07-05 | reviews/artifact-plan-review-2026-07-05-v2.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
