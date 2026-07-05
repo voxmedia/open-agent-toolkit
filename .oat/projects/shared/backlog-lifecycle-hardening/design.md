@@ -119,8 +119,140 @@ the same drift the command exists to prevent, never silent corruption.
 
 ## Component Design
 
-_(pending collaborative review)_
+### `commands/backlog/shared/item-status.ts` (new)
+
+**Purpose:** single source of truth for backlog item statuses.
+**Interface:** exports the status list (`open`, `in_progress`, `closed`,
+`wont_do`), the terminal subset (`closed`, `wont_do`), and
+`isValidStatus`/`isTerminalStatus` guards, plus a helper that extracts the
+`status` value from item frontmatter content. Consumed by `archive`,
+`regenerate-index`, and `pjm doctor` (cross-directory consumers use the
+package's `@commands/...` alias per import policy).
+
+### `commands/backlog/archive.ts` (new)
+
+**Purpose:** atomic close-out (the data flow in Architecture).
+**Command surface:** `oat backlog archive <id> [--wont-do]
+[--summary <text>] [--json]`. `<id>` is the item ID (`BL-YYMMDD-slug`);
+the file is `items/<id>.md`.
+**Responsibilities and contracts:**
+
+- Frontmatter mutation is minimal-diff: rewrite only the `status:` and
+  `updated:` lines in place (string-level), preserving surrounding
+  formatting and the enum comment — no YAML re-serialization churn.
+- `completed.md` entry text: `- YYYY-MM-DD — <id> — <title> — <summary>`
+  (title from item frontmatter; summary from `--summary` or
+  `TODO: summarize outcome` scaffold). Inserted as the first bullet after
+  `## Completed Items`.
+- Move uses `git mv` via child process when the backlog root is inside a
+  git work tree; plain `fs.rename` otherwise. `git mv` failure falls back
+  to rename + warning rather than aborting after the frontmatter write.
+- Idempotency: `archived/<id>.md` already existing → warning + exit 0,
+  no writes. `--json` no-op payload says so explicitly.
+- Output through CLI logger utilities; `--json` emits one structured
+  payload: `{ id, result: "archived" | "noop", status, completedEntry:
+"written" | "scaffolded" | "skipped", movedTo, indexRegenerated,
+warnings[] }`. Exit codes: 0 success/no-op, 1 actionable (unknown id,
+  invalid status), 2 system.
+
+### `commands/backlog/regenerate-index.ts` (modified)
+
+**Purpose:** reusable regeneration + status visibility.
+**Changes:** extract/export the regeneration core so `archive` calls it
+directly (no child process); while building the table, emit a warning per
+item whose status is out-of-enum (naming file and valid values). Table
+still renders verbatim; exit code unchanged (doctor owns enforcement).
+
+### `commands/pjm/doctor.ts` (modified)
+
+**Purpose:** drift detection (check table in Architecture).
+**Changes:** four new checks implemented with the shared status module,
+scanning `pjm/backlog/items/` and `pjm/backlog/archived/` frontmatter and
+best-effort matching `completed.md` entry IDs (`BL-`/legacy `bl-` pattern)
+against `items/` filenames. Each check lists offending file paths in its
+message and carries an actionable `fix` (terminal-in-items: "run
+`oat backlog archive <id>`"). `.oat/repo/README.md` joins the canonical
+scaffold path list so pre-README repos get the existing missing-canonical
+nudge ("run `oat pjm init`") — this delivers the handoff's "doctor hint"
+ask with no new mechanism.
+
+### `commands/pjm/init.ts` (modified)
+
+**Purpose:** complete scaffold + handoff to shim tooling.
+**Changes:** add `repo-readme.md` template → `README.md` target to the
+scaffold file list (same write-if-missing backfill semantics as the
+AGENTS.md files); after init/backfill, print a next-step hint to run
+`oat instructions sync` (mentioning `--dry-run` preview) so CLAUDE.md
+shims are created under the consumer's chosen strategy. Init itself never
+writes CLAUDE.md.
+
+### `commands/instructions/instructions.utils.ts` (modified)
+
+**Purpose:** scan carve-in.
+**Changes:** in the directory BFS, when the root-level `.oat` entry is
+skipped by `ROOT_EXCLUDED_DIRECTORIES`, enqueue `.oat/repo` directly if it
+exists. The exclusion set is unchanged; `.oat/templates`, `.oat/projects`,
+and `.oat/sync` remain unscanned. `sync` and `validate` both inherit the
+carve-in because they share `scanInstructionFiles`.
+
+### Bundled templates (modified/new)
+
+- `pjm-agents.md`: append the exemplar **Backlog Lifecycle** section — the
+  skills-repo variant including "these are the only terminal values —
+  never invent variants like `done`" — with close-out step 1–4 rewritten
+  around `oat backlog archive` as the primary path (manual steps remain
+  documented as the fallback the command automates).
+- `reference-agents.md`: add the source-of-truth map and an update rule
+  deferring close-out workflow to `../pjm/AGENTS.md` (no duplication).
+- `repo-agents.md`: pointer bullets to the lifecycle section and README.
+- `repo-readme.md` (new): human-facing orientation generalized from the
+  downstream exemplar — layout table limited to canonical scaffold paths
+  (no downstream-specific rows like `handoffs/`), generated-vs-curated
+  conventions, ID conventions, close-out pointer.
+
+### Propagation surfaces
+
+- **Skills:** grep-driven sweep of the bundled skills referencing
+  `backlog/archived` or `completed.md` (14 known); every skill that
+  narrates manual close-out steps is re-pointed at `oat backlog archive`;
+  each changed skill's frontmatter `version:` bumps in the same PR.
+  `oat pjm migrate` guidance is included in the sweep.
+- **Docs:** `apps/oat-docs` gains archive-command coverage in the CLI/
+  backlog docs; regenerate the docs index via `oat docs generate-index`.
+- **Release:** lockstep version bump across the five public packages;
+  `pnpm release:validate` must pass before done.
 
 ## Testing Strategy
 
-_(pending collaborative review)_
+Unit tests colocated per command (existing vitest patterns:
+`archive.test.ts` beside `archive.ts`, temp-dir fixtures like
+`init.test.ts`/`regenerate-index.test.ts`).
+
+**Archive command:** fresh archive happy path (status flip, `updated`
+bump, entry written, file moved, index regenerated); `--wont-do` with and
+without `--summary` (entry skipped without); TODO scaffold when `--summary`
+missing on closed; invalid current status rejected with fix hint (exit 1);
+unknown id (exit 1); already-archived no-op (exit 0 + warning); missing
+`completed.md` created from scaffold; missing `## Completed Items` heading
+→ warn + scaffolded section; git path (`git mv` in a temp git repo,
+history-preserving) and non-git fallback (plain temp dir); `--json`
+payload shape for archived and no-op results; enum comment preserved in
+rewritten frontmatter.
+
+**Regenerate-index:** invalid status emits warning while table still
+renders; no warning for valid statuses.
+
+**Doctor:** fixture backlogs exercising each of the four checks (positive
+and clean cases); README.md missing → canonical-files check fires.
+
+**Instructions scan:** `.oat/repo/**` AGENTS/CLAUDE pairs appear in scan
+results (sync dry-run + validate); `.oat/templates` and `.oat/projects`
+content never appears; carve-in no-ops when `.oat/repo` doesn't exist.
+
+**pjm init:** fresh directory yields README.md and instruction files
+containing the Backlog Lifecycle heading; re-run backfills a deleted
+README.md without touching existing files; sync hint present in output.
+
+**Repo-level gates:** `pnpm lint`, `pnpm type-check`, workspace `pnpm
+test`, and `pnpm release:validate` (publishable-package definition of
+done).
