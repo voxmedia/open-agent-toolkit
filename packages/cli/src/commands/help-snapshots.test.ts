@@ -229,6 +229,7 @@ describe('help output snapshots', () => {
       Commands:
         init [options]                         Scaffold the canonical backlog directory structure and starter files
         regenerate-index [options]             Regenerate the managed backlog index table
+        archive [options] <id>                 Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, and regenerate the index
         generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
         help [command]                         display help for command
       "
