@@ -403,6 +403,43 @@ describe('runPjmDoctorChecks', () => {
     expect(check?.status).toBe('pass');
   });
 
+  it('fails backlog_invalid_status when an item has no status field', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    // A status-less item file must not be invisible to drift detection.
+    const dir = join(repoRoot, 'pjm', 'backlog', 'items');
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, 'BL-260101-nostatus.md'),
+      [
+        '---',
+        'id: BL-260101-nostatus',
+        'title: No status item',
+        '---',
+        '',
+        '## Description',
+        '',
+        'Body.',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    // A well-formed sibling must not be flagged.
+    await writeBacklogItem(repoRoot, 'items', 'BL-260102-open', 'open');
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    const check = checks.find((c) => c.name === 'pjm:backlog_invalid_status');
+    expect(check?.status).toBe('fail');
+    expect(check?.message).toContain('missing status');
+    expect(check?.message).toContain('pjm/backlog/items/BL-260101-nostatus.md');
+    expect(check?.message).not.toContain('BL-260102-open');
+    // Valid enum values remain in the message.
+    expect(check?.message).toContain('open');
+    expect(check?.message).toContain('wont_do');
+  });
+
   it('warns backlog_archived_open when an archived item is still open/in_progress', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
     tempDirs.push(root);

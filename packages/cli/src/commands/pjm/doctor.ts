@@ -390,19 +390,40 @@ export async function runPjmDoctorChecks(
         : 'Run `oat backlog archive <id>` to move each closed/wont_do item into archived/.',
   });
 
-  const invalidStatus = backlogItems
+  // A missing/empty `status:` is as much a drift as an out-of-enum value: the
+  // `oat backlog archive` command rejects both, so `pjm doctor` must surface
+  // both rather than leaving status-less items silently invisible.
+  const missingStatusItems = backlogItems
+    .filter((item) => item.status === null || item.status.trim() === '')
+    .map((item) => item.relativePath);
+  const outOfEnumStatusItems = backlogItems
     .filter(
-      (item) => item.status !== null && !isValidBacklogStatus(item.status),
+      (item) =>
+        item.status !== null &&
+        item.status.trim() !== '' &&
+        !isValidBacklogStatus(item.status),
     )
     .map((item) => item.relativePath);
+  const invalidStatus = [...outOfEnumStatusItems, ...missingStatusItems];
+  const invalidStatusDetails: string[] = [];
+  if (outOfEnumStatusItems.length > 0) {
+    invalidStatusDetails.push(
+      `out-of-enum status: ${outOfEnumStatusItems.join(', ')}`,
+    );
+  }
+  if (missingStatusItems.length > 0) {
+    invalidStatusDetails.push(
+      `missing status: ${missingStatusItems.join(', ')}`,
+    );
+  }
   checks.push({
     name: 'pjm:backlog_invalid_status',
-    description: 'Backlog items with out-of-enum status',
+    description: 'Backlog items with a missing or out-of-enum status',
     status: checkStatus(invalidStatus),
     message:
       invalidStatus.length === 0
         ? 'All backlog item statuses are within the valid enum.'
-        : `Backlog items with out-of-enum status: ${invalidStatus.join(', ')}. Valid statuses: ${BACKLOG_ITEM_STATUSES.join(', ')}.`,
+        : `Backlog items with an invalid status (${invalidStatusDetails.join('; ')}). Valid statuses: ${BACKLOG_ITEM_STATUSES.join(', ')}.`,
     fix:
       invalidStatus.length === 0
         ? undefined
