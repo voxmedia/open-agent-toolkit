@@ -269,9 +269,67 @@ describe('regenerateBacklogIndex', () => {
     await expect(
       readFile(join(clonedBacklogRoot, 'items', '.gitkeep'), 'utf8'),
     ).resolves.toBe('');
-    await expect(
-      regenerateBacklogIndex(clonedBacklogRoot),
-    ).resolves.toBeUndefined();
+    await expect(regenerateBacklogIndex(clonedBacklogRoot)).resolves.toEqual({
+      itemCount: 0,
+      warnings: [],
+    });
+  });
+
+  it('warns on an out-of-enum status while still rendering the item row', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-invalid-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+
+    await writeBacklogItem(itemsDir, 'stale.md', {
+      id: 'BL-260622-stale',
+      title: '"Stale"',
+      status: 'done',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+
+    const result = await regenerateBacklogIndex(backlogRoot);
+
+    expect(result.itemCount).toBe(1);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain(join(itemsDir, 'stale.md'));
+    expect(result.warnings[0]).toContain('done');
+    expect(result.warnings[0]).toContain('open, in_progress, closed, wont_do');
+
+    const index = await readFile(join(backlogRoot, 'index.md'), 'utf8');
+    expect(index).toContain(
+      '| BL-260622-stale | Stale | done | high | task | S |',
+    );
+  });
+
+  it('returns no warnings when every item has a valid status', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-valid-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'BL-260622-alpha',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'high',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+    await writeBacklogItem(itemsDir, 'beta.md', {
+      id: 'BL-260622-beta',
+      title: '"Beta"',
+      status: 'wont_do',
+      priority: 'low',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+
+    const result = await regenerateBacklogIndex(backlogRoot);
+
+    expect(result).toEqual({ itemCount: 2, warnings: [] });
   });
 
   it('leaves the file bytes unchanged when a formatter re-pads the managed table', async () => {
