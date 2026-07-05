@@ -460,4 +460,130 @@ describe('instructions command integration', () => {
       stray: 0,
     });
   });
+
+  for (const strategy of ['pointer', 'symlink', 'copy'] as const) {
+    it(`sync --dry-run plans CLAUDE.md creations for .oat/repo instruction files (${strategy})`, async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+
+      await mkdir(join(root, '.oat', 'repo', 'pjm'), { recursive: true });
+      await mkdir(join(root, '.oat', 'templates'), { recursive: true });
+      await writeFile(
+        join(root, '.oat', 'repo', 'AGENTS.md'),
+        '# repo instructions\n',
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.oat', 'repo', 'pjm', 'AGENTS.md'),
+        '# repo pjm instructions\n',
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.oat', 'templates', 'AGENTS.md'),
+        '# ignored\n',
+        'utf8',
+      );
+
+      const dryRun = await runCli(
+        root,
+        ['instructions', 'sync', '--dry-run', '--strategy', strategy, '--json'],
+        ['--json'],
+      );
+
+      // Planned creations are not drift-blocking (only skipped actions exit 1),
+      // so a dry-run that merely lists new pointers exits 0.
+      expect(dryRun.exitCode).toBe(0);
+      const payload = JSON.parse(dryRun.stdout);
+      expect(payload.mode).toBe('dry-run');
+
+      const plannedCreateTargets = payload.actions
+        .filter(
+          (action: { type: string; result: string }) =>
+            action.type === 'create' && action.result === 'planned',
+        )
+        .map((action: { target: string }) => action.target);
+
+      expect(
+        plannedCreateTargets.some((target: string) =>
+          target.endsWith(join('.oat', 'repo', 'CLAUDE.md')),
+        ),
+      ).toBe(true);
+      expect(
+        plannedCreateTargets.some((target: string) =>
+          target.endsWith(join('.oat', 'repo', 'pjm', 'CLAUDE.md')),
+        ),
+      ).toBe(true);
+
+      // The rest of .oat stays excluded — no action touches .oat/templates.
+      expect(
+        payload.actions.some((action: { target: string }) =>
+          action.target.includes(join('.oat', 'templates')),
+        ),
+      ).toBe(false);
+
+      // dry-run never writes.
+      await expect(
+        lstat(join(root, '.oat', 'repo', 'CLAUDE.md')),
+      ).rejects.toThrow();
+    });
+  }
+
+  it('validate reports drift for a hand-edited .oat/repo CLAUDE.md', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    await mkdir(join(root, '.oat', 'repo', 'pjm'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'repo', 'pjm', 'AGENTS.md'),
+      '# repo pjm instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.oat', 'repo', 'pjm', 'CLAUDE.md'),
+      '# hand-edited drift\n',
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      ['instructions', 'validate', '--json'],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(1);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('drift');
+    expect(payload.summary.scanned).toBe(1);
+    expect(payload.summary.contentMismatch).toBe(1);
+    expect(payload.entries[0].agentsPath).toContain(
+      join('.oat', 'repo', 'pjm', 'AGENTS.md'),
+    );
+    expect(payload.entries[0].status).toBe('content_mismatch');
+  });
+
+  it('produces unchanged output when .oat/repo is absent', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    await writeFile(join(root, 'AGENTS.md'), '# root instructions\n', 'utf8');
+    await writeFile(join(root, 'CLAUDE.md'), EXPECTED_CLAUDE_CONTENT, 'utf8');
+    await mkdir(join(root, '.oat', 'templates'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'templates', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      ['instructions', 'validate', '--json'],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('ok');
+    expect(payload.summary.scanned).toBe(1);
+    expect(payload.summary.ok).toBe(1);
+  });
 });
