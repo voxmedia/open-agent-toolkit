@@ -220,6 +220,30 @@ describe('createBacklogCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('emits the no-op JSON payload when the item is already archived', async () => {
+    const { command, capture, archiveBacklogItem } = createHarness();
+    archiveBacklogItem.mockResolvedValueOnce({
+      id: 'BL-260705-demo',
+      result: 'noop',
+      status: 'closed',
+      completedEntry: 'skipped',
+      movedTo:
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
+      indexRegenerated: false,
+      warnings: ['Backlog item BL-260705-demo is already archived'],
+    });
+
+    await runCommand(command, 'archive', ['--json'], ['BL-260705-demo']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      id: 'BL-260705-demo',
+      result: 'noop',
+      completedEntry: 'skipped',
+      indexRegenerated: false,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('maps an actionable archive failure to exit code 1', async () => {
     const { command, capture, archiveBacklogItem } = createHarness();
     const { BacklogArchiveError } = await import('./archive');

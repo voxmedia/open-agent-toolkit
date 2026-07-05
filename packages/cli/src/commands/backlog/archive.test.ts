@@ -100,6 +100,22 @@ describe('archiveBacklogItem', () => {
     expect(index).not.toContain(id);
   });
 
+  it('preserves a "#"-bearing title verbatim in the completed entry', async () => {
+    const backlogRoot = await freshBacklog();
+    const id = 'BL-260705-hash';
+    await seedItem(backlogRoot, id, { title: "'Fix #123 crash'" });
+
+    await archiveBacklogItem(backlogRoot, id, {
+      summary: 'Patched',
+      now: FIXED_NOW,
+    });
+
+    const completed = await readFile(join(backlogRoot, 'completed.md'), 'utf8');
+    expect(completed).toContain(
+      `- 2026-07-05 — ${id} — Fix #123 crash — Patched`,
+    );
+  });
+
   it('inserts the completed entry newest-first above existing entries', async () => {
     const backlogRoot = await freshBacklog();
     const completedPath = join(backlogRoot, 'completed.md');

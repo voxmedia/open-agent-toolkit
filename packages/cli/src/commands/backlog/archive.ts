@@ -3,10 +3,8 @@ import { access, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import {
-  getFrontmatterBlock,
-  getFrontmatterField,
-} from '@commands/shared/frontmatter';
+import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import YAML from 'yaml';
 
 import { regenerateBacklogIndex } from './regenerate-index';
 import {
@@ -91,11 +89,22 @@ async function isInsideGitWorkTree(cwd: string): Promise<boolean> {
   }
 }
 
-function unquoteTitle(raw: string | null): string {
-  if (!raw) {
+/**
+ * Read the item `title` from its frontmatter. Parses the YAML block (rather
+ * than a line regex) so a legitimate `#` inside a quoted title — e.g.
+ * `title: 'Fix #123 crash'` — is preserved instead of being stripped as an
+ * inline comment.
+ */
+function readItemTitle(content: string): string {
+  const block = getFrontmatterBlock(content);
+  if (!block) {
     return '';
   }
-  return raw.replace(/^['"]|['"]$/g, '').trim();
+  const parsed = YAML.parse(block);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return '';
+  }
+  return String((parsed as Record<string, unknown>).title ?? '').trim();
 }
 
 /**
@@ -242,10 +251,7 @@ export async function archiveBacklogItem(
   const updatedIso = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const entryDate = updatedIso.slice(0, 10);
 
-  const frontmatterBlock = getFrontmatterBlock(content);
-  const title = unquoteTitle(
-    frontmatterBlock ? getFrontmatterField(frontmatterBlock, 'title') : null,
-  );
+  const title = readItemTitle(content);
 
   // 4. Rewrite frontmatter in place (before the move) so a crash leaves the
   //    detectable "terminal status still in items/" drift, never corruption.
