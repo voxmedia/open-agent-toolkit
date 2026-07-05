@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-update-repo-reference
-version: 1.2.0
+version: 1.3.0
 description: Use when repo reference artifacts need updating — roadmap, decision records, backlog status, or completed history. Frequently invoked at project completion, often chained from `oat-project-document`, to ensure active `.oat/repo/pjm/` state and durable `.oat/repo/reference/` records reflect what shipped.
 disable-model-invocation: false
 user-invocable: true
@@ -69,7 +69,11 @@ For recently completed or in-progress projects, read `discovery.md`, `spec.md`, 
 Promote notable findings into one of:
 
 - Backlog item files under `.oat/repo/pjm/backlog/items/`
-- Completed summaries in `.oat/repo/pjm/backlog/completed.md`
+- Completed close-outs via `oat backlog archive <id>` (see Step 4) — the atomic
+  command flips the item's `status`, appends the canonical
+  `.oat/repo/pjm/backlog/completed.md` entry, moves the item file into
+  `archived/`, and regenerates the index in one step. Reserve hand-editing
+  `completed.md` for narrative touch-ups the command does not own.
 - Decision records under `.oat/repo/reference/decisions/`, created with
   `oat decision new "<title>"` (delegate to `oat-pjm-decision` for a guided
   capture). Do not hand-author decision files or write into a legacy
@@ -89,16 +93,32 @@ Update these files as applicable:
 4. `.oat/repo/pjm/backlog/items/*.md`
    - Add or update active backlog items as file-backed records.
 5. `.oat/repo/pjm/backlog/completed.md`
-   - Keep newest completed summaries first.
+   - Keep newest completed summaries first. Prefer letting `oat backlog archive <id>`
+     append the canonical entry (see below) over hand-editing.
 6. `.oat/repo/pjm/backlog/archived/*.md`
-   - Add rich historical item files only when a completed item needs preserved detail.
+   - Item files land here automatically when you run `oat backlog archive <id>`.
+     Only hand-add or enrich a file here when a completed item needs preserved
+     detail the command did not capture.
 7. `.oat/repo/reference/decisions/`
    - Create new decisions with `oat decision new` (see `oat-pjm-decision`); the
      command writes one `DR-YYMMDD-slug` record and regenerates the managed
      decision index. Do not hand-edit `reference/decisions/index.md` inside its
      managed markers.
 
-If you modify backlog item files or the completed archive structure, run:
+To close out a completed backlog item, run the atomic close-out command rather
+than moving files by hand:
+
+```bash
+oat backlog archive <id> --summary "one-line outcome"
+# abandoned work: oat backlog archive <id> --wont-do --summary "why"
+```
+
+This flips the item's `status` to a terminal value (`closed`/`wont_do` — never
+invent variants like `done`), stamps `updated`, appends the canonical
+newest-first `completed.md` entry, moves the item file from `items/` into
+`archived/`, and regenerates the managed index in one step. Only when you edit
+backlog files by hand outside this command (curated overview text, an enriched
+`archived/` record) re-run the index regeneration:
 
 ```bash
 oat backlog regenerate-index
