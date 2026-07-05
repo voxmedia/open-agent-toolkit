@@ -7,11 +7,30 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { initializeRepoReference } from './init';
+
+// Repo-root `.oat/templates/` directory. The synthetic `seedTemplate` fixtures
+// below write stub bodies, so template *content* can only be asserted against
+// the real source templates that ship in the bundle.
+const REPO_TEMPLATES_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  '..',
+  '..',
+  '.oat',
+  'templates',
+);
+
+async function readRepoTemplate(name: string): Promise<string> {
+  return readFile(join(REPO_TEMPLATES_DIR, name), 'utf8');
+}
 
 const TEMPLATE_NAMES = [
   'current-state.md',
@@ -192,5 +211,53 @@ describe('initializeRepoReference', () => {
     ).rejects.toThrow(
       'Template reference-agents.md was not found in repo-local templates or bundled assets.',
     );
+  });
+});
+
+describe('pjm instruction template source content', () => {
+  it('bakes the backlog lifecycle and kickoff-handoff sections into pjm-agents.md', async () => {
+    const content = await readRepoTemplate('pjm-agents.md');
+
+    expect(content).toContain('## Backlog Lifecycle');
+    expect(content).toContain('## Project Kickoff Handoffs');
+    // Close-out is rewritten around the atomic command as the primary path.
+    expect(content).toContain('oat backlog archive');
+    // Skills-repo terminal-status clause is upstreamed verbatim.
+    expect(content).toContain('never invent variants like `done`');
+    // The handoffs section references the convention doc and its deletion rule.
+    expect(content).toContain('handoffs/<BL-id>.md');
+    expect(content).toContain('git rm');
+  });
+
+  it('defers the close-out workflow to ../pjm/AGENTS.md in reference-agents.md', async () => {
+    const content = await readRepoTemplate('reference-agents.md');
+
+    expect(content).toContain('../pjm/AGENTS.md');
+    expect(content.toLowerCase()).toContain('source of truth');
+  });
+
+  it('points the repo AGENTS guide at the lifecycle section and the README', async () => {
+    const content = await readRepoTemplate('repo-agents.md');
+
+    expect(content).toContain('Backlog Lifecycle');
+    expect(content).toContain('pjm/AGENTS.md');
+    expect(content).toContain('README.md');
+  });
+
+  it('orients humans with a canonical layout table in repo-readme.md', async () => {
+    const content = await readRepoTemplate('repo-readme.md');
+
+    expect(content).toContain('## Layout');
+    expect(content).toContain('`pjm/handoffs/`');
+    expect(content).toContain('BL-YYMMDD-slug');
+    expect(content).toContain('oat backlog archive');
+  });
+
+  it('documents the consumable handoffs convention in pjm-handoffs-readme.md', async () => {
+    const content = await readRepoTemplate('pjm-handoffs-readme.md');
+
+    expect(content).toContain('<BL-id>.md');
+    expect(content).toContain('consumable');
+    expect(content).toContain('git rm');
   });
 });
