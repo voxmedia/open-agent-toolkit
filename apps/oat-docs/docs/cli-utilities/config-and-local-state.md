@@ -16,11 +16,58 @@ Use the `oat backlog` group when you want direct CLI support for the file-backed
 - `oat backlog init` - scaffold `.oat/repo/pjm/backlog/` with starter files and directories for a fresh repo
 - `oat backlog generate-id <title>` - generate a deterministic `BL-YYMMDD-slug` backlog ID from a title
 - `oat backlog generate-id <title> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
+- `oat backlog archive <id>` - atomic close-out: set a terminal status, record the completion in `completed.md`, move the item into `archived/`, and regenerate the index in one step
 - `oat backlog regenerate-index` - rebuild the managed backlog index table from item frontmatter
 
 Backlog IDs are deterministic date+slug identifiers (`BL-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. The slug is capped at 30 characters at the last whole-word boundary (with trailing stop-words trimmed), so prefer concise, meaningful titles. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
 
 Run `oat backlog init` first when the local backlog scaffold does not exist yet in a fresh repo. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
+
+For the end-to-end states an item moves through — and how `oat backlog archive` and `oat pjm doctor` keep the backlog honest — see [Backlog Lifecycle](backlog-lifecycle.md).
+
+### `oat backlog archive`
+
+`oat backlog archive <id> [--wont-do] [--summary <text>] [--json] [--backlog-root <path>]` performs the full close-out for a backlog item so status flip, completed-log entry, file move, and index regeneration never drift apart.
+
+**Arguments and flags:**
+
+- `<id>` (required) - the backlog item id (`BL-YYMMDD-slug`); the item file must live under `items/`.
+- `--wont-do` - close the item as `wont_do` instead of the default terminal status `closed`.
+- `--summary <text>` - one-line outcome summary recorded in `completed.md`.
+- `--backlog-root <path>` - override the backlog root (defaults to `.oat/repo/pjm/backlog`).
+- `--json` - emit the machine-readable result payload instead of human log lines.
+
+**Behavior:**
+
+- Validates the item's current `status` against the enum (`open | in_progress | closed | wont_do`); an out-of-enum value such as `done` is a hard error with a fix hint. Archiving is legal from any valid status — a `closed` item still in `items/` just gets its move finished.
+- Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with `git mv` inside a work tree, falling back to a plain rename (with a warning) outside git or if `git mv` fails.
+- `closed` archives always append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`); when `--summary` is omitted the entry carries a visible `TODO: summarize outcome` placeholder. `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
+- Regenerates the managed backlog index after the move.
+- Idempotent: re-running on an item already in `archived/` is a no-op warning with no writes.
+
+**Exit codes:**
+
+- `0` - item archived, or already-archived no-op.
+- `1` - actionable error: unknown id (no file under `items/`) or an out-of-enum current status. The message names the file path, the valid statuses, and the fix.
+- `2` - reserved for unexpected system/runtime failures.
+
+**JSON payload (`--json`):**
+
+On success the payload is the archive result object:
+
+```json
+{
+  "id": "BL-260705-example",
+  "result": "archived",
+  "status": "closed",
+  "completedEntry": "written",
+  "movedTo": ".oat/repo/pjm/backlog/archived/BL-260705-example.md",
+  "indexRegenerated": true,
+  "warnings": []
+}
+```
+
+`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`. On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
 
 For full project-management repo-reference setup, use [`oat pjm init`](tool-packs.md#install-vs-initialize). It scaffolds the two-layer PJM surface (`pjm/current-state.md`, `pjm/roadmap.md`, `reference/decisions/`, and AGENTS guides) and delegates the backlog sub-surface to `oat backlog init`.
 
