@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | ----------------------------------- | ------- | ----- | --------- |
 | Phase 1: Backlog close-out core     | passed  | 3     | 3/3       |
 | Phase 2: Instructions scan carve-in | passed  | 2     | 2/2       |
-| Phase 3: Doctor drift checks        | pending | 1     | 0/1       |
+| Phase 3: Doctor drift checks        | passed  | 1     | 1/1       |
 | Phase 4: Templates + pjm init       | pending | 2     | 0/2       |
 | Phase 5: Skills + docs propagation  | pending | 3     | 0/3       |
 | Phase 6: Dogfood + release          | pending | 2     | 0/2       |
 
-**Total:** 5/13 tasks completed
+**Total:** 6/13 tasks completed
 
 Execution: p01/p02 declared as a parallel worktree group but run sequentially per user direction (see Deviations). HiLL pause: after p06 only. Dispatch ceiling: maximum (Claude: opus, enforced).
 
@@ -64,6 +64,15 @@ Sequential Tier-1 opus dispatch. Commits `b7110db6` (t01 carve-in), `c7e5b0dc` (
 - **Verification:** instructions suite (62 tests incl. 3-strategy sync dry-run + validate-drift + absent-repo) + lint + type-check clean.
 - **Review (opus, in-memory):** PASS, 0C/0I/0M, 1 Minor — a symlinked-root-`.oat` layout bypasses the carve-in, consistent with the BFS's existing never-traverse-symlinked-dirs behavior; reviewer marked it no-fix-needed. Recorded, not fixed.
 - **Deviation (accepted):** p02-t02's `sync --dry-run` assertion checks exit 0 with `create` actions present, not exit 1 — planned CLAUDE.md creations aren't skip actions, so sync exits 0 (verified against `sync.ts:421` `hasSkippedActions`). Test-assertion refinement, no production change.
+
+### Phase p03 — Doctor drift checks (complete, review passed)
+
+Sequential Tier-1 opus dispatch. Commits `7fbeaf0f` (t01 four checks), `31e4643e` (t01 m1 fix).
+
+- **Outcome:** four `pjm:*` checks added to `pjm doctor` (auto-aggregated into top-level `oat doctor`): `backlog_terminal_in_items` (FAIL), `backlog_invalid_status` (FAIL), `backlog_archived_open` (warn), `backlog_completed_unarchived` (warn). All derive from a single `collectBacklogItems` frontmatter pass and reuse the p01 `item-status` module.
+- **Verification:** pjm doctor suite (19 tests) + top-level doctor aggregation (18) + lint + type-check clean.
+- **Review (opus, in-memory):** PASS, 0C/0I/0M, 2 Minor. m1 (status-less items slipped past all checks) **fixed** in `31e4643e` — `backlog_invalid_status` now also FAILs on missing/empty status with distinct "missing status" wording + fixture. m2 (whole-file completed.md ID scan) accepted as-is per design's best-effort WARN wording.
+- **Design alignment:** design.md Drift Checks row for `pjm:backlog_invalid_status` broadened to "missing/empty or out-of-enum status" to match the shipped m1 fix (implementation is source of truth; design updated in the p03 bookkeeping commit).
 
 ### Review Received: plan (artifact, gate)
 

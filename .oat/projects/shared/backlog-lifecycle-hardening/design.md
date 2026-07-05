@@ -110,12 +110,12 @@ the same drift the command exists to prevent, never silent corruption.
 
 ### Drift Checks (pjm doctor)
 
-| Check                              | Condition                                                 | Severity                                   |
-| ---------------------------------- | --------------------------------------------------------- | ------------------------------------------ |
-| `pjm:backlog_terminal_in_items`    | item in `items/` with status `closed`/`wont_do`           | fail (fix: run `oat backlog archive <id>`) |
-| `pjm:backlog_invalid_status`       | item (items/ or archived/) with out-of-enum status        | fail (fix: set a valid status)             |
-| `pjm:backlog_archived_open`        | item in `archived/` with status `open`/`in_progress`      | warn                                       |
-| `pjm:backlog_completed_unarchived` | `completed.md` entry ID whose file still sits in `items/` | warn (best-effort ID regex scan)           |
+| Check                              | Condition                                                           | Severity                                   |
+| ---------------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
+| `pjm:backlog_terminal_in_items`    | item in `items/` with status `closed`/`wont_do`                     | fail (fix: run `oat backlog archive <id>`) |
+| `pjm:backlog_invalid_status`       | item (items/ or archived/) with missing/empty or out-of-enum status | fail (fix: set a valid status)             |
+| `pjm:backlog_archived_open`        | item in `archived/` with status `open`/`in_progress`                | warn                                       |
+| `pjm:backlog_completed_unarchived` | `completed.md` entry ID whose file still sits in `items/`           | warn (best-effort ID regex scan)           |
 
 ## Component Design
 
