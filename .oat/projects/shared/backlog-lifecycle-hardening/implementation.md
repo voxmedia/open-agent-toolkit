@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1: Backlog close-out core     | passed  | 3     | 3/3       |
 | Phase 2: Instructions scan carve-in | passed  | 2     | 2/2       |
 | Phase 3: Doctor drift checks        | passed  | 1     | 1/1       |
-| Phase 4: Templates + pjm init       | pending | 2     | 0/2       |
+| Phase 4: Templates + pjm init       | passed  | 2     | 2/2       |
 | Phase 5: Skills + docs propagation  | pending | 3     | 0/3       |
 | Phase 6: Dogfood + release          | pending | 2     | 0/2       |
 
-**Total:** 6/13 tasks completed
+**Total:** 8/13 tasks completed
 
 Execution: p01/p02 declared as a parallel worktree group but run sequentially per user direction (see Deviations). HiLL pause: after p06 only. Dispatch ceiling: maximum (Claude: opus, enforced).
 
@@ -73,6 +73,14 @@ Sequential Tier-1 opus dispatch. Commits `7fbeaf0f` (t01 four checks), `31e4643e
 - **Verification:** pjm doctor suite (19 tests) + top-level doctor aggregation (18) + lint + type-check clean.
 - **Review (opus, in-memory):** PASS, 0C/0I/0M, 2 Minor. m1 (status-less items slipped past all checks) **fixed** in `31e4643e` — `backlog_invalid_status` now also FAILs on missing/empty status with distinct "missing status" wording + fixture. m2 (whole-file completed.md ID scan) accepted as-is per design's best-effort WARN wording.
 - **Design alignment:** design.md Drift Checks row for `pjm:backlog_invalid_status` broadened to "missing/empty or out-of-enum status" to match the shipped m1 fix (implementation is source of truth; design updated in the p03 bookkeeping commit).
+
+### Phase p04 — Templates + pjm init (complete, review passed)
+
+Sequential Tier-1 opus dispatch. Commits `824fc3de` (t01 template content + bundle-assets + content assertions), `69d44db8` (t02 README/handoffs emission + sync hint + canonical nudge).
+
+- **Outcome:** `pjm-agents.md` gains the Backlog Lifecycle section (built around `oat backlog archive` as primary, manual fallback retained, "never invent variants like `done`" clause, wont_do-entry-only-with-`--summary`) and the Project Kickoff Handoffs section (full required-content list, kickoff-stack-only, ID+title no bare IDs). New `repo-readme.md` and `pjm-handoffs-readme.md` templates; both appended to `bundle-assets.sh`. `pjm init` scaffolds `README.md` + `pjm/handoffs/README.md` (write-if-missing, nested parent created), flows into `CANONICAL_REPO_REFERENCE_PATHS` so `pjm doctor` nudges when they're missing (no doctor.ts production change), and prints an `oat instructions sync` hint. Init never writes CLAUDE.md.
+- **Verification:** pjm suite (init/index/doctor/migrate, 48 tests) + full CLI suite (2154) + lint + type-check + `pnpm format` clean.
+- **Review (opus, in-memory):** PASS, 0C/0I, 1 Minor — plan's p04-t02 file list under-specified the necessary touches to `pjm/index.ts` (emit the hint on the non-JSON path; JSON payload unchanged) and `index.test.ts`/`migrate.test.ts` (fixtures asserting init's created-file list). Mechanical, no regression; recorded here as plan-artifact drift rather than a code fix.
 
 ### Review Received: plan (artifact, gate)
 
