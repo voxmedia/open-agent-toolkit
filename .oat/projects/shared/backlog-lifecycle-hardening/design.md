@@ -179,12 +179,17 @@ ask with no new mechanism.
 ### `commands/pjm/init.ts` (modified)
 
 **Purpose:** complete scaffold + handoff to shim tooling.
-**Changes:** add `repo-readme.md` template → `README.md` target to the
+**Changes:** add `repo-readme.md` → `README.md` and
+`pjm-handoffs-readme.md` → `pjm/handoffs/README.md` targets to the
 scaffold file list (same write-if-missing backfill semantics as the
-AGENTS.md files); after init/backfill, print a next-step hint to run
+AGENTS.md files; the new targets flow into the canonical path list that
+`pjm doctor` imports, so pre-existing scaffolds get the missing-canonical
+nudge automatically); after init/backfill, print a next-step hint to run
 `oat instructions sync` (mentioning `--dry-run` preview) so CLAUDE.md
 shims are created under the consumer's chosen strategy. Init itself never
-writes CLAUDE.md.
+writes CLAUDE.md. The new bundled templates must also be appended to the
+explicit template list in `packages/cli/scripts/bundle-assets.sh` so
+installed CLIs ship them.
 
 ### `commands/instructions/instructions.utils.ts` (modified)
 
@@ -207,16 +212,47 @@ carve-in because they share `scanInstructionFiles`.
 - `repo-agents.md`: pointer bullets to the lifecycle section and README.
 - `repo-readme.md` (new): human-facing orientation generalized from the
   downstream exemplar — layout table limited to canonical scaffold paths
-  (no downstream-specific rows like `handoffs/`), generated-vs-curated
-  conventions, ID conventions, close-out pointer.
+  (now including `pjm/handoffs/`), generated-vs-curated conventions, ID
+  conventions, close-out pointer.
+- `pjm-handoffs-readme.md` (new): the `pjm/handoffs/README.md` convention
+  doc, generalized from the orc exemplar — one-shot kickoff prompts, one
+  file per backlog item named `<BL-id>.md`, consumable-not-durable
+  (deleted via `git rm` in the PR that ships the item), durable knowledge
+  stays in the item file/`reference/`, each handoff carries its own
+  deletion instruction.
+- `pjm-agents.md` additionally gains a **Project Kickoff Handoffs**
+  section (discovery Q4): generate/refresh handoffs when a
+  priority-alignment pass concludes; kickoff-stack items only (lane count
+  and ordering are the human's call); required handoff content — item
+  reference (ID + title + path), recommended mode
+  (`oat-project-quick-start` vs `oat-project-new`) with artifact
+  pre-population guidance, authoritative input pointers (research dirs,
+  decision records, code paths), repo conventions and verification gates
+  the item file omits, and a close-out section requiring (a) the Backlog
+  Lifecycle executed in the same shipping PR and (b) deletion of the
+  handoff file in that PR; delete stale handoffs when items are
+  reprioritized out; every backlog item reference pairs the ID with a
+  human-readable title — no bare IDs.
 
 ### Propagation surfaces
 
 - **Skills:** grep-driven sweep of the bundled skills referencing
-  `backlog/archived` or `completed.md` (14 known); every skill that
+  `archived/` or `completed.md` (14 known); every skill that
   narrates manual close-out steps is re-pointed at `oat backlog archive`;
   each changed skill's frontmatter `version:` bumps in the same PR.
   `oat pjm migrate` guidance is included in the sweep.
+- **`oat-pjm-review-backlog` skill (kickoff-handoff encoding):** the skill
+  gains the Project Kickoff Handoffs workflow — when a priority-alignment
+  pass concludes, generate/refresh one handoff per agreed kickoff-stack
+  item under `pjm/handoffs/` (required content per the template section)
+  and delete stale handoffs for reprioritized items; all review and
+  alignment output pairs item IDs with human-readable titles. Lane count
+  and kickoff-stack selection remain explicit human decisions the skill
+  must not make on its own.
+- **Dogfood:** run the updated `oat pjm init` in this repository to create
+  its own `.oat/repo/pjm/` (backlog scaffold + `handoffs/`) — this repo
+  currently has no pjm directory; existing `.oat/repo/README.md` and
+  reference content are preserved by write-if-missing semantics.
 - **Docs:** `apps/oat-docs` gains archive-command coverage in the CLI/
   backlog docs; regenerate the docs index via `oat docs generate-index`.
 - **Release:** lockstep version bump across the five public packages;

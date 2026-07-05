@@ -126,6 +126,41 @@ lifecycle says skip `wont_do` entries unless worth recording. Which wins?
 entry only when `--summary` is provided. The upstreamed template text keeps
 the exemplar convention.
 
+### Question 4 (mid-plan addition): Kickoff-handoff pattern as first-class pjm
+
+**Q (user):** The orc repo established a kickoff-handoff pattern
+(`.oat/repo/pjm/handoffs/` — one-shot project-kickoff prompts per backlog
+item, exemplar: tkstang/orc PR #10) and the user has been replaying a
+manual prompt in each repo to adopt it. Encode it into this work so it is a
+first-class part of the pjm pack and `oat pjm init`, and give this repo its
+own `pjm/` directory too.
+**Decision:** Upstream the convention, not the per-repo actions:
+
+- `oat pjm init` scaffolds `pjm/handoffs/` with a README documenting the
+  convention (one file per backlog item named `<BL-id>.md`; consumable, not
+  durable — deleted via `git rm` in the PR that ships the item; durable
+  knowledge stays in the item file and `reference/`; each handoff carries
+  its own deletion instruction). Content generalized from the orc exemplar.
+- The pjm instruction template gains a **Project Kickoff Handoffs** section:
+  generate/refresh handoffs when a priority-alignment pass concludes;
+  kickoff-stack items only; required handoff content (item reference with
+  ID + title + path, recommended mode — quick-start vs spec-driven — with
+  artifact pre-population guidance, authoritative input pointers, repo
+  conventions/verification gates the item file omits, and a close-out
+  section requiring the Backlog Lifecycle executed and the handoff file
+  deleted in the same shipping PR); delete stale handoffs when items are
+  reprioritized out; every backlog item reference pairs the ID with a
+  human-readable title — no bare IDs.
+- The repo README template's layout table registers `pjm/handoffs/`.
+- The `oat-pjm-review-backlog` skill encodes the handoff generation/refresh
+  step at priority-alignment conclusion and the ID + title pairing rule
+  (lane count and kickoff-stack ordering remain the human's call).
+- Dogfood: run the updated `oat pjm init` in this repo to create its own
+  `.oat/repo/pjm/` (including `handoffs/`) — this repo currently has no
+  pjm directory at all.
+- Out of scope: running backlog reviews or authoring actual handoff files
+  in the downstream repos (per-repo actions).
+
 ## Solution Space
 
 The overall shape was fixed by the handoff document and session review; the
