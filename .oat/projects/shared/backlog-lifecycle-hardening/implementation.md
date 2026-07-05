@@ -39,6 +39,12 @@ Parallel group: `[['p01', 'p02']]` — p01 and p02 run concurrently in worktrees
 
 ---
 
+## Deviations from Plan / Design
+
+| Item                       | Source Artifact                                                        | Planned                                                 | Actual / Accepted                                                                    | Reason                                                                                                                                                                                                                                                   | Source of Truth                                                                      | Follow-up                                                                      |
+| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Execution mode for p01/p02 | plan.md `oat_plan_parallel_groups: [['p01','p02']]` + `## Parallelism` | Concurrent worktree execution, merge back in plan order | Sequential Tier-1 opus subagent dispatch on the `pjm-guidance` branch (p01 then p02) | User-directed at implement preflight: session-created git worktrees are unreliable in this Orca-relay workspace and each worktree needs its own `pnpm run worktree:init`; wall-clock savings for a 3+2-task group are modest against the failure surface | Plan's disjoint-write-set analysis still holds; only the execution mechanism changed | None — the declared group remains valid for repos where worktrees are reliable |
+
 ## Task Log
 
 _(populated during execution)_
