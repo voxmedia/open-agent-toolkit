@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                               | Status  | Tasks | Completed |
-| ----------------------------------- | ------- | ----- | --------- |
-| Phase 1: Backlog close-out core     | passed  | 3     | 3/3       |
-| Phase 2: Instructions scan carve-in | passed  | 2     | 2/2       |
-| Phase 3: Doctor drift checks        | passed  | 1     | 1/1       |
-| Phase 4: Templates + pjm init       | passed  | 2     | 2/2       |
-| Phase 5: Skills + docs propagation  | passed  | 3     | 3/3       |
-| Phase 6: Dogfood + release          | pending | 2     | 0/2       |
+| Phase                               | Status   | Tasks | Completed |
+| ----------------------------------- | -------- | ----- | --------- |
+| Phase 1: Backlog close-out core     | passed   | 3     | 3/3       |
+| Phase 2: Instructions scan carve-in | passed   | 2     | 2/2       |
+| Phase 3: Doctor drift checks        | passed   | 1     | 1/1       |
+| Phase 4: Templates + pjm init       | passed   | 2     | 2/2       |
+| Phase 5: Skills + docs propagation  | passed   | 3     | 3/3       |
+| Phase 6: Dogfood + release          | complete | 2     | 2/2       |
 
-**Total:** 11/13 tasks completed
+**Total:** 13/13 tasks completed
 
 Execution: p01/p02 declared as a parallel worktree group but run sequentially per user direction (see Deviations). HiLL pause: after p06 only. Dispatch ceiling: maximum (Claude: opus, enforced).
 
@@ -92,6 +92,14 @@ Sequential Tier-1 opus dispatch. Commits `a053dbde` (t01 skills sweep), `5d53a71
 - **Review (opus, in-memory):** PASS, 0C/0I/0M, 1 Minor — cosmetic missing comma in one re-pointed sentence; left unfixed to avoid a version re-bump for prose (reviewer-endorsed).
 - **Note:** provider mirrors under `.claude`/`.codex`/`.cursor` are symlinks/generated, so skill edits need no separate staged files.
 
+### Phase p06 — Dogfood + release (complete, awaiting final review)
+
+Sequential Tier-1 opus dispatch. Commits `0c20c8ae` (t01 dogfood), `38d5493e` (t02 lockstep release).
+
+- **p06-t01 dogfood:** `pnpm run cli -- pjm init` in this repo created `.oat/repo/pjm/**` (AGENTS.md with Backlog Lifecycle + Project Kickoff Handoffs, backlog scaffold, `handoffs/README.md`, current-state.md, roadmap.md) + backfilled `.oat/repo/AGENTS.md` and `reference/AGENTS.md`; existing curated `.oat/repo/README.md` preserved byte-for-byte (sha match). `pjm doctor`: canonical_files ✓, template_frontmatter ✓, top_level_layout ✓, all four new backlog checks ✓ — three pre-existing warnings on legacy `reference/` content (decision-record.md, backlog.md/backlog-completed.md, second roadmap) are unrelated to this feature, recorded not chased. `instructions sync --dry-run` listed the 3 new `.oat/repo/**` AGENTS.md with planned CLAUDE.md creations (proves the p02 carve-in end-to-end); `sync` applied 3 pointer shims; `validate` → ok (scanned=10, ok=10).
+- **p06-t02 release:** lockstep bump of all five public packages 0.1.40 → **0.1.41**; `packages/cli/assets/public-package-versions.json` regenerated to match and staged. `pnpm release:validate` passed; full gates green (`build`, `lint`, `type-check`, `test`, `format`).
+- **Deviation (accepted):** patch bump (0.1.41) rather than the plan's suggested minor — repo convention is patch-only across the 0.1.x line (the last lockstep release was `chore(release): bump public packages to 0.1.32`; feature PRs ship as patch), and the plan's escape hatch permits it. release:validate passed at patch.
+
 ### Review Received: plan (artifact, gate)
 
 **Date:** 2026-07-05
@@ -114,4 +122,17 @@ Preceding in-memory structured review loop (oat-reviewer ×2) is recorded in the
 
 ## Final Summary (for PR/docs)
 
-_(fill before running `oat-project-pr-final`)_
+**What shipped:** Backlog lifecycle hardening for the `oat` CLI, across four coupled surfaces plus propagation.
+
+- **`oat backlog archive <id> [--wont-do] [--summary <text>] [--json]`** — atomic close-out: minimal-diff frontmatter rewrite (status + `updated`, enum comment preserved), canonical newest-first `completed.md` entry (closed always with TODO scaffold when no summary; wont_do only with `--summary`), `git mv` to `archived/` with `fs.rename` fallback, and index regeneration. Idempotent (already-archived → exit-0 no-op), exit semantics 0/1/2.
+- **`oat backlog regenerate-index`** now warns on out-of-enum statuses (still renders the row) via an exported `regenerateBacklogIndex` core reused by the archive command; a dependency-free `item-status.ts` module is the single source of truth for the status enum.
+- **`oat pjm doctor`** (and top-level `oat doctor` by aggregation) gained four drift checks: `pjm:backlog_terminal_in_items` (FAIL), `pjm:backlog_invalid_status` (FAIL, incl. missing/empty status), `pjm:backlog_archived_open` (warn), `pjm:backlog_completed_unarchived` (warn).
+- **Instructions scan carve-in** — `.oat/repo/**` AGENTS.md/CLAUDE.md pairs are now scanned/synced/validated (rest of `.oat/` still excluded), so `oat instructions sync` creates their CLAUDE.md shims under the consumer's strategy.
+- **`oat pjm init` scaffold** — new Backlog Lifecycle + Project Kickoff Handoffs sections in `pjm/AGENTS.md`, a source-of-truth map in `reference/AGENTS.md`, pointer bullets in the repo AGENTS.md, a human-facing `.oat/repo/README.md`, and a `pjm/handoffs/README.md` convention doc; init prints an `oat instructions sync` next-step hint and never writes CLAUDE.md. Delivered via two new bundled templates (`repo-readme.md`, `pjm-handoffs-readme.md`) wired into `bundle-assets.sh` and `CANONICAL_REPO_REFERENCE_PATHS`.
+- **Propagation** — `oat-pjm-update-repo-reference` re-pointed at `oat backlog archive`; `oat-pjm-review-backlog` gained the kickoff-handoff workflow; new docs pages for the command + lifecycle; this repo dogfooded its own `.oat/repo/pjm/` scaffold; lockstep bump of the five public packages to 0.1.41.
+
+**Key files/modules:** `packages/cli/src/commands/backlog/{archive,regenerate-index,index}.ts` + `shared/item-status.ts`; `commands/pjm/{doctor,init,index}.ts`; `commands/instructions/instructions.utils.ts`; `.oat/templates/{pjm-agents,reference-agents,repo-agents,repo-readme,pjm-handoffs-readme}.md`; `packages/cli/scripts/bundle-assets.sh`; `.agents/skills/{oat-pjm-update-repo-reference,oat-pjm-review-backlog}/SKILL.md`; `apps/oat-docs/docs/cli-utilities/**`.
+
+**Verification:** per-phase opus reviews (p01–p05 all PASS 0C/0I; minors fixed inline); full CLI suite 2154 tests + docs build + lint + type-check + format green; `pnpm release:validate` passed; feature dogfooded end-to-end in this repo (`pjm init` → `doctor` → `instructions sync`/`validate`).
+
+**Design deltas:** (1) p01/p02 declared parallel group executed sequentially per user direction (worktree reliability in this workspace); (2) `pjm:backlog_invalid_status` broadened to also flag missing/empty status (design.md updated to match); (3) release bumped patch (0.1.41) per repo convention rather than minor. All recorded in the Deviations table / task log above.
