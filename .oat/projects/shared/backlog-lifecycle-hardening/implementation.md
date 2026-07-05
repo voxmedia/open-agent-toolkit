@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase                               | Status  | Tasks | Completed |
 | ----------------------------------- | ------- | ----- | --------- |
-| Phase 1: Backlog close-out core     | pending | 3     | 0/3       |
+| Phase 1: Backlog close-out core     | passed  | 3     | 3/3       |
 | Phase 2: Instructions scan carve-in | pending | 2     | 0/2       |
 | Phase 3: Doctor drift checks        | pending | 1     | 0/1       |
 | Phase 4: Templates + pjm init       | pending | 2     | 0/2       |
@@ -47,7 +47,14 @@ Parallel group: `[['p01', 'p02']]` — p01 and p02 run concurrently in worktrees
 
 ## Task Log
 
-_(populated during execution)_
+### Phase p01 — Backlog close-out core (complete, review passed)
+
+Sequential Tier-1 opus dispatch. Commits `340fa03b` (t01 status module), `23cc3e8e` (t02 regeneration core export + invalid-status warnings), `d7594cc6` (t03 `oat backlog archive` command), `c57f3efe` (t03 minor fixes).
+
+- **Outcome:** `oat backlog archive <id> [--wont-do] [--summary] [--json]` performs atomic close-out (minimal-diff frontmatter rewrite → completed.md entry → `git mv` with fs.rename fallback → index regeneration); `regenerateBacklogIndex` exported returning `{ itemCount, warnings }` and warns on out-of-enum statuses; dependency-free `item-status.ts` shared module ready for p03/doctor import.
+- **Verification:** scoped backlog vitest (59 tests) + help-snapshot + lint + type-check all clean.
+- **Review (opus, in-memory):** PASS, 0 Critical / 0 Important. 2 Minor fixed in `c57f3efe`: (m1) `#`-bearing item titles were truncated in completed.md entries — now read via `YAML.parse` instead of the comment-stripping frontmatter helper, with a regression test; (m2) added no-op `--json` payload coverage through the command wrapper.
+- **Implementer deviations (accepted):** regenerate-index command-warning wiring landed in the t03 commit (its `git add backlog/` covers `index.ts`) rather than t02; `archive` gained a `--backlog-root` option mirroring sibling commands; `--json` payload uses the design's `{ id, result, status, ... }` shape (not the sibling `{ status: 'ok' }` convention) to avoid a `status` key collision. None change design intent.
 
 ### Review Received: plan (artifact, gate)
 
