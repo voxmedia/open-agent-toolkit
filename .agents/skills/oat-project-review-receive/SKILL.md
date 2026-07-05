@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.4
+version: 1.5.5
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -267,15 +267,13 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
   - Require explicit user confirmation before applying any artifact edits.
   - Resolve findings directly in artifact files; do not convert findings into plan tasks.
   - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
-- If `oat_review_type == code` AND `oat_review_invocation == auto`:
-  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. Apply relaxed disposition defaults:
+- If `oat_review_type == code` AND `oat_review_invocation` is `auto` or `gate`:
+  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement` or by `oat gate review`. Apply relaxed disposition defaults:
     - Critical/Important/Medium: convert to fix tasks (same as manual mode)
-    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
-    - **No user prompts for disposition decisions.** The auto-review path runs fully autonomously.
+    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
+    - **No user prompts for disposition decisions.** The auto/gate review path runs fully autonomously.
     - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
-- If `oat_review_type == code` AND `oat_review_invocation == gate`:
-  - **Gate review mode.** This review was spawned by `oat gate review`, but receive remains standard disposition behavior. Treat `gate` the same as manual for prompts, finding conversion, artifact archival, and bookkeeping unless a future implementation explicitly designs an autonomous receive path.
 - If `oat_review_type == code` (manual or `oat_review_invocation` absent):
   - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
 

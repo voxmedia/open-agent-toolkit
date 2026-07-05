@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.8
+version: 1.3.9
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -25,11 +25,13 @@ Reviewers should distinguish implementation defects from artifact drift. If code
 
 ## Model Invocation Gate
 
-This skill is model-invokable only for explicit review asks such as "review project" or "review the project", or when the user confirms a previously offered project-review step. Do NOT auto-invoke merely because a task, phase, or implementation appears complete.
+This skill is model-invokable only for explicit review asks such as "review project" or "review the project", or when the user confirms a previously offered project-review step. A gate-originated request from `oat gate review` is also an explicit review ask. Do NOT auto-invoke merely because a task, phase, or implementation appears complete.
 
 Before acting, verify that there is an active OAT project or a user-provided review target that can be resolved to project state. If neither exists, do not run this skill; offer `oat-project-open` / `oat-project-quick-start` for project workflow setup, or `oat-review-provide` for a non-project ad-hoc review.
 
-When the gate passes, summarize the inferred review type and scope, then ask before running the review.
+When the invocation is manual, summarize the inferred review type and scope, then ask before running the review.
+
+**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary. If subagent dispatch is unavailable, run the review inline in the current gate session instead of handing off to a fresh session.
 
 ## Mode Assertion
 
@@ -123,7 +125,7 @@ Tell user:
   - `oat-project-quick-start` (new quick project)
   - `oat-project-import-plan` (external plan import)
 
-If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`. Summarize the resolved project/review target and ask before continuing to Step 1.
+If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`. Summarize the resolved project/review target. For manual invocation, ask before continuing to Step 1. For `REVIEW_INVOCATION=gate`, continue without asking.
 
 ### Step 1: Parse Arguments or Ask
 
@@ -424,6 +426,8 @@ Files changed: {FILE_COUNT}
 Proceed with review?
 ```
 
+If `REVIEW_INVOCATION=gate`, print the same scope summary but do not ask `Proceed with review?`; continue directly.
+
 ### Step 4.1: Dispatch Profile Override Advisory (Artifact Plan Only)
 
 When reviewing `artifact plan`, apply this Dispatch Profile override advisory:
@@ -536,6 +540,7 @@ Detection logic:
 - If the runtime can dispatch reviewer work (`subagent_type` in Claude Code, Cursor invocation via `/name` or natural mention, or Codex multi-agent spawn/auto-spawn) → **Tier 1**.
 - If the Task tool is not available or subagent dispatch is not supported → **Tier 2**.
 - If user explicitly requests inline or confirms they are already in a fresh session → **Tier 3**.
+- If `REVIEW_INVOCATION=gate` and Tier 1 is unavailable, skip Tier 2 and use **Tier 3** inline. Do not return fresh-session instructions from a gate invocation.
 
 **Step 6b: Tier 1 — Subagent (if available)**
 
@@ -566,6 +571,7 @@ If subagent not available:
 - If user is already in a fresh session (confirmed), proceed to Tier 3.
 - If Codex reported `authorization required` and the user approved delegation, do **not** use Tier 2. Return to Tier 1 and delegate to `oat-reviewer`.
 - If user prefers fresh session: provide instructions and exit.
+- If `REVIEW_INVOCATION=gate`: do not provide fresh-session instructions; run Tier 3 inline instead.
 
 Instructions for fresh session:
 
@@ -655,9 +661,13 @@ oat_project: { PROJECT_PATH }
 
 - `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, minors auto-deferred for non-final scopes).
 - `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: minors are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
-- `gate`: Review was spawned by `oat gate review`. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. `oat-project-review-receive` treats gate reviews with the same standard disposition behavior as manual reviews unless a future implementation explicitly designs autonomous receive.
+- `gate`: Review was spawned by `oat gate review` for a workflow gate. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. `oat-project-review-receive` uses the same no-prompt disposition behavior as `auto`, and the gate CLI maps the review artifact findings to exit status.
 
-When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter. When `oat gate review` spawns this skill, set `oat_review_invocation: gate`. For all other invocations (user-triggered, fresh session), use `manual`.
+When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter.
+
+When `oat gate review` invokes this skill, it includes gate-originated context instructing the reviewer to write `oat_review_invocation: gate`. Honor that instruction in the artifact frontmatter.
+
+For all other invocations (user-triggered, fresh session), use `manual`.
 
 Gate parsing contract:
 

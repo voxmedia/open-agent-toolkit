@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.24
+version: 2.0.25
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -679,6 +679,39 @@ This setting controls only the extra `oat-project-review-provide` lifecycle revi
 
 **On resume:** If `oat_auto_review_at_hill_checkpoints` is already present in plan.md frontmatter, skip Touchpoint A entirely — do not re-ask, do not re-read config, do not print the auto-review note. The stored value is authoritative. If only legacy `oat_auto_review_at_checkpoints` is present, treat it as authoritative for this run and write the new `oat_auto_review_at_hill_checkpoints` key on the next plan frontmatter update.
 
+### Step 2.6: Validate Optional Phase Review Gate
+
+Read `oat_phase_review_gate` from `"$PROJECT_PATH/plan.md"` frontmatter when present.
+
+This is the plan-level `phaseReviewGate` setting: an optional, non-pausing external lifecycle review gate that runs after a phase's standard per-phase self-review passes. It uses the existing `oat gate review` target configuration to run a cross-provider review, then maps the produced review artifact to a blocking/non-blocking gate result.
+
+Valid shape:
+
+```yaml
+oat_phase_review_gate:
+  enabled: true
+  phases: [] # empty or omitted = every implementation phase
+  review_type: code
+  exit_nonzero_on: important
+```
+
+Validation rules:
+
+- Missing, `null`, or `enabled: false` means disabled.
+- `enabled: true` activates the gate.
+- `phases` is optional. If missing or empty (`[]`), run after every implementation phase. If populated, every value must be a known plan phase ID.
+- `review_type` is optional and defaults to `code`. This skill only supports `code` phase gates; any other value is invalid for implementation phase execution.
+- `exit_nonzero_on` is optional and defaults to `important`. Allowed values: `critical`, `important`, `medium`, `minor`.
+
+If the setting is invalid, stop before task execution and ask the user to repair `plan.md`. Do not silently disable a malformed gate.
+
+This setting is independent from HiLL checkpoints:
+
+- It does not pause when the gate passes.
+- It does not append to `oat_hill_completed`.
+- It does not alter `oat_plan_hill_phases` or `oat_auto_review_at_hill_checkpoints`.
+- It uses the existing gate target config; do not hardcode `--target` in reusable plan execution unless the user explicitly asks for manual/debug routing.
+
 ### Step 3: Check Implementation State
 
 Check if implementation already started:
@@ -892,6 +925,42 @@ On reviewer verdict `fail`, run a bounded fix loop.
 - **Sequential mode:** STOP the run. Surface to user with phase ID, unresolved findings, review artifact path. Do not proceed to subsequent phases.
 - **Parallel group mode:** mark the phase `excluded`. Do not merge its worktree. Continue the remaining phases in the group. Report in Outstanding Items after the group completes.
 
+### Optional External Phase Review Gate
+
+After the standard per-phase reviewer passes and after the required phase bookkeeping commit is cleanly recorded, check `oat_phase_review_gate`.
+
+If the gate is enabled and the current phase is selected:
+
+1. Run the gate from the orchestration branch with the active project path:
+
+   ```bash
+   oat --json gate review \
+     --project "$PROJECT_PATH" \
+     --review-type code \
+     --review-scope "{pNN}" \
+     --exit-nonzero-on "{threshold}" \
+     '$oat-project-review-provide code {pNN}'
+   ```
+
+   - `{threshold}` comes from `oat_phase_review_gate.exit_nonzero_on` (default: `important`).
+   - `{pNN}` is the completed phase ID.
+   - Do not pass `--target` in normal execution; the existing gate config selects the cross-provider target.
+   - The gate CLI injects gate context into the review prompt. The produced review artifact must use `oat_review_invocation: gate`.
+
+2. Parse the JSON result:
+   - `status: "ok"` / exit code `0` means the phase gate passed at the configured threshold. Record the gate artifact path and counts in `implementation.md`, then continue without pausing.
+   - `status: "blocked"` / non-zero exit due to review findings means blocking findings exist. Run `oat-project-review-receive` for the reported artifact path before treating the gate review as consumed.
+   - A non-zero exit caused by target execution failure, artifact validation failure, or missing review artifact is an operational failure. Stop and surface the gate output; do not continue as if the gate passed.
+
+3. If `oat-project-review-receive` adds fix tasks:
+   - Return to task execution for the newly added review-fix tasks.
+   - After fixes land, re-run the standard per-phase reviewer and this external phase gate for the same phase.
+   - Continue only after both the standard reviewer and the external phase gate pass.
+
+4. If `oat-project-review-receive` determines there are no blocking fix tasks at the configured threshold, record the receive result and continue.
+
+For a parallel group, run selected phase gates after fan-in and bookkeeping, one gate per successfully merged phase in plan order. If a phase gate blocks, stop the schedule and process that gate's review before starting later schedule entries.
+
 ### Parallel Group Execution
 
 When the current schedule entry is a multi-phase group, execute as follows.
@@ -966,7 +1035,7 @@ When the current schedule entry is a multi-phase group, execute as follows.
 
     For phases that were excluded (fix-loop exhausted), preserve the worktree and log its path in `implementation.md` Outstanding Items.
 
-8.  **Bookkeeping commit** after the group completes. Then HiLL checkpoint check.
+8.  **Bookkeeping commit** after the group completes. Then run any selected external phase review gates. After those gates pass, perform the HiLL checkpoint check.
 
 ### Step 7: Artifact Updates After Each Phase (or Group)
 
@@ -1039,7 +1108,7 @@ git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/
 git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
 ```
 
-Then check HiLL checkpoint — if the phase ID is in `oat_plan_hill_phases`, pause for user approval before continuing.
+Then run the optional external phase review gate for the completed phase when `oat_phase_review_gate` selects it. After the gate passes or is skipped, check HiLL checkpoint — if the phase ID is in `oat_plan_hill_phases`, pause for user approval before continuing.
 
 ### Step 8: Check Plan Phase Completion
 
@@ -1130,6 +1199,7 @@ Do not use `git add -A` or glob patterns. Only commit the three project artifact
 
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
 - **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. `[]` means pause after every phase; a populated array pauses only after listed phases. The field may be absent only before the first implementation-run confirmation. Listed phases are where you stop AFTER completing them.
+- **Phase review gate** (`oat_phase_review_gate` in plan.md): Optional non-pausing external review gate after a completed phase passes the standard reviewer. Missing/disabled means skip; `phases: []` means gate every implementation phase. Passing gates continue automatically; blocking gates are received/fixed before execution proceeds.
 
 **Revision phase completion handling:**
 
