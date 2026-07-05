@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                               | Status   | Tasks | Completed |
-| ----------------------------------- | -------- | ----- | --------- |
-| Phase 1: Backlog close-out core     | passed   | 3     | 3/3       |
-| Phase 2: Instructions scan carve-in | passed   | 2     | 2/2       |
-| Phase 3: Doctor drift checks        | passed   | 1     | 1/1       |
-| Phase 4: Templates + pjm init       | passed   | 2     | 2/2       |
-| Phase 5: Skills + docs propagation  | passed   | 3     | 3/3       |
-| Phase 6: Dogfood + release          | complete | 2     | 2/2       |
+| Phase                               | Status | Tasks | Completed |
+| ----------------------------------- | ------ | ----- | --------- |
+| Phase 1: Backlog close-out core     | passed | 3     | 3/3       |
+| Phase 2: Instructions scan carve-in | passed | 2     | 2/2       |
+| Phase 3: Doctor drift checks        | passed | 1     | 1/1       |
+| Phase 4: Templates + pjm init       | passed | 2     | 2/2       |
+| Phase 5: Skills + docs propagation  | passed | 3     | 3/3       |
+| Phase 6: Dogfood + release          | passed | 2     | 2/2       |
 
 **Total:** 13/13 tasks completed
 
@@ -99,6 +99,15 @@ Sequential Tier-1 opus dispatch. Commits `0c20c8ae` (t01 dogfood), `38d5493e` (t
 - **p06-t01 dogfood:** `pnpm run cli -- pjm init` in this repo created `.oat/repo/pjm/**` (AGENTS.md with Backlog Lifecycle + Project Kickoff Handoffs, backlog scaffold, `handoffs/README.md`, current-state.md, roadmap.md) + backfilled `.oat/repo/AGENTS.md` and `reference/AGENTS.md`; existing curated `.oat/repo/README.md` preserved byte-for-byte (sha match). `pjm doctor`: canonical_files ✓, template_frontmatter ✓, top_level_layout ✓, all four new backlog checks ✓ — three pre-existing warnings on legacy `reference/` content (decision-record.md, backlog.md/backlog-completed.md, second roadmap) are unrelated to this feature, recorded not chased. `instructions sync --dry-run` listed the 3 new `.oat/repo/**` AGENTS.md with planned CLAUDE.md creations (proves the p02 carve-in end-to-end); `sync` applied 3 pointer shims; `validate` → ok (scanned=10, ok=10).
 - **p06-t02 release:** lockstep bump of all five public packages 0.1.40 → **0.1.41**; `packages/cli/assets/public-package-versions.json` regenerated to match and staged. `pnpm release:validate` passed; full gates green (`build`, `lint`, `type-check`, `test`, `format`).
 - **Deviation (accepted):** patch bump (0.1.41) rather than the plan's suggested minor — repo convention is patch-only across the 0.1.x line (the last lockstep release was `chore(release): bump public packages to 0.1.32`; feature PRs ship as patch), and the plan's escape hatch permits it. release:validate passed at patch.
+
+### Final Review (code, scope=final, opus in-memory) — PASS
+
+Auto-review fired at the p06 HiLL checkpoint (workflow.autoReviewAtHillCheckpoints=true). Covered the full feature range `9cf77e55..38d5493e`, with focused review of the previously-unreviewed p06 diff plus cross-phase integration.
+
+- **Verdict:** PASS — 0 Critical, 0 Important, 0 Medium, 1 Minor.
+- **Integration verified:** `item-status.ts` is the single source of truth (exactly 3 non-test consumers: archive, regenerate-index, doctor; no duplicated enum); archive write-ordering ↔ doctor drift checks are mutually consistent; `CANONICAL_REPO_REFERENCE_PATHS` (from TEMPLATE_TARGETS, imported by doctor) structurally prevents an init/doctor scaffold mismatch; p06 dogfood output matches the p04 templates; CLAUDE.md shims are correct `@AGENTS.md` pointer stubs; curated `.oat/repo/README.md` not overwritten; lockstep 0.1.41 with regenerated version map; no other package.json drift.
+- **Gates at HEAD:** full CLI suite 2154 tests, lint 0/0, type-check, `pnpm build:docs`, `pnpm release:validate` (5 packages) — all green; working tree clean.
+- **Minor m1 (deferred):** `pjm:backlog_archived_open` uses hardcoded `'open'/'in_progress'` literals instead of deriving the non-terminal set from `item-status` (`isValidBacklogStatus && !isTerminalBacklogStatus`). No current defect (literals equal today's non-terminal statuses); pure maintainability. Deferred with rationale (recommended as a follow-up backlog item) rather than fixed at the final gate.
 
 ### Review Received: plan (artifact, gate)
 
