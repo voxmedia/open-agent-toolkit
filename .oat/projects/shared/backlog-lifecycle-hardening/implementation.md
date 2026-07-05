@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-05
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,15 +27,15 @@ oat_generated: false
 | Phase                               | Status  | Tasks | Completed |
 | ----------------------------------- | ------- | ----- | --------- |
 | Phase 1: Backlog close-out core     | passed  | 3     | 3/3       |
-| Phase 2: Instructions scan carve-in | pending | 2     | 0/2       |
+| Phase 2: Instructions scan carve-in | passed  | 2     | 2/2       |
 | Phase 3: Doctor drift checks        | pending | 1     | 0/1       |
 | Phase 4: Templates + pjm init       | pending | 2     | 0/2       |
 | Phase 5: Skills + docs propagation  | pending | 3     | 0/3       |
 | Phase 6: Dogfood + release          | pending | 2     | 0/2       |
 
-**Total:** 0/13 tasks completed
+**Total:** 5/13 tasks completed
 
-Parallel group: `[['p01', 'p02']]` — p01 and p02 run concurrently in worktrees, merge in plan order. HiLL pause: after p06 only. Dispatch ceiling: maximum (Codex: xhigh · Claude: opus).
+Execution: p01/p02 declared as a parallel worktree group but run sequentially per user direction (see Deviations). HiLL pause: after p06 only. Dispatch ceiling: maximum (Claude: opus, enforced).
 
 ---
 
@@ -55,6 +55,15 @@ Sequential Tier-1 opus dispatch. Commits `340fa03b` (t01 status module), `23cc3e
 - **Verification:** scoped backlog vitest (59 tests) + help-snapshot + lint + type-check all clean.
 - **Review (opus, in-memory):** PASS, 0 Critical / 0 Important. 2 Minor fixed in `c57f3efe`: (m1) `#`-bearing item titles were truncated in completed.md entries — now read via `YAML.parse` instead of the comment-stripping frontmatter helper, with a regression test; (m2) added no-op `--json` payload coverage through the command wrapper.
 - **Implementer deviations (accepted):** regenerate-index command-warning wiring landed in the t03 commit (its `git add backlog/` covers `index.ts`) rather than t02; `archive` gained a `--backlog-root` option mirroring sibling commands; `--json` payload uses the design's `{ id, result, status, ... }` shape (not the sibling `{ status: 'ok' }` convention) to avoid a `status` key collision. None change design intent.
+
+### Phase p02 — Instructions scan carve-in (complete, review passed)
+
+Sequential Tier-1 opus dispatch. Commits `b7110db6` (t01 carve-in), `c7e5b0dc` (t02 sync/validate integration coverage).
+
+- **Outcome:** `scanInstructionDirectories` re-enters `.oat/repo` when the root-level `.oat` is skipped (via a `ROOT_EXCLUDED_DIRECTORY_CARVE_INS` map + injectable existence check); `ROOT_EXCLUDED_DIRECTORIES` unchanged, so `.oat/templates|projects|sync` stay unscanned. `sync` and `validate` inherit the carve-in through `scanInstructionFiles`.
+- **Verification:** instructions suite (62 tests incl. 3-strategy sync dry-run + validate-drift + absent-repo) + lint + type-check clean.
+- **Review (opus, in-memory):** PASS, 0C/0I/0M, 1 Minor — a symlinked-root-`.oat` layout bypasses the carve-in, consistent with the BFS's existing never-traverse-symlinked-dirs behavior; reviewer marked it no-fix-needed. Recorded, not fixed.
+- **Deviation (accepted):** p02-t02's `sync --dry-run` assertion checks exit 0 with `create` actions present, not exit 1 — planned CLAUDE.md creations aren't skip actions, so sync exits 0 (verified against `sync.ts:421` `hasSkippedActions`). Test-assertion refinement, no production change.
 
 ### Review Received: plan (artifact, gate)
 
