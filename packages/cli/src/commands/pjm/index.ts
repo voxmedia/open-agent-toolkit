@@ -9,7 +9,7 @@ import { formatDoctorResults, type DoctorCheck } from '@ui/output';
 import { Command } from 'commander';
 
 import { runPjmDoctorChecks } from './doctor';
-import { initializeRepoReference } from './init';
+import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
 import { migratePjmRepo, readPjmMigrationPrompt } from './migrate';
 
 interface InitOptions {
@@ -180,6 +180,7 @@ export function createPjmCommand(
               `Skipped existing: ${result.skipped.join(', ')}`,
             );
           }
+          context.logger.info(INSTRUCTIONS_SYNC_HINT);
         }
         process.exitCode = 0;
       } catch (error) {

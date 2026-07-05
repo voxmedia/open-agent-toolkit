@@ -13,6 +13,8 @@ const TEMPLATE_NAMES = [
   'repo-agents.md',
   'pjm-agents.md',
   'reference-agents.md',
+  'repo-readme.md',
+  'pjm-handoffs-readme.md',
 ] as const;
 
 async function seedTemplate(root: string, name: string): Promise<void> {
@@ -98,6 +100,34 @@ describe('runPjmDoctorChecks', () => {
         message: expect.stringContaining('pjm/roadmap.md'),
       }),
     );
+  });
+
+  it('fails canonical_files with the init fix when README.md is missing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await rm(join(repoRoot, 'README.md'));
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    const check = checks.find((c) => c.name === 'pjm:canonical_files');
+    expect(check?.status).toBe('fail');
+    expect(check?.message).toContain('README.md');
+    expect(check?.fix).toContain('oat pjm init');
+  });
+
+  it('fails canonical_files when the pjm handoffs README is missing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await rm(join(repoRoot, 'pjm', 'handoffs', 'README.md'));
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    const check = checks.find((c) => c.name === 'pjm:canonical_files');
+    expect(check?.status).toBe('fail');
+    expect(check?.message).toContain('pjm/handoffs/README.md');
+    expect(check?.fix).toContain('oat pjm init');
   });
 
   it('fails when instantiated files still contain template frontmatter', async () => {
