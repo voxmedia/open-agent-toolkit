@@ -27,6 +27,15 @@ export const DEFAULT_INSTRUCTION_SYNC_STRATEGY: InstructionSyncStrategy =
 const ROOT_EXCLUDED_DIRECTORIES = new Set(['.git', '.oat', '.worktrees']);
 const GLOBAL_EXCLUDED_DIRECTORIES = new Set(['node_modules']);
 
+// The only excluded-subtree re-entry points: a root-level directory is excluded
+// wholesale, but a named subdirectory holds tracked instruction files that
+// sync/validate must manage, so it is carved back into the scan. `.oat` is
+// excluded at the repo root, yet `.oat/repo/**` carries AGENTS.md/CLAUDE.md
+// pairs; `.oat/templates`, `.oat/projects`, and `.oat/sync` stay unscanned.
+const ROOT_EXCLUDED_DIRECTORY_CARVE_INS = new Map<string, string>([
+  ['.oat', 'repo'],
+]);
+
 interface BuildInstructionsPayloadArgs {
   mode: InstructionsMode;
   entries: InstructionEntry[];
@@ -40,6 +49,18 @@ interface InstructionDirectoryEntry {
   brokenClaudePath?: string;
   brokenClaudeErrorCode?: string;
   claudePath?: string;
+}
+
+async function directoryExists(
+  dependencies: InstructionsScanDependencies,
+  directoryPath: string,
+): Promise<boolean> {
+  try {
+    const stats = await dependencies.stat(directoryPath);
+    return stats.isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 function getErrorCode(error: unknown): string | null {
@@ -167,6 +188,13 @@ async function scanInstructionDirectories(
           continue;
         }
         if (isRootLevel && ROOT_EXCLUDED_DIRECTORIES.has(entry.name)) {
+          const carveIn = ROOT_EXCLUDED_DIRECTORY_CARVE_INS.get(entry.name);
+          if (carveIn) {
+            const carveInPath = join(entryPath, carveIn);
+            if (await directoryExists(dependencies, carveInPath)) {
+              queue.push(carveInPath);
+            }
+          }
           continue;
         }
         queue.push(entryPath);
