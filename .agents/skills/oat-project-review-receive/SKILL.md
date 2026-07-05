@@ -481,13 +481,15 @@ If the project itself is still untracked because earlier lifecycle steps never c
 
 **Bounded loop protection:**
 
-Count how many review cycles have occurred for this scope:
+Count how many review cycles have occurred for this scope. Exclude gate-originated artifacts (`oat_review_invocation: gate`): the cap measures failed fix cycles of the standard review loop, not artifact volume, and phase gate re-runs are governed by the phase review gate flow in `oat-project-implement`, not by this cap.
 
 ```bash
 {
   find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
   find "$PROJECT_PATH/reviews/archived" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
-} | wc -l
+} | while IFS= read -r artifact; do
+  grep -q "oat_review_invocation: gate" "$artifact" || echo "$artifact"
+done | wc -l
 ```
 
 **If 3 or more cycles:**
