@@ -52,6 +52,15 @@ _(populated during execution)_
 
 Preceding in-memory structured review loop (oat-reviewer ×2) is recorded in the plan Reviews-row note: round 1 → 7 findings fixed; round 2 → 0 Critical/Important with 4 accuracy fixes applied before this gate ran.
 
+### Review Received: plan (artifact, manual — v2)
+
+**Date:** 2026-07-05
+**Review artifact:** reviews/archived/artifact-plan-review-2026-07-05-v2.md
+
+**Findings:** 0 critical, 1 important, 0 medium, 0 minor
+
+**Disposition:** I1 (release bump task omits the generated public package version map) → `resolve_in_artifact`, user-confirmed. Verified against `bundle-assets.sh` (writes `packages/cli/assets/public-package-versions.json` from public package versions; file is git-tracked and shipped via the CLI's `assets`). p06-t02 updated: version map added to Files and the Step 5 `git add`, regeneration note added to Step 2, clean-tree expectation added to Step 4. No plan tasks created (artifact review).
+
 ---
 
 ## Final Summary (for PR/docs)
