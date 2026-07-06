@@ -71,6 +71,13 @@ status when the configured threshold is met. `cross-provider-exec` does not do
 that interpretation; for generic prompts it still returns only the child process
 status.
 
+`oat-project-implement` uses `oat gate review` per phase when a project opts in
+via the `oat_phase_review_gate` plan frontmatter — a non-pausing gate that runs
+after each selected phase's standard reviewer passes. See
+[Reviews → Phase review gate](../workflows/projects/reviews.md#phase-review-gate)
+for the frontmatter contract and how passing versus blocking gates are
+dispositioned.
+
 ## Exec targets
 
 `oat gate cross-provider-exec` chooses from `workflow.gates.execTargets`.

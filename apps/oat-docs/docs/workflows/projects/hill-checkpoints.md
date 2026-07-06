@@ -10,6 +10,8 @@ OAT supports two checkpoint classes:
 - Workflow phase checkpoints
 - Plan phase checkpoints
 
+The [phase review gate](reviews.md#phase-review-gate) (`oat_phase_review_gate`) is a separate, non-pausing mechanism — it does not pause on a passing gate and never modifies the HiLL keys below (`oat_hill_completed`, `oat_plan_hill_phases`).
+
 ## Workflow checkpoints (`state.md`)
 
 Frontmatter keys:

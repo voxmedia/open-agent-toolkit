@@ -187,7 +187,8 @@ For each phase in the plan (whether sequential or inside a parallel group):
 5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 6. **On fail, run the bounded fix loop** (see below).
 7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.
-8. **HiLL checkpoint** if the phase id is listed in `oat_plan_hill_phases`.
+8. **Phase review gate** — when `oat_phase_review_gate` selects the phase, run the optional non-pausing external gate (`oat gate review`) after the step 7 bookkeeping commit and before the HiLL check. A passing gate continues automatically; a blocking gate is received and fixed, reusing the bounded fix loop's `oat_orchestration_retry_limit`. See [Reviews → Phase review gate](reviews.md#phase-review-gate).
+9. **HiLL checkpoint** if the phase id is listed in `oat_plan_hill_phases`.
 
 ### Bounded fix loop
 

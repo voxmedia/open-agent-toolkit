@@ -107,6 +107,21 @@ Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact 
 
 This feature is opt-in and disabled by default. When disabled, the manual `oat-project-review-provide` workflow applies.
 
+## Phase review gate
+
+The phase review gate is an optional, **non-pausing** external review gate that runs after a phase's standard per-phase reviewer passes and the phase bookkeeping is committed. Where the Tier 1 reviewer is an in-session self-review, the gate calls `oat gate review` against the configured cross-provider target, adding an independent perspective before implementation moves to the next phase. It is enabled per-project through `plan.md` frontmatter (`oat_phase_review_gate`; see [Project Artifacts](artifacts.md#oat_phase_review_gate) for the field shape and validation).
+
+It is independent of [HiLL checkpoints](hill-checkpoints.md): a passing gate does not pause, and the gate never touches `oat_hill_completed`, `oat_plan_hill_phases`, or `oat_auto_review_at_hill_checkpoints`.
+
+Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Either way the produced artifact is consumed by `oat-project-review-receive`, autonomously and without user prompts, so findings never evaporate:
+
+- **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Minor — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/Important concern it escalates to the blocking path.
+- **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
+
+Gate-originated artifacts (`oat_review_invocation: gate`) are excluded from the same-scope review-cycle cap in `oat-project-review-receive`. The cap measures failed fix cycles of the standard review loop, so counting gate artifacts would trip it on artifact volume rather than real fix rounds.
+
+This feature is opt-in and disabled by default (missing or `enabled: false`). For a parallel phase group, selected gates run after fan-in and bookkeeping, one per merged phase in plan order.
+
 ## Auto artifact-review loops
 
 Generated planning and analysis artifacts have a separate review loop from code/phase reviews.
