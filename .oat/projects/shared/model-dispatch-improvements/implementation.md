@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-05
+oat_last_updated: 2026-07-06
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: model-dispatch-improvements
 
 **Started:** 2026-07-05
-**Last Updated:** 2026-07-05
+**Last Updated:** 2026-07-06
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -130,38 +130,34 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-07-05
+### 2026-07-06
 
-**Session Start:** {time}
+**Session Start:** n/a
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Add Dispatch Policy Config Types - pending
+- [ ] p01-t02: Add Policy Preset Compilation - pending
+- [ ] p01-t03: Expose Dispatch Policy Config Commands - pending
+- [ ] p01-t04: Update Provider Value Registries - pending
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Implementation not started yet.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- HiLL checkpoints: final phase only (`p04`) from `workflow.hillCheckpointDefault`.
+- Auto-review at HiLL checkpoints: enabled from `workflow.autoReviewAtHillCheckpoints`.
+- Execution tier: Tier 1 subagents authorized by user request.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- None yet.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-07-05
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** n/a
 
 ---
 
