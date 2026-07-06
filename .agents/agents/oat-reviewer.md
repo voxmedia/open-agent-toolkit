@@ -287,7 +287,7 @@ Write the review artifact to the specified path.
 
 **File path format:**
 
-Use a seconds-precision UTC timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `date -u +%Y-%m-%dT%H%M%SZ`) so same-scope, same-day re-reviews never collide and always sort by recency:
+Use a seconds-precision **UTC** timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `date -u +%Y-%m-%dT%H%M%SZ` — the `-u` and the trailing `Z` are mandatory) so same-scope, same-day re-reviews never collide and always sort by recency. Never emit a local-time or `Z`-less timestamp: a timezone-less datetime mis-orders artifacts written by agents in different timezones.
 
 - Phase review: `{project}/reviews/pNN-review-YYYY-MM-DDTHHMMSSZ.md`
 - Final review: `{project}/reviews/final-review-YYYY-MM-DDTHHMMSSZ.md`

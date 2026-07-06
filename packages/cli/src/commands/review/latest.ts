@@ -9,6 +9,7 @@ import {
 import {
   getFrontmatterBlock,
   getFrontmatterField,
+  parseGeneratedTime,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
@@ -139,7 +140,7 @@ async function readReviewCandidate(
     return null;
   }
 
-  const generatedTime = Date.parse(generatedAt);
+  const generatedTime = parseGeneratedTime(generatedAt);
   if (Number.isNaN(generatedTime)) {
     return null;
   }

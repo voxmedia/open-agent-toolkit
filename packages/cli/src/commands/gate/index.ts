@@ -12,6 +12,7 @@ import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
+  parseGeneratedTime,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
@@ -929,7 +930,7 @@ async function readReviewGateArtifactCandidate(
     return null;
   }
 
-  const generatedTime = Date.parse(generatedAt);
+  const generatedTime = parseGeneratedTime(generatedAt);
   if (Number.isNaN(generatedTime)) {
     return null;
   }

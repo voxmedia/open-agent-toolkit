@@ -605,7 +605,7 @@ Review storage contract:
 
 **Naming convention:**
 
-Use a seconds-precision UTC timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `date -u +%Y-%m-%dT%H%M%SZ`), not a date-only stamp, so that same-scope re-reviews and re-gates within one day never collide and `oat review latest` orders them by recency:
+Use a seconds-precision **UTC** timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `date -u +%Y-%m-%dT%H%M%SZ` — the `-u` and the trailing `Z` are mandatory), not a date-only or local-time stamp, so that same-scope re-reviews and re-gates within one day never collide and `oat review latest` orders them by recency:
 
 - Phase review: `{PROJECT_PATH}/reviews/pNN-review-YYYY-MM-DDTHHMMSSZ.md`
 - Task review: `{PROJECT_PATH}/reviews/pNN-tNN-review-YYYY-MM-DDTHHMMSSZ.md`

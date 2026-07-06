@@ -105,6 +105,27 @@ and disambiguate re-gate rounds:
 and `handoff`. Treat any status other than `ok`/`blocked` as an operational
 failure, not a passing gate.
 
+**Drive gates through `oat gate review`, not raw provider invocation.** An
+orchestrator that hand-rolls the review (for example, calling
+`codex exec … oat-project-review-provide <scope>` directly) and then watches
+`reviews/` for a file is reimplementing — less reliably — what the CLI already
+does: `oat gate review` snapshots the reviews directory, dispatches the
+provider, and attributes the produced artifact by content hash, so it is immune
+to a stale file lingering from a prior round. It works standalone, not only
+inside the `oat-project-implement` auto-loop — a one-off final review is just:
+
+```bash
+oat --json gate review \
+  --project "$PROJECT_PATH" \
+  --review-type code \
+  --review-scope final \
+  --exit-nonzero-on important \
+  'Use oat-project-review-provide code final to review the current project'
+```
+
+Read the resulting envelope and exit code; that is the whole completion
+contract.
+
 ## Exec targets
 
 `oat gate cross-provider-exec` chooses from `workflow.gates.execTargets`.
