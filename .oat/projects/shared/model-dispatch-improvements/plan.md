@@ -176,6 +176,7 @@ pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceil
 
 - For capped managed implementer/fix dispatch, keep `selected = min(preferred, ceiling)`.
 - For managed `uncapped`, select the preferred implementer/fix value when provider controls support it.
+- Confirm whether Codex pinned variants can select an effort above the current host/session default; if not, preserve honest resolver metadata and log/document the runtime caveat.
 - For inherit/default mode, return no selected dispatch args and log inherited/provider-default behavior.
 - Keep reviewer dispatch targeting configured capped policy values, and make reviewer behavior explicit for `uncapped` and inherit/default where no target exists.
 
@@ -218,6 +219,7 @@ pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceil
 **Scope:**
 
 - Add regression cases for Codex uncapped preferred effort selecting pinned variants.
+- Capture any Codex host/session-default limitation discovered while testing uncapped pinned variants so the docs do not imply unsupported upward selection.
 - Add regression cases for Claude uncapped preferred model selecting Task `model`, including `fable`.
 - Add inherit/default cases for Codex and Claude returning no dispatch args.
 - Add unsupported-provider behavior for managed capped and uncapped policies.
@@ -317,11 +319,12 @@ pnpm run oat:validate-skills
 - Document dispatch policy terminology and legacy dispatch-ceiling compatibility.
 - Explain `Economy`, `Balanced`, `High`, `Frontier`, `Uncapped`, and `Inherit Host Defaults`.
 - Explain cap-vs-target behavior for implementers/fix loops/reviewers.
-- Explain provider-specific enforcement and Claude model-only Task dispatch.
+- Explain provider-specific enforcement, Claude model-only Task dispatch, and any Codex host/session-default caveat discovered during resolver testing.
 
 **Verification:**
 
 ```bash
+pnpm run cli -- docs generate-index
 pnpm build:docs
 ```
 
@@ -434,14 +437,16 @@ git diff --check
 
 ## Reviews
 
-| Scope | Type     | Status  | Artifact | Notes                                            |
-| ----- | -------- | ------- | -------- | ------------------------------------------------ |
-| plan  | artifact | passed  | n/a      | Inline plan artifact review passed.              |
-| p01   | code     | pending | n/a      | Dispatch policy model and preset changes.        |
-| p02   | code     | pending | n/a      | Resolver semantics and provider-specific cases.  |
-| p03   | code     | pending | n/a      | Lifecycle skill, docs, template, and asset sync. |
-| p04   | code     | pending | n/a      | Validation and release metadata.                 |
-| final | code     | pending | n/a      | Final branch review before PR handoff.           |
+Plan gate review findings were resolved in plan scope.
+
+| Scope | Type     | Status  | Date       | Artifact                                            |
+| ----- | -------- | ------- | ---------- | --------------------------------------------------- |
+| plan  | artifact | passed  | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05.md |
+| p01   | code     | pending | n/a        | n/a                                                 |
+| p02   | code     | pending | n/a        | n/a                                                 |
+| p03   | code     | pending | n/a        | n/a                                                 |
+| p04   | code     | pending | n/a        | n/a                                                 |
+| final | code     | pending | n/a        | n/a                                                 |
 
 ## Implementation Complete
 
