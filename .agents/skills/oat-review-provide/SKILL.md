@@ -1,6 +1,6 @@
 ---
 name: oat-review-provide
-version: 1.2.2
+version: 1.2.3
 description: Use when you need an ad-hoc review outside an active OAT project lifecycle. Reviews code or artifacts without project phase state, unlike oat-project-review-provide.
 argument-hint: '[unstaged|staged|base_branch=<branch>|base_sha=<sha>|<sha1>..<sha2>|--files <path1,path2,...>] [--output <path>] [--mode auto|local|tracked|inline]'
 disable-model-invocation: true
@@ -151,18 +151,20 @@ If user asks for tracked `.oat/repo/reviews` and it is gitignored, warn and ask 
 
 Derive a **scope slug** from the resolved scope mode so that the filename indicates what was reviewed:
 
-| Scope mode             | Slug derivation                      | Example filename                              |
-| ---------------------- | ------------------------------------ | --------------------------------------------- |
-| `base_branch=<branch>` | Current branch name                  | `ad-hoc-review-2026-02-16-oat-repo.md`        |
-| `unstaged`             | Literal `unstaged`                   | `ad-hoc-review-2026-02-16-unstaged.md`        |
-| `staged`               | Literal `staged`                     | `ad-hoc-review-2026-02-16-staged.md`          |
-| `--files <paths>`      | First 2–3 basenames, joined with `-` | `ad-hoc-review-2026-02-16-auth-login.md`      |
-| `base_sha=<sha>`       | Short SHA (7 chars)                  | `ad-hoc-review-2026-02-16-abc1234.md`         |
-| `<sha1>..<sha2>`       | Both short SHAs joined with `-`      | `ad-hoc-review-2026-02-16-abc1234-def5678.md` |
+| Scope mode             | Slug derivation                      | Example filename                                      |
+| ---------------------- | ------------------------------------ | ----------------------------------------------------- |
+| `base_branch=<branch>` | Current branch name                  | `ad-hoc-review-2026-02-16T140322Z-oat-repo.md`        |
+| `unstaged`             | Literal `unstaged`                   | `ad-hoc-review-2026-02-16T140322Z-unstaged.md`        |
+| `staged`               | Literal `staged`                     | `ad-hoc-review-2026-02-16T140322Z-staged.md`          |
+| `--files <paths>`      | First 2–3 basenames, joined with `-` | `ad-hoc-review-2026-02-16T140322Z-auth-login.md`      |
+| `base_sha=<sha>`       | Short SHA (7 chars)                  | `ad-hoc-review-2026-02-16T140322Z-abc1234.md`         |
+| `<sha1>..<sha2>`       | Both short SHAs joined with `-`      | `ad-hoc-review-2026-02-16T140322Z-abc1234-def5678.md` |
 
 ```bash
 mkdir -p "$OUTPUT_DIR"
-TODAY=$(date +%Y-%m-%d)
+# Seconds-precision UTC token so same-scope same-day re-reviews never collide and
+# order by recency in `oat review latest`. The trailing Z (UTC) is mandatory.
+STAMP=$(date -u +%Y-%m-%dT%H%M%SZ)
 
 # Derive SCOPE_SLUG based on scope mode (examples):
 # base_branch → SCOPE_SLUG=$(git branch --show-current | tr '/' '-')
@@ -174,10 +176,10 @@ TODAY=$(date +%Y-%m-%d)
 # Sanitize: lowercase, replace non-alphanumeric with '-', collapse runs, trim to 40 chars
 SCOPE_SLUG=$(echo "$SCOPE_SLUG" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-40)
 
-OUT_FILE="$OUTPUT_DIR/ad-hoc-review-${TODAY}-${SCOPE_SLUG}.md"
+OUT_FILE="$OUTPUT_DIR/ad-hoc-review-${STAMP}-${SCOPE_SLUG}.md"
 ```
 
-If the file already exists (same scope reviewed twice in one day), suffix with `-v2`, `-v3`, etc.
+Set `oat_generated_at` in the artifact frontmatter to the matching full UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`). Same-second collisions are effectively impossible for sequential runs; if one occurs, suffix with `-v2`, `-v3`, etc.
 
 ### Step 4: Run Review
 
