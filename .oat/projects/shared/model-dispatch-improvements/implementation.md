@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-06
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 4     | 4/4       |
-| Phase 3 | pending  | 5     | 0/5       |
+| Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | pending  | 3     | 0/3       |
 
-**Total:** 8/16 tasks completed
+**Total:** 13/16 tasks completed
 
 ---
 
@@ -252,6 +252,167 @@ oat_generated: false
 
 ---
 
+## Phase 3: Lifecycle Skills, Templates, and Docs
+
+**Status:** complete
+**Started:** 2026-07-06
+**Completed:** 2026-07-06
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Updated planning and quick-start prompts from ceiling-only language to the dispatch policy model.
+- Updated implementation dispatch instructions for capped managed, managed `Uncapped`, and `Inherit Host Defaults` behavior.
+- Aligned templates, plan-writing guidance, and agent contracts with policy terminology and Claude `fable`.
+- Documented the dispatch policy model across workflow, implementation, configuration, and directory-reference docs.
+- Regenerated bundled assets and provider views, then fixed p03 review findings around no-target reviewer metadata, lifecycle docs, and Codex role descriptions.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-plan/SKILL.md` - planning dispatch policy prompt.
+- `.agents/skills/oat-project-quick-start/SKILL.md` - quick-start dispatch policy prompt and version bump.
+- `.agents/skills/oat-project-implement/SKILL.md` - runtime dispatch rules and no-target reviewer wording.
+- `.agents/skills/oat-project-plan-writing/SKILL.md` - template and Dispatch Profile guidance.
+- `.oat/templates/plan.md` and `.oat/templates/state.md` - dispatch policy frontmatter/template comments.
+- `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md` - policy model documentation.
+- `apps/oat-docs/docs/workflows/projects/implementation-execution.md` - implementation dispatch behavior.
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md` - plan-boundary policy capture.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` and tests - no-target reviewer selection metadata.
+- `packages/cli/src/validation/skills.test.ts` - quick-start skill version expectation.
+
+**Verification:**
+
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+- Run: `pnpm run cli -- docs generate-index`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+- Run: `pnpm run cli -- sync --scope all`
+- Result: pass
+- Run: `pnpm run cli -- --help >/dev/null`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`
+- Result: pass (224 files / 2128 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- Result: pass (38 tests)
+- Run: `pnpm run cli -- status --scope project --json`
+- Result: pass (`total=142`, `inSync=142`, `drifted=0`, `missing=0`, `stray=0`)
+- Run: `git diff --check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- p03 review found stale `review-target` metadata for managed `Uncapped` reviewer dispatch, stale lifecycle docs, and stale Codex role wording. Commit `3f47d036` addressed the contract and docs; commit `2c358e55` aligned the quick-start skill version expectation with the p03 skill bump.
+- p03 re-review passed with no findings.
+
+### Task p03-t01: Update Planning Policy Prompts
+
+**Status:** completed
+**Commit:** 555cdaea
+**Follow-up Commit:** 2c358e55
+
+**Outcome:**
+
+- Updated planning and quick-start prompts to present `Economy`, `Balanced`, `High`, `Frontier`, `Uncapped`, and `Inherit Host Defaults`.
+- Persisted explicit dispatch policy state for managed uncapped and inherit/default selections.
+- Bumped changed skill versions and aligned the quick-start version expectation test.
+
+**Verification:**
+
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- Result: pass
+
+---
+
+### Task p03-t02: Update Implementation Dispatch Instructions
+
+**Status:** completed
+**Commit:** 55f4e4dd
+**Fix Commit:** 3f47d036
+
+**Outcome:**
+
+- Updated implementation dispatch rules for capped managed, managed `Uncapped`, and `Inherit Host Defaults`.
+- Clarified Codex pinned variant behavior, Claude model-axis behavior, and no-target reviewer fallback behavior.
+- Fixed managed `Uncapped` reviewer selection metadata so no-target reviewer paths do not masquerade as configured review targets.
+
+**Verification:**
+
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`
+- Result: pass
+
+---
+
+### Task p03-t03: Update Templates and Plan-Writing Guidance
+
+**Status:** completed
+**Commit:** 8fbab426
+
+**Outcome:**
+
+- Updated plan-writing guidance, templates, and agent contracts for dispatch policy terminology.
+- Added Claude `fable` to Dispatch Profile allowed values where appropriate.
+- Clarified provider defaults as inherit/default or base/unpinned fallback behavior.
+
+**Verification:**
+
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+
+---
+
+### Task p03-t04: Update Docs Site Content
+
+**Status:** completed
+**Commit:** b253fb01
+**Fix Commit:** 3f47d036
+
+**Outcome:**
+
+- Documented dispatch policy terminology, legacy dispatch-ceiling compatibility, managed capped choices, managed `Uncapped`, and `Inherit Host Defaults`.
+- Explained cap-vs-target behavior and provider-specific enforcement for Codex and Claude.
+- Updated lifecycle docs to describe `oat_dispatch_policy` capture and legacy compatibility at the plan boundary.
+
+**Verification:**
+
+- Run: `pnpm run cli -- docs generate-index`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+
+---
+
+### Task p03-t05: Regenerate Bundled Assets and Provider Views
+
+**Status:** completed
+**Commit:** e9918d2f
+**Fix Commit:** 3f47d036
+
+**Outcome:**
+
+- Regenerated bundled CLI assets and provider views after canonical skill, template, agent, and docs updates.
+- Updated Codex role descriptions to dispatch policy cap wording.
+- Verified managed provider views are in sync.
+
+**Verification:**
+
+- Run: `pnpm run cli -- sync --scope all`
+- Result: pass
+- Run: `pnpm run cli -- --help >/dev/null`
+- Result: pass
+- Run: `pnpm run cli -- status --scope project --json`
+- Result: pass (`total=142`, `inSync=142`, `drifted=0`, `missing=0`, `stray=0`)
+- Run: `git diff --check`
+- Result: pass
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -333,6 +494,40 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 3 — 2026-07-06 12:16
+
+**Branch:** dispatch-fixes-round-2
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p03   | DONE        | pass   | 1/2            | passed      |
+
+#### Parallel Groups
+
+- p03: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p03 implementation used model_axis=inherited, effort_axis=selected:high, dispatch_ceiling=xhigh; high was selected because p03 changed shipped lifecycle skills, templates, docs, and generated provider assets.
+- Dispatch: p03 review used effort_axis=selected:xhigh at the configured ceiling for deterministic quality gate behavior.
+- Dispatch: p03 review fix used effort_axis=selected:high to resolve lifecycle docs and no-target reviewer selection metadata findings.
+- Dispatch: p03 re-review used effort_axis=selected:xhigh and passed with no findings.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -353,12 +548,18 @@ Chronological log of implementation progress.
 - [x] p02-t02: Implement Capped, Uncapped, and Inherit Selection - 76ee79a4, fix 91e917e8
 - [x] p02-t03: Update Resolver Output and Errors - fb7e29bc
 - [x] p02-t04: Cover Provider-Specific Resolver Cases - c34e7c05
+- [x] p03-t01: Update Planning Policy Prompts - 555cdaea, follow-up 2c358e55
+- [x] p03-t02: Update Implementation Dispatch Instructions - 55f4e4dd, fix 3f47d036
+- [x] p03-t03: Update Templates and Plan-Writing Guidance - 8fbab426
+- [x] p03-t04: Update Docs Site Content - b253fb01, fix 3f47d036
+- [x] p03-t05: Regenerate Bundled Assets and Provider Views - e9918d2f, fix 3f47d036
 
 **What changed (high level):**
 
 - Phase 1 completed and passed re-review.
 - Claude `fable` is now accepted across config, provider registry, and dispatch resolver paths.
 - Phase 2 completed and passed re-review after fixing config-source precedence.
+- Phase 3 completed and passed re-review after aligning shipped skills, docs, templates, generated assets, and no-target reviewer metadata.
 
 **Decisions:**
 
@@ -367,10 +568,11 @@ Chronological log of implementation progress.
 - Execution tier: Tier 1 subagents authorized by user request.
 - Resolver valid-value checks should use canonical provider/config values instead of local stale lists.
 - New dispatch policy config and legacy dispatch ceiling config must be compared by resolved source precedence.
+- Managed `Uncapped` review dispatch has no review target; logs and resolver metadata use no-target wording rather than `review-target`.
 
 **Follow-ups / TODO:**
 
-- Continue with p03-t01.
+- Continue with p04-t01.
 
 **Blockers:**
 
@@ -392,10 +594,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                  | Passed | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts src/providers/ceiling/registry.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts` | yes    | 0      | targeted |
-| 2     | `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `git diff --check`                                                                                                                                                                                                                    | yes    | 0      | targeted |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                          | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts src/providers/ceiling/registry.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`                                                                                         | yes    | 0      | targeted |
+| 2     | `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `git diff --check`                                                                                                                                                                                                                                                                                                            | yes    | 0      | targeted |
+| 3     | `pnpm run oat:validate-skills`; `pnpm run cli -- docs generate-index`; `pnpm build:docs`; `pnpm run cli -- sync --scope all`; `pnpm run cli -- --help >/dev/null`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm run cli -- status --scope project --json`; `git diff --check` | yes    | 0      | targeted |
 
 ## Final Summary (for PR/docs)
 
