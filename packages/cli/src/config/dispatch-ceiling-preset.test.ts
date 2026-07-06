@@ -4,6 +4,7 @@ import {
   DISPATCH_CEILING_PRESETS,
   compileAdvancedDispatchCeiling,
   compileDispatchCeilingPreset,
+  compileDispatchPolicyPreset,
 } from './dispatch-ceiling-preset';
 
 describe('compileDispatchCeilingPreset', () => {
@@ -39,6 +40,53 @@ describe('compileDispatchCeilingPreset', () => {
       'maximum',
       'cost-conscious',
     ]);
+  });
+});
+
+describe('compileDispatchPolicyPreset', () => {
+  it('economy → capped managed { codex: medium, claude: sonnet }', () => {
+    const result = compileDispatchPolicyPreset('economy');
+    expect(result).toEqual({
+      mode: 'managed',
+      policy: 'economy',
+      providers: { codex: 'medium', claude: 'sonnet' },
+    });
+  });
+
+  it('balanced → capped managed { codex: high, claude: sonnet }', () => {
+    const result = compileDispatchPolicyPreset('balanced');
+    expect(result).toEqual({
+      mode: 'managed',
+      policy: 'balanced',
+      providers: { codex: 'high', claude: 'sonnet' },
+    });
+  });
+
+  it('high → capped managed { codex: xhigh, claude: opus }', () => {
+    const result = compileDispatchPolicyPreset('high');
+    expect(result).toEqual({
+      mode: 'managed',
+      policy: 'high',
+      providers: { codex: 'xhigh', claude: 'opus' },
+    });
+  });
+
+  it('frontier → capped managed { codex: xhigh, claude: fable }', () => {
+    const result = compileDispatchPolicyPreset('frontier');
+    expect(result).toEqual({
+      mode: 'managed',
+      policy: 'frontier',
+      providers: { codex: 'xhigh', claude: 'fable' },
+    });
+  });
+
+  it('uncapped is explicit managed selection without concrete provider caps', () => {
+    const result = compileDispatchPolicyPreset('uncapped');
+    expect(result).toEqual({
+      mode: 'managed',
+      policy: 'uncapped',
+    });
+    expect('providers' in result).toBe(false);
   });
 });
 

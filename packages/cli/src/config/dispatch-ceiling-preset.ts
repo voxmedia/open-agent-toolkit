@@ -3,6 +3,7 @@ import type {
   WorkflowCodexDispatchCeiling,
   WorkflowDispatchCeiling,
   WorkflowDispatchCeilingPreset,
+  WorkflowManagedDispatchPolicy,
 } from './oat-config';
 
 /**
@@ -21,6 +22,22 @@ export const DISPATCH_CEILING_PRESETS = {
 } as const satisfies Record<
   WorkflowDispatchCeilingPreset,
   { codex: WorkflowCodexDispatchCeiling; claude: WorkflowClaudeDispatchCeiling }
+>;
+
+export type DispatchPolicyClaudeValue = WorkflowClaudeDispatchCeiling | 'fable';
+export type CappedManagedDispatchPolicy = Exclude<
+  WorkflowManagedDispatchPolicy,
+  'uncapped'
+>;
+
+export const DISPATCH_POLICY_PRESETS = {
+  economy: { codex: 'medium', claude: 'sonnet' },
+  balanced: { codex: 'high', claude: 'sonnet' },
+  high: { codex: 'xhigh', claude: 'opus' },
+  frontier: { codex: 'xhigh', claude: 'fable' },
+} as const satisfies Record<
+  CappedManagedDispatchPolicy,
+  { codex: WorkflowCodexDispatchCeiling; claude: DispatchPolicyClaudeValue }
 >;
 
 /**
@@ -42,6 +59,20 @@ export interface PresetCompileResult {
 export interface AdvancedCompileResult {
   providers: WorkflowDispatchCeiling['providers'] & object;
 }
+
+export type DispatchPolicyCompileResult =
+  | {
+      mode: 'managed';
+      policy: CappedManagedDispatchPolicy;
+      providers: {
+        codex: WorkflowCodexDispatchCeiling;
+        claude: DispatchPolicyClaudeValue;
+      };
+    }
+  | {
+      mode: 'managed';
+      policy: 'uncapped';
+    };
 
 /**
  * Compile a preset label into concrete per-provider values.
@@ -65,4 +96,22 @@ export function compileAdvancedDispatchCeiling(
   providers: WorkflowDispatchCeiling['providers'] & object,
 ): AdvancedCompileResult {
   return { providers };
+}
+
+/**
+ * Compile the managed dispatch-policy ladder into concrete provider caps.
+ * `uncapped` is intentionally explicit but has no provider caps.
+ */
+export function compileDispatchPolicyPreset(
+  policy: WorkflowManagedDispatchPolicy,
+): DispatchPolicyCompileResult {
+  if (policy === 'uncapped') {
+    return { mode: 'managed', policy };
+  }
+
+  return {
+    mode: 'managed',
+    policy,
+    providers: { ...DISPATCH_POLICY_PRESETS[policy] },
+  };
 }
