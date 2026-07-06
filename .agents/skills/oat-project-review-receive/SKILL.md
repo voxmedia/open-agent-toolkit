@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.5
+version: 1.5.6
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -102,7 +102,7 @@ fi
 
 Selection rules:
 
-- Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime.
+- Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
 - Read the JSON result:
   - `path: null` means no review target was found.
   - `kind: "project"` and `actionable: true` means this skill can process the target when the path is an active top-level project review.

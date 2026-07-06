@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.9
+version: 1.3.10
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -605,13 +605,15 @@ Review storage contract:
 
 **Naming convention:**
 
-- Phase review: `{PROJECT_PATH}/reviews/pNN-review-YYYY-MM-DD.md`
-- Task review: `{PROJECT_PATH}/reviews/pNN-tNN-review-YYYY-MM-DD.md`
-- Final review: `{PROJECT_PATH}/reviews/final-review-YYYY-MM-DD.md`
-- Range review: `{PROJECT_PATH}/reviews/range-review-YYYY-MM-DD.md`
-- Artifact review: `{PROJECT_PATH}/reviews/artifact-{artifact}-review-YYYY-MM-DD.md`
+Use a seconds-precision UTC timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `date -u +%Y-%m-%dT%H%M%SZ`), not a date-only stamp, so that same-scope re-reviews and re-gates within one day never collide and `oat review latest` orders them by recency:
 
-**If file exists for today:** append `-v2`, `-v3`, etc.
+- Phase review: `{PROJECT_PATH}/reviews/pNN-review-YYYY-MM-DDTHHMMSSZ.md`
+- Task review: `{PROJECT_PATH}/reviews/pNN-tNN-review-YYYY-MM-DDTHHMMSSZ.md`
+- Final review: `{PROJECT_PATH}/reviews/final-review-YYYY-MM-DDTHHMMSSZ.md`
+- Range review: `{PROJECT_PATH}/reviews/range-review-YYYY-MM-DDTHHMMSSZ.md`
+- Artifact review: `{PROJECT_PATH}/reviews/artifact-{artifact}-review-YYYY-MM-DDTHHMMSSZ.md`
+
+Set `oat_generated_at` in the artifact frontmatter to the matching full timestamp (`YYYY-MM-DDTHH:MM:SSZ`). Same-second collisions are effectively impossible for sequential runs; if one occurs, append `-v2`, `-v3`, etc.
 
 **Important:** `PROJECT_PATH` here must be the resolved path from Step 1.5. If a worktree was detected, this path is relative to the worktree root, ensuring the artifact is written on the correct branch.
 
@@ -642,7 +644,7 @@ Shared ad-hoc companion reference (non-project mode):
 ```markdown
 ---
 oat_generated: true
-oat_generated_at: { today }
+oat_generated_at: { full UTC timestamp, e.g. 2026-07-06T11:16:01Z }
 oat_review_scope: { scope }
 oat_review_type: { code|artifact }
 oat_review_invocation: { manual|auto|gate }
