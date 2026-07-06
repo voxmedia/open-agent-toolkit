@@ -642,7 +642,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
-    type: 'haiku | sonnet | opus',
+    type: 'haiku | sonnet | opus | fable',
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand:
@@ -733,7 +733,12 @@ const WORKFLOW_ENUM_VALUES = {
     'high',
     'xhigh',
   ],
-  'workflow.dispatchCeiling.providers.claude': ['haiku', 'sonnet', 'opus'],
+  'workflow.dispatchCeiling.providers.claude': [
+    'haiku',
+    'sonnet',
+    'opus',
+    'fable',
+  ],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([

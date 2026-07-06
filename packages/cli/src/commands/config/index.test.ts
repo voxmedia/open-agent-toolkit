@@ -984,6 +984,26 @@ describe('oat config', () => {
       });
     });
 
+    it('sets workflow.dispatchCeiling.providers.claude to fable for frontier compatibility', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.claude',
+        'fable',
+      ]);
+
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
+      });
+    });
+
     it('set workflow.dispatchCeiling.providers.codex validates provider-specific enums (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
@@ -1371,6 +1391,23 @@ describe('oat config', () => {
         'Key: workflow.dispatchCeiling.providers.codex',
       );
       expect(capture.info[0]).toContain('low | medium | high | xhigh');
+      expect(capture.info[0]).toContain('Default: unset');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.dispatchCeiling.providers.claude shows fable enum metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'describe',
+        'workflow.dispatchCeiling.providers.claude',
+      ]);
+
+      expect(capture.info[0]).toContain(
+        'Key: workflow.dispatchCeiling.providers.claude',
+      );
+      expect(capture.info[0]).toContain('haiku | sonnet | opus | fable');
       expect(capture.info[0]).toContain('Default: unset');
       expect(process.exitCode).toBe(0);
     });
