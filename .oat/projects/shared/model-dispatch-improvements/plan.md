@@ -444,7 +444,7 @@ Plan gate review findings were resolved in plan scope.
 | Scope | Type     | Status  | Date       | Artifact                                            |
 | ----- | -------- | ------- | ---------- | --------------------------------------------------- |
 | plan  | artifact | passed  | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05.md |
-| p01   | code     | pending | n/a        | n/a                                                 |
+| p01   | code     | passed  | 2026-07-06 | reviews/archived/p01-review-2026-07-06-v2.md        |
 | p02   | code     | pending | n/a        | n/a                                                 |
 | p03   | code     | pending | n/a        | n/a                                                 |
 | p04   | code     | pending | n/a        | n/a                                                 |
@@ -454,12 +454,12 @@ Plan gate review findings were resolved in plan scope.
 
 Implementation is complete when all four phases pass review and the release validation command succeeds.
 
-| Phase | Tasks | Status  |
-| ----- | ----- | ------- |
-| p01   | 4     | pending |
-| p02   | 4     | pending |
-| p03   | 5     | pending |
-| p04   | 3     | pending |
+| Phase | Tasks | Status   |
+| ----- | ----- | -------- |
+| p01   | 4     | complete |
+| p02   | 4     | pending  |
+| p03   | 5     | pending  |
+| p04   | 3     | pending  |
 
 **Total:** 16 tasks.
 
