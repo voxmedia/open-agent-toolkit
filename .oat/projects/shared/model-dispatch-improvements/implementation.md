@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-06
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 4     | 4/4       |
 | Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | pending  | 3     | 0/3       |
+| Phase 4 | complete | 3     | 3/3       |
 
-**Total:** 13/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ---
 
@@ -413,6 +413,116 @@ oat_generated: false
 
 ---
 
+## Phase 4: Validation, Release Metadata, and Handoff
+
+**Status:** complete
+**Started:** 2026-07-06
+**Completed:** 2026-07-06
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Ran targeted dispatch policy test coverage for config, preset compilation, provider registry, resolver, config commands, and help snapshots.
+- Ran CLI type-check, lint, formatting, skill validation, and docs build quality gates.
+- Bumped the lockstep public package set and bundled public package versions asset to `0.1.41`.
+- Validated release metadata and confirmed managed provider views are in sync.
+
+**Key files touched:**
+
+- `packages/cli/package.json` - bumped CLI package version to `0.1.41`.
+- `packages/control-plane/package.json` - bumped control-plane package version to `0.1.41`.
+- `packages/docs-config/package.json` - bumped docs-config package version to `0.1.41`.
+- `packages/docs-theme/package.json` - bumped docs-theme package version to `0.1.41`.
+- `packages/docs-transforms/package.json` - bumped docs-transforms package version to `0.1.41`.
+- `packages/cli/assets/public-package-versions.json` - updated bundled public package version metadata.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts`
+- Result: pass (224 files / 2128 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm format`
+- Result: pass
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+- Run: `pnpm run cli -- status --scope project --json`
+- Result: pass (`total=142`, `inSync=142`, `drifted=0`, `missing=0`, `stray=0`)
+- Run: `git diff --check`
+- Result: pass
+
+**Notes / Decisions:**
+
+- p04-t01 and p04-t02 were validation-only and produced no source changes.
+- p04 review passed with no findings. The repeated commit-hook provider-view sync warning was not treated as a p04 finding because live status reported all managed provider views in sync.
+- No lockfile update was required for the pnpm workspace version bump.
+
+### Task p04-t01: Run Targeted Dispatch Policy Tests
+
+**Status:** completed
+**Commit:** no changes
+
+**Outcome:**
+
+- Targeted dispatch policy test coverage passed without requiring test or source changes.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts`
+- Result: pass
+
+---
+
+### Task p04-t02: Run Workspace Quality Gates
+
+**Status:** completed
+**Commit:** no changes
+
+**Outcome:**
+
+- CLI type-check, lint, formatting, skill validation, and docs build passed without requiring source changes.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm format`
+- Result: pass
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+
+---
+
+### Task p04-t03: Bump Public Package Versions and Validate Release
+
+**Status:** completed
+**Commit:** c0e55ff6
+
+**Outcome:**
+
+- Bumped all five public lockstep packages and bundled public package version metadata to `0.1.41`.
+- Release validation passed.
+
+**Verification:**
+
+- Run: `pnpm release:validate`
+- Result: pass
+- Run: `git diff --check`
+- Result: pass
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -528,6 +638,38 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 4 — 2026-07-06 12:29
+
+**Branch:** dispatch-fixes-round-2
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p04: sequential
+
+#### Dispatch Notes
+
+- Dispatch: p04 implementation used model_axis=inherited, effort_axis=selected:high, dispatch_ceiling=xhigh; high was selected because p04 ran final validation and release metadata updates for shipped public surfaces.
+- Dispatch: p04 review used effort_axis=selected:xhigh at the configured ceiling for deterministic quality gate behavior.
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -553,6 +695,9 @@ Chronological log of implementation progress.
 - [x] p03-t03: Update Templates and Plan-Writing Guidance - 8fbab426
 - [x] p03-t04: Update Docs Site Content - b253fb01, fix 3f47d036
 - [x] p03-t05: Regenerate Bundled Assets and Provider Views - e9918d2f, fix 3f47d036
+- [x] p04-t01: Run Targeted Dispatch Policy Tests - no changes
+- [x] p04-t02: Run Workspace Quality Gates - no changes
+- [x] p04-t03: Bump Public Package Versions and Validate Release - c0e55ff6
 
 **What changed (high level):**
 
@@ -560,6 +705,7 @@ Chronological log of implementation progress.
 - Claude `fable` is now accepted across config, provider registry, and dispatch resolver paths.
 - Phase 2 completed and passed re-review after fixing config-source precedence.
 - Phase 3 completed and passed re-review after aligning shipped skills, docs, templates, generated assets, and no-target reviewer metadata.
+- Phase 4 completed and passed review after final validation gates and lockstep public package version bumps.
 
 **Decisions:**
 
@@ -572,7 +718,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p04-t01.
+- Await final review.
 
 **Blockers:**
 
@@ -594,34 +740,54 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                          | Passed | Failed | Coverage |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts src/providers/ceiling/registry.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`                                                                                         | yes    | 0      | targeted |
-| 2     | `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `git diff --check`                                                                                                                                                                                                                                                                                                            | yes    | 0      | targeted |
-| 3     | `pnpm run oat:validate-skills`; `pnpm run cli -- docs generate-index`; `pnpm build:docs`; `pnpm run cli -- sync --scope all`; `pnpm run cli -- --help >/dev/null`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm run cli -- status --scope project --json`; `git diff --check` | yes    | 0      | targeted |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Passed | Failed | Coverage |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts src/providers/ceiling/registry.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`                                                                                                                                                                                                                  | yes    | 0      | targeted |
+| 2     | `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `git diff --check`                                                                                                                                                                                                                                                                                                                                                                                                                                     | yes    | 0      | targeted |
+| 3     | `pnpm run oat:validate-skills`; `pnpm run cli -- docs generate-index`; `pnpm build:docs`; `pnpm run cli -- sync --scope all`; `pnpm run cli -- --help >/dev/null`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm run cli -- status --scope project --json`; `git diff --check`                                                                                                                          | yes    | 0      | targeted |
+| 4     | `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts src/config/dispatch-ceiling-preset.test.ts src/providers/ceiling/registry.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli type-check`; `pnpm --filter @open-agent-toolkit/cli lint`; `pnpm format`; `pnpm run oat:validate-skills`; `pnpm build:docs`; `pnpm release:validate`; `pnpm run cli -- status --scope project --json`; `git diff --check` | yes    | 0      | targeted |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A dispatch policy model that separates managed capped policies, managed `Uncapped`, and `Inherit Host Defaults`.
+- Policy preset/config support for `Economy`, `Balanced`, `High`, `Frontier`, `Uncapped`, and inherit/default behavior.
+- Resolver semantics that select preferred implementer/fix effort or model under caps, preserve legacy dispatch ceiling compatibility, and use explicit no-target reviewer metadata where no review cap exists.
+- Updated lifecycle skills, templates, docs, generated assets, and package release metadata for the new dispatch policy contract.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Planning and quick-start prompts now ask for dispatch policy, not only dispatch ceiling.
+- Managed `Uncapped` still lets OAT choose preferred dispatch controls where a provider supports them; `Inherit Host Defaults` is the mode that leaves dispatch controls to the executing harness.
+- Claude `Frontier` maps through the `fable` model tier, while Codex continues to use pinned effort variants.
+- Review dispatch targets configured capped policies; uncapped and inherit/default reviewer paths are logged as no-target/default behavior.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/config/oat-config.ts` - dispatch policy config model and validation.
+- `packages/cli/src/config/dispatch-ceiling-preset.ts` - managed policy preset compilation.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - dispatch policy resolution and output.
+- `.agents/skills/oat-project-plan/SKILL.md` and `.agents/skills/oat-project-quick-start/SKILL.md` - planning policy prompts.
+- `.agents/skills/oat-project-implement/SKILL.md` - runtime dispatch selection rules.
+- `.oat/templates/plan.md` and `.oat/templates/state.md` - dispatch policy state templates.
+- `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md` - dispatch policy docs.
+- `packages/cli/assets/**` and `.codex/**` - bundled/generated asset updates.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Targeted CLI dispatch policy tests passed.
+- CLI type-check and lint passed.
+- Formatting check passed.
+- Skill validation passed.
+- Docs build passed.
+- Release validation passed.
+- Provider-view status reported `total=142`, `inSync=142`, `drifted=0`, `missing=0`, `stray=0`.
+- `git diff --check` passed.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None recorded.
 
 ## References
 
