@@ -8,9 +8,9 @@
 
 <!-- OAT BACKLOG-INDEX -->
 
-| ID                     | Title | Status | Priority | Scope | Estimate |
-| ---------------------- | ----- | ------ | -------- | ----- | -------- |
-| _No backlog items yet_ | -     | -      | -        | -     | -        |
+| ID                                  | Title                                                             | Status | Priority | Scope   | Estimate |
+| ----------------------------------- | ----------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260706-front-load-recurring-gate | Front-load recurring gate-finding classes into implementer briefs | open   | medium   | feature | L        |
 
 <!-- END OAT BACKLOG-INDEX -->
 
