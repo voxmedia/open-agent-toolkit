@@ -49,7 +49,7 @@ describe('provider ceiling adapters', () => {
       expect(claude.provider).toBe('claude');
       expect(claude.supportsCeiling).toBe(true);
       expect(claude.mechanism).toBe('model-arg');
-      expect(claude.validValues).toEqual(['haiku', 'sonnet', 'opus']);
+      expect(claude.validValues).toEqual(['haiku', 'sonnet', 'opus', 'fable']);
     });
 
     it('compiles a value to a model arg for the implementer role', () => {
@@ -66,6 +66,12 @@ describe('provider ceiling adapters', () => {
       });
     });
 
+    it('compiles fable to a model arg for Frontier dispatch', () => {
+      expect(claude.compileToDispatchArgs('fable', 'reviewer', {})).toEqual({
+        model: 'fable',
+      });
+    });
+
     it('returns null for an invalid value', () => {
       expect(claude.compileToDispatchArgs('gpt', 'implementer', {})).toBeNull();
     });
@@ -73,6 +79,12 @@ describe('provider ceiling adapters', () => {
     it('flags verifyOnDispatch when the requested tier is above the orchestrator', () => {
       expect(
         claude.verifyOnDispatch('opus', { orchestratorTier: 'sonnet' }),
+      ).toBe(true);
+    });
+
+    it('flags verifyOnDispatch when fable is above the orchestrator', () => {
+      expect(
+        claude.verifyOnDispatch('fable', { orchestratorTier: 'opus' }),
       ).toBe(true);
     });
 
@@ -93,7 +105,7 @@ describe('provider ceiling adapters', () => {
     });
 
     it('exposes a tier order for above-orchestrator comparison', () => {
-      expect(CLAUDE_TIER_ORDER).toEqual(['haiku', 'sonnet', 'opus']);
+      expect(CLAUDE_TIER_ORDER).toEqual(['haiku', 'sonnet', 'opus', 'fable']);
     });
   });
 

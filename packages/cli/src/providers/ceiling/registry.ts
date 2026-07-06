@@ -61,7 +61,12 @@ const CODEX_IMPLEMENTER_ROLE = 'oat-phase-implementer';
 const CODEX_REVIEWER_ROLE = 'oat-reviewer';
 
 /** Claude tier order, low → high, for above-orchestrator comparison. */
-export const CLAUDE_TIER_ORDER: readonly string[] = ['haiku', 'sonnet', 'opus'];
+export const CLAUDE_TIER_ORDER: readonly string[] = [
+  'haiku',
+  'sonnet',
+  'opus',
+  'fable',
+];
 
 const codexAdapter: ProviderCeilingAdapter = {
   provider: 'codex',
