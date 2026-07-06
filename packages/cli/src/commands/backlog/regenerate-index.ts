@@ -5,6 +5,11 @@ import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { computeManagedIndexUpdate } from '@commands/shared/managed-index';
 import YAML from 'yaml';
 
+import {
+  BACKLOG_ITEM_STATUSES,
+  isValidBacklogStatus,
+} from './shared/item-status';
+
 const INDEX_START = '<!-- OAT BACKLOG-INDEX -->';
 const INDEX_END = '<!-- END OAT BACKLOG-INDEX -->';
 
@@ -97,9 +102,14 @@ function renderManagedSection(items: BacklogIndexItem[]): string {
   ].join('\n');
 }
 
+export interface RegenerateBacklogIndexResult {
+  itemCount: number;
+  warnings: string[];
+}
+
 export async function regenerateBacklogIndex(
   backlogRoot: string,
-): Promise<void> {
+): Promise<RegenerateBacklogIndexResult> {
   const itemsDir = join(backlogRoot, 'items');
   const indexPath = join(backlogRoot, 'index.md');
 
@@ -109,6 +119,7 @@ export async function regenerateBacklogIndex(
     .sort();
 
   const items: BacklogIndexItem[] = [];
+  const warnings: string[] = [];
   for (const entry of entries) {
     const filePath = join(itemsDir, entry);
     const item = parseItemFrontmatter(
@@ -116,6 +127,11 @@ export async function regenerateBacklogIndex(
       filePath,
     );
     if (item) {
+      if (item.status !== '' && !isValidBacklogStatus(item.status)) {
+        warnings.push(
+          `Backlog item ${filePath} has invalid status "${item.status}". Valid statuses: ${BACKLOG_ITEM_STATUSES.join(', ')}.`,
+        );
+      }
       items.push(item);
     }
   }
@@ -142,8 +158,9 @@ export async function regenerateBacklogIndex(
     renderManagedSection(items),
   );
   if (updated === null) {
-    return;
+    return { itemCount: items.length, warnings };
   }
 
   await writeFile(indexPath, updated, 'utf8');
+  return { itemCount: items.length, warnings };
 }

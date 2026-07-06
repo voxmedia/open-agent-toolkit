@@ -6,6 +6,7 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { archiveBacklogItem, BacklogArchiveError } from './archive';
 import { initializeBacklog } from './init';
 import { regenerateBacklogIndex } from './regenerate-index';
 import { generateBacklogId } from './shared/generate-id';
@@ -18,6 +19,12 @@ interface RegenerateIndexOptions {
   backlogRoot?: string;
 }
 
+interface ArchiveOptions {
+  backlogRoot?: string;
+  wontDo?: boolean;
+  summary?: string;
+}
+
 interface GenerateIdOptions {
   createdAt?: string;
 }
@@ -27,6 +34,7 @@ interface BacklogCommandDependencies {
   resolveProjectRoot: typeof resolveProjectRoot;
   initializeBacklog: typeof initializeBacklog;
   regenerateBacklogIndex: typeof regenerateBacklogIndex;
+  archiveBacklogItem: typeof archiveBacklogItem;
   pathExists: (path: string) => Promise<boolean>;
 }
 
@@ -53,6 +61,7 @@ const DEFAULT_DEPENDENCIES: BacklogCommandDependencies = {
   resolveProjectRoot,
   initializeBacklog,
   regenerateBacklogIndex,
+  archiveBacklogItem,
   pathExists: pathExistsDefault,
 };
 
@@ -125,14 +134,79 @@ export function createBacklogCommand(
         options.backlogRoot,
         dependencies,
       );
-      await dependencies.regenerateBacklogIndex(backlogRoot);
+      const { itemCount, warnings } =
+        await dependencies.regenerateBacklogIndex(backlogRoot);
 
       if (context.json) {
-        context.logger.json({ status: 'ok', backlogRoot });
+        context.logger.json({ status: 'ok', backlogRoot, itemCount, warnings });
       } else {
+        for (const warning of warnings) {
+          context.logger.warn(warning);
+        }
         context.logger.info(`Regenerated backlog index at ${backlogRoot}`);
       }
       process.exitCode = 0;
+    });
+
+  cmd
+    .command('archive')
+    .description(
+      'Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, and regenerate the index',
+    )
+    .argument('<id>', 'Backlog item id (`BL-YYMMDD-slug`)')
+    .option('--wont-do', 'Close the item as `wont_do` instead of `closed`')
+    .option('--summary <text>', 'One-line outcome summary for completed.md')
+    .option(
+      '--backlog-root <path>',
+      'Backlog root directory (defaults to .oat/repo/pjm/backlog)',
+    )
+    .action(async (id: string, options: ArchiveOptions, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      const backlogRoot = await resolveBacklogRoot(
+        context,
+        options.backlogRoot,
+        dependencies,
+      );
+
+      try {
+        const result = await dependencies.archiveBacklogItem(backlogRoot, id, {
+          wontDo: options.wontDo,
+          summary: options.summary,
+        });
+
+        if (context.json) {
+          context.logger.json(result);
+        } else {
+          for (const warning of result.warnings) {
+            context.logger.warn(warning);
+          }
+          if (result.result === 'noop') {
+            context.logger.info(`Backlog item ${id} is already archived.`);
+          } else {
+            context.logger.success(
+              `Archived ${id} as ${result.status} (moved to ${result.movedTo}).`,
+            );
+          }
+        }
+        process.exitCode = 0;
+      } catch (error) {
+        if (error instanceof BacklogArchiveError) {
+          if (context.json) {
+            context.logger.json({
+              result: 'error',
+              id,
+              message: error.message,
+            });
+          } else {
+            context.logger.error(error.message);
+          }
+          process.exitCode = error.exitCode;
+          return;
+        }
+        throw error;
+      }
     });
 
   cmd

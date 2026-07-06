@@ -28,7 +28,16 @@ const TEMPLATE_TARGETS = [
   { template: 'current-state.md', target: 'pjm/current-state.md' },
   { template: 'roadmap.md', target: 'pjm/roadmap.md' },
   { template: 'reference-agents.md', target: 'reference/AGENTS.md' },
+  { template: 'repo-readme.md', target: 'README.md' },
+  { template: 'pjm-handoffs-readme.md', target: 'pjm/handoffs/README.md' },
 ] as const satisfies readonly TemplateTarget[];
+
+// Next-step hint printed after init/backfill. `oat pjm init` never writes
+// CLAUDE.md shims itself — strategy ownership stays with `oat instructions
+// sync`, so we point the operator at it (with the `--dry-run` preview).
+export const INSTRUCTIONS_SYNC_HINT =
+  'Next step: run `oat instructions sync` to create CLAUDE.md shims for the ' +
+  'repo-reference AGENTS.md files (preview with `oat instructions sync --dry-run`).';
 
 const BACKLOG_PATHS = [
   'pjm/backlog/index.md',

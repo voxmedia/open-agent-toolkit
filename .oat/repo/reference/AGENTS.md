@@ -1,8 +1,3 @@
----
-oat_template: true
-oat_template_name: reference-agents
----
-
 # Durable Reference Guidance
 
 This directory owns append-mostly reference material.

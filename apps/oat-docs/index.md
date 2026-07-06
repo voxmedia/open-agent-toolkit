@@ -3,6 +3,7 @@
 - [OAT Documentation](index.md) — An open-source toolkit for portable, provider-agnostic agent tooling and workflows.
 - Cli Utilities
   - [CLI Utilities](cli-utilities/index.md) — Standalone adoption lane for general OAT CLI surfaces outside provider sync, docs tooling, and tracked workflows.
+  - [Backlog Lifecycle](cli-utilities/backlog-lifecycle.md) — The states a file-backed backlog item moves through, how oat backlog archive closes it out atomically, and how oat pjm doctor catches lifecycle drift.
   - [CLI Bootstrap](cli-utilities/bootstrap.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
   - [Config and Local State](cli-utilities/config-and-local-state.md) — Utility command groups for config discovery, backlog helpers, local paths, instruction integrity, and diagnostics.
   - [Configuration](cli-utilities/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.

@@ -27,6 +27,8 @@ const EXPECTED_FILES = [
   'pjm/current-state.md',
   'pjm/roadmap.md',
   'reference/AGENTS.md',
+  'README.md',
+  'pjm/handoffs/README.md',
   'pjm/backlog/index.md',
   'pjm/backlog/completed.md',
   'pjm/backlog/items/.gitkeep',
@@ -40,6 +42,8 @@ const TEMPLATE_NAMES = [
   'repo-agents.md',
   'pjm-agents.md',
   'reference-agents.md',
+  'repo-readme.md',
+  'pjm-handoffs-readme.md',
 ] as const;
 
 async function seedTemplate(root: string, name: string): Promise<void> {
@@ -163,6 +167,17 @@ describe('oat pjm', () => {
     await expect(
       readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
     ).resolves.not.toContain('oat_template:');
+  });
+
+  it('prints the instructions sync next-step hint after init', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    const result = await runCli(root, ['pjm', 'init']);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('oat instructions sync');
+    expect(result.stdout).toContain('--dry-run');
   });
 
   it('supports a repo root override', async () => {

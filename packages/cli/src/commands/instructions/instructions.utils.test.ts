@@ -143,6 +143,77 @@ describe('instructions utils', () => {
     );
   });
 
+  it('carves .oat/repo back into the scan while keeping the rest of .oat excluded', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, '.oat', 'repo', 'pjm'), { recursive: true });
+    await mkdir(join(repoRoot, '.oat', 'templates'), { recursive: true });
+    await mkdir(join(repoRoot, '.oat', 'projects'), { recursive: true });
+    await mkdir(join(repoRoot, '.oat', 'sync'), { recursive: true });
+
+    await writeFile(
+      join(repoRoot, '.oat', 'repo', 'AGENTS.md'),
+      '# repo instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'repo', 'pjm', 'AGENTS.md'),
+      '# repo pjm instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'projects', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'sync', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot);
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(entries).toHaveLength(2);
+    expect(paths).toContain('.oat/repo/AGENTS.md');
+    expect(paths).toContain('.oat/repo/pjm/AGENTS.md');
+    expect(paths).not.toContain('.oat/templates/AGENTS.md');
+    expect(paths).not.toContain('.oat/projects/AGENTS.md');
+    expect(paths).not.toContain('.oat/sync/AGENTS.md');
+  });
+
+  it('leaves the scan unchanged when .oat/repo does not exist', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, '.oat', 'templates'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+    await mkdir(join(repoRoot, 'packages', 'app'), { recursive: true });
+    await writeFile(
+      join(repoRoot, 'packages', 'app', 'AGENTS.md'),
+      '# app instructions\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot);
+
+    expect(entries).toHaveLength(1);
+    expect(relative(repoRoot, entries[0]?.agentsPath ?? '')).toBe(
+      'packages/app/AGENTS.md',
+    );
+  });
+
   it('accepts CRLF pointer content as ok', async () => {
     const repoRoot = await createRepoRoot();
 

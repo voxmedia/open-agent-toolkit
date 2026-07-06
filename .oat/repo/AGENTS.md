@@ -1,8 +1,3 @@
----
-oat_template: true
-oat_template_name: repo-agents
----
-
 # Repo Reference Guidance
 
 Use this directory as the canonical OAT repo-reference root.

@@ -7,11 +7,30 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { initializeRepoReference } from './init';
+import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
+
+// Repo-root `.oat/templates/` directory. The synthetic `seedTemplate` fixtures
+// below write stub bodies, so template *content* can only be asserted against
+// the real source templates that ship in the bundle.
+const REPO_TEMPLATES_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  '..',
+  '..',
+  '.oat',
+  'templates',
+);
+
+async function readRepoTemplate(name: string): Promise<string> {
+  return readFile(join(REPO_TEMPLATES_DIR, name), 'utf8');
+}
 
 const TEMPLATE_NAMES = [
   'current-state.md',
@@ -19,6 +38,8 @@ const TEMPLATE_NAMES = [
   'repo-agents.md',
   'pjm-agents.md',
   'reference-agents.md',
+  'repo-readme.md',
+  'pjm-handoffs-readme.md',
 ] as const;
 
 const EXPECTED_FILES = [
@@ -27,6 +48,8 @@ const EXPECTED_FILES = [
   'pjm/current-state.md',
   'pjm/roadmap.md',
   'reference/AGENTS.md',
+  'README.md',
+  'pjm/handoffs/README.md',
   'pjm/backlog/index.md',
   'pjm/backlog/completed.md',
   'pjm/backlog/items/.gitkeep',
@@ -94,6 +117,52 @@ describe('initializeRepoReference', () => {
     await expect(
       access(join(repoRoot, 'reference', 'backlog')),
     ).rejects.toThrow();
+  });
+
+  it('emits the human README and the pjm handoffs README', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, 'repo');
+    await seedTemplates(join(assetsRoot, 'templates'));
+
+    const result = await initializeRepoReference({ assetsRoot, repoRoot });
+
+    expect(result.created).toContain('README.md');
+    expect(result.created).toContain('pjm/handoffs/README.md');
+    await expect(access(join(repoRoot, 'README.md'))).resolves.toBeUndefined();
+    await expect(
+      access(join(repoRoot, 'pjm', 'handoffs', 'README.md')),
+    ).resolves.toBeUndefined();
+  });
+
+  it('backfills a deleted README/handoffs README without touching existing files', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, 'repo');
+    await seedTemplates(join(assetsRoot, 'templates'));
+
+    await initializeRepoReference({ assetsRoot, repoRoot });
+    // Curate an existing file, then delete the two READMEs so the rerun must
+    // backfill only the missing ones.
+    const curated = '# Curated current state\n';
+    await writeFile(join(repoRoot, 'pjm', 'current-state.md'), curated, 'utf8');
+    await rm(join(repoRoot, 'README.md'));
+    await rm(join(repoRoot, 'pjm', 'handoffs', 'README.md'));
+
+    const second = await initializeRepoReference({ assetsRoot, repoRoot });
+
+    expect(second.created).toEqual(['README.md', 'pjm/handoffs/README.md']);
+    await expect(
+      readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
+    ).resolves.toBe(curated);
+    expect(second.skipped).toContain('pjm/current-state.md');
+  });
+
+  it('exposes a sync next-step hint mentioning oat instructions sync and --dry-run', () => {
+    expect(INSTRUCTIONS_SYNC_HINT).toContain('oat instructions sync');
+    expect(INSTRUCTIONS_SYNC_HINT).toContain('--dry-run');
   });
 
   it('does not overwrite existing canonical docs and reports them as skipped', async () => {
@@ -192,5 +261,53 @@ describe('initializeRepoReference', () => {
     ).rejects.toThrow(
       'Template reference-agents.md was not found in repo-local templates or bundled assets.',
     );
+  });
+});
+
+describe('pjm instruction template source content', () => {
+  it('bakes the backlog lifecycle and kickoff-handoff sections into pjm-agents.md', async () => {
+    const content = await readRepoTemplate('pjm-agents.md');
+
+    expect(content).toContain('## Backlog Lifecycle');
+    expect(content).toContain('## Project Kickoff Handoffs');
+    // Close-out is rewritten around the atomic command as the primary path.
+    expect(content).toContain('oat backlog archive');
+    // Skills-repo terminal-status clause is upstreamed verbatim.
+    expect(content).toContain('never invent variants like `done`');
+    // The handoffs section references the convention doc and its deletion rule.
+    expect(content).toContain('handoffs/<BL-id>.md');
+    expect(content).toContain('git rm');
+  });
+
+  it('defers the close-out workflow to ../pjm/AGENTS.md in reference-agents.md', async () => {
+    const content = await readRepoTemplate('reference-agents.md');
+
+    expect(content).toContain('../pjm/AGENTS.md');
+    expect(content.toLowerCase()).toContain('source of truth');
+  });
+
+  it('points the repo AGENTS guide at the lifecycle section and the README', async () => {
+    const content = await readRepoTemplate('repo-agents.md');
+
+    expect(content).toContain('Backlog Lifecycle');
+    expect(content).toContain('pjm/AGENTS.md');
+    expect(content).toContain('README.md');
+  });
+
+  it('orients humans with a canonical layout table in repo-readme.md', async () => {
+    const content = await readRepoTemplate('repo-readme.md');
+
+    expect(content).toContain('## Layout');
+    expect(content).toContain('`pjm/handoffs/`');
+    expect(content).toContain('BL-YYMMDD-slug');
+    expect(content).toContain('oat backlog archive');
+  });
+
+  it('documents the consumable handoffs convention in pjm-handoffs-readme.md', async () => {
+    const content = await readRepoTemplate('pjm-handoffs-readme.md');
+
+    expect(content).toContain('<BL-id>.md');
+    expect(content).toContain('consumable');
+    expect(content).toContain('git rm');
   });
 });

@@ -1,6 +1,12 @@
 import { access, readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import {
+  BACKLOG_ITEM_STATUSES,
+  extractBacklogStatus,
+  isTerminalBacklogStatus,
+  isValidBacklogStatus,
+} from '@commands/backlog/shared/item-status';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import type { DoctorCheck } from '@ui/output';
 
@@ -130,6 +136,57 @@ function containsTemplateFrontmatter(content: string): boolean {
     (/\boat_template\s*:/i.test(frontmatter) ||
       /\boat_template_name\s*:/i.test(frontmatter)),
   );
+}
+
+const BACKLOG_ITEMS_DIRECTORY = 'pjm/backlog/items';
+const BACKLOG_ARCHIVED_DIRECTORY = 'pjm/backlog/archived';
+const BACKLOG_COMPLETED_FILE = 'pjm/backlog/completed.md';
+// Best-effort backlog id scan: `BL-YYMMDD-slug` (legacy lowercase `bl-`
+// matched case-insensitively). The six-digit requirement keeps the literal
+// `BL-YYMMDD-slug` format placeholder in `completed.md` from matching.
+const BACKLOG_ID_PATTERN = /\bbl-\d{6}-[a-z0-9][a-z0-9-]*/gi;
+
+interface BacklogItemRecord {
+  directory: 'items' | 'archived';
+  relativePath: string;
+  id: string;
+  status: string | null;
+}
+
+/**
+ * Single frontmatter pass over both backlog directories. Every drift check
+ * derives from this scan so the filesystem is walked once. `index.md` is the
+ * managed index, not an item, so it is excluded.
+ */
+async function collectBacklogItems(
+  repoRoot: string,
+): Promise<BacklogItemRecord[]> {
+  const records: BacklogItemRecord[] = [];
+  const directories = [
+    { directory: 'items' as const, relativeDir: BACKLOG_ITEMS_DIRECTORY },
+    { directory: 'archived' as const, relativeDir: BACKLOG_ARCHIVED_DIRECTORY },
+  ];
+  for (const { directory, relativeDir } of directories) {
+    const fileNames = await listMarkdownFiles(join(repoRoot, relativeDir));
+    for (const fileName of fileNames) {
+      if (fileName === 'index.md') {
+        continue;
+      }
+      const content = await readIfExists(join(repoRoot, relativeDir, fileName));
+      records.push({
+        directory,
+        relativePath: `${relativeDir}/${fileName}`,
+        id: fileName.replace(/\.md$/, ''),
+        status: content ? extractBacklogStatus(content) : null,
+      });
+    }
+  }
+  return records;
+}
+
+/** Best-effort scan of completed-log content for backlog item ids. */
+function extractCompletedIds(content: string): string[] {
+  return [...content.matchAll(BACKLOG_ID_PATTERN)].map((match) => match[0]!);
 }
 
 function checkStatus(missing: string[]): 'pass' | 'fail' {
@@ -307,6 +364,161 @@ export async function runPjmDoctorChecks(
       secondRoadmaps.length === 0
         ? undefined
         : 'Move active operational docs to pjm/ and leave reference/ for durable append-mostly artifacts.',
+  });
+
+  const backlogItems = await collectBacklogItems(repoRoot);
+
+  const terminalInItems = backlogItems
+    .filter(
+      (item) =>
+        item.directory === 'items' &&
+        item.status !== null &&
+        isTerminalBacklogStatus(item.status),
+    )
+    .map((item) => item.relativePath);
+  checks.push({
+    name: 'pjm:backlog_terminal_in_items',
+    description: 'Terminal-status backlog items awaiting archive',
+    status: checkStatus(terminalInItems),
+    message:
+      terminalInItems.length === 0
+        ? 'No terminal-status backlog items remain under items/.'
+        : `Terminal-status backlog items still under items/: ${terminalInItems.join(', ')}`,
+    fix:
+      terminalInItems.length === 0
+        ? undefined
+        : 'Run `oat backlog archive <id>` to move each closed/wont_do item into archived/.',
+  });
+
+  // A missing/empty `status:` is as much a drift as an out-of-enum value: the
+  // `oat backlog archive` command rejects both, so `pjm doctor` must surface
+  // both rather than leaving status-less items silently invisible.
+  const missingStatusItems = backlogItems
+    .filter((item) => item.status === null || item.status.trim() === '')
+    .map((item) => item.relativePath);
+  const outOfEnumStatusItems = backlogItems
+    .filter(
+      (item) =>
+        item.status !== null &&
+        item.status.trim() !== '' &&
+        !isValidBacklogStatus(item.status),
+    )
+    .map((item) => item.relativePath);
+  const invalidStatus = [...outOfEnumStatusItems, ...missingStatusItems];
+  const invalidStatusDetails: string[] = [];
+  if (outOfEnumStatusItems.length > 0) {
+    invalidStatusDetails.push(
+      `out-of-enum status: ${outOfEnumStatusItems.join(', ')}`,
+    );
+  }
+  if (missingStatusItems.length > 0) {
+    invalidStatusDetails.push(
+      `missing status: ${missingStatusItems.join(', ')}`,
+    );
+  }
+  checks.push({
+    name: 'pjm:backlog_invalid_status',
+    description: 'Backlog items with a missing or out-of-enum status',
+    status: checkStatus(invalidStatus),
+    message:
+      invalidStatus.length === 0
+        ? 'All backlog item statuses are within the valid enum.'
+        : `Backlog items with an invalid status (${invalidStatusDetails.join('; ')}). Valid statuses: ${BACKLOG_ITEM_STATUSES.join(', ')}.`,
+    fix:
+      invalidStatus.length === 0
+        ? undefined
+        : `Set a valid status (${BACKLOG_ITEM_STATUSES.join(', ')}) on each listed item.`,
+  });
+
+  const archivedOpen = backlogItems
+    .filter(
+      (item) =>
+        item.directory === 'archived' &&
+        item.status !== null &&
+        isValidBacklogStatus(item.status) &&
+        !isTerminalBacklogStatus(item.status),
+    )
+    .map((item) => item.relativePath);
+  checks.push({
+    name: 'pjm:backlog_archived_open',
+    description: 'Archived backlog items with a non-terminal status',
+    status: warnStatus(archivedOpen),
+    message:
+      archivedOpen.length === 0
+        ? 'No archived backlog items carry an open status.'
+        : `Archived backlog items still marked open/in_progress: ${archivedOpen.join(', ')}`,
+    fix:
+      archivedOpen.length === 0
+        ? undefined
+        : 'Set a terminal status (closed/wont_do) on each archived item, or move it back under items/.',
+  });
+
+  // A single id must never live in both `items/` and `archived/`: the live copy
+  // shadows the archived record and `oat backlog archive` refuses to reconcile
+  // it automatically (auto-archiving would clobber the archived file). Derive
+  // from the same single scan so the filesystem is not re-walked.
+  const backlogPathsByIdAndDir = new Map<
+    string,
+    { items?: string; archived?: string }
+  >();
+  for (const item of backlogItems) {
+    const key = item.id.toLowerCase();
+    const entry = backlogPathsByIdAndDir.get(key) ?? {};
+    entry[item.directory] = item.relativePath;
+    backlogPathsByIdAndDir.set(key, entry);
+  }
+  const duplicateIdPairs: string[] = [];
+  for (const entry of backlogPathsByIdAndDir.values()) {
+    if (entry.items && entry.archived) {
+      duplicateIdPairs.push(`${entry.items} + ${entry.archived}`);
+    }
+  }
+  checks.push({
+    name: 'pjm:backlog_duplicate_id',
+    description: 'Backlog ids present in both items/ and archived/',
+    status: checkStatus(duplicateIdPairs),
+    message:
+      duplicateIdPairs.length === 0
+        ? 'No backlog id is present in both items/ and archived/.'
+        : `Backlog ids present in both items/ and archived/: ${duplicateIdPairs.join('; ')}`,
+    fix:
+      duplicateIdPairs.length === 0
+        ? undefined
+        : 'Reconcile each duplicate manually: decide whether the active (items/) or archived copy is authoritative, remove the other, then re-run `oat backlog archive <id>` if the item still needs archiving.',
+  });
+
+  const itemPathsById = new Map<string, string>();
+  for (const item of backlogItems) {
+    if (item.directory === 'items') {
+      itemPathsById.set(item.id.toLowerCase(), item.relativePath);
+    }
+  }
+  const completedContent = await readIfExists(
+    join(repoRoot, BACKLOG_COMPLETED_FILE),
+  );
+  const completedUnarchived: string[] = [];
+  const seenUnarchived = new Set<string>();
+  if (completedContent) {
+    for (const completedId of extractCompletedIds(completedContent)) {
+      const relativePath = itemPathsById.get(completedId.toLowerCase());
+      if (relativePath && !seenUnarchived.has(relativePath)) {
+        seenUnarchived.add(relativePath);
+        completedUnarchived.push(relativePath);
+      }
+    }
+  }
+  checks.push({
+    name: 'pjm:backlog_completed_unarchived',
+    description: 'Completed-log entries whose item file is still under items/',
+    status: warnStatus(completedUnarchived),
+    message:
+      completedUnarchived.length === 0
+        ? 'No completed backlog entries reference an item still under items/.'
+        : `Completed log references items still under items/: ${completedUnarchived.join(', ')}`,
+    fix:
+      completedUnarchived.length === 0
+        ? undefined
+        : 'Run `oat backlog archive <id>` to archive each completed item still under items/.',
   });
 
   return checks;
