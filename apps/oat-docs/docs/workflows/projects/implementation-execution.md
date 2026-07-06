@@ -182,7 +182,6 @@ Resolved cap: xhigh
 Selected effort: provider-default
 Policy source: project state
 Provider default effort: xhigh
-Selection mode: provider-default
 Model axis: inherited
 Effort axis: provider-default
 Dispatch target: explorer

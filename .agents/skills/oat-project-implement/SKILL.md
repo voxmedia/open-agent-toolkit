@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.25
+version: 2.0.26
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -496,7 +496,6 @@ Resolved cap: xhigh
 Selected effort: provider-default
 Policy source: project state
 Provider default effort: xhigh
-Selection mode: provider-default
 Model axis: inherited
 Effort axis: provider-default
 Dispatch target: explorer
