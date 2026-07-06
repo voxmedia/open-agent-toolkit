@@ -14,10 +14,14 @@ oat_parallel_execution: false
 oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_dispatch_ceiling: # optional project override for provider-aware dispatch ceilings
-#   provider: codex # codex | claude
-#   value: high # codex: low|medium|high|xhigh; claude: haiku|sonnet|opus
+# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
+#   mode: managed # managed | inherit
+#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
+#   providers: # present for capped managed policies; omitted for uncapped/inherit
+#     codex: high # low|medium|high|xhigh
+#     claude: sonnet # haiku|sonnet|opus|fable
 #   source: project-state
+# oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status

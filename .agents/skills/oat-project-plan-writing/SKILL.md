@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.5
+version: 1.2.6
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -91,10 +91,10 @@ Runtime routing note:
 
 - Keep `oat_ready_for` canonical as `oat-project-implement`.
 - Declare parallelism via `oat_plan_parallel_groups` in plan.md frontmatter (empty = sequential; nested arrays of phase IDs = parallel groups). `oat-project-implement` reads this field to choose sequential vs worktree-isolated parallel execution.
-- Dispatch ceilings are not stored in `plan.md`. Plan-producing skills resolve
-  them from `workflow.dispatchCeiling.<provider>` or project `state.md`
-  frontmatter, then persist interactive answers back to `state.md` as
-  `oat_dispatch_ceiling`.
+- Dispatch policies are not stored in `plan.md`. Plan-producing skills resolve
+  them from `workflow.dispatchPolicy.*`, compatibility
+  `workflow.dispatchCeiling.*` keys, or project `state.md` frontmatter, then
+  persist interactive answers back to `state.md` as `oat_dispatch_policy`.
 
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
 
@@ -109,16 +109,16 @@ If a user-authored override is needed, use this table shape:
 ```markdown
 ## Dispatch Profile
 
-| Phase | Claude model              | Codex effort                   | Rationale                     |
-| ----- | ------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+| Phase | Claude model                     | Codex effort                   | Rationale                     |
+| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
+| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
 ```
 
 Validation rules for explicit rows:
 
 - `Phase` must match a real `pNN` phase in the plan.
-- `Claude model` must be `haiku`, `sonnet`, `opus`, `auto`, or blank.
-- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank. In Codex, explicit effort values are preferred controls that `oat-project-implement` caps against the resolved OAT dispatch ceiling and maps to pinned implementer variants when selected. Provider default effort is informational for base/unpinned roles and is not an OAT ceiling.
+- `Claude model` must be `haiku`, `sonnet`, `opus`, `fable`, `auto`, or blank.
+- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `auto`, or blank. In Codex, explicit effort values are preferred controls. `oat-project-implement` caps them when a capped managed policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
 - Blank or `auto` means no explicit constraint for that provider.
 - `Rationale` is recommended and should explain why runtime selection should not decide on its own.
 
