@@ -120,6 +120,8 @@ Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter 
 
 Gate-originated artifacts (`oat_review_invocation: gate`) are excluded from the same-scope review-cycle cap in `oat-project-review-receive`. The cap measures failed fix cycles of the standard review loop, so counting gate artifacts would trip it on artifact volume rather than real fix rounds.
 
+When a phase is re-gated multiple times, each round produces a distinct review artifact — filenames and `oat_generated_at` are seconds-precision, so rounds never collide and `oat review latest` resolves the newest. An orchestrator should know a gate finished from the `oat --json gate review` result envelope on process exit (`status`, `runId`, `generatedAt`), not by watching the `reviews/` directory or the provider's log; see [Gate completion signal](../../cli-utilities/workflow-gates.md#gate-completion-signal).
+
 This feature is opt-in and disabled by default (missing or `enabled: false`). For a parallel phase group, selected gates run after fan-in and bookkeeping, one per merged phase in plan order.
 
 ## Auto artifact-review loops

@@ -78,6 +78,33 @@ after each selected phase's standard reviewer passes. See
 for the frontmatter contract and how passing versus blocking gates are
 dispositioned.
 
+### Gate completion signal
+
+The canonical "how do I know the gate finished" signal is the structured result
+`oat --json gate review` writes to stdout on exit, together with the process
+exit code. Orchestrators should run the gate synchronously and read that
+envelope — do **not** poll the `reviews/` directory for a file to appear or
+watch the provider process's log for liveness. Filesystem and log-liveness
+heuristics are unreliable: a re-gate can momentarily surface a prior round's
+artifact, and a lingering provider side-process says nothing about whether the
+review committed.
+
+Every terminal envelope carries a `runId` (unique per gate invocation) and,
+once an artifact exists, its `generatedAt` (the artifact's seconds-precision
+`oat_generated_at`), so a caller can correlate the result to the exact artifact
+and disambiguate re-gate rounds:
+
+| `status`                     | Exit | Meaning                                                   |
+| ---------------------------- | ---- | --------------------------------------------------------- |
+| `ok`                         | 0    | Review completed; gate passed at the threshold.           |
+| `blocked`                    | 1    | Review completed; findings at/above the threshold.        |
+| `review_failed`              | ≠0   | The provider target exited non-zero; no verdict.          |
+| `artifact_validation_failed` | 1    | Provider ran but the review artifact could not be parsed. |
+
+`ok` and `blocked` also include `outcome`, `artifactPath`, `counts`, `scope`,
+and `handoff`. Treat any status other than `ok`/`blocked` as an operational
+failure, not a passing gate.
+
 ## Exec targets
 
 `oat gate cross-provider-exec` chooses from `workflow.gates.execTargets`.
