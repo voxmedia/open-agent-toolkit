@@ -94,6 +94,8 @@ interface DispatchCeilingResolution {
   status: 'resolved' | 'unresolved' | 'blocked';
   provider: DispatchCeilingProvider;
   value: DispatchCeilingValue | null;
+  policyMode: WorkflowDispatchPolicyMode | null;
+  policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null;
   source: DispatchCeilingSource | null;
   preset: string | null;
   unresolved: boolean;
@@ -111,11 +113,21 @@ const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
   ...VALID_CLAUDE_DISPATCH_CEILINGS,
 ];
 
+type DispatchSelectionMode =
+  | 'capped'
+  | 'uncapped'
+  | 'review-target'
+  | 'inherit-default'
+  | 'unresolved';
+
 interface DispatchSelection {
   role: CeilingRole;
   preferredValue: DispatchCeilingValue | null;
   selectedValue: DispatchCeilingValue | null;
   capped: boolean;
+  selectionMode: DispatchSelectionMode;
+  policyMode: WorkflowDispatchPolicyMode | null;
+  policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null;
 }
 
 const DEFAULT_DEPENDENCIES: DispatchCeilingDependencies = {
@@ -238,6 +250,14 @@ function isValidManagedPolicy(
   );
 }
 
+function validManagedPolicyList(): string {
+  return VALID_MANAGED_DISPATCH_POLICIES.join(', ');
+}
+
+function validProviderValueList(provider: DispatchCeilingProvider): string {
+  return providerValueOrder(provider)?.join(', ') ?? 'none';
+}
+
 function compiledPolicyValueForProvider(
   provider: DispatchCeilingProvider,
   compiled: DispatchPolicyCompileResult,
@@ -248,6 +268,11 @@ function compiledPolicyValueForProvider(
 
   const value = compiled.providers[provider as keyof typeof compiled.providers];
   return isValidProviderValue(provider, value) ? value : null;
+}
+
+function invalidProjectPolicyMessage(value: unknown): string {
+  const actual = typeof value === 'string' ? value : String(value);
+  return `Invalid project dispatch policy "${actual}". Valid managed policies: ${validManagedPolicyList()}. Use mode "inherit" for host defaults.`;
 }
 
 function readProjectDispatchPolicy(
@@ -282,12 +307,15 @@ function readProjectDispatchPolicy(
   }
 
   if (mode !== 'managed') {
-    return null;
+    const actual = typeof mode === 'string' ? mode : String(mode);
+    throw new Error(
+      `Invalid project dispatch policy mode "${actual}". Valid modes: managed, inherit.`,
+    );
   }
 
   const policyValue = policyRecord['policy'];
   if (!isValidManagedPolicy(policyValue)) {
-    return null;
+    throw new Error(invalidProjectPolicyMessage(policyValue));
   }
 
   const compiled = compileDispatchPolicyPreset(policyValue);
@@ -306,6 +334,17 @@ function readProjectDispatchPolicy(
     providers && typeof providers === 'object' && !Array.isArray(providers)
       ? (providers as Record<string, unknown>)[provider]
       : null;
+  const providerOrder = providerValueOrder(provider);
+  if (
+    providerOrder &&
+    explicitValue !== null &&
+    explicitValue !== undefined &&
+    !isValidProviderValue(provider, explicitValue)
+  ) {
+    throw new Error(
+      `Invalid project dispatch policy provider value "${String(explicitValue)}" for ${provider}. Valid values: ${validProviderValueList(provider)}.`,
+    );
+  }
   const value = isValidProviderValue(provider, explicitValue)
     ? explicitValue
     : compiledPolicyValueForProvider(provider, compiled);
@@ -383,12 +422,14 @@ async function resolveProjectStateCeiling(
     return null;
   }
 
+  let content: string;
   try {
-    const content = await dependencies.readFile(join(projectPath, 'state.md'));
-    return readProjectDispatchCeiling(provider, content);
+    content = await dependencies.readFile(join(projectPath, 'state.md'));
   } catch {
     return null;
   }
+
+  return readProjectDispatchCeiling(provider, content);
 }
 
 async function resolveProjectPath(
@@ -525,39 +566,49 @@ function selectDispatchValue(
   policy: ResolvedDispatchPolicy,
   preferredValue: DispatchCeilingValue | null,
 ): DispatchSelection {
+  const baseSelection = {
+    role,
+    policyMode: policy.mode,
+    policy: policy.policy,
+  };
+
   if (policy.mode === 'inherit') {
     return {
-      role,
+      ...baseSelection,
       preferredValue: null,
       selectedValue: null,
       capped: false,
+      selectionMode: 'inherit-default',
     };
   }
 
   if (policy.policy === 'uncapped') {
     return {
-      role,
+      ...baseSelection,
       preferredValue: role === 'reviewer' ? null : preferredValue,
       selectedValue: role === 'reviewer' ? null : preferredValue,
       capped: false,
+      selectionMode: role === 'reviewer' ? 'review-target' : 'uncapped',
     };
   }
 
   if (policy.value === null) {
     return {
-      role,
+      ...baseSelection,
       preferredValue: null,
       selectedValue: null,
       capped: false,
+      selectionMode: 'capped',
     };
   }
 
   if (role === 'reviewer' || preferredValue === null) {
     return {
-      role,
+      ...baseSelection,
       preferredValue,
       selectedValue: policy.value,
       capped: false,
+      selectionMode: role === 'reviewer' ? 'review-target' : 'capped',
     };
   }
 
@@ -566,19 +617,21 @@ function selectDispatchValue(
   const ceilingIndex = order?.indexOf(policy.value) ?? -1;
   if (!order || preferredIndex < 0 || ceilingIndex < 0) {
     return {
-      role,
+      ...baseSelection,
       preferredValue,
       selectedValue: policy.value,
       capped: false,
+      selectionMode: 'capped',
     };
   }
 
   const selectedIndex = Math.min(preferredIndex, ceilingIndex);
   return {
-    role,
+    ...baseSelection,
     preferredValue,
     selectedValue: order[selectedIndex]!,
     capped: preferredIndex > ceilingIndex,
+    selectionMode: 'capped',
   };
 }
 
@@ -608,6 +661,9 @@ function buildProviderResolution(
         preferredValue,
         selectedValue: null,
         capped: false,
+        selectionMode: 'unresolved',
+        policyMode: null,
+        policy: null,
       },
     };
   }
@@ -682,7 +738,7 @@ async function resolveCodexProviderDefaultEffort(
 
 function blockMessage(provider: DispatchCeilingProvider): string {
   const label = providerLabel(provider);
-  return `BLOCKED: ${label} dispatch ceiling is unresolved in non-interactive mode.\nSet workflow.dispatchCeiling.providers.${provider} in .oat/config.json or oat_dispatch_ceiling in project state.`;
+  return `BLOCKED: ${label} dispatch policy is unresolved in non-interactive mode.\nSet workflow.dispatchPolicy.mode/workflow.dispatchPolicy.policy, workflow.dispatchCeiling.providers.${provider}, oat_dispatch_policy, or legacy oat_dispatch_ceiling.`;
 }
 
 function isNonInteractiveEnv(env: NodeJS.ProcessEnv): boolean {
@@ -737,6 +793,8 @@ async function resolveDispatchCeiling(
       status: 'resolved',
       provider,
       value: resolvedValue.value,
+      policyMode: resolvedValue.mode,
+      policy: resolvedValue.policy,
       source: resolvedValue.source,
       preset: resolvedValue.preset,
       unresolved: false,
@@ -755,6 +813,8 @@ async function resolveDispatchCeiling(
     status: shouldBlock ? 'blocked' : 'unresolved',
     provider,
     value: null,
+    policyMode: null,
+    policy: null,
     source: null,
     preset: null,
     unresolved: true,
@@ -802,6 +862,15 @@ async function resolveCeilingValue(
   return null;
 }
 
+function policyLabel(
+  policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null,
+): string {
+  if (policy === 'legacy-ceiling') {
+    return 'legacy capped';
+  }
+  return policy ?? 'inherit host defaults';
+}
+
 function writeHumanResolution(
   context: CommandContext,
   resolution: DispatchCeilingResolution,
@@ -813,8 +882,9 @@ function writeHumanResolution(
   }
 
   context.logger.info(
-    `${label} dispatch ceiling: ${resolution.value ?? 'unresolved'}`,
+    `${label} dispatch policy: ${policyLabel(resolution.policy)}`,
   );
+  context.logger.info(`Resolved cap: ${resolution.value ?? 'none'}`);
   context.logger.info(`Source: ${sourceLabel(resolution.source)}`);
 
   const providerResolution = resolution.providers[resolution.provider];
@@ -822,15 +892,34 @@ function writeHumanResolution(
     context.logger.info(
       `Mode: ${providerResolution.mode} (${providerResolution.mechanism})`,
     );
+    context.logger.info(
+      `Selection: ${providerResolution.selection.selectionMode}`,
+    );
   }
 
   if (resolution.provider === 'codex') {
     context.logger.info(
       `Codex provider default effort: ${resolution.providerDefaultEffort}`,
     );
-    context.logger.info(
-      `Note: OAT will use pinned subagent variants up to ${resolution.value ?? 'the resolved ceiling'}. Base/unpinned roles resolve through the provider default.`,
-    );
+    if (providerResolution?.selection.selectionMode === 'inherit-default') {
+      context.logger.info(
+        'Note: OAT will not select a Codex effort; base/unpinned roles resolve through the provider default.',
+      );
+    } else if (providerResolution?.selection.selectionMode === 'uncapped') {
+      context.logger.info(
+        'Note: OAT will use the preferred pinned Codex variant with no configured cap. Actual host support for upward effort selection must be verified by the dispatching host.',
+      );
+    } else if (
+      providerResolution?.selection.selectionMode === 'review-target'
+    ) {
+      context.logger.info(
+        'Note: Reviewer dispatch uses the configured target when one exists; uncapped/inherit policies provide no reviewer target.',
+      );
+    } else {
+      context.logger.info(
+        `Note: OAT will use pinned subagent variants up to ${resolution.value ?? 'the resolved policy cap'}. Base/unpinned roles resolve through the provider default.`,
+      );
+    }
     if (
       providerResolution?.selection.selectedValue &&
       providerResolution.selection.preferredValue
@@ -841,6 +930,11 @@ function writeHumanResolution(
     }
   } else {
     context.logger.info('Effort axis: not-applicable');
+    if (providerResolution?.selection.selectionMode === 'inherit-default') {
+      context.logger.info(
+        'Note: OAT will not select a Claude model; Task dispatch inherits host/provider behavior.',
+      );
+    }
     if (
       providerResolution?.selection.selectedValue &&
       providerResolution.selection.preferredValue
@@ -896,7 +990,7 @@ export function createProjectDispatchCeilingCommand(
 
   command.addCommand(
     new Command('resolve')
-      .description('Resolve dispatch ceiling for a provider')
+      .description('Resolve dispatch policy for a provider')
       .requiredOption(
         '--provider <provider>',
         'Provider name: codex or claude are enforced; any other provider resolves as advisory (unsupported)',
@@ -911,11 +1005,11 @@ export function createProjectDispatchCeilingCommand(
       )
       .option(
         '--preferred <value>',
-        'Preferred implementer/fix dispatch value before capping by the resolved ceiling',
+        'Preferred implementer/fix dispatch value before applying the resolved policy',
       )
       .option(
         '--project-path <path>',
-        'Read project-state ceiling from an explicit project path',
+        'Read project-state policy from an explicit project path',
       )
       .option(
         '--preflight',

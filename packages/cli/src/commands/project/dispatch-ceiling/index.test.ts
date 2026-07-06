@@ -304,7 +304,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       unresolved: true,
     });
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'BLOCKED: Codex dispatch ceiling is unresolved',
+      'BLOCKED: Codex dispatch policy is unresolved',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -346,7 +346,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       unresolved: true,
     });
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'BLOCKED: Codex dispatch ceiling is unresolved',
+      'BLOCKED: Codex dispatch policy is unresolved',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -361,11 +361,42 @@ describe('oat project dispatch-ceiling resolve', () => {
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, ['--provider', 'claude']);
 
-    expect(capture.info).toContain('Claude dispatch ceiling: sonnet');
+    expect(capture.info).toContain('Claude dispatch policy: legacy capped');
+    expect(capture.info).toContain('Resolved cap: sonnet');
     expect(capture.info).toContain('Source: repo config');
     expect(capture.info).toContain('Mode: enforced (model-arg)');
+    expect(capture.info).toContain('Selection: capped');
     expect(capture.info).toContain('Effort axis: not-applicable');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('reports clear guidance for invalid project dispatch policy values', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: maximum',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'Invalid project dispatch policy "maximum". Valid managed policies: economy, balanced, high, frontier, uncapped.',
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('resolves Claude fable from repo config to Task model args', async () => {
@@ -699,6 +730,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'medium',
               selectedValue: 'medium',
               capped: false,
+              selectionMode: 'capped',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
             },
           },
         },
@@ -733,6 +767,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'xhigh',
               selectedValue: 'medium',
               capped: true,
+              selectionMode: 'capped',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
             },
           },
         },
@@ -792,6 +829,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'medium',
               selectedValue: null,
               capped: false,
+              selectionMode: 'unresolved',
+              policyMode: null,
+              policy: null,
             },
           },
         },
@@ -826,6 +866,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: null,
               selectedValue: null,
               capped: false,
+              selectionMode: 'unresolved',
+              policyMode: null,
+              policy: null,
             },
           },
         },
@@ -894,6 +937,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'medium',
               selectedValue: 'xhigh',
               capped: false,
+              selectionMode: 'review-target',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
             },
           },
         },
@@ -946,6 +992,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'xhigh',
               selectedValue: 'xhigh',
               capped: false,
+              selectionMode: 'uncapped',
+              policyMode: 'managed',
+              policy: 'uncapped',
             },
           },
         },
@@ -987,6 +1036,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: null,
               selectedValue: null,
               capped: false,
+              selectionMode: 'review-target',
+              policyMode: 'managed',
+              policy: 'uncapped',
             },
           },
         },
@@ -1039,6 +1091,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: null,
               selectedValue: null,
               capped: false,
+              selectionMode: 'inherit-default',
+              policyMode: 'inherit',
+              policy: null,
             },
           },
         },
