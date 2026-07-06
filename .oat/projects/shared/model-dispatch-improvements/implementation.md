@@ -707,6 +707,7 @@ Chronological log of implementation progress.
 - Phase 3 completed and passed re-review after aligning shipped skills, docs, templates, generated assets, and no-target reviewer metadata.
 - Phase 4 completed and passed review after final validation gates and lockstep public package version bumps.
 - Final review findings were addressed by removing unrelated `multi-family-dispatch` project artifacts from the branch and aligning sidecar dispatch examples with resolver selection-mode vocabulary.
+- Final re-review passed with no findings.
 
 **Decisions:**
 
@@ -720,7 +721,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Await final review.
+- Continue with documentation and PR handoff.
 
 **Blockers:**
 
