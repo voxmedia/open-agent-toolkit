@@ -1367,7 +1367,7 @@ echo "$FINAL_ROW"
 **If final review row exists and status is `passed`:**
 
 - Example row:
-  - `| final | code | passed | 2026-01-28 | reviews/final-review-2026-01-28.md |`
+  - `| final | code | passed | 2026-01-28 | reviews/final-review-2026-01-28T140322Z.md |`
 - Check:
   ```bash
   echo "$FINAL_ROW" | grep -qE "^\\|\\s*final\\s*\\|.*\\|\\s*passed\\s*\\|" && echo "passed"
@@ -1517,7 +1517,7 @@ Final verification:
 
 Final review:
 - Status: ✓ passed
-- Artifact: reviews/final-review-{date}.md
+- Artifact: reviews/final-review-{timestamp}.md
 
 Next: Create PR or run the oat-project-pr-final skill (when available)
 ```
