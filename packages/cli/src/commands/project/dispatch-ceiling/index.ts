@@ -217,7 +217,7 @@ interface ProjectStateCeiling {
   preset: string | null;
 }
 
-function readProjectDispatchCeiling(
+function readProjectDispatchPolicy(
   provider: DispatchCeilingProvider,
   content: string,
 ): ProjectStateCeiling | null {
@@ -231,7 +231,38 @@ function readProjectDispatchCeiling(
     return null;
   }
 
-  const ceiling = (parsed as Record<string, unknown>)['oat_dispatch_ceiling'];
+  const policy = (parsed as Record<string, unknown>)['oat_dispatch_policy'];
+  if (!policy || typeof policy !== 'object' || Array.isArray(policy)) {
+    return null;
+  }
+
+  const policyRecord = policy as Record<string, unknown>;
+  if (policyRecord['mode'] !== 'managed') {
+    return null;
+  }
+
+  const providers = policyRecord['providers'];
+  if (!providers || typeof providers !== 'object' || Array.isArray(providers)) {
+    return null;
+  }
+
+  const value = (providers as Record<string, unknown>)[provider];
+  if (!isValidProviderValue(provider, value)) {
+    return null;
+  }
+
+  const policyValue = policyRecord['policy'];
+  return {
+    value,
+    preset: typeof policyValue === 'string' ? policyValue : null,
+  };
+}
+
+function readLegacyProjectDispatchCeiling(
+  provider: DispatchCeilingProvider,
+  parsed: Record<string, unknown>,
+): ProjectStateCeiling | null {
+  const ceiling = parsed['oat_dispatch_ceiling'];
   if (!ceiling || typeof ceiling !== 'object' || Array.isArray(ceiling)) {
     return null;
   }
@@ -254,6 +285,29 @@ function readProjectDispatchCeiling(
     value,
     preset: typeof presetValue === 'string' ? presetValue : null,
   };
+}
+
+function readProjectDispatchCeiling(
+  provider: DispatchCeilingProvider,
+  content: string,
+): ProjectStateCeiling | null {
+  const frontmatter = getFrontmatterBlock(content);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const parsed: unknown = YAML.parse(frontmatter);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return null;
+  }
+
+  return (
+    readProjectDispatchPolicy(provider, content) ??
+    readLegacyProjectDispatchCeiling(
+      provider,
+      parsed as Record<string, unknown>,
+    )
+  );
 }
 
 async function resolveProjectStateCeiling(

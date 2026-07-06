@@ -214,6 +214,76 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('reads explicit project dispatch policy frontmatter before legacy ceiling state', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  providers:',
+        '    codex: high',
+        '  source: project-state',
+        'oat_dispatch_ceiling:',
+        '  providers:',
+        '    codex: medium',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'high',
+      source: 'project-state',
+      preset: 'balanced',
+      unresolved: false,
+      providers: {
+        codex: {
+          value: 'high',
+          mode: 'enforced',
+          mechanism: 'pinned-variant',
+          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps absent project policy and legacy ceiling state unresolved', async () => {
+    const { root, home } = await setup();
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'unresolved',
+      provider: 'codex',
+      value: null,
+      source: null,
+      preset: null,
+      unresolved: true,
+      providers: {
+        codex: {
+          value: null,
+          dispatchArgs: null,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('blocks unresolved non-interactive preflight', async () => {
     const { root, home } = await setup();
 
