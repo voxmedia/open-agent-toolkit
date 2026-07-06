@@ -109,6 +109,14 @@ Auto-review fired at the p06 HiLL checkpoint (workflow.autoReviewAtHillCheckpoin
 - **Gates at HEAD:** full CLI suite 2154 tests, lint 0/0, type-check, `pnpm build:docs`, `pnpm release:validate` (5 packages) — all green; working tree clean.
 - **Minor m1 (deferred):** `pjm:backlog_archived_open` uses hardcoded `'open'/'in_progress'` literals instead of deriving the non-terminal set from `item-status` (`isValidBacklogStatus && !isTerminalBacklogStatus`). No current defect (literals equal today's non-terminal statuses); pure maintainability. Deferred with rationale (recommended as a follow-up backlog item) rather than fixed at the final gate.
 
+### Independent Codex Final Review (cross-runtime second opinion) — 1 Important, fixed
+
+The configured `oat-project-implement` gate (`oat gate review --review-type code --review-scope final`, a cross-runtime Codex review) was initially skipped during the run — I substituted an in-memory Claude opus review. On catching that, I ran the gate: it is **broken on this host** — `oat gate review` passes a two-part prompt as two positional argv to `codex exec` (which takes one PROMPT), so Codex errors with `unexpected argument` and no review runs, yet the gate still exits 0 (a broken gate reporting green). Both are defects in OAT's own gate→Codex adapter (candidate backlog items: argv construction, and exit-0-on-failure).
+
+Ran the independent Codex review through the working rescue channel instead. Verdict: 1 Important finding (a genuine catch the three same-model-family reviews missed).
+
+- **Important (fixed in `7fed0c16`):** `archiveBacklogItem` checked `archived/<id>.md` before `items/<id>.md`, so an id present in BOTH directories returned a `noop` "already archived" success while leaving the live `items/` copy unarchived — the command silently no-ops on the exact drift it exists to fix. Fix: guard the no-op on `items/` absence; if both exist, throw `BacklogArchiveError` (exit 1, no file touched) directing manual reconciliation. Added a fifth doctor check **`pjm:backlog_duplicate_id`** (FAIL) to detect the same-id-in-both-dirs invariant Codex noted the checks were missing. Also folded in the previously-deferred `archived_open` cleanup (now derives the non-terminal set from `item-status` instead of hardcoded literals). 129 backlog+pjm+doctor tests green; lint/type-check/`release:validate` (still 0.1.41, PR-scoped bump) clean. design.md data-flow + Drift Checks table updated.
+
 ### Review Received: plan (artifact, gate)
 
 **Date:** 2026-07-05

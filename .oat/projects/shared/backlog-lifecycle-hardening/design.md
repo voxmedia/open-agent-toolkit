@@ -82,10 +82,13 @@ shared module is introduced:
 ```
 oat backlog archive <id> [--wont-do] [--summary "..."] [--json]
   1. resolve repo root + backlog root (same resolution as regenerate-index)
-  2. locate <id>.md:
-       in archived/  -> warn "already archived", exit 0 (idempotent no-op)
-       in items/     -> continue
-       nowhere       -> actionable error, exit 1
+  2. locate <id>.md (check items/ presence before treating archived as a no-op):
+       archived/ only          -> warn "already archived", exit 0 (idempotent no-op)
+       archived/ AND items/    -> duplicate/conflict, actionable error, exit 1
+                                  (auto-archiving would clobber the archived record;
+                                   resolve manually — surfaced by pjm:backlog_duplicate_id)
+       items/ only             -> continue
+       nowhere                 -> actionable error, exit 1
   3. parse frontmatter; validate current status against the enum
        out-of-enum (e.g. `done`) -> error naming the file, valid values,
        and the fix (correct status manually, then re-run), exit 1
@@ -116,6 +119,7 @@ the same drift the command exists to prevent, never silent corruption.
 | `pjm:backlog_invalid_status`       | item (items/ or archived/) with missing/empty or out-of-enum status | fail (fix: set a valid status)             |
 | `pjm:backlog_archived_open`        | item in `archived/` with status `open`/`in_progress`                | warn                                       |
 | `pjm:backlog_completed_unarchived` | `completed.md` entry ID whose file still sits in `items/`           | warn (best-effort ID regex scan)           |
+| `pjm:backlog_duplicate_id`         | same `<id>.md` present in both `items/` and `archived/`             | fail (fix: resolve the duplicate manually) |
 
 ## Component Design
 
