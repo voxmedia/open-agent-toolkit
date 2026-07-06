@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.8
+version: 2.1.9
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -467,62 +467,93 @@ Required parallelism pass before finalizing the plan:
 - Quick mode is not "sequential by default." A quick-start plan is sequential only when the dependency and write-set analysis says it should be.
 - When a task claims scoped verification, prefer the exact runner invocation that truly scopes to the intended file, test, or target instead of package-level shortcuts that may execute the full suite.
 
-### Step 3.5: Resolve Dispatch Ceiling Before Implementation Readiness
+### Step 3.5: Resolve Dispatch Policy Before Implementation Readiness
 
 Before moving the quick project to ready-for-implementation, resolve the
-dispatch ceiling.
+dispatch policy.
 
 Resolution order:
 
-1. Config keys `workflow.dispatchCeiling.providers.<provider>` via the resolver CLI
-2. Project `state.md` frontmatter key `oat_dispatch_ceiling`
-3. Interactive quick-planning prompt (below)
-4. Leave unresolved for implementation preflight when non-interactive
+1. Config keys `workflow.dispatchPolicy.mode` / `workflow.dispatchPolicy.policy` via the resolver CLI
+2. Compatibility config keys `workflow.dispatchCeiling.providers.<provider>`
+3. Project `state.md` frontmatter key `oat_dispatch_policy`
+4. Legacy project `state.md` frontmatter key `oat_dispatch_ceiling`
+5. Interactive quick-planning prompt (below)
+6. Leave unresolved for implementation preflight when non-interactive
 
-If no ceiling resolves and the session is interactive, present the preset
-prompt once before finalizing `plan.md`:
+If no policy resolves and the session is interactive, present the dispatch
+policy prompt once before finalizing `plan.md`:
 
 ```text
-Set the dispatch ceiling — the maximum subagent tier OAT may use.
+Set the dispatch policy — how OAT should choose subagent model/effort controls.
 
-  1. Balanced (recommended) — Codex: high · Claude: sonnet
-  2. Maximum                — Codex: xhigh · Claude: opus  (reviews always run at this tier)
-  3. Cost-conscious         — Codex: medium · Claude: sonnet
-  4. Advanced — set per provider
-  5. No ceiling
+  Managed capped policies:
+  1. Economy   — Codex: medium · Claude: sonnet
+  2. Balanced  — Codex: high   · Claude: sonnet  (recommended)
+  3. High      — Codex: xhigh  · Claude: opus
+  4. Frontier  — Codex: xhigh  · Claude: fable
 
-OAT applies this where the provider exposes a reliable mechanism (Codex: pinned
-variants; Claude: Task model parameter). Other providers may treat it as advisory.
+  Managed uncapped:
+  5. Uncapped — OAT selects the preferred implementer/fix target without a stored maximum cap.
+
+  Host defaults:
+  6. Inherit Host Defaults — OAT does not select model/effort controls.
+
+OAT applies managed policies where the provider exposes a reliable mechanism
+(Codex: pinned variants; Claude: Task model parameter). Other providers may
+treat managed policies as advisory.
 ```
 
-**Preset selection** persists `preset` + compiled per-provider values. On
-selection, print the exact compiled result (e.g., "Ceiling set: balanced →
-Codex: high · Claude: sonnet") before proceeding.
+**Managed capped policy selection (options 1-4)** persists `mode: managed`,
+`policy`, and the compiled provider targets. On selection, print the exact
+compiled result (e.g., "Dispatch policy set: balanced → Codex: high · Claude:
+sonnet") before proceeding.
 
-**Advanced (option 4)** prompts for each provider's value individually, then
-persists `providers` + `source` only — no `preset` key.
+**Uncapped (option 5)** persists explicit managed uncapped state. It does not
+write provider caps, and it must not be represented by leaving dispatch policy
+state absent.
 
-**No ceiling (option 5)** leaves `oat_dispatch_ceiling` unset; implementer
-subagents run at provider defaults.
+**Inherit Host Defaults (option 6)** persists explicit inherit/default state.
+Use this only when the user wants OAT to leave implementation, fix, and review
+model/effort controls to the executing host/provider.
 
 Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter using the
 normalized shape:
 
 ```yaml
-oat_dispatch_ceiling:
-  preset: balanced # omit when Advanced was chosen
+oat_dispatch_policy:
+  mode: managed
+  policy: balanced
   providers:
     codex: high
     claude: sonnet
   source: project-state
 ```
 
+For `Uncapped`:
+
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: uncapped
+  source: project-state
+```
+
+For `Inherit Host Defaults`:
+
+```yaml
+oat_dispatch_policy:
+  mode: inherit
+  source: project-state
+```
+
 Do not prompt when `OAT_NON_INTERACTIVE=1` or when no user-response channel
 exists. In that case, leave the value unresolved. `oat-project-implement`
-must block before work starts if it still cannot resolve a ceiling.
+must block before work starts if it still cannot resolve a policy.
 
-Do not treat provider default effort as the OAT dispatch ceiling. Provider
-default is informational for base/unpinned roles only.
+Do not treat provider default effort as the OAT dispatch policy. Provider
+defaults apply only for explicit inherit/default behavior or base/unpinned
+fallback paths.
 
 ### Step 3.6: Run Plan Artifact Review Loop
 
