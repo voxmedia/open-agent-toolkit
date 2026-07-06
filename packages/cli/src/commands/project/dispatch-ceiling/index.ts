@@ -239,6 +239,12 @@ interface ResolvedDispatchPolicy {
   preset: string | null;
 }
 
+type ConfigCandidateSource = Exclude<ResolvedConfigSource, 'default'>;
+
+interface ResolvedConfigDispatchCandidate extends ResolvedDispatchPolicy {
+  configSource: ConfigCandidateSource;
+}
+
 function isValidManagedPolicy(
   value: unknown,
 ): value is WorkflowManagedDispatchPolicy {
@@ -448,62 +454,123 @@ async function resolveProjectPath(
   return join(repoRoot, activeProject.path);
 }
 
-function readResolvedConfigCeiling(
+function isConfigCandidateSource(
+  source: ResolvedConfigSource | undefined,
+): source is ConfigCandidateSource {
+  return source !== undefined && source !== 'default';
+}
+
+function configSourcePrecedence(source: ResolvedConfigSource): number {
+  switch (source) {
+    case 'env':
+      return 4;
+    case 'local':
+      return 3;
+    case 'shared':
+      return 2;
+    case 'user':
+      return 1;
+    case 'default':
+      return 0;
+  }
+}
+
+function lowerPrecedenceConfigSource(
+  left: ConfigCandidateSource,
+  right: ConfigCandidateSource,
+): ConfigCandidateSource {
+  return configSourcePrecedence(left) <= configSourcePrecedence(right)
+    ? left
+    : right;
+}
+
+function stripConfigCandidateSource(
+  candidate: ResolvedConfigDispatchCandidate,
+): ResolvedDispatchPolicy {
+  return {
+    mode: candidate.mode,
+    policy: candidate.policy,
+    value: candidate.value,
+    source: candidate.source,
+    preset: candidate.preset,
+  };
+}
+
+function readResolvedConfigPolicyCandidate(
   provider: DispatchCeilingProvider,
   resolvedConfig: ResolvedConfig,
-): ResolvedDispatchPolicy | null {
+): ResolvedConfigDispatchCandidate | null {
   const modeEntry = resolvedConfig.resolved['workflow.dispatchPolicy.mode'];
   const policyEntry = resolvedConfig.resolved['workflow.dispatchPolicy.policy'];
-  const modeSource = modeEntry
-    ? configSourceToCeilingSource(modeEntry.source)
-    : null;
-  const policySource = policyEntry
-    ? configSourceToCeilingSource(policyEntry.source)
-    : null;
 
   if (
     modeEntry?.value === 'inherit' &&
-    modeSource !== null &&
-    modeEntry.source !== 'default'
+    isConfigCandidateSource(modeEntry.source)
   ) {
+    const source = configSourceToCeilingSource(modeEntry.source);
+    if (source === null) {
+      return null;
+    }
+
     return {
       mode: 'inherit',
       policy: null,
       value: null,
-      source: modeSource,
+      source,
       preset: null,
+      configSource: modeEntry.source,
     };
   }
 
   if (
     modeEntry?.value === 'managed' &&
     isValidManagedPolicy(policyEntry?.value) &&
-    policySource !== null &&
-    policyEntry?.source !== 'default'
+    isConfigCandidateSource(modeEntry.source) &&
+    isConfigCandidateSource(policyEntry?.source)
   ) {
     const policy = policyEntry.value;
     const compiled = compileDispatchPolicyPreset(policy);
+    const configSource = lowerPrecedenceConfigSource(
+      modeEntry.source,
+      policyEntry.source,
+    );
+    const source = configSourceToCeilingSource(configSource);
+    if (source === null) {
+      return null;
+    }
+
     return {
       mode: 'managed',
       policy,
       value: compiledPolicyValueForProvider(provider, compiled),
-      source: policySource,
+      source,
       preset: policy,
+      configSource,
     };
   }
 
+  return null;
+}
+
+function readResolvedLegacyConfigCeilingCandidate(
+  provider: DispatchCeilingProvider,
+  resolvedConfig: ResolvedConfig,
+): ResolvedConfigDispatchCandidate | null {
   // Read the concrete per-provider value from the nested key. The flat
   // `workflow.dispatchCeiling.<provider>` shape was removed in p01; never read
   // the preset label for dispatch.
   const entry =
     resolvedConfig.resolved[`workflow.dispatchCeiling.providers.${provider}`];
-  const source = entry ? configSourceToCeilingSource(entry.source) : null;
   if (
     !entry ||
-    !source ||
-    entry.source === 'default' ||
+    !isConfigCandidateSource(entry.source) ||
     !isValidProviderValue(provider, entry.value)
   ) {
+    return null;
+  }
+
+  const source = configSourceToCeilingSource(entry.source);
+  if (source === null) {
     return null;
   }
 
@@ -513,7 +580,37 @@ function readResolvedConfigCeiling(
     value: entry.value,
     source,
     preset: null,
+    configSource: entry.source,
   };
+}
+
+function readResolvedConfigCeiling(
+  provider: DispatchCeilingProvider,
+  resolvedConfig: ResolvedConfig,
+): ResolvedDispatchPolicy | null {
+  const policyCandidate = readResolvedConfigPolicyCandidate(
+    provider,
+    resolvedConfig,
+  );
+  const legacyCandidate = readResolvedLegacyConfigCeilingCandidate(
+    provider,
+    resolvedConfig,
+  );
+
+  if (!policyCandidate) {
+    return legacyCandidate ? stripConfigCandidateSource(legacyCandidate) : null;
+  }
+
+  if (!legacyCandidate) {
+    return stripConfigCandidateSource(policyCandidate);
+  }
+
+  const winner =
+    configSourcePrecedence(policyCandidate.configSource) >=
+    configSourcePrecedence(legacyCandidate.configSource)
+      ? policyCandidate
+      : legacyCandidate;
+  return stripConfigCandidateSource(winner);
 }
 
 function normalizeRole(value: string | undefined): CeilingRole {

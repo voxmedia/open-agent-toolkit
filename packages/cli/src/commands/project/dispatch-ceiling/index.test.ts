@@ -1043,6 +1043,143 @@ describe('oat project dispatch-ceiling resolve', () => {
       });
     });
 
+    it('keeps repo legacy cap over lower-precedence user managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+      await writeJson(join(home, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: 'medium',
+        source: 'repo-config',
+        policyMode: 'managed',
+        policy: 'legacy-ceiling',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'medium',
+              capped: true,
+              selectionMode: 'capped',
+              policy: 'legacy-ceiling',
+            },
+          },
+        },
+      });
+    });
+
+    it('keeps local legacy cap over lower-precedence user inherit policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.local.json'), {
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+      await writeJson(join(home, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchPolicy: { mode: 'inherit' } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: 'medium',
+        source: 'local-config',
+        policyMode: 'managed',
+        policy: 'legacy-ceiling',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'medium',
+              capped: true,
+              selectionMode: 'capped',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
+            },
+          },
+        },
+      });
+    });
+
+    it('prefers higher-precedence managed uncapped policy over legacy cap', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+      await writeJson(join(root, '.oat', 'config.local.json'), {
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'local-config',
+        policyMode: 'managed',
+        policy: 'uncapped',
+        preset: 'uncapped',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'xhigh',
+              capped: false,
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
+            },
+          },
+        },
+      });
+    });
+
     it('documents Codex uncapped pinned variant host-default caveat in human output', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
