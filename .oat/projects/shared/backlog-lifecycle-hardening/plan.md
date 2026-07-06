@@ -578,18 +578,18 @@ git commit -m "chore(p06-t02): lockstep public package bump for backlog lifecycl
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                 |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 2 Minor fixed in c57f3efe                                                                     |
-| p02    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 1 Minor (symlinked-.oat edge, no fix needed)                                                  |
-| p03    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; m1 (status-less items) fixed in 31e4643e, m2 accepted best-effort                             |
-| p04    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 1 Minor (plan file-list under-specified index.ts/test fixtures) noted only                    |
-| p05    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; sweep completeness independently verified; 1 cosmetic Minor left (avoid re-bump)              |
-| p06    | code     | passed          | 2026-07-05 | covered by final-scope review (opus): PASS 0C/0I                                                                                         |
-| final  | code     | received        | 2026-07-05 | reviews/final-review-2026-07-05.md (gate): 0C/0I/0M/1m; no blocking findings; prior Codex duplicate-id finding already fixed in 7fed0c16 |
-| spec   | artifact | pending         | -          | -                                                                                                                                        |
-| design | artifact | pending         | -          | -                                                                                                                                        |
-| plan   | artifact | fixes_completed | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05-v2.md (v1 gate: passed clean; v2 manual: 1 Important resolved in-artifact)              |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                         |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 2 Minor fixed in c57f3efe                                                                                                             |
+| p02    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 1 Minor (symlinked-.oat edge, no fix needed)                                                                                          |
+| p03    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; m1 (status-less items) fixed in 31e4643e, m2 accepted best-effort                                                                     |
+| p04    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; 1 Minor (plan file-list under-specified index.ts/test fixtures) noted only                                                            |
+| p05    | code     | passed          | 2026-07-05 | in-memory oat-reviewer (opus): PASS 0C/0I; sweep completeness independently verified; 1 cosmetic Minor left (avoid re-bump)                                                      |
+| p06    | code     | passed          | 2026-07-05 | covered by final-scope review (opus): PASS 0C/0I                                                                                                                                 |
+| final  | code     | passed          | 2026-07-05 | reviews/archived/final-review-2026-07-05.md (gate, cross-runtime Codex): 0C/0I/0M/1m; 1 minor (docs drift — 5th doctor check missing from backlog-lifecycle.md) fixed on receive |
+| spec   | artifact | pending         | -          | -                                                                                                                                                                                |
+| design | artifact | pending         | -          | -                                                                                                                                                                                |
+| plan   | artifact | fixes_completed | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05-v2.md (v1 gate: passed clean; v2 manual: 1 Important resolved in-artifact)                                                      |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

@@ -117,6 +117,13 @@ Ran the independent Codex review through the working rescue channel. Verdict: 1 
 
 - **Important (fixed in `7fed0c16`):** `archiveBacklogItem` checked `archived/<id>.md` before `items/<id>.md`, so an id present in BOTH directories returned a `noop` "already archived" success while leaving the live `items/` copy unarchived — the command silently no-ops on the exact drift it exists to fix. Fix: guard the no-op on `items/` absence; if both exist, throw `BacklogArchiveError` (exit 1, no file touched) directing manual reconciliation. Added a fifth doctor check **`pjm:backlog_duplicate_id`** (FAIL) to detect the same-id-in-both-dirs invariant Codex noted the checks were missing. Also folded in the previously-deferred `archived_open` cleanup (now derives the non-terminal set from `item-status` instead of hardcoded literals). 129 backlog+pjm+doctor tests green; lint/type-check/`release:validate` (still 0.1.41, PR-scoped bump) clean. design.md data-flow + Drift Checks table updated.
 
+### Review Received: final (code, gate — cross-runtime Codex, via repo-local 0.1.41)
+
+The `oat-project-implement` gate ran correctly through the repo-local build and produced an independent Codex final review (artifact `reviews/archived/final-review-2026-07-05.md`, committed by the gate as `f9dabbae`). Verdict: 0C/0I/0M/**1 minor**, no blocking findings; the gate exited 0 and confirmed the duplicate-id fix (`7fed0c16`) is in the reviewed tree.
+
+- **Minor (fixed on receive):** docs drift — the fifth doctor check `pjm:backlog_duplicate_id` (added with the Codex-review fix) was missing from the public `apps/oat-docs/docs/cli-utilities/backlog-lifecycle.md` check list. Added it (fail severity, with the manual-reconcile note); `pnpm build:docs` green.
+- Final review row → `passed`; artifact archived to `reviews/archived/`.
+
 ### Review Received: plan (artifact, gate)
 
 **Date:** 2026-07-05

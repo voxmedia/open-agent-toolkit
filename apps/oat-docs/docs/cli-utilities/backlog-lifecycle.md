@@ -56,5 +56,6 @@ The manual close-out this command replaces is exactly where the two motivating r
 - **`pjm:backlog_invalid_status`** (fail) - an item carries an out-of-enum or missing `status`. The message lists the offending file paths and the valid statuses.
 - **`pjm:backlog_archived_open`** (warn) - an `open` or `in_progress` item is in `archived/`, which usually means it was archived prematurely.
 - **`pjm:backlog_completed_unarchived`** (warn) - `completed.md` references an item whose file still lives in `items/`.
+- **`pjm:backlog_duplicate_id`** (fail) - the same `<id>.md` exists in both `items/` and `archived/`. `oat backlog archive` refuses to auto-resolve this (it would clobber the archived record), so the duplicate must be reconciled by hand.
 
 Doctor reports drift; it never auto-fixes. A human or agent runs `oat backlog archive` (or corrects the status) and re-runs doctor to confirm the backlog is clean again.
