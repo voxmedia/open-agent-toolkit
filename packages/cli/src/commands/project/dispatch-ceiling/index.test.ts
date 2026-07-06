@@ -899,5 +899,150 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       });
     });
+
+    it('selects preferred Codex effort for managed uncapped implementer dispatch', async () => {
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_policy:',
+          '  mode: managed',
+          '  policy: uncapped',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'project-state',
+        preset: 'uncapped',
+        unresolved: false,
+        providers: {
+          codex: {
+            value: null,
+            mode: 'enforced',
+            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            selection: {
+              role: 'implementer',
+              preferredValue: 'xhigh',
+              selectedValue: 'xhigh',
+              capped: false,
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('returns no reviewer target for managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'repo-config',
+        preset: 'uncapped',
+        unresolved: false,
+        providers: {
+          codex: {
+            value: null,
+            mode: 'advisory',
+            dispatchArgs: null,
+            selection: {
+              role: 'reviewer',
+              preferredValue: null,
+              selectedValue: null,
+              capped: false,
+            },
+          },
+        },
+      });
+    });
+
+    it('returns no dispatch args for inherit/default project policy', async () => {
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_policy:',
+          '  mode: inherit',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--role',
+        'implementer',
+        '--preferred',
+        'fable',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'claude',
+        value: null,
+        source: 'project-state',
+        preset: null,
+        unresolved: false,
+        providers: {
+          claude: {
+            value: null,
+            mode: 'advisory',
+            dispatchArgs: null,
+            selection: {
+              role: 'implementer',
+              preferredValue: null,
+              selectedValue: null,
+              capped: false,
+            },
+          },
+        },
+      });
+    });
   });
 });
