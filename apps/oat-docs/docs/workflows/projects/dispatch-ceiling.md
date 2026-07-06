@@ -1,134 +1,175 @@
 ---
-title: Dispatch Ceiling
-description: "How OAT's provider-neutral dispatch ceiling works — presets, the compile/resolve flow, and how enforcement differs for Codex, Claude, and unsupported providers."
+title: Dispatch Policy
+description: 'How OAT dispatch policy works: managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.'
 ---
 
-# Dispatch Ceiling
+# Dispatch Policy
 
-The **dispatch ceiling** is the most capable tier OAT is allowed to use when it dispatches subagents (phase implementers and reviewers) during `oat-project-implement`. It is a **provider-neutral OAT intent** — your declaration of "don't go above this," decoupled from which provider you happen to be running. OAT then applies that intent through whatever mechanism each provider actually exposes.
+OAT dispatch policy controls how `oat-project-implement` selects model or
+effort controls for phase implementers, fix loops, and reviewers. The current
+contract separates two ideas that used to be conflated:
 
-This page explains the model, the why, and — most importantly — how enforcement differs across providers. For the raw config keys see [Configuration](../../cli-utilities/configuration.md); for how dispatch runs at execution time see [Implementation Execution](implementation-execution.md).
+- **Managed policies** keep OAT responsible for selecting model/effort controls.
+- **Inherit Host Defaults** tells OAT not to select model/effort controls and to
+  let the executing host/provider decide.
 
-## Two principles
+The CLI command is still named `oat project dispatch-ceiling resolve` for
+compatibility, and legacy `workflow.dispatchCeiling.*` / `oat_dispatch_ceiling`
+state is still readable as capped managed input. New configuration should use
+dispatch policy terminology.
 
-1. **Presets are convenience only — they compile to concrete values at _write_ time.** A fuzzy label like `balanced` is never read at dispatch; it is expanded into concrete per-provider values the moment you set it.
-2. **Enforcement capability is computed at dispatch, never stored.** Whether a ceiling is _enforced_, _advisory_, or _unsupported_ is a property of the provider × runtime, so OAT recomputes it on every run rather than persisting a value that would go stale.
+For raw config keys see [Configuration](../../cli-utilities/configuration.md);
+for execution-time behavior see [Implementation Execution](implementation-execution.md).
 
-## Setting a ceiling
+## Policy Choices
 
-Set it via `oat config set` (repo / user / local) or answer the planning/implementation preflight prompt. Three shapes:
+| Policy                  | Mode    | Codex target | Claude target | Meaning                                      |
+| ----------------------- | ------- | ------------ | ------------- | -------------------------------------------- |
+| `Economy`               | managed | `medium`     | `sonnet`      | Lower-cost managed cap                       |
+| `Balanced`              | managed | `high`       | `sonnet`      | Default managed cap                          |
+| `High`                  | managed | `xhigh`      | `opus`        | High-capability managed cap                  |
+| `Frontier`              | managed | `xhigh`      | `fable`       | Top managed tier currently exposed by OAT    |
+| `Uncapped`              | managed | none         | none          | OAT selects preferred controls without a cap |
+| `Inherit Host Defaults` | inherit | none         | none          | OAT does not select model/effort controls    |
 
-| Choice                                                 | What gets written                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------------------- |
-| **Preset** — `balanced` / `maximum` / `cost-conscious` | The preset label (provenance) **and** the compiled per-provider values |
-| **Advanced** — set providers directly                  | `providers.*` only (no `preset` key)                                   |
-| **No ceiling**                                         | Nothing — each provider runs at its normal/inherited behavior          |
+`Uncapped` is explicit managed state. It is not represented by omitting policy
+state. Existing projects with absent legacy ceiling state remain unresolved or
+legacy-compatible; they do not silently become managed `Uncapped`.
 
-The fixed preset table:
+## Config Shapes
 
-| Preset         | Codex    | Claude   |
-| -------------- | -------- | -------- |
-| Balanced       | `high`   | `sonnet` |
-| Maximum        | `xhigh`  | `opus`   |
-| Cost-conscious | `medium` | `sonnet` |
-
-`cost-conscious` deliberately keeps Claude at `sonnet` (no `haiku` reviewers by default) so review quality stays trustworthy.
-
-Config keys:
-
-- `workflow.dispatchCeiling.preset`
-- `workflow.dispatchCeiling.providers.codex` (`low` \| `medium` \| `high` \| `xhigh`)
-- `workflow.dispatchCeiling.providers.claude` (`haiku` \| `sonnet` \| `opus`)
+Preferred managed policy config:
 
 ```bash
-# A preset compiles immediately to concrete per-provider values:
-oat config set workflow.dispatchCeiling.preset balanced --shared
-# → stores preset: balanced AND providers: { codex: high, claude: sonnet }
-
-# Or set providers directly (advanced — no preset key stored):
-oat config set workflow.dispatchCeiling.providers.codex high --shared
+oat config set workflow.dispatchPolicy.policy balanced --shared
+oat config set workflow.dispatchPolicy.policy frontier --shared
+oat config set workflow.dispatchPolicy.policy uncapped --shared
 ```
 
-Project state can persist the compiled answer as `oat_dispatch_ceiling` (`preset?` + `providers` + `source`) so a planning/preflight choice carries into implementation.
+`workflow.dispatchPolicy.policy` writes `workflow.dispatchPolicy.mode=managed`.
+To request host defaults:
 
-> The earlier flat `workflow.dispatchCeiling.codex` / `.claude` keys were removed. This was a clean break with no migration — set the new keys above.
+```bash
+oat config set workflow.dispatchPolicy.mode inherit --shared
+```
 
-## How it resolves at dispatch
+Project state uses the same shape:
+
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: balanced
+  providers:
+    codex: high
+    claude: sonnet
+  source: project-state
+```
+
+For `Uncapped`, omit provider caps:
+
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: uncapped
+  source: project-state
+```
+
+For host defaults:
+
+```yaml
+oat_dispatch_policy:
+  mode: inherit
+  source: project-state
+```
+
+Legacy compatibility keys remain readable:
+
+- `workflow.dispatchCeiling.preset`
+- `workflow.dispatchCeiling.providers.codex`
+- `workflow.dispatchCeiling.providers.claude`
+- `oat_dispatch_ceiling`
+
+Legacy preset names map into the managed ladder: `cost-conscious` maps to
+`Economy`, `balanced` maps to `Balanced`, and `maximum` maps to `High`.
+
+## How Resolution Works
 
 Before dispatching a subagent, the orchestrator calls:
 
 ```bash
-oat project dispatch-ceiling resolve --provider <provider> --role <implementer|reviewer> --preflight --json
+oat project dispatch-ceiling resolve --provider <provider> --role <implementer|reviewer> --json
 ```
 
-For implementer or fix dispatch, pass the runtime classification too. In Codex
-this is the preferred effort; in Claude it is the preferred model tier:
+For implementer or fix dispatch, pass the preferred runtime control:
 
 ```bash
-oat project dispatch-ceiling resolve --provider codex --role implementer --preferred medium --json
-oat project dispatch-ceiling resolve --provider claude --role implementer --preferred sonnet --json
+oat project dispatch-ceiling resolve --provider codex --role implementer --preferred high --json
+oat project dispatch-ceiling resolve --provider claude --role implementer --preferred opus --json
 ```
 
-The resolver:
+The resolver returns the resolved policy, optional cap, source, provider default
+effort where applicable, and provider-specific `dispatchArgs`.
 
-1. reads the concrete `providers.<provider>` value (config precedence, then project state) — **never the preset label**;
-2. looks up that provider's **adapter** in the provider ceiling registry;
-3. applies `--preferred` for implementer/fix dispatch, capping it against the ceiling;
-4. returns a per-provider result: `{ value, mode, mechanism, dispatchArgs, selection }`.
+Selection modes:
 
-`mode` is the honest enforcement status, computed right there and never persisted:
+- `capped` - implementer/fix dispatch selects `min(preferred, cap)`.
+- `uncapped` - implementer/fix dispatch selects the preferred value.
+- `review-target` - reviewer dispatch targets a configured cap when one exists.
+- `inherit-default` - OAT returns no dispatch args and leaves controls to the host.
+- `unresolved` - non-interactive implementation blocks before work starts.
 
-- **enforced** — the provider has a real mechanism and OAT dispatched the requested control.
-- **advisory** — the ceiling is recorded as intent, but the provider can't deterministically enforce it (or an above-orchestrator request couldn't be honored).
-- **unsupported** — no adapter mechanism exists for that provider.
+## Provider Behavior
 
-## Per-provider behavior
+|                   | Codex                                       | Claude Code                             | Unsupported provider |
+| ----------------- | ------------------------------------------- | --------------------------------------- | -------------------- |
+| Managed mechanism | Pinned role variants                        | Task `model` argument                   | None                 |
+| Axis              | effort (`low < medium < high < xhigh`)      | model (`haiku < sonnet < opus < fable`) | None                 |
+| Capped policy     | selected pinned variant up to cap           | selected Task model up to cap           | advisory/unsupported |
+| Uncapped          | preferred pinned variant, no cap            | preferred Task model, no cap            | advisory/unsupported |
+| Inherit/default   | base/unpinned role follows provider default | omit `model`                            | normal behavior      |
 
-The same ceiling intent produces different — but honest — behavior per provider, because each adapter declares its own mechanism.
+Codex uses pinned variants because per-call effort controls were unreliable in
+dogfooding. For managed `Uncapped`, OAT still selects the preferred pinned
+variant; the dispatching host should verify whether upward effort selection is
+actually honored in the current session.
 
-|                   | **Codex**                                                                                         | **Claude**                             | **Unsupported provider**   |
-| ----------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- | -------------------------- |
-| Can OAT enforce?  | Yes                                                                                               | Yes                                    | No (no adapter yet)        |
-| Mechanism         | Pinned variant files                                                                              | Per-call Task `model` argument         | None                       |
-| Where it lives    | Sync-time committed `.codex` role variants (`oat-phase-implementer-high`, `oat-reviewer-high`, …) | Passed at dispatch time — **no files** | —                          |
-| Axis              | effort (`low < medium < high < xhigh`)                                                            | model tier (`haiku < sonnet < opus`)   | —                          |
-| `dispatchArgs`    | `{ variant: "oat-reviewer-high" }`                                                                | `{ model: "sonnet" }`                  | `null`                     |
-| `mode`            | `enforced`                                                                                        | `enforced`                             | `advisory` / `unsupported` |
-| If no ceiling set | base/unpinned role (provider default)                                                             | inherits the orchestrator's model      | normal behavior            |
+Claude Code uses the per-call Task `model` argument. It has no OAT-managed
+per-dispatch effort axis, so dispatch logs use `effort_axis=not-applicable`.
+`Frontier` maps to Claude `fable`.
 
-### Why the mechanisms differ
+## Implementer, Fix, and Reviewer Behavior
 
-- **Codex** dispatches through **pinned, sync-time role variants**. Per-call reasoning-effort proved unreliable in practice, so OAT generates committed `oat-phase-implementer-{low..xhigh}` / `oat-reviewer-{low..xhigh}` role files. Implementer/fix dispatch passes `--preferred` so `dispatchArgs.variant` matches the selected capped effort; reviewer dispatch uses the variant matching the resolved ceiling.
-- **Claude** uses the **per-call Task `model` parameter**, which is reliable and bidirectional (a Sonnet orchestrator can dispatch an Opus subagent and vice-versa) and overrides agent frontmatter. Implementer/fix dispatch passes `--preferred` as the preferred model tier and receives the capped selected `model`; reviewer dispatch uses the ceiling model. OAT needs no variant files.
-- **Unsupported providers** (any without a registered adapter) resolve to `unsupported` with `dispatchArgs: null`. The resolve command **returns cleanly and never blocks** — the ceiling is recorded as intent and applied if/when an adapter ships, while the provider runs at its own capabilities.
+For implementer and fix dispatches:
 
-A **provider adapter registry** is what lets these genuinely different mechanisms sit behind one resolver, so the lifecycle skills consume `dispatchArgs` without ever branching on provider.
+- Capped managed policies select `min(preferred, cap)`.
+- Managed `Uncapped` selects the preferred value without a cap.
+- Inherit/default mode returns no model/effort dispatch args.
 
-## Cap vs target: implementer vs reviewer
+For reviewer dispatches:
 
-The ceiling means slightly different things for the two dispatch roles:
+- Capped managed policies target the configured cap for deterministic review
+  quality gates.
+- Managed `Uncapped` has no reviewer cap, so OAT uses the base/unpinned reviewer
+  fallback and logs provider-default behavior.
+- Inherit/default mode also uses the base/unpinned reviewer fallback.
 
-- **Implementer** runs at `min(preferred, ceiling)` — the ceiling is a **cap**. A simple phase may run below it.
-- **Reviewer** runs **at** the ceiling — a **target** — so quality gates are deterministic.
+Generic sidecars such as `explorer` are outside the implementer/reviewer/fix
+contract. If their payload does not pin a reliable provider control, logs should
+say `provider-default`.
 
-Both providers honor this distinction (Codex selects the matching variant; Claude passes the matching model).
+## Dispatch Logs
 
-Generic sidecars such as built-in `explorer` are outside this implementer/reviewer/fix contract. They may run at provider default when they are read-only advisory helpers. In that case, dispatch logs should say `Preferred effort: provider-default`, `Selected effort: provider-default`, and `Effort axis: provider-default`; only log a concrete selected effort when the actual sidecar payload pins a reliable provider control.
-
-## Verify-on-upgrade
-
-Only a request for a tier **above** the orchestrator's current tier risks a silent plan/entitlement fallback. So the adapter verifies the actually-dispatched model **only** on that upgrade path; capping down or staying lateral needs no check. OAT never logs `enforced` unless the requested control was actually honored.
-
-## Dispatch logs
-
-OAT logs the honest enforcement state per dispatch, for example:
+Examples:
 
 ```text
-Dispatch ceiling: high (codex, enforced — variant oat-reviewer-high)
-Dispatch ceiling: sonnet (claude, enforced — Task model arg)
-Dispatch ceiling: balanced (cursor, unsupported — no adapter; informational)
+Dispatch policy: balanced; selected=high; cap=high (codex, enforced — variant oat-phase-implementer-high)
+Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-xhigh)
+Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-xhigh)
+Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
+Dispatch policy: frontier; selected=fable; cap=fable (claude, enforced — Task model arg)
 ```
 
-## Summary
-
-You declare intent once (a preset, explicit per-provider values, or nothing). Under Codex it becomes deterministic pinned variants; under Claude it becomes a per-call Task `model` argument; under any other provider it is recorded as advisory and that provider runs normally. The logs tell you honestly whether the ceiling was `enforced`, `advisory`, or `unsupported` — one provider-neutral knob that enforces where it can and degrades gracefully where it can't.
+OAT logs `enforced` only when the provider accepted the requested control.
+Above-orchestrator Claude upgrade requests may require post-dispatch
+verification. Unsupported providers do not block; OAT records the policy as
+advisory/unsupported and dispatch follows provider behavior.
