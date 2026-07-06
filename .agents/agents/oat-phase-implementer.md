@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.0.2
+version: 1.0.3
 description: Implements a single plan phase end-to-end — reads artifacts once, executes tasks sequentially, commits per task, self-reviews, and returns a structured summary. Dispatched by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: cyan
@@ -46,7 +46,7 @@ For Codex, `provider-default` means the base/unpinned role follows Codex configu
 
 If `mode: fix`, the block also includes:
 
-- **review_artifact**: Path to the review artifact from the reviewer (e.g., `reviews/p02-review-YYYY-MM-DD.md`)
+- **review_artifact**: Path to the review artifact from the reviewer (e.g., `reviews/p02-review-2026-01-28T140322Z.md`)
 - **findings**: Critical and Important findings list
 - **prior_summary**: Your own prior `implement` run summary (what was previously built)
 

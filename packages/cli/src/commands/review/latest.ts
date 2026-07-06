@@ -9,6 +9,7 @@ import {
 import {
   getFrontmatterBlock,
   getFrontmatterField,
+  parseGeneratedTime,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
@@ -139,7 +140,7 @@ async function readReviewCandidate(
     return null;
   }
 
-  const generatedTime = Date.parse(generatedAt);
+  const generatedTime = parseGeneratedTime(generatedAt);
   if (Number.isNaN(generatedTime)) {
     return null;
   }
@@ -169,6 +170,9 @@ function sortReviewCandidates(a: ReviewCandidate, b: ReviewCandidate): number {
   if (a.lifecycleRank !== b.lifecycleRank) {
     return b.lifecycleRank - a.lifecycleRank;
   }
+  // Same scope, same generated time: fall back to a stable path order. Review
+  // artifacts carry a seconds-precision `oat_generated_at`, so distinct re-gate
+  // rounds differ on generatedTime above and never reach this branch.
   return a.path.localeCompare(b.path);
 }
 

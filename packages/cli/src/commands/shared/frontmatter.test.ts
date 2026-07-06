@@ -13,6 +13,7 @@ import {
   getFrontmatterField,
   getSkillVersion,
   parseFrontmatterField,
+  parseGeneratedTime,
 } from './frontmatter';
 
 describe('frontmatter', () => {
@@ -23,6 +24,44 @@ describe('frontmatter', () => {
       tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
     );
     tempDirs.length = 0;
+  });
+
+  describe('parseGeneratedTime', () => {
+    it('treats a Z-suffixed UTC timestamp as UTC', () => {
+      expect(parseGeneratedTime('2026-07-05T11:16:01Z')).toBe(
+        Date.parse('2026-07-05T11:16:01Z'),
+      );
+    });
+
+    it('treats a bare date as UTC midnight', () => {
+      expect(parseGeneratedTime('2026-07-05')).toBe(
+        Date.parse('2026-07-05T00:00:00Z'),
+      );
+    });
+
+    it('treats a datetime with no timezone as UTC, not local', () => {
+      // Without the guard this would parse as local time and mis-order across
+      // timezones. It must equal the explicit-UTC parse regardless of TZ.
+      expect(parseGeneratedTime('2026-07-05T11:16:01')).toBe(
+        Date.parse('2026-07-05T11:16:01Z'),
+      );
+    });
+
+    it('respects an explicit numeric offset', () => {
+      expect(parseGeneratedTime('2026-07-05T11:16:01+02:00')).toBe(
+        Date.parse('2026-07-05T09:16:01Z'),
+      );
+    });
+
+    it('orders a bare date before any same-day timestamp', () => {
+      expect(parseGeneratedTime('2026-07-05')).toBeLessThan(
+        parseGeneratedTime('2026-07-05T00:00:01Z'),
+      );
+    });
+
+    it('returns NaN for unparseable input', () => {
+      expect(Number.isNaN(parseGeneratedTime('not-a-date'))).toBe(true);
+    });
   });
 
   describe('getFrontmatterBlock', () => {

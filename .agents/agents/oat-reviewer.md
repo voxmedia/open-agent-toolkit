@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.1.3
+version: 1.1.4
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write
 color: yellow
@@ -287,19 +287,21 @@ Write the review artifact to the specified path.
 
 **File path format:**
 
-- Phase review: `{project}/reviews/pNN-review-YYYY-MM-DD.md`
-- Final review: `{project}/reviews/final-review-YYYY-MM-DD.md`
-- Task review: `{project}/reviews/pNN-tNN-review-YYYY-MM-DD.md`
-- Range review: `{project}/reviews/range-review-YYYY-MM-DD.md`
+Use a seconds-precision **UTC** timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `date -u +%Y-%m-%dT%H%M%SZ` — the `-u` and the trailing `Z` are mandatory) so same-scope, same-day re-reviews never collide and always sort by recency. Never emit a local-time or `Z`-less timestamp: a timezone-less datetime mis-orders artifacts written by agents in different timezones.
 
-**If file already exists for today:** add `-v2`, `-v3`, etc.
+- Phase review: `{project}/reviews/pNN-review-YYYY-MM-DDTHHMMSSZ.md`
+- Final review: `{project}/reviews/final-review-YYYY-MM-DDTHHMMSSZ.md`
+- Task review: `{project}/reviews/pNN-tNN-review-YYYY-MM-DDTHHMMSSZ.md`
+- Range review: `{project}/reviews/range-review-YYYY-MM-DDTHHMMSSZ.md`
+
+The timestamp token must match the `oat_generated_at` frontmatter for the same run. In the unlikely event a file with that exact second already exists, append `-v2`, `-v3`, etc.
 
 **Review artifact template:**
 
 ````markdown
 ---
 oat_generated: true
-oat_generated_at: YYYY-MM-DD
+oat_generated_at: YYYY-MM-DDTHH:MM:SSZ
 oat_review_scope: { scope }
 oat_review_type: { code|artifact|analysis }
 oat_review_invocation: { manual|auto|gate }
@@ -308,7 +310,7 @@ oat_project: { project-path }
 
 # {Code|Artifact|Analysis} Review: {scope}
 
-**Reviewed:** YYYY-MM-DD
+**Reviewed:** YYYY-MM-DDTHH:MM:SSZ
 **Scope:** {scope description}
 **Files reviewed:** {N}
 **Commits:** {range or count}

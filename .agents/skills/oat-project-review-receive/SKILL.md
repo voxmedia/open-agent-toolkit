@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.4
+version: 1.5.6
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -102,7 +102,7 @@ fi
 
 Selection rules:
 
-- Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime.
+- Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
 - Read the JSON result:
   - `path: null` means no review target was found.
   - `kind: "project"` and `actionable: true` means this skill can process the target when the path is an active top-level project review.
@@ -267,15 +267,23 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
   - Require explicit user confirmation before applying any artifact edits.
   - Resolve findings directly in artifact files; do not convert findings into plan tasks.
   - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
-- If `oat_review_type == code` AND `oat_review_invocation == auto`:
-  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. Apply relaxed disposition defaults:
+- If `oat_review_type == code` AND `oat_review_invocation == auto`, OR `oat_review_invocation == gate` from a **blocking** gate (the gate-originated context does not indicate a passing-gate sweep):
+  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement` or by a blocking `oat gate review`. Apply relaxed disposition defaults:
     - Critical/Important/Medium: convert to fix tasks (same as manual mode)
-    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
-    - **No user prompts for disposition decisions.** The auto-review path runs fully autonomously.
+    - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
+    - **No user prompts for disposition decisions.** The auto/gate review path runs fully autonomously.
     - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
-- If `oat_review_type == code` AND `oat_review_invocation == gate`:
-  - **Gate review mode.** This review was spawned by `oat gate review`, but receive remains standard disposition behavior. Treat `gate` the same as manual for prompts, finding conversion, artifact archival, and bookkeeping unless a future implementation explicitly designs an autonomous receive path.
+- If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
+  - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
+    - The gate verdict decided whether the phase stops; it did **not** decide whether Medium/Minor findings are ignored. There are, by definition, no unresolved Critical/Important findings in a passing gate (if there were, the gate would have blocked).
+    - Make a per-finding **judgment call** for each Medium/Minor — do not mechanically dump them all:
+      - **Defer to final** (default): record under "Deferred Findings" (Mediums under "Deferred Findings (Medium)" so Step 8.5 resurfacing picks them up) with concrete rationale.
+      - **Address now:** only for small, contained, low-risk fixes. Apply the fix, commit it with the phase bookkeeping, and record the disposition. Do **not** re-run the standard reviewer or re-gate the phase for address-now fixes.
+      - **Reject** as false-positive / out-of-scope, with concrete rationale.
+    - `address now` is an **exception, not the norm** — when in doubt, defer. Do not let a passing gate drift into behaving like a Medium-blocking gate by habit.
+    - **Escalation exception:** if an address-now fix reveals or creates a Critical/Important concern, stop treating it as a sweep item. Convert it to a fix task and return control to the blocking-gate path (`oat-project-implement` re-runs the standard reviewer and the gate for the phase).
+    - Do not add blocking fix tasks for deferred or rejected findings. After recording all dispositions, archive the artifact (Step 7.5) and commit review bookkeeping (Step 7.6) as usual.
 - If `oat_review_type == code` (manual or `oat_review_invocation` absent):
   - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
 
@@ -483,13 +491,15 @@ If the project itself is still untracked because earlier lifecycle steps never c
 
 **Bounded loop protection:**
 
-Count how many review cycles have occurred for this scope:
+Count how many review cycles have occurred for this scope. Exclude gate-originated artifacts (`oat_review_invocation: gate`): the cap measures failed fix cycles of the standard review loop, not artifact volume, and phase gate re-runs are governed by the phase review gate flow in `oat-project-implement`, not by this cap.
 
 ```bash
 {
   find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
   find "$PROJECT_PATH/reviews/archived" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
-} | wc -l
+} | while IFS= read -r artifact; do
+  grep -q "oat_review_invocation: gate" "$artifact" || echo "$artifact"
+done | wc -l
 ```
 
 **If 3 or more cycles:**

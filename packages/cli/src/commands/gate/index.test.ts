@@ -1526,7 +1526,12 @@ describe('oat gate', () => {
       project: projectPath,
       blocking: false,
       counts: { critical: 0, important: 0 },
+      runId: expect.any(String),
+      generatedAt: '2026-06-01T00:00:00Z',
     });
+    // The completion envelope carries a non-empty run id and the produced
+    // artifact's oat_generated_at so callers can correlate result to artifact.
+    expect(capture.jsonPayloads[0]?.runId).toMatch(/[0-9a-f-]{8,}/i);
     expect(process.exitCode).toBe(0);
   });
 

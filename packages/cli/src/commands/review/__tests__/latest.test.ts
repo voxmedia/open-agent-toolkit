@@ -283,6 +283,49 @@ describe('oat review latest', () => {
     expect(result?.actionable).toBe(true);
   });
 
+  it('selects the newest same-scope same-day re-gate by seconds-precision generated time', async () => {
+    const root = await createRepoRoot();
+    const projectPath = '.oat/projects/shared/demo';
+
+    // Four re-gate rounds of the same scope on the same calendar day. With
+    // date-only timestamps these tie and the resolver fell back to path order;
+    // seconds precision must make round 4 (the PASS) win.
+    await writeReview(
+      root,
+      `${projectPath}/reviews/final-review-2026-07-05T110000Z.md`,
+      {
+        generatedAt: '2026-07-05T11:00:00Z',
+        scope: 'final',
+        project: projectPath,
+      },
+    );
+    await writeReview(
+      root,
+      `${projectPath}/reviews/final-review-2026-07-05T110249Z.md`,
+      {
+        generatedAt: '2026-07-05T11:02:49Z',
+        scope: 'final',
+        project: projectPath,
+      },
+    );
+    await writeReview(
+      root,
+      `${projectPath}/reviews/final-review-2026-07-05T111601Z.md`,
+      {
+        generatedAt: '2026-07-05T11:16:01Z',
+        scope: 'final',
+        project: projectPath,
+      },
+    );
+
+    const result = await findLatestReview({ repoRoot: root, projectPath });
+
+    expect(result?.path).toBe(
+      `${projectPath}/reviews/final-review-2026-07-05T111601Z.md`,
+    );
+    expect(result?.generatedAt).toBe('2026-07-05T11:16:01Z');
+  });
+
   it('emits json for the latest review', async () => {
     const root = await createRepoRoot();
     const projectPath = '.oat/projects/shared/demo';

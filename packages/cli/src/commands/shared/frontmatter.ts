@@ -77,6 +77,22 @@ export function getFrontmatterField(
   return match[1]!.replace(/\s*#.*$/, '').trim();
 }
 
+/**
+ * Parse an `oat_generated_at` value into a comparable epoch millisecond time.
+ *
+ * Review artifacts should carry a UTC, `Z`-suffixed timestamp
+ * (`YYYY-MM-DDTHH:MM:SSZ`). A bare date (`YYYY-MM-DD`) already parses as UTC,
+ * but a datetime with no timezone designator parses as *local* time, which
+ * mis-orders artifacts written by agents in different timezones. Treat such a
+ * value as UTC by appending `Z` so ordering is timezone-independent regardless
+ * of what the writer emitted. Returns `NaN` for unparseable input.
+ */
+export function parseGeneratedTime(value: string): number {
+  const hasTime = value.includes('T');
+  const hasZone = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value);
+  return Date.parse(hasTime && !hasZone ? `${value}Z` : value);
+}
+
 export async function parseFrontmatterField(
   filePath: string,
   field: string,
