@@ -158,50 +158,44 @@ new contract.
 - Docs and bundled skills explain cap vs target behavior for implementers, fix loops, reviews, escalation, Uncapped, and Inherit Host Defaults.
 - Tests cover configured capped selection, uncapped preferred selection, inherit/default behavior, Frontier/Fable mapping for Claude, and migration compatibility for absent state.
 
-## Constraints
-
-- {Constraint 1}
-- {Constraint 2}
-
-## Success Criteria
-
-- {Criterion 1}
-- {Criterion 2}
-
-## Out of Scope
-
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Add Claude pinned effort variants if real usage shows that the gap between
+  default-effort `opus` and `fable` matters enough to justify the maintenance
+  cost.
+- Add provider-specific entitlement detection for Frontier access if
+  verify-on-dispatch and clear errors are not sufficient.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Codex upward selection:** Confirm in implementation whether pinned Codex
+  variants can select an effort above the current provider default/session
+  setting, and document any runtime caveats.
+- **Persisted shape:** Decide the exact config/frontmatter shape for managed
+  policy vs inherit mode while preserving compatibility with current
+  `workflow.dispatchCeiling.providers.*` values.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Existing resolver tests are the best starting point for codifying the new
+  semantics.
+- `Frontier` can map to Claude `fable` now, while any future GPT 5.6 SOL-class
+  mapping should wait until the Codex provider exposes a concrete value.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Silent behavior change:** Existing projects with absent ceiling state could
+  unexpectedly start using managed uncapped selection if absence is redefined.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Store `Uncapped` explicitly and keep absence as
+    unresolved/legacy/default behavior until an explicit choice is made.
+- **Provider promise mismatch:** Frontier naming could imply guaranteed access
+  when account/provider access is gated.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Log requested vs honored behavior and document
+    access-gating caveats.
 
 ## Next Steps
 
