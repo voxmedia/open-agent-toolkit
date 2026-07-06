@@ -1103,6 +1103,105 @@ describe('oat config', () => {
       });
     });
 
+    it('set workflow.dispatchPolicy.policy writes managed policy state', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const { command } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchPolicy.policy',
+        'frontier',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchPolicy: {
+            mode: 'managed',
+            policy: 'frontier',
+          },
+        },
+      });
+
+      const { command: getCmd, capture: getCap } = createHarness({
+        cwd: root,
+        home,
+      });
+      await runCommand(
+        getCmd,
+        ['get', 'workflow.dispatchPolicy.policy'],
+        ['--json'],
+      );
+      expect(getCap.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.dispatchPolicy.policy',
+        value: 'frontier',
+        source: 'shared',
+      });
+    });
+
+    it('set workflow.dispatchPolicy.mode inherit clears managed policy state', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchPolicy.policy',
+        'uncapped',
+      ]);
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchPolicy.mode',
+        'inherit',
+      ]);
+
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchPolicy: {
+            mode: 'inherit',
+          },
+        },
+      });
+    });
+
+    it('set workflow.dispatchPolicy.mode managed requires an existing policy', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchPolicy.mode',
+        'managed',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('workflow.dispatchPolicy.policy');
+    });
+
+    it('set workflow.dispatchPolicy.policy rejects legacy ceiling preset names', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchPolicy.policy',
+        'maximum',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        'economy | balanced | high | frontier | uncapped',
+      );
+    });
+
     it('workflow.autoReviewAtHillCheckpoints overrides legacy autoReviewAtCheckpoints', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -1209,6 +1308,8 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.autoArtifactReview.plan');
       expect(capture.info[0]).toContain('workflow.autoArtifactReview.analysis');
       expect(capture.info[0]).toContain('workflow.designMode');
+      expect(capture.info[0]).toContain('workflow.dispatchPolicy.mode');
+      expect(capture.info[0]).toContain('workflow.dispatchPolicy.policy');
       expect(capture.info[0]).toContain('workflow.dispatchCeiling.preset');
       expect(capture.info[0]).toContain(
         'workflow.dispatchCeiling.providers.codex',
