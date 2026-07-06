@@ -24,19 +24,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 4     | 0/4       |
+| Phase 2 | pending | 4     | 0/4       |
+| Phase 3 | pending | 5     | 0/5       |
+| Phase 4 | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/16 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Dispatch Policy Model and Presets
 
-**Status:** in_progress
-**Started:** 2026-07-05
+**Status:** pending
+**Started:** not started
 
 ### Phase Summary (fill when phase is complete)
 
@@ -57,27 +59,27 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add Dispatch Policy Config Types
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** pending
+**Commit:** n/a
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Pending.
 
 **Files changed:**
 
-- `{path}` - {why}
+- Pending.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts`
+- Result: pending
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- First implementation task from `plan.md`.
 
 **Issues Encountered:**
 

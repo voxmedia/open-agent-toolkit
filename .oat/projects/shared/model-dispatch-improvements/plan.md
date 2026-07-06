@@ -1,204 +1,465 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-05
 oat_phase: plan
-oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_phase_status: complete
+oat_plan_parallel_groups: []
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
 ---
 
 # Implementation Plan: model-dispatch-improvements
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Replace ambiguous dispatch-ceiling behavior with an explicit dispatch policy contract: managed capped tiers, managed uncapped selection, and host-default inheritance.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Add a durable dispatch policy model, compile it through the existing resolver/provider-adapter boundary, then update lifecycle prompts, docs, and shipped assets so user-facing copy matches behavior.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript CLI, OAT config/state frontmatter, provider ceiling adapters, bundled Markdown skills/docs, Vitest, oxlint/oxfmt, Turborepo.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `type(pNN-tNN): description`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+- [x] Captured quick discovery decisions
+- [x] Produced lightweight design
+- [x] Evaluated phases for parallelism opportunities
+- [x] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Persisted dispatch ceiling for this project (`maximum`)
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+This plan is intentionally sequential. Phase 1 establishes the config/data-model vocabulary that Phase 2 consumes in resolver semantics. Phase 3 updates lifecycle skills, docs, templates, and generated assets after the resolver contract is stable. Phase 4 performs release/package validation after all shipped surfaces have settled. Running these phases in parallel would create overlapping edits in config docs, skill copies, generated assets, and package metadata.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+`oat_plan_parallel_groups: []`
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+## Phase 1: Dispatch Policy Model and Presets
 
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+Establish the durable vocabulary for managed capped tiers, managed uncapped selection, and host-default inheritance while preserving legacy dispatch-ceiling compatibility.
 
----
-
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model              | Codex effort                   | Rationale                     |
-| ----- | ------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them against the resolved OAT dispatch ceiling and maps selected efforts to pinned implementer variants. Codex provider default effort is informational for base/unpinned roles and is not an OAT ceiling.
-
----
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add Dispatch Policy Config Types
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify as needed: `packages/cli/src/config/resolve.ts`
 
-**Step 1: Write test (RED)**
+**Scope:**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+- Add typed config/state concepts for dispatch policy mode: `managed` and `inherit`.
+- Add managed policy names: `economy`, `balanced`, `high`, `frontier`, and `uncapped`.
+- Keep existing `workflow.dispatchCeiling` values readable as capped managed compatibility input.
+- Ensure absent policy/ceiling state remains unresolved or legacy-compatible, not implicitly `uncapped`.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
-
-**Step 2: Implement (GREEN)**
-
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
+**Verification:**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+pnpm --filter @open-agent-toolkit/cli test -- src/config/oat-config.test.ts
 ```
 
----
+**Commit:** `feat(p01-t01): add dispatch policy config model`
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add Policy Preset Compilation
 
 **Files:**
 
-- {File list}
+- Modify: `packages/cli/src/config/dispatch-ceiling-preset.ts`
+- Modify: `packages/cli/src/config/dispatch-ceiling-preset.test.ts`
 
-**Step 1: Write test (RED)**
+**Scope:**
 
-{Test code}
+- Add managed policy compilation for `economy`, `balanced`, `high`, `frontier`, and `uncapped`.
+- Compile the capped managed policies as:
+  - `economy` -> Codex `medium`, Claude `sonnet`
+  - `balanced` -> Codex `high`, Claude `sonnet`
+  - `high` -> Codex `xhigh`, Claude `opus`
+  - `frontier` -> Codex `xhigh`, Claude `fable`
+- Preserve legacy `balanced`, `maximum`, and `cost-conscious` preset compatibility.
+- Treat legacy `maximum` as the compatibility spelling for `high`, and legacy `cost-conscious` as the compatibility spelling for `economy`.
+- Map `frontier` to Claude `fable`; keep Codex mapped to the highest currently supported effort (`xhigh`) until a concrete frontier Codex value exists.
+- Represent `uncapped` explicitly without compiling it into concrete provider caps.
 
-**Step 2: Implement (GREEN)**
-
-{Implementation code or signatures}
-
-**Step 3: Refactor**
-
-{Optional cleanup}
-
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
+**Verification:**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-ceiling-preset.test.ts
 ```
 
----
+**Commit:** `feat(p01-t02): add dispatch policy presets`
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Expose Dispatch Policy Config Commands
 
-### Task p02-t01: {Task Name}
+**Files:**
 
-{Continue TDD pattern...}
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+- Modify if snapshots change: `packages/cli/src/commands/help-snapshots.test.ts`
 
----
+**Scope:**
+
+- Add config catalog entries, validation, and descriptions for the new dispatch policy keys.
+- Keep legacy dispatch-ceiling keys available and documented as compatibility aliases or legacy surfaces.
+- Ensure `oat config get/list/describe/set` provides clear output for managed policies, `uncapped`, and inherit/default mode.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/config/index.test.ts src/commands/help-snapshots.test.ts
+```
+
+**Commit:** `feat(p01-t03): expose dispatch policy config`
+
+### Task p01-t04: Update Provider Value Registries
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/ceiling/registry.ts`
+- Modify: `packages/cli/src/providers/ceiling/registry.test.ts`
+- Modify as needed: `packages/cli/src/config/oat-config.ts`
+
+**Scope:**
+
+- Add Claude `fable` as the Frontier model tier.
+- Update Claude tier ordering and verify-on-upgrade behavior to include `fable`.
+- Keep Codex effort values unchanged unless the provider registry already exposes a new concrete frontier effort.
+- Update provider tests for valid values and model argument compilation.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/providers/ceiling/registry.test.ts
+```
+
+**Commit:** `feat(p01-t04): add frontier provider tiers`
+
+## Phase 2: Resolver Semantics
+
+Teach the dispatch resolver to compile managed capped, managed uncapped, and inherit/default behavior into honest provider dispatch args and logs.
+
+### Task p02-t01: Read Project Dispatch Policy State
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Scope:**
+
+- Add parser support for explicit project `oat_dispatch_policy` frontmatter.
+- Keep fallback support for legacy `oat_dispatch_ceiling`.
+- Preserve source/preset provenance for compatibility.
+- Add tests proving absent state remains unresolved and legacy state remains capped managed behavior.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts
+```
+
+**Commit:** `feat(p02-t01): read dispatch policy project state`
+
+### Task p02-t02: Implement Capped, Uncapped, and Inherit Selection
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Scope:**
+
+- For capped managed implementer/fix dispatch, keep `selected = min(preferred, ceiling)`.
+- For managed `uncapped`, select the preferred implementer/fix value when provider controls support it.
+- For inherit/default mode, return no selected dispatch args and log inherited/provider-default behavior.
+- Keep reviewer dispatch targeting configured capped policy values, and make reviewer behavior explicit for `uncapped` and inherit/default where no target exists.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts
+```
+
+**Commit:** `feat(p02-t02): resolve managed dispatch policies`
+
+### Task p02-t03: Update Resolver Output and Errors
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Scope:**
+
+- Extend `selection` metadata so consumers can distinguish capped, uncapped, review-target, and inherit/default outcomes.
+- Update human-readable output from "dispatch ceiling" wording toward "dispatch policy" where appropriate.
+- Keep non-interactive unresolved behavior for absent/ambiguous state.
+- Ensure invalid policy values report clear valid-value guidance.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts
+```
+
+**Commit:** `fix(p02-t03): clarify dispatch policy resolution output`
+
+### Task p02-t04: Cover Provider-Specific Resolver Cases
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Scope:**
+
+- Add regression cases for Codex uncapped preferred effort selecting pinned variants.
+- Add regression cases for Claude uncapped preferred model selecting Task `model`, including `fable`.
+- Add inherit/default cases for Codex and Claude returning no dispatch args.
+- Add unsupported-provider behavior for managed capped and uncapped policies.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts
+```
+
+**Commit:** `test(p02-t04): cover dispatch policy resolver cases`
+
+## Phase 3: Lifecycle Skills, Templates, and Docs
+
+Update all shipped instruction and documentation surfaces so agents and users apply the same dispatch policy contract.
+
+### Task p03-t01: Update Planning Policy Prompts
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+
+**Scope:**
+
+- Replace current dispatch-ceiling prompt copy with dispatch-policy wording.
+- Present managed choices `Economy`, `Balanced`, `High`, `Frontier`, `Uncapped`, and separate `Inherit Host Defaults`.
+- Persist explicit policy state for `Uncapped` and inherit/default mode.
+- Bump each changed skill frontmatter `version:`.
+
+**Verification:**
+
+```bash
+pnpm run oat:validate-skills
+```
+
+**Commit:** `docs(p03-t01): update planning dispatch policy prompts`
+
+### Task p03-t02: Update Implementation Dispatch Instructions
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Scope:**
+
+- Update runtime dispatch selection rules for capped managed, uncapped managed, and inherit/default mode.
+- Keep Codex payload-first assertions tied to pinned variants.
+- Keep Claude model-axis selection via Task `model` and `effort_axis=not-applicable`.
+- Clarify review behavior when capped policy exists vs when policy is `Uncapped` or inherit/default.
+- Bump skill frontmatter `version:`.
+
+**Verification:**
+
+```bash
+pnpm run oat:validate-skills
+```
+
+**Commit:** `docs(p03-t02): update implementation dispatch policy rules`
+
+### Task p03-t03: Update Templates and Plan-Writing Guidance
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.oat/templates/plan.md`
+- Modify: `.oat/templates/state.md`
+- Modify as needed: `.agents/agents/oat-phase-implementer.md`, `.agents/agents/oat-reviewer.md`
+
+**Scope:**
+
+- Update Dispatch Profile allowed Claude values to include `fable`.
+- Update template comments from dispatch ceiling to dispatch policy where appropriate.
+- Clarify that provider defaults are only for inherit/default or base/unpinned fallback paths.
+- Bump changed skill versions where required.
+
+**Verification:**
+
+```bash
+pnpm run oat:validate-skills
+```
+
+**Commit:** `docs(p03-t03): align dispatch policy templates`
+
+### Task p03-t04: Update Docs Site Content
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- Modify as needed: related workflow index pages
+
+**Scope:**
+
+- Document dispatch policy terminology and legacy dispatch-ceiling compatibility.
+- Explain `Economy`, `Balanced`, `High`, `Frontier`, `Uncapped`, and `Inherit Host Defaults`.
+- Explain cap-vs-target behavior for implementers/fix loops/reviewers.
+- Explain provider-specific enforcement and Claude model-only Task dispatch.
+
+**Verification:**
+
+```bash
+pnpm build:docs
+```
+
+**Commit:** `docs(p03-t04): document dispatch policy model`
+
+### Task p03-t05: Regenerate Bundled Assets and Provider Views
+
+**Files:**
+
+- Modify generated/provider assets as produced by commands:
+  - `packages/cli/assets/**`
+  - `.claude/**`
+  - `.cursor/**`
+  - `.codex/**`
+  - `.oat/sync/manifest.json`
+
+**Scope:**
+
+- Run provider sync after canonical skill/template/agent updates.
+- Run the CLI asset bundling path so shipped `packages/cli/assets` mirrors canonical docs/skills/templates.
+- Inspect diffs to ensure generated outputs match the canonical changes and no unrelated drift is introduced.
+
+**Verification:**
+
+```bash
+pnpm run cli -- sync --scope all
+pnpm run cli -- --help >/dev/null
+git diff --check
+```
+
+**Commit:** `chore(p03-t05): sync dispatch policy assets`
+
+## Phase 4: Validation, Release Metadata, and Handoff
+
+Run the required checks for a shipped CLI/docs/skill change and prepare the branch for implementation handoff.
+
+### Task p04-t01: Run Targeted Dispatch Policy Tests
+
+**Files:**
+
+- Modify tests only if failures identify missing coverage or incorrect expectations.
+
+**Scope:**
+
+- Run targeted tests for config, preset compilation, provider registry, resolver, and config command behavior.
+- Fix any failures within the changed contract.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- \
+  src/config/oat-config.test.ts \
+  src/config/dispatch-ceiling-preset.test.ts \
+  src/providers/ceiling/registry.test.ts \
+  src/commands/project/dispatch-ceiling/index.test.ts \
+  src/commands/config/index.test.ts \
+  src/commands/help-snapshots.test.ts
+```
+
+**Commit:** `test(p04-t01): validate dispatch policy behavior`
+
+### Task p04-t02: Run Workspace Quality Gates
+
+**Files:**
+
+- Modify source/tests/docs only if workspace checks reveal issues.
+
+**Scope:**
+
+- Run type-check, lint, formatting, skill validation, and docs build.
+- Fix failures caused by this project.
+
+**Verification:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm --filter @open-agent-toolkit/cli lint
+pnpm format
+pnpm run oat:validate-skills
+pnpm build:docs
+```
+
+**Commit:** `chore(p04-t02): satisfy dispatch policy quality gates`
+
+### Task p04-t03: Bump Public Package Versions and Validate Release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Scope:**
+
+- Bump the lockstep public package set because CLI behavior, bundled skills, docs, and assets are shipped surfaces.
+- Run release validation.
+- Fix any release metadata mismatch.
+
+**Verification:**
+
+```bash
+pnpm release:validate
+git diff --check
+```
+
+**Commit:** `chore(p04-t03): bump public packages for dispatch policy`
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+| Scope | Type     | Status  | Artifact | Notes                                            |
+| ----- | -------- | ------- | -------- | ------------------------------------------------ |
+| plan  | artifact | passed  | n/a      | Inline plan artifact review passed.              |
+| p01   | code     | pending | n/a      | Dispatch policy model and preset changes.        |
+| p02   | code     | pending | n/a      | Resolver semantics and provider-specific cases.  |
+| p03   | code     | pending | n/a      | Lifecycle skill, docs, template, and asset sync. |
+| p04   | code     | pending | n/a      | Validation and release metadata.                 |
+| final | code     | pending | n/a      | Final branch review before PR handoff.           |
 
 ## Implementation Complete
 
-**Summary:**
+Implementation is complete when all four phases pass review and the release validation command succeeds.
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+| Phase | Tasks | Status  |
+| ----- | ----- | ------- |
+| p01   | 4     | pending |
+| p02   | 4     | pending |
+| p03   | 5     | pending |
+| p04   | 3     | pending |
 
-**Total: {N} tasks**
-
-Ready for code review and merge.
-
----
+**Total:** 16 tasks.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
-- Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Discovery: `.oat/projects/shared/model-dispatch-improvements/discovery.md`
+- Design: `.oat/projects/shared/model-dispatch-improvements/design.md`
+- Existing resolver: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Existing provider registry: `packages/cli/src/providers/ceiling/registry.ts`
+- Current dispatch docs: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
