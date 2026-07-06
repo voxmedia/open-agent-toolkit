@@ -295,6 +295,58 @@ describe('archiveBacklogItem', () => {
     expect(completedAfter).toBe(completedBefore);
   });
 
+  it('rejects a duplicate id present in both items/ and archived/ without modifying either file (exit 1)', async () => {
+    const backlogRoot = await freshBacklog();
+    const id = 'BL-260705-demo';
+    await seedItem(backlogRoot, id);
+    const itemsPath = join(backlogRoot, 'items', `${id}.md`);
+    const archivedPath = join(backlogRoot, 'archived', `${id}.md`);
+    await writeFile(
+      archivedPath,
+      `---\nid: ${id}\ntitle: 'Demo Item'\nstatus: closed\n---\n`,
+      'utf8',
+    );
+    const itemsBefore = await readFile(itemsPath, 'utf8');
+    const archivedBefore = await readFile(archivedPath, 'utf8');
+
+    let caught: unknown;
+    try {
+      await archiveBacklogItem(backlogRoot, id, { now: FIXED_NOW });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(BacklogArchiveError);
+    const err = caught as BacklogArchiveError;
+    expect(err.exitCode).toBe(1);
+    expect(err.message).toContain(itemsPath);
+    expect(err.message).toContain(archivedPath);
+    // Neither file is touched — no clobber of the archived record and the live
+    // items/ copy is left in place for manual reconciliation.
+    expect(await readFile(itemsPath, 'utf8')).toBe(itemsBefore);
+    expect(await readFile(archivedPath, 'utf8')).toBe(archivedBefore);
+  });
+
+  it('still returns a noop when only the archived copy exists (no items/ duplicate)', async () => {
+    const backlogRoot = await freshBacklog();
+    const id = 'BL-260705-demo';
+    // Only the archived copy exists — the clean idempotent no-op path.
+    await writeFile(
+      join(backlogRoot, 'archived', `${id}.md`),
+      `---\nid: ${id}\ntitle: 'Demo Item'\nstatus: closed\n---\n`,
+      'utf8',
+    );
+
+    const result = await archiveBacklogItem(backlogRoot, id, {
+      now: FIXED_NOW,
+    });
+
+    expect(result.result).toBe('noop');
+    expect(await fileExists(join(backlogRoot, 'items', `${id}.md`))).toBe(
+      false,
+    );
+  });
+
   it('creates completed.md from a scaffold when it is missing', async () => {
     const backlogRoot = await freshBacklog();
     await rm(join(backlogRoot, 'completed.md'));

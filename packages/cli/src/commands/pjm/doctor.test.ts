@@ -510,6 +510,40 @@ describe('runPjmDoctorChecks', () => {
     expect(check?.status).toBe('pass');
   });
 
+  it('fails backlog_duplicate_id when the same id exists in items/ and archived/', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await writeBacklogItem(repoRoot, 'items', 'BL-260101-dup', 'open');
+    await writeBacklogItem(repoRoot, 'archived', 'BL-260101-dup', 'closed');
+    // A non-duplicate sibling in each directory must not be flagged.
+    await writeBacklogItem(repoRoot, 'items', 'BL-260102-solo', 'open');
+    await writeBacklogItem(repoRoot, 'archived', 'BL-260103-done', 'closed');
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    const check = checks.find((c) => c.name === 'pjm:backlog_duplicate_id');
+    expect(check?.status).toBe('fail');
+    expect(check?.message).toContain('pjm/backlog/items/BL-260101-dup.md');
+    expect(check?.message).toContain('pjm/backlog/archived/BL-260101-dup.md');
+    expect(check?.message).not.toContain('BL-260102-solo');
+    expect(check?.message).not.toContain('BL-260103-done');
+    expect(check?.fix).toContain('Reconcile');
+  });
+
+  it('passes backlog_duplicate_id when no id is present in both directories', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    const repoRoot = await createCanonicalRepo(root);
+    await writeBacklogItem(repoRoot, 'items', 'BL-260101-open', 'open');
+    await writeBacklogItem(repoRoot, 'archived', 'BL-260102-closed', 'closed');
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+
+    const check = checks.find((c) => c.name === 'pjm:backlog_duplicate_id');
+    expect(check?.status).toBe('pass');
+  });
+
   it('warns backlog_completed_unarchived when a completed entry file still sits in items/', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
     tempDirs.push(root);

@@ -209,6 +209,15 @@ export async function archiveBacklogItem(
 
   // Idempotent no-op: already archived.
   if (await pathExists(archivedPath)) {
+    // Conflicting duplicate: the same id lives in BOTH `items/` and
+    // `archived/`. Treating this as a clean no-op would silently leave the live
+    // `items/` copy unarchived, while auto-archiving would clobber the existing
+    // archived record. Refuse and make the user reconcile the duplicate.
+    if (await pathExists(itemsPath)) {
+      throw new BacklogArchiveError(
+        `Backlog item ${id} exists in both \`items/\` (${itemsPath}) and \`archived/\` (${archivedPath}). Auto-archiving would clobber the existing archived record, so this is left untouched. Fix: reconcile the duplicate manually — decide which of the two files is authoritative and remove the other — then re-run \`oat backlog archive ${id}\`.`,
+      );
+    }
     let status: BacklogItemStatus | null = null;
     try {
       const extracted = extractBacklogStatus(

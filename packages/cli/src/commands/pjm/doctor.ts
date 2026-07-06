@@ -434,7 +434,9 @@ export async function runPjmDoctorChecks(
     .filter(
       (item) =>
         item.directory === 'archived' &&
-        (item.status === 'open' || item.status === 'in_progress'),
+        item.status !== null &&
+        isValidBacklogStatus(item.status) &&
+        !isTerminalBacklogStatus(item.status),
     )
     .map((item) => item.relativePath);
   checks.push({
@@ -449,6 +451,40 @@ export async function runPjmDoctorChecks(
       archivedOpen.length === 0
         ? undefined
         : 'Set a terminal status (closed/wont_do) on each archived item, or move it back under items/.',
+  });
+
+  // A single id must never live in both `items/` and `archived/`: the live copy
+  // shadows the archived record and `oat backlog archive` refuses to reconcile
+  // it automatically (auto-archiving would clobber the archived file). Derive
+  // from the same single scan so the filesystem is not re-walked.
+  const backlogPathsByIdAndDir = new Map<
+    string,
+    { items?: string; archived?: string }
+  >();
+  for (const item of backlogItems) {
+    const key = item.id.toLowerCase();
+    const entry = backlogPathsByIdAndDir.get(key) ?? {};
+    entry[item.directory] = item.relativePath;
+    backlogPathsByIdAndDir.set(key, entry);
+  }
+  const duplicateIdPairs: string[] = [];
+  for (const entry of backlogPathsByIdAndDir.values()) {
+    if (entry.items && entry.archived) {
+      duplicateIdPairs.push(`${entry.items} + ${entry.archived}`);
+    }
+  }
+  checks.push({
+    name: 'pjm:backlog_duplicate_id',
+    description: 'Backlog ids present in both items/ and archived/',
+    status: checkStatus(duplicateIdPairs),
+    message:
+      duplicateIdPairs.length === 0
+        ? 'No backlog id is present in both items/ and archived/.'
+        : `Backlog ids present in both items/ and archived/: ${duplicateIdPairs.join('; ')}`,
+    fix:
+      duplicateIdPairs.length === 0
+        ? undefined
+        : 'Reconcile each duplicate manually: decide whether the active (items/) or archived copy is authoritative, remove the other, then re-run `oat backlog archive <id>` if the item still needs archiving.',
   });
 
   const itemPathsById = new Map<string, string>();
