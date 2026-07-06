@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                  | Legacy |
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------ | ------ |
+| DR-260706-claude-remains-model-axis-only | 2026-07-06 | accepted | Claude remains model-axis only                         | -      |
+| DR-260706-inherit-host-defaults-means-no | 2026-07-06 | accepted | Inherit Host Defaults means no OAT selection           | -      |
+| DR-260706-managed-uncapped-is-explicit   | 2026-07-06 | accepted | Managed Uncapped is explicit state                     | -      |
+| DR-260706-resolver-owns-preferred        | 2026-07-06 | accepted | Resolver owns preferred selection                      | -      |
+| DR-260706-reviewer-targets-only-capped   | 2026-07-06 | accepted | Reviewer targets only capped policies                  | -      |
 | DR-260701-gates-v2-remains-deferred      | 2026-07-01 | accepted | Gates V2 remains deferred                              | -      |
 | DR-260701-lifecycle-gate-commands-stay   | 2026-07-01 | accepted | Lifecycle gate commands stay target-neutral by default | -      |
 | DR-260701-provider-verification-happens  | 2026-07-01 | accepted | Provider verification happens at the CLI argv boundary | -      |
