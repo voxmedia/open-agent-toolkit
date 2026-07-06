@@ -298,6 +298,74 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('resolves Claude fable from repo config to Task model args', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'claude',
+      value: 'fable',
+      source: 'repo-config',
+      unresolved: false,
+      providers: {
+        claude: {
+          value: 'fable',
+          mode: 'enforced',
+          mechanism: 'model-arg',
+          dispatchArgs: { model: 'fable' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('resolves Claude fable from project state to Task model args', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_ceiling:',
+        '  providers:',
+        '    claude: fable',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'claude',
+      value: 'fable',
+      source: 'project-state',
+      unresolved: false,
+      providers: {
+        claude: {
+          value: 'fable',
+          mode: 'enforced',
+          mechanism: 'model-arg',
+          dispatchArgs: { model: 'fable' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('resolves unknown providers as advisory/unsupported instead of erroring', async () => {
     const { root, home } = await setup();
 

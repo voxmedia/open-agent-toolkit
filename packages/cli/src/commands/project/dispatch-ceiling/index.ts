@@ -10,6 +10,8 @@ import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
+  VALID_CLAUDE_DISPATCH_CEILINGS,
+  VALID_CODEX_DISPATCH_CEILINGS,
   type ActiveProjectResolution,
   type WorkflowCodexDispatchCeiling,
   type WorkflowClaudeDispatchCeiling,
@@ -95,16 +97,11 @@ interface DispatchCeilingResolution {
 }
 
 const CODEX_VALUES: readonly WorkflowCodexDispatchCeiling[] = [
-  'low',
-  'medium',
-  'high',
-  'xhigh',
+  ...VALID_CODEX_DISPATCH_CEILINGS,
 ];
 
 const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
-  'haiku',
-  'sonnet',
-  'opus',
+  ...VALID_CLAUDE_DISPATCH_CEILINGS,
 ];
 
 interface DispatchSelection {
