@@ -441,14 +441,15 @@ git diff --check
 
 Plan gate review findings were resolved in plan scope.
 
-| Scope | Type     | Status | Date       | Artifact                                            |
-| ----- | -------- | ------ | ---------- | --------------------------------------------------- |
-| plan  | artifact | passed | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05.md |
-| p01   | code     | passed | 2026-07-06 | reviews/archived/p01-review-2026-07-06-v2.md        |
-| p02   | code     | passed | 2026-07-06 | reviews/archived/p02-review-2026-07-06-v2.md        |
-| p03   | code     | passed | 2026-07-06 | reviews/archived/p03-review-2026-07-06-v2.md        |
-| p04   | code     | passed | 2026-07-06 | reviews/archived/p04-review-2026-07-06.md           |
-| final | code     | passed | 2026-07-06 | reviews/archived/final-review-2026-07-06-v2.md      |
+| Scope | Type     | Status   | Date       | Artifact                                            |
+| ----- | -------- | -------- | ---------- | --------------------------------------------------- |
+| plan  | artifact | passed   | 2026-07-05 | reviews/archived/artifact-plan-review-2026-07-05.md |
+| p01   | code     | passed   | 2026-07-06 | reviews/archived/p01-review-2026-07-06-v2.md        |
+| p02   | code     | passed   | 2026-07-06 | reviews/archived/p02-review-2026-07-06-v2.md        |
+| p03   | code     | passed   | 2026-07-06 | reviews/archived/p03-review-2026-07-06-v2.md        |
+| p04   | code     | passed   | 2026-07-06 | reviews/archived/p04-review-2026-07-06.md           |
+| final | code     | passed   | 2026-07-06 | reviews/archived/final-review-2026-07-06-v2.md      |
+| final | code     | received | 2026-07-06 | reviews/final-review-2026-07-06-v3.md               |
 
 ## Implementation Complete
 
