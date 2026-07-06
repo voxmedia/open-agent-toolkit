@@ -128,7 +128,7 @@ function codexEffortVariantDescription(
   if (effort === 'high') {
     return `OAT ${roleLabel} pinned to high reasoning effort for broad, subtle, or higher-risk implementation, fix, or review phases.`;
   }
-  return `OAT ${roleLabel} pinned to xhigh reasoning effort for the highest configured Codex dispatch ceiling.`;
+  return `OAT ${roleLabel} pinned to xhigh reasoning effort for the highest configured Codex dispatch policy cap.`;
 }
 
 function codexEffortVariantsFromBase(

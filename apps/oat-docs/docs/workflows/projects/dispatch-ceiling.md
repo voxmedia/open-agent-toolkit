@@ -115,6 +115,8 @@ Selection modes:
 - `capped` - implementer/fix dispatch selects `min(preferred, cap)`.
 - `uncapped` - implementer/fix dispatch selects the preferred value.
 - `review-target` - reviewer dispatch targets a configured cap when one exists.
+- `no-review-target` - managed uncapped reviewer dispatch has no configured
+  target and falls back to the base/unpinned reviewer.
 - `inherit-default` - OAT returns no dispatch args and leaves controls to the host.
 - `unresolved` - non-interactive implementation blocks before work starts.
 

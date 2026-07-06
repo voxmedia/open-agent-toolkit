@@ -363,7 +363,7 @@ Codex rules:
 6. For implementer/fix dispatch: call `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <preferred-effort>`; read `providers.codex.selection.selectedValue` and `providers.codex.dispatchArgs.variant` for the selected role name (e.g., `oat-phase-implementer-medium`). Never pass a cap-only implementer variant when `selection.selectedValue` is lower.
 7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer`; read `providers.codex.dispatchArgs.variant`.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
-   - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
+   - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
 8. Codex payload-first assertion applies only when the resolver returns a pinned variant. If `effort_axis=selected:<value>`, the actual `spawn_agent` payload MUST use the matching pinned `agent_type`. If the resolver returns no variant, use the base role and log provider-default.
 9. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
@@ -399,7 +399,7 @@ Resolved cap: {resolved cap value | none}
 Selected effort: {low | medium | high | xhigh | provider-default | not-applicable}
 Policy source: {repo config | project state | preflight prompt}
 Provider default effort: {value | unknown | not-applicable}
-Selection mode: {capped | uncapped | review-target | inherit-default}
+Selection mode: {capped | uncapped | review-target | no-review-target | inherit-default}
 Model axis: { selected:<value> | inherited | not-applicable | host-auto }
 Effort axis: { selected:<value> | provider-default | inherited | not-applicable | host-auto }
 Dispatch target: {host-specific subagent/role/tool target}

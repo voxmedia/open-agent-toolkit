@@ -117,6 +117,7 @@ type DispatchSelectionMode =
   | 'capped'
   | 'uncapped'
   | 'review-target'
+  | 'no-review-target'
   | 'inherit-default'
   | 'unresolved';
 
@@ -685,7 +686,7 @@ function selectDispatchValue(
       preferredValue: role === 'reviewer' ? null : preferredValue,
       selectedValue: role === 'reviewer' ? null : preferredValue,
       capped: false,
-      selectionMode: role === 'reviewer' ? 'review-target' : 'uncapped',
+      selectionMode: role === 'reviewer' ? 'no-review-target' : 'uncapped',
     };
   }
 
@@ -1010,7 +1011,13 @@ function writeHumanResolution(
       providerResolution?.selection.selectionMode === 'review-target'
     ) {
       context.logger.info(
-        'Note: Reviewer dispatch uses the configured target when one exists; uncapped/inherit policies provide no reviewer target.',
+        'Note: Reviewer dispatch uses the configured target from the resolved capped policy.',
+      );
+    } else if (
+      providerResolution?.selection.selectionMode === 'no-review-target'
+    ) {
+      context.logger.info(
+        'Note: Managed uncapped reviewer dispatch has no configured target; use the base/unpinned reviewer fallback.',
       );
     } else {
       context.logger.info(

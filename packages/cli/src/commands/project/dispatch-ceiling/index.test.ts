@@ -1208,7 +1208,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       );
     });
 
-    it('returns no reviewer target for managed uncapped policy', async () => {
+    it('returns explicit no-target reviewer fallback for managed uncapped policy', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
@@ -1242,7 +1242,7 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: null,
               selectedValue: null,
               capped: false,
-              selectionMode: 'review-target',
+              selectionMode: 'no-review-target',
               policyMode: 'managed',
               policy: 'uncapped',
             },
