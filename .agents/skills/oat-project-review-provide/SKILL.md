@@ -661,7 +661,7 @@ oat_project: { PROJECT_PATH }
 
 - `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, minors auto-deferred for non-final scopes).
 - `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: minors are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
-- `gate`: Review was spawned by `oat gate review` for a workflow gate. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. `oat-project-review-receive` uses the same no-prompt disposition behavior as `auto`, and the gate CLI maps the review artifact findings to exit status.
+- `gate`: Review was spawned by `oat gate review` for a workflow gate. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. The gate CLI maps the review artifact findings to exit status, and `oat-project-review-receive` dispositions gate reviews autonomously (no user prompts) — selecting convert-to-fix-tasks when the gate **blocked** at its threshold, or non-pausing judgment-sweep disposition (defer / small-fix-now / reject, with sub-threshold findings recorded durably) when the gate **passed**.
 
 When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter.
 

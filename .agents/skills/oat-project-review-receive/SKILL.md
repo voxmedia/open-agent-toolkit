@@ -267,13 +267,23 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
   - Require explicit user confirmation before applying any artifact edits.
   - Resolve findings directly in artifact files; do not convert findings into plan tasks.
   - Do not defer findings by default. Only use `rejected_with_rationale` for invalid findings, or `needs_user_direction` when user input is required.
-- If `oat_review_type == code` AND `oat_review_invocation` is `auto` or `gate`:
-  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement` or by `oat gate review`. Apply relaxed disposition defaults:
+- If `oat_review_type == code` AND `oat_review_invocation == auto`, OR `oat_review_invocation == gate` from a **blocking** gate (the gate-originated context does not indicate a passing-gate sweep):
+  - **Auto-disposition mode.** This review was spawned by the auto-review checkpoint trigger in `oat-project-implement` or by a blocking `oat gate review`. Apply relaxed disposition defaults:
     - Critical/Important/Medium: convert to fix tasks (same as manual mode)
     - Minor: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code). Manual mode now also defaults minors to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
     - **No user prompts for disposition decisions.** The auto/gate review path runs fully autonomously.
     - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are deferred with a note explaining why, rather than pausing for interactive resolution.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
+- If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
+  - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
+    - The gate verdict decided whether the phase stops; it did **not** decide whether Medium/Minor findings are ignored. There are, by definition, no unresolved Critical/Important findings in a passing gate (if there were, the gate would have blocked).
+    - Make a per-finding **judgment call** for each Medium/Minor — do not mechanically dump them all:
+      - **Defer to final** (default): record under "Deferred Findings" (Mediums under "Deferred Findings (Medium)" so Step 8.5 resurfacing picks them up) with concrete rationale.
+      - **Address now:** only for small, contained, low-risk fixes. Apply the fix, commit it with the phase bookkeeping, and record the disposition. Do **not** re-run the standard reviewer or re-gate the phase for address-now fixes.
+      - **Reject** as false-positive / out-of-scope, with concrete rationale.
+    - `address now` is an **exception, not the norm** — when in doubt, defer. Do not let a passing gate drift into behaving like a Medium-blocking gate by habit.
+    - **Escalation exception:** if an address-now fix reveals or creates a Critical/Important concern, stop treating it as a sweep item. Convert it to a fix task and return control to the blocking-gate path (`oat-project-implement` re-runs the standard reviewer and the gate for the phase).
+    - Do not add blocking fix tasks for deferred or rejected findings. After recording all dispositions, archive the artifact (Step 7.5) and commit review bookkeeping (Step 7.6) as usual.
 - If `oat_review_type == code` (manual or `oat_review_invocation` absent):
   - Follow the existing task-conversion flow in Steps 3-10 with standard disposition behavior.
 

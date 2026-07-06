@@ -947,17 +947,18 @@ If the gate is enabled and the current phase is selected:
    - Do not pass `--target` in normal execution; the existing gate config selects the cross-provider target.
    - The gate CLI injects gate context into the review prompt. The produced review artifact must use `oat_review_invocation: gate`.
 
-2. Parse the JSON result:
-   - `status: "ok"` / exit code `0` means the phase gate passed at the configured threshold. Record the gate artifact path and counts in `implementation.md`, then continue without pausing.
-   - `status: "blocked"` / non-zero exit due to review findings means blocking findings exist. Run `oat-project-review-receive` for the reported artifact path before treating the gate review as consumed.
+2. Parse the JSON result. The gate verdict (`exit_nonzero_on: {threshold}`) decides whether the phase **stops**; it does not decide whether sub-threshold findings are ignored. Either way the produced artifact must be **consumed** — passing gate artifacts are not left unprocessed at the top level of `reviews/`.
+   - `status: "ok"` / exit code `0` means the phase gate passed at the configured threshold, so the phase does not stop. Still run `oat-project-review-receive` for the reported artifact path in non-pausing **judgment-sweep** mode (pass gate-passed context so receive selects sweep disposition). The sweep makes a per-finding judgment for each Medium/Minor — defer to final (default), address now (small/contained/low-risk fixes only), or reject with rationale — writes those durable dispositions into `implementation.md`, and archives the artifact. Then continue without pausing. Address-now fixes from a passing gate do **not** re-trigger the standard reviewer or re-gate the phase.
+   - `status: "blocked"` / non-zero exit due to review findings means blocking findings exist. Run `oat-project-review-receive` for the reported artifact path (blocking disposition) before treating the gate review as consumed.
    - A non-zero exit caused by target execution failure, artifact validation failure, or missing review artifact is an operational failure. Stop and surface the gate output; do not continue as if the gate passed.
 
-3. If `oat-project-review-receive` adds fix tasks:
+3. If `oat-project-review-receive` adds fix tasks (blocking gate, or a sweep address-now fix that revealed a Critical/Important concern):
    - Return to task execution for the newly added review-fix tasks.
    - After fixes land, re-run the standard per-phase reviewer and this external phase gate for the same phase.
    - Continue only after both the standard reviewer and the external phase gate pass.
+   - Bound these gate block → fix → re-gate rounds by `oat_orchestration_retry_limit` (from `state.md`, default `2`). If the limit is exhausted with the gate still blocking, apply the same terminal handling as the standard bounded fix loop: **sequential mode** stops the run and surfaces the phase ID, unresolved findings, and artifact path; **parallel group mode** marks the phase `excluded` and reports it in Outstanding Items.
 
-4. If `oat-project-review-receive` determines there are no blocking fix tasks at the configured threshold, record the receive result and continue.
+4. If the judgment sweep (passing gate) records only deferrals/rejections and no blocking fix tasks, record the receive result and continue.
 
 For a parallel group, run selected phase gates after fan-in and bookkeeping, one gate per successfully merged phase in plan order. If a phase gate blocks, stop the schedule and process that gate's review before starting later schedule entries.
 
