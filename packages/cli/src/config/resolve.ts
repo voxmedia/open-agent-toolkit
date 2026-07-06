@@ -104,6 +104,10 @@ const DEFAULT_WORKFLOW_CONFIG = {
         claude: null,
       },
     },
+    dispatchPolicy: {
+      mode: null,
+      policy: null,
+    },
   },
 } satisfies Record<string, unknown>;
 

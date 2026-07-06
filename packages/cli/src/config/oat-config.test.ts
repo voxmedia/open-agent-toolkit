@@ -1269,5 +1269,108 @@ describe('oat-config', () => {
         });
       });
     });
+
+    describe('normalizeWorkflowConfig dispatchPolicy', () => {
+      it('reads managed dispatch policy config from .oat/config.json', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchPolicy: {
+                mode: 'managed',
+                policy: 'frontier',
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchPolicy).toEqual({
+          mode: 'managed',
+          policy: 'frontier',
+        });
+      });
+
+      it('reads inherit dispatch policy config without a managed policy', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchPolicy: {
+                mode: 'inherit',
+                policy: 'uncapped',
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchPolicy).toEqual({
+          mode: 'inherit',
+        });
+      });
+
+      it('accepts explicit uncapped as a managed dispatch policy', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchPolicy: {
+                mode: 'managed',
+                policy: 'uncapped',
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchPolicy).toEqual({
+          mode: 'managed',
+          policy: 'uncapped',
+        });
+      });
+
+      it('drops invalid dispatch policy values while preserving legacy dispatch ceiling values', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchPolicy: {
+                mode: 'auto',
+                policy: 'maximum',
+              },
+              dispatchCeiling: {
+                preset: 'balanced',
+                providers: { codex: 'high' },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow).toEqual({
+          dispatchCeiling: {
+            preset: 'balanced',
+            providers: { codex: 'high' },
+          },
+        });
+      });
+    });
   });
 });
