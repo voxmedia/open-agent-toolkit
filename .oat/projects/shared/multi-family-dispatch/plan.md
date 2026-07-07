@@ -719,17 +719,17 @@ pnpm release:validate
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                                           |
-| ------ | -------- | ------- | ---------- | ---------------------------------------------------------------------------------- |
-| design | artifact | passed  | 2026-07-07 | signed off in-session (Q23)                                                        |
-| plan   | artifact | passed  | 2026-07-07 | structured in-session review (oat-reviewer, 6 findings applied, re-verified CLEAN) |
-| p01    | code     | pending | n/a        | n/a                                                                                |
-| p02    | code     | pending | n/a        | n/a                                                                                |
-| p03    | code     | pending | n/a        | n/a                                                                                |
-| p04    | code     | pending | n/a        | n/a                                                                                |
-| p05    | code     | pending | n/a        | n/a                                                                                |
-| p06    | code     | pending | n/a        | n/a                                                                                |
-| final  | code     | pending | n/a        | n/a                                                                                |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| design | artifact | passed   | 2026-07-07 | signed off in-session (Q23)                        |
+| plan   | artifact | received | 2026-07-07 | reviews/artifact-plan-review-2026-07-07T052748Z.md |
+| p01    | code     | pending  | n/a        | n/a                                                |
+| p02    | code     | pending  | n/a        | n/a                                                |
+| p03    | code     | pending  | n/a        | n/a                                                |
+| p04    | code     | pending  | n/a        | n/a                                                |
+| p05    | code     | pending  | n/a        | n/a                                                |
+| p06    | code     | pending  | n/a        | n/a                                                |
+| final  | code     | pending  | n/a        | n/a                                                |
 
 ## Implementation Complete
 
