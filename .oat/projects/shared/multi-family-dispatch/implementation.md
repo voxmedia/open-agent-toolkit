@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 7     | 7/7       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 7     | 7/7       |
 
 **Total:** 14/25 tasks completed
 
@@ -894,6 +894,40 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 3 — 2026-07-07 09:42
+
+**Branch:** multi-family-dispatch
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p03   | DONE_WITH_CONCERNS | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p03: sequential.
+
+#### Dispatch Notes
+
+- Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact   | Planned / Documented                                | Actual / Accepted                                                         | Reason                                                                                                                | Source of Truth | Follow-up |
+| ------------- | ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------- | --------- |
+| p03-t07       | plan.md file list | The task named config command/test and asset files. | The implementation also updated `oat-config.ts` and `oat-config.test.ts`. | Persisting `recommendationVersion` required config-model support so normalized writes do not drop the adoption stamp. | implementation  | None.     |
+
 ### Run 2 — 2026-07-07 08:35
 
 **Branch:** multi-family-dispatch
@@ -1000,7 +1034,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p03-t01 after p02 gate review passes.
+- Continue with p04-t01 after p03 gate review passes.
 
 **Blockers:**
 
@@ -1034,7 +1068,7 @@ Chronological log of implementation progress.
 - m2: Addressed now. Redacted the personal work email from the Cursor auth-context
   evidence while preserving the exit code and keychain behavior.
 
-**Next:** Continue implementation with p02-t01.
+**Next:** Continue implementation with p04-t01 after p03 gate review passes.
 
 ---
 
