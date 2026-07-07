@@ -212,6 +212,7 @@ async function runCrossProviderExec(options: {
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
   args?: string[];
+  globalArgs?: string[];
 }): Promise<LoggerCapture> {
   process.exitCode = undefined;
   const { command, capture } = createHarness({
@@ -220,10 +221,11 @@ async function runCrossProviderExec(options: {
     processEnv: options.processEnv,
     runProcess: options.runProcess,
   });
-  await runCommand(command, [
-    'cross-provider-exec',
-    ...(options.args ?? ['Run', 'review']),
-  ]);
+  await runCommand(
+    command,
+    ['cross-provider-exec', ...(options.args ?? ['Run', 'review'])],
+    options.globalArgs,
+  );
   return capture;
 }
 
@@ -1377,6 +1379,208 @@ describe('oat gate', () => {
       command: 'cursor-agent',
       args: ['-p', '--model', 'gpt-5.5', 'Run', 'review'],
       purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('records different-family diversity metadata in gate review JSON output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'p04', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'different-family',
+        producer: {
+          value: 'gpt-5.5-xhigh',
+          provenance: 'declared',
+          confidence: 'medium',
+          family: 'openai',
+          source: 'stamp',
+        },
+        reviewer: {
+          target: 'cursor-reviewer',
+          runtime: 'cursor',
+          model: 'composer-2.5',
+          family: 'composer',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns and runs when no different-family target is available', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'claude-default': null,
+              'cursor-default': null,
+              'codex-default': {
+                runtime: 'codex',
+                baseCommand: ['codex', 'exec', '--model', 'gpt-5.3-codex'],
+                priority: 100,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'gpt-5.5-xhigh:declared', 'Run', 'review'],
+      globalArgs: [],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', '--model', 'gpt-5.3-codex', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(capture.warn[0]).toContain(
+      'No different-family gate target was available',
+    );
+    expect(capture.info.join('\n')).toContain(
+      'achieved=degraded-to-different-slug',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('records same-family no-diverse metadata when fallback target family is unknown', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'gpt-5.5-xhigh:declared', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'same-family - no diverse target available',
+        warning: expect.stringContaining(
+          'No different-family gate target was available',
+        ),
+        reviewer: {
+          target: 'cursor-default',
+          runtime: 'cursor',
+          family: 'unknown',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('records unknown-producer diversity metadata', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--producer-identity',
+        'unknown:unknown',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'unknown-producer',
+        producer: {
+          value: 'unknown',
+          provenance: 'unknown',
+          confidence: 'unknown',
+          family: 'unknown',
+          source: 'flag',
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });

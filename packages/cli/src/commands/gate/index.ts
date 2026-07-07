@@ -137,6 +137,11 @@ interface ProcessRunResult {
 }
 
 type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
+type GateDiversityAchieved =
+  | 'different-family'
+  | 'degraded-to-different-slug'
+  | 'same-family - no diverse target available'
+  | 'unknown-producer';
 type GateWriteLayer = 'shared' | 'local' | 'user';
 type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
 type GateConfigContainer = OatConfig | OatLocalConfig | UserConfig;
@@ -147,6 +152,8 @@ export interface SelectedExecTarget {
   target: ExecTarget;
   model?: string;
   family: ModelFamily;
+  diversity?: GateDiversityMetadata;
+  noDiverseFamilyFallback?: boolean;
 }
 
 interface GateProducerIdentity {
@@ -156,6 +163,25 @@ interface GateProducerIdentity {
   family: ModelFamily;
   diversityClaimable: boolean;
   source: 'flag' | 'stamp' | 'unknown';
+}
+
+interface GateDiversityMetadata {
+  avoid: CrossProviderAvoid;
+  achieved: GateDiversityAchieved;
+  producer: {
+    value: string;
+    provenance: IdentityProvenance;
+    confidence: IdentityConfidence;
+    family: ModelFamily;
+    source: GateProducerIdentity['source'];
+  };
+  reviewer: {
+    target: string;
+    runtime: string;
+    family: ModelFamily;
+    model?: string;
+  };
+  warning?: string;
 }
 
 interface ReviewGateArtifactCandidate extends LatestReview {
@@ -711,6 +737,85 @@ function expandExecTargetCandidates(
   }));
 }
 
+function producerHasKnownFamily(identity: GateProducerIdentity): boolean {
+  return identity.diversityClaimable && identity.family !== 'unknown';
+}
+
+function shouldAttemptNoDiverseFallback(
+  avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity,
+): boolean {
+  return avoid === 'same-family' && producerHasKnownFamily(producerIdentity);
+}
+
+function achievedDiversity(
+  selected: SelectedExecTarget,
+  producerIdentity: GateProducerIdentity,
+): GateDiversityAchieved {
+  if (!producerHasKnownFamily(producerIdentity)) {
+    return 'unknown-producer';
+  }
+
+  if (
+    selected.family !== 'unknown' &&
+    selected.family !== producerIdentity.family
+  ) {
+    return 'different-family';
+  }
+
+  if (selected.model && selected.model !== producerIdentity.value) {
+    return 'degraded-to-different-slug';
+  }
+
+  return 'same-family - no diverse target available';
+}
+
+function diversityFallbackWarning(
+  achieved: GateDiversityAchieved,
+): string | undefined {
+  if (
+    achieved !== 'degraded-to-different-slug' &&
+    achieved !== 'same-family - no diverse target available'
+  ) {
+    return undefined;
+  }
+
+  return `No different-family gate target was available; running with achieved=${achieved}.`;
+}
+
+function attachDiversityMetadata(
+  selected: SelectedExecTarget,
+  avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity,
+): SelectedExecTarget {
+  const achieved = achievedDiversity(selected, producerIdentity);
+  const warning = selected.noDiverseFamilyFallback
+    ? diversityFallbackWarning(achieved)
+    : undefined;
+
+  return {
+    ...selected,
+    diversity: {
+      avoid,
+      achieved,
+      producer: {
+        value: producerIdentity.value,
+        provenance: producerIdentity.provenance,
+        confidence: producerIdentity.confidence,
+        family: producerIdentity.family,
+        source: producerIdentity.source,
+      },
+      reviewer: {
+        target: selected.id,
+        runtime: selected.target.runtime,
+        family: selected.family,
+        ...(selected.model ? { model: selected.model } : {}),
+      },
+      ...(warning ? { warning } : {}),
+    },
+  };
+}
+
 function argvHead(argv: string[]): [string, string[]] {
   return [argv[0] ?? '', argv.slice(1)];
 }
@@ -722,9 +827,7 @@ function listExecTargetCandidates(
   producerIdentity: GateProducerIdentity = unknownProducerIdentity(),
 ): SelectedExecTarget[] {
   const shouldAvoidSameFamily =
-    avoid === 'same-family' &&
-    producerIdentity.diversityClaimable &&
-    producerIdentity.family !== 'unknown';
+    avoid === 'same-family' && producerHasKnownFamily(producerIdentity);
   const shouldAvoidSameRuntime =
     (avoid === 'same-runtime' ||
       (avoid === 'same-family' && !shouldAvoidSameFamily)) &&
@@ -758,6 +861,29 @@ export function selectExecTarget(
       producerIdentity,
     )[0] ?? null
   );
+}
+
+async function firstAvailableExecTarget(
+  candidates: SelectedExecTarget[],
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<SelectedExecTarget | null> {
+  for (const candidate of candidates) {
+    const availabilityCommand = candidate.target.availabilityCommand;
+    if (
+      !availabilityCommand ||
+      (await checkArgv(
+        availabilityCommand,
+        'availability',
+        context,
+        dependencies,
+      ))
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
 }
 
 async function checkArgv(
@@ -819,27 +945,31 @@ async function selectAvailableExecTarget(
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<SelectedExecTarget | null> {
-  for (const candidate of listExecTargetCandidates(
-    registry,
-    currentRuntime,
-    avoid,
-    producerIdentity,
-  )) {
-    const availabilityCommand = candidate.target.availabilityCommand;
-    if (
-      !availabilityCommand ||
-      (await checkArgv(
-        availabilityCommand,
-        'availability',
-        context,
-        dependencies,
-      ))
-    ) {
-      return candidate;
-    }
+  const selected = await firstAvailableExecTarget(
+    listExecTargetCandidates(registry, currentRuntime, avoid, producerIdentity),
+    context,
+    dependencies,
+  );
+  if (selected) {
+    return selected;
   }
 
-  return null;
+  if (!shouldAttemptNoDiverseFallback(avoid, producerIdentity)) {
+    return null;
+  }
+
+  const fallback = await firstAvailableExecTarget(
+    listExecTargetCandidates(
+      registry,
+      currentRuntime,
+      'none',
+      unknownProducerIdentity(),
+    ),
+    context,
+    dependencies,
+  );
+
+  return fallback ? { ...fallback, noDiverseFamilyFallback: true } : null;
 }
 
 async function resolveSelectedExecTarget(
@@ -857,7 +987,11 @@ async function resolveSelectedExecTarget(
       throw new Error(`Unknown exec target "${explicitTarget}".`);
     }
 
-    return expandExecTargetCandidates(explicitTarget, target)[0]!;
+    return attachDiversityMetadata(
+      expandExecTargetCandidates(explicitTarget, target)[0]!,
+      'none',
+      producerIdentity,
+    );
   }
 
   const avoid = parseCrossProviderAvoid(options.avoid);
@@ -879,7 +1013,7 @@ async function resolveSelectedExecTarget(
     throw new Error(noEligibleTargetMessage(currentRuntime, avoid));
   }
 
-  return selected;
+  return attachDiversityMetadata(selected, avoid, producerIdentity);
 }
 
 async function executeTarget(
@@ -917,6 +1051,24 @@ async function executeTarget(
       { cause: error },
     );
   }
+}
+
+function logGateDiversity(
+  selected: SelectedExecTarget,
+  context: CommandContext,
+): void {
+  const diversity = selected.diversity;
+  if (!diversity || context.json) {
+    return;
+  }
+
+  if (diversity.warning) {
+    context.logger.warn(diversity.warning);
+  }
+
+  context.logger.info(
+    `Gate diversity: achieved=${diversity.achieved} producer=${diversity.producer.value} producer_family=${diversity.producer.family} provenance=${diversity.producer.provenance} confidence=${diversity.producer.confidence} reviewer=${diversity.reviewer.target} reviewer_family=${diversity.reviewer.family}`,
+  );
 }
 
 function noEligibleTargetMessage(
@@ -1331,6 +1483,7 @@ function writeReviewGateResult(
     invocation: string | null;
     normalization?: ReviewGateVerdict['normalization'];
     handoff: string;
+    diversity?: GateDiversityMetadata;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -1360,6 +1513,14 @@ function writeReviewGateResult(
   context.logger.info(
     `Verdict: ${payload.status} (critical=${payload.counts.critical}, important=${payload.counts.important}, medium=${payload.counts.medium}, minor=${payload.counts.minor})`,
   );
+  if (payload.diversity) {
+    if (payload.diversity.warning) {
+      context.logger.warn(payload.diversity.warning);
+    }
+    context.logger.info(
+      `Gate diversity: achieved=${payload.diversity.achieved} producer=${payload.diversity.producer.value} producer_family=${payload.diversity.producer.family} provenance=${payload.diversity.producer.provenance} confidence=${payload.diversity.producer.confidence} reviewer=${payload.diversity.reviewer.target} reviewer_family=${payload.diversity.reviewer.family}`,
+    );
+  }
   context.logger.info(payload.handoff);
 }
 
@@ -1578,6 +1739,7 @@ async function runCrossProviderExec(
       dependencies,
     );
 
+    logGateDiversity(selected, context);
     process.exitCode = await executeTarget(
       selected,
       prompt,
@@ -1722,6 +1884,7 @@ async function runReviewGate(
       invocation: verdict.invocation,
       normalization: verdict.normalization,
       handoff,
+      diversity: selected.diversity,
     });
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
