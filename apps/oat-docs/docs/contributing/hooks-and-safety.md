@@ -20,6 +20,29 @@ The hook is non-blocking: it never fails the commit, even when managed drift is 
 
 OAT installs the hook into Git's currently active hook directory. When a consumer repo keeps hooks in a repo-managed folder such as `.githooks/`, Git must be configured to use that path before install, or OAT must configure it during the hook prompt flow.
 
+## OAT repo developer hooks
+
+The `open-agent-toolkit` repository also ships its own managed hook scripts under
+`tools/git-hooks/`. These are contributor hooks for this repo, separate from the
+consumer hook snippet that `oat init` installs into other repositories.
+
+The repo hooks source `tools/git-hooks/repo-toolchain.sh` before running pnpm
+commands. The helper changes to the repo root, loads `.nvmrc` through nvm when
+available, and then prefers Corepack pnpm. This keeps `commit-msg`,
+`pre-commit`, `pre-push`, and `post-checkout` on the same Node/pnpm toolchain
+even when a developer shell has multiple versions installed.
+
+The repo's `pre-commit` OAT status check uses the repo-local source CLI when the
+OAT source tree is present:
+
+```bash
+corepack pnpm run --silent cli:source -- status --scope project --hook
+```
+
+That avoids false sync drift from a stale globally installed `oat` while still
+leaving the consumer-repo hook contract unchanged: generated hooks in other
+repos continue to call `oat status --scope project --hook`.
+
 ## Safety contracts
 
 - `sync` mutates by default; use `--dry-run` to preview.

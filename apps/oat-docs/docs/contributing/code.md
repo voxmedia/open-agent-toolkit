@@ -12,15 +12,21 @@ Use this page when you are changing the OAT codebase itself rather than only edi
 Install and verify the workspace from the repo root:
 
 ```bash
-pnpm install
-pnpm build
-pnpm run cli -- help
+nvm use
+corepack pnpm install
+corepack pnpm build
+corepack pnpm run cli -- help
 ```
+
+The repo pins Node in `.nvmrc` and the package manager in `package.json`
+(`packageManager`). If your machine has multiple Node or pnpm installs, prefer
+Corepack from the active `.nvmrc` Node so workspace commands use the same pnpm
+version as the hooks and CI.
 
 For worktree-based implementation, initialize the worktree before starting the CLI workflow:
 
 ```bash
-pnpm run worktree:init
+corepack pnpm run worktree:init
 ```
 
 ## Monorepo Structure
