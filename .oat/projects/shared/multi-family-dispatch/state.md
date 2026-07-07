@@ -13,13 +13,16 @@ oat_children: []
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: design
-oat_phase_status: in_progress
+oat_phase: plan
+oat_phase_status: complete
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_dispatch_ceiling: # optional project override for provider-aware dispatch ceilings
-#   provider: codex # codex | claude
-#   value: high # codex: low|medium|high|xhigh; claude: haiku|sonnet|opus
-#   source: project-state
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  providers:
+    codex: xhigh
+    claude: opus
+  source: project-state
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -27,7 +30,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T04:22:55Z'
+oat_project_state_updated: '2026-07-07T05:18:54Z'
 oat_generated: false
 ---
 
@@ -39,10 +42,10 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery Round 2 complete (post-parent-shipment revalidation + Codex-reviewed identity
-provenance model). Design revised to the shipped-parent ground truth: four-tier stamp
-provenance, layered tier matrix, `avoid: same-family` gate extension, oracle-based
-validation. Awaiting design sign-off; not yet planned.
+Planning complete — ready for implementation **in a new worktree after PR #129 merges**.
+Plan: 6 phases / 25 tasks, sequential; artifact review passed (structured, 6 findings
+applied). Dispatch policy: managed `high` (Codex xhigh · Claude opus). HiLL checkpoints
+deferred to `oat-project-implement` at execution start.
 
 ## Artifacts
 
@@ -60,8 +63,10 @@ validation. Awaiting design sign-off; not yet planned.
 - ✓ Artifacts restored after accidental removal by parent final-review fix (`b4601236`)
 - ✓ Discovery Round 2 (parent shipped; identity provenance; matrix; gates; validation)
 - ✓ Design revised to shipped-parent ground truth
-- ⧗ Design sign-off
-- ☐ Generate implementation plan (in the implementation worktree, after kickoff revalidation)
+- ✓ Design signed off (plan-gating decisions, Q23)
+- ✓ Implementation plan complete (6 phases / 25 tasks; artifact review passed)
+- ✓ Dispatch policy persisted (managed high — codex xhigh · claude opus)
+- ⧗ Awaiting implementation (new worktree; p01 opens with kickoff revalidation)
 
 ## Blockers
 
@@ -69,7 +74,8 @@ None
 
 ## Next Milestone
 
-Sign off the revised design, then generate a quick implementation plan.
+Merge PR #129, create the implementation worktree, run `pnpm run worktree:init`, then
+run `oat-project-implement` (p01 kickoff revalidation + blocking experiments first).
 
 ## Notes
 
