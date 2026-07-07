@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
@@ -896,7 +896,7 @@ found`) so the doctor surface remains explicit.
 
 ## Phase 6: Skills, Docs, Assets, and Release Validation
 
-**Status:** completed; external gate pending
+**Status:** completed
 **Started:** 2026-07-07
 
 ### Phase Summary
@@ -1084,7 +1084,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- p06 external phase review gate pending.
+- None.
 
 #### Artifact / Design Deltas
 
@@ -1720,6 +1720,29 @@ same-runtime` remains the runtime-avoidance path.
 
 **Next:** Run the p06 external phase review gate, consume its artifact, then pause at
 the configured final HiLL checkpoint.
+
+---
+
+### Review Received: p06 gate
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/archived/p06-review-2026-07-07T171242Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- Passed. No gate findings required disposition.
+
+**Next:** Pause at the configured final HiLL checkpoint before final review/PR
+closeout.
 
 ---
 
