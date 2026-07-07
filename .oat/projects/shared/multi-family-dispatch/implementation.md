@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t03
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 7     | 2/7       |
+| Phase 3 | in_progress | 7     | 3/7       |
 
-**Total:** 9/25 tasks completed
+**Total:** 10/25 tasks completed
 
 ---
 
@@ -617,6 +617,51 @@ __EXIT_CODE__=0
 
 ---
 
+### Task p03-t03: Resolver deep-merge with per-cell source and selection provenance
+
+**Status:** completed
+**Commit:** feat(p03-t03): resolve matrix with source and selection provenance
+
+**Outcome (required when completed):**
+
+- Added provider/tier matrix resolution across user, repo, local, and project
+  layers, with project matrix cells overriding lower layers.
+- Added per-provider `cellSource` plus additive selection metadata:
+  `selectionBranch` and classified `family`.
+- Preserved existing `selectionMode` and legacy Codex/Claude cap behavior while
+  making managed-provider holes unresolved in non-interactive preflight.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+  failed on missing merged matrix value/source/family metadata and missing-cell
+  unresolved behavior.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+  passed (44 tests).
+- Type-check: `pnpm --filter @open-agent-toolkit/cli type-check` passed after
+  wiring the additive metadata through the internal resolution type.
+
+**Notes / Decisions:**
+
+- Bare provider cells are treated as `prompt-persisted`; per-tier cells are
+  treated as `matrix-pinned`. Ordered route cells currently select the floor;
+  p05 owns route escalation behavior.
+- Cursor and other open providers can now resolve concrete string cells even
+  before an enforcement adapter is registered; without an adapter they remain
+  `mode: unsupported`.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -828,7 +873,7 @@ Track test execution during implementation.
 | ----- | ------------------------------------------------------------------------------------ | ------ | ------ | -------- |
 | 1     | type-check; live cursor-agent probes; grep producer grammar                          | yes    | 0      | n/a      |
 | 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test                                         | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; cli type-check                         | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

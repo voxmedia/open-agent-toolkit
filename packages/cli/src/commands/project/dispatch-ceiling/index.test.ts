@@ -395,6 +395,185 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('resolves merged matrix cells with project override over repo and user config', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(home, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            cursor: { high: 'composer-2.5' },
+          },
+        },
+      },
+    });
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            cursor: { high: 'gpt-5.3-codex-high' },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    cursor:',
+        '      high: glm-5.2-max',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'cursor', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'cursor',
+      value: 'glm-5.2-max',
+      providers: {
+        cursor: {
+          value: 'glm-5.2-max',
+          mode: 'unsupported',
+          cellSource: 'project-state',
+          selection: {
+            selectedValue: 'glm-5.2-max',
+            selectionBranch: 'matrix-pinned',
+            family: 'glm',
+            cellSource: 'project-state',
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('re-resolves the same abstract tier through the active provider column', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: { high: 'xhigh' },
+            claude: { high: 'opus' },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+    await runCommand(command, ['--provider', 'claude', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      provider: 'codex',
+      value: 'xhigh',
+      providers: {
+        codex: {
+          cellSource: 'repo-config',
+          selection: {
+            selectedValue: 'xhigh',
+            family: 'openai',
+            selectionBranch: 'matrix-pinned',
+          },
+        },
+      },
+    });
+    expect(capture.jsonPayloads[1]).toMatchObject({
+      provider: 'claude',
+      value: 'opus',
+      providers: {
+        claude: {
+          cellSource: 'repo-config',
+          selection: {
+            selectedValue: 'opus',
+            family: 'claude',
+            selectionBranch: 'matrix-pinned',
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('blocks non-interactive preflight when a managed provider cell is absent', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--preflight',
+      '--non-interactive',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      provider: 'cursor',
+      value: null,
+      unresolved: true,
+      providers: {
+        cursor: {
+          value: null,
+          mode: 'unsupported',
+          selection: {
+            selectedValue: null,
+            selectionBranch: 'unresolved',
+            family: 'unknown',
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('keeps absent project policy and legacy ceiling state unresolved', async () => {
     const { root, home } = await setup();
 
@@ -1521,7 +1700,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       });
     });
 
-    it('resolves unsupported providers with managed capped policy as unsupported', async () => {
+    it('keeps unsupported providers with no managed cell unresolved', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
@@ -1534,12 +1713,12 @@ describe('oat project dispatch-ceiling resolve', () => {
       await runCommand(command, ['--provider', 'cursor', '--json']);
 
       expect(capture.jsonPayloads[0]).toMatchObject({
-        status: 'resolved',
+        status: 'unresolved',
         provider: 'cursor',
         value: null,
-        policyMode: 'managed',
-        policy: 'frontier',
-        unresolved: false,
+        policyMode: null,
+        policy: null,
+        unresolved: true,
         providers: {
           cursor: {
             value: null,
@@ -1548,8 +1727,9 @@ describe('oat project dispatch-ceiling resolve', () => {
             dispatchArgs: null,
             selection: {
               selectedValue: null,
-              selectionMode: 'capped',
-              policy: 'frontier',
+              selectionMode: 'unresolved',
+              selectionBranch: 'unresolved',
+              family: 'unknown',
             },
           },
         },

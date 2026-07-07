@@ -42,6 +42,10 @@ import {
   type CeilingRole,
   type EnforcementMechanism,
 } from '@providers/ceiling/registry';
+import {
+  classifyModelFamily,
+  type ModelFamily,
+} from '@providers/identity/family';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -50,9 +54,7 @@ import YAML from 'yaml';
 // (mode: unsupported) rather than erroring. Typed concrete-value validation is
 // applied only for the providers that have a value enum.
 type DispatchCeilingProvider = 'codex' | 'claude' | (string & {});
-type DispatchCeilingValue =
-  | WorkflowCodexDispatchCeiling
-  | WorkflowClaudeDispatchCeiling;
+type DispatchCeilingValue = string;
 type DispatchCeilingSource =
   | 'local-config'
   | 'repo-config'
@@ -69,6 +71,7 @@ interface ProviderResolution {
   mechanism: EnforcementMechanism;
   dispatchArgs: CeilingDispatchArgs;
   verifyOnDispatch: boolean;
+  cellSource: DispatchCeilingSource | null;
   selection: DispatchSelection;
 }
 
@@ -128,6 +131,12 @@ type DispatchSelectionMode =
   | 'no-review-target'
   | 'inherit-default'
   | 'unresolved';
+type DispatchSelectionBranch =
+  | 'matrix-pinned'
+  | 'prompt-persisted'
+  | 'escalation-target'
+  | 'inherit'
+  | 'unresolved';
 
 interface DispatchSelection {
   role: CeilingRole;
@@ -135,6 +144,9 @@ interface DispatchSelection {
   selectedValue: DispatchCeilingValue | null;
   capped: boolean;
   selectionMode: DispatchSelectionMode;
+  selectionBranch: DispatchSelectionBranch;
+  family: ModelFamily;
+  cellSource: DispatchCeilingSource | null;
   policyMode: WorkflowDispatchPolicyMode | null;
   policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null;
 }
@@ -184,7 +196,7 @@ function isValidProviderValue(
       CLAUDE_VALUES.includes(value as WorkflowClaudeDispatchCeiling)
     );
   }
-  return false;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function configSourceToCeilingSource(
@@ -247,6 +259,8 @@ interface ResolvedDispatchPolicy {
   source: DispatchCeilingSource;
   preset: string | null;
   matrix: ProjectDispatchMatrix | null;
+  cellSource: DispatchCeilingSource | null;
+  selectionBranch: DispatchSelectionBranch;
   warnings: string[];
 }
 
@@ -434,6 +448,114 @@ function readProjectDispatchMatrix(value: unknown): {
   return { matrix, warnings: [] };
 }
 
+function policyTier(
+  policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null,
+): WorkflowDispatchMatrixTier | null {
+  return typeof policy === 'string' &&
+    (VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(policy)
+    ? (policy as WorkflowDispatchMatrixTier)
+    : null;
+}
+
+function dispatchValueFromRouteTarget(
+  target: WorkflowDispatchRouteTarget,
+): string | null {
+  return target.model ?? target.effort ?? target.harness ?? null;
+}
+
+function dispatchValueFromMatrixCell(
+  cell: WorkflowDispatchMatrixCell,
+): string | null {
+  if (typeof cell === 'string') {
+    return cell;
+  }
+
+  const [first] = cell;
+  if (first === undefined) {
+    return null;
+  }
+
+  return typeof first === 'string'
+    ? first
+    : dispatchValueFromRouteTarget(first);
+}
+
+interface MatrixCellResolution {
+  value: DispatchCeilingValue;
+  cellSource: DispatchCeilingSource;
+  selectionBranch: DispatchSelectionBranch;
+}
+
+function resolveProviderCellFromValue(
+  providerValue: WorkflowDispatchProviderValue | undefined,
+  tier: WorkflowDispatchMatrixTier | null,
+  cellSource: DispatchCeilingSource,
+): MatrixCellResolution | null {
+  if (providerValue === undefined) {
+    return null;
+  }
+
+  if (typeof providerValue === 'string') {
+    return {
+      value: providerValue,
+      cellSource,
+      selectionBranch: 'prompt-persisted',
+    };
+  }
+
+  if (tier === null) {
+    return null;
+  }
+
+  const cell = providerValue[tier];
+  if (cell === undefined) {
+    return null;
+  }
+
+  const value = dispatchValueFromMatrixCell(cell);
+  return value ? { value, cellSource, selectionBranch: 'matrix-pinned' } : null;
+}
+
+function resolveProviderMatrixCell(
+  provider: DispatchCeilingProvider,
+  tier: WorkflowDispatchMatrixTier | null,
+  resolvedConfig: ResolvedConfig,
+  projectMatrix: ProjectDispatchMatrix | null,
+): MatrixCellResolution | null {
+  let selected: MatrixCellResolution | null = null;
+  const layers: Array<{
+    source: DispatchCeilingSource;
+    providers: ProjectDispatchMatrix | undefined | null;
+  }> = [
+    {
+      source: 'user-config',
+      providers: resolvedConfig.user.workflow?.dispatchCeiling?.providers,
+    },
+    {
+      source: 'repo-config',
+      providers: resolvedConfig.shared.workflow?.dispatchCeiling?.providers,
+    },
+    {
+      source: 'local-config',
+      providers: resolvedConfig.local.workflow?.dispatchCeiling?.providers,
+    },
+    { source: 'project-state', providers: projectMatrix },
+  ];
+
+  for (const layer of layers) {
+    const resolved = resolveProviderCellFromValue(
+      layer.providers?.[provider],
+      tier,
+      layer.source,
+    );
+    if (resolved) {
+      selected = resolved;
+    }
+  }
+
+  return selected;
+}
+
 function readProjectDispatchPolicy(
   provider: DispatchCeilingProvider,
   content: string,
@@ -464,6 +586,8 @@ function readProjectDispatchPolicy(
       source: 'project-state',
       preset: null,
       matrix: parsedMatrix.matrix,
+      cellSource: null,
+      selectionBranch: 'inherit',
       warnings: parsedMatrix.warnings,
     };
   }
@@ -489,6 +613,8 @@ function readProjectDispatchPolicy(
       source: 'project-state',
       preset: policyValue,
       matrix: parsedMatrix.matrix,
+      cellSource: null,
+      selectionBranch: 'prompt-persisted',
       warnings: parsedMatrix.warnings,
     };
   }
@@ -520,6 +646,8 @@ function readProjectDispatchPolicy(
     source: 'project-state',
     preset: policyValue,
     matrix: parsedMatrix.matrix,
+    cellSource: 'project-state',
+    selectionBranch: 'prompt-persisted',
     warnings: parsedMatrix.warnings,
   };
 }
@@ -554,6 +682,8 @@ function readLegacyProjectDispatchCeiling(
     source: 'project-state',
     preset: typeof presetValue === 'string' ? presetValue : null,
     matrix: null,
+    cellSource: 'project-state',
+    selectionBranch: 'prompt-persisted',
     warnings: [],
   };
 }
@@ -656,6 +786,8 @@ function stripConfigCandidateSource(
     source: candidate.source,
     preset: candidate.preset,
     matrix: candidate.matrix,
+    cellSource: candidate.cellSource,
+    selectionBranch: candidate.selectionBranch,
     warnings: candidate.warnings,
   };
 }
@@ -683,6 +815,8 @@ function readResolvedConfigPolicyCandidate(
       source,
       preset: null,
       matrix: null,
+      cellSource: null,
+      selectionBranch: 'inherit',
       warnings: [],
       configSource: modeEntry.source,
     };
@@ -712,6 +846,8 @@ function readResolvedConfigPolicyCandidate(
       source,
       preset: policy,
       matrix: null,
+      cellSource: null,
+      selectionBranch: 'prompt-persisted',
       warnings: [],
       configSource,
     };
@@ -749,6 +885,8 @@ function readResolvedLegacyConfigCeilingCandidate(
     source,
     preset: null,
     matrix: null,
+    cellSource: source,
+    selectionBranch: 'prompt-persisted',
     warnings: [],
     configSource: entry.source,
   };
@@ -827,6 +965,15 @@ function normalizePreferredValue(
   return normalized;
 }
 
+function selectionFamily(
+  provider: DispatchCeilingProvider,
+  value: DispatchCeilingValue | null,
+): ModelFamily {
+  return value
+    ? classifyModelFamily({ value, providerId: provider })
+    : 'unknown';
+}
+
 function selectDispatchValue(
   provider: DispatchCeilingProvider,
   role: CeilingRole,
@@ -837,6 +984,7 @@ function selectDispatchValue(
     role,
     policyMode: policy.mode,
     policy: policy.policy,
+    cellSource: policy.cellSource,
   };
 
   if (policy.mode === 'inherit') {
@@ -846,16 +994,21 @@ function selectDispatchValue(
       selectedValue: null,
       capped: false,
       selectionMode: 'inherit-default',
+      selectionBranch: 'inherit',
+      family: 'unknown',
     };
   }
 
   if (policy.policy === 'uncapped') {
+    const selectedValue = role === 'reviewer' ? null : preferredValue;
     return {
       ...baseSelection,
       preferredValue: role === 'reviewer' ? null : preferredValue,
-      selectedValue: role === 'reviewer' ? null : preferredValue,
+      selectedValue,
       capped: false,
       selectionMode: role === 'reviewer' ? 'no-review-target' : 'uncapped',
+      selectionBranch: selectedValue ? 'prompt-persisted' : 'unresolved',
+      family: selectionFamily(provider, selectedValue),
     };
   }
 
@@ -866,6 +1019,8 @@ function selectDispatchValue(
       selectedValue: null,
       capped: false,
       selectionMode: 'capped',
+      selectionBranch: policy.selectionBranch,
+      family: 'unknown',
     };
   }
 
@@ -876,6 +1031,8 @@ function selectDispatchValue(
       selectedValue: policy.value,
       capped: false,
       selectionMode: role === 'reviewer' ? 'review-target' : 'capped',
+      selectionBranch: policy.selectionBranch,
+      family: selectionFamily(provider, policy.value),
     };
   }
 
@@ -889,16 +1046,21 @@ function selectDispatchValue(
       selectedValue: policy.value,
       capped: false,
       selectionMode: 'capped',
+      selectionBranch: policy.selectionBranch,
+      family: selectionFamily(provider, policy.value),
     };
   }
 
   const selectedIndex = Math.min(preferredIndex, ceilingIndex);
+  const selectedValue = order[selectedIndex]!;
   return {
     ...baseSelection,
     preferredValue,
-    selectedValue: order[selectedIndex]!,
+    selectedValue,
     capped: preferredIndex > ceilingIndex,
     selectionMode: 'capped',
+    selectionBranch: policy.selectionBranch,
+    family: selectionFamily(provider, selectedValue),
   };
 }
 
@@ -923,12 +1085,16 @@ function buildProviderResolution(
       mechanism: adapter.mechanism,
       dispatchArgs: null,
       verifyOnDispatch: false,
+      cellSource: null,
       selection: {
         role,
         preferredValue,
         selectedValue: null,
         capped: false,
         selectionMode: 'unresolved',
+        selectionBranch: 'unresolved',
+        family: 'unknown',
+        cellSource: null,
         policyMode: null,
         policy: null,
       },
@@ -962,6 +1128,7 @@ function buildProviderResolution(
           orchestratorTier,
         })
       : false,
+    cellSource: policy.cellSource,
     selection,
   };
 }
@@ -1104,6 +1271,8 @@ interface ResolvedCeilingValue {
   source: DispatchCeilingSource;
   preset: string | null;
   matrix: ProjectDispatchMatrix | null;
+  cellSource: DispatchCeilingSource | null;
+  selectionBranch: DispatchSelectionBranch;
   warnings: string[];
 }
 
@@ -1120,20 +1289,46 @@ async function resolveCeilingValue(
   dependencies: DispatchCeilingDependencies,
 ): Promise<ResolvedCeilingValue | null> {
   const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
-  if (configCeiling) {
-    return configCeiling;
-  }
-
   const projectCeiling = await resolveProjectStateCeiling(
     provider,
     projectPath,
     dependencies,
   );
-  if (projectCeiling) {
-    return projectCeiling;
+
+  const baseCeiling = configCeiling ?? projectCeiling;
+  if (!baseCeiling) {
+    return null;
   }
 
-  return null;
+  if (baseCeiling.mode === 'inherit' || baseCeiling.policy === 'uncapped') {
+    return baseCeiling;
+  }
+
+  const tier = policyTier(baseCeiling.policy);
+  const matrixCell = resolveProviderMatrixCell(
+    provider,
+    tier,
+    resolvedConfig,
+    projectCeiling?.matrix ?? null,
+  );
+  if (matrixCell) {
+    return {
+      ...baseCeiling,
+      value: matrixCell.value,
+      cellSource: matrixCell.cellSource,
+      selectionBranch: matrixCell.selectionBranch,
+    };
+  }
+
+  if (
+    baseCeiling.policy !== 'legacy-ceiling' &&
+    baseCeiling.value === null &&
+    providerValueOrder(provider) === null
+  ) {
+    return null;
+  }
+
+  return baseCeiling;
 }
 
 function policyLabel(
