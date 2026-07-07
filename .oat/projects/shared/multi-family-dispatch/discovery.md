@@ -168,6 +168,12 @@ they conflict.
 **A:** Yes — intentional. This is follow-on discovery/design (and possibly plan) material kept on this branch for continuity; implementation will happen later in a new worktree.
 **Decision:** State this explicitly in `state.md` and the top of `design.md` so future review passes treat these files as planning artifacts rather than unfinished implementation scope. The prior reviewer's objection is valid only when such artifacts look like shipped-implementation scope — the framing removes the ambiguity.
 
+### Question 20: Live Cursor probe verification (2026-07-07)
+
+**Q:** Do the doc-derived Cursor probe mechanisms actually work on the live binary?
+**A (verified from a live Cursor session):** Yes, with the fragilities confirmed. `cursor-agent --list-models` shows a `(current)` marker with a slug-shaped value (`composer-2.5 - Composer 2.5 (current)`) and is the fastest source. The init-event probe (`cursor-agent -p --output-format stream-json --trust "ok" | head -1 | jq -r '.model'`, ~1–3s) returns a **display name** (`Composer 2.5 Fast`), not a slug. `~/.cursor/cli-config.json` `.model` is the configured default, not necessarily the active session model. No `CURSOR_MODEL` env var; `CURSOR_AGENT=1` is presence-only. Critically, the three sources **disagreed simultaneously on the same machine** (current `composer-2.5` vs config/display fast variant) — the slug-vs-variant gotcha is empirical fact, not doc speculation.
+**Decision:** The dedicated helper (`oat internal cursor-current-target`) resolves with documented priority: `--list-models (current)` (slug-shaped) → init-event echo (display name, needs mapping) → cli-config default (weakest). All three are `inferred` provenance; exact-match-or-degrade across sources. The revalidation checklist item for the probe surface is marked done; still outstanding: whether `--model` accepts display names, the `cursor-agent models` subcommand, and the **blocking** invalid-`--model` characterization.
+
 ## Solution Space
 
 ### Approach 1: Model-identity layer + family-aware dispatch _(Recommended, chosen)_

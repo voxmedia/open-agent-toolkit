@@ -122,9 +122,19 @@ shared identity/matrix foundation plus the two concerns.
 1. **Model-identity primitive (shared).** Resolves identity per dispatch with strict
    precedence: declaration (launcher/OAT-stamped) → observation (harness/subagent
    report) → inference (config read / probe) → `unknown`. No `CURSOR_MODEL` env var
-   exists, so Cursor identity must be stamped, observed, or probed. Probes are fragile:
-   the init-event `model` field is a display name, not a slug; `--list-models
-(current)` is undocumented and slow (~1.5–3s).
+   exists (`CURSOR_AGENT=1` is presence-only), so Cursor identity must be stamped,
+   observed, or probed. The three probe sources were **live-verified 2026-07-07** and
+   can **mutually disagree on the same machine at the same time**, so the helper needs a
+   documented priority:
+   1. `cursor-agent --list-models` `(current)` marker — fastest, slug-shaped, closest
+      to dispatch truth (returned `composer-2.5`).
+   2. Init-event probe (`cursor-agent -p --output-format stream-json --trust "ok" |
+head -1 | jq -r '.model'`) — ~1–3s, returns a **display name**, not a slug
+      (returned `Composer 2.5 Fast`).
+   3. `~/.cursor/cli-config.json` `.model` — the configured default, which is not
+      necessarily the active session model.
+      All three are `inferred`-tier provenance; exact-match-or-degrade applies across
+      them.
 
 2. **Family classifier (shared).** Maps a model string to a family bucket via a
    pattern-based, extensible map (`claude | openai | composer | glm | …`) with
@@ -321,9 +331,10 @@ oat project dispatch-ceiling resolve \
 
 - **Identity failure → explicit `unknown`,** honest logs, never a claimed enforced tier
   or claimed diversity.
-- **Slug-vs-variant gotcha** (`bl-e6fc`): `--list-models` may report `composer-2.5`
-  while the dispatch slug is `composer-2.5-fast`. Exact-match-or-degrade; no
-  auto-normalization.
+- **Slug-vs-variant gotcha** (`bl-e6fc`, **live-confirmed 2026-07-07**): on one
+  machine simultaneously, `--list-models (current)` reported `composer-2.5` while
+  config/display showed the fast variant (`composer-2.5-fast` / `Composer 2.5 Fast`).
+  Exact-match-or-degrade; no auto-normalization.
 - **Invalid/unavailable `--model`:** empirical characterization is **blocking** (see
   stamp section) — silent fallback corrupts `declared` stamps and mandates
   pre-validation + observed echo.
@@ -380,9 +391,12 @@ oat project dispatch-ceiling resolve \
       confirmed — `dispatchPolicy {mode, policy}` + legacy ceiling providers; `fable` in
       tier order; **no producer stamp shipped** → stamp is phase 1 here). Re-confirm at
       kickoff against the merged main.
-- [ ] Re-verify the Cursor CLI against the live binary (docs snapshot 2026-06-19,
-      stale): `--model`, init-event `model` field (display name vs slug),
-      `--list-models` `(current)` marker, `cursor-agent models`.
+- [x] ~~Re-verify the Cursor CLI probe surface against the live binary~~ (done
+      2026-07-07 from a live Cursor session: `(current)` marker exists and is
+      slug-shaped; init-event `model` is a display name; cli-config `.model` is the
+      default, not the active model; the three sources can disagree simultaneously; no
+      `CURSOR_MODEL` env var). **Still outstanding:** whether `--model` accepts slugs
+      only or also display names, and the `cursor-agent models` subcommand surface.
 - [ ] **Blocking:** characterize invalid/unavailable `--model` behavior empirically
       (error vs silent fallback) — determines whether `declared` stamps need mandatory
       pre-validation + observed echo.
