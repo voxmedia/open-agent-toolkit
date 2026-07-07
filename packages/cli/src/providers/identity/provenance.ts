@@ -76,7 +76,10 @@ function resolved(
     provenance: record.provenance,
     confidence,
     mismatch,
-    diversityClaimable: value !== 'unknown',
+    diversityClaimable:
+      value !== 'unknown' &&
+      record.provenance !== 'unknown' &&
+      confidence !== 'unknown',
     records,
   };
 }

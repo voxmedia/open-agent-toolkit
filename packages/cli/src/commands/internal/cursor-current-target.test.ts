@@ -180,6 +180,39 @@ describe('probeCursorCurrentTarget', () => {
     });
   });
 
+  it('degrades raw single-token mismatches when a catalog is available', async () => {
+    const runCursorAgent = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        stdout: 'composer-2.5-fast - Composer 2.5 Fast\n',
+        stderr: '',
+      })
+      .mockResolvedValueOnce({ ok: false, stdout: '', stderr: 'keychain' })
+      .mockResolvedValueOnce({
+        ok: false,
+        stdout: '',
+        stderr: 'not available',
+      });
+    const readFile = vi.fn(async () =>
+      JSON.stringify({ model: 'composer-2.5' }),
+    );
+
+    const result = await probeCursorCurrentTarget({
+      cwd: '/repo',
+      home: '/home/user',
+      dependencies: createProbeDependencies({ runCursorAgent, readFile }),
+    });
+
+    expect(result).toMatchObject({
+      value: 'unknown',
+      rawValue: 'composer-2.5',
+      source: 'cli-config',
+      provenance: 'inferred',
+      family: 'unknown',
+    });
+  });
+
   it('returns unknown when every source fails', async () => {
     const result = await probeCursorCurrentTarget({
       cwd: '/repo',

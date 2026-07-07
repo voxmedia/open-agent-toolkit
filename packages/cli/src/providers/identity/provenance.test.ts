@@ -85,4 +85,18 @@ describe('resolveIdentityConfidence', () => {
       diversityClaimable: false,
     });
   });
+
+  it('marks concrete identities with unknown provenance as not diversity-claimable', () => {
+    expect(
+      resolveIdentityConfidence([
+        { value: 'gpt-5.5-high', provenance: 'unknown' },
+      ]),
+    ).toMatchObject({
+      value: 'gpt-5.5-high',
+      provenance: 'unknown',
+      confidence: 'unknown',
+      mismatch: false,
+      diversityClaimable: false,
+    });
+  });
 });

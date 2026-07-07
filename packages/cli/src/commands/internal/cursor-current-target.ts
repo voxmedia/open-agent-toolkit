@@ -187,6 +187,9 @@ function mapThroughCatalog(
   if (match) {
     return match.slug;
   }
+  if (catalog.length > 0) {
+    return undefined;
+  }
   return isSingleToken(normalized) ? normalized : undefined;
 }
 

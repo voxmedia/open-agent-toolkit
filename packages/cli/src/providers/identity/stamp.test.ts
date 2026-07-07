@@ -120,4 +120,18 @@ describe('dispatch identity stamps', () => {
     ).toEqual([]);
     expect(warnings.join('\n')).toContain('line 1');
   });
+
+  it('normalizes invalid provenance fields to unknown without dropping the producer', () => {
+    expect(
+      parseDispatchStamps(
+        'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-high provenance=not-real model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+      ),
+    ).toMatchObject([
+      {
+        producer: 'gpt-5.5-high',
+        provenance: 'unknown',
+        legacy: false,
+      },
+    ]);
+  });
 });
