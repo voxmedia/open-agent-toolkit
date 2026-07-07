@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t05
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 7     | 4/7       |
+| Phase 3 | in_progress | 7     | 5/7       |
 
-**Total:** 11/25 tasks completed
+**Total:** 12/25 tasks completed
 
 ---
 
@@ -710,6 +710,54 @@ __EXIT_CODE__=0
 
 ---
 
+### Task p03-t05: Availability oracles and set-time validation
+
+**Status:** completed
+**Commit:** feat(p03-t05): add availability oracles and set-time validation
+
+**Outcome (required when completed):**
+
+- Added a provider matrix-cell availability oracle with Claude closed-tier
+  checks, Codex pinned-role variant checks, and Cursor live catalog checks.
+- Validated `workflow.dispatchCeiling.providers.<provider>` values at config
+  set time and warned without blocking when values are unknown or cannot be
+  validated.
+- Preserved Codex/Claude closed enum parsing while allowing open provider
+  columns such as Cursor to persist arbitrary non-empty slugs.
+
+**Files changed:**
+
+- `packages/cli/src/providers/identity/availability.ts`
+- `packages/cli/src/providers/identity/availability.test.ts`
+- `packages/cli/src/commands/config/index.ts`
+- `packages/cli/src/commands/config/index.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/availability.test.ts`
+  failed because the oracle module did not exist.
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+  failed because dynamic provider keys were not yet recognized/writable.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/availability.test.ts`
+  passed (8 tests).
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+  passed (89 tests).
+- Type-check: `pnpm --filter @open-agent-toolkit/cli type-check` passed.
+
+**Notes / Decisions:**
+
+- Cursor validation uses `cursor-agent models` first and falls back to legacy
+  `--list-models` only when the first command does not yield a usable catalog.
+- Unknown providers are treated as `unvalidated`, not invalid, so new provider
+  columns can be configured before an oracle exists.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -917,11 +965,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                            | Passed | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------ | ------ | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar                          | yes    | 0      | n/a      |
-| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; cli type-check          | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                         | Passed | Failed | Coverage |
+| ----- | ----------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar                                                       | yes    | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                              | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; cli type-check | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

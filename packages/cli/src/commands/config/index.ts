@@ -26,9 +26,20 @@ import {
   type ResolvedConfigSource,
 } from '@config/resolve';
 import { resolveProjectRoot } from '@fs/paths';
+import {
+  validateMatrixCell,
+  type MatrixCellAvailability,
+  type ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import { Command } from 'commander';
 
 import { createConfigDumpCommand } from './dump';
+
+const DISPATCH_CEILING_PROVIDER_KEY_PREFIX =
+  'workflow.dispatchCeiling.providers.';
+
+type WorkflowDispatchProviderConfigKey =
+  `${typeof DISPATCH_CEILING_PROVIDER_KEY_PREFIX}${string}`;
 
 type ConfigKey =
   | 'activeIdea'
@@ -67,6 +78,7 @@ type ConfigKey =
   | 'workflow.dispatchCeiling.preset'
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
+  | WorkflowDispatchProviderConfigKey
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
   | 'workflow.reviewExecutionModel'
@@ -113,6 +125,11 @@ interface ConfigCommandDependencies {
     userConfigDir: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<ResolvedConfig>;
+  validateMatrixCell: (
+    provider: string,
+    value: string,
+    options: ValidateMatrixCellOptions,
+  ) => Promise<MatrixCellAvailability>;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -698,11 +715,30 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   writeUserConfig,
   resolveProjectsRoot,
   resolveEffectiveConfig,
+  validateMatrixCell,
   processEnv: process.env,
 };
 
 function isConfigKey(value: string): value is ConfigKey {
-  return KEY_ORDER.includes(value as ConfigKey);
+  return (
+    KEY_ORDER.includes(value as ConfigKey) ||
+    isDispatchCeilingProviderKey(value)
+  );
+}
+
+function isDispatchCeilingProviderKey(
+  value: string,
+): value is WorkflowDispatchProviderConfigKey {
+  return (
+    value.startsWith(DISPATCH_CEILING_PROVIDER_KEY_PREFIX) &&
+    value.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length).trim().length > 0
+  );
+}
+
+function providerNameFromConfigKey(
+  key: WorkflowDispatchProviderConfigKey,
+): string {
+  return key.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length).trim();
 }
 
 function normalizeSharedRoot(value: string): string {
@@ -854,7 +890,33 @@ function parseWorkflowValue(
     return normalized;
   }
 
+  if (isDispatchCeilingProviderKey(key)) {
+    const normalized = rawValue.trim();
+    if (normalized.length === 0) {
+      throw new Error(
+        `Invalid value for ${key}: provider values cannot be empty`,
+      );
+    }
+    return normalized;
+  }
+
   throw new Error(`Unknown workflow key: ${key}`);
+}
+
+function dispatchProviderAvailabilityWarning(
+  key: WorkflowDispatchProviderConfigKey,
+  value: string,
+  availability: MatrixCellAvailability,
+): string | null {
+  if (availability === 'valid') {
+    return null;
+  }
+
+  if (availability === 'unknown-value') {
+    return `${key} value '${value}' was not recognized by the provider availability oracle; saving anyway.`;
+  }
+
+  return `${key} value '${value}' could not be validated because the provider availability oracle is unavailable; saving anyway.`;
 }
 
 function applyWorkflowValue(
@@ -995,6 +1057,7 @@ async function setConfigValue(
   rawValue: string,
   surface: ConfigSurface,
   dependencies: ConfigCommandDependencies,
+  warn: (message: string) => void,
 ): Promise<ConfigValue> {
   validateSurfaceForKey(key, surface);
 
@@ -1005,6 +1068,24 @@ async function setConfigValue(
     const parsedValue = parseWorkflowValue(key, rawValue);
     const displayValue =
       typeof parsedValue === 'boolean' ? String(parsedValue) : parsedValue;
+    if (typeof parsedValue === 'string' && isDispatchCeilingProviderKey(key)) {
+      const availability = await dependencies.validateMatrixCell(
+        providerNameFromConfigKey(key),
+        parsedValue,
+        {
+          cwd: repoRoot,
+          env: dependencies.processEnv,
+        },
+      );
+      const warning = dispatchProviderAvailabilityWarning(
+        key,
+        parsedValue,
+        availability,
+      );
+      if (warning) {
+        warn(warning);
+      }
+    }
 
     if (effectiveSurface === 'user') {
       const userConfig = await dependencies.readUserConfig(userConfigDir);
@@ -1359,6 +1440,7 @@ async function runSet(
       rawValue,
       surface,
       dependencies,
+      context.logger.warn,
     );
     if (context.json) {
       context.logger.json({

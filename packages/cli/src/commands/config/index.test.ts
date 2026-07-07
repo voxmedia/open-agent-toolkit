@@ -7,6 +7,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { MatrixCellAvailability } from '@providers/identity/availability';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,6 +17,11 @@ interface HarnessOptions {
   cwd: string;
   env?: NodeJS.ProcessEnv;
   home?: string;
+  validateMatrixCell?: (
+    provider: string,
+    value: string,
+    options: { cwd: string; env: NodeJS.ProcessEnv },
+  ) => Promise<MatrixCellAvailability>;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -25,7 +31,7 @@ function createHarness(options: HarnessOptions): {
   const capture = createLoggerCapture();
   const home = options.home ?? '/tmp/home';
 
-  const command = createConfigCommand({
+  const overrides: Parameters<typeof createConfigCommand>[0] = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
       dryRun: false,
@@ -38,7 +44,12 @@ function createHarness(options: HarnessOptions): {
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
     processEnv: options.env ?? {},
-  });
+  };
+  if (options.validateMatrixCell) {
+    overrides.validateMatrixCell = options.validateMatrixCell;
+  }
+
+  const command = createConfigCommand(overrides);
 
   return { capture, command };
 }
@@ -1002,6 +1013,99 @@ describe('oat config', () => {
         version: 1,
         workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
       });
+    });
+
+    it('sets dynamic workflow.dispatchCeiling.providers cursor values after successful availability validation', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor',
+        'composer-2.5',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: { providers: { cursor: 'composer-2.5' } },
+        },
+      });
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'cursor',
+        'composer-2.5',
+        {
+          cwd: root,
+          env: {},
+        },
+      );
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('warns but saves dynamic workflow.dispatchCeiling.providers values when the oracle reports unknown-value', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'unknown-value' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor',
+        'missing-model',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: { providers: { cursor: 'missing-model' } },
+        },
+      });
+      expect(capture.warn[0]).toContain(
+        'workflow.dispatchCeiling.providers.cursor',
+      );
+      expect(capture.warn[0]).toContain('missing-model');
+      expect(capture.warn[0]).toContain('not recognized');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('warns but saves provider values when the availability oracle is unavailable', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'unvalidated' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor',
+        'composer-2.5',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: { providers: { cursor: 'composer-2.5' } },
+        },
+      });
+      expect(capture.warn[0]).toContain(
+        'workflow.dispatchCeiling.providers.cursor',
+      );
+      expect(capture.warn[0]).toContain('could not be validated');
+      expect(process.exitCode).toBe(0);
     });
 
     it('set workflow.dispatchCeiling.providers.codex validates provider-specific enums (legacy key updated)', async () => {
