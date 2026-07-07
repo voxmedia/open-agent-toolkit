@@ -1589,6 +1589,13 @@ async function validateRecommendationCells(
   warn: (message: string) => void,
 ): Promise<void> {
   for (const ref of collectDispatchMatrixCellRefs(recommendation.providers)) {
+    const closedValues = closedDispatchProviderValues(ref.provider);
+    if (closedValues && !closedValues.includes(ref.value)) {
+      throw new Error(
+        `Invalid value for ${ref.path}: expected one of ${closedValues.join(' | ')}, got '${ref.value}'`,
+      );
+    }
+
     let availability: MatrixCellAvailability;
     try {
       availability = await dependencies.validateMatrixCell(

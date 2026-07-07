@@ -1328,6 +1328,36 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it('rejects invalid closed-provider values during dispatch matrix recommendation adoption', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'unknown-value' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                claude: { frontier: 'opus-4.9' },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        'workflow.dispatchCeiling.providers.claude.frontier',
+      );
+      expect(capture.error[0]).toContain('haiku | sonnet | opus | fable');
+      expect(validateMatrixCell).not.toHaveBeenCalled();
+      await expect(
+        readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
     it('warns per cell during dispatch matrix recommendation adoption without blocking', async () => {
       const root = await createRepoRoot();
       const validateMatrixCell = vi.fn(
