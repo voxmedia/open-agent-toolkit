@@ -10,194 +10,285 @@ oat_template_name: design
 
 # Design: multi-family-dispatch
 
-> **Status: pre-project draft — revalidate at kickoff.** This lightweight design is a
-> follow-on to `model-dispatch-improvements` (`.oat/projects/shared/model-dispatch-improvements/design.md`),
-> written **before** that project's implementation landed. It grounds in the parent's
-> intended contract, not its shipped code, and the Cursor-CLI facts derive from a stale
-> (2026-06-19) docs snapshot. Every such claim is an assumption to re-verify — see the
-> **Revalidation Checklist**.
+> **Status: follow-on discovery/design — implementation happens in a new worktree.**
+> This project is **intentionally included on this branch** as follow-on
+> discovery/design (and possibly plan) material for continuity after
+> `model-dispatch-improvements`. It is **not** part of that project's shipped
+> implementation surface, and reviews of the parent PR should treat these files as
+> planning artifacts, not stray implementation. Actual implementation will occur later
+> in a dedicated worktree.
+>
+> **Revalidate at kickoff.** The parent has now shipped; its shapes were re-read on
+> 2026-07-06 and this design is grounded in them, but the Cursor-CLI facts still derive
+> from a stale (2026-06-19) docs snapshot and must be verified against the live binary —
+> see the **Revalidation Checklist**.
 
 ## Overview
 
-The parent reframed dispatch as an explicit policy (`Economy / Balanced / High / Frontier /
-Uncapped / Inherit`) compiled by one resolver into provider-specific dispatch args, with
-adapters for Codex (effort) and Claude (model). That contract assumes each provider is a
-**single model family** with one ordered axis.
+The parent shipped dispatch as an explicit policy — `dispatchPolicy: { mode: managed |
+inherit, policy: economy | balanced | high | frontier | uncapped }` alongside the legacy
+`dispatchCeiling: { preset, providers: {codex, claude} }` — compiled by one resolver into
+provider-specific dispatch args (Codex → effort variants, Claude → Task `model`, with
+`fable` topping `CLAUDE_TIER_ORDER`). That contract assumes each provider is a **single
+model family** with one ordered axis.
 
 This project extends the contract to **multi-family providers** — a single harness whose
-executing model can belong to different families. Cursor (`cursor-agent`) is the first: one
-CLI that runs Claude, OpenAI/GPT, and Cursor's own Composer models. The spine of the work
-is **model identity and family-aware dispatch**, not "Cursor ceiling support"; Cursor is
-just the first provider that makes the identities below diverge.
+executing model can belong to different families. Cursor (`cursor-agent`) is the first:
+one CLI that runs Claude, OpenAI/GPT, Cursor's own Composer, and other families (e.g.
+GLM). The spine is **model identity and family-aware dispatch**, not "Cursor ceiling
+support"; Cursor is just the first provider that makes the identities below diverge.
 
-Two concerns sit on a shared identity foundation and are joined at exactly one seam —
-producer identity:
+**Core goal: switching providers mid-implementation must not break behavior.** The
+abstract tier vocabulary (`economy/balanced/high/frontier`) is the portability contract:
+a project says "high" and that means something for Claude, for Codex, and for Cursor —
+whichever harness is active when a dispatch happens. Resolution is therefore
+**per-dispatch** (never cached per-project), and producer identity is **per-artifact**
+(different phases may be produced by different harnesses/models).
+
+Two concerns sit on a shared identity foundation, joined at exactly one seam — producer
+identity:
 
 - **Implementation cross-model** — _absolute, preference-driven_ ("use X"): choose the
-  producer model per task tier. Opt-in optimization. Per-tier model/effort selection
-  already exists for single-family harnesses; the new part is **cross-family routing** and
-  its generalization, **cross-harness routing**.
+  producer model per task tier. Per-tier model/effort selection already shipped for
+  single-family harnesses; the new part is **cross-family routing** and its
+  generalization, **cross-harness routing**.
 - **Gate cross-model** — _relational, producer-derived_ ("use not-X's-family"): choose a
-  reviewer that differs from whoever produced the artifact. Always-on independence
-  invariant, because a same-family gate is redundant with the automatic phase review.
+  reviewer that differs from whoever produced the artifact. A same-family gate is
+  redundant with the automatic phase review — going cross-model is the point of gates.
 
 ## Model Identity Model
 
-Identity is the organizing concept. Five roles, attached to dispatch **events** so a gate
-can know who produced the artifact it reviews:
+Identity is the organizing concept. Five roles, attached to dispatch **events** so a
+gate can know who produced the artifact it reviews:
 
 - **CurrentIdentity** — model/family running the orchestration harness.
 - **ProducerIdentity** — model/family used for a specific implementation/fix dispatch.
 - **ReviewerIdentity** — model/family selected for a gate/review.
-- **DispatchPreference** — the user's preferred default family/model for implementation.
+- **DispatchPreference** — the user's preferred default family/model per tier.
 - **EscalationProfile** — the ordered allowed targets for higher-risk work.
 
-The load-bearing principle: **gates diversify from `ProducerIdentity`, not `CurrentIdentity`.**
-Today these coincide (producer = orchestrator), which is why the shipped runtime-avoidance
-works; the moment implementation cross-model exists (orchestrate on Opus, produce on
-Composer), they diverge and gate avoidance keyed on the orchestrator is wrong.
+Load-bearing principle: **gates diversify from `ProducerIdentity`, not
+`CurrentIdentity`.** Today these coincide (producer = orchestrator), which is why the
+shipped runtime-avoidance works; with cross-model implementation (orchestrate on Opus,
+produce on Composer) — and with mid-project harness switches — they diverge, and gate
+avoidance keyed on the orchestrator is wrong.
+
+### Producer-Identity Stamp (built here — the parent shipped without it)
+
+The parent's plan predated this decision and shipped **no** stamp; the interface this
+design previously assumed does not exist, so the stamp is **phase 1 work in this
+project**. It is cheaper than it sounds: the parent's own run already writes per-dispatch
+"Dispatch Notes" lines into `implementation.md` orchestration runs (e.g. `Dispatch: p01
+implementation used model_axis=inherited, effort_axis=selected:high,
+dispatch_ceiling=xhigh`). Those lines record the **selection decision** but not the
+**resolved identity** — `inherited` hides which model actually ran. The stamp work is to
+formalize these lines into stable, parseable records that include the resolved concrete
+identity, plus a reader.
+
+**Provenance is a first-class field.** Producer identity is not binary present/missing:
+
+- `declared` — OAT pinned the target and passed it to the harness. Authoritative
+  **only if** the harness rejects bad values rather than silently falling back.
+- `observed` — the harness or subagent reported what actually ran (init-event `model`
+  field, subagent report echo). A cross-check, not proof.
+- `inferred` — OAT read config or probed current state (`cli-config.json`,
+  `--list-models (current)`, orchestrator self-knowledge of its session model).
+- `unknown` — no reliable identity.
+
+Reliability by dispatch path: Claude Task with `model` arg and Cursor `--model <slug>`
+are `declared` by construction; Codex pinned variants declare effort (model is
+`inferred` from codex config); inherited/unpinned dispatches are at best
+`observed`/`inferred`. Two specific failure modes: (1) **silent fallback on invalid
+slug** would make a `declared` stamp lie — characterizing this empirically is a
+**blocking** kickoff item (if fallback is silent, pre-dispatch validation is mandatory
+and the init-event echo becomes the post-dispatch truth check); (2) **mid-session model
+switches** of the orchestrator make self-reported identity stale — orchestrator
+self-knowledge is never `declared`.
+
+Consumption rules: gates enforce family avoidance confidently on `declared`; use
+`observed`/`inferred` but log lower confidence; on `unknown`, OAT cannot truthfully
+claim family diversity and must say so.
 
 ## Architecture
 
 Keep the parent's layering (persisted policy → resolver → provider adapters) and add a
-shared identity/catalog foundation plus the two concerns.
+shared identity/matrix foundation plus the two concerns.
 
-1. **Model-identity primitive (shared).** Resolves "what model/family is in play" for the
-   current session and for each dispatch, with strict precedence:
-   1. **Declaration** — a launcher-stamped value (e.g. `OAT_CURRENT_TARGET` / stamped
-      current model), preferred over any probe (the `bl-e6fc` rule). No `CURSOR_MODEL` env
-      var exists, so it must be stamped or probed.
-   2. **Probe (best-effort)** — `cursor-agent --output-format json` `system`/`init` `model`
-      field (a **display name**, not a slug) or `cursor-agent --list-models` `(current)`
-      marker. Both are fragile (below).
-   3. **Unknown** — degrade explicitly; never guess a family.
+1. **Model-identity primitive (shared).** Resolves identity per dispatch with strict
+   precedence: declaration (launcher/OAT-stamped) → observation (harness/subagent
+   report) → inference (config read / probe) → `unknown`. No `CURSOR_MODEL` env var
+   exists, so Cursor identity must be stamped, observed, or probed. Probes are fragile:
+   the init-event `model` field is a display name, not a slug; `--list-models
+(current)` is undocumented and slow (~1.5–3s).
 
-2. **Family classifier + semantic catalog (shared).** A curated `slug → family → rung/effort`
-   catalog owns what tiers _mean_; the classifier maps a model string to a family bucket
-   (`claude | openai | composer | …`) with degrade-to-`unknown`. This is the **one**
-   sanctioned, tested exception to the ecosystem's "opaque model ids" principle — never a
-   silent inference. Live `cursor-agent models` validates **availability** only; it never
-   defines semantics.
+2. **Family classifier (shared).** Maps a model string to a family bucket via a
+   pattern-based, extensible map (`claude | openai | composer | glm | …`) with
+   degrade-to-`unknown`. The family set is open-ended. This is the one sanctioned,
+   tested exception to the ecosystem's "opaque model ids" principle — never a silent
+   inference. Note the GPT 5.6 (sol/terra/luna) horizon: if OpenAI ships named models
+   with per-model effort, **Codex itself becomes multi-family-ish**, so per-family axis
+   shapes live here in the shared foundation, not in Cursor-specific code.
 
-3. **Resolver + adapters.** The resolver joins persisted policy + identity + the catalog
-   into dispatch args. Provider adapters translate: Codex → effort variants, Claude → Task
-   `model`, Cursor → `--model` slug.
+3. **Tier matrix (layered config).** See Data Models. The resolver joins persisted
+   policy + the matrix + identity into dispatch args at each dispatch, against the
+   active harness.
 
-4. **Producer-identity stamp (interface from the parent).** The parent ships a minimal,
-   semantics-free stamp recording the producer model/family on each dispatch event
-   (decision "B"). This project _consumes_ it; without it, producer-anchored gate diversity
-   cannot survive a session boundary.
+4. **Resolver + adapters.** Codex → effort variants; Claude → Task `model`; Cursor →
+   `--model` slug (flat slugs are the transport format; the matrix and classifier carry
+   the semantics).
 
-**Value precedence for a policy rung's concrete value:** (1) explicit user-pinned value wins
-verbatim, no detection; (2) family-detected default only when unpinned; (3) inherit selects
-nothing. Detection is a _default generator_, never on the critical path when intent is
-expressed — this is what makes "use Composer 2.5 as Balanced even while orchestrating on
-Opus/GPT" work without any detection.
+**Value precedence for a tier's concrete value:** (1) an explicit matrix value at any
+config layer wins verbatim — no detection; (2) interactive **prompt-and-persist** fills
+a hole (ask once, write the answer into the appropriate config layer — the parent's
+unresolved-ceiling pattern); (3) `inherit` mode selects nothing. Detection is never on
+the critical path when intent is expressed — this is what makes "use Composer 2.5 as
+Balanced even while orchestrating on Opus/GPT" work with zero detection, and what makes
+a mid-project switch to Codex re-resolve "balanced" through the Codex column without
+breaking.
 
 ## Component Design
 
-### Model-Identity Primitive and Family Classifier
+### Tier Matrix (Layered Config)
 
-A shared resolver input (declaration-first, probe fallback, `unknown`) plus a curated
-classifier. Centralize the probe/classify behind one internal helper (e.g. `oat internal
-cursor-current-target`, per `bl-e6fc`) so skills and gate resolution share one
-implementation and never inline shell `awk`.
+The matrix maps abstract tiers to concrete per-provider values, and lives in **layered
+config** — not project state — precisely so it survives harness switches and is
+editable any time: user defaults (`~/.oat/config.json`) < repo (`.oat/config.json` /
+`.oat/config.local.json`) < project-level override. Project state stores only the
+abstract policy selection. Illustrative (values are examples, not recommendations):
 
-### Semantic Catalog / Harness Tree
+```yaml
+providers:
+  cursor:
+    {
+      economy: 'composer-2.5',
+      balanced: 'glm-5.2',
+      high: 'gpt-5.5-high',
+      frontier: 'fable-5',
+    }
+  claude:
+    {
+      economy: 'haiku-4.5',
+      balanced: 'sonnet-5',
+      high: 'opus-4.8',
+      frontier: 'fable-5',
+    }
+  codex:
+    {
+      economy: 'gpt-5.4-mini',
+      balanced: 'gpt-5.5-medium',
+      high: 'gpt-5.5-high',
+      frontier: 'gpt-5.5-xhigh',
+    }
+```
 
-The config surface is a **per-harness default tree** (tier → model/effort, or an ordered
-route) with layered **per-project overrides** (harness default < project override <
-local/user). That tree _is_ the curated catalog for the harness. For single-family harnesses
-a tier maps to one effort/model; for Cursor a tier maps to a slug, and may be an ordered
-route. Flat slugs are the **transport** to `cursor-agent --model`; the catalog carries the
-semantics (`slug → family → rung/effort shape`), leaving room for future per-family effort
-axes (GPT 5.6) without a schema break.
+Notes: a tier cell may be **cross-family** (`cursor.frontier: fable-5` is natural — a
+harness column has no "native family"); a cell may also be an **ordered route** (floor →
+escalation targets) per Concern 2. Existing shipped shapes remain readable: bare
+`providers.codex`/`providers.claude` ceiling values stay valid as capped single-axis
+input; the matrix extends `providers.*` rather than introducing a third parallel shape.
+
+**Recommended default matrix (adopt-time template).** OAT ships a recommendation the
+user **explicitly adopts** (an init command copies it into their chosen config layer) —
+not an ambient default that changes behavior when OAT updates it. Adoption validates
+every cell against the provider oracles and stamps the recommendation version so drift
+is detectable (doctor can note a newer recommendation) without being coercive.
+
+### Validation (native oracles, no curated catalog)
+
+OAT never owns the authoritative model list. Each provider class has a native oracle:
+Claude → the closed registry enum (`haiku/sonnet/opus/fable`); Codex → the closed effort
+enum + pinned-variant files existing on disk; Cursor → the live `cursor-agent models` /
+`--list-models` account catalog. One oracle, reused at five checkpoints:
+
+1. **Adopt-time** — validate the template against the account; warn per cell.
+2. **Set-time** — `oat config set` warns on unknown values; if the oracle is
+   unavailable (CLI not installed), mark the cell _unvalidated_, not invalid.
+3. **Doctor** — a dispatch-matrix check re-validates configured cells, catching drift
+   (a model removed from the account/catalog after it was configured). WARN, naming the
+   exact cell and config layer.
+4. **Preflight** — validates only the cells the run will use; holes trigger
+   prompt-and-persist.
+5. **Dispatch-time backstop** — cell-naming errors on rejection, plus the subagent
+   report echo as an `observed` cross-check on what actually ran.
 
 ### Multi-Family Provider Adapter (Cursor)
 
 A `cursorAdapter` in the ceiling registry (`packages/cli/src/providers/ceiling/registry.ts`),
 satisfying `bl-c3d8`: `supportsCeiling: true`, `mechanism: 'model-arg'`,
-`compileToDispatchArgs → { model }`, dispatched as `cursor-agent -p --model <slug>` (a fresh
-headless subprocess per dispatch — so OAT is not bound to the session's family). Valid values
-are slugs validated against availability, not a hardcoded tier enum. **Verify-on-upgrade is
-not-applicable** for Cursor: the parent's `isAboveOrchestrator` uses one `CLAUDE_TIER_ORDER`,
-and cross-family Cursor has no total order (`bl-c3d8` permits documenting N/A).
+`compileToDispatchArgs → { model }`, dispatched as `cursor-agent -p --model <slug>` (a
+fresh headless subprocess per dispatch — so OAT is not bound to the session's family).
+Valid values are matrix slugs validated against the availability oracle, not a hardcoded
+tier enum. **Verify-on-upgrade: not-applicable** — cross-family Cursor has no total
+order (`bl-c3d8` permits documenting N/A).
 
 ### Concern 1 — Family-Aware Gate Avoidance
 
-Today the built-in `cursor-default` target is `['cursor-agent', '-p']` with **no `--model`**
-(`oat-config.ts`), so gates inherit the user's `~/.cursor/cli-config.json` default — the root
-cause of "gates ran the producer's model." And `commands/gate/index.ts` defaults avoidance to
-`same-runtime`, filtering targets whose runtime equals the current runtime. That works for
-native harnesses **only because each native runtime is single-family** — runtime-avoidance is
-family-avoidance by accident. Cursor is the first runtime where runtime ≠ family, so:
+Shipped state: the built-in `cursor-default` target pins **no `--model`**
+(`oat-config.ts`), so gates inherit the user's `~/.cursor/cli-config.json` default — the
+root cause of "the gate ran the producer's model." Gate resolution already supports an
+**ordered preference walk**: `avoid: 'same-runtime' | 'none'` (default `same-runtime`)
+filters candidates, then priority order + availability checks pick the winner; users can
+already define multiple custom targets, including Cursor targets with pinned models.
+That machinery works for native harnesses **only because each native runtime is
+single-family** — runtime-avoidance is family-avoidance by accident, and it is
+wrong-shaped for Cursor in both directions (it excludes intra-Cursor different-family
+targets, and it admits a codex-GPT reviewer for GPT-via-Cursor-produced work).
 
-- **New axis: intra-target model variation.** Native cross-family gates switch the _binary_
-  (`codex exec` / `claude -p`); Cursor stays on `cursor-agent` and switches `--model`. The
-  current registry avoidance ranges over _targets_, not _models within a target_. Add
-  model-level variation — either virtual Cursor targets (`cursor-composer` / `cursor-gpt` /
-  `cursor-claude`) that avoidance ranges over, or exec targets gaining a model dimension so
-  avoidance reasons over `(target, model) → family`. Either needs the classifier.
-- **Producer-anchored, always-on, cross-family.** Diversify from `ProducerIdentity` (read
-  from the stamp), not `CurrentIdentity`. Default `diversity: different-family`, on by
-  default; `different-slug` is only an insufficient floor.
-- **Structured achieved-diversity metadata.** Record the achieved level on the gate/review
-  event — `different-family` / `degraded-to-different-slug` / `none-available` — so
-  degradation is auditable, never a silently weaker review. Explicit gate config overrides.
-- **No engineering around single-family accounts.** If no diverse family is available, warn
-  and run (flagged non-independent). Keep the shipped "no fallback after dispatch" rule:
-  diversity selection is pre-dispatch only.
+The upgrade is a small delta on existing machinery, not a new subsystem:
+
+- **Extend the avoid enum** with `same-family` (and optionally `same-model`). The
+  candidate walk, priorities, and availability checks are reused as-is; `--avoid none`
+  remains the escape hatch.
+- **Give avoidance its two missing inputs:** each candidate target's family (derived
+  from its pinned `--model` via the classifier; single-family runtimes are free) and
+  the **producer's** family (from the stamp, per-artifact — a gate over p02–p03
+  diversifies against each phase's producer).
+- **Default change, done in the open:** `same-family` becomes the shipped default of
+  the existing overridable knob (there is precedent — `same-runtime` is already an
+  opinionated default). Note it loudly in release notes; record the **achieved** level
+  on every gate outcome (`different-family` / `degraded-to-different-slug` /
+  `same-family — no diverse target available` / `unknown-producer`) so degradation is
+  auditable, never silent.
+- **Confidence follows stamp provenance:** enforce confidently on `declared`; proceed
+  with lower-confidence logging on `observed`/`inferred`; on `unknown`, run but state
+  that family diversity cannot be truthfully claimed.
+- **No engineering around single-family accounts.** If no diverse family is available,
+  warn and run (flagged). Keep the shipped "no fallback after dispatch" rule: diversity
+  selection is pre-dispatch only.
 
 ### Concern 2 — Multi-Family Implementation Routing
 
-`DispatchPreference` sets the default/floor producer per tier; `EscalationProfile` is the
-ordered route above it. For a multi-family harness, a tier's value is an **ordered list of
-targets** (floor → escalation), because families share no total order — escalation is a
-**discrete jump** between named points, not `min()` over an enum. ("Ceiling"/`min()` stays
-valid only for single-axis providers.)
+`DispatchPreference` sets the default/floor producer per tier; `EscalationProfile` is
+the ordered route above it. For a multi-family harness a tier's value may be an
+**ordered list of targets** (floor → escalation), because families share no total
+order — escalation is a **discrete jump** between named points, not `min()` over an
+enum. ("Ceiling"/`min()` remain valid for single-axis providers.)
 
-**Cross-harness as the general form.** A tier maps to a dispatch target `(harness, model,
-effort)`. The dispatch layer chooses a native subagent when the harness matches and an
-exec-command (the existing gate cross-provider-exec plumbing) when it does not — unifying
-"Cursor switches `--model`" and "a Claude orchestrator runs `codex exec gpt-5.5 xhigh`" under
-one abstraction. Bake `(harness, model, effort)` into the data model now; implement
-Cursor-native + same-harness first; defer cross-harness-exec for single-family harnesses (it
-depends on the target CLI exposing an exec/`-p` entry).
+**Escalation triggers reuse existing machinery** (resolved — no new trigger concept):
+the plan's **Dispatch Profile** rows choose the starting point in the route per phase,
+and the existing fix-loop/retry machinery (`oat_orchestration_retry_limit`) advances
+along the route on repeated review failure.
+
+**Cross-harness as the general form.** A tier maps to a dispatch target `(harness,
+model, effort)`. The dispatch layer chooses a native subagent when the harness matches
+and an exec-command (the existing gate cross-provider-exec plumbing) when it does not —
+unifying "Cursor switches `--model`" and "a Claude orchestrator runs `codex exec
+gpt-5.5 xhigh`". Bake `(harness, model, effort)` into the data model now; implement
+Cursor-native + same-harness first; defer cross-harness-exec for single-family harnesses
+(it depends on the target CLI exposing an exec/`-p` entry).
 
 ## Data Models
 
-Extend the parent's `oat_dispatch_policy.providers.*` map to carry multi-family values and
-`(harness, model, effort)` targets, without breaking existing single-model config:
-
-```yaml
-oat_dispatch_policy:
-  mode: managed | inherit
-  policy: economy | balanced | high | frontier | uncapped
-  providers:
-    codex: <effort> # unchanged (effort axis)
-    claude: <model> # unchanged (model axis)
-    cursor: # multi-family harness tree: per-tier slug or ordered route
-      balanced: composer-2.5
-      high: # ordered route: floor → escalation target(s)
-        - composer-2.5
-        - { harness: cursor, model: gpt-5.5-xhigh }
-  source: project-state | repo-config | user-config | local-config | env
-```
-
-Semantics to preserve:
-
-- A bare string (`cursor: <slug>`) remains valid (single pinned model, no escalation).
-- A route entry is an ordered list; a target may be a bare slug (same harness) or an explicit
-  `(harness, model, effort)` object (enables cross-harness later).
-- Absent `cursor` value = unpinned → family-detected default (or advisory/unsupported if
-  detection is unavailable and no manual value exists). As in the parent, absent state must
-  **not** silently become managed-uncapped.
-- Slugs are opaque to storage; only the classifier/catalog interpret them, for the
-  default-generator and gate-diversity paths.
-
-Identity is recorded on dispatch **events** (producer stamp + reviewer identity + achieved
-diversity level). Persistence location is an open question (commit trailer / `implementation.md`
-dispatch log / state).
+- **Abstract policy** stays in project state (shipped `dispatchPolicy` shape).
+- **Tier matrix** lives in layered config, extending `providers.*`: a cell is a bare
+  slug, a per-tier map, or an ordered route whose entries are bare slugs (same harness)
+  or `(harness, model, effort)` objects.
+- **Dispatch events** carry identity: producer stamp (resolved value + provenance),
+  reviewer identity, achieved-diversity level. Primary persistence: formalized Dispatch
+  Notes in `implementation.md` orchestration runs (exact format at plan time; commit
+  trailers remain an alternative).
+- Migration safety (inherited from the parent): absent matrix/policy state is never
+  silently reinterpreted; existing bare provider ceiling values remain readable.
 
 ## API Design
 
@@ -207,92 +298,100 @@ Reuse the parent resolver CLI; add identity/role inputs:
 oat project dispatch-ceiling resolve \
   --provider cursor \
   --role <implementer|reviewer> \
-  --preferred <slug> \
-  --current-model <declared-or-probed, optional> \
+  --preferred <slug-or-tier> \
+  --producer-identity <value+provenance, optional> \
   --json
 ```
 
 - `selection` states which precedence branch produced `selectedValue`
-  (`user-pinned | family-default | escalation-target | inherit`) and the classified family
-  (or `unknown`).
-- For reviewers, `selection` exposes the diversity decision: producer family, chosen reviewer
-  family, achieved level, whether config or the ceiling constrained it.
-- The `oat internal cursor-current-target` helper owns probe + classify so gate resolution and
-  skills share one implementation.
+  (`matrix-pinned | prompt-persisted | escalation-target | inherit`), the classified
+  family (or `unknown`), and — for reviewers — the diversity decision: producer family
+  - provenance, chosen reviewer family, achieved level, what constrained it.
+- One internal helper (e.g. `oat internal cursor-current-target`, per `bl-e6fc`) owns
+  probe + classify so skills and gate resolution share one implementation.
 
 ## Error Handling
 
-- **Detection failure → explicit `unknown`.** Fall back to a user's manual value if present,
-  else advisory/unsupported with `dispatchArgs: null` and an honest log — never claim an
-  enforced tier.
-- **Slug-vs-variant gotcha** (`bl-e6fc`): `--list-models` may report `composer-2.5` while the
-  dispatch slug is `composer-2.5-fast`. Exact-match-or-degrade; no auto-normalization.
-- **Invalid/unavailable `--model`:** undocumented in the snapshot; characterize empirically at
-  kickoff (error vs silent fallback) before relying on it.
-- **Frontier under Cursor:** advisory, not enforced, when a family/account cannot honor it.
-- **Gate integrity:** keep "no fallback after dispatch"; diversity selection is pre-dispatch.
+- **Identity failure → explicit `unknown`,** honest logs, never a claimed enforced tier
+  or claimed diversity.
+- **Slug-vs-variant gotcha** (`bl-e6fc`): `--list-models` may report `composer-2.5`
+  while the dispatch slug is `composer-2.5-fast`. Exact-match-or-degrade; no
+  auto-normalization.
+- **Invalid/unavailable `--model`:** empirical characterization is **blocking** (see
+  stamp section) — silent fallback corrupts `declared` stamps and mandates
+  pre-validation + observed echo.
+- **Frontier under any harness:** advisory, not enforced, when the account cannot honor
+  it.
+- **Gate integrity:** keep "no fallback after dispatch"; diversity selection is
+  pre-dispatch only.
 
 ## Phasing
 
-1. **Shared foundation** — model-identity primitive + family classifier + semantic
-   catalog/harness tree; consume the parent's producer-identity stamp.
-2. **Family-aware gate avoidance** — the intra-target model-variation upgrade,
-   producer-anchored, always-on cross-family, with achieved-diversity metadata. Small,
-   shippable first.
-3. **Multi-family implementation routing** — DispatchPreference + EscalationProfile over the
-   tree, with `(harness, model, effort)` targets. Larger; revisit after GPT 5.6.
+1. **Shared foundation** — producer-identity stamp (formalize Dispatch Notes; four-tier
+   provenance; reader) + family classifier + layered tier matrix + oracle validation +
+   adopt-time recommended template.
+2. **Family-aware gate avoidance** — `avoid: same-family`, producer-anchored via the
+   stamp, achieved-diversity metadata. Small, shippable first.
+3. **Multi-family implementation routing** — DispatchPreference + EscalationProfile
+   routes with `(harness, model, effort)` targets, escalation via Dispatch Profile +
+   retry hooks. Larger; revisit after GPT 5.6.
 
 ## Open Questions (resolve before/at plan)
 
-- **Escalation trigger:** reuse the implicit review-failure escalation, or add per-phase plan
-  tagging?
-- **Producer-identity persistence location:** commit trailer vs `implementation.md` dispatch
-  log vs state.
-- **Intra-target avoidance representation:** virtual Cursor targets vs `(target, model)` axis.
-- **Harness-tree home:** built here, or as a generalization extending the parent's config
-  model?
-- **Detection without a declaration path:** is probe-only acceptable given latency and the
-  undocumented `(current)` marker?
+- **Project-layer matrix location:** a project `config.json` (new file concept) vs
+  `state.md` frontmatter (where `oat_dispatch_ceiling` lives today)?
+- **Intra-target avoidance representation:** virtual Cursor targets
+  (`cursor-composer`/`cursor-gpt`) vs exec targets gaining a model dimension
+  (`(target, model) → family`)?
+- **Stamp record format:** exact parseable shape of formalized Dispatch Notes lines.
+- **Detection without a declaration path:** is probe-only acceptable for Cursor
+  identity given latency and the undocumented `(current)` marker?
+- **`same-family` default rollout:** ship as default immediately (bug-fix framing for
+  multi-family targets) or per-target opt-in for one release?
 
 ## Testing Strategy
 
-- Adapter unit tests mirroring codex/claude: valid slug → `{ model }`; unpinned + detected
-  family → correct rung; unpinned + `unknown` → advisory/`null`; ordered-route escalation
-  selects floor then target; verify-on-upgrade N/A.
-- Precedence tests: user-pinned beats detected family beats inherit.
-- Family classifier: representative slugs per family, degrade-to-`unknown`, slug-vs-variant
-  exact-match-or-degrade.
-- Gate cross-model: producer family X → reviewer family ≠ X, capped by ceiling; the
-  `cursor-default` inheritance bug reproduced and the fix asserted; achieved-diversity metadata
-  recorded; `none-available` warns and runs.
-- Cross-harness data model: `(harness, model, effort)` target parses and (when implemented)
-  dispatches via the exec path.
-- Migration/compat: existing bare `cursor: <slug>` still resolves; absent Cursor value is not
-  treated as uncapped.
-- Skill/docs + `pnpm release:validate` (bundled surfaces are shipped), same as the parent.
+- Matrix/precedence: layered override order; explicit cell beats prompt-persisted beats
+  inherit; cross-family cells; ordered routes select floor then escalation target;
+  mid-run provider switch re-resolves the same tier through the new column.
+- Stamp: each provenance tier produced by its dispatch path; `inherited` records
+  resolved identity; subagent echo mismatch flags; reader parses formalized notes.
+- Classifier: representative slugs per family incl. non-big-three (GLM);
+  degrade-to-`unknown`; slug-vs-variant exact-match-or-degrade.
+- Gates: `same-family` filters correctly both directions (intra-Cursor allowed,
+  cross-runtime same-family blocked); producer-anchored per-artifact; achieved level
+  recorded; `unknown` producer → honest non-claim; `--avoid none` still works; priority
+  walk unchanged.
+- Validation: oracle per provider class; unvalidated≠invalid when oracle absent; doctor
+  drift check; adopt-time template validation + version stamp.
+- Migration/compat: existing bare provider values resolve; absent state never silently
+  managed; skill/docs + `pnpm release:validate` (bundled surfaces are shipped).
 
-## Revalidation Checklist (run at kickoff)
+## Revalidation Checklist (run at kickoff, in the implementation worktree)
 
-- [ ] Re-read the **shipped** `model-dispatch-improvements` code — confirm actual policy key
-      names, resolver shape, `CeilingCompileContext` fields, and that the producer-identity
-      stamp exists; reconcile this design's assumed shapes with what landed.
-- [ ] Re-verify the Cursor CLI against **live** docs / the installed binary (snapshot is
-      2026-06-19, stale): `--model`, `--output-format json` init `model` field (display name
-      vs slug), `--list-models` `(current)` marker, `cursor-agent models`.
-- [ ] Characterize invalid/unavailable `--model` behavior empirically.
-- [ ] Confirm a reliable declaration path exists (launcher can stamp current model); if not,
-      decide whether probe-only is acceptable given ~1.5–3s/probe latency.
-- [ ] Confirm the gate avoidance surface in `commands/gate/index.ts` still defaults to
-      `same-runtime` and decide the intra-target representation (virtual targets vs
-      `(target, model)`).
-- [ ] Settle the escalation trigger, producer-identity persistence location, and family-taxonomy
-      source (curated map vs live).
-- [ ] Re-examine the GPT 5.6 (sol/terra/luna) axis question — if OpenAI tiers gain per-model
-      effort, confirm the per-family axis-shape data model still holds.
+- [x] Re-read the shipped `model-dispatch-improvements` code (done 2026-07-06: shapes
+      confirmed — `dispatchPolicy {mode, policy}` + legacy ceiling providers; `fable` in
+      tier order; **no producer stamp shipped** → stamp is phase 1 here). Re-confirm at
+      kickoff against the merged main.
+- [ ] Re-verify the Cursor CLI against the live binary (docs snapshot 2026-06-19,
+      stale): `--model`, init-event `model` field (display name vs slug),
+      `--list-models` `(current)` marker, `cursor-agent models`.
+- [ ] **Blocking:** characterize invalid/unavailable `--model` behavior empirically
+      (error vs silent fallback) — determines whether `declared` stamps need mandatory
+      pre-validation + observed echo.
+- [ ] Confirm a reliable declaration path exists for Cursor identity; else decide
+      probe-only acceptability.
+- [ ] Confirm gate avoidance still ships `same-runtime|none` and decide the intra-target
+      representation.
+- [ ] Settle the remaining open questions (matrix project-layer location, stamp format,
+      `same-family` rollout).
+- [ ] Re-examine GPT 5.6 (sol/terra/luna): if Codex gains named models × efforts,
+      confirm the per-family axis-shape foundation holds.
 
 ## References
 
-- Parent design: `.oat/projects/shared/model-dispatch-improvements/design.md`
+- Parent (shipped): `.oat/projects/shared/model-dispatch-improvements/` (design,
+  summary, and the Dispatch Notes convention in its `implementation.md`)
 - Discovery: `discovery.md`
 - `bl-c3d8` — third-provider dispatch-ceiling adapter (Cursor)
 - `bl-e6fc` — gate same-target/cross-target execution (Cursor probe, declaration-first)

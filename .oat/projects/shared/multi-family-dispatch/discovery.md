@@ -120,6 +120,54 @@ The concrete pains that motivated it:
 **A:** One project — the concerns are separable but share the same foundation (family classifier + semantic catalog), and splitting would fragment ownership of the catalog.
 **Decision:** One project, three phases: (1) shared foundation — family classifier + harness-tree/catalog + consume the producer stamp; (2) family-aware gate avoidance (small, shippable first); (3) multi-family implementation routing (larger, revisit post-GPT-5.6).
 
+## Discovery Round 2 (2026-07-06, after the parent shipped)
+
+The parent (`model-dispatch-improvements`) completed on this branch. Its shipped code
+was re-read, and a second discovery conversation (Claude Fable orchestrator + Codex
+review) produced the findings and decisions below. They supersede earlier answers where
+they conflict.
+
+### Question 13: Revalidation findings against the shipped parent
+
+**Q:** What did the parent actually ship, versus what this project assumed?
+**A:** Shipped: `dispatchPolicy: { mode: managed|inherit, policy: economy|balanced|high|frontier|uncapped }` alongside the legacy `dispatchCeiling: { preset, providers: {codex, claude} }`; `fable` added to `CLAUDE_TIER_ORDER`; gate avoidance unchanged (`same-runtime | none`). **The producer-identity stamp (decision "B") did not ship** — the parent's plan predated that decision and was never retrofitted.
+**Decision:** The stamp moves into this project's phase 1. The parent is complete and is not reopened. Its shipped run logs already write per-dispatch "Dispatch Notes" lines into `implementation.md` (e.g. `model_axis=inherited, effort_axis=selected:high`) — the stamp work is to formalize those lines into parseable records that include the **resolved** identity (today `inherited` hides the concrete model), plus a reader.
+
+### Question 14: Core goal — mid-project provider switching
+
+**Q:** Why must the tier vocabulary stay abstract in project state?
+**A:** The orchestration harness can change mid-project. "High" must resolve for Claude, Codex, and Cursor — whichever is active at dispatch time. If a project pinned "high = composer-2.5" as its single answer, switching harnesses breaks it.
+**Decision:** Named core goal: **switching providers mid-implementation must not break behavior.** Project state stores only the abstract policy; concretization lives in layered config; resolution is per-dispatch against the active harness; producer identity is per-artifact (different phases may have different producers).
+
+### Question 15: The tier matrix as layered config
+
+**Q:** Where does tier→model concretization live, and who edits it?
+**A (user-provided shape, values illustrative):** a full per-provider tier matrix, e.g. `providers: { cursor: { economy: composer-2.5, balanced: glm-5.2, high: gpt-5.5-high, frontier: fable-5 }, claude: {...}, codex: {...} }`, settable in `~/.oat/config.json` (user defaults), repo config, and a per-project override layer; user-editable at any time.
+**Decision:** The matrix is **layered config, not project state** (this resolves the earlier "harness-tree home" open question). Cross-family cells are natural (`cursor.frontier: fable-5`); the family set is open-ended (GLM et al.). The earlier "curated rung catalog" is **demoted to a recommended default matrix shipped as an adopt-time template**: the user explicitly adopts it into their config layer (validated at adoption, version-stamped so doctor can flag newer recommendations); OAT updating the recommendation never silently changes behavior. Prompt-and-persist survives only as the interactive fallback that fills matrix holes (ask once, write to the appropriate config layer — the parent's unresolved-ceiling pattern).
+
+### Question 16: Gate diversity via the existing avoidance config
+
+**Q:** Doesn't gate config already support avoiding the same runtime/model with ordered preferences?
+**A:** Partially — and the shape is right. Shipped: `avoid: same-runtime | none` (default `same-runtime`) filters candidates, then a priority-ordered walk with availability checks picks the winner; users can already define multiple custom targets including Cursor targets with pinned models. Missing: any model/family granularity — and `same-runtime` is wrong-shaped for Cursor in both directions (excludes intra-Cursor different-family targets; admits a codex-GPT reviewer for GPT-via-Cursor work).
+**Decision:** Gate diversity is **an extension of the existing avoid mechanism, not a new subsystem**: add `same-family` (optionally `same-model`) to the enum; give avoidance the candidate target's family (pinned `--model` + classifier) and the producer's family (from the stamp). Making `same-family` the default is a default-value change to an existing overridable knob (`--avoid none` escape hatch, `same-runtime` precedent as an opinionated default) — note it loudly, record the achieved level; no prompt ceremony required. Rollout timing stays an open question.
+
+### Question 17: Producer-identity reliability and provenance
+
+**Q:** Can the producer model be determined reliably enough for the stamp to be trusted?
+**A:** Yes when OAT pinned the dispatch (identity known by construction), no when dispatch inherited (requires introspection; all introspection paths are fragile). Two concrete failure modes: silent fallback on an invalid slug would make a pinned stamp lie; mid-session model switches make orchestrator self-knowledge stale.
+**Decision:** The stamp carries **four-tier provenance** (per Codex review): `declared` (OAT pinned and passed it — authoritative only if the harness rejects bad values rather than silently falling back), `observed` (harness/subagent reported what actually ran — a cross-check, not proof), `inferred` (OAT read config/probed), `unknown`. Gates enforce confidently on `declared`, proceed with lower-confidence logging on `observed`/`inferred`, and on `unknown` cannot truthfully claim family diversity. The managed path (matrix-resolved, pinned) makes `declared` the normal case. Empirically characterizing invalid `--model` behavior is **blocking** for trusting `declared` Cursor stamps.
+
+### Question 18: Config validation without a curated-catalog treadmill
+
+**Q:** Users will typo or use stale model strings; validating against a maintained list is the treadmill we rejected. Ideas?
+**A/Decision:** **Delegate validation to each provider's native oracle** — Claude: the closed registry enum; Codex: the closed effort enum plus pinned-variant files existing on disk; Cursor: the live `cursor-agent models` account catalog. OAT never owns the authoritative list for open-ended providers. Reuse the one oracle at five checkpoints: adopt-time (template validation), set-time (`oat config set` warns; oracle unavailable → cell marked _unvalidated_, not invalid), doctor (drift check naming cell + layer), preflight (validates the run's cells; holes → prompt-and-persist), dispatch-time backstop (cell-naming errors + the subagent report echo as an `observed` cross-check). Residual treadmill is only the shipped recommendation going stale — benign, because it is adopt-time copied and doctor can flag it.
+
+### Question 19: Relationship to the parent PR branch
+
+**Q:** These artifacts were removed by the parent's final-review fix (`b4601236`) as "stray project artifacts," then recovered. Are they intentional on this branch?
+**A:** Yes — intentional. This is follow-on discovery/design (and possibly plan) material kept on this branch for continuity; implementation will happen later in a new worktree.
+**Decision:** State this explicitly in `state.md` and the top of `design.md` so future review passes treat these files as planning artifacts rather than unfinished implementation scope. The prior reviewer's objection is valid only when such artifacts look like shipped-implementation scope — the framing removes the ambiguity.
+
 ## Solution Space
 
 ### Approach 1: Model-identity layer + family-aware dispatch _(Recommended, chosen)_
@@ -179,7 +227,7 @@ The concrete pains that motivated it:
 
 ## Key Decisions
 
-1. **Separate project; parent stays single-axis.** Only a minimal, semantics-free producer-identity stamp lands in `model-dispatch-improvements` (decision "B").
+1. **Separate project; parent stays single-axis.** _(Updated in Round 2: the parent shipped **without** the decision-"B" stamp, so the producer-identity stamp is now phase 1 of this project — see Question 13.)_
 2. **Model identity is the spine.** Current / Producer / Reviewer identities + DispatchPreference + EscalationProfile; identity attaches to dispatch events.
 3. **Two separated concerns.** Implementation cross-model (absolute, preference-driven, opt-in) vs gate cross-model (relational, producer-derived, always-on), joined only at producer identity.
 4. **Explicit intent > detection > inherit.** Detection is a default generator, never on the critical path when the user pinned a value.
@@ -191,10 +239,14 @@ The concrete pains that motivated it:
 10. **Cross-harness implementation is the general form:** tier → `(harness, model, effort)` target; reuse gate exec plumbing; Cursor-native first, cross-harness-exec later.
 11. **One project, three phases:** shared foundation → gate avoidance → implementation routing.
 12. **Family classification is an explicit, tested heuristic** that intentionally and locally overrides the "opaque model ids" principle — never a silent inference.
+13. **Mid-project provider switching must not break behavior** (Round 2): abstract policy in project state; layered-config tier matrix; per-dispatch resolution; per-artifact producer identity.
+14. **The stamp carries four-tier provenance** (Round 2): `declared` / `observed` / `inferred` / `unknown`; gate confidence follows provenance; `unknown` means diversity cannot be truthfully claimed.
+15. **Gate diversity is an avoid-enum extension** (Round 2): `same-family` added to the shipped `same-runtime | none` mechanism, reusing the priority walk; shipped-default change done in the open, no prompt ceremony.
+16. **Validation delegates to native provider oracles** (Round 2): Claude enum, Codex variant files, Cursor live catalog; recommended matrix ships as an adopt-time, version-stamped template.
 
 ## Constraints
 
-- Do not backflow multi-family semantics into `model-dispatch-improvements`; the parent's only addition is the semantics-free producer-identity stamp.
+- Do not backflow multi-family semantics into `model-dispatch-improvements`; the parent shipped without the stamp and is not reopened (the stamp is built here).
 - Explicit user intent always wins over detection.
 - Gate diversity is on by default and targets a different family; never silently pass a same-family review.
 - Curated semantics own tier meaning; live model lists are availability checks only.
@@ -229,15 +281,20 @@ The concrete pains that motivated it:
 
 ## Open Questions
 
-- **Escalation trigger:** Does "escalate when it needs it" reuse the existing implicit escalation (repeated review-failure bumps the implementer) or a new per-phase plan tag? Resolve before planning.
-- **Producer-identity persistence location:** commit trailer vs `implementation.md` dispatch log vs state — where is the stamp written and read?
+Resolved in Round 2: the escalation trigger (reuse plan Dispatch Profile rows for the
+per-phase starting point + existing retry/fix-loop machinery to advance along the
+route — no new trigger concept) and the harness-tree home (layered config; see
+Question 15). Still open:
+
+- **Project-layer matrix location:** a per-project `config.json` (new file concept) vs `state.md` frontmatter (where `oat_dispatch_ceiling` lives today)?
+- **Stamp record format:** the exact parseable shape of the formalized Dispatch Notes lines (commit trailers remain an alternative).
 - **Intra-target avoidance representation:** multiple virtual Cursor targets (`cursor-composer` / `cursor-gpt` / `cursor-claude`) that avoidance ranges over, vs exec targets gaining a model dimension so avoidance reasons over `(target, model) → family`.
-- **Harness-tree home:** is the per-harness tree config structure built in this project, or as a generalization that extends the parent's config model?
+- **`same-family` default rollout:** ship as the default immediately (bug-fix framing for multi-family targets) or per-target opt-in for one release?
 - **Cursor detection reliability without a declaration path:** if no launcher can stamp the current model, is probe-only acceptable given latency and the undocumented `(current)` marker?
 
 ## Assumptions
 
-- The parent ships a minimal producer-identity stamp this project can consume.
+- ~~The parent ships a minimal producer-identity stamp this project can consume.~~ _(Invalidated in Round 2 — the parent shipped without it; the stamp is phase 1 here.)_
 - Family classification via a curated `slug → family` map is acceptable as the one sanctioned exception to model-id opacity.
 - Every OAT→Cursor dispatch is a fresh `cursor-agent -p --model <slug>` subprocess, so OAT is not bound to the session's family and can dispatch a different model per phase/gate.
 - The Cursor CLI facts here derive from a stale (2026-06-19) docs snapshot and must be re-verified against the live binary at kickoff.
@@ -256,9 +313,12 @@ The concrete pains that motivated it:
 - **Scope creep via cross-harness.** The `(harness, model, effort)` generalization could balloon.
   - **Likelihood:** Medium · **Impact:** Medium
   - **Mitigation:** Phase it — data model now, Cursor-native first, cross-harness-exec later.
-- **Parent/child drift.** This design grounds in the parent's _intended_ contract, not shipped code.
-  - **Likelihood:** Medium · **Impact:** Medium
-  - **Mitigation:** Revalidation Checklist re-reads the shipped parent at kickoff.
+- **Parent/child drift.** _(Partially retired in Round 2: the shipped parent was re-read on 2026-07-06 and the design was regrounded on its actual shapes.)_ Residual risk: drift between now and kickoff in the implementation worktree.
+  - **Likelihood:** Low · **Impact:** Medium
+  - **Mitigation:** Revalidation Checklist re-confirms against merged main at kickoff.
+- **Stamp trust depends on harness behavior.** Silent fallback on invalid `--model` would corrupt `declared` stamps.
+  - **Likelihood:** Unknown (undocumented) · **Impact:** High
+  - **Mitigation:** Blocking kickoff item to characterize empirically; if silent, mandatory pre-validation + `observed` echo as the truth check.
 
 ## Next Steps
 

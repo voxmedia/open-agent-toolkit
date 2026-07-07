@@ -27,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-06T14:49:31.299Z'
+oat_project_state_updated: '2026-07-07T04:22:55Z'
 oat_generated: false
 ---
 
@@ -39,10 +39,10 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery captured. Lightweight design being revised to reflect the model-identity
-reframe (Current/Producer/Reviewer identities + DispatchPreference + EscalationProfile),
-the two-concern split (gate cross-model vs implementation cross-model), the harness-tree
-config model, and the cross-harness dispatch generalization. Not yet planned.
+Discovery Round 2 complete (post-parent-shipment revalidation + Codex-reviewed identity
+provenance model). Design revised to the shipped-parent ground truth: four-tier stamp
+provenance, layered tier matrix, `avoid: same-family` gate extension, oracle-based
+validation. Awaiting design sign-off; not yet planned.
 
 ## Artifacts
 
@@ -57,8 +57,11 @@ config model, and the cross-harness dispatch generalization. Not yet planned.
 - ✓ Lightweight design drafted ahead of project init
 - ✓ Extensive discovery captured
 - ✓ Project initialized via `oat project new` (quick mode)
-- ⧗ Revise lightweight design to match discovery
-- ☐ Generate implementation plan
+- ✓ Artifacts restored after accidental removal by parent final-review fix (`b4601236`)
+- ✓ Discovery Round 2 (parent shipped; identity provenance; matrix; gates; validation)
+- ✓ Design revised to shipped-parent ground truth
+- ⧗ Design sign-off
+- ☐ Generate implementation plan (in the implementation worktree, after kickoff revalidation)
 
 ## Blockers
 
@@ -70,9 +73,15 @@ Sign off the revised design, then generate a quick implementation plan.
 
 ## Notes
 
-Follow-on to `model-dispatch-improvements` (single-axis dispatch policy). This project
-extends that contract to multi-family providers (Cursor first) and is intentionally kept
-separate; only a minimal, semantics-free producer-identity stamp lands in the parent
-(decision "B"). Revalidate all assumptions at kickoff — see the design's Revalidation
-Checklist. Tracks backlog items `bl-c3d8` (third-provider ceiling adapter) and `bl-e6fc`
-(gate cross-target execution).
+**Intentionally included on this branch.** This project is follow-on discovery/design
+(and possibly plan) material kept on the `model-dispatch-improvements` PR branch for
+continuity. It is **not** part of the parent's shipped implementation surface, and
+implementation will happen later in a **new worktree**. Review passes should treat these
+files as planning artifacts — they were once removed as "stray project artifacts"
+(`b4601236`) and deliberately restored (`9745e7a2`).
+
+Follow-on to `model-dispatch-improvements` (single-axis dispatch policy), extending it to
+multi-family providers (Cursor first). The parent shipped **without** the producer-identity
+stamp, so the stamp is phase 1 of this project. Revalidate all assumptions at kickoff —
+see the design's Revalidation Checklist. Tracks backlog items `bl-c3d8` (third-provider
+ceiling adapter) and `bl-e6fc` (gate cross-target execution).
