@@ -5,6 +5,7 @@ import {
 } from '@commands/__tests__/helpers';
 import type { OatConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
+import type { MatrixCellAvailability } from '@providers/identity/availability';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -49,6 +50,11 @@ interface HarnessOptions {
   }>;
   oatConfig?: OatConfig;
   pjmChecks?: DoctorCheck[];
+  validateMatrixCell?: (
+    provider: string,
+    value: string,
+    options: { cwd: string; env: NodeJS.ProcessEnv },
+  ) => Promise<MatrixCellAvailability>;
 }
 
 interface RunDoctorArgs {
@@ -70,6 +76,7 @@ function createHarness(options: HarnessOptions = {}): {
   command: Command;
   checkSkillVersions: ReturnType<typeof vi.fn>;
   runPjmDoctorChecks: ReturnType<typeof vi.fn>;
+  validateMatrixCell: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const scope = options.scope ?? 'project';
@@ -108,6 +115,10 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
   const runPjmDoctorChecks = vi.fn(async () => options.pjmChecks ?? []);
+  const validateMatrixCell = vi.fn(
+    options.validateMatrixCell ??
+      (async () => 'valid' satisfies MatrixCellAvailability),
+  );
   const command = createDoctorCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? scope) as Scope,
@@ -156,9 +167,17 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     checkSkillVersions,
     runPjmDoctorChecks,
+    validateMatrixCell,
+    processEnv: {},
   });
 
-  return { capture, command, checkSkillVersions, runPjmDoctorChecks };
+  return {
+    capture,
+    command,
+    checkSkillVersions,
+    runPjmDoctorChecks,
+    validateMatrixCell,
+  };
 }
 
 async function runDoctor(
@@ -406,6 +425,84 @@ describe('createDoctorCommand', () => {
     expect(runPjmDoctorChecks).not.toHaveBeenCalled();
     expect(capture.info[0]).toContain('pjm:disabled');
     expect(capture.info[0]).not.toContain('pjm:canonical_files');
+  });
+
+  it('passes dispatch matrix availability when all configured cells validate', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: {
+                balanced: 'composer-2.5',
+                high: [{ model: 'gpt-5.5-high' }],
+              },
+              codex: 'high',
+            },
+          },
+        },
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'All configured dispatch matrix cells are available',
+    );
+    expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
+      cwd: '/tmp/workspace',
+      env: {},
+    });
+    expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'gpt-5.5-high', {
+      cwd: '/tmp/workspace',
+      env: {},
+    });
+    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
+      cwd: '/tmp/workspace',
+      env: {},
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns on unknown or unvalidated configured dispatch matrix cells', async () => {
+    const { command, capture } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: {
+                high: [{ model: 'missing-model' }, { model: 'composer-2.5' }],
+              },
+              codex: 'xhigh',
+            },
+          },
+        },
+      },
+      validateMatrixCell: async (_provider, value) => {
+        if (value === 'missing-model') {
+          return 'unknown-value';
+        }
+        if (value === 'xhigh') {
+          return 'unvalidated';
+        }
+        return 'valid';
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high[0].model=missing-model',
+    );
+    expect(capture.info[0]).toContain(
+      'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.codex=xhigh',
+    );
+    expect(capture.info[0]).toContain('oat config set');
+    expect(process.exitCode).toBe(1);
   });
 
   it('outputs JSON when --json set', async () => {

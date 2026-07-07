@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t06
+oat_current_task_id: p03-t07
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 7     | 5/7       |
+| Phase 3 | in_progress | 7     | 6/7       |
 
-**Total:** 12/25 tasks completed
+**Total:** 13/25 tasks completed
 
 ---
 
@@ -758,6 +758,46 @@ __EXIT_CODE__=0
 
 ---
 
+### Task p03-t06: Dispatch matrix doctor drift check
+
+**Status:** completed
+**Commit:** feat(p03-t06): add dispatch matrix doctor check
+
+**Outcome (required when completed):**
+
+- Added a project-scope `project:dispatch_matrix` doctor check that inspects
+  configured dispatch-ceiling provider cells.
+- Flattened bare provider cells, per-tier matrix cells, and ordered route target
+  cells into provider/value/path references for validation.
+- Warned on unknown or unvalidated cells without failing the doctor run, using
+  the p03-t05 availability oracle.
+
+**Files changed:**
+
+- `packages/cli/src/commands/doctor/index.ts`
+- `packages/cli/src/commands/doctor/index.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts`
+  failed because no dispatch matrix doctor check was emitted.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts`
+  passed (20 tests).
+- Type-check: `pnpm --filter @open-agent-toolkit/cli type-check` passed.
+
+**Notes / Decisions:**
+
+- Empty matrices emit a passing diagnostic (`No configured dispatch matrix cells
+found`) so the doctor surface remains explicit.
+- Oracle exceptions degrade to `unvalidated` rather than hard-failing doctor.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -965,11 +1005,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                         | Passed | Failed | Coverage |
-| ----- | ----------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar                                                       | yes    | 0      | n/a      |
-| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                              | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; cli type-check | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                                            | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                          | yes    | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                 | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; cli type-check | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

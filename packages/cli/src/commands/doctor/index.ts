@@ -26,7 +26,13 @@ import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
-import { readOatConfig, type OatConfig } from '@config/oat-config';
+import {
+  readOatConfig,
+  type OatConfig,
+  type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRouteTarget,
+} from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
@@ -36,6 +42,11 @@ import { codexAdapter } from '@providers/codex';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
+import {
+  validateMatrixCell,
+  type MatrixCellAvailability,
+  type ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
@@ -57,6 +68,12 @@ interface DoctorDependencies {
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  validateMatrixCell: (
+    provider: string,
+    value: string,
+    options: ValidateMatrixCellOptions,
+  ) => Promise<MatrixCellAvailability>;
+  processEnv: NodeJS.ProcessEnv;
   runPjmDoctorChecks: (
     repoRoot: string,
     options?: PjmDoctorOptions,
@@ -78,6 +95,16 @@ interface SkillVersionReport {
   installedSkillCount: number;
   skippedMissingBundledCount: number;
   outdatedSkills: OutdatedSkillVersion[];
+}
+
+interface DispatchMatrixCellRef {
+  provider: string;
+  value: string;
+  path: string;
+}
+
+interface DispatchMatrixCellIssue extends DispatchMatrixCellRef {
+  availability: Exclude<MatrixCellAvailability, 'valid'>;
 }
 
 async function pathExistsDefault(path: string): Promise<boolean> {
@@ -215,6 +242,8 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     readOatConfig,
+    validateMatrixCell,
+    processEnv: process.env,
     runPjmDoctorChecks,
     // Default binding remains self-contained, but still honors the caller-
     // provided pathExists dependency from runChecksForScope when available.
@@ -223,6 +252,156 @@ function createDependencies(): DoctorDependencies {
       assetsRoot,
       pathExists = pathExistsDefault,
     ) => checkSkillVersionsDefault(scopeRoot, assetsRoot, pathExists),
+  };
+}
+
+function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
+  return typeof entry === 'object' && entry !== null && !Array.isArray(entry);
+}
+
+function addDispatchMatrixCellRefs(
+  refs: DispatchMatrixCellRef[],
+  provider: string,
+  path: string,
+  cell: WorkflowDispatchMatrixCell,
+): void {
+  if (typeof cell === 'string') {
+    refs.push({ provider, value: cell, path });
+    return;
+  }
+
+  for (const [index, entry] of cell.entries()) {
+    const entryPath = `${path}[${index}]`;
+    if (typeof entry === 'string') {
+      refs.push({ provider, value: entry, path: entryPath });
+      continue;
+    }
+
+    if (!isRouteTarget(entry)) {
+      continue;
+    }
+
+    if (entry.model) {
+      refs.push({ provider, value: entry.model, path: `${entryPath}.model` });
+    }
+    if (entry.effort) {
+      refs.push({ provider, value: entry.effort, path: `${entryPath}.effort` });
+    }
+  }
+}
+
+function collectDispatchMatrixCellRefs(
+  config: OatConfig,
+): DispatchMatrixCellRef[] {
+  const refs: DispatchMatrixCellRef[] = [];
+  const providers = config.workflow?.dispatchCeiling?.providers ?? {};
+
+  for (const [provider, providerValue] of Object.entries(providers)) {
+    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
+    if (typeof providerValue === 'string') {
+      refs.push({ provider, value: providerValue, path: providerPath });
+      continue;
+    }
+
+    const tierMap = providerValue as Exclude<
+      WorkflowDispatchProviderValue,
+      string
+    >;
+    for (const [tier, cell] of Object.entries(tierMap)) {
+      if (cell === undefined) {
+        continue;
+      }
+      addDispatchMatrixCellRefs(
+        refs,
+        provider,
+        `${providerPath}.${tier}`,
+        cell,
+      );
+    }
+  }
+
+  return refs;
+}
+
+function formatDispatchMatrixIssueList(
+  issues: DispatchMatrixCellIssue[],
+): string {
+  return issues.map((issue) => `${issue.path}=${issue.value}`).join(', ');
+}
+
+async function createDispatchMatrixDoctorCheck(
+  scopeRoot: string,
+  config: OatConfig,
+  dependencies: DoctorDependencies,
+): Promise<DoctorCheck> {
+  const refs = collectDispatchMatrixCellRefs(config);
+  if (refs.length === 0) {
+    return {
+      name: 'project:dispatch_matrix',
+      description: 'Dispatch matrix cell availability',
+      status: 'pass',
+      message: 'No configured dispatch matrix cells found.',
+    };
+  }
+
+  const issues: DispatchMatrixCellIssue[] = [];
+  for (const ref of refs) {
+    let availability: MatrixCellAvailability;
+    try {
+      availability = await dependencies.validateMatrixCell(
+        ref.provider,
+        ref.value,
+        {
+          cwd: scopeRoot,
+          env: dependencies.processEnv,
+        },
+      );
+    } catch {
+      availability = 'unvalidated';
+    }
+
+    if (availability !== 'valid') {
+      issues.push({ ...ref, availability });
+    }
+  }
+
+  if (issues.length === 0) {
+    return {
+      name: 'project:dispatch_matrix',
+      description: 'Dispatch matrix cell availability',
+      status: 'pass',
+      message: 'All configured dispatch matrix cells are available.',
+    };
+  }
+
+  const unknown = issues.filter(
+    (issue) => issue.availability === 'unknown-value',
+  );
+  const unvalidated = issues.filter(
+    (issue) => issue.availability === 'unvalidated',
+  );
+  const messageParts: string[] = [];
+  if (unknown.length > 0) {
+    messageParts.push(
+      `Unknown dispatch matrix cells: ${formatDispatchMatrixIssueList(
+        unknown,
+      )}`,
+    );
+  }
+  if (unvalidated.length > 0) {
+    messageParts.push(
+      `Unvalidated dispatch matrix cells: ${formatDispatchMatrixIssueList(
+        unvalidated,
+      )}`,
+    );
+  }
+
+  return {
+    name: 'project:dispatch_matrix',
+    description: 'Dispatch matrix cell availability',
+    status: 'warn',
+    message: messageParts.join('. '),
+    fix: 'Run `oat config set workflow.dispatchCeiling.providers.<provider> <value>` with an available value, or refresh provider assets with `oat sync --scope project`.',
   };
 }
 
@@ -477,6 +656,9 @@ async function runChecksForScope(
 
     const repoReferenceRoot = join(scopeRoot, '.oat', 'repo');
     const config = await dependencies.readOatConfig(scopeRoot);
+    checks.push(
+      await createDispatchMatrixDoctorCheck(scopeRoot, config, dependencies),
+    );
     const projectManagementEnabled =
       config.tools?.['project-management'] === true;
     if (projectManagementEnabled) {
