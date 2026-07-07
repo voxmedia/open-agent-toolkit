@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-06
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-07-07
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
 # Implementation: multi-family-dispatch
 
 **Started:** 2026-07-06
-**Last Updated:** 2026-07-06
+**Last Updated:** 2026-07-07
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,62 +26,79 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 3     | 1/3       |
+| Phase 2 | pending     | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 1/25 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Kickoff Revalidation and Blocking Experiments
 
 **Status:** in_progress
 **Started:** 2026-07-06
 
 ### Phase Summary (fill when phase is complete)
 
-**Outcome (what changed):**
+**Outcome (what changed):** Pending p01-t02 and p01-t03.
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+**Key files touched:** Pending.
 
-**Key files touched:**
+**Verification:** Pending.
 
-- `{path}` - {why}
+**Notes / Decisions:** Pending.
 
-**Verification:**
+### Task p01-t01: Re-confirm shipped dispatch surfaces against merged main
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** pending
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Reconfirmed the shipped dispatch-policy surfaces in the merged worktree before
+  running any Cursor behavior experiments.
+- No design drift was found that contradicts the phase plan. The design remains
+  grounded in shipped reality: policy state is still `dispatchPolicy { mode,
+policy }` plus legacy `dispatchCeiling.providers.{codex,claude}`, gate
+  avoidance is still `same-runtime | none`, and no producer-identity stamp is
+  present in shipped source.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.oat/projects/shared/multi-family-dispatch/implementation.md` - recorded the
+  kickoff revalidation results.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass (tsc completed with exit code 0)
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- `packages/cli/src/config/oat-config.ts` still defines
+  `WorkflowDispatchPolicy` as `mode: managed|inherit` with
+  `policy: economy|balanced|high|frontier|uncapped`; the legacy ceiling provider
+  shape still accepts only `codex` and `claude`.
+- `GateAvoid` and the gate command's local `CrossProviderAvoid` still accept
+  only `same-runtime | none`; `parseCrossProviderAvoid` still defaults to
+  `same-runtime`.
+- `BUILTIN_EXEC_TARGETS` still includes `cursor-default` as
+  `['cursor-agent', '-p']` with no pinned `--model`, matching the design's
+  inherited-Cursor gate concern.
+- `packages/cli/src/providers/ceiling/registry.ts` still registers only Codex
+  and Claude adapters. Unknown providers, including Cursor, fall back to
+  `supportsCeiling: false` / `mechanism: none`.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` still emits the
+  additive resolver shape with `providers.<provider>.dispatchArgs`,
+  `verifyOnDispatch`, and `selection`; unsupported providers remain advisory or
+  unsupported rather than enforced.
+- A source search for producer/stamp terminology found no shipped producer
+  stamp implementation. Existing "Dispatch:" lines are skill/log convention
+  only and do not carry resolved identity.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
@@ -128,30 +145,34 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-07-06
+### 2026-07-07
 
-**Session Start:** {time}
+**Session Start:** p01 implementation
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Re-confirm shipped dispatch surfaces against merged main - commit pending
+- [ ] p01-t02: Characterize Cursor invalid-model behavior - pending
+- [ ] p01-t03: Decide stamp record format and declaration path - pending
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Revalidated the shipped dispatch-policy, ceiling adapter, resolver, and gate
+  avoidance surfaces against the merged worktree.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- No design update was needed for p01-t01; shipped reality matches the design's
+  grounding closely enough to continue to the blocking Cursor experiment.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Run the live `cursor-agent` invalid-model experiment before resolving stamp
+  confidence and declaration-path rules.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
+**Session End:** pending
 
 ---
 
