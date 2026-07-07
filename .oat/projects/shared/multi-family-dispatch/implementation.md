@@ -1746,6 +1746,32 @@ closeout.
 
 ---
 
+### 2026-07-07
+
+**Post-p06 closeout fix:** repo-local hook toolchain execution
+
+- Added `tools/git-hooks/repo-toolchain.sh` so this repository's managed Git
+  hooks load `.nvmrc` Node through nvm when available and invoke pnpm through
+  Corepack.
+- Updated `commit-msg`, `pre-commit`, `pre-push`, and `post-checkout` to use
+  the shared hook toolchain helper.
+- Updated the OAT project-status pre-commit check to invoke the repo-local
+  source CLI through Corepack pnpm when the OAT source tree is present.
+- Preserved the global `oat status --scope project --hook` path as a fallback
+  for environments where the repo-local OAT source CLI is not present.
+- User approved continuation beyond the final HiLL checkpoint and requested the
+  documentation pass plus a final Claude/Fable gate review.
+
+**Verification:**
+
+- Run: `sh -n tools/git-hooks/{commit-msg,pre-commit,pre-push,post-checkout}`
+- Result: pass
+- Run: `tools/git-hooks/pre-commit`
+- Result: pass (`lint-staged` reported no staged files; no stale global `oat`
+  sync warning)
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1764,6 +1790,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p03 gate      | plan.md p03-t06   | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                    | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                           | plan.md updated              | None.                                                                          |
 | p04-t02       | plan.md file list | The task named `oat-config.ts` and gate code.                             | The implementation also updated `packages/cli/src/config/resolve.ts`.                      | Layered exec-target resolution must preserve `ExecTarget.models`; otherwise model candidates disappear after config merge.      | implementation               | None.                                                                          |
 | p06-t04       | plan.md file list | The task listed five package files plus `public-package-versions.json`.   | The implementation also updated `packages/cli/src/validation/skills.test.ts`.              | Skill version validation intentionally tracks changed canonical skill frontmatter versions.                                     | implementation               | None.                                                                          |
+| post-p06      | plan.md           | Implementation plan ended after p06 release validation and gate review.   | Added a repo-local Git hook/toolchain fix before final documentation/review closeout.      | The active repo hooks were resolving stale global/Codex-bundled tooling under mixed Node/pnpm versions.                         | implementation               | None.                                                                          |
 
 ## Test Results
 

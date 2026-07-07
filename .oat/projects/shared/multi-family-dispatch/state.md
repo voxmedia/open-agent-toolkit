@@ -11,7 +11,8 @@ oat_siblings: []
 oat_depends_on: []
 oat_children: []
 oat_hill_checkpoints: []
-oat_hill_completed: []
+oat_hill_completed:
+  - final
 oat_parallel_execution: false
 oat_phase: implement
 oat_phase_status: in_progress
@@ -30,7 +31,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T17:14:39Z'
+oat_project_state_updated: '2026-07-07T18:31:54Z'
 oat_generated: false
 ---
 
@@ -43,9 +44,9 @@ oat_generated: false
 ## Current Phase
 
 Implementation tasks are complete. Phases p01 through p06 have passed their standard
-reviews, and all external phase review gates have been consumed. The configured final
-HiLL checkpoint after p06 has been reached; pause here before final review and PR
-closeout.
+reviews, and all external phase review gates have been consumed. The final HiLL
+checkpoint after p06 was approved by the user, and documentation/final-review closeout
+is underway.
 
 ## Artifacts
 
@@ -53,7 +54,7 @@ closeout.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; p01 confidence-rule updates applied)
 - **Plan:** `plan.md` (complete; all implementation phases passed)
-- **Implementation:** `implementation.md` (complete; paused at final HiLL)
+- **Implementation:** `implementation.md` (complete; final closeout underway)
 
 ## Progress
 
@@ -85,7 +86,8 @@ closeout.
 - ✓ p06 manifest, docs-index command, and lifecycle tracking review fixes applied
 - ✓ p06 standard re-review passed
 - ✓ p06 external phase review gate passed and was consumed
-- ⧗ Final HiLL checkpoint reached; awaiting user approval before final review
+- ✓ Final HiLL checkpoint approved by the user for final review/closeout
+- ✓ Post-p06 repo-local Git hook toolchain fix applied
 
 ## Blockers
 
@@ -93,8 +95,8 @@ None
 
 ## Next Milestone
 
-Paused at the configured final HiLL checkpoint. Next, after user approval, run final
-review/closeout.
+Run the documentation pass, apply approved documentation updates, then trigger the final
+Claude/Fable independent code review gate.
 
 ## Notes
 

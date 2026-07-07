@@ -1,2 +1,9 @@
+#!/bin/sh
+set -u
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=tools/git-hooks/repo-toolchain.sh
+. "$script_dir/repo-toolchain.sh"
+
 # Validate commit message format with commitlint
-pnpm exec commitlint --edit "$1"
+run_pnpm exec commitlint --edit "$1"

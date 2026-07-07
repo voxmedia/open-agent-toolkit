@@ -1,8 +1,17 @@
+#!/bin/sh
+set -u
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=tools/git-hooks/repo-toolchain.sh
+. "$script_dir/repo-toolchain.sh"
+
 # Run lint-staged to only lint changed files
-pnpm exec lint-staged
+run_pnpm exec lint-staged
 
 # >>> oat pre-commit hook >>>
-if command -v oat >/dev/null 2>&1; then
+if [ -f "packages/cli/src/index.ts" ] && [ -f "package.json" ]; then
+  run_pnpm run --silent cli:source -- status --scope project --hook || true
+elif command -v oat >/dev/null 2>&1; then
   oat status --scope project --hook || true
 fi
 # <<< oat pre-commit hook <<<
