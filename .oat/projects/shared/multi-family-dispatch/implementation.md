@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | completed   | 7     | 7/7       |
-| Phase 4 | completed   | 4     | 4/4       |
-| Phase 5 | completed   | 3     | 3/3       |
-| Phase 6 | completed   | 4     | 4/4       |
-| Phase 7 | in_progress | 2     | 0/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 7     | 7/7       |
+| Phase 4 | completed | 4     | 4/4       |
+| Phase 5 | completed | 3     | 3/3       |
+| Phase 6 | completed | 4     | 4/4       |
+| Phase 7 | completed | 2     | 2/2       |
 
-**Total:** 25/27 tasks completed
+**Total:** 27/27 tasks completed
 
 ---
 
@@ -1833,6 +1833,77 @@ to reach `passed`.
 
 ---
 
+## Phase 7: Final Review Fixes
+
+**Status:** completed
+**Started:** 2026-07-07
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Restored the same-runtime diversity floor when `same-family` gate avoidance
+  sees an unknown or non-claimable producer identity.
+- Rejected invalid closed-provider dispatch matrix values for Codex and Claude
+  tier cells at config-set time, while preserving warn-and-save behavior for
+  open providers such as Cursor.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/gate/index.ts` - unknown-producer
+  `same-family` selection now conservatively applies same-runtime filtering
+  before using the existing no-diverse-target fallback.
+- `packages/cli/src/commands/gate/index.test.ts` - regression coverage for the
+  unknown-producer floor and fallback path.
+- `packages/cli/src/commands/config/index.ts` - closed-provider tier cells now
+  reuse fixed provider enum validation.
+- `packages/cli/src/commands/config/index.test.ts` - regression coverage for
+  invalid Claude tier values failing before save or availability validation.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: pass (61 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
+- Result: pass (163 tests)
+
+### Task p07-t01: Restore same-runtime floor for unknown-producer same-family gates
+
+**Status:** completed
+**Commit:** 4b79de1d
+
+**Outcome:**
+
+- `same-family` gate avoidance now falls back to same-runtime avoidance when
+  the producer identity cannot claim a known model family.
+- If no same-runtime-diverse candidate is eligible, the existing no-diverse
+  fallback still allows execution and reports diversity honestly.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: pass (61 tests)
+
+### Task p07-t02: Reject invalid closed-provider matrix values at set time
+
+**Status:** completed
+**Commit:** d8001058
+
+**Outcome:**
+
+- Dynamic tier keys such as
+  `workflow.dispatchCeiling.providers.claude.high` now reject values outside
+  the closed provider enum before persistence or availability-oracle calls.
+- Open providers keep the prior validation-warning behavior so future provider
+  model names can still be saved when the oracle cannot confirm them.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
+- Result: pass (163 tests)
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1858,15 +1929,15 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                           | Passed  | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                         | yes     | 0      | n/a      |
-| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                                | yes     | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check       | yes     | 0      | n/a      |
-| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                                 | yes     | 0      | n/a      |
-| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                                  | yes     | 0      | n/a      |
-| 6     | oat:validate-skills; docs generate-index; build:docs; sync --scope all; status --scope project --json; git diff --check; cli test/type-check/lint; release:validate | yes     | 0      | n/a      |
-| 7     | final review fix verification pending                                                                                                                               | pending | n/a    | n/a      |
+| Phase | Tests Run                                                                                                                                                           | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                         | yes    | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                                | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check       | yes    | 0      | n/a      |
+| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                                 | yes    | 0      | n/a      |
+| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                                  | yes    | 0      | n/a      |
+| 6     | oat:validate-skills; docs generate-index; build:docs; sync --scope all; status --scope project --json; git diff --check; cli test/type-check/lint; release:validate | yes    | 0      | n/a      |
+| 7     | gate/index.test; config/index.test; oat-config.test                                                                                                                 | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

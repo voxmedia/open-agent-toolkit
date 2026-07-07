@@ -788,31 +788,31 @@ git commit -m "fix(p07-t02): reject invalid closed-provider dispatch cells"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
-| design | artifact | passed      | 2026-07-07 | signed off in-session (Q23)                                 |
-| plan   | artifact | passed      | 2026-07-07 | reviews/archived/artifact-plan-review-2026-07-07T052748Z.md |
-| p01    | code     | passed      | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
-| p02    | code     | passed      | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
-| p03    | code     | passed      | 2026-07-07 | reviews/archived/p03-review-2026-07-07T150751Z.md           |
-| p04    | code     | passed      | 2026-07-07 | reviews/archived/p04-review-2026-07-07T155438Z.md           |
-| p05    | code     | passed      | 2026-07-07 | reviews/archived/p05-review-2026-07-07T163044Z.md           |
-| p06    | code     | passed      | 2026-07-07 | reviews/archived/p06-review-2026-07-07T171242Z.md           |
-| final  | code     | fixes_added | 2026-07-07 | reviews/archived/final-review-2026-07-07T200402Z.md         |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| design | artifact | passed          | 2026-07-07 | signed off in-session (Q23)                                 |
+| plan   | artifact | passed          | 2026-07-07 | reviews/archived/artifact-plan-review-2026-07-07T052748Z.md |
+| p01    | code     | passed          | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
+| p02    | code     | passed          | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
+| p03    | code     | passed          | 2026-07-07 | reviews/archived/p03-review-2026-07-07T150751Z.md           |
+| p04    | code     | passed          | 2026-07-07 | reviews/archived/p04-review-2026-07-07T155438Z.md           |
+| p05    | code     | passed          | 2026-07-07 | reviews/archived/p05-review-2026-07-07T163044Z.md           |
+| p06    | code     | passed          | 2026-07-07 | reviews/archived/p06-review-2026-07-07T171242Z.md           |
+| final  | code     | fixes_completed | 2026-07-07 | reviews/archived/final-review-2026-07-07T200402Z.md         |
 
 ## Implementation Complete
 
 Implementation is complete when all seven phases pass review, final re-review passes, and release validation succeeds.
 
-| Phase | Tasks | Status  |
-| ----- | ----- | ------- |
-| p01   | 3     | passed  |
-| p02   | 4     | passed  |
-| p03   | 7     | passed  |
-| p04   | 4     | passed  |
-| p05   | 3     | passed  |
-| p06   | 4     | passed  |
-| p07   | 2     | pending |
+| Phase | Tasks | Status    |
+| ----- | ----- | --------- |
+| p01   | 3     | passed    |
+| p02   | 4     | passed    |
+| p03   | 7     | passed    |
+| p04   | 4     | passed    |
+| p05   | 3     | passed    |
+| p06   | 4     | passed    |
+| p07   | 2     | completed |
 
 **Total:** 27 tasks.
 
