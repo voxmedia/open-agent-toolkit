@@ -2,13 +2,18 @@ export type ModelFamily = 'claude' | 'openai' | 'composer' | 'glm' | 'unknown';
 
 interface ClassifyModelFamilyInput {
   value: string;
+  /**
+   * Structured model-provider identifier, when a harness exposes one. This is
+   * not the orchestration/runtime harness id; e.g. Cursor can run several model
+   * families and must be classified from the concrete model value.
+   */
   providerId?: string;
 }
 
 const PROVIDER_ID_FAMILIES: Array<[RegExp, ModelFamily]> = [
   [/^(anthropic|claude)$/i, 'claude'],
   [/^(openai|codex)$/i, 'openai'],
-  [/^(cursor|composer)$/i, 'composer'],
+  [/^composer$/i, 'composer'],
   [/^(glm|zai|zhipu)$/i, 'glm'],
 ];
 

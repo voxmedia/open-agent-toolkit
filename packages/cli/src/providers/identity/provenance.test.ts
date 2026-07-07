@@ -59,6 +59,40 @@ describe('resolveIdentityConfidence', () => {
     });
   });
 
+  it('ignores value-less observations instead of clobbering declarations', () => {
+    expect(
+      resolveIdentityConfidence([
+        {
+          value: 'composer-2.5',
+          provenance: 'declared',
+          rejectOnInvalid: true,
+        },
+        { value: ' ', provenance: 'observed' },
+      ]),
+    ).toMatchObject({
+      value: 'composer-2.5',
+      provenance: 'declared',
+      confidence: 'high',
+      mismatch: false,
+      diversityClaimable: true,
+    });
+  });
+
+  it('does not flag unknown declarations as mismatches against observations', () => {
+    expect(
+      resolveIdentityConfidence([
+        { value: 'unknown', provenance: 'declared' },
+        { value: 'composer-2.5', provenance: 'observed' },
+      ]),
+    ).toMatchObject({
+      value: 'composer-2.5',
+      provenance: 'observed',
+      confidence: 'low',
+      mismatch: false,
+      diversityClaimable: true,
+    });
+  });
+
   it.each(['observed', 'inferred'] as const)(
     'treats %s identity alone as low confidence',
     (provenance) => {

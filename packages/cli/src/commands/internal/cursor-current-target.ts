@@ -101,6 +101,9 @@ const DEFAULT_DEPENDENCIES: CursorCurrentTargetCommandDependencies = {
 
 function apiKeyArgs(env: NodeJS.ProcessEnv): string[] {
   const apiKey = env.CURSOR_API_KEY;
+  // p01 live verification showed the argv flag can bypass a locked login
+  // keychain for catalog probes; keep using it even though argv is visible to
+  // local process inspection for the short-lived helper process.
   return typeof apiKey === 'string' && apiKey.length > 0
     ? ['--api-key', apiKey]
     : [];

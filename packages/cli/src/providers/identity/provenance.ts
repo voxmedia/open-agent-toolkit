@@ -49,7 +49,9 @@ function strongestRecord(
   records: IdentityRecord[],
   provenance: IdentityProvenance,
 ): IdentityRecord | undefined {
-  return records.find((record) => record.provenance === provenance);
+  return records.find(
+    (record) => record.provenance === provenance && record.value !== 'unknown',
+  );
 }
 
 function strongestKnownRecord(

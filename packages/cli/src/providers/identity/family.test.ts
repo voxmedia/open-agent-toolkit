@@ -31,6 +31,15 @@ describe('classifyModelFamily', () => {
     ).toBe('claude');
   });
 
+  it('does not treat cursor harness id as a model family provider id', () => {
+    expect(
+      classifyModelFamily({
+        value: 'gpt-5.5-high',
+        providerId: 'cursor',
+      }),
+    ).toBe('openai');
+  });
+
   it('falls back to unknown for unrecognized values', () => {
     expect(classifyModelFamily({ value: 'mystery-model' })).toBe('unknown');
   });
