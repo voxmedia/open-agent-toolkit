@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 7     | 1/7       |
+| Phase 3 | in_progress | 7     | 2/7       |
 
-**Total:** 8/25 tasks completed
+**Total:** 9/25 tasks completed
 
 ---
 
@@ -576,6 +576,47 @@ __EXIT_CODE__=0
 
 ---
 
+### Task p03-t02: Sparse project-layer matrix override in state frontmatter
+
+**Status:** completed
+**Commit:** feat(p03-t02): parse sparse project matrix override
+
+**Outcome (required when completed):**
+
+- Parsed `oat_dispatch_policy.matrix` from project `state.md` frontmatter as a
+  sparse provider/tier override using the same matrix cell shapes introduced in
+  p03-t01.
+- Surfaced the parsed project matrix additively in dispatch-ceiling resolution
+  output for the p03-t03 merge step.
+- Ignored a present but wholly malformed matrix with a warning while preserving
+  normal policy and legacy ceiling resolution behavior.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+  failed on missing `matrix` output and malformed-matrix warning behavior.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+  passed (41 tests).
+
+**Notes / Decisions:**
+
+- The sparse matrix is parsed and carried forward but does not alter selection
+  semantics until the p03-t03 resolver deep-merge task.
+- A malformed matrix does not make an otherwise valid project policy invalid.
+
+**Issues Encountered:**
+
+- Corrected the RED test expectation so explicit project policy still wins over
+  legacy ceiling state when only the matrix override is malformed.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -787,7 +828,7 @@ Track test execution during implementation.
 | ----- | ------------------------------------------------------------------------------------ | ------ | ------ | -------- |
 | 1     | type-check; live cursor-agent probes; grep producer grammar                          | yes    | 0      | n/a      |
 | 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check | yes    | 0      | n/a      |
-| 3     | oat-config.test                                                                      | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test                                         | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

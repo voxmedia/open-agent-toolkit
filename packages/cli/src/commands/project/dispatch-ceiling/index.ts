@@ -16,8 +16,14 @@ import {
   resolveActiveProject,
   VALID_CLAUDE_DISPATCH_CEILINGS,
   VALID_CODEX_DISPATCH_CEILINGS,
+  VALID_DISPATCH_MATRIX_TIERS,
   VALID_MANAGED_DISPATCH_POLICIES,
   type ActiveProjectResolution,
+  type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchMatrixTier,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRoute,
+  type WorkflowDispatchRouteTarget,
   type WorkflowCodexDispatchCeiling,
   type WorkflowClaudeDispatchCeiling,
   type WorkflowDispatchPolicyMode,
@@ -55,6 +61,7 @@ type DispatchCeilingSource =
   | 'project-state';
 
 type DispatchCeilingMode = 'enforced' | 'advisory' | 'unsupported';
+type ProjectDispatchMatrix = Record<string, WorkflowDispatchProviderValue>;
 
 interface ProviderResolution {
   value: DispatchCeilingValue | null;
@@ -101,6 +108,7 @@ interface DispatchCeilingResolution {
   unresolved: boolean;
   projectPath: string | null;
   providerDefaultEffort: string;
+  matrix: ProjectDispatchMatrix | null;
   providers: Record<string, ProviderResolution>;
   message?: string;
 }
@@ -238,6 +246,8 @@ interface ResolvedDispatchPolicy {
   value: DispatchCeilingValue | null;
   source: DispatchCeilingSource;
   preset: string | null;
+  matrix: ProjectDispatchMatrix | null;
+  warnings: string[];
 }
 
 type ConfigCandidateSource = Exclude<ResolvedConfigSource, 'default'>;
@@ -282,6 +292,148 @@ function invalidProjectPolicyMessage(value: unknown): string {
   return `Invalid project dispatch policy "${actual}". Valid managed policies: ${validManagedPolicyList()}. Use mode "inherit" for host defaults.`;
 }
 
+function normalizeProjectMatrixBareValue(
+  provider: DispatchCeilingProvider,
+  value: unknown,
+): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const order = providerValueOrder(provider);
+  if (order && !isValidProviderValue(provider, trimmed)) {
+    return undefined;
+  }
+
+  return trimmed;
+}
+
+function normalizeProjectMatrixRouteTarget(
+  value: unknown,
+): WorkflowDispatchRouteTarget | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  const target: WorkflowDispatchRouteTarget = {};
+  for (const key of ['harness', 'model', 'effort'] as const) {
+    const rawValue = record[key];
+    if (typeof rawValue === 'string' && rawValue.trim()) {
+      target[key] = rawValue.trim();
+    }
+  }
+
+  return Object.keys(target).length > 0 ? target : undefined;
+}
+
+function normalizeProjectMatrixCell(
+  provider: DispatchCeilingProvider,
+  value: unknown,
+): WorkflowDispatchMatrixCell | undefined {
+  const bareValue = normalizeProjectMatrixBareValue(provider, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (!Array.isArray(value) || value.length === 0) {
+    return undefined;
+  }
+
+  const route: WorkflowDispatchRoute = [];
+  for (const entry of value) {
+    const bareEntry = normalizeProjectMatrixBareValue(provider, entry);
+    if (bareEntry !== undefined) {
+      route.push(bareEntry);
+      continue;
+    }
+
+    const target = normalizeProjectMatrixRouteTarget(entry);
+    if (target !== undefined) {
+      route.push(target);
+    }
+  }
+
+  return route.length > 0 ? route : undefined;
+}
+
+function normalizeProjectMatrixProviderValue(
+  provider: DispatchCeilingProvider,
+  value: unknown,
+): WorkflowDispatchProviderValue | undefined {
+  const bareValue = normalizeProjectMatrixBareValue(provider, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const tierMap: Partial<
+    Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
+  > = {};
+  for (const [tier, rawCell] of Object.entries(value)) {
+    if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {
+      continue;
+    }
+
+    const normalized = normalizeProjectMatrixCell(provider, rawCell);
+    if (normalized !== undefined) {
+      tierMap[tier as WorkflowDispatchMatrixTier] = normalized;
+    }
+  }
+
+  return Object.keys(tierMap).length > 0 ? tierMap : undefined;
+}
+
+function readProjectDispatchMatrix(value: unknown): {
+  matrix: ProjectDispatchMatrix | null;
+  warnings: string[];
+} {
+  if (value === undefined || value === null) {
+    return { matrix: null, warnings: [] };
+  }
+
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    return {
+      matrix: null,
+      warnings: [
+        'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+      ],
+    };
+  }
+
+  const matrix: ProjectDispatchMatrix = {};
+  for (const [provider, rawProviderValue] of Object.entries(value)) {
+    if (!provider.trim()) {
+      continue;
+    }
+    const normalized = normalizeProjectMatrixProviderValue(
+      provider,
+      rawProviderValue,
+    );
+    if (normalized !== undefined) {
+      matrix[provider] = normalized;
+    }
+  }
+
+  if (Object.keys(matrix).length === 0) {
+    return {
+      matrix: null,
+      warnings: [
+        'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+      ],
+    };
+  }
+
+  return { matrix, warnings: [] };
+}
+
 function readProjectDispatchPolicy(
   provider: DispatchCeilingProvider,
   content: string,
@@ -302,6 +454,7 @@ function readProjectDispatchPolicy(
   }
 
   const policyRecord = policy as Record<string, unknown>;
+  const parsedMatrix = readProjectDispatchMatrix(policyRecord['matrix']);
   const mode = policyRecord['mode'];
   if (mode === 'inherit') {
     return {
@@ -310,6 +463,8 @@ function readProjectDispatchPolicy(
       value: null,
       source: 'project-state',
       preset: null,
+      matrix: parsedMatrix.matrix,
+      warnings: parsedMatrix.warnings,
     };
   }
 
@@ -333,6 +488,8 @@ function readProjectDispatchPolicy(
       value: null,
       source: 'project-state',
       preset: policyValue,
+      matrix: parsedMatrix.matrix,
+      warnings: parsedMatrix.warnings,
     };
   }
 
@@ -362,6 +519,8 @@ function readProjectDispatchPolicy(
     value,
     source: 'project-state',
     preset: policyValue,
+    matrix: parsedMatrix.matrix,
+    warnings: parsedMatrix.warnings,
   };
 }
 
@@ -394,6 +553,8 @@ function readLegacyProjectDispatchCeiling(
     value,
     source: 'project-state',
     preset: typeof presetValue === 'string' ? presetValue : null,
+    matrix: null,
+    warnings: [],
   };
 }
 
@@ -494,6 +655,8 @@ function stripConfigCandidateSource(
     value: candidate.value,
     source: candidate.source,
     preset: candidate.preset,
+    matrix: candidate.matrix,
+    warnings: candidate.warnings,
   };
 }
 
@@ -519,6 +682,8 @@ function readResolvedConfigPolicyCandidate(
       value: null,
       source,
       preset: null,
+      matrix: null,
+      warnings: [],
       configSource: modeEntry.source,
     };
   }
@@ -546,6 +711,8 @@ function readResolvedConfigPolicyCandidate(
       value: compiledPolicyValueForProvider(provider, compiled),
       source,
       preset: policy,
+      matrix: null,
+      warnings: [],
       configSource,
     };
   }
@@ -581,6 +748,8 @@ function readResolvedLegacyConfigCeilingCandidate(
     value: entry.value,
     source,
     preset: null,
+    matrix: null,
+    warnings: [],
     configSource: entry.source,
   };
 }
@@ -874,6 +1043,9 @@ async function resolveDispatchCeiling(
     projectPath,
     dependencies,
   );
+  for (const warning of resolvedValue?.warnings ?? []) {
+    context.logger.warn(warning);
+  }
 
   const providerResolution = buildProviderResolution(
     provider,
@@ -898,6 +1070,7 @@ async function resolveDispatchCeiling(
       unresolved: false,
       projectPath,
       providerDefaultEffort,
+      matrix: resolvedValue.matrix,
       providers,
     };
   }
@@ -918,6 +1091,7 @@ async function resolveDispatchCeiling(
     unresolved: true,
     projectPath,
     providerDefaultEffort,
+    matrix: null,
     providers,
     message,
   };
@@ -929,6 +1103,8 @@ interface ResolvedCeilingValue {
   value: DispatchCeilingValue | null;
   source: DispatchCeilingSource;
   preset: string | null;
+  matrix: ProjectDispatchMatrix | null;
+  warnings: string[];
 }
 
 /**

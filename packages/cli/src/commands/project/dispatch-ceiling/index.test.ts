@@ -261,6 +261,140 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('parses sparse project dispatch matrix overrides from policy frontmatter', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    cursor:',
+        '      balanced:',
+        '        - composer-2.5',
+        '        - harness: cursor',
+        '          model: gpt-5.3-codex-high',
+        '          effort: high',
+        '          ignored: true',
+        '      high: glm-5.2-max',
+        '      experimental: ignored',
+        '    codex:',
+        '      high: xhigh',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      matrix: {
+        cursor: {
+          balanced: [
+            'composer-2.5',
+            {
+              harness: 'cursor',
+              model: 'gpt-5.3-codex-high',
+              effort: 'high',
+            },
+          ],
+          high: 'glm-5.2-max',
+        },
+        codex: {
+          high: 'xhigh',
+        },
+      },
+    });
+    expect(capture.warn).toEqual([]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports no project dispatch matrix override when matrix key is absent', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      matrix: null,
+    });
+    expect(capture.warn).toEqual([]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('ignores malformed project dispatch matrix overrides with a warning', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  matrix:',
+        '    cursor:',
+        '      high:',
+        '        - {}',
+        '      frontier: []',
+        '    claude:',
+        '      high: super-opus',
+        '  source: project-state',
+        'oat_dispatch_ceiling:',
+        '  providers:',
+        '    codex: medium',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'high',
+      matrix: null,
+    });
+    expect(capture.warn).toEqual([
+      'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('keeps absent project policy and legacy ceiling state unresolved', async () => {
     const { root, home } = await setup();
 
