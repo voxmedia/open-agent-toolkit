@@ -447,7 +447,9 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         cursor: {
           value: 'glm-5.2-max',
-          mode: 'unsupported',
+          mode: 'enforced',
+          mechanism: 'model-arg',
+          dispatchArgs: { model: 'glm-5.2-max' },
           cellSource: 'project-state',
           selection: {
             selectedValue: 'glm-5.2-max',
@@ -562,7 +564,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         cursor: {
           value: null,
-          mode: 'unsupported',
+          mode: 'advisory',
           selection: {
             selectedValue: null,
             selectionBranch: 'unresolved',
@@ -784,7 +786,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     const { root, home } = await setup();
 
     const { command, capture } = createHarness({ cwd: root, home });
-    await runCommand(command, ['--provider', 'cursor', '--json']);
+    await runCommand(command, ['--provider', 'other-provider', '--json']);
 
     const payload = capture.jsonPayloads[0] as {
       status: string;
@@ -798,10 +800,10 @@ describe('oat project dispatch-ceiling resolve', () => {
     // Provider-neutral design: an unknown provider must NOT produce a command
     // error. It flows through the fallback no-op adapter and resolves advisory.
     expect(payload.status).not.toBe('error');
-    expect(payload.provider).toBe('cursor');
-    expect(payload.providers.cursor.mode).toBe('unsupported');
-    expect(payload.providers.cursor.value).toBeNull();
-    expect(payload.providers.cursor.dispatchArgs).toBeNull();
+    expect(payload.provider).toBe('other-provider');
+    expect(payload.providers['other-provider'].mode).toBe('unsupported');
+    expect(payload.providers['other-provider'].value).toBeNull();
+    expect(payload.providers['other-provider'].dispatchArgs).toBeNull();
     // Unknown providers never have concrete config/state values, so they are
     // unresolved (advisory) rather than blocked or errored.
     expect(payload.status).toBe('unresolved');
@@ -1158,7 +1160,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       const { command, capture } = createHarness({ cwd: root, home });
       await runCommand(command, [
         '--provider',
-        'cursor',
+        'other-provider',
         '--role',
         'implementer',
         '--preferred',
@@ -1168,9 +1170,9 @@ describe('oat project dispatch-ceiling resolve', () => {
 
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'unresolved',
-        provider: 'cursor',
+        provider: 'other-provider',
         providers: {
-          cursor: {
+          'other-provider': {
             value: null,
             mode: 'unsupported',
             dispatchArgs: null,
@@ -1700,7 +1702,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       });
     });
 
-    it('keeps unsupported providers with no managed cell unresolved', async () => {
+    it('keeps Cursor with no managed cell unresolved', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
@@ -1722,8 +1724,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           cursor: {
             value: null,
-            mode: 'unsupported',
-            mechanism: 'none',
+            mode: 'advisory',
+            mechanism: 'model-arg',
             dispatchArgs: null,
             selection: {
               selectedValue: null,
@@ -1748,7 +1750,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       const { command, capture } = createHarness({ cwd: root, home });
       await runCommand(command, [
         '--provider',
-        'cursor',
+        'other-provider',
         '--role',
         'implementer',
         '--preferred',
@@ -1758,12 +1760,12 @@ describe('oat project dispatch-ceiling resolve', () => {
 
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'resolved',
-        provider: 'cursor',
+        provider: 'other-provider',
         value: null,
         policyMode: 'managed',
         policy: 'uncapped',
         providers: {
-          cursor: {
+          'other-provider': {
             mode: 'unsupported',
             mechanism: 'none',
             dispatchArgs: null,

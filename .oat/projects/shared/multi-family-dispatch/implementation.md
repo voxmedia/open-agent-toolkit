@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t04
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 7     | 3/7       |
+| Phase 3 | in_progress | 7     | 4/7       |
 
-**Total:** 10/25 tasks completed
+**Total:** 11/25 tasks completed
 
 ---
 
@@ -662,6 +662,54 @@ __EXIT_CODE__=0
 
 ---
 
+### Task p03-t04: Cursor ceiling adapter
+
+**Status:** completed
+**Commit:** feat(p03-t04): register cursor ceiling adapter
+
+**Outcome (required when completed):**
+
+- Registered a Cursor ceiling adapter with `supportsCeiling: true` and
+  `mechanism: model-arg`.
+- Compiled opaque Cursor model strings to `{ model: '<slug>' }` for both
+  implementer and reviewer roles; blank values compile to `null`.
+- Kept `verifyOnDispatch` false because Cursor model choices do not form a
+  total ordered tier.
+- Updated resolver expectations so resolved Cursor matrix cells report
+  `mode: enforced` with model dispatch args, while truly unknown providers
+  still use the unsupported fallback.
+
+**Files changed:**
+
+- `packages/cli/src/providers/ceiling/registry.ts`
+- `packages/cli/src/providers/ceiling/registry.test.ts`
+- `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/ceiling/registry.test.ts`
+  failed because Cursor still used the advisory fallback.
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+  failed because resolved Cursor cells still reported unsupported/no args.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/ceiling/registry.test.ts`
+  passed (23 tests).
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
+  passed (44 tests).
+
+**Notes / Decisions:**
+
+- Cursor `validValues` remains empty to signal "no closed enum"; validation is
+  delegated to the availability oracle in p03-t05.
+- The dispatch-ceiling resolver test changed only where Cursor is no longer an
+  unknown provider.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -873,7 +921,7 @@ Track test execution during implementation.
 | ----- | ------------------------------------------------------------------------------------ | ------ | ------ | -------- |
 | 1     | type-check; live cursor-agent probes; grep producer grammar                          | yes    | 0      | n/a      |
 | 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; cli type-check                         | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; cli type-check          | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
