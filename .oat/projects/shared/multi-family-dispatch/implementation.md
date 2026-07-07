@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p02-t04
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 3/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | completed | 4     | 4/4       |
 
-**Total:** 6/25 tasks completed
+**Total:** 7/25 tasks completed
 
 ---
 
@@ -325,6 +325,8 @@ __EXIT_CODE__=0
   unknown identity records.
 - Added `oat internal cursor-current-target` as the shared Cursor current-model
   probe helper.
+- Added pure producer-identity stamp formatting and parsing helpers, including
+  legacy Dispatch-line tolerance and grouped producer identity reads.
 
 **Key files touched:**
 
@@ -343,6 +345,10 @@ __EXIT_CODE__=0
   mocked subprocess/file-read probe priority and command output.
 - `packages/cli/src/commands/internal/index.ts` - registers the internal
   command.
+- `packages/cli/src/providers/identity/stamp.ts` - formats and parses
+  producer-identity Dispatch stamps.
+- `packages/cli/src/providers/identity/stamp.test.ts` - covers round-trip
+  grammar, legacy parsing, grouped reader output, and malformed-line warnings.
 
 **Verification:**
 
@@ -352,6 +358,8 @@ __EXIT_CODE__=0
 - Result: pass (6 tests)
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/internal/cursor-current-target.test.ts`
 - Result: pass (8 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/stamp.test.ts`
+- Result: pass (4 tests)
 
 **Notes / Decisions:**
 
@@ -478,8 +486,41 @@ __EXIT_CODE__=0
 
 ### Task p02-t04: Producer-identity stamp writer and reader
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** feat(p02-t04): add producer-identity stamp writer/reader
+
+**Outcome (required when completed):**
+
+- Added `formatDispatchStamp(record)` for the p01-t03
+  `Dispatch: key=value` grammar.
+- Added `parseDispatchStamps(markdown)` with best-effort legacy Dispatch-line
+  support, explicit unknown identity/provenance defaults, and warning callbacks
+  for skipped malformed lines.
+- Added `getProducerIdentitiesByScope(markdown)` to read orchestration-run
+  Dispatch Notes into per-scope producer identity records.
+
+**Files changed:**
+
+- `packages/cli/src/providers/identity/stamp.ts`
+- `packages/cli/src/providers/identity/stamp.test.ts`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/stamp.test.ts`
+  failed because `./stamp` did not exist.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/stamp.test.ts`
+  passed (4 tests).
+
+**Notes / Decisions:**
+
+- Malformed Dispatch lines are skipped through an optional warning callback and
+  never throw.
+- Legacy lines without `producer`/`provenance` fields parse as
+  `producer: unknown` and `provenance: unknown`.
+
+**Issues Encountered:**
+
+- None.
 
 ---
 
@@ -625,10 +666,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                   | Passed | Failed | Coverage |
-| ----- | ----------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar | yes    | 0      | n/a      |
-| 2     | -                                                           | -      | -      | -        |
+| Phase | Tests Run                                                            | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar          | yes    | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
