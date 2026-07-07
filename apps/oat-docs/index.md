@@ -8,7 +8,7 @@
   - [Config and Local State](cli-utilities/config-and-local-state.md) — Utility command groups for config discovery, backlog helpers, local paths, instruction integrity, and diagnostics.
   - [Configuration](cli-utilities/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
   - [Tool Packs and Installed Assets](cli-utilities/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
-  - [Workflow Gates](cli-utilities/workflow-gates.md) — Configure per-skill final commands and cross-runtime review dispatch with oat gate.
+  - [Workflow Gates](cli-utilities/workflow-gates.md) — Configure per-skill final commands and family-aware review dispatch with oat gate.
 - Contributing
   - [Contributing](contributing/index.md) — Contributor-facing guide for working on OAT code, docs, markdown patterns, and skill authoring.
   - [Contributing Code](contributing/code.md) — Contributor setup, repo structure, quality gates, and pull request expectations for OAT changes.
@@ -50,7 +50,7 @@
     - [Workflow & Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - [Project Artifacts](workflows/projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
     - [Design Modes](workflows/projects/design-modes.md) — How oat-project-design balances section-by-section collaboration, selective review, and draft-and-review.
-    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT dispatch policy works: managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.
+    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT dispatch policy works: managed tiers, dispatch matrix cells, ordered routes, producer provenance, legacy compatibility, and provider-specific enforcement.
     - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
     - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase-subagent dispatch, tier detection, runtime dispatch selection, bounded fix loop, plan-declared parallelism, and dry-run mode in oat-project-implement v2.0.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.

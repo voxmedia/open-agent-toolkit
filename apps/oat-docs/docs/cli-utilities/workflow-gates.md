@@ -1,6 +1,6 @@
 ---
 title: Workflow Gates
-description: Configure per-skill final commands and cross-runtime review dispatch with oat gate.
+description: Configure per-skill final commands and family-aware review dispatch with oat gate.
 ---
 
 # Workflow Gates
@@ -15,6 +15,13 @@ exit status.
 selects an exec target, runs the prompt, and exits with the child process
 status. Use `oat gate review` when the command is specifically an OAT review
 gate that should inspect the produced review artifact.
+
+:::note Release note: default avoidance changed
+Gate dispatch now defaults to `--avoid same-family`, not `same-runtime`.
+For multi-family providers such as Cursor, this prevents a gate from reviewing
+with the same model family that produced the work. Use `--avoid none` only when
+you intentionally allow same-family review.
+:::
 
 ## Gate config
 
@@ -129,9 +136,9 @@ contract.
 ## Exec targets
 
 `oat gate cross-provider-exec` chooses from `workflow.gates.execTargets`.
-Targets are keyed by opaque id. OAT uses only the declared runtime, commands,
-and priority; it does not parse model names or infer provider semantics from the
-id.
+Targets are keyed by opaque id. OAT uses the declared runtime, commands,
+priority, optional `models` list, and any pinned `--model` already present in
+the command. It does not infer provider semantics from the target id.
 
 Built-in targets:
 
@@ -161,6 +168,30 @@ oat gate target set claude-opus \
 
 JSON argv is intentional: provider commands often contain flags such as `-p` or
 `--model`, which would be ambiguous as variadic CLI options.
+
+Targets may also define a `models` list directly in config. During selection,
+OAT expands that target into `(target, model)` candidates, preserves the target
+priority and model list order, and appends `--model <winner>` to the command.
+A long-form target that already pins `--model` in `baseCommand` is treated as
+that candidate's model and is not double-pinned.
+
+```json
+{
+  "workflow": {
+    "gates": {
+      "execTargets": {
+        "cursor-family-gate": {
+          "runtime": "cursor",
+          "baseCommand": ["cursor-agent", "-p", "--force"],
+          "models": ["composer-2.5", "gpt-5.5-xhigh", "claude-opus-4-8"],
+          "availabilityCommand": ["cursor-agent", "--version"],
+          "priority": 95
+        }
+      }
+    }
+  }
+}
+```
 
 ### Trusted target examples
 
@@ -275,12 +306,15 @@ oat gate cross-provider-exec "Use oat-project-review-provide to review the curre
 By default the dispatcher:
 
 1. Resolves built-in and configured exec targets.
-2. Detects the current runtime with host detection commands.
-3. Applies `--avoid same-runtime`.
-4. Checks candidate availability in descending priority order, with target id as
+2. Expands target `models` into candidate `(target, model)` pairs.
+3. Detects the current runtime with host detection commands.
+4. Resolves producer identity from `--producer-identity` or dispatch stamps when
+   available.
+5. Applies `--avoid same-family`.
+6. Checks candidate availability in descending priority order, with target id as
    the tie-breaker.
-5. Runs the chosen `baseCommand` with the prompt appended.
-6. Exits with the child process status.
+7. Runs the chosen `baseCommand` with the selected model and prompt appended.
+8. Exits with the child process status.
 
 Use `--target <id>` to pin one target and skip detection/avoidance:
 
@@ -289,11 +323,31 @@ oat gate cross-provider-exec --target claude-opus "Review the current project"
 ```
 
 Use `--avoid none` only when you intentionally allow the current runtime to be
-selected:
+selected or same-family review to run:
 
 ```bash
 oat gate cross-provider-exec --avoid none "Run this gate on any available target"
 ```
+
+Use `--producer-identity <value>:<provenance>` to route manually from a known
+producer when no project dispatch stamp exists:
+
+```bash
+oat gate review \
+  --producer-identity gpt-5.5-xhigh:declared \
+  --review-type code \
+  --review-scope final \
+  "Use oat-project-review-provide code final to review the current project"
+```
+
+Gate JSON output includes `diversity` metadata with the requested avoid mode,
+producer identity/provenance/confidence, reviewer target/model/family, and the
+achieved level:
+
+- `different-family`
+- `degraded-to-different-slug`
+- `same-family - no diverse target available`
+- `unknown-producer`
 
 ## Failure behavior
 
@@ -311,9 +365,8 @@ OAT does not try another target after a failed review.
 
 ## Current limits
 
-V1 gates avoid the current runtime, not the current model or effort setting.
-Same-runtime but different-target dispatch, such as using Cursor again with a
-different model slug, is future work. Until that exists, reusable lifecycle
-gates should rely on default `same-runtime` avoidance for cross-runtime review;
-manual and local overrides can pin an explicit reviewer target with
-`--target <id>`.
+Family diversity is selected before dispatch. If the selected provider command
+starts and then fails, OAT does not try another target after dispatch. If no
+different-family target is available, OAT warns, records the degraded achieved
+level, and runs the best available target rather than pretending diversity was
+achieved.

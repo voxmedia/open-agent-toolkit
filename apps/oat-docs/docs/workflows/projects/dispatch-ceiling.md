@@ -1,6 +1,6 @@
 ---
 title: Dispatch Policy
-description: 'How OAT dispatch policy works: managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.'
+description: 'How OAT dispatch policy works: managed tiers, dispatch matrix cells, ordered routes, producer provenance, legacy compatibility, and provider-specific enforcement.'
 ---
 
 # Dispatch Policy
@@ -20,6 +20,11 @@ dispatch policy terminology.
 
 For raw config keys see [Configuration](../../cli-utilities/configuration.md);
 for execution-time behavior see [Implementation Execution](implementation-execution.md).
+
+Multi-family providers such as Cursor use the same abstract policy names, but
+their concrete model values come from a dispatch matrix under
+`workflow.dispatchCeiling.providers.*`. A matrix cell can be a single value, a
+per-tier value, or an ordered route for escalation.
 
 ## Policy Choices
 
@@ -85,12 +90,54 @@ oat_dispatch_policy:
 Legacy compatibility keys remain readable:
 
 - `workflow.dispatchCeiling.preset`
-- `workflow.dispatchCeiling.providers.codex`
-- `workflow.dispatchCeiling.providers.claude`
+- `workflow.dispatchCeiling.providers.<provider>`
+- `workflow.dispatchCeiling.providers.<provider>.<tier>`
 - `oat_dispatch_ceiling`
 
 Legacy preset names map into the managed ladder: `cost-conscious` maps to
 `Economy`, `balanced` maps to `Balanced`, and `maximum` maps to `High`.
+
+## Dispatch Matrix
+
+The dispatch matrix maps the abstract policy rung (`economy`, `balanced`,
+`high`, `frontier`) to concrete provider controls. Existing bare Codex and
+Claude values remain valid, and multi-family providers can use tier cells:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config set workflow.dispatchCeiling.providers.cursor.balanced composer-2.5 --shared
+oat config set workflow.dispatchCeiling.providers.cursor.high gpt-5.5-xhigh --shared
+```
+
+For ordered escalation, write a route in config JSON. The resolver selects the
+floor entry at escalation level `0` and advances by route entry when the
+implementation/fix loop escalates:
+
+```json
+{
+  "workflow": {
+    "dispatchCeiling": {
+      "providers": {
+        "cursor": {
+          "high": [
+            "composer-2.5",
+            { "harness": "cursor", "model": "gpt-5.5-xhigh" }
+          ],
+          "frontier": [
+            { "harness": "cursor", "model": "gpt-5.5-xhigh" },
+            { "harness": "cursor", "model": "fable-5" }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Project `state.md` may carry only sparse project-specific matrix overrides
+under `oat_dispatch_policy.matrix`. The full reusable matrix belongs in user,
+shared, or local config so switching harnesses mid-project re-resolves the same
+abstract policy through the active provider column.
 
 ## How Resolution Works
 
@@ -105,6 +152,7 @@ For implementer or fix dispatch, pass the preferred runtime control:
 ```bash
 oat project dispatch-ceiling resolve --provider codex --role implementer --preferred high --json
 oat project dispatch-ceiling resolve --provider claude --role implementer --preferred opus --json
+oat project dispatch-ceiling resolve --provider cursor --role implementer --preferred high --escalation-level 0 --json
 ```
 
 The resolver returns the resolved policy, optional cap, source, provider default
@@ -114,6 +162,9 @@ Selection modes:
 
 - `capped` - implementer/fix dispatch selects `min(preferred, cap)`.
 - `uncapped` - implementer/fix dispatch selects the preferred value.
+- `matrix-pinned` - a matrix cell supplied the selected provider value.
+- `prompt-persisted` - an interactive prompt filled a missing cell and persisted it.
+- `escalation-target` - an ordered route entry supplied the selected target.
 - `review-target` - reviewer dispatch targets a configured cap when one exists.
 - `no-review-target` - managed uncapped reviewer dispatch has no configured
   target and falls back to the base/unpinned reviewer.
@@ -122,13 +173,13 @@ Selection modes:
 
 ## Provider Behavior
 
-|                   | Codex                                       | Claude Code                             | Unsupported provider |
-| ----------------- | ------------------------------------------- | --------------------------------------- | -------------------- |
-| Managed mechanism | Pinned role variants                        | Task `model` argument                   | None                 |
-| Axis              | effort (`low < medium < high < xhigh`)      | model (`haiku < sonnet < opus < fable`) | None                 |
-| Capped policy     | selected pinned variant up to cap           | selected Task model up to cap           | advisory/unsupported |
-| Uncapped          | preferred pinned variant, no cap            | preferred Task model, no cap            | advisory/unsupported |
-| Inherit/default   | base/unpinned role follows provider default | omit `model`                            | normal behavior      |
+|                   | Codex                                       | Claude Code                             | Cursor / model-arg providers | Unsupported provider |
+| ----------------- | ------------------------------------------- | --------------------------------------- | ---------------------------- | -------------------- |
+| Managed mechanism | Pinned role variants                        | Task `model` argument                   | `--model` argument           | None                 |
+| Axis              | effort (`low < medium < high < xhigh`)      | model (`haiku < sonnet < opus < fable`) | opaque model slug            | None                 |
+| Capped policy     | selected pinned variant up to cap           | selected Task model up to cap           | selected matrix cell         | advisory/unsupported |
+| Uncapped          | preferred pinned variant, no cap            | preferred Task model, no cap            | preferred matrix cell        | advisory/unsupported |
+| Inherit/default   | base/unpinned role follows provider default | omit `model`                            | omit `--model`               | normal behavior      |
 
 Codex uses pinned variants because per-call effort controls were unreliable in
 dogfooding. For managed `Uncapped`, OAT still selects the preferred pinned
@@ -138,6 +189,25 @@ actually honored in the current session.
 Claude Code uses the per-call Task `model` argument. It has no OAT-managed
 per-dispatch effort axis, so dispatch logs use `effort_axis=not-applicable`.
 `Frontier` maps to Claude `fable`.
+
+Cursor and other model-arg providers use matrix values as opaque slugs. OAT
+validates availability with provider oracles when possible, but tier semantics
+come from the configured matrix, not from a built-in model catalog.
+
+## Producer Provenance
+
+Dispatch notes use a parseable single-line stamp so later gates can identify
+the producer family:
+
+```text
+Dispatch: scope=p06 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=selected:gpt-5.5-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=xhigh target=cursor
+```
+
+`producer` is the resolved model slug when OAT knows it, otherwise `unknown`.
+`provenance` is one of `declared`, `observed`, `inferred`, or `unknown`.
+Concrete same-harness model arguments can be declared. Codex pinned effort
+variants declare effort, not concrete producer identity, unless an observed or
+inferred model is available.
 
 ## Implementer, Fix, and Reviewer Behavior
 
