@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 1/4       |
+| Phase 2 | in_progress | 4     | 2/4       |
 
-**Total:** 4/25 tasks completed
+**Total:** 5/25 tasks completed
 
 ---
 
@@ -321,6 +321,8 @@ __EXIT_CODE__=0
 **Outcome (what changed):**
 
 - Started the shared identity foundation with a tested model-family classifier.
+- Added provenance/confidence resolution for declared, observed, inferred, and
+  unknown identity records.
 
 **Key files touched:**
 
@@ -328,11 +330,18 @@ __EXIT_CODE__=0
   and structured provider IDs into family buckets.
 - `packages/cli/src/providers/identity/family.test.ts` - covers representative
   slugs, display names, provider IDs, unknown values, and malformed input.
+- `packages/cli/src/providers/identity/provenance.ts` - resolves identity
+  confidence, mismatch handling, and diversity-claimability.
+- `packages/cli/src/providers/identity/provenance.test.ts` - covers
+  corroboration, reject-on-invalid promotion, mismatches, low-confidence
+  observations, and unknown identity.
 
 **Verification:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/family.test.ts`
 - Result: pass (11 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/provenance.test.ts`
+- Result: pass (6 tests)
 
 **Notes / Decisions:**
 
@@ -377,6 +386,43 @@ __EXIT_CODE__=0
 ---
 
 ### Task p02-t02: Identity provenance types and corroboration rules
+
+**Status:** completed
+**Commit:** feat(p02-t02): add identity provenance model
+
+**Outcome (required when completed):**
+
+- Added `IdentityProvenance`, `IdentityRecord`, and
+  `resolveIdentityConfidence(records)` for declared, observed, inferred, and
+  unknown identity inputs.
+- Implemented design rules for high-confidence corroboration, uncorroborated
+  reject-on-invalid declarations, observed-wins mismatches, low-confidence
+  observed/inferred records, and non-claimable unknown identity.
+
+**Files changed:**
+
+- `packages/cli/src/providers/identity/provenance.ts`
+- `packages/cli/src/providers/identity/provenance.test.ts`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/provenance.test.ts`
+  failed because `./provenance` did not exist.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/provenance.test.ts`
+  passed (6 tests).
+
+**Notes / Decisions:**
+
+- Declared/observed mismatch resolves to the observed value, marks
+  `mismatch: true`, and downgrades confidence to `low`.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+### Task p02-t03: Cursor current-model probe helper (`oat internal cursor-current-target`)
 
 **Status:** pending
 **Commit:** -
