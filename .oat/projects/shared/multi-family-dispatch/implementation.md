@@ -936,6 +936,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | Task / Review | Source Artifact   | Planned / Documented                                | Actual / Accepted                                                         | Reason                                                                                                                | Source of Truth | Follow-up |
 | ------------- | ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------- | --------- |
 | p03-t07       | plan.md file list | The task named config command/test and asset files. | The implementation also updated `oat-config.ts` and `oat-config.test.ts`. | Persisting `recommendationVersion` required config-model support so normalized writes do not drop the adoption stamp. | implementation  | None.     |
+| p03 gate      | plan.md p03-t06   | The doctor check was named `dispatch:matrix`.       | The implementation registers `project:dispatch_matrix`.                   | The project-scoped name follows the existing doctor check naming convention and the check runs only in project scope. | plan.md updated | None.     |
 
 ### Run 2 — 2026-07-07 08:35
 
@@ -1112,6 +1113,38 @@ Chronological log of implementation progress.
 
 ---
 
+### Review Received: p03 gate
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/archived/p03-review-2026-07-07T150751Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 3
+
+**New tasks added:** None
+
+**Disposition:**
+
+- M1: Deferred to p05/final sweep. The duplicated matrix normalization and
+  cell-ref walkers are currently behaviorally covered by p03 tests, and p05 is
+  the route-semantics phase that will stabilize the shared route-cell shape.
+- m1: Deferred to final follow-up. Cursor catalog caching is an optimization for
+  multi-cell validation passes; current behavior is correct and bounded by the
+  existing per-call timeout.
+- m2: Addressed now. `oat config list` now appends dynamic
+  `workflow.dispatchCeiling.providers.*` keys discovered in the resolved config,
+  with a JSON-mode regression test for `cursor.high`.
+- m3: Addressed now. Updated p03-t06 wording in `plan.md` to the actual
+  `project:dispatch_matrix` doctor check name.
+
+**Next:** Continue implementation with p04-t01.
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1127,16 +1160,17 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review | Source Artifact | Planned / Documented                                                      | Actual / Accepted                                                                          | Reason                                                                                                                          | Source of Truth              | Follow-up                                                                      |
 | ------------- | --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
 | p02 gate      | plan.md p02-t03 | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback. | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain. | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
+| p03 gate      | plan.md p03-t06 | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                    | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                           | plan.md updated              | None.                                                                          |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                            | Passed | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                          | yes    | 0      | n/a      |
-| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                 | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; cli type-check | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                                                                     | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                   | yes    | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                          | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 

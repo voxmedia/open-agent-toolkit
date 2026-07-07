@@ -411,7 +411,7 @@ Configured cell whose value is no longer available → WARN naming the exact cel
 
 **Step 2: Implement (GREEN)**
 
-`dispatch:matrix` check reusing `validateMatrixCell`.
+`project:dispatch_matrix` check reusing `validateMatrixCell`.
 
 **Step 3: Verify**
 
@@ -726,17 +726,17 @@ pnpm release:validate
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| design | artifact | passed   | 2026-07-07 | signed off in-session (Q23)                                 |
-| plan   | artifact | passed   | 2026-07-07 | reviews/archived/artifact-plan-review-2026-07-07T052748Z.md |
-| p01    | code     | passed   | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
-| p02    | code     | passed   | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
-| p03    | code     | received | 2026-07-07 | reviews/p03-review-2026-07-07T150751Z.md                    |
-| p04    | code     | pending  | n/a        | n/a                                                         |
-| p05    | code     | pending  | n/a        | n/a                                                         |
-| p06    | code     | pending  | n/a        | n/a                                                         |
-| final  | code     | pending  | n/a        | n/a                                                         |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| design | artifact | passed  | 2026-07-07 | signed off in-session (Q23)                                 |
+| plan   | artifact | passed  | 2026-07-07 | reviews/archived/artifact-plan-review-2026-07-07T052748Z.md |
+| p01    | code     | passed  | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
+| p02    | code     | passed  | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
+| p03    | code     | passed  | 2026-07-07 | reviews/archived/p03-review-2026-07-07T150751Z.md           |
+| p04    | code     | pending | n/a        | n/a                                                         |
+| p05    | code     | pending | n/a        | n/a                                                         |
+| p06    | code     | pending | n/a        | n/a                                                         |
+| final  | code     | pending | n/a        | n/a                                                         |
 
 ## Implementation Complete
 

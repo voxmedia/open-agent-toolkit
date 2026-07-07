@@ -1265,6 +1265,25 @@ async function getConfigValue(
   };
 }
 
+async function listConfigKeys(
+  repoRoot: string,
+  userConfigDir: string,
+  dependencies: ConfigCommandDependencies,
+): Promise<ConfigKey[]> {
+  const resolved = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    userConfigDir,
+    dependencies.processEnv,
+  );
+  const staticKeys = new Set<string>(KEY_ORDER);
+  const dynamicProviderKeys = Object.keys(resolved.resolved)
+    .filter(isDispatchCeilingProviderKey)
+    .filter((key) => !staticKeys.has(key))
+    .sort();
+
+  return [...KEY_ORDER, ...dynamicProviderKeys];
+}
+
 async function setConfigValue(
   repoRoot: string,
   userConfigDir: string,
@@ -1929,7 +1948,11 @@ async function runList(
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
     const values: ConfigValue[] = [];
-    for (const key of KEY_ORDER) {
+    for (const key of await listConfigKeys(
+      repoRoot,
+      userConfigDir,
+      dependencies,
+    )) {
       values.push(
         await getConfigValue(repoRoot, userConfigDir, key, dependencies),
       );

@@ -416,6 +416,37 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('list includes dynamic dispatch matrix provider keys', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: { cursor: { high: 'composer-2.5' } },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root });
+    await runCommand(command, ['list'], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      values: expect.arrayContaining([
+        {
+          key: 'workflow.dispatchCeiling.providers.cursor.high',
+          value: 'composer-2.5',
+          source: 'shared',
+        },
+      ]),
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('supports json mode for get, set, and list', async () => {
     const root = await createRepoRoot();
 
