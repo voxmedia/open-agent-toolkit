@@ -130,6 +130,31 @@ and the mismatch is flagged loudly. `observed`/`inferred` alone are usable with
 lower-confidence logging; on `unknown`, OAT cannot truthfully claim family diversity and
 must say so.
 
+**Dispatch Notes grammar (resolved 2026-07-07).** Formalized dispatch stamps extend the
+shipped one-line `Dispatch:` convention with parseable, space-separated `key=value`
+fields:
+
+```text
+Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>
+```
+
+Required identity fields are `producer`, `provenance`, and `role`; readers treat other
+fields as additive context. Values are single tokens. `producer` is the resolved slug
+when OAT has one; display-name-only observations are mapped through the live catalog
+only on exact match, otherwise they degrade to `producer=unknown
+provenance=observed|inferred`. Unknown identity is written explicitly as
+`producer=unknown provenance=unknown`. Legacy `Dispatch:` lines without these fields are
+still parsed best-effort with `provenance=unknown`.
+
+**Declaration path decision (resolved 2026-07-07).** A reliable launcher declaration path
+is available now for OAT-owned dispatches that compile concrete dispatch arguments. The
+lifecycle launcher stamps the producer from the same payload it sends to the harness
+(`cursor-agent --model`, Claude Task `model`, Codex pinned variant and/or `codex exec
+--model`) and records it in the Dispatch Notes line above. No new ambient
+`OAT_CURRENT_TARGET` environment variable is introduced in this project slice. Inherited
+or unpinned sessions remain probe-only (`observed`/`inferred`/`unknown`) and cannot make a
+high-confidence family-diversity claim unless a later observation corroborates them.
+
 ## Architecture
 
 Keep the parent's layering (persisted policy → resolver → provider adapters) and add a
@@ -331,8 +356,10 @@ Cursor-native + same-harness first; defer cross-harness-exec for single-family h
   or `(harness, model, effort)` objects.
 - **Dispatch events** carry identity: producer stamp (resolved value + provenance),
   reviewer identity, achieved-diversity level. Primary persistence: formalized Dispatch
-  Notes in `implementation.md` orchestration runs (exact format at plan time; commit
-  trailers remain an alternative).
+  Notes in `implementation.md` orchestration runs using the resolved p01-t03 grammar
+  (`producer=<slug|unknown> provenance=<declared|observed|inferred|unknown>
+role=<implementer|fix|reviewer>` plus dispatch context). Commit trailers are no longer
+  the chosen path.
 - Migration safety (inherited from the parent): absent matrix/policy state is never
   silently reinterpreted; existing bare provider ceiling values remain readable.
 
@@ -394,13 +421,11 @@ reports per-cell source; values set via `oat config set`, not hand-editing);
 **intra-target avoidance** — model dimension on exec targets, long-form pinned targets
 coexist with explicit priority; **`same-family` rollout** — shipped default immediately.
 
-Still open (fine to resolve during implementation):
-
-- **Stamp record format:** exact parseable shape of formalized Dispatch Notes lines
-  (commit trailers remain an alternative).
-- **Detection without a declaration path:** is probe-only acceptable for Cursor
-  identity given latency and the undocumented `(current)` marker? (Depends on the
-  blocking kickoff experiment.)
+Resolved 2026-07-07 (p01-t03): **stamp record format** — the single-line `Dispatch:`
+key=value grammar above, with required `producer`, `provenance`, and `role` fields;
+**declaration path** — use OAT-owned launcher dispatch arguments as the declaration and
+write them to Dispatch Notes, with probes retained only as fallback/corroboration. No
+active design questions remain for p01.
 
 ## Testing Strategy
 
@@ -438,11 +463,14 @@ Still open (fine to resolve during implementation):
       (error vs silent fallback) — invalid values hard-error with exit code 1, so
       uncorroborated Cursor `declared` stamps qualify as high-confidence for OAT-pinned
       dispatches.
-- [ ] Confirm a reliable declaration path exists for Cursor identity; else decide
-      probe-only acceptability.
-- [ ] Confirm gate avoidance still ships `same-runtime|none` and decide the intra-target
-      representation.
-- [ ] Settle the stamp record format (the other formerly-open questions were resolved
+- [x] Confirm a reliable declaration path exists for Cursor identity; else decide
+      probe-only acceptability. Decision: OAT-owned `--model` dispatch arguments are the
+      declaration path; probe-only is fallback/corroboration, not a high-confidence
+      declaration.
+- [x] Confirm gate avoidance still ships `same-runtime|none` and decide the intra-target
+      representation. p01-t01 reconfirmed the shipped gate enum; the design keeps the
+      already-decided `models` dimension on exec targets.
+- [x] Settle the stamp record format (the other formerly-open questions were resolved
       2026-07-07 — see Open Questions).
 - [ ] Re-examine GPT 5.6 (sol/terra/luna): if Codex gains named models × efforts,
       confirm the per-family axis-shape foundation holds.

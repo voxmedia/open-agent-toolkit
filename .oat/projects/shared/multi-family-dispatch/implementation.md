@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,29 +24,58 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 2/3       |
-| Phase 2 | pending     | 4     | 0/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | pending   | 4     | 0/4       |
 
-**Total:** 2/25 tasks completed
+**Total:** 3/25 tasks completed
 
 ---
 
 ## Phase 1: Kickoff Revalidation and Blocking Experiments
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-06
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):** Pending p01-t02 and p01-t03.
+**Outcome (what changed):**
 
-**Key files touched:** Pending.
+- Reconfirmed the shipped dispatch surfaces before building on the design.
+- Ran the blocking live Cursor behavior experiment and updated stamp-confidence
+  rules: invalid Cursor `--model` values hard-error, so OAT-pinned Cursor
+  declarations can be high-confidence.
+- Resolved the producer-stamp grammar and declaration path for later
+  implementation phases.
 
-**Verification:** Pending.
+**Key files touched:**
 
-**Notes / Decisions:** Pending.
+- `.oat/projects/shared/multi-family-dispatch/design.md` - recorded updated
+  Cursor confidence rules, the Dispatch Notes grammar, and launcher declaration
+  decision.
+- `.oat/projects/shared/multi-family-dispatch/implementation.md` - recorded
+  task outcomes, command evidence, and verification results.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass (p01-t01)
+- Run: live `cursor-agent` experiment commands listed under p01-t02
+- Result: pass (valid slug exit 0; invalid slug exit 1 hard error; display name
+  exit 0; `models` catalog exit 0 with API key; `--list-models` exit 1 under
+  locked keychain)
+- Run: `grep -n "producer=" .oat/projects/shared/multi-family-dispatch/design.md`
+- Result: pass (exit code 0; grammar appears in the design)
+
+**Notes / Decisions:**
+
+- Stamp grammar is a single-line `Dispatch:` key=value record with required
+  `producer=<slug|unknown> provenance=declared|observed|inferred|unknown
+role=implementer|fix|reviewer`.
+- Launcher declaration is available for OAT-owned dispatches from the actual
+  dispatch payload; no new ambient `OAT_CURRENT_TARGET` environment variable is
+  introduced in this slice.
 
 ### Task p01-t01: Re-confirm shipped dispatch surfaces against merged main
 
@@ -105,7 +134,7 @@ policy }` plus legacy `dispatchCeiling.providers.{codex,claude}`, gate
 ### Task p01-t02: {Task Name}
 
 **Status:** completed
-**Commit:** pending
+**Commit:** bad77fec
 
 **Outcome (required when completed):**
 
@@ -232,6 +261,56 @@ __EXIT_CODE__=0
 
 ---
 
+### Task p01-t03: Decide stamp record format and declaration path
+
+**Status:** completed
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Resolved the formalized Dispatch Notes grammar as one line of parseable
+  `key=value` fields:
+  `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
+- Chose the launcher declaration path: OAT-owned dispatches stamp producer
+  identity from the same concrete dispatch payload sent to the harness
+  (`cursor-agent --model`, Claude Task `model`, Codex pinned variant and/or
+  `codex exec --model`). Probe-only identity remains a fallback/corroboration
+  path and is not a high-confidence declaration.
+
+**Files changed:**
+
+- `.oat/projects/shared/multi-family-dispatch/design.md` - resolved the two
+  remaining open questions and updated the revalidation checklist.
+- `.oat/projects/shared/multi-family-dispatch/implementation.md` - recorded the
+  p01-t03 outcome and phase summary.
+
+**Verification:**
+
+- Run: `grep -n "producer=" .oat/projects/shared/multi-family-dispatch/design.md`
+- Result: pass:
+
+```text
+138:Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>
+144:only on exact match, otherwise they degrade to `producer=unknown
+146:`producer=unknown provenance=unknown`. Legacy `Dispatch:` lines without these fields are
+360:  (`producer=<slug|unknown> provenance=<declared|observed|inferred|unknown>
+__EXIT_CODE__=0
+```
+
+**Notes / Decisions:**
+
+- Values are single tokens. Display-name-only Cursor observations must map
+  exactly through the live catalog before being written as `producer=<slug>`;
+  otherwise they degrade to `producer=unknown`.
+- Legacy `Dispatch:` lines without producer fields remain best-effort parseable
+  as `provenance=unknown`.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
 ## Phase 2: {Phase Name}
 
 **Status:** pending
@@ -269,8 +348,8 @@ Chronological log of implementation progress.
 **Session Start:** p01 implementation
 
 - [x] p01-t01: Re-confirm shipped dispatch surfaces against merged main - 3b367095
-- [x] p01-t02: Characterize Cursor invalid-model behavior - commit pending
-- [ ] p01-t03: Decide stamp record format and declaration path - pending
+- [x] p01-t02: Characterize Cursor invalid-model behavior - bad77fec
+- [x] p01-t03: Decide stamp record format and declaration path - commit pending
 
 **What changed (high level):**
 
@@ -278,6 +357,8 @@ Chronological log of implementation progress.
   avoidance surfaces against the merged worktree.
 - Ran live Cursor model probes with the local `cursor-agent` binary and recorded
   the valid, invalid, display-name, `models`, and `--list-models` behavior.
+- Resolved the producer-stamp grammar and declaration path for the later
+  identity reader/writer implementation.
 
 **Decisions:**
 
@@ -286,10 +367,13 @@ Chronological log of implementation progress.
 - Cursor invalid `--model` values hard-error, so declared Cursor stamps for
   OAT-pinned dispatches can be high-confidence without mandatory observed
   corroboration. Slugs remain the preferred config/matrix representation.
+- Producer stamps use `producer`, `provenance`, and `role` fields on
+  single-line Dispatch Notes; OAT-owned launcher dispatch args are the
+  declaration source.
 
 **Follow-ups / TODO:**
 
-- Resolve the Dispatch Notes grammar and launcher declaration path in p01-t03.
+- Continue with p02-t01.
 
 **Blockers:**
 
@@ -319,10 +403,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                   | Passed | Failed | Coverage |
+| ----- | ----------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar | yes    | 0      | n/a      |
+| 2     | -                                                           | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
