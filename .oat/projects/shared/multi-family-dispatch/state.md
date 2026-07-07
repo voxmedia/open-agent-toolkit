@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 8606e571ed53cd0e70fd633b4fd410d461dd3b34
+oat_current_task: null
+oat_last_commit: 8e68d0ec
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-c3d8' }
@@ -30,7 +30,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T16:33:00Z'
+oat_project_state_updated: '2026-07-07T16:57:20Z'
 oat_generated: false
 ---
 
@@ -42,18 +42,19 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. Phases p01 through p05 are complete. p05 added ordered
-implementation routes, same-harness target objects, and route escalation guidance, then
-passed standard review after one bounded fix and passed the external phase review gate.
-Next: continue with p06-t01.
+Implementation in progress. Phases p01 through p05 are complete and have passed their
+standard reviews plus external phase gates. Phase p06 task execution is complete:
+lifecycle skills/templates, docs, provider sync metadata, public package versions, and
+release validation have been updated. The first p06 standard review found fixable
+artifact drift; those fixes are recorded and p06 is awaiting re-review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; p01 confidence-rule updates applied)
-- **Plan:** `plan.md` (complete; p05 review passed)
-- **Implementation:** `implementation.md` (in progress; next task p06-t01)
+- **Plan:** `plan.md` (complete; p06 tasks complete, p06 review pending)
+- **Implementation:** `implementation.md` (tasks complete; p06 re-review pending)
 
 ## Progress
 
@@ -81,6 +82,9 @@ Next: continue with p06-t01.
 - ✓ Phase p05 multi-family implementation routing complete
 - ✓ p05 standard review passed after one bounded fix
 - ✓ p05 external phase review gate passed and was consumed
+- ✓ Phase p06 skill/docs/sync/version propagation task work complete
+- ✓ p06 manifest, docs-index command, and lifecycle tracking review fixes applied
+- ⧗ p06 standard re-review pending
 
 ## Blockers
 
@@ -88,8 +92,8 @@ None
 
 ## Next Milestone
 
-Continue implementation with p06-t01 (skills/docs/assets propagation and release
-validation).
+Rerun p06 standard review. If it passes, run the p06 external phase review gate, consume
+the gate artifact, and pause at the configured final HiLL checkpoint.
 
 ## Notes
 

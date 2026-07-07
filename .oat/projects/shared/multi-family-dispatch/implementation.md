@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,8 +31,9 @@ oat_generated: false
 | Phase 3 | completed | 7     | 7/7       |
 | Phase 4 | completed | 4     | 4/4       |
 | Phase 5 | completed | 3     | 3/3       |
+| Phase 6 | completed | 4     | 4/4       |
 
-**Total:** 21/25 tasks completed
+**Total:** 25/25 tasks completed
 
 ---
 
@@ -893,6 +894,158 @@ found`) so the doctor surface remains explicit.
 
 ---
 
+## Phase 6: Skills, Docs, Assets, and Release Validation
+
+**Status:** task-complete; p06 review fixes in progress
+**Started:** 2026-07-07
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Propagated matrix-aware dispatch policy guidance into lifecycle skills and the
+  state template.
+- Updated the docs site for matrix cells, route targets, producer provenance,
+  same-family gate avoidance, `models` target expansion, and achieved-diversity
+  metadata.
+- Re-ran provider-view sync after the lockstep package bump so the tracked sync
+  manifest now advertises OAT `0.1.44`.
+- Bumped all five public packages in lockstep to `0.1.44` and kept the bundled
+  public-package version asset aligned.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-plan/SKILL.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `.oat/templates/state.md`
+- `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
+- `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- `apps/oat-docs/docs/cli-utilities/configuration.md`
+- `apps/oat-docs/index.md`
+- `.oat/sync/manifest.json`
+- `packages/cli/assets/public-package-versions.json`
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+- `packages/cli/src/validation/skills.test.ts`
+
+**Verification:**
+
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+- Run: `pnpm run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+- Result: pass (generated 9-entry docs app index)
+- Run: `pnpm build:docs`
+- Result: pass
+- Run: `pnpm run cli -- sync --scope all`
+- Result: pass (provider views already synchronized; later rerun refreshed `.oat/sync/manifest.json` to `0.1.44`)
+- Run: `pnpm run cli -- status --scope project --json`
+- Result: pass (`142/142` provider views in sync)
+- Run: `git diff --check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+**Notes / Decisions:**
+
+- The original p06-t03 sync commit was intentionally empty because sync reported no
+  provider-view changes at that point. After p06-t04 bumped package versions,
+  repo-local sync refreshed the tracked manifest `oatVersion` to `0.1.44`.
+- The docs-index verification command must target the docs app explicitly from the
+  repo root: `--docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+- Updating `packages/cli/src/validation/skills.test.ts` is accepted p06-t04
+  file-list drift because changed canonical skill versions are part of the skill
+  validation contract.
+
+### Task p06-t01: Update remaining lifecycle skills and templates
+
+**Status:** completed
+**Commit:** 2a83d6d7
+
+**Outcome (required when completed):**
+
+- Updated the plan and quick-start lifecycle skills with matrix-aware dispatch
+  policy prompt/persist guidance and route-aware preflight behavior.
+- Updated the state template with sparse matrix override guidance.
+- Bumped each changed canonical skill frontmatter version once in the final PR
+  diff.
+
+**Verification:**
+
+- Run: `pnpm run oat:validate-skills`
+- Result: pass
+
+### Task p06-t02: Docs site updates
+
+**Status:** completed
+**Commit:** a27a6887
+
+**Outcome (required when completed):**
+
+- Documented dispatch matrix cells, ordered routes, producer provenance, and
+  same-family gate behavior across the docs site.
+- Regenerated the docs app index using the docs app source/output paths.
+
+**Verification:**
+
+- Run: `pnpm run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+- Result: pass
+- Run: `pnpm build:docs`
+- Result: pass
+
+### Task p06-t03: Sync provider views and bundled assets
+
+**Status:** completed
+**Commit:** fc230617; review fix 8e68d0ec
+
+**Outcome (required when completed):**
+
+- Confirmed provider views were synchronized after the skill/docs updates.
+- Refreshed `.oat/sync/manifest.json` to `oatVersion: "0.1.44"` after the lockstep
+  public package version bump.
+
+**Verification:**
+
+- Run: `pnpm run cli -- sync --scope all`
+- Result: pass
+- Run: `pnpm run cli -- status --scope project --json`
+- Result: pass (`142/142` provider views in sync)
+- Run: `git diff --check`
+- Result: pass
+
+### Task p06-t04: Lockstep version bump and release validation
+
+**Status:** completed
+**Commit:** dbd87ea2
+
+**Outcome (required when completed):**
+
+- Bumped the five public packages in lockstep to `0.1.44`.
+- Updated `packages/cli/assets/public-package-versions.json` to match the public
+  package set.
+- Updated the skill version validation test for the changed quick-start skill.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli test`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli lint`
+- Result: pass
+- Run: `pnpm release:validate`
+- Result: pass
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1441,6 +1594,75 @@ same-runtime` remains the runtime-avoidance path.
 
 ---
 
+### 2026-07-07
+
+**Session Start:** p06 implementation
+
+- [x] p06-t01: Update remaining lifecycle skills and templates - 2a83d6d7
+- [x] p06-t02: Docs site updates - a27a6887
+- [x] p06-t03: Sync provider views and bundled assets - fc230617; review fix 8e68d0ec
+- [x] p06-t04: Lockstep version bump and release validation - dbd87ea2
+
+**What changed (high level):**
+
+- Propagated matrix-aware dispatch policy guidance into lifecycle skills and the
+  state template.
+- Updated the docs site for dispatch matrices, ordered routes, provenance,
+  same-family gate avoidance, model-expanded targets, and achieved-diversity
+  metadata.
+- Confirmed provider-view sync and refreshed the sync manifest after the package
+  version bump.
+- Bumped all five public packages to `0.1.44` and passed release validation.
+
+**Decisions:**
+
+- The p06-t02 docs-index verification command now uses the docs app source/output
+  path from repo root rather than relying on the CLI default.
+- The p06-t03 empty sync commit is retained as the honest result at that task
+  boundary; the later p06-t04 version bump required a follow-up manifest refresh.
+
+**Follow-ups / TODO:**
+
+- Re-run p06 standard review after the manifest, plan-command, and lifecycle
+  tracking fixes.
+
+**Blockers:**
+
+- None.
+
+**Session End:** 2026-07-07 - p06 task execution complete; review fixes pending
+
+---
+
+### Review Received: p06 standard review
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/p06-review-2026-07-07T165139Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- I1: Addressed now. Repo-local sync refreshed `.oat/sync/manifest.json` from
+  `0.1.43` to `0.1.44`, and repo-local project status reports `142/142` provider
+  views in sync.
+- I2: Addressed now. `implementation.md` and `state.md` now record p06 task
+  completion, verification evidence, and a null current-task pointer.
+- M1: Addressed now. The p06-t02 verification command now targets
+  `apps/oat-docs/docs` and `apps/oat-docs/index.md` explicitly, and the corrected
+  command plus `pnpm build:docs` passed.
+
+**Next:** Re-review p06.
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1458,41 +1680,70 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p02 gate      | plan.md p02-t03   | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback. | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain. | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
 | p03 gate      | plan.md p03-t06   | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                    | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                           | plan.md updated              | None.                                                                          |
 | p04-t02       | plan.md file list | The task named `oat-config.ts` and gate code.                             | The implementation also updated `packages/cli/src/config/resolve.ts`.                      | Layered exec-target resolution must preserve `ExecTarget.models`; otherwise model candidates disappear after config merge.      | implementation               | None.                                                                          |
+| p06-t04       | plan.md file list | The task listed five package files plus `public-package-versions.json`.   | The implementation also updated `packages/cli/src/validation/skills.test.ts`.              | Skill version validation intentionally tracks changed canonical skill frontmatter versions.                                     | implementation               | None.                                                                          |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                     | Passed | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                   | yes    | 0      | n/a      |
-| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                          | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check | yes    | 0      | n/a      |
-| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                           | yes    | 0      | n/a      |
-| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                            | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                                                                           | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                         | yes    | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                                | yes    | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check       | yes    | 0      | n/a      |
+| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                                 | yes    | 0      | n/a      |
+| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                                  | yes    | 0      | n/a      |
+| 6     | oat:validate-skills; docs generate-index; build:docs; sync --scope all; status --scope project --json; git diff --check; cli test/type-check/lint; release:validate | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Multi-family dispatch matrix support across configuration, resolver, validation,
+  lifecycle skills, and documentation.
+- Producer identity/provenance stamping and family-aware review-gate diversity.
+- Ordered implementation route resolution with same-harness dispatch targets.
+- Lockstep public package version bump to `0.1.44`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Dispatch ceilings now accept provider/tier matrix cells and ordered route cells.
+- Cursor can be selected as a model-arg dispatch provider, with live availability
+  checks and hard-error confidence from the p01 binary experiment.
+- Review gates default to same-family avoidance and report achieved diversity.
+- Lifecycle skills describe prompt-and-persist behavior for missing matrix cells and
+  route-backed escalation.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - matrix and route
+  resolution.
+- `packages/cli/src/providers/ceiling/registry.ts` - Codex, Claude, and Cursor
+  provider adapters.
+- `packages/cli/src/providers/identity/*` - producer identity, availability, and
+  stamp parsing.
+- `packages/cli/src/commands/gate/index.ts` - same-family gate selection and
+  achieved-diversity reporting.
+- `.agents/skills/oat-project-implement/SKILL.md` - runtime dispatch selection,
+  route escalation, and stamp grammar.
+- `apps/oat-docs/docs/**` - public documentation for the shipped dispatch behavior.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Phase-local Vitest suites for config, resolver, provider registry, identity,
+  gate behavior, doctor, bundle consistency, and CLI help snapshots.
+- CLI type-check, lint, skill validation, docs index generation, docs build,
+  provider-view sync/status checks, release validation, and live Cursor binary
+  probes.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- p01 updated Cursor confidence rules after live binary experiments proved invalid
+  model values hard-error.
+- p03 renamed the doctor check to `project:dispatch_matrix` to match scoped doctor
+  conventions.
+- p06 accepted validation-test file-list drift for the changed quick-start skill
+  version contract.
 
 ## References
 

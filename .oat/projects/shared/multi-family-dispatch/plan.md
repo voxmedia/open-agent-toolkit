@@ -685,7 +685,7 @@ pnpm run oat:validate-skills
 **Verification:**
 
 ```bash
-pnpm run cli -- docs generate-index
+pnpm run cli -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 pnpm build:docs
 ```
 
@@ -742,14 +742,14 @@ pnpm release:validate
 
 Implementation is complete when all six phases pass review and release validation succeeds.
 
-| Phase | Tasks | Status  |
-| ----- | ----- | ------- |
-| p01   | 3     | passed  |
-| p02   | 4     | passed  |
-| p03   | 7     | passed  |
-| p04   | 4     | passed  |
-| p05   | 3     | passed  |
-| p06   | 4     | pending |
+| Phase | Tasks | Status         |
+| ----- | ----- | -------------- |
+| p01   | 3     | passed         |
+| p02   | 4     | passed         |
+| p03   | 7     | passed         |
+| p04   | 4     | passed         |
+| p05   | 3     | passed         |
+| p06   | 4     | review pending |
 
 **Total:** 25 tasks.
 
