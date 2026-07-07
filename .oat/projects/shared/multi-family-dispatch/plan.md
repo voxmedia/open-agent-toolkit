@@ -786,6 +786,68 @@ git add packages/cli/src/commands/config/ packages/cli/src/config/
 git commit -m "fix(p07-t02): reject invalid closed-provider dispatch cells"
 ```
 
+### Task p07-t03: (review) Reject invalid closed-provider recommendation cells
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Fable final re-review minor: `oat config adopt dispatch-matrix` reused the
+availability warning path for recommendation cells. A repo-controlled bundled
+recommendation containing an invalid closed-provider value would warn and save
+an inert value, even after p07-t02 fixed direct `config set`.
+
+**Step 2: Implement fix**
+
+Reuse the closed-provider enum validation during recommendation adoption before
+calling the availability oracle or writing config.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
+Expected: pass, including invalid recommendation cells rejected before save.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/
+git commit -m "fix(p07-t03): reject invalid recommendation cells"
+```
+
+### Task p07-t04: (review) Warn when unknown-producer fallback abandons the floor
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Fable final re-review minor: when unknown-producer `same-family` avoidance
+attempted the same-runtime floor but fell back to an unfiltered target, metadata
+reported `unknown-producer` without an explicit warning that the floor had been
+abandoned.
+
+**Step 2: Implement fix**
+
+Emit the existing no-diverse-target warning when a no-diverse fallback is used
+and achieved diversity is `unknown-producer`.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+Expected: pass, including warning metadata in review-gate output.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/
+git commit -m "fix(p07-t04): warn on unknown-producer gate fallback"
+```
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    |
@@ -798,7 +860,7 @@ git commit -m "fix(p07-t02): reject invalid closed-provider dispatch cells"
 | p04    | code     | passed          | 2026-07-07 | reviews/archived/p04-review-2026-07-07T155438Z.md           |
 | p05    | code     | passed          | 2026-07-07 | reviews/archived/p05-review-2026-07-07T163044Z.md           |
 | p06    | code     | passed          | 2026-07-07 | reviews/archived/p06-review-2026-07-07T171242Z.md           |
-| final  | code     | fixes_completed | 2026-07-07 | reviews/archived/final-review-2026-07-07T200402Z.md         |
+| final  | code     | fixes_completed | 2026-07-07 | reviews/final-review-2026-07-07T215003Z.md                  |
 
 ## Implementation Complete
 
@@ -812,9 +874,9 @@ Implementation is complete when all seven phases pass review, final re-review pa
 | p04   | 4     | passed    |
 | p05   | 3     | passed    |
 | p06   | 4     | passed    |
-| p07   | 2     | completed |
+| p07   | 4     | completed |
 
-**Total:** 27 tasks.
+**Total:** 29 tasks.
 
 ## References
 

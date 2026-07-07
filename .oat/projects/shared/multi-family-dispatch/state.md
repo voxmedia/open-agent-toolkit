@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: d8001058
+oat_last_commit: 96a70098
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-c3d8' }
@@ -31,7 +31,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T21:24:30Z'
+oat_project_state_updated: '2026-07-07T21:50:03Z'
 oat_generated: false
 ---
 
@@ -45,16 +45,16 @@ oat_generated: false
 
 Implementation tasks through p07 are complete and all external phase review gates have
 been consumed. The final HiLL checkpoint after p06 was approved by the user, the
-documentation pass is complete, and final-review fix tasks have been implemented. The
-project is ready for final re-review.
+documentation pass is complete, and final-review plus Fable re-review fix tasks have
+been implemented. The project is ready for a clean final re-review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; p01 confidence-rule updates applied)
-- **Plan:** `plan.md` (complete; p07 final review fix tasks completed)
-- **Implementation:** `implementation.md` (complete; awaiting final re-review)
+- **Plan:** `plan.md` (complete; p07 final review and Fable fix tasks completed)
+- **Implementation:** `implementation.md` (complete; awaiting clean final re-review)
 
 ## Progress
 
@@ -91,6 +91,7 @@ project is ready for final re-review.
 - ✓ Documentation pass complete
 - ✓ Final review received and dispositioned
 - ✓ Final review fixes implemented (p07-t01, p07-t02)
+- ✓ Fable re-review minor fixes implemented (p07-t03, p07-t04)
 
 ## Blockers
 
@@ -98,7 +99,7 @@ None
 
 ## Next Milestone
 
-Rerun the final independent code review and process the re-review.
+Rerun the final independent code review and process the clean re-review.
 
 ## Notes
 

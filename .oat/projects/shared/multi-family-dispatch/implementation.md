@@ -32,9 +32,9 @@ oat_generated: false
 | Phase 4 | completed | 4     | 4/4       |
 | Phase 5 | completed | 3     | 3/3       |
 | Phase 6 | completed | 4     | 4/4       |
-| Phase 7 | completed | 2     | 2/2       |
+| Phase 7 | completed | 4     | 4/4       |
 
-**Total:** 27/27 tasks completed
+**Total:** 29/29 tasks completed
 
 ---
 
@@ -1833,6 +1833,37 @@ to reach `passed`.
 
 ---
 
+### Review Received: final re-review (Fable)
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/final-review-2026-07-07T215003Z.md
+
+**Invocation note:**
+
+- The direct `oat gate review` Fable invocation was attempted with a
+  repo-local `claude-fable-review` target and `oat_review_invocation: gate`,
+  but the provider process stalled without writing an artifact.
+- The successful review used the same Claude/Fable model in a constrained
+  stdout-only review packet over the p07 fix diff and final deferred ledger.
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** p07-t03, p07-t04
+
+**Disposition:**
+
+- m1: Converted to p07-t03. The direct `config set` closed-provider rejection
+  should also apply to repo-controlled dispatch matrix recommendation adoption.
+- m2: Converted to p07-t04. Unknown-producer fallback should warn when it
+  abandons the conservative same-runtime floor.
+
+---
+
 ## Phase 7: Final Review Fixes
 
 **Status:** completed
@@ -1847,6 +1878,10 @@ to reach `passed`.
 - Rejected invalid closed-provider dispatch matrix values for Codex and Claude
   tier cells at config-set time, while preserving warn-and-save behavior for
   open providers such as Cursor.
+- Extended closed-provider validation to dispatch matrix recommendation
+  adoption.
+- Added warning metadata when unknown-producer gate fallback abandons the
+  same-runtime floor.
 
 **Key files touched:**
 
@@ -1854,18 +1889,19 @@ to reach `passed`.
   `same-family` selection now conservatively applies same-runtime filtering
   before using the existing no-diverse-target fallback.
 - `packages/cli/src/commands/gate/index.test.ts` - regression coverage for the
-  unknown-producer floor and fallback path.
+  unknown-producer floor, fallback path, and warning metadata.
 - `packages/cli/src/commands/config/index.ts` - closed-provider tier cells now
-  reuse fixed provider enum validation.
+  reuse fixed provider enum validation for set-time and adopt-time paths.
 - `packages/cli/src/commands/config/index.test.ts` - regression coverage for
-  invalid Claude tier values failing before save or availability validation.
+  invalid Claude tier values and recommendation cells failing before save or
+  availability validation.
 
 **Verification:**
 
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
-- Result: pass (61 tests)
+- Result: pass (62 tests)
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
-- Result: pass (163 tests)
+- Result: pass (164 tests)
 
 ### Task p07-t01: Restore same-runtime floor for unknown-producer same-family gates
 
@@ -1901,6 +1937,39 @@ to reach `passed`.
 
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
 - Result: pass (163 tests)
+
+### Task p07-t03: Reject invalid closed-provider recommendation cells
+
+**Status:** completed
+**Commit:** 0981627a
+
+**Outcome:**
+
+- Dispatch matrix recommendation adoption now rejects invalid Codex and Claude
+  values before availability-oracle calls or config writes.
+- Open-provider recommendation cells retain the existing warn-and-save oracle
+  behavior.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
+- Result: pass (164 tests)
+
+### Task p07-t04: Warn on unknown-producer gate fallback
+
+**Status:** completed
+**Commit:** 96a70098
+
+**Outcome:**
+
+- When `same-family` avoidance falls back after the unknown-producer
+  same-runtime floor filters all available targets, review-gate diversity
+  metadata now includes an explicit no-diverse-target warning.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Result: pass (62 tests)
 
 ---
 
