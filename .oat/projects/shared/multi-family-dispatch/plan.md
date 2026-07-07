@@ -733,7 +733,7 @@ pnpm release:validate
 | p01    | code     | passed  | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
 | p02    | code     | passed  | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
 | p03    | code     | passed  | 2026-07-07 | reviews/archived/p03-review-2026-07-07T150751Z.md           |
-| p04    | code     | pending | n/a        | n/a                                                         |
+| p04    | code     | passed  | 2026-07-07 | reviews/p04-review-2026-07-07T154719Z.md                    |
 | p05    | code     | pending | n/a        | n/a                                                         |
 | p06    | code     | pending | n/a        | n/a                                                         |
 | final  | code     | pending | n/a        | n/a                                                         |
@@ -747,7 +747,7 @@ Implementation is complete when all six phases pass review and release validatio
 | p01   | 3     | passed  |
 | p02   | 4     | passed  |
 | p03   | 7     | passed  |
-| p04   | 4     | pending |
+| p04   | 4     | passed  |
 | p05   | 3     | pending |
 | p06   | 4     | pending |
 

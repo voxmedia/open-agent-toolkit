@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,8 +29,9 @@ oat_generated: false
 | Phase 1 | completed | 3     | 3/3       |
 | Phase 2 | completed | 4     | 4/4       |
 | Phase 3 | completed | 7     | 7/7       |
+| Phase 4 | completed | 4     | 4/4       |
 
-**Total:** 14/25 tasks completed
+**Total:** 18/25 tasks completed
 
 ---
 
@@ -903,6 +904,40 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 4 — 2026-07-07 10:24
+
+**Branch:** multi-family-dispatch
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p04   | DONE_WITH_CONCERNS | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p04: sequential.
+
+#### Dispatch Notes
+
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=declared model_axis=openai effort_axis=xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=declared model_axis=openai effort_axis=xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=declared model_axis=openai effort_axis=xhigh dispatch_policy=high dispatch_ceiling=xhigh target=main-orchestrator
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=declared model_axis=openai effort_axis=xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact   | Planned / Documented                          | Actual / Accepted                                                     | Reason                                                                                    | Source of Truth | Follow-up |
+| ------------- | ----------------- | --------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------- | --------- |
+| p04-t02       | plan.md file list | The task named `oat-config.ts` and gate code. | The implementation also updated `packages/cli/src/config/resolve.ts`. | Layered exec-target resolution must preserve `ExecTarget.models` for p04-t02 to function. | implementation  | None.     |
+
 ### Run 3 — 2026-07-07 09:42
 
 **Branch:** multi-family-dispatch
@@ -1145,6 +1180,99 @@ Chronological log of implementation progress.
 
 ---
 
+### 2026-07-07
+
+**Session Start:** p04 implementation
+
+- [x] p04-t01: Extend gate avoid enum with `same-family` - 588b6ab2
+- [x] p04-t02: `models` dimension on exec targets and candidate expansion - 4d6fb7b3
+- [x] p04-t03: Producer-anchored family filtering - d9b50ffa
+- [x] p04-t04: Achieved-diversity metadata and confidence-graded logging - 2e1fe55b
+- [x] p04 review fixes: align gate diversity edge cases - 826304c7
+
+**What changed (high level):**
+
+- Changed gate avoidance default to `same-family` while preserving explicit
+  `same-runtime` and `none` modes.
+- Added model-expanded exec target candidates and preserved `models` through
+  layered target resolution.
+- Filtered gate candidates by producer model family when the producer identity
+  is claimable, and recorded achieved diversity metadata in human and JSON
+  review-gate output.
+- Fixed review-found edge cases so unknown producers run with
+  `unknown-producer` metadata instead of synthetic same-runtime avoidance, and
+  pinned `--model` commands take precedence over conflicting `models` lists.
+
+**Decisions:**
+
+- Pinned model arguments in `baseCommand` are the dispatch truth when they
+  conflict with a configured `models` list, because execution suppresses
+  appending another `--model` for pinned commands.
+- Unknown or non-claimable producers do not trigger fallback same-runtime
+  filtering under the default `same-family` mode. Explicit `--avoid
+same-runtime` remains the runtime-avoidance path.
+
+**Follow-ups / TODO:**
+
+- Continue with p05-t01 after p04 gate review passes.
+
+**Blockers:**
+
+- None.
+
+**Session End:** 2026-07-07 - p04 implementation complete
+
+---
+
+### Review Received: p04 standard review
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/p04-review-2026-07-07T154018Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- I1: Addressed now. Default `same-family` no longer synthesizes same-runtime
+  filtering when producer identity is unknown or non-claimable; explicit
+  `--avoid same-runtime` remains supported.
+- I2: Addressed now. Pinned `--model` arguments in `baseCommand` now take
+  precedence over conflicting `models` lists, so selection metadata and executed
+  argv agree.
+
+**Next:** Re-review p04.
+
+---
+
+### Review Received: p04 re-review
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/p04-review-2026-07-07T154719Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- Passed. No review-receive fixes required.
+
+**Next:** Continue implementation with p05-t01 after p04 gate review passes.
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1157,10 +1285,11 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                                                      | Actual / Accepted                                                                          | Reason                                                                                                                          | Source of Truth              | Follow-up                                                                      |
-| ------------- | --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
-| p02 gate      | plan.md p02-t03 | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback. | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain. | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
-| p03 gate      | plan.md p03-t06 | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                    | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                           | plan.md updated              | None.                                                                          |
+| Task / Review | Source Artifact   | Planned / Documented                                                      | Actual / Accepted                                                                          | Reason                                                                                                                          | Source of Truth              | Follow-up                                                                      |
+| ------------- | ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
+| p02 gate      | plan.md p02-t03   | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback. | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain. | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
+| p03 gate      | plan.md p03-t06   | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                    | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                           | plan.md updated              | None.                                                                          |
+| p04-t02       | plan.md file list | The task named `oat-config.ts` and gate code.                             | The implementation also updated `packages/cli/src/config/resolve.ts`.                      | Layered exec-target resolution must preserve `ExecTarget.models`; otherwise model candidates disappear after config merge.      | implementation               | None.                                                                          |
 
 ## Test Results
 
@@ -1171,6 +1300,7 @@ Track test execution during implementation.
 | 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                   | yes    | 0      | n/a      |
 | 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                          | yes    | 0      | n/a      |
 | 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check | yes    | 0      | n/a      |
+| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                           | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
