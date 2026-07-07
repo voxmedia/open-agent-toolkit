@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 8ae81bba5543cb3eefe919cd6fd55ff63df0eaa0
+oat_current_task: p03-t01
+oat_last_commit: 2054657c2ad7eaf69c6aa85fe4b3142deb8126e6
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-c3d8' }
@@ -30,7 +30,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T13:07:57Z'
+oat_project_state_updated: '2026-07-07T13:35:36Z'
 oat_generated: false
 ---
 
@@ -42,10 +42,10 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. Phase p01 completed kickoff revalidation, the blocking
-Cursor behavior experiment, and stamp grammar/declaration decisions. Standard p01 review
-passed after one bounded fix, and the external phase gate passed and was consumed with
-sub-threshold findings addressed. Next: continue with p02-t01.
+Implementation in progress. Phases p01 and p02 are complete. p02 added the shared
+identity foundation, passed standard review after one bounded fix, and is ready for the
+configured external phase gate. Next: run the p02 phase review gate, then continue with
+p03-t01.
 
 ## Artifacts
 
@@ -53,7 +53,7 @@ sub-threshold findings addressed. Next: continue with p02-t01.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; p01 confidence-rule updates applied)
 - **Plan:** `plan.md` (complete; p01 review passed)
-- **Implementation:** `implementation.md` (in progress; next task p02-t01)
+- **Implementation:** `implementation.md` (in progress; next task p03-t01)
 
 ## Progress
 
@@ -69,7 +69,9 @@ sub-threshold findings addressed. Next: continue with p02-t01.
 - ✓ Phase p01 kickoff revalidation and blocking Cursor experiments complete
 - ✓ p01 standard review passed after one bounded fix
 - ✓ p01 external phase review gate passed and was consumed
-- ⧗ Continue with p02-t01
+- ✓ Phase p02 shared identity foundation complete
+- ✓ p02 standard review passed after one bounded fix
+- ⧗ p02 external phase review gate pending
 
 ## Blockers
 
@@ -77,7 +79,8 @@ None
 
 ## Next Milestone
 
-Continue implementation with p02-t01 (shared identity foundation).
+Run the configured p02 phase review gate, then continue implementation with p03-t01
+(tier matrix, resolver, Cursor adapter, and validation oracles).
 
 ## Notes
 
