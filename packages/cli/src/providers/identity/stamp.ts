@@ -114,8 +114,10 @@ function tokenMap(tokens: string[]): Map<string, string> {
   for (const token of tokens) {
     const sanitized = token.replace(/,$/, '');
     const match = sanitized.match(/^([a-z_]+)=(.+)$/);
-    if (match) {
-      fields.set(match[1], match[2]);
+    const key = match?.[1];
+    const value = match?.[2];
+    if (key && value) {
+      fields.set(key, value);
     }
   }
   return fields;
@@ -238,8 +240,8 @@ export function getProducerIdentitiesByScope(
 ): Record<string, ProducerIdentity[]> {
   const grouped: Record<string, ProducerIdentity[]> = {};
   for (const stamp of parseDispatchStamps(markdown, options)) {
-    grouped[stamp.scope] ??= [];
-    grouped[stamp.scope].push({
+    const identities = grouped[stamp.scope] ?? [];
+    identities.push({
       scope: stamp.scope,
       action: stamp.action,
       role: stamp.role,
@@ -247,6 +249,7 @@ export function getProducerIdentitiesByScope(
       provenance: stamp.provenance,
       target: stamp.target,
     });
+    grouped[stamp.scope] = identities;
   }
   return grouped;
 }
