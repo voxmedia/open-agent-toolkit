@@ -14,8 +14,12 @@ oat gate review is the review-aware command, so it packages gate context, projec
 
 ## Decision
 
-TODO
+`oat gate review` owns review prompt assembly. It packages gate context, resolved
+project context, review type/scope hints, and the user prompt into one provider
+prompt argument.
 
 ## Consequences
 
-TODO
+The generic `cross-provider-exec` command remains provider-agnostic and does not
+inspect or assemble review artifacts. Review-gate-specific context belongs in
+`oat gate review`.

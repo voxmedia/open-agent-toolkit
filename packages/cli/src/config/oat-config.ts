@@ -183,7 +183,11 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
     runtime: 'cursor',
     baseCommand: ['cursor-agent', '-p'],
     hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
-    availabilityCommand: ['cursor-agent', '--version'],
+    availabilityCommand: [
+      'sh',
+      '-c',
+      'command -v cursor-agent || command -v agent',
+    ],
     priority: 70,
   },
 };

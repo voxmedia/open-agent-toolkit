@@ -130,10 +130,12 @@ interface ProcessRunOptions {
   env: NodeJS.ProcessEnv;
   purpose: 'host-detection' | 'availability' | 'execute';
   stdio: 'ignore' | 'inherit';
+  timeoutMs: number;
 }
 
 interface ProcessRunResult {
   exitCode: number;
+  timedOut?: boolean;
 }
 
 type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
@@ -161,6 +163,7 @@ interface GateProducerIdentity {
   provenance: IdentityProvenance;
   confidence: IdentityConfidence;
   family: ModelFamily;
+  avoidFamilies: ModelFamily[];
   diversityClaimable: boolean;
   source: 'flag' | 'stamp' | 'unknown';
 }
@@ -174,6 +177,7 @@ interface GateDiversityMetadata {
     confidence: IdentityConfidence;
     family: ModelFamily;
     source: GateProducerIdentity['source'];
+    avoidFamilies: ModelFamily[];
   };
   reviewer: {
     target: string;
@@ -229,6 +233,8 @@ const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
 ];
 const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
+const GATE_CHECK_TIMEOUT_MS = 5_000;
+const GATE_EXEC_TIMEOUT_MS = 10 * 60 * 1_000;
 
 function reviewGateProjectContext(projectPath: string): string {
   return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
@@ -247,15 +253,39 @@ async function runChildProcess(
   options: ProcessRunOptions,
 ): Promise<ProcessRunResult> {
   return new Promise((resolve, reject) => {
+    let timedOut = false;
+    let killTimeout: NodeJS.Timeout | null = null;
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env,
       stdio: options.stdio,
     });
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+      killTimeout = setTimeout(() => {
+        child.kill('SIGKILL');
+      }, 5_000);
+      killTimeout.unref();
+    }, options.timeoutMs);
+    timeout.unref();
 
-    child.on('error', reject);
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      if (killTimeout) {
+        clearTimeout(killTimeout);
+      }
+      reject(error);
+    });
     child.on('close', (code) => {
-      resolve({ exitCode: code ?? 1 });
+      clearTimeout(timeout);
+      if (killTimeout) {
+        clearTimeout(killTimeout);
+      }
+      resolve({
+        exitCode: timedOut ? 124 : (code ?? 1),
+        ...(timedOut ? { timedOut: true } : {}),
+      });
     });
   });
 }
@@ -375,6 +405,20 @@ function parseNumericFlag(
   if (!Number.isFinite(parsed)) {
     throw new Error(`${flag} must be a finite number.`);
   }
+  return parsed;
+}
+
+function resolveGateExecTimeoutMs(env: NodeJS.ProcessEnv): number {
+  const rawValue = env.OAT_GATE_EXEC_TIMEOUT_MS?.trim();
+  if (!rawValue) {
+    return GATE_EXEC_TIMEOUT_MS;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return GATE_EXEC_TIMEOUT_MS;
+  }
+
   return parsed;
 }
 
@@ -586,11 +630,14 @@ function identityFromRecords(
   source: GateProducerIdentity['source'],
 ): GateProducerIdentity {
   const resolved = resolveIdentityConfidence(records);
+  const family = classifyModelFamily({ value: resolved.value });
   return {
     value: resolved.value,
     provenance: resolved.provenance,
     confidence: resolved.confidence,
-    family: classifyModelFamily({ value: resolved.value }),
+    family,
+    avoidFamilies:
+      resolved.diversityClaimable && family !== 'unknown' ? [family] : [],
     diversityClaimable: resolved.diversityClaimable,
     source,
   };
@@ -628,6 +675,69 @@ function parseProducerIdentityOption(
   );
 }
 
+function identityFromStamps(
+  stamps: ReturnType<typeof parseDispatchStamps>,
+): GateProducerIdentity {
+  const identities = stamps
+    .map((stamp) =>
+      identityFromRecords(
+        [{ value: stamp.producer, provenance: stamp.provenance }],
+        'stamp',
+      ),
+    )
+    .filter(
+      (identity) =>
+        identity.diversityClaimable && identity.family !== 'unknown',
+    );
+  const latest = identities.at(-1);
+  if (!latest) {
+    return unknownProducerIdentity();
+  }
+
+  return {
+    ...latest,
+    avoidFamilies: [...new Set(identities.map((identity) => identity.family))],
+  };
+}
+
+function phaseNumber(scope: string): number | undefined {
+  const match = scope.match(/^p(\d+)(?:$|-t\d+$)/);
+  const value = match?.[1];
+  return value === undefined ? undefined : Number.parseInt(value, 10);
+}
+
+function reviewScopeRange(
+  scope: string,
+): { start: number; end: number } | null {
+  if (scope === 'final') {
+    return { start: 1, end: Number.MAX_SAFE_INTEGER };
+  }
+
+  const range = scope.match(/^p(\d+)-p(\d+)$/);
+  if (!range) {
+    return null;
+  }
+
+  return {
+    start: Number.parseInt(range[1] ?? '0', 10),
+    end: Number.parseInt(range[2] ?? '0', 10),
+  };
+}
+
+function stampInReviewScope(stampScope: string, reviewScope: string): boolean {
+  const range = reviewScopeRange(reviewScope);
+  if (!range) {
+    return false;
+  }
+
+  const stampPhase = phaseNumber(stampScope);
+  return (
+    stampPhase !== undefined &&
+    stampPhase >= range.start &&
+    stampPhase <= range.end
+  );
+}
+
 async function readStampedProducerIdentity(options: {
   repoRoot: string;
   projectPath: string;
@@ -648,20 +758,18 @@ async function readStampedProducerIdentity(options: {
     return unknownProducerIdentity();
   }
 
-  const stamp = parseDispatchStamps(markdown)
+  const stamps = parseDispatchStamps(markdown).filter(
+    (candidate) => candidate.role === 'implementer' || candidate.role === 'fix',
+  );
+  const exactStamp = [...stamps]
     .reverse()
-    .find(
-      (candidate) =>
-        candidate.scope === scope &&
-        (candidate.role === 'implementer' || candidate.role === 'fix'),
-    );
-  if (!stamp) {
-    return unknownProducerIdentity();
+    .find((candidate) => candidate.scope === scope);
+  if (exactStamp) {
+    return identityFromStamps([exactStamp]);
   }
 
-  return identityFromRecords(
-    [{ value: stamp.producer, provenance: stamp.provenance }],
-    'stamp',
+  return identityFromStamps(
+    stamps.filter((candidate) => stampInReviewScope(candidate.scope, scope)),
   );
 }
 
@@ -742,7 +850,7 @@ function expandExecTargetCandidates(
 }
 
 function producerHasKnownFamily(identity: GateProducerIdentity): boolean {
-  return identity.diversityClaimable && identity.family !== 'unknown';
+  return identity.diversityClaimable && identity.avoidFamilies.length > 0;
 }
 
 function shouldAttemptNoDiverseFallback(avoid: CrossProviderAvoid): boolean {
@@ -759,7 +867,7 @@ function achievedDiversity(
 
   if (
     selected.family !== 'unknown' &&
-    selected.family !== producerIdentity.family
+    !producerIdentity.avoidFamilies.includes(selected.family)
   ) {
     return 'different-family';
   }
@@ -806,6 +914,7 @@ function attachDiversityMetadata(
         confidence: producerIdentity.confidence,
         family: producerIdentity.family,
         source: producerIdentity.source,
+        avoidFamilies: producerIdentity.avoidFamilies,
       },
       reviewer: {
         target: selected.id,
@@ -845,7 +954,7 @@ function listExecTargetCandidates(
       (candidate) =>
         !shouldAvoidSameFamily ||
         (candidate.family !== 'unknown' &&
-          candidate.family !== producerIdentity.family),
+          !producerIdentity.avoidFamilies.includes(candidate.family)),
     );
 }
 
@@ -905,6 +1014,7 @@ async function checkArgv(
       env: dependencies.processEnv,
       purpose,
       stdio: 'ignore',
+      timeoutMs: GATE_CHECK_TIMEOUT_MS,
     });
     return result.exitCode === 0;
   } catch {
@@ -1023,7 +1133,7 @@ async function executeTarget(
   prompt: string[],
   context: CommandContext,
   dependencies: GateCommandDependencies,
-): Promise<number> {
+): Promise<ProcessRunResult> {
   const [command, baseArgs] = argvHead(selected.target.baseCommand);
   if (!command) {
     throw new Error(`Exec target "${selected.id}" has an empty base command.`);
@@ -1033,9 +1143,16 @@ async function executeTarget(
     selected.model && !findPinnedModelArg(selected.target.baseCommand)
       ? ['--model', selected.model]
       : [];
+  const timeoutMs = resolveGateExecTimeoutMs(dependencies.processEnv);
+
+  if (!context.json) {
+    context.logger.info(
+      `Running gate target ${selected.id} (${selected.target.runtime}); timeout=${timeoutMs}ms.`,
+    );
+  }
 
   try {
-    const result = await dependencies.runProcess(
+    return await dependencies.runProcess(
       command,
       [...baseArgs, ...modelArgs, ...prompt],
       {
@@ -1043,9 +1160,9 @@ async function executeTarget(
         env: dependencies.processEnv,
         purpose: 'execute',
         stdio: 'inherit',
+        timeoutMs,
       },
     );
-    return result.exitCode;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
@@ -1533,9 +1650,13 @@ function writeReviewGateExecutionFailure(
     target: string;
     project: string;
     exitCode: number;
+    timedOut?: boolean;
+    timeoutMs?: number;
   },
 ): void {
-  const message = `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
+  const message = payload.timedOut
+    ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
+    : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -1544,6 +1665,10 @@ function writeReviewGateExecutionFailure(
       target: payload.target,
       project: payload.project,
       exitCode: payload.exitCode,
+      timedOut: payload.timedOut ?? false,
+      ...(payload.timeoutMs !== undefined
+        ? { timeoutMs: payload.timeoutMs }
+        : {}),
       message,
     });
     return;
@@ -1742,12 +1867,8 @@ async function runCrossProviderExec(
     );
 
     logGateDiversity(selected, context);
-    process.exitCode = await executeTarget(
-      selected,
-      prompt,
-      context,
-      dependencies,
-    );
+    const result = await executeTarget(selected, prompt, context, dependencies);
+    process.exitCode = result.exitCode;
   } catch (error) {
     writeError(context, error);
   }
@@ -1803,12 +1924,13 @@ async function runReviewGate(
         : []),
       prompt.join(' '),
     ]);
-    const childExitCode = await executeTarget(
+    const childResult = await executeTarget(
       selected,
       [reviewPrompt],
       context,
       dependencies,
     );
+    const childExitCode = childResult.exitCode;
 
     if (childExitCode !== 0) {
       writeReviewGateExecutionFailure(context, {
@@ -1816,6 +1938,8 @@ async function runReviewGate(
         target: selected.id,
         project: projectPath,
         exitCode: childExitCode,
+        timedOut: childResult.timedOut ?? false,
+        timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
       });
       process.exitCode = childExitCode;
       return;

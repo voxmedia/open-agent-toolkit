@@ -184,7 +184,11 @@ that candidate's model and is not double-pinned.
           "runtime": "cursor",
           "baseCommand": ["cursor-agent", "-p", "--force"],
           "models": ["composer-2.5", "gpt-5.5-xhigh", "claude-opus-4-8"],
-          "availabilityCommand": ["cursor-agent", "--version"],
+          "availabilityCommand": [
+            "sh",
+            "-c",
+            "command -v cursor-agent || command -v agent"
+          ],
           "priority": 95
         }
       }
@@ -362,6 +366,12 @@ Gate failure behavior is owned by the gate-aware skill:
 `cross-provider-exec` does fallback only before dispatch, while selecting an
 available target. Once a target actually runs, its exit code is the gate result;
 OAT does not try another target after a failed review.
+
+Gate target execution has a child-process timeout (default 10 minutes, override
+with `OAT_GATE_EXEC_TIMEOUT_MS`). When a review target times out, JSON output
+reports `status: review_failed`, `outcome: review_did_not_complete`,
+`timedOut: true`, and the timeout value so automation can distinguish a hung
+provider prompt from a completed review with findings.
 
 ## Current limits
 

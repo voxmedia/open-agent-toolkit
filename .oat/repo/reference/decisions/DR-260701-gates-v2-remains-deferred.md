@@ -14,8 +14,12 @@ This project intentionally avoided same-target or model-level dispatch policy ch
 
 ## Decision
 
-TODO
+Keep the workflow-gate target-selection repair scoped to V1 behavior. Do not add
+same-target, model-level target preference, or broader Gates V2 dispatch-policy
+machinery in this project.
 
 ## Consequences
 
-TODO
+The shipped fix preserves the existing target registry and runtime-avoidance
+model. Same-target/model-specific dispatch remains in the Gates V2 backlog lane
+and must be designed separately before implementation.

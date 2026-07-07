@@ -33,6 +33,7 @@ interface ProcessCall {
   args: string[];
   purpose: 'host-detection' | 'availability' | 'execute';
   stdio: 'ignore' | 'inherit';
+  timeoutMs: number;
 }
 
 type ProcessRunner = (
@@ -43,8 +44,9 @@ type ProcessRunner = (
     env: NodeJS.ProcessEnv;
     purpose: ProcessCall['purpose'];
     stdio: ProcessCall['stdio'];
+    timeoutMs: number;
   },
-) => Promise<{ exitCode: number }>;
+) => Promise<{ exitCode: number; timedOut?: boolean }>;
 
 type ProcessCallInput = ProcessCall & {
   cwd: string;
@@ -129,6 +131,7 @@ function createProcessRunner(
   options: {
     availableTargets?: Iterable<string>;
     executeExitCode?: number;
+    executeTimedOut?: boolean;
     onExecute?: (call: ProcessCallInput) => Promise<void> | void;
   } = {},
 ): { calls: ProcessCall[]; runProcess: ProcessRunner } {
@@ -161,6 +164,7 @@ function createProcessRunner(
       args: [...args],
       purpose: runOptions.purpose,
       stdio: runOptions.stdio,
+      timeoutMs: runOptions.timeoutMs,
     });
 
     if (runOptions.purpose === 'host-detection') {
@@ -200,7 +204,10 @@ function createProcessRunner(
       });
     }
 
-    return { exitCode: options.executeExitCode ?? 0 };
+    return {
+      exitCode: options.executeTimedOut ? 124 : (options.executeExitCode ?? 0),
+      ...(options.executeTimedOut ? { timedOut: true } : {}),
+    };
   };
 
   return { calls, runProcess };
@@ -861,6 +868,12 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('uses command discovery for the built-in cursor target availability check', () => {
+    expect(BUILTIN_EXEC_TARGETS['cursor-default']?.availabilityCommand).toEqual(
+      ['sh', '-c', 'command -v cursor-agent || command -v agent'],
+    );
+  });
+
   it('rejects malformed target JSON and non-array argv inputs', async () => {
     const { root, home } = await setup();
 
@@ -1367,6 +1380,94 @@ describe('oat gate', () => {
       command: 'cursor-agent',
       args: expect.arrayContaining(['--model', 'composer-2.5']),
       purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('aggregates producer families from implementation stamps for final review scope', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+      ].join('\n'),
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': null,
+              'openai-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5'],
+                priority: 300,
+              },
+              'claude-reviewer': {
+                runtime: 'claude',
+                baseCommand: ['claude', '-p'],
+                priority: 250,
+              },
+              'composer-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['composer-2.5'],
+                priority: 100,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', 'Review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+      purpose: 'execute',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'different-family',
+        producer: {
+          value: 'claude-opus-4-8',
+          family: 'claude',
+          source: 'stamp',
+          avoidFamilies: expect.arrayContaining(['openai', 'claude']),
+        },
+        reviewer: {
+          target: 'composer-reviewer',
+          model: 'composer-2.5',
+          family: 'composer',
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -2628,6 +2729,35 @@ describe('oat gate', () => {
       stdio: 'inherit',
     });
     expect(process.exitCode).toBe(7);
+  });
+
+  it('reports review target timeouts with structured failure metadata', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({ executeTimedOut: true });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1234' },
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      purpose: 'execute',
+      stdio: 'inherit',
+      timeoutMs: 1234,
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      exitCode: 124,
+      timedOut: true,
+      timeoutMs: 1234,
+      message: expect.stringContaining('timed out after 1234ms'),
+    });
+    expect(process.exitCode).toBe(124);
   });
 
   it('accepts an explicit project name when no active project is configured', async () => {
