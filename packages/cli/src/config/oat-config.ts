@@ -72,7 +72,7 @@ export type WorkflowDispatchProviderValue =
   | string
   | Partial<Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>>;
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
-export type GateAvoid = 'same-runtime' | 'none';
+export type GateAvoid = 'same-family' | 'same-runtime' | 'none';
 
 export interface WorkflowDispatchCeiling {
   preset?: WorkflowDispatchCeilingPreset;

@@ -995,6 +995,82 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('accepts same-family avoidance and defaults to it', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'same-family', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+
+    const defaultRunner = createProcessRunner();
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: defaultRunner.runProcess,
+    });
+
+    expect(defaultRunner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps same-runtime avoidance supported explicitly', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CURSOR_AGENT: '1' },
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'same-runtime', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('lists every supported avoidance mode in validation errors', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    const capture = await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'explode', 'Run', 'review'],
+    });
+
+    expect(runner.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining(
+        '--avoid must be one of same-family | same-runtime | none',
+      ),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('selects targets by descending priority and lexicographic id', () => {
     const selected = selectExecTarget(
       {
@@ -1015,7 +1091,7 @@ describe('oat gate', () => {
         },
       },
       'cursor',
-      'same-runtime',
+      'same-family',
     );
 
     expect(selected).toEqual({

@@ -124,7 +124,7 @@ interface ProcessRunResult {
   exitCode: number;
 }
 
-type CrossProviderAvoid = 'same-runtime' | 'none';
+type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
 type GateWriteLayer = 'shared' | 'local' | 'user';
 type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
 type GateConfigContainer = OatConfig | OatLocalConfig | UserConfig;
@@ -162,6 +162,7 @@ const VALID_WRITE_LAYERS: readonly GateWriteLayer[] = [
   'user',
 ];
 const VALID_CROSS_PROVIDER_AVOIDS: readonly CrossProviderAvoid[] = [
+  'same-family',
   'same-runtime',
   'none',
 ];
@@ -260,9 +261,11 @@ function parseLayer(value: string | undefined): GateWriteLayer {
 function parseCrossProviderAvoid(
   value: string | undefined,
 ): CrossProviderAvoid {
-  const avoid = value?.trim() || 'same-runtime';
+  const avoid = value?.trim() || 'same-family';
   if (!(VALID_CROSS_PROVIDER_AVOIDS as readonly string[]).includes(avoid)) {
-    throw new Error('--avoid must be one of same-runtime | none.');
+    throw new Error(
+      '--avoid must be one of same-family | same-runtime | none.',
+    );
   }
   return avoid as CrossProviderAvoid;
 }
@@ -532,7 +535,8 @@ function listExecTargetCandidates(
   avoid: CrossProviderAvoid,
 ): SelectedExecTarget[] {
   const shouldAvoidSameRuntime =
-    avoid === 'same-runtime' && currentRuntime !== 'unknown';
+    (avoid === 'same-runtime' || avoid === 'same-family') &&
+    currentRuntime !== 'unknown';
 
   return sortedExecTargetEntries(registry)
     .filter(
@@ -1563,7 +1567,10 @@ export function createGateCommand(
     .command('cross-provider-exec')
     .description('Run a prompt through an alternate configured runtime target')
     .option('--target <id>', 'Run this exact exec target')
-    .option('--avoid <mode>', 'Avoidance mode: same-runtime or none')
+    .option(
+      '--avoid <mode>',
+      'Avoidance mode: same-family, same-runtime, or none',
+    )
     .option(
       '--current-runtime <runtime>',
       'Override detected runtime for testing or manual routing',
@@ -1586,7 +1593,10 @@ export function createGateCommand(
     .command('review')
     .description('Run a review gate and map review findings to exit status')
     .option('--target <id>', 'Run this exact exec target')
-    .option('--avoid <mode>', 'Avoidance mode: same-runtime or none')
+    .option(
+      '--avoid <mode>',
+      'Avoidance mode: same-family, same-runtime, or none',
+    )
     .option(
       '--current-runtime <runtime>',
       'Override detected runtime for testing or manual routing',
