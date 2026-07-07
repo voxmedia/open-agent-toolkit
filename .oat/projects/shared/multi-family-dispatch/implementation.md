@@ -685,6 +685,37 @@ Chronological log of implementation progress.
 
 ---
 
+### Review Received: p02 gate
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/archived/p02-review-2026-07-07T133749Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 2
+
+**New tasks added:** None
+
+**Disposition:**
+
+- M1: Addressed now. Value-less declared/observed records no longer act as
+  corroboration or mismatch anchors, so a failed observation cannot clobber a valid
+  declared identity.
+- M2: Addressed now. `providerId` is documented as a structured model-provider id,
+  `cursor` is no longer mapped to `composer`, and a regression test preserves the
+  harness/family distinction.
+- m1: Addressed now. Added an inline comment documenting why the short-lived helper
+  uses `--api-key` argv despite local process-list visibility.
+- m2: Addressed now. Recorded the accepted p02-t03 probe-order deviation in the
+  deviations table below; the updated design and implementation are source of truth.
+
+**Next:** Continue implementation with p03-t01.
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -697,9 +728,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                      | Actual / Accepted                                                                          | Reason                                                                                                                          | Source of Truth              | Follow-up                                                                      |
+| ------------- | --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
+| p02 gate      | plan.md p02-t03 | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback. | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain. | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
 
 ## Test Results
 
