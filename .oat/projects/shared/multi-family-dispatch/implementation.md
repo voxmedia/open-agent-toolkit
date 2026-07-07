@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,8 +30,9 @@ oat_generated: false
 | Phase 2 | completed | 4     | 4/4       |
 | Phase 3 | completed | 7     | 7/7       |
 | Phase 4 | completed | 4     | 4/4       |
+| Phase 5 | completed | 3     | 3/3       |
 
-**Total:** 18/25 tasks completed
+**Total:** 21/25 tasks completed
 
 ---
 
@@ -904,6 +905,40 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 5 — 2026-07-07 11:24
+
+**Branch:** multi-family-dispatch
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p05   | DONE        | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p05: sequential.
+
+#### Dispatch Notes
+
+- Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+- Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=inherited effort_axis=provider-default dispatch_policy=high dispatch_ceiling=xhigh target=main-orchestrator
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 ### Run 4 — 2026-07-07 10:24
 
 **Branch:** multi-family-dispatch
@@ -1295,6 +1330,95 @@ same-runtime` remains the runtime-avoidance path.
 
 ---
 
+### 2026-07-07
+
+**Session Start:** p05 implementation
+
+- [x] p05-t01: Ordered-route resolution in the resolver - d05169a0
+- [x] p05-t02: `(harness, model, effort)` target objects with same-harness dispatch - 302161a9
+- [x] p05-t03: Wire escalation to existing retry/Dispatch Profile hooks - f599acdc
+- [x] p05 review fixes: preserve route target dispatch axes - 80932b88
+
+**What changed (high level):**
+
+- Added ordered route resolution for matrix cells, including `--escalation-level`
+  discrete route selection.
+- Added same-harness route target objects with provider-specific dispatch-axis
+  handling and honest cross-harness advisory behavior.
+- Updated the implementation skill so retry escalation advances route entries
+  and every dispatch records the p01 producer-stamp grammar.
+- Fixed review-found target-axis and stamp-provenance bugs before passing p05
+  re-review.
+
+**Decisions:**
+
+- Same-harness route objects dispatch through the target harness adapter axis:
+  pinned-variant providers use `effort`, model-arg providers use `model`.
+- `harness` is not a dispatch value. Harness-only route objects are explicit
+  advisory targets until they carry a dispatchable axis.
+- Codex pinned variants declare the effort axis only; they do not declare
+  concrete producer identity without observed or inferred model evidence.
+
+**Follow-ups / TODO:**
+
+- Run the p05 phase review gate, then continue with p06-t01.
+
+**Blockers:**
+
+- None.
+
+**Session End:** 2026-07-07 - p05 implementation complete
+
+---
+
+### Review Received: p05 standard review
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/p05-review-2026-07-07T161421Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- I1: Addressed now. Route target objects now resolve dispatch values through
+  the target harness adapter axis, so Codex model+effort objects use `effort`
+  and Cursor model objects use `model`.
+- I2: Addressed now. Skill guidance now states that Codex pinned variants
+  declare effort only and must not be stamped as declared producer identity.
+
+**Next:** Re-review p05.
+
+---
+
+### Review Received: p05 re-review
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/p05-review-2026-07-07T162316Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- Passed. No review-receive fixes required.
+
+**Next:** Run the p05 phase review gate, then continue implementation with p06-t01.
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1323,6 +1447,7 @@ Track test execution during implementation.
 | 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                          | yes    | 0      | n/a      |
 | 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check | yes    | 0      | n/a      |
 | 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                           | yes    | 0      | n/a      |
+| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                            | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
