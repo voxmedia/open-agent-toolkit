@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-t01
-oat_last_commit: 80932b88923576cd4ee6f9eb3fbe0b565a79cdd1
+oat_last_commit: 8606e571ed53cd0e70fd633b4fd410d461dd3b34
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-c3d8' }
@@ -30,7 +30,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T16:24:00Z'
+oat_project_state_updated: '2026-07-07T16:33:00Z'
 oat_generated: false
 ---
 
@@ -44,8 +44,8 @@ oat_generated: false
 
 Implementation in progress. Phases p01 through p05 are complete. p05 added ordered
 implementation routes, same-harness target objects, and route escalation guidance, then
-passed standard review after one bounded fix. Next: run the p05 phase review gate, then
-continue with p06-t01.
+passed standard review after one bounded fix and passed the external phase review gate.
+Next: continue with p06-t01.
 
 ## Artifacts
 
@@ -80,7 +80,7 @@ continue with p06-t01.
 - ✓ p04 external phase review gate passed and was consumed
 - ✓ Phase p05 multi-family implementation routing complete
 - ✓ p05 standard review passed after one bounded fix
-- ⧗ p05 external phase review gate pending
+- ✓ p05 external phase review gate passed and was consumed
 
 ## Blockers
 
@@ -88,8 +88,8 @@ None
 
 ## Next Milestone
 
-Run the configured p05 phase review gate, then continue implementation with p06-t01
-(skills/docs/assets propagation and release validation).
+Continue implementation with p06-t01 (skills/docs/assets propagation and release
+validation).
 
 ## Notes
 
