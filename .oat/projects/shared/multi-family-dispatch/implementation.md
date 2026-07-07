@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p02-t03
+oat_current_task_id: p02-t04
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 2/4       |
+| Phase 2 | in_progress | 4     | 3/4       |
 
-**Total:** 5/25 tasks completed
+**Total:** 6/25 tasks completed
 
 ---
 
@@ -323,6 +323,8 @@ __EXIT_CODE__=0
 - Started the shared identity foundation with a tested model-family classifier.
 - Added provenance/confidence resolution for declared, observed, inferred, and
   unknown identity records.
+- Added `oat internal cursor-current-target` as the shared Cursor current-model
+  probe helper.
 
 **Key files touched:**
 
@@ -335,6 +337,12 @@ __EXIT_CODE__=0
 - `packages/cli/src/providers/identity/provenance.test.ts` - covers
   corroboration, reject-on-invalid promotion, mismatches, low-confidence
   observations, and unknown identity.
+- `packages/cli/src/commands/internal/cursor-current-target.ts` - probes Cursor
+  catalog, init-event, and cli-config sources and emits JSON/text results.
+- `packages/cli/src/commands/internal/cursor-current-target.test.ts` - covers
+  mocked subprocess/file-read probe priority and command output.
+- `packages/cli/src/commands/internal/index.ts` - registers the internal
+  command.
 
 **Verification:**
 
@@ -342,6 +350,8 @@ __EXIT_CODE__=0
 - Result: pass (11 tests)
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/provenance.test.ts`
 - Result: pass (6 tests)
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/internal/cursor-current-target.test.ts`
+- Result: pass (8 tests)
 
 **Notes / Decisions:**
 
@@ -423,6 +433,50 @@ __EXIT_CODE__=0
 ---
 
 ### Task p02-t03: Cursor current-model probe helper (`oat internal cursor-current-target`)
+
+**Status:** completed
+**Commit:** feat(p02-t03): add cursor current-target probe helper
+
+**Outcome (required when completed):**
+
+- Added the shared `probeCursorCurrentTarget` helper and
+  `oat internal cursor-current-target` command.
+- Implemented the updated p01/design probe priority:
+  `cursor-agent models` (using `CURSOR_API_KEY` when available) first, then
+  `--list-models`, then init-event model, then `~/.cursor/cli-config.json`
+  `.model`, then explicit `unknown`.
+- Enforced exact catalog matching for display-name values; display-name
+  disagreements degrade to `unknown` instead of normalizing variants.
+
+**Files changed:**
+
+- `packages/cli/src/commands/internal/cursor-current-target.ts`
+- `packages/cli/src/commands/internal/cursor-current-target.test.ts`
+- `packages/cli/src/commands/internal/index.ts`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/internal/cursor-current-target.test.ts`
+  failed because `./cursor-current-target` did not exist.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/internal/cursor-current-target.test.ts`
+  passed (8 tests).
+
+**Notes / Decisions:**
+
+- The implementation follows the p01 finding that `cursor-agent models` with an
+  API key can be the reliable live catalog path while `--list-models` may fail
+  against a locked login keychain.
+- Init-event and cli-config display names must map through an exact live-catalog
+  slug/display match; otherwise the helper reports `value: unknown` with the
+  strongest surviving inferred source.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
+### Task p02-t04: Producer-identity stamp writer and reader
 
 **Status:** pending
 **Commit:** -
