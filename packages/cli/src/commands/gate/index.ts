@@ -775,6 +775,7 @@ function diversityFallbackWarning(
   achieved: GateDiversityAchieved,
 ): string | undefined {
   if (
+    achieved !== 'unknown-producer' &&
     achieved !== 'degraded-to-different-slug' &&
     achieved !== 'same-family - no diverse target available'
   ) {

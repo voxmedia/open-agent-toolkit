@@ -1734,6 +1734,63 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('records a warning when unknown-producer fallback abandons the same-runtime floor', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { CURSOR_AGENT: '1' },
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'unknown:unknown', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'unknown-producer',
+        warning: expect.stringContaining(
+          'No different-family gate target was available',
+        ),
+        reviewer: {
+          target: 'cursor-reviewer',
+          runtime: 'cursor',
+          family: 'openai',
+          model: 'gpt-5.5',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('lists every supported avoidance mode in validation errors', async () => {
     const { root, home } = await setup();
     const runner = createProcessRunner();
