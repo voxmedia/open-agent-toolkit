@@ -896,7 +896,7 @@ found`) so the doctor surface remains explicit.
 
 ## Phase 6: Skills, Docs, Assets, and Release Validation
 
-**Status:** task-complete; p06 review fixes in progress
+**Status:** completed; external gate pending
 **Started:** 2026-07-07
 
 ### Phase Summary
@@ -1057,6 +1057,42 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 6 — 2026-07-07 12:06
+
+**Branch:** multi-family-dispatch
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p06   | DONE_WITH_CONCERNS | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p06: sequential.
+
+#### Dispatch Notes
+
+- Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+- Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=inherited effort_axis=provider-default dispatch_policy=high dispatch_ceiling=xhigh target=main-orchestrator
+- Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+
+#### Outstanding Items
+
+- p06 external phase review gate pending.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact   | Planned / Documented                                             | Actual / Accepted                                                       | Reason                                                            | Source of Truth | Follow-up |
+| ------------- | ----------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------- | --------- |
+| p06-t04       | plan.md file list | Five package files plus `public-package-versions.json` changed.  | `packages/cli/src/validation/skills.test.ts` also changed.              | Skill version validation tracks changed canonical skill versions. | implementation  | None.     |
+| p06 review    | plan.md p06-t02   | `pnpm run cli -- docs generate-index` from repo root was listed. | The command now passes docs app `--docs-dir` and `--output` paths.      | Repo-root defaults generated the wrong index path during review.  | plan.md updated | None.     |
+| p06 review    | plan.md p06-t03   | Sync ran before the p06-t04 public package version bump.         | Sync was rerun after the bump and refreshed manifest version to 0.1.44. | The version bump changes generated sync manifest metadata.        | implementation  | None.     |
 
 ### Run 5 — 2026-07-07 11:24
 
@@ -1660,6 +1696,30 @@ same-runtime` remains the runtime-avoidance path.
   command plus `pnpm build:docs` passed.
 
 **Next:** Re-review p06.
+
+---
+
+### Review Received: p06 re-review
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/p06-review-2026-07-07T170507Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None
+
+**Disposition:**
+
+- Passed. Prior p06 review findings are fixed, and no new p06 findings were
+  reported.
+
+**Next:** Run the p06 external phase review gate, consume its artifact, then pause at
+the configured final HiLL checkpoint.
 
 ---
 
