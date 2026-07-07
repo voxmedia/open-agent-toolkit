@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t07
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | completed   | 3     | 3/3       |
 | Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 7     | 6/7       |
+| Phase 3 | completed   | 7     | 7/7       |
 
-**Total:** 13/25 tasks completed
+**Total:** 14/25 tasks completed
 
 ---
 
@@ -532,8 +532,41 @@ __EXIT_CODE__=0
 
 ## Phase 3: Tier Matrix, Resolver, Cursor Adapter, and Validation Oracles
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-07
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Extended dispatch-ceiling config into a layered tier matrix with sparse
+  project overrides and per-cell source/provenance reporting.
+- Registered Cursor as an enforceable model-arg ceiling provider while keeping
+  Cursor slugs open-ended and validated through live availability oracles.
+- Added set-time, doctor-time, and adopt-time validation for matrix cells.
+- Added an opt-in, version-stamped recommended dispatch matrix adoption flow.
+
+**Key files touched:**
+
+- `packages/cli/src/config/oat-config.ts` - matrix cell config model and
+  recommendation-version persistence.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - sparse
+  project matrix parsing and resolver merge semantics.
+- `packages/cli/src/providers/ceiling/registry.ts` - Cursor ceiling adapter.
+- `packages/cli/src/providers/identity/availability.ts` - provider availability
+  oracle.
+- `packages/cli/src/commands/config/index.ts` - set-time validation and
+  dispatch-matrix adoption.
+- `packages/cli/src/commands/doctor/index.ts` - dispatch matrix drift check.
+- `packages/cli/assets/config/dispatch-matrix-recommendation.json` - bundled
+  recommended matrix.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/providers/ceiling/registry.test.ts src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`
+- Result: pass
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: pass
 
 ### Task p03-t01: Extend `workflow.dispatchCeiling.providers.*` with matrix cells
 
@@ -797,6 +830,55 @@ found`) so the doctor surface remains explicit.
 
 - Self-review found the first implementation treated unvalidated-only cells as
   warning exits; fixed in a follow-up p03-t06 commit before p03-t07 work.
+
+---
+
+### Task p03-t07: Recommended default matrix as adopt-time template
+
+**Status:** completed
+**Commit:** feat(p03-t07): add adopt-time recommended dispatch matrix
+
+**Outcome (required when completed):**
+
+- Added a bundled dispatch matrix recommendation asset with version
+  `2026-07-07.1`.
+- Added `oat config adopt dispatch-matrix` with shared/local/user surfaces and
+  explicit overwrite confirmation (`--yes` or interactive confirmation).
+- Validated every adopted recommendation cell with the availability oracle,
+  warning per cell without blocking adoption.
+- Persisted `workflow.dispatchCeiling.recommendationVersion` so adopted configs
+  remain pinned to the recommendation version until explicitly re-adopted.
+
+**Files changed:**
+
+- `packages/cli/assets/config/dispatch-matrix-recommendation.json`
+- `packages/cli/src/commands/config/index.ts`
+- `packages/cli/src/commands/config/index.test.ts`
+- `packages/cli/src/config/oat-config.ts`
+- `packages/cli/src/config/oat-config.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts`
+  failed because `config adopt` did not exist.
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
+  failed because the recommendation version stamp was dropped.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
+  passed (159 tests).
+- Type-check: `pnpm --filter @open-agent-toolkit/cli type-check` passed.
+
+**Notes / Decisions:**
+
+- Added typed config-model support for `recommendationVersion`; otherwise
+  `writeOatConfig` would have dropped the adoption stamp on the next normalized
+  write.
+- The adoption command defaults to the local workflow surface, matching other
+  workflow config writes, while tests cover the shared surface.
+
+**Issues Encountered:**
+
+- None.
 
 ---
 

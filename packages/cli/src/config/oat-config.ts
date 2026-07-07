@@ -76,6 +76,7 @@ export type GateAvoid = 'same-runtime' | 'none';
 
 export interface WorkflowDispatchCeiling {
   preset?: WorkflowDispatchCeilingPreset;
+  recommendationVersion?: string;
   providers?: Record<string, WorkflowDispatchProviderValue>;
 }
 
@@ -527,6 +528,13 @@ function normalizeWorkflowConfig(
     ) {
       dispatchCeiling.preset = parsed.dispatchCeiling
         .preset as WorkflowDispatchCeilingPreset;
+    }
+
+    const recommendationVersion = trimNonEmptyString(
+      parsed.dispatchCeiling.recommendationVersion,
+    );
+    if (recommendationVersion !== undefined) {
+      dispatchCeiling.recommendationVersion = recommendationVersion;
     }
 
     if (isRecord(parsed.dispatchCeiling.providers)) {

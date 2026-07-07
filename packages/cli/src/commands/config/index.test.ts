@@ -22,6 +22,8 @@ interface HarnessOptions {
     value: string,
     options: { cwd: string; env: NodeJS.ProcessEnv },
   ) => Promise<MatrixCellAvailability>;
+  assetFiles?: Record<string, string>;
+  confirmResponses?: boolean[];
 }
 
 function createHarness(options: HarnessOptions): {
@@ -30,6 +32,8 @@ function createHarness(options: HarnessOptions): {
 } {
   const capture = createLoggerCapture();
   const home = options.home ?? '/tmp/home';
+  const assetFiles = options.assetFiles ?? {};
+  const confirmResponses = [...(options.confirmResponses ?? [])];
 
   const overrides: Parameters<typeof createConfigCommand>[0] = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -43,6 +47,15 @@ function createHarness(options: HarnessOptions): {
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
+    resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+    readFile: vi.fn(async (path: string) => {
+      const content = assetFiles[path];
+      if (content === undefined) {
+        throw new Error(`ENOENT: no such file or directory, open '${path}'`);
+      }
+      return content;
+    }),
+    confirmAction: vi.fn(async () => confirmResponses.shift() ?? false),
     processEnv: options.env ?? {},
   };
   if (options.validateMatrixCell) {
@@ -1123,6 +1136,196 @@ describe('oat config', () => {
         'workflow.dispatchCeiling.providers.codex',
       );
       expect(capture.error[0]).toContain('low | medium | high | xhigh');
+    });
+
+    it('adopts the bundled dispatch matrix recommendation into the shared config with a version stamp', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                cursor: {
+                  economy: 'composer-2.5',
+                  balanced: 'composer-2.5-fast',
+                },
+                codex: { high: 'high' },
+                claude: { frontier: 'fable' },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: '2026-07-07.1',
+            providers: {
+              cursor: {
+                economy: 'composer-2.5',
+                balanced: 'composer-2.5-fast',
+              },
+              codex: { high: 'high' },
+              claude: { frontier: 'fable' },
+            },
+          },
+        },
+      });
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'cursor',
+        'composer-2.5',
+        {
+          cwd: root,
+          env: {},
+        },
+      );
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'cursor',
+        'composer-2.5-fast',
+        { cwd: root, env: {} },
+      );
+      expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
+        cwd: root,
+        env: {},
+      });
+      expect(validateMatrixCell).toHaveBeenCalledWith('claude', 'fable', {
+        cwd: root,
+        env: {},
+      });
+      expect(capture.info[0]).toContain('2026-07-07.1');
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('warns per cell during dispatch matrix recommendation adoption without blocking', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(
+        async (_provider: string, value: string) =>
+          value === 'missing-model' ? 'unknown-value' : 'unvalidated',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                cursor: {
+                  high: [{ model: 'missing-model' }],
+                  frontier: 'composer-2.5',
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.cursor.high[0].model',
+      );
+      expect(capture.warn.join('\n')).toContain('missing-model');
+      expect(capture.warn.join('\n')).toContain('not recognized');
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.cursor.frontier',
+      );
+      expect(capture.warn.join('\n')).toContain('could not be validated');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('does not overwrite an existing dispatch matrix without explicit confirmation', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: { cursor: { high: 'existing-model' } },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        confirmResponses: [false],
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: { cursor: { high: 'replacement-model' } },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: 'old',
+            providers: { cursor: { high: 'existing-model' } },
+          },
+        },
+      });
+      expect(capture.error[0]).toContain('Dispatch matrix adoption cancelled');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('overwrites an existing dispatch matrix when adoption is explicitly confirmed', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: { cursor: { high: 'existing-model' } },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({
+        cwd: root,
+        confirmResponses: [true],
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: { cursor: { high: 'replacement-model' } },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: 'new',
+            providers: { cursor: { high: 'replacement-model' } },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
     });
 
     it('set workflow.dispatchCeiling.preset balanced compiles to concrete providers', async () => {

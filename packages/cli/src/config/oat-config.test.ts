@@ -1157,6 +1157,36 @@ describe('oat-config', () => {
         });
       });
 
+      it('preserves dispatch matrix recommendation version stamps', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                recommendationVersion: '2026-07-07.1',
+                providers: { cursor: { high: 'composer-2.5' } },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling).toEqual({
+          recommendationVersion: '2026-07-07.1',
+          providers: { cursor: { high: 'composer-2.5' } },
+        });
+
+        await writeOatConfig(repoRoot, config);
+        const raw = await readFile(configPath, 'utf8');
+        expect(JSON.parse(raw).workflow.dispatchCeiling).toMatchObject({
+          recommendationVersion: '2026-07-07.1',
+        });
+      });
+
       it('accepts cursor dispatch matrix cells under providers', async () => {
         const repoRoot = await createRepoRoot();
         const configPath = join(repoRoot, '.oat', 'config.json');
