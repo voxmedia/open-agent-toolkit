@@ -558,8 +558,10 @@ __EXIT_CODE__=0
 - `packages/cli/src/commands/config/index.ts` - set-time validation and
   dispatch-matrix adoption.
 - `packages/cli/src/commands/doctor/index.ts` - dispatch matrix drift check.
+- `packages/cli/config/dispatch-matrix-recommendation.json` - canonical source
+  for the recommended matrix.
 - `packages/cli/assets/config/dispatch-matrix-recommendation.json` - bundled
-  recommended matrix.
+  generated copy read by the shipped CLI.
 
 **Verification:**
 
@@ -851,9 +853,12 @@ found`) so the doctor surface remains explicit.
 
 **Files changed:**
 
+- `packages/cli/config/dispatch-matrix-recommendation.json`
 - `packages/cli/assets/config/dispatch-matrix-recommendation.json`
+- `packages/cli/scripts/bundle-assets.sh`
 - `packages/cli/src/commands/config/index.ts`
 - `packages/cli/src/commands/config/index.test.ts`
+- `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
 - `packages/cli/src/config/oat-config.ts`
 - `packages/cli/src/config/oat-config.test.ts`
 - `.oat/projects/shared/multi-family-dispatch/implementation.md`
@@ -873,6 +878,10 @@ found`) so the doctor surface remains explicit.
 - Added typed config-model support for `recommendationVersion`; otherwise
   `writeOatConfig` would have dropped the adoption stamp on the next normalized
   write.
+- p03 gate review found that direct commits under `packages/cli/assets/` are
+  not canonical because `bundle-assets.sh` deletes and recreates that tree.
+  The recommendation now lives at `packages/cli/config/` and is copied into
+  `packages/cli/assets/config/` during the package build.
 - The adoption command defaults to the local workflow surface, matching other
   workflow config writes, while tests cover the shared surface.
 
