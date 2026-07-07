@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: null
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 3     | 3/3       |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 7     | 7/7       |
-| Phase 4 | completed | 4     | 4/4       |
-| Phase 5 | completed | 3     | 3/3       |
-| Phase 6 | completed | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 3     | 3/3       |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | completed   | 7     | 7/7       |
+| Phase 4 | completed   | 4     | 4/4       |
+| Phase 5 | completed   | 3     | 3/3       |
+| Phase 6 | completed   | 4     | 4/4       |
+| Phase 7 | in_progress | 2     | 0/2       |
 
-**Total:** 25/25 tasks completed
+**Total:** 25/27 tasks completed
 
 ---
 
@@ -1772,6 +1773,66 @@ closeout.
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/archived/final-review-2026-07-07T200402Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 3
+
+**New tasks added:** p07-t01, p07-t02
+
+**Disposition:**
+
+- M1: Deferred with tracked follow-up
+  `BL-260707-consolidate-dispatch-matrix`. The duplicated matrix
+  normalizers and cell-reference walkers are behaviorally consistent at HEAD
+  and covered by tests. Consolidating them now would add refactor risk after
+  the release-validation pass; the trigger for the backlog item is the next
+  matrix cell-shape change.
+- M2: Converted to p07-t01. Unknown or non-claimable producer identity under
+  default `same-family` gate avoidance should preserve the previous
+  same-runtime diversity floor and only fall back through the existing
+  no-eligible-target path.
+- m1: Deferred with tracked follow-up
+  `BL-260707-cache-cursor-model-catalog`. The per-cell Cursor catalog lookup
+  affects interactive maintenance surfaces only, not dispatch correctness, so
+  it is accepted as a post-release optimization.
+- m2: Converted to p07-t02. Closed-enum provider cells should reject invalid
+  values at set time instead of warning that an inert value is being saved.
+- m3: Deferred with tracked follow-up
+  `BL-260707-support-producer-identity`. Final/range scope stamp aggregation
+  is a larger producer-identity enhancement; p07-t01 removes the immediate
+  unknown-producer independence regression.
+
+**Deferred Findings (Medium):**
+
+- M1 accepted defer to post-release with backlog
+  `BL-260707-consolidate-dispatch-matrix`; rationale: all duplicate paths are
+  green and behavior-consistent, while extracting a shared normalizer/walker
+  after p05 route changes would be higher churn than warranted for this PR.
+
+**Deferred Findings (Minor):**
+
+- m1 accepted defer to post-release with backlog
+  `BL-260707-cache-cursor-model-catalog`; rationale: adopt and doctor can pay
+  a per-pass catalog cost without changing dispatch correctness.
+- m3 accepted defer to post-release with backlog
+  `BL-260707-support-producer-identity`; rationale: final/range producer
+  aggregation should be designed with the broader producer-identity follow-up
+  instead of patched into this release.
+
+**Next:** Execute p07 fix tasks via the `oat-project-implement` skill, update the
+final review row to `fixes_completed`, then re-run final review and review-receive
+to reach `passed`.
+
+---
+
 ### 2026-07-06
 
 **Session Start:** {time}
@@ -1784,26 +1845,28 @@ closeout.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact   | Planned / Documented                                                      | Actual / Accepted                                                                          | Reason                                                                                                                          | Source of Truth              | Follow-up                                                                      |
-| ------------- | ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
-| p02 gate      | plan.md p02-t03   | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback. | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain. | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
-| p03 gate      | plan.md p03-t06   | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                    | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                           | plan.md updated              | None.                                                                          |
-| p04-t02       | plan.md file list | The task named `oat-config.ts` and gate code.                             | The implementation also updated `packages/cli/src/config/resolve.ts`.                      | Layered exec-target resolution must preserve `ExecTarget.models`; otherwise model candidates disappear after config merge.      | implementation               | None.                                                                          |
-| p06-t04       | plan.md file list | The task listed five package files plus `public-package-versions.json`.   | The implementation also updated `packages/cli/src/validation/skills.test.ts`.              | Skill version validation intentionally tracks changed canonical skill frontmatter versions.                                     | implementation               | None.                                                                          |
-| post-p06      | plan.md           | Implementation plan ended after p06 release validation and gate review.   | Added a repo-local Git hook/toolchain fix before final documentation/review closeout.      | The active repo hooks were resolving stale global/Codex-bundled tooling under mixed Node/pnpm versions.                         | implementation               | None.                                                                          |
+| Task / Review | Source Artifact   | Planned / Documented                                                      | Actual / Accepted                                                                                                                            | Reason                                                                                                                                                                      | Source of Truth              | Follow-up                                                                      |
+| ------------- | ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
+| p02 gate      | plan.md p02-t03   | `--list-models` current marker is the first Cursor catalog/current probe. | `cursor-agent models` is first, then `--list-models`, then init-event and config fallback.                                                   | p01 live verification showed `cursor-agent models` works with API key while `--list-models` can fail against a locked keychain.                                             | design.md and implementation | No plan task added; future p02/p03 consumers should follow the updated design. |
+| p03 gate      | plan.md p03-t06   | The doctor check was named `dispatch:matrix`.                             | The implementation registers `project:dispatch_matrix`.                                                                                      | The implemented name follows scoped doctor-check convention and the check only runs in project scope.                                                                       | plan.md updated              | None.                                                                          |
+| p04-t02       | plan.md file list | The task named `oat-config.ts` and gate code.                             | The implementation also updated `packages/cli/src/config/resolve.ts`.                                                                        | Layered exec-target resolution must preserve `ExecTarget.models`; otherwise model candidates disappear after config merge.                                                  | implementation               | None.                                                                          |
+| p06-t04       | plan.md file list | The task listed five package files plus `public-package-versions.json`.   | The implementation also updated `packages/cli/src/validation/skills.test.ts`.                                                                | Skill version validation intentionally tracks changed canonical skill frontmatter versions.                                                                                 | implementation               | None.                                                                          |
+| post-p06      | plan.md           | Implementation plan ended after p06 release validation and gate review.   | Added a repo-local Git hook/toolchain fix before final documentation/review closeout.                                                        | The active repo hooks were resolving stale global/Codex-bundled tooling under mixed Node/pnpm versions.                                                                     | implementation               | None.                                                                          |
+| final review  | design.md         | Final/range gates diversify against each phase producer.                  | Current stamp lookup is exact single-scope; final/range scopes degrade to unknown-producer unless an explicit producer identity is supplied. | Aggregating producer identity across ranges needs a broader producer-identity design pass, and p07-t01 addresses the immediate unknown-producer diversity-floor regression. | implementation and backlog   | `BL-260707-support-producer-identity`                                          |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                                                           | Passed | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                         | yes    | 0      | n/a      |
-| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                                | yes    | 0      | n/a      |
-| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check       | yes    | 0      | n/a      |
-| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                                 | yes    | 0      | n/a      |
-| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                                  | yes    | 0      | n/a      |
-| 6     | oat:validate-skills; docs generate-index; build:docs; sync --scope all; status --scope project --json; git diff --check; cli test/type-check/lint; release:validate | yes    | 0      | n/a      |
+| Phase | Tests Run                                                                                                                                                           | Passed  | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | -------- |
+| 1     | type-check; live cursor-agent probes; grep producer grammar                                                                                                         | yes     | 0      | n/a      |
+| 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check                                                                                | yes     | 0      | n/a      |
+| 3     | oat-config.test; dispatch-ceiling/index.test; registry.test; availability.test; config/index.test; doctor/index.test; bundle-consistency.test; cli type-check       | yes     | 0      | n/a      |
+| 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                                 | yes     | 0      | n/a      |
+| 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                                  | yes     | 0      | n/a      |
+| 6     | oat:validate-skills; docs generate-index; build:docs; sync --scope all; status --scope project --json; git diff --check; cli test/type-check/lint; release:validate | yes     | 0      | n/a      |
+| 7     | final review fix verification pending                                                                                                                               | pending | n/a    | n/a      |
 
 ## Final Summary (for PR/docs)
 

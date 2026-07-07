@@ -724,34 +724,97 @@ pnpm release:validate
 
 **Commit:** `chore(p06-t04): bump public packages for multi-family dispatch`
 
+## Phase 7: Final Review Fixes
+
+Final-review findings that require code changes before the project can pass final re-review. Deferred review findings are tracked in PJM backlog items and recorded in `implementation.md`.
+
+### Task p07-t01: (review) Restore same-runtime floor for unknown-producer same-family gates
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Under the new default `avoid=same-family`, `listExecTargetCandidates` only applies family filtering when the producer family is known. With an unknown producer, no avoidance filter runs and the highest-priority target can be the same runtime/model that produced the work, regressing the shipped same-runtime independence floor for unstamped projects.
+
+Location: `packages/cli/src/commands/gate/index.ts:832`
+
+**Step 2: Implement fix**
+
+When `avoid === 'same-family'` and producer identity is unknown or non-claimable, retain the same-runtime filter as a conservative floor. Fall back to unfiltered selection only through the existing no-eligible-target fallback and preserve honest achieved-diversity metadata/logging. Update the existing unknown-producer regression coverage so it expects the same-runtime floor rather than no fallback.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+Expected: pass, including coverage for unknown producer identity under the default `same-family` mode.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/
+git commit -m "fix(p07-t01): restore unknown-producer gate diversity floor"
+```
+
+### Task p07-t02: (review) Reject invalid closed-provider matrix values at set time
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: `oat config set workflow.dispatchCeiling.providers.claude.high opus-4.8` currently warns that the value was not recognized but says it is "saving anyway". For closed-enum providers such as Codex and Claude, invalid values are later dropped by config normalization, so the saved value is inert and misleading.
+
+Location: `packages/cli/src/commands/config/index.ts:1010`
+
+**Step 2: Implement fix**
+
+For closed-enum provider cells (`codex`, `claude`), fail `config set` when the supplied value is not accepted by that provider's enum/availability rules and include the valid-value list in the error. Keep open-provider behavior for Cursor and future providers, where unrecognized values may still be saved with an availability warning.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
+Expected: pass, including a regression that closed-provider invalid values are rejected at set time and open-provider values retain current warning/save behavior.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/config/ packages/cli/src/config/
+git commit -m "fix(p07-t02): reject invalid closed-provider dispatch cells"
+```
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| design | artifact | passed   | 2026-07-07 | signed off in-session (Q23)                                 |
-| plan   | artifact | passed   | 2026-07-07 | reviews/archived/artifact-plan-review-2026-07-07T052748Z.md |
-| p01    | code     | passed   | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
-| p02    | code     | passed   | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
-| p03    | code     | passed   | 2026-07-07 | reviews/archived/p03-review-2026-07-07T150751Z.md           |
-| p04    | code     | passed   | 2026-07-07 | reviews/archived/p04-review-2026-07-07T155438Z.md           |
-| p05    | code     | passed   | 2026-07-07 | reviews/archived/p05-review-2026-07-07T163044Z.md           |
-| p06    | code     | passed   | 2026-07-07 | reviews/archived/p06-review-2026-07-07T171242Z.md           |
-| final  | code     | received | 2026-07-07 | reviews/final-review-2026-07-07T200402Z.md                  |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| design | artifact | passed      | 2026-07-07 | signed off in-session (Q23)                                 |
+| plan   | artifact | passed      | 2026-07-07 | reviews/archived/artifact-plan-review-2026-07-07T052748Z.md |
+| p01    | code     | passed      | 2026-07-07 | reviews/archived/p01-review-2026-07-07T130154Z.md           |
+| p02    | code     | passed      | 2026-07-07 | reviews/archived/p02-review-2026-07-07T133749Z.md           |
+| p03    | code     | passed      | 2026-07-07 | reviews/archived/p03-review-2026-07-07T150751Z.md           |
+| p04    | code     | passed      | 2026-07-07 | reviews/archived/p04-review-2026-07-07T155438Z.md           |
+| p05    | code     | passed      | 2026-07-07 | reviews/archived/p05-review-2026-07-07T163044Z.md           |
+| p06    | code     | passed      | 2026-07-07 | reviews/archived/p06-review-2026-07-07T171242Z.md           |
+| final  | code     | fixes_added | 2026-07-07 | reviews/archived/final-review-2026-07-07T200402Z.md         |
 
 ## Implementation Complete
 
-Implementation is complete when all six phases pass review and release validation succeeds.
+Implementation is complete when all seven phases pass review, final re-review passes, and release validation succeeds.
 
-| Phase | Tasks | Status |
-| ----- | ----- | ------ |
-| p01   | 3     | passed |
-| p02   | 4     | passed |
-| p03   | 7     | passed |
-| p04   | 4     | passed |
-| p05   | 3     | passed |
-| p06   | 4     | passed |
+| Phase | Tasks | Status  |
+| ----- | ----- | ------- |
+| p01   | 3     | passed  |
+| p02   | 4     | passed  |
+| p03   | 7     | passed  |
+| p04   | 4     | passed  |
+| p05   | 3     | passed  |
+| p06   | 4     | passed  |
+| p07   | 2     | pending |
 
-**Total:** 25 tasks.
+**Total:** 27 tasks.
 
 ## References
 
