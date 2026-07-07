@@ -1157,6 +1157,169 @@ describe('oat-config', () => {
         });
       });
 
+      it('accepts cursor dispatch matrix cells under providers', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  cursor: {
+                    economy: 'composer-2.5',
+                    balanced: [
+                      'composer-2.5-fast',
+                      {
+                        harness: 'cursor',
+                        model: 'gpt-5.3-codex-high',
+                        effort: 'high',
+                        ignored: true,
+                      },
+                    ],
+                    high: [
+                      { harness: 'cursor', model: 'glm-5.2-max' },
+                      'claude-opus-4-8',
+                    ],
+                    frontier: 'fable-5',
+                    experimental: 'not-a-tier',
+                  },
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          cursor: {
+            economy: 'composer-2.5',
+            balanced: [
+              'composer-2.5-fast',
+              {
+                harness: 'cursor',
+                model: 'gpt-5.3-codex-high',
+                effort: 'high',
+              },
+            ],
+            high: [
+              { harness: 'cursor', model: 'glm-5.2-max' },
+              'claude-opus-4-8',
+            ],
+            frontier: 'fable-5',
+          },
+        });
+      });
+
+      it('accepts bare cursor model slugs as single pinned provider values', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: { cursor: 'composer-2.5' },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          cursor: 'composer-2.5',
+        });
+      });
+
+      it('accepts per-tier maps for codex and claude while keeping bare enum values valid', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  codex: {
+                    economy: 'low',
+                    balanced: 'medium',
+                    high: 'high',
+                    frontier: 'xhigh',
+                    stray: 'ignored',
+                  },
+                  claude: {
+                    economy: 'haiku',
+                    balanced: 'sonnet',
+                    high: 'opus',
+                    frontier: 'fable',
+                  },
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          codex: {
+            economy: 'low',
+            balanced: 'medium',
+            high: 'high',
+            frontier: 'xhigh',
+          },
+          claude: {
+            economy: 'haiku',
+            balanced: 'sonnet',
+            high: 'opus',
+            frontier: 'fable',
+          },
+        });
+      });
+
+      it('drops invalid dispatch matrix provider shapes silently', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  cursor: {
+                    economy: [],
+                    balanced: [{ unknown: true }],
+                  },
+                  codex: 'ultra',
+                  claude: {
+                    high: 'super-opus',
+                  },
+                },
+              },
+              dispatchPolicy: {
+                mode: 'managed',
+                policy: 'high',
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow).toEqual({
+          dispatchPolicy: {
+            mode: 'managed',
+            policy: 'high',
+          },
+        });
+      });
+
       it('drops invalid preset values silently', async () => {
         const repoRoot = await createRepoRoot();
         const configPath = join(repoRoot, '.oat', 'config.json');

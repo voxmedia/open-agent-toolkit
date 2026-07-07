@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-07
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -24,12 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 3     | 3/3       |
-| Phase 2 | completed | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 3     | 3/3       |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | in_progress | 7     | 1/7       |
 
-**Total:** 7/25 tasks completed
+**Total:** 8/25 tasks completed
 
 ---
 
@@ -529,6 +530,52 @@ __EXIT_CODE__=0
 
 ---
 
+## Phase 3: Tier Matrix, Resolver, Cursor Adapter, and Validation Oracles
+
+**Status:** in_progress
+**Started:** 2026-07-07
+
+### Task p03-t01: Extend `workflow.dispatchCeiling.providers.*` with matrix cells
+
+**Status:** completed
+**Commit:** feat(p03-t01): add dispatch matrix config model
+
+**Outcome (required when completed):**
+
+- Extended the workflow dispatch-ceiling config model so
+  `workflow.dispatchCeiling.providers.*` can hold bare provider values,
+  per-tier matrix maps, and ordered route cells.
+- Preserved legacy bare-value enum validation for `codex` and `claude` while
+  allowing open-ended Cursor slugs and route target objects.
+- Kept dispatch policy parsing unchanged.
+
+**Files changed:**
+
+- `packages/cli/src/config/oat-config.ts`
+- `packages/cli/src/config/oat-config.test.ts`
+- `.oat/projects/shared/multi-family-dispatch/implementation.md`
+
+**Verification:**
+
+- RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
+  failed on the new Cursor/matrix cases because provider normalization only
+  accepted `codex` and `claude` enum strings.
+- GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
+  passed (65 tests).
+
+**Notes / Decisions:**
+
+- Unknown tier keys and unknown route-target object keys are ignored during
+  normalization, matching the existing config-normalization style.
+- Invalid provider shapes are dropped silently; valid siblings continue to
+  normalize.
+
+**Issues Encountered:**
+
+- None.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -740,6 +787,7 @@ Track test execution during implementation.
 | ----- | ------------------------------------------------------------------------------------ | ------ | ------ | -------- |
 | 1     | type-check; live cursor-agent probes; grep producer grammar                          | yes    | 0      | n/a      |
 | 2     | family.test; provenance.test; cursor-current-target.test; stamp.test; cli type-check | yes    | 0      | n/a      |
+| 3     | oat-config.test                                                                      | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
