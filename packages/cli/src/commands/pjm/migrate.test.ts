@@ -22,6 +22,8 @@ const TEMPLATE_NAMES = [
   'repo-agents.md',
   'pjm-agents.md',
   'reference-agents.md',
+  'repo-readme.md',
+  'pjm-handoffs-readme.md',
 ] as const;
 
 const LEGACY_DECISIONS = [

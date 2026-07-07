@@ -22,6 +22,7 @@ Instruction sync is currently project-only.
 - It scans the current repository recursively.
 - It supports nested directories all the way down the tree.
 - It skips provider-irrelevant or local-only roots such as `.git`, `.oat`, `.worktrees`, and `node_modules`.
+- Exception: `.oat/repo/**` is scanned even though the rest of `.oat/` is skipped, so the curated `AGENTS.md` files there (repo root guidance, `pjm/`, `reference/`) get their sibling `CLAUDE.md` shims managed and validated like any other directory. The rest of `.oat/` (`templates/`, `projects/`, `sync/`) stays excluded.
 - It does not scan user-level provider roots such as `~/.claude` in this release.
 
 ## Canonical Model

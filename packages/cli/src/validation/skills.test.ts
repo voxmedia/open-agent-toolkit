@@ -726,14 +726,17 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('documents gate invocation as standard receive disposition', async () => {
+  it('documents gate invocation as autonomous receive disposition', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-review-receive/SKILL.md',
     );
 
     expect(content).toMatch(/oat_review_invocation/);
-    expect(content).toMatch(/`gate`/);
-    expect(content).toMatch(/standard disposition behavior/i);
+    expect(content).toMatch(/gate/);
+    // A blocking gate is received autonomously (auto-disposition); a passing
+    // gate runs the non-pausing judgment sweep. Neither is "standard/manual".
+    expect(content).toMatch(/auto-disposition mode/i);
+    expect(content).toMatch(/judgment-sweep mode/i);
   });
 
   it('requires reviewer artifacts to expose gate-parseable findings counts or sections', async () => {

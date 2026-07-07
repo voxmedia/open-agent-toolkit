@@ -5,7 +5,7 @@ Use this template for non-project commit-range reviews.
 ````markdown
 ---
 oat_generated: true
-oat_generated_at: YYYY-MM-DD
+oat_generated_at: YYYY-MM-DDTHH:MM:SSZ
 oat_review_type: code
 oat_review_scope: { scope }
 oat_review_scope_mode: { files|unstaged|staged|range }

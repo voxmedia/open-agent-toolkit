@@ -57,6 +57,7 @@ See [Project Splitting](splitting.md) for the full parent/child model.
 
 - `oat_plan_hill_phases` — list of phase IDs to pause at for HiLL checkpoints.
 - `oat_plan_parallel_groups` — declares which phases may execute concurrently in worktrees. See below.
+- `oat_phase_review_gate` — opt-in non-pausing external review gate that runs after a phase's standard reviewer passes. See below.
 
 #### oat_plan_parallel_groups
 
@@ -84,6 +85,27 @@ Each inner array is a group of phases that execute concurrently in their own wor
 **Validation:**
 
 Before dispatching, `oat-project-implement` invokes `oat project validate-plan --project-path "${PROJECT_PATH}"`. Non-zero exit blocks the run. See [CLI Reference](../../reference/cli-reference.md) and [Implementation Execution](implementation-execution.md) for details.
+
+#### oat_phase_review_gate
+
+Enable an optional, non-pausing external review gate that runs after each selected phase's standard reviewer passes and its bookkeeping is committed:
+
+```yaml
+oat_phase_review_gate:
+  enabled: true
+  phases: [] # empty or omitted = every implementation phase
+  review_type: code
+  exit_nonzero_on: important
+```
+
+**Semantics:**
+
+- Missing, `null`, or `enabled: false` → disabled (default). `enabled: true` activates the gate.
+- `phases` → optional. Empty or missing runs the gate after every implementation phase; a populated list restricts it to those phase IDs, each of which must exist in the plan body.
+- `review_type` → optional, defaults to `code`. Only `code` is supported for phase gates.
+- `exit_nonzero_on` → optional, defaults to `important`. One of `critical`, `important`, `medium`, `minor`. This is the blocking threshold: findings at or above it stop the phase; sub-threshold findings are dispositioned by the judgment sweep rather than ignored.
+
+A malformed gate stops the run before task execution rather than being silently disabled. The gate is independent of HiLL checkpoints and reuses the existing `oat gate review` target config — it does not hardcode a `--target`. See [Reviews → Phase review gate](reviews.md#phase-review-gate) for the runtime behavior and disposition rules.
 
 ## Reference artifacts
 

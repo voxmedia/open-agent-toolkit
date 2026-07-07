@@ -8,22 +8,25 @@
 
 <!-- OAT DECISION-INDEX -->
 
-| ID                                       | Date       | Status   | Title                                                  | Legacy |
-| ---------------------------------------- | ---------- | -------- | ------------------------------------------------------ | ------ |
-| DR-260706-claude-remains-model-axis-only | 2026-07-06 | accepted | Claude remains model-axis only                         | -      |
-| DR-260706-inherit-host-defaults-means-no | 2026-07-06 | accepted | Inherit Host Defaults means no OAT selection           | -      |
-| DR-260706-managed-uncapped-is-explicit   | 2026-07-06 | accepted | Managed Uncapped is explicit state                     | -      |
-| DR-260706-resolver-owns-preferred        | 2026-07-06 | accepted | Resolver owns preferred selection                      | -      |
-| DR-260706-reviewer-targets-only-capped   | 2026-07-06 | accepted | Reviewer targets only capped policies                  | -      |
-| DR-260701-gates-v2-remains-deferred      | 2026-07-01 | accepted | Gates V2 remains deferred                              | -      |
-| DR-260701-lifecycle-gate-commands-stay   | 2026-07-01 | accepted | Lifecycle gate commands stay target-neutral by default | -      |
-| DR-260701-provider-verification-happens  | 2026-07-01 | accepted | Provider verification happens at the CLI argv boundary | -      |
-| DR-260701-review-gates-own-review-prompt | 2026-07-01 | accepted | Review gates own review prompt assembly                | -      |
-| DR-260624-allocator-free-deterministic   | 2026-06-24 | accepted | Allocator-free deterministic IDs                       | -      |
-| DR-260624-file-per-record-decisions      | 2026-06-24 | accepted | File-per-record decisions with a generated index       | -      |
-| DR-260624-lockstep-release-bump-batched  | 2026-06-24 | accepted | Lockstep release bump batched to the final phase       | -      |
-| DR-260624-migration-is-lossless          | 2026-06-24 | accepted | Migration is lossless and guarded                      | -      |
-| DR-260624-two-physical-layers-not-one    | 2026-06-24 | accepted | Two physical layers, not one                           | -      |
+| ID                                       | Date       | Status   | Title                                                                   | Legacy |
+| ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260706-claude-remains-model-axis-only | 2026-07-06 | accepted | Claude remains model-axis only                                          | -      |
+| DR-260706-gate-completion-is-signaled-by | 2026-07-06 | accepted | Gate completion is signaled by the JSON envelope not filesystem state   | -      |
+| DR-260706-inherit-host-defaults-means-no | 2026-07-06 | accepted | Inherit Host Defaults means no OAT selection                            | -      |
+| DR-260706-managed-uncapped-is-explicit   | 2026-07-06 | accepted | Managed Uncapped is explicit state                                      | -      |
+| DR-260706-phase-review-gate-is-non       | 2026-07-06 | accepted | Phase review gate is non-pausing and separates verdict from disposition | -      |
+| DR-260706-resolver-owns-preferred        | 2026-07-06 | accepted | Resolver owns preferred selection                                       | -      |
+| DR-260706-review-artifacts-use-seconds   | 2026-07-06 | accepted | Review artifacts use seconds-precision UTC timestamps                   | -      |
+| DR-260706-reviewer-targets-only-capped   | 2026-07-06 | accepted | Reviewer targets only capped policies                                   | -      |
+| DR-260701-gates-v2-remains-deferred      | 2026-07-01 | accepted | Gates V2 remains deferred                                               | -      |
+| DR-260701-lifecycle-gate-commands-stay   | 2026-07-01 | accepted | Lifecycle gate commands stay target-neutral by default                  | -      |
+| DR-260701-provider-verification-happens  | 2026-07-01 | accepted | Provider verification happens at the CLI argv boundary                  | -      |
+| DR-260701-review-gates-own-review-prompt | 2026-07-01 | accepted | Review gates own review prompt assembly                                 | -      |
+| DR-260624-allocator-free-deterministic   | 2026-06-24 | accepted | Allocator-free deterministic IDs                                        | -      |
+| DR-260624-file-per-record-decisions      | 2026-06-24 | accepted | File-per-record decisions with a generated index                        | -      |
+| DR-260624-lockstep-release-bump-batched  | 2026-06-24 | accepted | Lockstep release bump batched to the final phase                        | -      |
+| DR-260624-migration-is-lossless          | 2026-06-24 | accepted | Migration is lossless and guarded                                       | -      |
+| DR-260624-two-physical-layers-not-one    | 2026-06-24 | accepted | Two physical layers, not one                                            | -      |
 
 <!-- END OAT DECISION-INDEX -->
 

@@ -12,11 +12,23 @@ function createHarness(): {
   capture: LoggerCapture;
   command: Command;
   initializeBacklog: ReturnType<typeof vi.fn>;
+  archiveBacklogItem: ReturnType<typeof vi.fn>;
   pathExists: ReturnType<typeof vi.fn>;
   resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const initializeBacklog = vi.fn(async (_backlogRoot: string) => {});
+  const archiveBacklogItem = vi.fn(
+    async (_backlogRoot: string, id: string) => ({
+      id,
+      result: 'archived' as const,
+      status: 'closed' as const,
+      completedEntry: 'written' as const,
+      movedTo: `/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/${id}.md`,
+      indexRegenerated: true,
+      warnings: [] as string[],
+    }),
+  );
   const pathExists = vi.fn(async (_path: string) => false);
   const resolveProjectRoot = vi.fn(
     async (_cwd: string) => '/tmp/workspace/repo',
@@ -34,6 +46,7 @@ function createHarness(): {
       logger: capture.logger,
     }),
     initializeBacklog,
+    archiveBacklogItem,
     pathExists,
     resolveProjectRoot,
   });
@@ -42,6 +55,7 @@ function createHarness(): {
     capture,
     command,
     initializeBacklog,
+    archiveBacklogItem,
     pathExists,
     resolveProjectRoot,
   };
@@ -168,6 +182,79 @@ describe('createBacklogCommand', () => {
       createdAt: '2026-06-22T10:00:00Z',
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('archives an item through the resolved backlog root with parsed options', async () => {
+    const { command, capture, archiveBacklogItem, resolveProjectRoot } =
+      createHarness();
+
+    await runCommand(
+      command,
+      'archive',
+      [],
+      ['BL-260705-demo', '--wont-do', '--summary', 'Not pursuing'],
+    );
+
+    expect(resolveProjectRoot).toHaveBeenCalledWith('/tmp/workspace');
+    expect(archiveBacklogItem).toHaveBeenCalledWith(
+      '/tmp/workspace/repo/.oat/repo/pjm/backlog',
+      'BL-260705-demo',
+      { wontDo: true, summary: 'Not pursuing' },
+    );
+    expect(capture.success.join('\n')).toContain('Archived BL-260705-demo');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('emits a structured JSON payload for archive results', async () => {
+    const { command, capture } = createHarness();
+
+    await runCommand(command, 'archive', ['--json'], ['BL-260705-demo']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      id: 'BL-260705-demo',
+      result: 'archived',
+      status: 'closed',
+      completedEntry: 'written',
+      indexRegenerated: true,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('emits the no-op JSON payload when the item is already archived', async () => {
+    const { command, capture, archiveBacklogItem } = createHarness();
+    archiveBacklogItem.mockResolvedValueOnce({
+      id: 'BL-260705-demo',
+      result: 'noop',
+      status: 'closed',
+      completedEntry: 'skipped',
+      movedTo:
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
+      indexRegenerated: false,
+      warnings: ['Backlog item BL-260705-demo is already archived'],
+    });
+
+    await runCommand(command, 'archive', ['--json'], ['BL-260705-demo']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      id: 'BL-260705-demo',
+      result: 'noop',
+      completedEntry: 'skipped',
+      indexRegenerated: false,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('maps an actionable archive failure to exit code 1', async () => {
+    const { command, capture, archiveBacklogItem } = createHarness();
+    const { BacklogArchiveError } = await import('./archive');
+    archiveBacklogItem.mockRejectedValueOnce(
+      new BacklogArchiveError('Backlog item BL-260705-demo not found.', 1),
+    );
+
+    await runCommand(command, 'archive', [], ['BL-260705-demo']);
+
+    expect(capture.error.join('\n')).toContain('not found');
+    expect(process.exitCode).toBe(1);
   });
 
   it('reports a collision when the candidate item path exists', async () => {

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative } from 'node:path';
 
@@ -12,6 +12,7 @@ import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
+  parseGeneratedTime,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
@@ -929,7 +930,7 @@ async function readReviewGateArtifactCandidate(
     return null;
   }
 
-  const generatedTime = Date.parse(generatedAt);
+  const generatedTime = parseGeneratedTime(generatedAt);
   if (Number.isNaN(generatedTime)) {
     return null;
   }
@@ -1098,9 +1099,11 @@ function writeReviewGateResult(
   context: CommandContext,
   payload: {
     status: 'ok' | 'blocked';
+    runId: string;
     target: string;
     project: string;
     artifactPath: string;
+    generatedAt: string;
     threshold: ReviewGateThreshold;
     blocking: boolean;
     counts: ReviewGateVerdict['counts'];
@@ -1126,6 +1129,9 @@ function writeReviewGateResult(
   } else {
     context.logger.info('Review completed and gate passed.');
   }
+  context.logger.info(
+    `Run: ${payload.runId} (generated ${payload.generatedAt})`,
+  );
   context.logger.info(`Review artifact: ${payload.artifactPath}`);
   if (payload.normalization) {
     context.logger.info(
@@ -1141,6 +1147,7 @@ function writeReviewGateResult(
 function writeReviewGateExecutionFailure(
   context: CommandContext,
   payload: {
+    runId: string;
     target: string;
     project: string;
     exitCode: number;
@@ -1151,6 +1158,7 @@ function writeReviewGateExecutionFailure(
     context.logger.json({
       status: 'review_failed',
       outcome: 'review_did_not_complete',
+      runId: payload.runId,
       target: payload.target,
       project: payload.project,
       exitCode: payload.exitCode,
@@ -1165,9 +1173,11 @@ function writeReviewGateExecutionFailure(
 function writeReviewGateArtifactValidationFailure(
   context: CommandContext,
   payload: {
+    runId: string;
     target: string;
     project: string;
     artifactPath: string | null;
+    generatedAt: string | null;
     message: string;
     recovery: string;
   },
@@ -1176,9 +1186,11 @@ function writeReviewGateArtifactValidationFailure(
     context.logger.json({
       status: 'artifact_validation_failed',
       outcome: 'review_completed_artifact_validation_failed',
+      runId: payload.runId,
       target: payload.target,
       project: payload.project,
       artifactPath: payload.artifactPath,
+      generatedAt: payload.generatedAt,
       message: payload.message,
       recovery: payload.recovery,
     });
@@ -1360,6 +1372,7 @@ async function runReviewGate(
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<void> {
+  const runId = randomUUID();
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
@@ -1405,6 +1418,7 @@ async function runReviewGate(
 
     if (childExitCode !== 0) {
       writeReviewGateExecutionFailure(context, {
+        runId,
         target: selected.id,
         project: projectPath,
         exitCode: childExitCode,
@@ -1420,9 +1434,11 @@ async function runReviewGate(
     const producedArtifact = findProducedReviewArtifact(before, after);
     if (!producedArtifact) {
       writeReviewGateArtifactValidationFailure(context, {
+        runId,
         target: selected.id,
         project: projectPath,
         artifactPath: null,
+        generatedAt: null,
         message: `No new review artifact was detected for project ${projectPath}.`,
         recovery:
           'Ensure the review provider wrote a project review artifact. If it did, fix or attach that artifact and run oat-project-review-receive before treating the review as consumed.',
@@ -1442,9 +1458,11 @@ async function runReviewGate(
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       writeReviewGateArtifactValidationFailure(context, {
+        runId,
         target: selected.id,
         project: projectPath,
         artifactPath: producedArtifact.path,
+        generatedAt: producedArtifact.generatedAt,
         message: detail,
         recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then run oat-project-review-receive for ${producedArtifact.path}; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
       });
@@ -1461,9 +1479,11 @@ async function runReviewGate(
 
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
+      runId,
       target: selected.id,
       project: projectPath,
       artifactPath: producedArtifact.path,
+      generatedAt: producedArtifact.generatedAt,
       threshold,
       blocking,
       counts: verdict.counts,

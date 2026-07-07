@@ -48,7 +48,7 @@ For Codex, `provider-default` means explicit inherit/default behavior or a base/
 
 If `mode: fix`, the block also includes:
 
-- **review_artifact**: Path to the review artifact from the reviewer (e.g., `reviews/p02-review-YYYY-MM-DD.md`)
+- **review_artifact**: Path to the review artifact from the reviewer (e.g., `reviews/p02-review-2026-01-28T140322Z.md`)
 - **findings**: Critical and Important findings list
 - **prior_summary**: Your own prior `implement` run summary (what was previously built)
 

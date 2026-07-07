@@ -12,3 +12,16 @@ This directory owns append-mostly reference material.
 - `external-plans/` stores imported provider or external plans.
 - Create research, brainstorm, and deck folders on demand when a workflow needs them.
 - Do not put active roadmap, current-state, or backlog records directly under `reference/`.
+
+## Source of Truth
+
+| Topic                                  | Canonical location                                                          |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| Backlog close-out / lifecycle workflow | `../pjm/AGENTS.md` (Backlog Lifecycle)                                      |
+| Project kickoff handoffs               | `../pjm/AGENTS.md` (Project Kickoff Handoffs) + `../pjm/handoffs/README.md` |
+| Durable decisions                      | `decisions/`                                                                |
+| Active operating picture / roadmap     | `../pjm/current-state.md`, `../pjm/roadmap.md`                              |
+
+**Update rule.** Do not restate the backlog close-out workflow here. When it
+changes, edit `../pjm/AGENTS.md` and link to it — this directory defers to that
+section rather than duplicating it.

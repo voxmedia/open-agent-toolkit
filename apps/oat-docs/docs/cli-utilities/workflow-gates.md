@@ -71,6 +71,61 @@ status when the configured threshold is met. `cross-provider-exec` does not do
 that interpretation; for generic prompts it still returns only the child process
 status.
 
+`oat-project-implement` uses `oat gate review` per phase when a project opts in
+via the `oat_phase_review_gate` plan frontmatter — a non-pausing gate that runs
+after each selected phase's standard reviewer passes. See
+[Reviews → Phase review gate](../workflows/projects/reviews.md#phase-review-gate)
+for the frontmatter contract and how passing versus blocking gates are
+dispositioned.
+
+### Gate completion signal
+
+The canonical "how do I know the gate finished" signal is the structured result
+`oat --json gate review` writes to stdout on exit, together with the process
+exit code. Orchestrators should run the gate synchronously and read that
+envelope — do **not** poll the `reviews/` directory for a file to appear or
+watch the provider process's log for liveness. Filesystem and log-liveness
+heuristics are unreliable: a re-gate can momentarily surface a prior round's
+artifact, and a lingering provider side-process says nothing about whether the
+review committed.
+
+Every terminal envelope carries a `runId` (unique per gate invocation) and,
+once an artifact exists, its `generatedAt` (the artifact's seconds-precision
+`oat_generated_at`), so a caller can correlate the result to the exact artifact
+and disambiguate re-gate rounds:
+
+| `status`                     | Exit | Meaning                                                   |
+| ---------------------------- | ---- | --------------------------------------------------------- |
+| `ok`                         | 0    | Review completed; gate passed at the threshold.           |
+| `blocked`                    | 1    | Review completed; findings at/above the threshold.        |
+| `review_failed`              | ≠0   | The provider target exited non-zero; no verdict.          |
+| `artifact_validation_failed` | 1    | Provider ran but the review artifact could not be parsed. |
+
+`ok` and `blocked` also include `outcome`, `artifactPath`, `counts`, `scope`,
+and `handoff`. Treat any status other than `ok`/`blocked` as an operational
+failure, not a passing gate.
+
+**Drive gates through `oat gate review`, not raw provider invocation.** An
+orchestrator that hand-rolls the review (for example, calling
+`codex exec … oat-project-review-provide <scope>` directly) and then watches
+`reviews/` for a file is reimplementing — less reliably — what the CLI already
+does: `oat gate review` snapshots the reviews directory, dispatches the
+provider, and attributes the produced artifact by content hash, so it is immune
+to a stale file lingering from a prior round. It works standalone, not only
+inside the `oat-project-implement` auto-loop — a one-off final review is just:
+
+```bash
+oat --json gate review \
+  --project "$PROJECT_PATH" \
+  --review-type code \
+  --review-scope final \
+  --exit-nonzero-on important \
+  'Use oat-project-review-provide code final to review the current project'
+```
+
+Read the resulting envelope and exit code; that is the whole completion
+contract.
+
 ## Exec targets
 
 `oat gate cross-provider-exec` chooses from `workflow.gates.execTargets`.
