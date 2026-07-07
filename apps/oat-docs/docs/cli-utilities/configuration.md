@@ -168,44 +168,53 @@ oat config get lastPausedProject
 oat config describe activeIdea
 ```
 
-## Dispatch ceiling resolution
+## Dispatch policy resolution
 
-The dispatch ceiling is set as a **provider-neutral preset** (or per-provider
-advanced values) and compiled at write time into concrete per-provider values.
-Runtime dispatch reads only the concrete values — never the preset label.
+Dispatch policy is the workflow setting that tells OAT whether to manage
+subagent model/effort selection and, if so, which managed policy to use.
 
-For the full conceptual model — presets, the compile/resolve flow, and how
-enforcement differs for Codex, Claude, and unsupported providers — see
-[Dispatch Ceiling](../workflows/projects/dispatch-ceiling.md).
+For the full conceptual model - managed capped tiers, managed `Uncapped`,
+`Inherit Host Defaults`, and provider-specific enforcement - see
+[Dispatch Policy](../workflows/projects/dispatch-ceiling.md).
 
 ### Config keys
 
-Three keys control the ceiling, all under `workflow.dispatchCeiling`:
+Preferred keys:
 
-| Key                                         | Values                                  | Purpose                                             |
-| ------------------------------------------- | --------------------------------------- | --------------------------------------------------- |
-| `workflow.dispatchCeiling.preset`           | `balanced`, `maximum`, `cost-conscious` | Convenience preset; compiles to concrete values     |
-| `workflow.dispatchCeiling.providers.codex`  | `low`, `medium`, `high`, `xhigh`        | Concrete Codex ceiling (set by preset or Advanced)  |
-| `workflow.dispatchCeiling.providers.claude` | `haiku`, `sonnet`, `opus`               | Concrete Claude ceiling (set by preset or Advanced) |
+| Key                              | Values                                                | Purpose                                                                            |
+| -------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `workflow.dispatchPolicy.mode`   | `managed`, `inherit`                                  | `managed` lets OAT select controls; `inherit` leaves controls to the host/provider |
+| `workflow.dispatchPolicy.policy` | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Managed policy. Setting this key writes `mode=managed`                             |
 
-**Presets compile to:**
+Managed policies compile to:
 
-| Preset           | Codex    | Claude   |
-| ---------------- | -------- | -------- |
-| `balanced`       | `high`   | `sonnet` |
-| `maximum`        | `xhigh`  | `opus`   |
-| `cost-conscious` | `medium` | `sonnet` |
+| Policy     | Codex    | Claude   |
+| ---------- | -------- | -------- |
+| `economy`  | `medium` | `sonnet` |
+| `balanced` | `high`   | `sonnet` |
+| `high`     | `xhigh`  | `opus`   |
+| `frontier` | `xhigh`  | `fable`  |
+| `uncapped` | none     | none     |
 
-**Advanced (no preset):** set `providers.codex` and/or `providers.claude`
-individually. No `preset` key is stored.
+Legacy compatibility keys remain supported for capped managed behavior:
 
-**No ceiling:** leave `oat_dispatch_ceiling` unset; implementer subagents run at
-provider defaults.
+| Key                                         | Values                                  | Purpose                                                                      |
+| ------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
+| `workflow.dispatchCeiling.preset`           | `balanced`, `maximum`, `cost-conscious` | Legacy preset alias; `maximum` maps to `high`, `cost-conscious` to `economy` |
+| `workflow.dispatchCeiling.providers.codex`  | `low`, `medium`, `high`, `xhigh`        | Legacy concrete Codex capped target                                          |
+| `workflow.dispatchCeiling.providers.claude` | `haiku`, `sonnet`, `opus`, `fable`      | Legacy concrete Claude capped target                                         |
+
+`Uncapped` is explicit managed state. Do not represent it by leaving policy
+state absent. To request no OAT model/effort selection, set:
+
+```bash
+oat config set workflow.dispatchPolicy.mode inherit
+```
 
 ### How enforcement works
 
-OAT applies the ceiling where the provider exposes a reliable mechanism. Other
-providers receive it as advisory.
+OAT applies managed policies where the provider exposes a reliable mechanism.
+Other providers receive them as advisory/unsupported.
 
 | Provider | Mechanism                 | Enforcement mode           |
 | -------- | ------------------------- | -------------------------- |
@@ -213,17 +222,22 @@ providers receive it as advisory.
 | Claude   | Task `model` parameter    | `enforced`                 |
 | Others   | None (informational only) | `advisory` / `unsupported` |
 
+Codex uses effort (`low < medium < high < xhigh`) and pinned OAT role variants.
+Claude uses Task `model` (`haiku < sonnet < opus < fable`) and keeps
+`effort_axis=not-applicable`.
+
 **Verify-on-upgrade:** when the requested tier exceeds the current orchestrator
 tier (an upgrade request), the resolver sets `verifyOnDispatch: true`. The skill
 confirms the actual model used after dispatch. If the provider did not honor the
 upgrade, the enforcement log reads `advisory — provider did not honor upgrade;
 ran <tier>` instead of `enforced`.
 
-### Clean break
+### Legacy compatibility
 
-The previous flat keys (`workflow.dispatchCeiling.codex` and
-`workflow.dispatchCeiling.claude`) are removed. There is no migration path — set
-the new keys.
+The command group and docs path still use `dispatch-ceiling` for compatibility.
+Legacy `workflow.dispatchCeiling.*` config and project `oat_dispatch_ceiling`
+frontmatter remain readable as capped managed policy input. Absent legacy state
+does not mean managed `Uncapped`.
 
 ### Using the resolver
 
@@ -238,9 +252,9 @@ oat project dispatch-ceiling resolve --provider claude --orchestrator-tier sonne
 ```
 
 The resolver checks effective config first, then project `state.md`
-`oat_dispatch_ceiling` frontmatter. For Codex it also reports
-`providerDefaultEffort`, which is informational for base/unpinned roles and is
-not treated as the OAT ceiling.
+`oat_dispatch_policy` frontmatter, then legacy `oat_dispatch_ceiling`.
+For Codex it also reports `providerDefaultEffort`, which is informational only
+for explicit inherit/default behavior or base/unpinned fallback paths.
 
 For non-interactive preflight checks, use:
 
@@ -269,9 +283,11 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
 - `workflow.autoArtifactReview.plan` — boolean, default `true`. Automatically run the bounded artifact-review loop for generated `plan.md` files before implementation handoff. Set to `false` only when you intentionally want to skip the plan artifact review.
 - `workflow.autoArtifactReview.analysis` — boolean, default `true`. Automatically run the bounded accuracy-review loop for generated docs and agent-instructions analysis artifacts before the matching apply workflow consumes them.
-- `workflow.dispatchCeiling.preset` — `balanced`, `maximum`, or `cost-conscious`. Convenience preset that compiles to per-provider values at write time. Setting this key is the recommended way to configure the ceiling.
-- `workflow.dispatchCeiling.providers.codex` — `low`, `medium`, `high`, or `xhigh`. Concrete Codex ceiling. Set automatically when a preset is selected; also settable directly for Advanced (no preset) configurations. Provider default effort is informational for base/unpinned roles and is not treated as this ceiling.
-- `workflow.dispatchCeiling.providers.claude` — `haiku`, `sonnet`, or `opus`. Concrete Claude ceiling. Set automatically when a preset is selected; also settable directly for Advanced configurations. Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
+- `workflow.dispatchPolicy.mode` — `managed` or `inherit`. `managed` means OAT selects model/effort controls from `workflow.dispatchPolicy.policy`; `inherit` means OAT leaves controls to host/provider defaults.
+- `workflow.dispatchPolicy.policy` — `economy`, `balanced`, `high`, `frontier`, or `uncapped`. `economy` through `frontier` are capped managed policies; `uncapped` keeps OAT-managed preferred selection without provider caps.
+- `workflow.dispatchCeiling.preset` — legacy compatibility alias (`balanced`, `maximum`, or `cost-conscious`) for capped managed policy setup.
+- `workflow.dispatchCeiling.providers.codex` — legacy concrete Codex cap (`low`, `medium`, `high`, or `xhigh`).
+- `workflow.dispatchCeiling.providers.claude` — legacy concrete Claude cap (`haiku`, `sonnet`, `opus`, or `fable`). Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 
 ### Auto artifact-review preferences

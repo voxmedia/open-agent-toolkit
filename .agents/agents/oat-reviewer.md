@@ -57,16 +57,18 @@ You will be given a "Review Scope" block including:
 - **oat_review_invocation**: Optional provenance selector for artifact-mode reviews. Use `manual`, `auto`, or `gate`; default to `manual` when absent.
 - **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
 - **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `provider-default`, `inherited`, `not-applicable`, or `host-auto`)
-- **dispatch_ceiling**: Optional resolved provider ceiling that capped/selected this review dispatch
-- **ceiling_source**: Optional source for the resolved ceiling (`repo config`, `project state`, or `preflight prompt`)
-- **provider_default_effort**: Optional Codex provider default effort, used only to explain base/unpinned fallback dispatches
+- **dispatch_policy**: Optional resolved policy label (`economy`, `balanced`, `high`, `frontier`, `uncapped`, `inherit host defaults`, or `legacy capped`)
+- **dispatch_ceiling**: Optional resolved provider cap that may have capped/selected this review dispatch; absent or null for `uncapped` and inherit/default modes
+- **policy_source**: Optional source for the resolved policy (`repo config`, `project state`, or `preflight prompt`)
+- **ceiling_source**: Optional compatibility alias for policy source (`repo config`, `project state`, or `preflight prompt`)
+- **provider_default_effort**: Optional Codex provider default effort, used only to explain inherit/default behavior or base/unpinned fallback dispatches
 - **dispatch_rationale**: Optional short rationale for the model/effort axis choices
 
 ## Dispatch Control
 
 The orchestrator owns dispatch control. Do not read `plan.md` Dispatch Profile rows to self-select a tier.
 
-For Codex, normal deterministic review dispatch uses pinned reviewer variants (`oat-reviewer-low`, `oat-reviewer-medium`, `oat-reviewer-high`, or `oat-reviewer-xhigh`) selected by the resolved OAT dispatch ceiling. The base `oat-reviewer` role is a provider-default/unpinned fallback; if you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as an OAT ceiling.
+For Codex, deterministic review dispatch under a capped managed policy uses pinned reviewer variants (`oat-reviewer-low`, `oat-reviewer-medium`, `oat-reviewer-high`, or `oat-reviewer-xhigh`) selected by the resolved OAT dispatch policy cap. Managed `Uncapped` and inherit/default policies have no reviewer target, so the base `oat-reviewer` role is used as a provider-default/unpinned fallback. If you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as managed uncapped selection or an OAT cap.
 
 For Claude Code, review dispatch is model-axis based and the effort axis is `not-applicable`.
 

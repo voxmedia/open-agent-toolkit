@@ -14,7 +14,7 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
-- [Dispatch Ceiling](dispatch-ceiling.md) - Provider-neutral ceiling model and provider-specific enforcement.
+- [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, and provider-specific enforcement.
 - [Project Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
 - [Implementation Execution](implementation-execution.md) - Phase dispatch, runtime selection, review/fix loop, and dry-run behavior.
 - [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.
@@ -47,7 +47,7 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
-- [Dispatch Ceiling](dispatch-ceiling.md) - Provider-neutral ceiling model: presets, the compile/resolve flow, and how enforcement differs for Codex, Claude, and unsupported providers.
+- [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.
 - [Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
 - [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.
 - [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.

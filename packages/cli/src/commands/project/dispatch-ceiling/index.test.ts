@@ -214,6 +214,76 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('reads explicit project dispatch policy frontmatter before legacy ceiling state', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  providers:',
+        '    codex: high',
+        '  source: project-state',
+        'oat_dispatch_ceiling:',
+        '  providers:',
+        '    codex: medium',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'high',
+      source: 'project-state',
+      preset: 'balanced',
+      unresolved: false,
+      providers: {
+        codex: {
+          value: 'high',
+          mode: 'enforced',
+          mechanism: 'pinned-variant',
+          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps absent project policy and legacy ceiling state unresolved', async () => {
+    const { root, home } = await setup();
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'unresolved',
+      provider: 'codex',
+      value: null,
+      source: null,
+      preset: null,
+      unresolved: true,
+      providers: {
+        codex: {
+          value: null,
+          dispatchArgs: null,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('blocks unresolved non-interactive preflight', async () => {
     const { root, home } = await setup();
 
@@ -234,7 +304,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       unresolved: true,
     });
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'BLOCKED: Codex dispatch ceiling is unresolved',
+      'BLOCKED: Codex dispatch policy is unresolved',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -276,7 +346,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       unresolved: true,
     });
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'BLOCKED: Codex dispatch ceiling is unresolved',
+      'BLOCKED: Codex dispatch policy is unresolved',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -291,10 +361,109 @@ describe('oat project dispatch-ceiling resolve', () => {
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, ['--provider', 'claude']);
 
-    expect(capture.info).toContain('Claude dispatch ceiling: sonnet');
+    expect(capture.info).toContain('Claude dispatch policy: legacy capped');
+    expect(capture.info).toContain('Resolved cap: sonnet');
     expect(capture.info).toContain('Source: repo config');
     expect(capture.info).toContain('Mode: enforced (model-arg)');
+    expect(capture.info).toContain('Selection: capped');
     expect(capture.info).toContain('Effort axis: not-applicable');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports clear guidance for invalid project dispatch policy values', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: maximum',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'Invalid project dispatch policy "maximum". Valid managed policies: economy, balanced, high, frontier, uncapped.',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('resolves Claude fable from repo config to Task model args', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'claude',
+      value: 'fable',
+      source: 'repo-config',
+      unresolved: false,
+      providers: {
+        claude: {
+          value: 'fable',
+          mode: 'enforced',
+          mechanism: 'model-arg',
+          dispatchArgs: { model: 'fable' },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('resolves Claude fable from project state to Task model args', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_ceiling:',
+        '  providers:',
+        '    claude: fable',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'claude',
+      value: 'fable',
+      source: 'project-state',
+      unresolved: false,
+      providers: {
+        claude: {
+          value: 'fable',
+          mode: 'enforced',
+          mechanism: 'model-arg',
+          dispatchArgs: { model: 'fable' },
+        },
+      },
+    });
     expect(process.exitCode).toBe(0);
   });
 
@@ -561,6 +730,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'medium',
               selectedValue: 'medium',
               capped: false,
+              selectionMode: 'capped',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
             },
           },
         },
@@ -595,6 +767,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'xhigh',
               selectedValue: 'medium',
               capped: true,
+              selectionMode: 'capped',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
             },
           },
         },
@@ -654,6 +829,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'medium',
               selectedValue: null,
               capped: false,
+              selectionMode: 'unresolved',
+              policyMode: null,
+              policy: null,
             },
           },
         },
@@ -688,6 +866,9 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: null,
               selectedValue: null,
               capped: false,
+              selectionMode: 'unresolved',
+              policyMode: null,
+              policy: null,
             },
           },
         },
@@ -756,6 +937,527 @@ describe('oat project dispatch-ceiling resolve', () => {
               preferredValue: 'medium',
               selectedValue: 'xhigh',
               capped: false,
+              selectionMode: 'review-target',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
+            },
+          },
+        },
+      });
+    });
+
+    it('selects preferred Codex effort for managed uncapped implementer dispatch', async () => {
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_policy:',
+          '  mode: managed',
+          '  policy: uncapped',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'project-state',
+        preset: 'uncapped',
+        unresolved: false,
+        providers: {
+          codex: {
+            value: null,
+            mode: 'enforced',
+            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            selection: {
+              role: 'implementer',
+              preferredValue: 'xhigh',
+              selectedValue: 'xhigh',
+              capped: false,
+              selectionMode: 'uncapped',
+              policyMode: 'managed',
+              policy: 'uncapped',
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('selects preferred Codex pinned variant for repo-config managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'high',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'repo-config',
+        preset: 'uncapped',
+        providers: {
+          codex: {
+            mode: 'enforced',
+            mechanism: 'pinned-variant',
+            dispatchArgs: { variant: 'oat-phase-implementer-high' },
+            selection: {
+              preferredValue: 'high',
+              selectedValue: 'high',
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
+            },
+          },
+        },
+      });
+    });
+
+    it('keeps repo legacy cap over lower-precedence user managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+      await writeJson(join(home, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: 'medium',
+        source: 'repo-config',
+        policyMode: 'managed',
+        policy: 'legacy-ceiling',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'medium',
+              capped: true,
+              selectionMode: 'capped',
+              policy: 'legacy-ceiling',
+            },
+          },
+        },
+      });
+    });
+
+    it('keeps local legacy cap over lower-precedence user inherit policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.local.json'), {
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+      await writeJson(join(home, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchPolicy: { mode: 'inherit' } },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: 'medium',
+        source: 'local-config',
+        policyMode: 'managed',
+        policy: 'legacy-ceiling',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'medium',
+              capped: true,
+              selectionMode: 'capped',
+              policyMode: 'managed',
+              policy: 'legacy-ceiling',
+            },
+          },
+        },
+      });
+    });
+
+    it('prefers higher-precedence managed uncapped policy over legacy cap', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+      });
+      await writeJson(join(root, '.oat', 'config.local.json'), {
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'local-config',
+        policyMode: 'managed',
+        policy: 'uncapped',
+        preset: 'uncapped',
+        providers: {
+          codex: {
+            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'xhigh',
+              capped: false,
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
+            },
+          },
+        },
+      });
+    });
+
+    it('documents Codex uncapped pinned variant host-default caveat in human output', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+      ]);
+
+      const output = capture.info.join('\n');
+      expect(capture.info).toContain('Codex dispatch policy: uncapped');
+      expect(capture.info).toContain('Resolved cap: none');
+      expect(capture.info).toContain('Selection: uncapped');
+      expect(output).toContain(
+        'Actual host support for upward effort selection must be verified by the dispatching host.',
+      );
+    });
+
+    it('returns explicit no-target reviewer fallback for managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'repo-config',
+        preset: 'uncapped',
+        unresolved: false,
+        providers: {
+          codex: {
+            value: null,
+            mode: 'advisory',
+            dispatchArgs: null,
+            selection: {
+              role: 'reviewer',
+              preferredValue: null,
+              selectedValue: null,
+              capped: false,
+              selectionMode: 'no-review-target',
+              policyMode: 'managed',
+              policy: 'uncapped',
+            },
+          },
+        },
+      });
+    });
+
+    it('selects preferred Claude fable model for managed uncapped implementer dispatch', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--role',
+        'implementer',
+        '--preferred',
+        'fable',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'claude',
+        value: null,
+        providers: {
+          claude: {
+            mode: 'enforced',
+            mechanism: 'model-arg',
+            dispatchArgs: { model: 'fable' },
+            selection: {
+              preferredValue: 'fable',
+              selectedValue: 'fable',
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
+            },
+          },
+        },
+      });
+    });
+
+    it('returns no dispatch args for Codex inherit/default config policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'inherit' },
+          dispatchCeiling: { providers: { codex: 'xhigh' } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'high',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        policyMode: 'inherit',
+        policy: null,
+        providers: {
+          codex: {
+            mode: 'advisory',
+            dispatchArgs: null,
+            selection: {
+              preferredValue: null,
+              selectedValue: null,
+              selectionMode: 'inherit-default',
+              policyMode: 'inherit',
+            },
+          },
+        },
+      });
+    });
+
+    it('returns no dispatch args for inherit/default project policy', async () => {
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_policy:',
+          '  mode: inherit',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'claude',
+        '--role',
+        'implementer',
+        '--preferred',
+        'fable',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'claude',
+        value: null,
+        source: 'project-state',
+        preset: null,
+        unresolved: false,
+        providers: {
+          claude: {
+            value: null,
+            mode: 'advisory',
+            dispatchArgs: null,
+            selection: {
+              role: 'implementer',
+              preferredValue: null,
+              selectedValue: null,
+              capped: false,
+              selectionMode: 'inherit-default',
+              policyMode: 'inherit',
+              policy: null,
+            },
+          },
+        },
+      });
+    });
+
+    it('resolves unsupported providers with managed capped policy as unsupported', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, ['--provider', 'cursor', '--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'cursor',
+        value: null,
+        policyMode: 'managed',
+        policy: 'frontier',
+        unresolved: false,
+        providers: {
+          cursor: {
+            value: null,
+            mode: 'unsupported',
+            mechanism: 'none',
+            dispatchArgs: null,
+            selection: {
+              selectedValue: null,
+              selectionMode: 'capped',
+              policy: 'frontier',
+            },
+          },
+        },
+      });
+    });
+
+    it('resolves unsupported providers with managed uncapped policy as unsupported', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'cursor',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'cursor',
+        value: null,
+        policyMode: 'managed',
+        policy: 'uncapped',
+        providers: {
+          cursor: {
+            mode: 'unsupported',
+            mechanism: 'none',
+            dispatchArgs: null,
+            selection: {
+              preferredValue: null,
+              selectedValue: null,
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
             },
           },
         },

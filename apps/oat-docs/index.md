@@ -50,7 +50,7 @@
     - [Workflow & Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - [Project Artifacts](workflows/projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
     - [Design Modes](workflows/projects/design-modes.md) — How oat-project-design balances section-by-section collaboration, selective review, and draft-and-review.
-    - [Dispatch Ceiling](workflows/projects/dispatch-ceiling.md) — How OAT's provider-neutral dispatch ceiling works — presets, the compile/resolve flow, and how enforcement differs for Codex, Claude, and unsupported providers.
+    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT dispatch policy works: managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.
     - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
     - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase-subagent dispatch, tier detection, runtime dispatch selection, bounded fix loop, plan-declared parallelism, and dry-run mode in oat-project-implement v2.0.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.

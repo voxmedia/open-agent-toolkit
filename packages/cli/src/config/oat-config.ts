@@ -40,11 +40,22 @@ export type WorkflowReviewExecutionModel =
   | 'fresh-session';
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
 export type WorkflowCodexDispatchCeiling = 'low' | 'medium' | 'high' | 'xhigh';
-export type WorkflowClaudeDispatchCeiling = 'haiku' | 'sonnet' | 'opus';
+export type WorkflowClaudeDispatchCeiling =
+  | 'haiku'
+  | 'sonnet'
+  | 'opus'
+  | 'fable';
 export type WorkflowDispatchCeilingPreset =
   | 'balanced'
   | 'maximum'
   | 'cost-conscious';
+export type WorkflowDispatchPolicyMode = 'managed' | 'inherit';
+export type WorkflowManagedDispatchPolicy =
+  | 'economy'
+  | 'balanced'
+  | 'high'
+  | 'frontier'
+  | 'uncapped';
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
 export type GateAvoid = 'same-runtime' | 'none';
 
@@ -54,6 +65,11 @@ export interface WorkflowDispatchCeiling {
     codex?: WorkflowCodexDispatchCeiling;
     claude?: WorkflowClaudeDispatchCeiling;
   };
+}
+
+export interface WorkflowDispatchPolicy {
+  mode: WorkflowDispatchPolicyMode;
+  policy?: WorkflowManagedDispatchPolicy;
 }
 
 export interface WorkflowAutoArtifactReview {
@@ -93,6 +109,7 @@ export interface OatWorkflowConfig {
   autoNarrowReReviewScope?: boolean;
   autoArtifactReview?: WorkflowAutoArtifactReview;
   designMode?: WorkflowDesignMode;
+  dispatchPolicy?: WorkflowDispatchPolicy;
   dispatchCeiling?: WorkflowDispatchCeiling;
   gates?: WorkflowGatesConfig;
 }
@@ -114,9 +131,13 @@ const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
 export const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] =
   ['low', 'medium', 'high', 'xhigh'];
 export const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
-  ['haiku', 'sonnet', 'opus'];
+  ['haiku', 'sonnet', 'opus', 'fable'];
 export const VALID_DISPATCH_CEILING_PRESETS: readonly WorkflowDispatchCeilingPreset[] =
   ['balanced', 'maximum', 'cost-conscious'];
+export const VALID_DISPATCH_POLICY_MODES: readonly WorkflowDispatchPolicyMode[] =
+  ['managed', 'inherit'];
+export const VALID_MANAGED_DISPATCH_POLICIES: readonly WorkflowManagedDispatchPolicy[] =
+  ['economy', 'balanced', 'high', 'frontier', 'uncapped'];
 const VALID_GATE_ON_FAILURES: readonly GateOnFailure[] = [
   'block',
   'prompt',
@@ -342,6 +363,33 @@ function normalizeWorkflowConfig(
     (VALID_DESIGN_MODES as readonly string[]).includes(parsed.designMode)
   ) {
     next.designMode = parsed.designMode as WorkflowDesignMode;
+  }
+
+  if (isRecord(parsed.dispatchPolicy)) {
+    const mode =
+      typeof parsed.dispatchPolicy.mode === 'string' &&
+      (VALID_DISPATCH_POLICY_MODES as readonly string[]).includes(
+        parsed.dispatchPolicy.mode,
+      )
+        ? (parsed.dispatchPolicy.mode as WorkflowDispatchPolicyMode)
+        : undefined;
+
+    if (mode === 'inherit') {
+      next.dispatchPolicy = { mode };
+    }
+
+    if (
+      mode === 'managed' &&
+      typeof parsed.dispatchPolicy.policy === 'string' &&
+      (VALID_MANAGED_DISPATCH_POLICIES as readonly string[]).includes(
+        parsed.dispatchPolicy.policy,
+      )
+    ) {
+      next.dispatchPolicy = {
+        mode,
+        policy: parsed.dispatchPolicy.policy as WorkflowManagedDispatchPolicy,
+      };
+    }
   }
 
   if (isRecord(parsed.dispatchCeiling)) {

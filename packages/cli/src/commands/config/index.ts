@@ -11,6 +11,8 @@ import {
   type OatWorkflowConfig,
   type UserConfig,
   type WorkflowDispatchCeilingPreset,
+  type WorkflowDispatchPolicyMode,
+  type WorkflowManagedDispatchPolicy,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -60,6 +62,8 @@ type ConfigKey =
   | 'workflow.autoReviewAtHillCheckpoints'
   | 'workflow.createPrOnComplete'
   | 'workflow.designMode'
+  | 'workflow.dispatchPolicy.mode'
+  | 'workflow.dispatchPolicy.policy'
   | 'workflow.dispatchCeiling.preset'
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
@@ -149,6 +153,8 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.autoArtifactReview.plan',
   'workflow.autoArtifactReview.analysis',
   'workflow.designMode',
+  'workflow.dispatchPolicy.mode',
+  'workflow.dispatchPolicy.policy',
   'workflow.dispatchCeiling.preset',
   'workflow.dispatchCeiling.providers.codex',
   'workflow.dispatchCeiling.providers.claude',
@@ -592,7 +598,31 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.dispatchCeiling.preset <value>',
     description:
-      'Provider-neutral ceiling preset that compiles to concrete per-provider values at write time. balanced → Codex: high, Claude: sonnet; maximum → Codex: xhigh, Claude: opus; cost-conscious → Codex: medium, Claude: sonnet. Preset provenance only; runtime dispatch reads concrete providers values. Resolution: local > shared > user > default.',
+      'Legacy compatibility alias for capped managed dispatch policies. Provider-neutral ceiling preset that compiles to concrete per-provider values at write time. balanced → Codex: high, Claude: sonnet; maximum → Codex: xhigh, Claude: opus; cost-conscious → Codex: medium, Claude: sonnet. Preset provenance only; runtime dispatch reads concrete providers values. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.dispatchPolicy.mode',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'managed | inherit',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.dispatchPolicy.mode <value>',
+    description:
+      'Dispatch policy mode. "managed" means OAT selects model/effort from workflow.dispatchPolicy.policy; "inherit" means OAT leaves dispatch controls to the host/provider defaults. Set workflow.dispatchPolicy.policy to choose a managed policy. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.dispatchPolicy.policy',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'economy | balanced | high | frontier | uncapped',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.dispatchPolicy.policy <value>',
+    description:
+      'Managed dispatch policy. economy, balanced, high, and frontier are capped managed policies; uncapped keeps OAT-managed preferred selection without provider caps. Setting this key writes workflow.dispatchPolicy.mode=managed. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.dispatchCeiling.providers.codex',
@@ -612,7 +642,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
-    type: 'haiku | sonnet | opus',
+    type: 'haiku | sonnet | opus | fable',
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand:
@@ -688,6 +718,14 @@ const WORKFLOW_ENUM_VALUES = {
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
   'workflow.designMode': ['collaborative', 'selective', 'draft'],
+  'workflow.dispatchPolicy.mode': ['managed', 'inherit'],
+  'workflow.dispatchPolicy.policy': [
+    'economy',
+    'balanced',
+    'high',
+    'frontier',
+    'uncapped',
+  ],
   'workflow.dispatchCeiling.preset': ['balanced', 'maximum', 'cost-conscious'],
   'workflow.dispatchCeiling.providers.codex': [
     'low',
@@ -695,7 +733,12 @@ const WORKFLOW_ENUM_VALUES = {
     'high',
     'xhigh',
   ],
-  'workflow.dispatchCeiling.providers.claude': ['haiku', 'sonnet', 'opus'],
+  'workflow.dispatchCeiling.providers.claude': [
+    'haiku',
+    'sonnet',
+    'opus',
+    'fable',
+  ],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
@@ -820,6 +863,38 @@ function applyWorkflowValue(
   value: boolean | string,
 ): OatWorkflowConfig {
   const subKey = key.slice('workflow.'.length);
+
+  if (subKey === 'dispatchPolicy.mode') {
+    const mode = value as WorkflowDispatchPolicyMode;
+    if (mode === 'inherit') {
+      return {
+        ...workflow,
+        dispatchPolicy: { mode },
+      };
+    }
+
+    const policy = workflow.dispatchPolicy?.policy;
+    if (!policy) {
+      throw new Error(
+        'Cannot set workflow.dispatchPolicy.mode to managed without an existing workflow.dispatchPolicy.policy. Set workflow.dispatchPolicy.policy <economy|balanced|high|frontier|uncapped> instead.',
+      );
+    }
+
+    return {
+      ...workflow,
+      dispatchPolicy: { mode, policy },
+    };
+  }
+
+  if (subKey === 'dispatchPolicy.policy') {
+    return {
+      ...workflow,
+      dispatchPolicy: {
+        mode: 'managed',
+        policy: value as WorkflowManagedDispatchPolicy,
+      },
+    };
+  }
 
   if (subKey === 'dispatchCeiling.preset') {
     // Presets compile to concrete per-provider values at write time so the

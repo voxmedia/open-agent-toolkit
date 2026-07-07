@@ -35,14 +35,16 @@ You will be given a "Phase Scope" block including:
 - **workflow_mode**: `spec-driven` | `quick` | `import` (default `spec-driven`)
 - **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
 - **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `provider-default`, `inherited`, `not-applicable`, or `host-auto`)
-- **dispatch_ceiling**: Optional resolved provider ceiling that capped/selected this dispatch
-- **ceiling_source**: Optional source for the resolved ceiling (`repo config`, `project state`, or `preflight prompt`)
-- **provider_default_effort**: Optional Codex provider default effort, used only to explain base/unpinned fallback dispatches
+- **dispatch_policy**: Optional resolved policy label (`economy`, `balanced`, `high`, `frontier`, `uncapped`, `inherit host defaults`, or `legacy capped`)
+- **dispatch_ceiling**: Optional resolved provider cap that may have capped/selected this dispatch; absent or null for `uncapped` and inherit/default modes
+- **policy_source**: Optional source for the resolved policy (`repo config`, `project state`, or `preflight prompt`)
+- **ceiling_source**: Optional compatibility alias for policy source (`repo config`, `project state`, or `preflight prompt`)
+- **provider_default_effort**: Optional Codex provider default effort, used only to explain inherit/default behavior or base/unpinned fallback dispatches
 - **dispatch_rationale**: Optional short rationale for the model/effort axis choices
 
-The `model_axis`, `effort_axis`, `dispatch_ceiling`, `ceiling_source`, and `provider_default_effort` fields describe dispatch state the orchestrator already chose; they are descriptive context for your report, not actions for you to take. Echo whatever values were provided in your summary. If a field is absent, report it as "not provided."
+The `model_axis`, `effort_axis`, `dispatch_policy`, `dispatch_ceiling`, `policy_source`, `ceiling_source`, and `provider_default_effort` fields describe dispatch state the orchestrator already chose; they are descriptive context for your report, not actions for you to take. Echo whatever values were provided in your summary. If a field is absent, report it as "not provided."
 
-For Codex, `provider-default` means the base/unpinned role follows Codex configured/provider default effort. It does not mean OAT inherited the parent session ceiling.
+For Codex, `provider-default` means explicit inherit/default behavior or a base/unpinned fallback follows Codex configured/provider default effort. It does not mean managed `Uncapped`, and it does not mean OAT inherited the parent session ceiling.
 
 If `mode: fix`, the block also includes:
 
@@ -131,8 +133,9 @@ Report format:
 **Confidence:** high | medium | low
 **Model axis:** {model_axis if provided, otherwise "not provided"}
 **Effort axis:** {effort_axis if provided, otherwise "not provided"}
+**Dispatch policy:** {dispatch_policy if provided, otherwise "not provided"}
 **Dispatch ceiling:** {dispatch_ceiling if provided, otherwise "not provided"}
-**Ceiling source:** {ceiling_source if provided, otherwise "not provided"}
+**Policy source:** {policy_source if provided, otherwise ceiling_source if provided, otherwise "not provided"}
 **Provider default effort:** {provider_default_effort if provided, otherwise "not provided"}
 
 ### Task Outcomes
@@ -200,8 +203,9 @@ If a fix introduces a regression or doesn't address its finding, either re-fix w
 **Confidence:** high | medium | low
 **Model axis:** {model_axis if provided, otherwise "not provided"}
 **Effort axis:** {effort_axis if provided, otherwise "not provided"}
+**Dispatch policy:** {dispatch_policy if provided, otherwise "not provided"}
 **Dispatch ceiling:** {dispatch_ceiling if provided, otherwise "not provided"}
-**Ceiling source:** {ceiling_source if provided, otherwise "not provided"}
+**Policy source:** {policy_source if provided, otherwise ceiling_source if provided, otherwise "not provided"}
 **Provider default effort:** {provider_default_effort if provided, otherwise "not provided"}
 
 ### Fix Outcomes
