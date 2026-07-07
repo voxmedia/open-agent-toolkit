@@ -309,6 +309,20 @@ describe('oat gate', () => {
     );
   }
 
+  async function writeImplementation(
+    root: string,
+    projectPath: string,
+    dispatchLine: string,
+  ): Promise<void> {
+    await writeFile(
+      join(root, projectPath, 'implementation.md'),
+      ['# Implementation', '', '#### Dispatch Notes', '', dispatchLine].join(
+        '\n',
+      ),
+      'utf8',
+    );
+  }
+
   async function writeReviewArtifact(options: {
     root: string;
     projectPath: string;
@@ -1201,6 +1215,172 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('filters modeled candidates by producer family while keeping diverse models from the same target', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'gpt-5.5-xhigh:declared', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('uses producer identity from implementation stamps when no flag is supplied', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'p04', 'Review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: expect.arrayContaining(['--model', 'composer-2.5']),
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('filters an unpinned Cursor target that would inherit the producer family', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-default': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'gpt-5.5-xhigh:declared', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps unknown producer identity runnable without claiming family diversity', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'unknown:unknown', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'gpt-5.5', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('lists every supported avoidance mode in validation errors', async () => {
     const { root, home } = await setup();
     const runner = createProcessRunner();
@@ -1247,6 +1427,7 @@ describe('oat gate', () => {
 
     expect(selected).toEqual({
       id: 'claude-default',
+      family: 'claude',
       target: {
         runtime: 'claude',
         baseCommand: ['claude', '-p'],

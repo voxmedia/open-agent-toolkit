@@ -40,6 +40,17 @@ import {
 } from '@config/resolve';
 import { dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, resolveProjectRoot } from '@fs/paths';
+import {
+  classifyModelFamily,
+  type ModelFamily,
+} from '@providers/identity/family';
+import {
+  resolveIdentityConfidence,
+  type IdentityConfidence,
+  type IdentityProvenance,
+  type IdentityRecord,
+} from '@providers/identity/provenance';
+import { parseDispatchStamps } from '@providers/identity/stamp';
 import { Command } from 'commander';
 
 import {
@@ -104,6 +115,7 @@ interface CrossProviderExecOptions {
   target?: string;
   avoid?: string;
   currentRuntime?: string;
+  producerIdentity?: string;
 }
 
 interface ReviewGateOptions extends CrossProviderExecOptions {
@@ -134,6 +146,16 @@ export interface SelectedExecTarget {
   id: string;
   target: ExecTarget;
   model?: string;
+  family: ModelFamily;
+}
+
+interface GateProducerIdentity {
+  value: string;
+  provenance: IdentityProvenance;
+  confidence: IdentityConfidence;
+  family: ModelFamily;
+  diversityClaimable: boolean;
+  source: 'flag' | 'stamp' | 'unknown';
 }
 
 interface ReviewGateArtifactCandidate extends LatestReview {
@@ -172,6 +194,12 @@ const VALID_REVIEW_GATE_THRESHOLDS: readonly ReviewGateThreshold[] = [
   'important',
   'medium',
   'minor',
+];
+const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
+  'declared',
+  'observed',
+  'inferred',
+  'unknown',
 ];
 const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
@@ -503,7 +531,7 @@ async function readEffectiveConfig(
 
 function sortedExecTargetEntries(
   registry: Readonly<Record<string, ExecTarget>>,
-): SelectedExecTarget[] {
+): Array<{ id: string; target: ExecTarget }> {
   return Object.entries(registry)
     .map(([id, target]) => ({ id, target }))
     .sort((left, right) => {
@@ -525,6 +553,103 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
       ? { availabilityCommand: [...target.availabilityCommand] }
       : {}),
   };
+}
+
+function identityFromRecords(
+  records: IdentityRecord[],
+  source: GateProducerIdentity['source'],
+): GateProducerIdentity {
+  const resolved = resolveIdentityConfidence(records);
+  return {
+    value: resolved.value,
+    provenance: resolved.provenance,
+    confidence: resolved.confidence,
+    family: classifyModelFamily({ value: resolved.value }),
+    diversityClaimable: resolved.diversityClaimable,
+    source,
+  };
+}
+
+function unknownProducerIdentity(): GateProducerIdentity {
+  return identityFromRecords([], 'unknown');
+}
+
+function parseProducerIdentityOption(
+  value: string | undefined,
+): GateProducerIdentity {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return unknownProducerIdentity();
+  }
+
+  const separator = trimmed.lastIndexOf(':');
+  const producer = separator > 0 ? trimmed.slice(0, separator).trim() : '';
+  const provenance = separator > 0 ? trimmed.slice(separator + 1).trim() : '';
+  if (!producer || !provenance) {
+    throw new Error(
+      '--producer-identity must use <value>:<declared|observed|inferred|unknown>.',
+    );
+  }
+  if (!(VALID_IDENTITY_PROVENANCES as readonly string[]).includes(provenance)) {
+    throw new Error(
+      '--producer-identity provenance must be one of declared | observed | inferred | unknown.',
+    );
+  }
+
+  return identityFromRecords(
+    [{ value: producer, provenance: provenance as IdentityProvenance }],
+    'flag',
+  );
+}
+
+async function readStampedProducerIdentity(options: {
+  repoRoot: string;
+  projectPath: string;
+  reviewScope?: string;
+}): Promise<GateProducerIdentity> {
+  const scope = options.reviewScope?.trim();
+  if (!scope) {
+    return unknownProducerIdentity();
+  }
+
+  let markdown: string;
+  try {
+    markdown = await readFile(
+      join(options.repoRoot, options.projectPath, 'implementation.md'),
+      'utf8',
+    );
+  } catch {
+    return unknownProducerIdentity();
+  }
+
+  const stamp = parseDispatchStamps(markdown)
+    .reverse()
+    .find(
+      (candidate) =>
+        candidate.scope === scope &&
+        (candidate.role === 'implementer' || candidate.role === 'fix'),
+    );
+  if (!stamp) {
+    return unknownProducerIdentity();
+  }
+
+  return identityFromRecords(
+    [{ value: stamp.producer, provenance: stamp.provenance }],
+    'stamp',
+  );
+}
+
+async function resolveReviewProducerIdentity(options: {
+  explicit?: string;
+  repoRoot: string;
+  projectPath: string;
+  reviewScope?: string;
+}): Promise<GateProducerIdentity> {
+  if (options.explicit?.trim()) {
+    return parseProducerIdentityOption(options.explicit);
+  }
+
+  return readStampedProducerIdentity(options);
 }
 
 function findPinnedModelArg(argv: readonly string[]): string | undefined {
@@ -552,19 +677,37 @@ function targetCandidateModels(target: ExecTarget): string[] | undefined {
   return pinnedModel ? [pinnedModel] : undefined;
 }
 
+function candidateFamily(
+  target: ExecTarget,
+  model: string | undefined,
+): ModelFamily {
+  if (model) {
+    return classifyModelFamily({ value: model });
+  }
+
+  return classifyModelFamily({ value: '', providerId: target.runtime });
+}
+
 function expandExecTargetCandidates(
   id: string,
   target: ExecTarget,
 ): SelectedExecTarget[] {
   const models = targetCandidateModels(target);
   if (!models) {
-    return [{ id, target: cloneExecTarget(target) }];
+    return [
+      {
+        id,
+        target: cloneExecTarget(target),
+        family: candidateFamily(target, undefined),
+      },
+    ];
   }
 
   return models.map((model) => ({
     id,
     target: cloneExecTarget(target),
     model,
+    family: candidateFamily(target, model),
   }));
 }
 
@@ -576,9 +719,15 @@ function listExecTargetCandidates(
   registry: Readonly<Record<string, ExecTarget>>,
   currentRuntime: string,
   avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity = unknownProducerIdentity(),
 ): SelectedExecTarget[] {
+  const shouldAvoidSameFamily =
+    avoid === 'same-family' &&
+    producerIdentity.diversityClaimable &&
+    producerIdentity.family !== 'unknown';
   const shouldAvoidSameRuntime =
-    (avoid === 'same-runtime' || avoid === 'same-family') &&
+    (avoid === 'same-runtime' ||
+      (avoid === 'same-family' && !shouldAvoidSameFamily)) &&
     currentRuntime !== 'unknown';
 
   return sortedExecTargetEntries(registry)
@@ -586,15 +735,29 @@ function listExecTargetCandidates(
       ({ target }) =>
         !shouldAvoidSameRuntime || target.runtime !== currentRuntime,
     )
-    .flatMap(({ id, target }) => expandExecTargetCandidates(id, target));
+    .flatMap(({ id, target }) => expandExecTargetCandidates(id, target))
+    .filter(
+      (candidate) =>
+        !shouldAvoidSameFamily ||
+        (candidate.family !== 'unknown' &&
+          candidate.family !== producerIdentity.family),
+    );
 }
 
 export function selectExecTarget(
   registry: Readonly<Record<string, ExecTarget>>,
   currentRuntime: string,
   avoid: CrossProviderAvoid,
+  producerIdentity?: GateProducerIdentity,
 ): SelectedExecTarget | null {
-  return listExecTargetCandidates(registry, currentRuntime, avoid)[0] ?? null;
+  return (
+    listExecTargetCandidates(
+      registry,
+      currentRuntime,
+      avoid,
+      producerIdentity,
+    )[0] ?? null
+  );
 }
 
 async function checkArgv(
@@ -652,6 +815,7 @@ async function selectAvailableExecTarget(
   registry: Readonly<Record<string, ExecTarget>>,
   currentRuntime: string,
   avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity,
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<SelectedExecTarget | null> {
@@ -659,6 +823,7 @@ async function selectAvailableExecTarget(
     registry,
     currentRuntime,
     avoid,
+    producerIdentity,
   )) {
     const availabilityCommand = candidate.target.availabilityCommand;
     if (
@@ -680,6 +845,7 @@ async function selectAvailableExecTarget(
 async function resolveSelectedExecTarget(
   targets: Readonly<Record<string, ExecTarget>>,
   options: CrossProviderExecOptions,
+  producerIdentity: GateProducerIdentity,
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<SelectedExecTarget> {
@@ -691,7 +857,7 @@ async function resolveSelectedExecTarget(
       throw new Error(`Unknown exec target "${explicitTarget}".`);
     }
 
-    return { id: explicitTarget, target: cloneExecTarget(target) };
+    return expandExecTargetCandidates(explicitTarget, target)[0]!;
   }
 
   const avoid = parseCrossProviderAvoid(options.avoid);
@@ -704,6 +870,7 @@ async function resolveSelectedExecTarget(
     targets,
     currentRuntime,
     avoid,
+    producerIdentity,
     context,
     dependencies,
   );
@@ -1400,9 +1567,13 @@ async function runCrossProviderExec(
   try {
     const effective = await readEffectiveConfig(context, dependencies);
     const targets = resolveExecTargets(effective);
+    const producerIdentity = parseProducerIdentityOption(
+      options.producerIdentity,
+    );
     const selected = await resolveSelectedExecTarget(
       targets,
       options,
+      producerIdentity,
       context,
       dependencies,
     );
@@ -1439,9 +1610,16 @@ async function runReviewGate(
       project: options.project,
     });
     const targets = resolveExecTargets(effective);
+    const producerIdentity = await resolveReviewProducerIdentity({
+      explicit: options.producerIdentity,
+      repoRoot,
+      projectPath,
+      reviewScope: options.reviewScope,
+    });
     const selected = await resolveSelectedExecTarget(
       targets,
       options,
+      producerIdentity,
       context,
       dependencies,
     );
@@ -1623,6 +1801,10 @@ export function createGateCommand(
       '--current-runtime <runtime>',
       'Override detected runtime for testing or manual routing',
     )
+    .option(
+      '--producer-identity <identity>',
+      'Producer identity as <value>:<declared|observed|inferred|unknown>',
+    )
     .argument('<prompt...>', 'Prompt arguments appended to the target command')
     .action(
       async (
@@ -1648,6 +1830,10 @@ export function createGateCommand(
     .option(
       '--current-runtime <runtime>',
       'Override detected runtime for testing or manual routing',
+    )
+    .option(
+      '--producer-identity <identity>',
+      'Producer identity as <value>:<declared|observed|inferred|unknown>',
     )
     .option(
       '--project <path-or-name>',
