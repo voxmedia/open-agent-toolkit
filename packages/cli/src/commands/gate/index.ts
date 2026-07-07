@@ -745,11 +745,8 @@ function producerHasKnownFamily(identity: GateProducerIdentity): boolean {
   return identity.diversityClaimable && identity.family !== 'unknown';
 }
 
-function shouldAttemptNoDiverseFallback(
-  avoid: CrossProviderAvoid,
-  producerIdentity: GateProducerIdentity,
-): boolean {
-  return avoid === 'same-family' && producerHasKnownFamily(producerIdentity);
+function shouldAttemptNoDiverseFallback(avoid: CrossProviderAvoid): boolean {
+  return avoid === 'same-family';
 }
 
 function achievedDiversity(
@@ -833,7 +830,9 @@ function listExecTargetCandidates(
   const shouldAvoidSameFamily =
     avoid === 'same-family' && producerHasKnownFamily(producerIdentity);
   const shouldAvoidSameRuntime =
-    avoid === 'same-runtime' && currentRuntime !== 'unknown';
+    currentRuntime !== 'unknown' &&
+    (avoid === 'same-runtime' ||
+      (avoid === 'same-family' && !producerHasKnownFamily(producerIdentity)));
 
   return sortedExecTargetEntries(registry)
     .filter(
@@ -956,7 +955,7 @@ async function selectAvailableExecTarget(
     return selected;
   }
 
-  if (!shouldAttemptNoDiverseFallback(avoid, producerIdentity)) {
+  if (!shouldAttemptNoDiverseFallback(avoid)) {
     return null;
   }
 

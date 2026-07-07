@@ -1055,8 +1055,8 @@ describe('oat gate', () => {
     });
 
     expect(runner.calls.at(-1)).toMatchObject({
-      command: 'claude',
-      args: ['-p', 'Run', 'review'],
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
       purpose: 'execute',
     });
     expect(process.exitCode).toBe(0);
@@ -1070,8 +1070,8 @@ describe('oat gate', () => {
     });
 
     expect(defaultRunner.calls.at(-1)).toMatchObject({
-      command: 'claude',
-      args: ['-p', 'Run', 'review'],
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
       purpose: 'execute',
     });
     expect(process.exitCode).toBe(0);
@@ -1446,7 +1446,52 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('does not fall back to same-runtime filtering for unknown producer identity', async () => {
+  it('uses same-runtime filtering as the floor for unknown producer identity', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'claude-default': null,
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5'],
+                priority: 150,
+              },
+              'codex-reviewer': {
+                runtime: 'codex',
+                baseCommand: ['codex', 'exec'],
+                priority: 100,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CURSOR_AGENT: '1' },
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'unknown:unknown', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('falls back to same-runtime targets for unknown producer identity when no floor target is eligible', async () => {
     const { root, home } = await setup();
     await writeFile(
       join(root, '.oat', 'config.json'),
@@ -1744,7 +1789,7 @@ describe('oat gate', () => {
     });
   });
 
-  it('detects built-in runtimes without avoiding them for unknown producer defaults', async () => {
+  it('detects built-in runtimes and applies same-runtime floor for unknown producer defaults', async () => {
     const cases: Array<{
       name: string;
       env: NodeJS.ProcessEnv;
@@ -1755,8 +1800,8 @@ describe('oat gate', () => {
       {
         name: 'claude',
         env: { CLAUDECODE: '1' },
-        expectedCommand: 'claude',
-        expectedArgs: ['-p', 'Run', 'review'],
+        expectedCommand: 'codex',
+        expectedArgs: ['exec', 'Run', 'review'],
         expectedDetectionCount: 1,
       },
       {
