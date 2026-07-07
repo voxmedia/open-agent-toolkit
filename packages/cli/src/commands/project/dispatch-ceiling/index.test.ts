@@ -528,6 +528,134 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('resolves ordered route floors and discrete escalation entries', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            cursor: {
+              high: [
+                'composer-2.5',
+                { harness: 'cursor', model: 'gpt-5.5-xhigh' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'cursor', '--json']);
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--escalation-level',
+      '1',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'cursor',
+      value: 'composer-2.5',
+      providers: {
+        cursor: {
+          value: 'composer-2.5',
+          dispatchArgs: { model: 'composer-2.5' },
+          selection: {
+            selectedValue: 'composer-2.5',
+            selectionBranch: 'matrix-pinned',
+            family: 'composer',
+            target: {
+              harness: 'cursor',
+              model: 'composer-2.5',
+              routeIndex: 0,
+              routeLength: 2,
+            },
+          },
+        },
+      },
+    });
+    expect(capture.jsonPayloads[1]).toMatchObject({
+      status: 'resolved',
+      provider: 'cursor',
+      value: 'gpt-5.5-xhigh',
+      providers: {
+        cursor: {
+          value: 'gpt-5.5-xhigh',
+          dispatchArgs: { model: 'gpt-5.5-xhigh' },
+          selection: {
+            selectedValue: 'gpt-5.5-xhigh',
+            selectionBranch: 'escalation-target',
+            family: 'openai',
+            target: {
+              harness: 'cursor',
+              model: 'gpt-5.5-xhigh',
+              routeIndex: 1,
+              routeLength: 2,
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps single-axis capped selection unchanged when escalation level is present', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers: { codex: 'medium' } } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preferred',
+      'xhigh',
+      '--escalation-level',
+      '1',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      value: 'medium',
+      providers: {
+        codex: {
+          dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+          selection: {
+            preferredValue: 'xhigh',
+            selectedValue: 'medium',
+            capped: true,
+            selectionMode: 'capped',
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('blocks non-interactive preflight when a managed provider cell is absent', async () => {
     const { root, home } = await setup();
     await writeFile(

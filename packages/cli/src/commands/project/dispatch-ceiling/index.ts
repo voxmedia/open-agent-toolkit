@@ -72,6 +72,7 @@ interface ProviderResolution {
   dispatchArgs: CeilingDispatchArgs;
   verifyOnDispatch: boolean;
   cellSource: DispatchCeilingSource | null;
+  target: ResolvedDispatchRouteTarget | null;
   selection: DispatchSelection;
 }
 
@@ -94,6 +95,7 @@ interface DispatchCeilingResolveOptions {
   role?: string;
   orchestratorTier?: string;
   preferred?: string;
+  escalationLevel?: string;
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
@@ -138,6 +140,14 @@ type DispatchSelectionBranch =
   | 'inherit'
   | 'unresolved';
 
+interface ResolvedDispatchRouteTarget {
+  harness: string;
+  model?: string;
+  effort?: string;
+  routeIndex: number;
+  routeLength: number;
+}
+
 interface DispatchSelection {
   role: CeilingRole;
   preferredValue: DispatchCeilingValue | null;
@@ -146,6 +156,7 @@ interface DispatchSelection {
   selectionMode: DispatchSelectionMode;
   selectionBranch: DispatchSelectionBranch;
   family: ModelFamily;
+  target: ResolvedDispatchRouteTarget | null;
   cellSource: DispatchCeilingSource | null;
   policyMode: WorkflowDispatchPolicyMode | null;
   policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null;
@@ -260,6 +271,7 @@ interface ResolvedDispatchPolicy {
   preset: string | null;
   matrix: ProjectDispatchMatrix | null;
   cellSource: DispatchCeilingSource | null;
+  target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
 }
@@ -463,33 +475,85 @@ function dispatchValueFromRouteTarget(
   return target.model ?? target.effort ?? target.harness ?? null;
 }
 
-function dispatchValueFromMatrixCell(
-  cell: WorkflowDispatchMatrixCell,
-): string | null {
-  if (typeof cell === 'string') {
-    return cell;
-  }
-
-  const [first] = cell;
-  if (first === undefined) {
-    return null;
-  }
-
-  return typeof first === 'string'
-    ? first
-    : dispatchValueFromRouteTarget(first);
-}
-
 interface MatrixCellResolution {
   value: DispatchCeilingValue;
   cellSource: DispatchCeilingSource;
+  target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
 }
 
+function routeTargetFromBareValue(
+  provider: DispatchCeilingProvider,
+  value: DispatchCeilingValue,
+  routeIndex: number,
+  routeLength: number,
+): ResolvedDispatchRouteTarget {
+  const adapter = getCeilingAdapter(provider);
+  const target: ResolvedDispatchRouteTarget = {
+    harness: provider,
+    routeIndex,
+    routeLength,
+  };
+
+  if (adapter.mechanism === 'pinned-variant') {
+    target.effort = value;
+  } else {
+    target.model = value;
+  }
+
+  return target;
+}
+
+function routeTargetFromObject(
+  provider: DispatchCeilingProvider,
+  target: WorkflowDispatchRouteTarget,
+  routeIndex: number,
+  routeLength: number,
+): ResolvedDispatchRouteTarget {
+  return {
+    harness: target.harness ?? provider,
+    ...(target.model ? { model: target.model } : {}),
+    ...(target.effort ? { effort: target.effort } : {}),
+    routeIndex,
+    routeLength,
+  };
+}
+
+function resolveRouteMatrixCell(
+  provider: DispatchCeilingProvider,
+  route: WorkflowDispatchRoute,
+  escalationLevel: number,
+  cellSource: DispatchCeilingSource,
+): MatrixCellResolution | null {
+  const routeIndex = Math.min(escalationLevel, route.length - 1);
+  const entry = route[routeIndex];
+  if (entry === undefined) {
+    return null;
+  }
+
+  const target =
+    typeof entry === 'string'
+      ? routeTargetFromBareValue(provider, entry, routeIndex, route.length)
+      : routeTargetFromObject(provider, entry, routeIndex, route.length);
+  const value =
+    typeof entry === 'string' ? entry : dispatchValueFromRouteTarget(entry);
+
+  return value
+    ? {
+        value,
+        cellSource,
+        target,
+        selectionBranch: routeIndex > 0 ? 'escalation-target' : 'matrix-pinned',
+      }
+    : null;
+}
+
 function resolveProviderCellFromValue(
+  provider: DispatchCeilingProvider,
   providerValue: WorkflowDispatchProviderValue | undefined,
   tier: WorkflowDispatchMatrixTier | null,
   cellSource: DispatchCeilingSource,
+  escalationLevel: number,
 ): MatrixCellResolution | null {
   if (providerValue === undefined) {
     return null;
@@ -499,6 +563,7 @@ function resolveProviderCellFromValue(
     return {
       value: providerValue,
       cellSource,
+      target: null,
       selectionBranch: 'prompt-persisted',
     };
   }
@@ -512,8 +577,16 @@ function resolveProviderCellFromValue(
     return null;
   }
 
-  const value = dispatchValueFromMatrixCell(cell);
-  return value ? { value, cellSource, selectionBranch: 'matrix-pinned' } : null;
+  if (typeof cell === 'string') {
+    return {
+      value: cell,
+      cellSource,
+      target: null,
+      selectionBranch: 'matrix-pinned',
+    };
+  }
+
+  return resolveRouteMatrixCell(provider, cell, escalationLevel, cellSource);
 }
 
 function resolveProviderMatrixCell(
@@ -521,6 +594,7 @@ function resolveProviderMatrixCell(
   tier: WorkflowDispatchMatrixTier | null,
   resolvedConfig: ResolvedConfig,
   projectMatrix: ProjectDispatchMatrix | null,
+  escalationLevel: number,
 ): MatrixCellResolution | null {
   let selected: MatrixCellResolution | null = null;
   const layers: Array<{
@@ -544,9 +618,11 @@ function resolveProviderMatrixCell(
 
   for (const layer of layers) {
     const resolved = resolveProviderCellFromValue(
+      provider,
       layer.providers?.[provider],
       tier,
       layer.source,
+      escalationLevel,
     );
     if (resolved) {
       selected = resolved;
@@ -587,6 +663,7 @@ function readProjectDispatchPolicy(
       preset: null,
       matrix: parsedMatrix.matrix,
       cellSource: null,
+      target: null,
       selectionBranch: 'inherit',
       warnings: parsedMatrix.warnings,
     };
@@ -614,6 +691,7 @@ function readProjectDispatchPolicy(
       preset: policyValue,
       matrix: parsedMatrix.matrix,
       cellSource: null,
+      target: null,
       selectionBranch: 'prompt-persisted',
       warnings: parsedMatrix.warnings,
     };
@@ -647,6 +725,7 @@ function readProjectDispatchPolicy(
     preset: policyValue,
     matrix: parsedMatrix.matrix,
     cellSource: 'project-state',
+    target: null,
     selectionBranch: 'prompt-persisted',
     warnings: parsedMatrix.warnings,
   };
@@ -683,6 +762,7 @@ function readLegacyProjectDispatchCeiling(
     preset: typeof presetValue === 'string' ? presetValue : null,
     matrix: null,
     cellSource: 'project-state',
+    target: null,
     selectionBranch: 'prompt-persisted',
     warnings: [],
   };
@@ -787,6 +867,7 @@ function stripConfigCandidateSource(
     preset: candidate.preset,
     matrix: candidate.matrix,
     cellSource: candidate.cellSource,
+    target: candidate.target,
     selectionBranch: candidate.selectionBranch,
     warnings: candidate.warnings,
   };
@@ -816,6 +897,7 @@ function readResolvedConfigPolicyCandidate(
       preset: null,
       matrix: null,
       cellSource: null,
+      target: null,
       selectionBranch: 'inherit',
       warnings: [],
       configSource: modeEntry.source,
@@ -847,6 +929,7 @@ function readResolvedConfigPolicyCandidate(
       preset: policy,
       matrix: null,
       cellSource: null,
+      target: null,
       selectionBranch: 'prompt-persisted',
       warnings: [],
       configSource,
@@ -886,6 +969,7 @@ function readResolvedLegacyConfigCeilingCandidate(
     preset: null,
     matrix: null,
     cellSource: source,
+    target: null,
     selectionBranch: 'prompt-persisted',
     warnings: [],
     configSource: entry.source,
@@ -965,12 +1049,28 @@ function normalizePreferredValue(
   return normalized;
 }
 
+function normalizeEscalationLevel(value: string | undefined): number {
+  if (value === undefined) {
+    return 0;
+  }
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error(
+      `Invalid escalation level "${value}". Use a non-negative integer.`,
+    );
+  }
+
+  return Number.parseInt(normalized, 10);
+}
+
 function selectionFamily(
   provider: DispatchCeilingProvider,
   value: DispatchCeilingValue | null,
+  target: ResolvedDispatchRouteTarget | null,
 ): ModelFamily {
   return value
-    ? classifyModelFamily({ value, providerId: provider })
+    ? classifyModelFamily({ value, providerId: target?.harness ?? provider })
     : 'unknown';
 }
 
@@ -985,6 +1085,7 @@ function selectDispatchValue(
     policyMode: policy.mode,
     policy: policy.policy,
     cellSource: policy.cellSource,
+    target: policy.target,
   };
 
   if (policy.mode === 'inherit') {
@@ -996,6 +1097,7 @@ function selectDispatchValue(
       selectionMode: 'inherit-default',
       selectionBranch: 'inherit',
       family: 'unknown',
+      target: null,
     };
   }
 
@@ -1008,7 +1110,8 @@ function selectDispatchValue(
       capped: false,
       selectionMode: role === 'reviewer' ? 'no-review-target' : 'uncapped',
       selectionBranch: selectedValue ? 'prompt-persisted' : 'unresolved',
-      family: selectionFamily(provider, selectedValue),
+      family: selectionFamily(provider, selectedValue, null),
+      target: null,
     };
   }
 
@@ -1021,6 +1124,7 @@ function selectDispatchValue(
       selectionMode: 'capped',
       selectionBranch: policy.selectionBranch,
       family: 'unknown',
+      target: null,
     };
   }
 
@@ -1032,7 +1136,7 @@ function selectDispatchValue(
       capped: false,
       selectionMode: role === 'reviewer' ? 'review-target' : 'capped',
       selectionBranch: policy.selectionBranch,
-      family: selectionFamily(provider, policy.value),
+      family: selectionFamily(provider, policy.value, policy.target),
     };
   }
 
@@ -1047,7 +1151,7 @@ function selectDispatchValue(
       capped: false,
       selectionMode: 'capped',
       selectionBranch: policy.selectionBranch,
-      family: selectionFamily(provider, policy.value),
+      family: selectionFamily(provider, policy.value, policy.target),
     };
   }
 
@@ -1060,7 +1164,12 @@ function selectDispatchValue(
     capped: preferredIndex > ceilingIndex,
     selectionMode: 'capped',
     selectionBranch: policy.selectionBranch,
-    family: selectionFamily(provider, selectedValue),
+    family: selectionFamily(
+      provider,
+      selectedValue,
+      selectedValue === policy.value ? policy.target : null,
+    ),
+    target: selectedValue === policy.value ? policy.target : null,
   };
 }
 
@@ -1086,6 +1195,7 @@ function buildProviderResolution(
       dispatchArgs: null,
       verifyOnDispatch: false,
       cellSource: null,
+      target: null,
       selection: {
         role,
         preferredValue,
@@ -1094,6 +1204,7 @@ function buildProviderResolution(
         selectionMode: 'unresolved',
         selectionBranch: 'unresolved',
         family: 'unknown',
+        target: null,
         cellSource: null,
         policyMode: null,
         policy: null,
@@ -1129,6 +1240,7 @@ function buildProviderResolution(
         })
       : false,
     cellSource: policy.cellSource,
+    target: selection.target,
     selection,
   };
 }
@@ -1203,12 +1315,14 @@ async function resolveDispatchCeiling(
       ? await resolveCodexProviderDefaultEffort(repoRoot, context, dependencies)
       : 'not-applicable';
   const preferredValue = normalizePreferredValue(provider, options.preferred);
+  const escalationLevel = normalizeEscalationLevel(options.escalationLevel);
 
   const resolvedValue = await resolveCeilingValue(
     provider,
     resolvedConfig,
     projectPath,
     dependencies,
+    escalationLevel,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);
@@ -1272,6 +1386,7 @@ interface ResolvedCeilingValue {
   preset: string | null;
   matrix: ProjectDispatchMatrix | null;
   cellSource: DispatchCeilingSource | null;
+  target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
 }
@@ -1287,6 +1402,7 @@ async function resolveCeilingValue(
   resolvedConfig: ResolvedConfig,
   projectPath: string | null,
   dependencies: DispatchCeilingDependencies,
+  escalationLevel: number,
 ): Promise<ResolvedCeilingValue | null> {
   const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
   const projectCeiling = await resolveProjectStateCeiling(
@@ -1310,12 +1426,14 @@ async function resolveCeilingValue(
     tier,
     resolvedConfig,
     projectCeiling?.matrix ?? null,
+    escalationLevel,
   );
   if (matrixCell) {
     return {
       ...baseCeiling,
       value: matrixCell.value,
       cellSource: matrixCell.cellSource,
+      target: matrixCell.target,
       selectionBranch: matrixCell.selectionBranch,
     };
   }
@@ -1481,6 +1599,10 @@ export function createProjectDispatchCeilingCommand(
       .option(
         '--preferred <value>',
         'Preferred implementer/fix dispatch value before applying the resolved policy',
+      )
+      .option(
+        '--escalation-level <level>',
+        'Ordered route entry to select; 0 is the floor and higher values advance through escalation targets',
       )
       .option(
         '--project-path <path>',
