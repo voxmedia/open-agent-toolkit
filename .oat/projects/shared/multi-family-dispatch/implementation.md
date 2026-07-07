@@ -1864,6 +1864,34 @@ to reach `passed`.
 
 ---
 
+### Review Received: final clean re-review (Fable)
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/archived/final-review-2026-07-07T215509Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** None
+
+**Disposition:**
+
+- m1: Accepted as cosmetic wording debt. The fallback warning text says
+  "different-family" even for the unknown-producer same-runtime floor path, but
+  the `achieved=unknown-producer` suffix disambiguates the behavior.
+- m2: Accepted and associated with existing matrix validation consolidation
+  backlog `BL-260707-consolidate-dispatch-matrix`. Recommendation adoption now
+  writes no incorrect state; a future validation-consolidation pass can decide
+  whether to split fail-fast validation from oracle probing.
+
+**Next:** Final review is passed. Proceed with final PR handoff.
+
+---
+
 ## Phase 7: Final Review Fixes
 
 **Status:** completed
@@ -1902,6 +1930,8 @@ to reach `passed`.
 - Result: pass (62 tests)
 - Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts`
 - Result: pass (164 tests)
+- Run: `pnpm release:validate` via pnpm 10.13.1 PATH shim
+- Result: pass (validated 5 public packages)
 
 ### Task p07-t01: Restore same-runtime floor for unknown-producer same-family gates
 
@@ -2006,7 +2036,7 @@ Track test execution during implementation.
 | 4     | gate/index.test; oat-config.test; resolve.test; help-snapshots.test; cli type-check                                                                                 | yes    | 0      | n/a      |
 | 5     | dispatch-ceiling/index.test; cli type-check; oat:validate-skills; git diff --check                                                                                  | yes    | 0      | n/a      |
 | 6     | oat:validate-skills; docs generate-index; build:docs; sync --scope all; status --scope project --json; git diff --check; cli test/type-check/lint; release:validate | yes    | 0      | n/a      |
-| 7     | gate/index.test; config/index.test; oat-config.test                                                                                                                 | yes    | 0      | n/a      |
+| 7     | gate/index.test; config/index.test; oat-config.test; release:validate                                                                                               | yes    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
