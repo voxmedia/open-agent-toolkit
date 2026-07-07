@@ -1,6 +1,6 @@
 ---
-oat_status: draft
-oat_ready_for: revalidation
+oat_status: complete
+oat_ready_for: oat-project-plan
 oat_blockers: []
 oat_last_updated: 2026-07-06
 oat_generated: false
@@ -265,16 +265,26 @@ The upgrade is a small delta on existing machinery, not a new subsystem:
 - **Extend the avoid enum** with `same-family` (and optionally `same-model`). The
   candidate walk, priorities, and availability checks are reused as-is; `--avoid none`
   remains the escape hatch.
-- **Give avoidance its two missing inputs:** each candidate target's family (derived
-  from its pinned `--model` via the classifier; single-family runtimes are free) and
-  the **producer's** family (from the stamp, per-artifact — a gate over p02–p03
+- **Give avoidance its two missing inputs:** each candidate's family and the
+  **producer's** family (from the stamp, per-artifact — a gate over p02–p03
   diversifies against each phase's producer).
-- **Default change, done in the open:** `same-family` becomes the shipped default of
-  the existing overridable knob (there is precedent — `same-runtime` is already an
-  opinionated default). Note it loudly in release notes; record the **achieved** level
-  on every gate outcome (`different-family` / `degraded-to-different-slug` /
-  `same-family — no diverse target available` / `unknown-producer`) so degradation is
-  auditable, never silent.
+- **Model dimension on exec targets (decided 2026-07-07):** targets gain an optional
+  `models` list (allowed gate models, preference-ordered within that target's priority
+  slot). Gate resolution expands candidates to `(target, model)` pairs; avoidance
+  filters by `family(candidate.model) ≠ family(producer)` via the classifier; the
+  existing priority walk + availability checks run unchanged; dispatch appends
+  `--model <winner>` to the baseCommand. Single-family runtimes are targets with one
+  implicit model — same code path. The **long form coexists**: hand-defined targets
+  with a pinned `--model` in `baseCommand` remain valid execTargets with their own
+  `priority` (the classifier parses the argv), giving full cross-target priority
+  control.
+- **Default change, done in the open (decided 2026-07-07: default immediately):**
+  `same-family` ships as the default of the existing overridable knob (precedent —
+  `same-runtime` is already an opinionated default; bug-fix framing — same-family gates
+  defeat the purpose of gates). Loud release note; `--avoid none` stays as the escape
+  hatch; record the **achieved** level on every gate outcome (`different-family` /
+  `degraded-to-different-slug` / `same-family — no diverse target available` /
+  `unknown-producer`) so degradation is auditable, never silent.
 - **Confidence follows stamp provenance:** the high-confidence path is
   `declared`+`observed` corroboration; uncorroborated `declared` is medium for Cursor
   until reject-don't-fallback is proven; lower-confidence logging on
@@ -365,18 +375,22 @@ oat project dispatch-ceiling resolve \
    routes with `(harness, model, effort)` targets, escalation via Dispatch Profile +
    retry hooks. Larger; revisit after GPT 5.6.
 
-## Open Questions (resolve before/at plan)
+## Open Questions
 
-- **Project-layer matrix location:** a project `config.json` (new file concept) vs
-  `state.md` frontmatter (where `oat_dispatch_ceiling` lives today)?
-- **Intra-target avoidance representation:** virtual Cursor targets
-  (`cursor-composer`/`cursor-gpt`) vs exec targets gaining a model dimension
-  (`(target, model) → family`)?
-- **Stamp record format:** exact parseable shape of formalized Dispatch Notes lines.
+Resolved 2026-07-07 (user decisions, plan-gating): **project-layer matrix location** —
+`state.md` frontmatter as a **sparse override** (abstract policy + only deviating cells;
+the full matrix lives in user/repo config layers; the CLI resolver deep-merges and
+reports per-cell source; values set via `oat config set`, not hand-editing);
+**intra-target avoidance** — model dimension on exec targets, long-form pinned targets
+coexist with explicit priority; **`same-family` rollout** — shipped default immediately.
+
+Still open (fine to resolve during implementation):
+
+- **Stamp record format:** exact parseable shape of formalized Dispatch Notes lines
+  (commit trailers remain an alternative).
 - **Detection without a declaration path:** is probe-only acceptable for Cursor
-  identity given latency and the undocumented `(current)` marker?
-- **`same-family` default rollout:** ship as default immediately (bug-fix framing for
-  multi-family targets) or per-target opt-in for one release?
+  identity given latency and the undocumented `(current)` marker? (Depends on the
+  blocking kickoff experiment.)
 
 ## Testing Strategy
 
@@ -415,8 +429,8 @@ oat project dispatch-ceiling resolve \
       probe-only acceptability.
 - [ ] Confirm gate avoidance still ships `same-runtime|none` and decide the intra-target
       representation.
-- [ ] Settle the remaining open questions (matrix project-layer location, stamp format,
-      `same-family` rollout).
+- [ ] Settle the stamp record format (the other formerly-open questions were resolved
+      2026-07-07 — see Open Questions).
 - [ ] Re-examine GPT 5.6 (sol/terra/luna): if Codex gains named models × efforts,
       confirm the per-family axis-shape foundation holds.
 

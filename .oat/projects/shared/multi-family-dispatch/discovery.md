@@ -186,6 +186,17 @@ they conflict.
 **A (verified against a live session transcript containing mid-session `/model` switches):** Yes, at two levels. (1) The harness injects the current model identity into the system prompt per request ("You are powered by … claude-fable-5") — deterministic injection, but relayed through agent prose, so `observed` at best. (2) The session transcript JSONL (`~/.claude/projects/<slug>/<session>.jsonl`) carries an **exact model ID on every assistant message** — the verification transcript showed `claude-opus-4-8` and `claude-fable-5` messages interleaved with per-message granularity across mid-session switches. No `CLAUDE_MODEL` env var (`CLAUDECODE=1` is presence-only); `ANTHROPIC_MODEL`/settings are config inputs (`inferred`), not resolved state.
 **Decision:** Claude Code's machine-readable `observed` source is the transcript's per-message model field — the strongest of the three harnesses (per-turn granularity survives mid-session switches, which is exactly the orchestrator-staleness failure mode). Task dispatch with a `model` arg remains `declared`. All three harnesses now have verified declared + observed paths and no ambient identity env var.
 
+### Question 23: Plan-gating decisions (2026-07-07, design sign-off)
+
+**Q:** Three open questions gated plan generation — project-layer matrix location, intra-target avoidance representation, and `same-family` rollout. Decisions?
+**A/Decision (user-confirmed):**
+
+1. **Matrix project layer = `state.md` frontmatter as a sparse override.** The full matrix lives in user/repo config layers; frontmatter carries the abstract policy plus only deviating cells. The CLI resolver deep-merges all layers and reports per-cell source; values are set via `oat config set`, not hand-editing — so multi-provider sprawl never lands in frontmatter.
+2. **Intra-target avoidance = model dimension on exec targets.** Targets gain an optional `models` list; gate resolution expands candidates to `(target, model)` pairs and filters by family vs the producer; dispatch appends `--model <winner>`. The long form coexists: hand-pinned `--model` targets remain valid with their own `priority` (classifier parses argv), preserving full cross-target priority control.
+3. **`same-family` becomes the shipped default immediately** (bug-fix framing; `--avoid none` escape hatch; loud release note; achieved-diversity metadata makes every outcome auditable).
+
+Design marked `oat_status: complete`, `oat_ready_for: oat-project-plan`. Remaining open items (stamp record format; probe-only acceptability) are implementation-time and kickoff-experiment-dependent respectively.
+
 ## Solution Space
 
 ### Approach 1: Model-identity layer + family-aware dispatch _(Recommended, chosen)_
