@@ -786,6 +786,37 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('normalizes exec target models from config', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const targets = await readResolvedTargets(root, home);
+    expect(targets['cursor-reviewer']).toEqual({
+      runtime: 'cursor',
+      baseCommand: ['cursor-agent', '-p'],
+      models: ['gpt-5.5', 'composer-2.5'],
+      priority: 150,
+    });
+  });
+
   it('disables and unsets exec targets', async () => {
     const { root, home } = await setup();
 
@@ -1047,6 +1078,126 @@ describe('oat gate', () => {
       args: ['-p', 'Run', 'review'],
       purpose: 'execute',
     });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('expands target models and appends the selected model before the prompt', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                priority: 150,
+              },
+              'claude-reviewer': {
+                runtime: 'claude',
+                baseCommand: ['claude', '-p', '--model', 'sonnet'],
+                priority: 120,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'none', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'gpt-5.5', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps targets without models as one implicit candidate', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'plain-reviewer': {
+                runtime: 'custom',
+                baseCommand: ['plain-reviewer', 'run'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'none', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'plain-reviewer',
+      args: ['run', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('treats long-form pinned model args as the candidate model without duplicating them', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-composer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p', '--model', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'none', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(
+      runner.calls.at(-1)?.args.filter((arg) => arg === '--model'),
+    ).toHaveLength(1);
     expect(process.exitCode).toBe(0);
   });
 

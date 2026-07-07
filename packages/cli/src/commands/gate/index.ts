@@ -133,6 +133,7 @@ type GateConfigMutation = (config: GateConfigContainer) => GateConfigContainer;
 export interface SelectedExecTarget {
   id: string;
   target: ExecTarget;
+  model?: string;
 }
 
 interface ReviewGateArtifactCandidate extends LatestReview {
@@ -516,6 +517,7 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
     runtime: target.runtime,
     baseCommand: [...target.baseCommand],
     priority: target.priority,
+    ...(target.models ? { models: [...target.models] } : {}),
     ...(target.hostDetectionCommand
       ? { hostDetectionCommand: [...target.hostDetectionCommand] }
       : {}),
@@ -523,6 +525,47 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
       ? { availabilityCommand: [...target.availabilityCommand] }
       : {}),
   };
+}
+
+function findPinnedModelArg(argv: readonly string[]): string | undefined {
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--model') {
+      const value = argv[index + 1]?.trim();
+      return value || undefined;
+    }
+    if (arg?.startsWith('--model=')) {
+      const value = arg.slice('--model='.length).trim();
+      return value || undefined;
+    }
+  }
+
+  return undefined;
+}
+
+function targetCandidateModels(target: ExecTarget): string[] | undefined {
+  if (target.models && target.models.length > 0) {
+    return [...target.models];
+  }
+
+  const pinnedModel = findPinnedModelArg(target.baseCommand);
+  return pinnedModel ? [pinnedModel] : undefined;
+}
+
+function expandExecTargetCandidates(
+  id: string,
+  target: ExecTarget,
+): SelectedExecTarget[] {
+  const models = targetCandidateModels(target);
+  if (!models) {
+    return [{ id, target: cloneExecTarget(target) }];
+  }
+
+  return models.map((model) => ({
+    id,
+    target: cloneExecTarget(target),
+    model,
+  }));
 }
 
 function argvHead(argv: string[]): [string, string[]] {
@@ -543,7 +586,7 @@ function listExecTargetCandidates(
       ({ target }) =>
         !shouldAvoidSameRuntime || target.runtime !== currentRuntime,
     )
-    .map(({ id, target }) => ({ id, target: cloneExecTarget(target) }));
+    .flatMap(({ id, target }) => expandExecTargetCandidates(id, target));
 }
 
 export function selectExecTarget(
@@ -683,10 +726,15 @@ async function executeTarget(
     throw new Error(`Exec target "${selected.id}" has an empty base command.`);
   }
 
+  const modelArgs =
+    selected.model && !findPinnedModelArg(selected.target.baseCommand)
+      ? ['--model', selected.model]
+      : [];
+
   try {
     const result = await dependencies.runProcess(
       command,
-      [...baseArgs, ...prompt],
+      [...baseArgs, ...modelArgs, ...prompt],
       {
         cwd: context.cwd,
         env: dependencies.processEnv,

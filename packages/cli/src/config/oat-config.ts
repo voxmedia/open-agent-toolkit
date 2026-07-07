@@ -100,6 +100,7 @@ export interface GateConfig {
 export interface ExecTarget {
   runtime: string;
   baseCommand: string[];
+  models?: string[];
   hostDetectionCommand?: string[];
   availabilityCommand?: string[];
   priority: number;
@@ -211,6 +212,21 @@ function normalizeArgv(value: unknown): string[] | undefined {
   }
 
   return [...value];
+}
+
+function normalizeStringList(value: unknown): string[] | undefined {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every(
+      (item): item is string =>
+        typeof item === 'string' && item.trim().length > 0,
+    )
+  ) {
+    return undefined;
+  }
+
+  return value.map((item) => item.trim());
 }
 
 function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
@@ -373,6 +389,11 @@ function normalizeExecTarget(
   const baseCommand = normalizeArgv(value.baseCommand);
   if (baseCommand !== undefined) {
     target.baseCommand = baseCommand;
+  }
+
+  const models = normalizeStringList(value.models);
+  if (models !== undefined) {
+    target.models = models;
   }
 
   if ('priority' in value) {
