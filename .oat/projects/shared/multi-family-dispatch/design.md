@@ -91,11 +91,14 @@ identity, plus a reader.
   **only if** the harness rejects bad values rather than silently falling back.
 - `observed` — the harness or subagent reported what actually ran (init-event `model`
   field, subagent report echo, or **persisted harness session metadata**, live-verified
-  2026-07-07 on both: Codex rollout JSONL under `~/.codex/sessions` carries
-  machine-readable model + effort fields per turn; Claude Code transcript JSONL under
-  `~/.claude/projects/<slug>/` carries an exact model ID **per assistant message**,
-  which captures even mid-session `/model` switches per-turn). A cross-check, not
-  proof; agent **prose** self-report is never more than `observed`.
+  2026-07-07 on both: Codex rollout JSONL under `~/.codex/sessions/YYYY/MM/DD/` carries
+  `turn_context.payload.model` + `payload.effort` **repeated per turn**; Claude Code
+  transcript JSONL under `~/.claude/projects/<slug>/` carries an exact model ID **per
+  assistant message** — so both survive mid-session model/effort changes. Codex's
+  older `~/.codex/log/session-*.jsonl` format has session-level `model` plus
+  `model_provider_id`/`model_provider_name` — the only **structured** provider/family
+  field seen on any harness, useful to the classifier when present). A cross-check,
+  not proof; agent **prose** self-report is never more than `observed`.
 - `inferred` — OAT read config or probed current state (`cli-config.json`,
   `--list-models (current)`, orchestrator self-knowledge of its session model).
 - `unknown` — no reliable identity.
