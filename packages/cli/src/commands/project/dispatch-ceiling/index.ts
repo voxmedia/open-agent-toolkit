@@ -144,6 +144,7 @@ interface ResolvedDispatchRouteTarget {
   harness: string;
   model?: string;
   effort?: string;
+  crossHarness: boolean;
   routeIndex: number;
   routeLength: number;
 }
@@ -491,6 +492,7 @@ function routeTargetFromBareValue(
   const adapter = getCeilingAdapter(provider);
   const target: ResolvedDispatchRouteTarget = {
     harness: provider,
+    crossHarness: false,
     routeIndex,
     routeLength,
   };
@@ -510,10 +512,12 @@ function routeTargetFromObject(
   routeIndex: number,
   routeLength: number,
 ): ResolvedDispatchRouteTarget {
+  const harness = target.harness ?? provider;
   return {
-    harness: target.harness ?? provider,
+    harness,
     ...(target.model ? { model: target.model } : {}),
     ...(target.effort ? { effort: target.effort } : {}),
+    crossHarness: harness !== provider,
     routeIndex,
     routeLength,
   };
@@ -1214,11 +1218,13 @@ function buildProviderResolution(
 
   const selection = selectDispatchValue(provider, role, policy, preferredValue);
   const dispatchValue = selection.selectedValue;
-  const dispatchArgs = dispatchValue
-    ? adapter.compileToDispatchArgs(dispatchValue, role, {
-        orchestratorTier,
-      })
-    : null;
+  const isCrossHarness = selection.target?.crossHarness === true;
+  const dispatchArgs =
+    dispatchValue && !isCrossHarness
+      ? adapter.compileToDispatchArgs(dispatchValue, role, {
+          orchestratorTier,
+        })
+      : null;
 
   let mode: DispatchCeilingMode;
   if (!adapter.supportsCeiling) {
@@ -1234,11 +1240,12 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
-    verifyOnDispatch: dispatchValue
-      ? adapter.verifyOnDispatch(dispatchValue, {
-          orchestratorTier,
-        })
-      : false,
+    verifyOnDispatch:
+      dispatchValue && !isCrossHarness
+        ? adapter.verifyOnDispatch(dispatchValue, {
+            orchestratorTier,
+          })
+        : false,
     cellSource: policy.cellSource,
     target: selection.target,
     selection,
@@ -1482,6 +1489,23 @@ function writeHumanResolution(
     context.logger.info(
       `Selection: ${providerResolution.selection.selectionMode}`,
     );
+    if (providerResolution.target) {
+      const details = [
+        `harness=${providerResolution.target.harness}`,
+        providerResolution.target.model
+          ? `model=${providerResolution.target.model}`
+          : null,
+        providerResolution.target.effort
+          ? `effort=${providerResolution.target.effort}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const suffix = providerResolution.target.crossHarness
+        ? ' (cross-harness target; native dispatch args deferred)'
+        : '';
+      context.logger.info(`Dispatch target: ${details}${suffix}`);
+    }
   }
 
   if (resolution.provider === 'codex') {

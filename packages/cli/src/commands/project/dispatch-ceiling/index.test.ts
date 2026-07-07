@@ -656,6 +656,144 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('reports same-harness route targets and active-harness bare route entries', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            cursor: {
+              high: [
+                { harness: 'cursor', model: 'gpt-5.5-xhigh' },
+                'composer-2.5',
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'cursor', '--json']);
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--escalation-level',
+      '1',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providers: {
+        cursor: {
+          dispatchArgs: { model: 'gpt-5.5-xhigh' },
+          selection: {
+            selectedValue: 'gpt-5.5-xhigh',
+            target: {
+              harness: 'cursor',
+              model: 'gpt-5.5-xhigh',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+    expect(capture.jsonPayloads[1]).toMatchObject({
+      providers: {
+        cursor: {
+          dispatchArgs: { model: 'composer-2.5' },
+          selection: {
+            selectedValue: 'composer-2.5',
+            target: {
+              harness: 'cursor',
+              model: 'composer-2.5',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it('marks cross-harness route targets advisory without native dispatch args', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [{ harness: 'cursor', model: 'gpt-5.5-xhigh' }],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'gpt-5.5-xhigh',
+      providers: {
+        codex: {
+          value: 'gpt-5.5-xhigh',
+          mode: 'advisory',
+          dispatchArgs: null,
+          target: {
+            harness: 'cursor',
+            model: 'gpt-5.5-xhigh',
+            crossHarness: true,
+          },
+          selection: {
+            selectedValue: 'gpt-5.5-xhigh',
+            target: {
+              harness: 'cursor',
+              model: 'gpt-5.5-xhigh',
+              crossHarness: true,
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('blocks non-interactive preflight when a managed provider cell is absent', async () => {
     const { root, home } = await setup();
     await writeFile(
