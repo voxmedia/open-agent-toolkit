@@ -471,13 +471,20 @@ function policyTier(
 }
 
 function dispatchValueFromRouteTarget(
-  target: WorkflowDispatchRouteTarget,
+  target: ResolvedDispatchRouteTarget,
 ): string | null {
-  return target.model ?? target.effort ?? target.harness ?? null;
+  const adapter = getCeilingAdapter(target.harness);
+  if (adapter.mechanism === 'pinned-variant') {
+    return target.effort ?? null;
+  }
+  if (adapter.mechanism === 'model-arg') {
+    return target.model ?? null;
+  }
+  return null;
 }
 
 interface MatrixCellResolution {
-  value: DispatchCeilingValue;
+  value: DispatchCeilingValue | null;
   cellSource: DispatchCeilingSource;
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
@@ -540,16 +547,14 @@ function resolveRouteMatrixCell(
       ? routeTargetFromBareValue(provider, entry, routeIndex, route.length)
       : routeTargetFromObject(provider, entry, routeIndex, route.length);
   const value =
-    typeof entry === 'string' ? entry : dispatchValueFromRouteTarget(entry);
+    typeof entry === 'string' ? entry : dispatchValueFromRouteTarget(target);
 
-  return value
-    ? {
-        value,
-        cellSource,
-        target,
-        selectionBranch: routeIndex > 0 ? 'escalation-target' : 'matrix-pinned',
-      }
-    : null;
+  return {
+    value,
+    cellSource,
+    target,
+    selectionBranch: routeIndex > 0 ? 'escalation-target' : 'matrix-pinned',
+  };
 }
 
 function resolveProviderCellFromValue(
@@ -1125,10 +1130,10 @@ function selectDispatchValue(
       preferredValue: null,
       selectedValue: null,
       capped: false,
-      selectionMode: 'capped',
+      selectionMode: policy.target ? 'unresolved' : 'capped',
       selectionBranch: policy.selectionBranch,
       family: 'unknown',
-      target: null,
+      target: policy.target,
     };
   }
 

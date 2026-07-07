@@ -409,10 +409,14 @@ Payload-first invariant:
   exactly:
   `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
   Derive `producer` and `provenance` from the resolver payload and actual host
-  arguments: concrete OAT-owned `model`, `variant`, or same-harness route args
-  are `declared`; base/unpinned or deferred cross-harness paths are
-  `producer=unknown provenance=unknown` unless an observed/inferred identity is
-  available. Do not write prose-only or legacy comma-separated stamp forms.
+  arguments. Only concrete model arguments, including same-harness route model
+  args for model-arg providers, declare producer identity. Codex pinned
+  variants declare the effort axis only; record `effort_axis=selected:<value>`
+  and keep `producer=unknown provenance=unknown` unless an observed/inferred
+  model identity is available. Base/unpinned or deferred cross-harness paths are
+  also `producer=unknown provenance=unknown` unless an observed/inferred
+  identity is available. Do not write prose-only or legacy comma-separated stamp
+  forms.
 
 Structured dispatch log:
 
