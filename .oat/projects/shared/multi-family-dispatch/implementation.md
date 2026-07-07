@@ -769,7 +769,7 @@ __EXIT_CODE__=0
   configured dispatch-ceiling provider cells.
 - Flattened bare provider cells, per-tier matrix cells, and ordered route target
   cells into provider/value/path references for validation.
-- Warned on unknown or unvalidated cells without failing the doctor run, using
+- Warned on unknown cells and reported unvalidated cells informationally, using
   the p03-t05 availability oracle.
 
 **Files changed:**
@@ -783,18 +783,20 @@ __EXIT_CODE__=0
 - RED: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts`
   failed because no dispatch matrix doctor check was emitted.
 - GREEN: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts`
-  passed (20 tests).
+  passed (21 tests after self-review follow-up).
 - Type-check: `pnpm --filter @open-agent-toolkit/cli type-check` passed.
 
 **Notes / Decisions:**
 
 - Empty matrices emit a passing diagnostic (`No configured dispatch matrix cells
 found`) so the doctor surface remains explicit.
-- Oracle exceptions degrade to `unvalidated` rather than hard-failing doctor.
+- Oracle exceptions degrade to `unvalidated` rather than hard-failing doctor or
+  producing a warning exit by themselves.
 
 **Issues Encountered:**
 
-- None.
+- Self-review found the first implementation treated unvalidated-only cells as
+  warning exits; fixed in a follow-up p03-t06 commit before p03-t07 work.
 
 ---
 

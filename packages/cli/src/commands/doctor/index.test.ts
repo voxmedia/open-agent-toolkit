@@ -505,6 +505,30 @@ describe('createDoctorCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('reports unvalidated dispatch matrix cells without warning exit status', async () => {
+    const { command, capture } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: { high: 'composer-2.5' },
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => 'unvalidated',
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high=composer-2.5',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
   it('outputs JSON when --json set', async () => {
     const { command, capture } = createHarness();
 

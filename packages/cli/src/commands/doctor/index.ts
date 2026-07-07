@@ -396,12 +396,16 @@ async function createDispatchMatrixDoctorCheck(
     );
   }
 
+  const hasUnknown = unknown.length > 0;
+
   return {
     name: 'project:dispatch_matrix',
     description: 'Dispatch matrix cell availability',
-    status: 'warn',
+    status: hasUnknown ? 'warn' : 'pass',
     message: messageParts.join('. '),
-    fix: 'Run `oat config set workflow.dispatchCeiling.providers.<provider> <value>` with an available value, or refresh provider assets with `oat sync --scope project`.',
+    fix: hasUnknown
+      ? 'Run `oat config set workflow.dispatchCeiling.providers.<provider> <value>` with an available value, or refresh provider assets with `oat sync --scope project`.'
+      : undefined,
   };
 }
 
