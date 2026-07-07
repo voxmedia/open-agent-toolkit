@@ -89,6 +89,10 @@ identity, plus a reader.
 
 - `declared` — OAT pinned the target and passed it to the harness. Authoritative
   **only if** the harness rejects bad values rather than silently falling back.
+  Cursor now qualifies on the OAT-pinned path: the p01-t02 live experiment
+  (2026-07-07) showed `cursor-agent --model definitely-not-a-model` exits 1 with
+  a hard "Cannot use this model" error and does not emit an init event or fall
+  back.
 - `observed` — the harness or subagent reported what actually ran (init-event `model`
   field, subagent report echo, or **persisted harness session metadata**, live-verified
   2026-07-07 on both: Codex rollout JSONL under `~/.codex/sessions/YYYY/MM/DD/` carries
@@ -103,27 +107,28 @@ identity, plus a reader.
   `--list-models (current)`, orchestrator self-knowledge of its session model).
 - `unknown` — no reliable identity.
 
-Reliability by dispatch path: Claude Task with `model` arg, Cursor `--model <slug>`,
+Reliability by dispatch path: Claude Task with `model` arg, Cursor `--model <slug-or-display-name>`,
 and `codex exec --model <model>` are `declared` by construction; Codex pinned variants
 declare effort (model is `inferred` from codex config unless `--model` was also
 passed, with session metadata as the `observed` cross-check); inherited/unpinned
 dispatches are at best `observed`/`inferred`. No harness exposes an ambient identity
 env var (live-verified 2026-07-07: Cursor has only `CURSOR_AGENT=1`, Codex only
-`CODEX_THREAD_ID`/`CODEX_CI` — no `CURSOR_MODEL`/`CODEX_MODEL`). Two specific failure modes: (1) **silent fallback on invalid
-slug** would make a `declared` stamp lie — characterizing this empirically is a
-**blocking** kickoff item (if fallback is silent, pre-dispatch validation is mandatory
-and the init-event echo becomes the post-dispatch truth check); (2) **mid-session model
+`CODEX_THREAD_ID`/`CODEX_CI` — no `CURSOR_MODEL`/`CODEX_MODEL`). Two specific failure modes remain bounded: (1) **invalid
+Cursor model values hard-error** on the live binary when an API key is supplied,
+so pre-dispatch validation is a UX/availability check rather than mandatory
+protection against silent fallback for declared Cursor stamps; the init-event
+echo is still the preferred `observed` corroboration when a dispatch runs; (2) **mid-session model
 switches** of the orchestrator make self-reported identity stale — orchestrator
 self-knowledge is never `declared`.
 
 Consumption rules: the **high-confidence path is `declared` corroborated by `observed`**
 (the harness/subagent echo matches what OAT requested). `declared` alone qualifies as
-high-confidence only for harnesses with _proven_ reject-don't-fallback behavior; for
-Cursor, until invalid-`--model` behavior is characterized, uncorroborated `declared` is
-treated as medium confidence. On a declared/observed **mismatch**, the observed value
-wins for gate purposes (it reflects what actually ran) and the mismatch is flagged
-loudly. `observed`/`inferred` alone are usable with lower-confidence logging; on
-`unknown`, OAT cannot truthfully claim family diversity and must say so.
+high-confidence only for harnesses with _proven_ reject-don't-fallback behavior; Cursor
+now meets that bar for OAT-pinned `--model` dispatches. On a declared/observed
+**mismatch**, the observed value wins for gate purposes (it reflects what actually ran)
+and the mismatch is flagged loudly. `observed`/`inferred` alone are usable with
+lower-confidence logging; on `unknown`, OAT cannot truthfully claim family diversity and
+must say so.
 
 ## Architecture
 
@@ -135,9 +140,12 @@ shared identity/matrix foundation plus the two concerns.
    report) → inference (config read / probe) → `unknown`. No `CURSOR_MODEL` env var
    exists (`CURSOR_AGENT=1` is presence-only), so Cursor identity must be stamped,
    observed, or probed. The three probe sources were **live-verified 2026-07-07** and
-   can **mutually disagree on the same machine at the same time**, so the helper needs a
+   can **mutually disagree on the same machine at the same time**, and the p01-t02 live
+   experiment found `cursor-agent --api-key "$CURSOR_API_KEY" models` can return the
+   catalog while `--list-models` still fails against a locked login keychain. The helper
+   needs a
    documented priority:
-   1. `cursor-agent --list-models` `(current)` marker — fastest, slug-shaped, closest
+   1. Catalog current marker from `cursor-agent models` / `--list-models` — slug-shaped, closest
       to dispatch truth (returned `composer-2.5`).
    2. Init-event probe (`cursor-agent -p --output-format stream-json --trust "ok" |
 head -1 | jq -r '.model'`) — ~1–3s, returns a **display name**, not a slug
@@ -356,9 +364,11 @@ oat project dispatch-ceiling resolve \
   machine simultaneously, `--list-models (current)` reported `composer-2.5` while
   config/display showed the fast variant (`composer-2.5-fast` / `Composer 2.5 Fast`).
   Exact-match-or-degrade; no auto-normalization.
-- **Invalid/unavailable `--model`:** empirical characterization is **blocking** (see
-  stamp section) — silent fallback corrupts `declared` stamps and mandates
-  pre-validation + observed echo.
+- **Invalid/unavailable `--model`:** live-characterized 2026-07-07. Invalid Cursor
+  model values hard-error with exit code 1 and an explicit "Cannot use this model"
+  message, so there is no silent fallback on the tested live binary. Pre-validation
+  remains useful for clearer errors and drift checks; observed echo remains useful for
+  mismatch logging.
 - **Frontier under any harness:** advisory, not enforced, when the account cannot honor
   it.
 - **Gate integrity:** keep "no fallback after dispatch"; diversity selection is
@@ -417,14 +427,17 @@ Still open (fine to resolve during implementation):
       tier order; **no producer stamp shipped** → stamp is phase 1 here). Re-confirm at
       kickoff against the merged main.
 - [x] ~~Re-verify the Cursor CLI probe surface against the live binary~~ (done
-      2026-07-07 from a live Cursor session: `(current)` marker exists and is
+      2026-07-07 from live Cursor sessions: `(current)` marker exists and is
       slug-shaped; init-event `model` is a display name; cli-config `.model` is the
       default, not the active model; the three sources can disagree simultaneously; no
-      `CURSOR_MODEL` env var). **Still outstanding:** whether `--model` accepts slugs
-      only or also display names, and the `cursor-agent models` subcommand surface.
-- [ ] **Blocking:** characterize invalid/unavailable `--model` behavior empirically
-      (error vs silent fallback) — determines whether `declared` stamps need mandatory
-      pre-validation + observed echo.
+      `CURSOR_MODEL` env var; p01-t02 additionally confirmed display names such as
+      `"Composer 2.5"` are accepted by `--model`, `cursor-agent models` returns a
+      slug/display catalog with `(current)` and `(default)` markers when an API key is
+      supplied, and `--list-models` can still fail when the login keychain is locked).
+- [x] **Blocking:** characterize invalid/unavailable `--model` behavior empirically
+      (error vs silent fallback) — invalid values hard-error with exit code 1, so
+      uncorroborated Cursor `declared` stamps qualify as high-confidence for OAT-pinned
+      dispatches.
 - [ ] Confirm a reliable declaration path exists for Cursor identity; else decide
       probe-only acceptability.
 - [ ] Confirm gate avoidance still ships `same-runtime|none` and decide the intra-target
