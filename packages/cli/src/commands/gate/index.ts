@@ -695,12 +695,16 @@ function findPinnedModelArg(argv: readonly string[]): string | undefined {
 }
 
 function targetCandidateModels(target: ExecTarget): string[] | undefined {
+  const pinnedModel = findPinnedModelArg(target.baseCommand);
+  if (pinnedModel) {
+    return [pinnedModel];
+  }
+
   if (target.models && target.models.length > 0) {
     return [...target.models];
   }
 
-  const pinnedModel = findPinnedModelArg(target.baseCommand);
-  return pinnedModel ? [pinnedModel] : undefined;
+  return undefined;
 }
 
 function candidateFamily(
@@ -829,9 +833,7 @@ function listExecTargetCandidates(
   const shouldAvoidSameFamily =
     avoid === 'same-family' && producerHasKnownFamily(producerIdentity);
   const shouldAvoidSameRuntime =
-    (avoid === 'same-runtime' ||
-      (avoid === 'same-family' && !shouldAvoidSameFamily)) &&
-    currentRuntime !== 'unknown';
+    avoid === 'same-runtime' && currentRuntime !== 'unknown';
 
   return sortedExecTargetEntries(registry)
     .filter(

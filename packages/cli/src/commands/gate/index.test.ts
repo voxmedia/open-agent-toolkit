@@ -1055,8 +1055,8 @@ describe('oat gate', () => {
     });
 
     expect(runner.calls.at(-1)).toMatchObject({
-      command: 'codex',
-      args: ['exec', 'Run', 'review'],
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
       purpose: 'execute',
     });
     expect(process.exitCode).toBe(0);
@@ -1070,8 +1070,8 @@ describe('oat gate', () => {
     });
 
     expect(defaultRunner.calls.at(-1)).toMatchObject({
-      command: 'codex',
-      args: ['exec', 'Run', 'review'],
+      command: 'claude',
+      args: ['-p', 'Run', 'review'],
       purpose: 'execute',
     });
     expect(process.exitCode).toBe(0);
@@ -1210,6 +1210,69 @@ describe('oat gate', () => {
       command: 'cursor-agent',
       args: ['-p', '--model', 'composer-2.5', 'Run', 'review'],
       purpose: 'execute',
+    });
+    expect(
+      runner.calls.at(-1)?.args.filter((arg) => arg === '--model'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('lets a pinned model override a conflicting models list', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-pinned': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p', '--model', 'gpt-5.5'],
+                models: ['composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--avoid',
+        'none',
+        '--producer-identity',
+        'composer-2.5:declared',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'gpt-5.5', expect.stringContaining('Review')],
+      purpose: 'execute',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        reviewer: {
+          target: 'cursor-pinned',
+          model: 'gpt-5.5',
+          family: 'openai',
+        },
+      },
     });
     expect(
       runner.calls.at(-1)?.args.filter((arg) => arg === '--model'),
@@ -1371,6 +1434,47 @@ describe('oat gate', () => {
     await runCrossProviderExec({
       root,
       home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'unknown:unknown', 'Run', 'review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'gpt-5.5', 'Run', 'review'],
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not fall back to same-runtime filtering for unknown producer identity', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CURSOR_AGENT: '1' },
       runProcess: runner.runProcess,
       args: ['--producer-identity', 'unknown:unknown', 'Run', 'review'],
     });
@@ -1640,7 +1744,7 @@ describe('oat gate', () => {
     });
   });
 
-  it('detects built-in runtimes and avoids the current runtime by default', async () => {
+  it('detects built-in runtimes without avoiding them for unknown producer defaults', async () => {
     const cases: Array<{
       name: string;
       env: NodeJS.ProcessEnv;
@@ -1651,8 +1755,8 @@ describe('oat gate', () => {
       {
         name: 'claude',
         env: { CLAUDECODE: '1' },
-        expectedCommand: 'codex',
-        expectedArgs: ['exec', 'Run', 'review'],
+        expectedCommand: 'claude',
+        expectedArgs: ['-p', 'Run', 'review'],
         expectedDetectionCount: 1,
       },
       {
@@ -1848,7 +1952,7 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('fails when no eligible non-current runtime is available', async () => {
+  it('fails when no eligible non-current runtime is available under explicit same-runtime avoidance', async () => {
     const { root, home } = await setup();
     await writeFile(
       join(root, '.oat', 'config.json'),
@@ -1872,6 +1976,7 @@ describe('oat gate', () => {
       home,
       processEnv: { CLAUDECODE: '1' },
       runProcess: runner.runProcess,
+      args: ['--avoid', 'same-runtime', 'Run', 'review'],
     });
 
     expect(
@@ -1921,7 +2026,7 @@ describe('oat gate', () => {
       home,
       processEnv: { CLAUDECODE: '1' },
       runProcess: runner.runProcess,
-      args: ['Review', 'the', 'current', 'project'],
+      args: ['--avoid', 'same-runtime', 'Review', 'the', 'current', 'project'],
     });
 
     expect(runner.calls.at(-1)).toMatchObject({
@@ -2123,7 +2228,7 @@ describe('oat gate', () => {
       home,
       processEnv: { CLAUDECODE: '1' },
       runProcess: runner.runProcess,
-      args: ['Review'],
+      args: ['--avoid', 'same-runtime', 'Review'],
     });
 
     expect(
