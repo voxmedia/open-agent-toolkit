@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 9a0001ed3e9c58d2ad684f057bff4878e201d58c
+oat_last_commit: 8ae81bba5543cb3eefe919cd6fd55ff63df0eaa0
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-c3d8' }
@@ -30,7 +30,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T12:59:03Z'
+oat_project_state_updated: '2026-07-07T13:07:57Z'
 oat_generated: false
 ---
 
@@ -43,9 +43,9 @@ oat_generated: false
 ## Current Phase
 
 Implementation in progress. Phase p01 completed kickoff revalidation, the blocking
-Cursor behavior experiment, and stamp grammar/declaration decisions; standard p01 review
-passed after one bounded fix. Next: run the configured p01 phase review gate, then
-continue with p02-t01.
+Cursor behavior experiment, and stamp grammar/declaration decisions. Standard p01 review
+passed after one bounded fix, and the external phase gate passed and was consumed with
+sub-threshold findings addressed. Next: continue with p02-t01.
 
 ## Artifacts
 
@@ -68,7 +68,8 @@ continue with p02-t01.
 - ✓ Dispatch policy persisted (managed high — codex xhigh · claude opus)
 - ✓ Phase p01 kickoff revalidation and blocking Cursor experiments complete
 - ✓ p01 standard review passed after one bounded fix
-- ⧗ p01 external phase review gate pending
+- ✓ p01 external phase review gate passed and was consumed
+- ⧗ Continue with p02-t01
 
 ## Blockers
 
@@ -76,8 +77,7 @@ None
 
 ## Next Milestone
 
-Run the configured p01 phase review gate, then continue implementation with p02-t01
-(shared identity foundation).
+Continue implementation with p02-t01 (shared identity foundation).
 
 ## Notes
 

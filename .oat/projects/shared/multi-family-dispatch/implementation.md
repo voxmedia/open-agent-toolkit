@@ -174,7 +174,7 @@ command -v cursor-agent
 /Users/tstang/.local/bin/cursor-agent
 
 cursor-agent status
-✓ Logged in as thomas.stang@voxmedia.com
+✓ Logged in as <redacted>
 __EXIT_CODE__=0
 
 cursor-agent models
@@ -414,6 +414,34 @@ Chronological log of implementation progress.
 - None.
 
 **Session End:** 2026-07-07 - p01 implementation complete
+
+---
+
+### Review Received: p01 gate
+
+**Date:** 2026-07-07
+**Review artifact:** reviews/archived/p01-review-2026-07-07T130154Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 2
+
+**New tasks added:** None
+
+**Disposition:**
+
+- M1: Addressed now. Clarified that declared or observed Cursor display-name values map
+  through the live catalog on exact match before stamping a single-token
+  `producer=<slug>`.
+- m1: Addressed now. Refreshed design frontmatter and changed the kickoff preface to
+  past tense after the live Cursor verification.
+- m2: Addressed now. Redacted the personal work email from the Cursor auth-context
+  evidence while preserving the exit code and keychain behavior.
+
+**Next:** Continue implementation with p02-t01.
 
 ---
 

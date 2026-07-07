@@ -1,8 +1,8 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-plan
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-06
+oat_last_updated: 2026-07-07
 oat_generated: false
 oat_template: false
 oat_template_name: design
@@ -18,10 +18,9 @@ oat_template_name: design
 > planning artifacts, not stray implementation. Actual implementation will occur later
 > in a dedicated worktree.
 >
-> **Revalidate at kickoff.** The parent has now shipped; its shapes were re-read on
-> 2026-07-06 and this design is grounded in them, but the Cursor-CLI facts still derive
-> from a stale (2026-06-19) docs snapshot and must be verified against the live binary —
-> see the **Revalidation Checklist**.
+> **Revalidated at kickoff.** The parent has now shipped; its shapes were re-read on
+> 2026-07-06 and this design is grounded in them. Cursor-CLI facts were verified against
+> the live binary during p01 on 2026-07-07; see the **Revalidation Checklist**.
 
 ## Overview
 
@@ -140,11 +139,12 @@ Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<impleme
 
 Required identity fields are `producer`, `provenance`, and `role`; readers treat other
 fields as additive context. Values are single tokens. `producer` is the resolved slug
-when OAT has one; display-name-only observations are mapped through the live catalog
-only on exact match, otherwise they degrade to `producer=unknown
-provenance=observed|inferred`. Unknown identity is written explicitly as
-`producer=unknown provenance=unknown`. Legacy `Dispatch:` lines without these fields are
-still parsed best-effort with `provenance=unknown`.
+when OAT has one. Declared or observed display-name-only values are mapped through the
+live catalog only on exact match and stamped as the catalog slug while preserving their
+strongest provenance; otherwise they degrade to `producer=unknown` with the strongest
+surviving provenance (`declared`, `observed`, or `inferred`). Unknown identity is written
+explicitly as `producer=unknown provenance=unknown`. Legacy `Dispatch:` lines without
+these fields are still parsed best-effort with `provenance=unknown`.
 
 **Declaration path decision (resolved 2026-07-07).** A reliable launcher declaration path
 is available now for OAT-owned dispatches that compile concrete dispatch arguments. The
