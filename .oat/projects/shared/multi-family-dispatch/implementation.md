@@ -335,6 +335,40 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-07-07 07:59
+
+**Branch:** multi-family-dispatch
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer        | Review | Fix Iterations | Disposition |
+| ----- | ------------------ | ------ | -------------- | ----------- |
+| p01   | DONE_WITH_CONCERNS | pass   | 1/2            | completed   |
+
+#### Parallel Groups
+
+- p01: sequential.
+
+#### Dispatch Notes
+
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+- Dispatch: scope=p01 action=fix role=fix producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+
+#### Outstanding Items
+
+- None.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented                                                                          | Actual / Accepted                                                                                  | Reason                                                    | Source of Truth          | Follow-up                                                   |
+| ------------- | --------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------ | ----------------------------------------------------------- |
+| p01-t02       | design.md       | Cursor declared stamps were medium confidence until invalid-model behavior was characterized. | Cursor invalid `--model` values hard-error; OAT-pinned Cursor declarations can be high confidence. | Live binary experiment resolved the blocking uncertainty. | design.md updated in p01 | Implement p02/p04 confidence logic from the updated design. |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -373,7 +407,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue with p02-t01.
+- Run the p01 external phase review gate, then continue with p02-t01.
 
 **Blockers:**
 

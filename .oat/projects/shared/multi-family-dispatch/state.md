@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 9a0001ed3e9c58d2ad684f057bff4878e201d58c
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'bl-c3d8' }
@@ -13,8 +13,8 @@ oat_children: []
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: plan
-oat_phase_status: complete
+oat_phase: implement
+oat_phase_status: in_progress
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -30,30 +30,30 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T05:18:54Z'
+oat_project_state_updated: '2026-07-07T12:59:03Z'
 oat_generated: false
 ---
 
 # Project State: multi-family-dispatch
 
-**Status:** Plan complete — awaiting implementation (new worktree)
+**Status:** Implementation in progress
 **Started:** 2026-07-06
 **Last Updated:** 2026-07-07
 
 ## Current Phase
 
-Planning complete — ready for implementation **in a new worktree after PR #129 merges**.
-Plan: 6 phases / 25 tasks, sequential; artifact review passed (structured, 6 findings
-applied). Dispatch policy: managed `high` (Codex xhigh · Claude opus). HiLL checkpoints
-deferred to `oat-project-implement` at execution start.
+Implementation in progress. Phase p01 completed kickoff revalidation, the blocking
+Cursor behavior experiment, and stamp grammar/declaration decisions; standard p01 review
+passed after one bounded fix. Next: run the configured p01 phase review gate, then
+continue with p02-t01.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (revising — lightweight; pre-project draft pending kickoff revalidation)
-- **Plan:** `plan.md` (scaffolded template — not started; awaiting design sign-off)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** `design.md` (complete; p01 confidence-rule updates applied)
+- **Plan:** `plan.md` (complete; p01 review passed)
+- **Implementation:** `implementation.md` (in progress; next task p02-t01)
 
 ## Progress
 
@@ -66,7 +66,9 @@ deferred to `oat-project-implement` at execution start.
 - ✓ Design signed off (plan-gating decisions, Q23)
 - ✓ Implementation plan complete (6 phases / 25 tasks; artifact review passed)
 - ✓ Dispatch policy persisted (managed high — codex xhigh · claude opus)
-- ⧗ Awaiting implementation (new worktree; p01 opens with kickoff revalidation)
+- ✓ Phase p01 kickoff revalidation and blocking Cursor experiments complete
+- ✓ p01 standard review passed after one bounded fix
+- ⧗ p01 external phase review gate pending
 
 ## Blockers
 
@@ -74,8 +76,8 @@ None
 
 ## Next Milestone
 
-Merge PR #129, create the implementation worktree, run `pnpm run worktree:init`, then
-run `oat-project-implement` (p01 kickoff revalidation + blocking experiments first).
+Run the configured p01 phase review gate, then continue implementation with p02-t01
+(shared identity foundation).
 
 ## Notes
 
