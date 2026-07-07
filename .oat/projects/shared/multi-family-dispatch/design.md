@@ -90,10 +90,12 @@ identity, plus a reader.
 - `declared` — OAT pinned the target and passed it to the harness. Authoritative
   **only if** the harness rejects bad values rather than silently falling back.
 - `observed` — the harness or subagent reported what actually ran (init-event `model`
-  field, subagent report echo, or **persisted harness session metadata** — Codex rollout
-  JSONL under `~/.codex/sessions` carries machine-readable model + effort fields per
-  turn, live-verified 2026-07-07). A cross-check, not proof; agent **prose** self-report
-  is never more than `observed`.
+  field, subagent report echo, or **persisted harness session metadata**, live-verified
+  2026-07-07 on both: Codex rollout JSONL under `~/.codex/sessions` carries
+  machine-readable model + effort fields per turn; Claude Code transcript JSONL under
+  `~/.claude/projects/<slug>/` carries an exact model ID **per assistant message**,
+  which captures even mid-session `/model` switches per-turn). A cross-check, not
+  proof; agent **prose** self-report is never more than `observed`.
 - `inferred` — OAT read config or probed current state (`cli-config.json`,
   `--list-models (current)`, orchestrator self-knowledge of its session model).
 - `unknown` — no reliable identity.

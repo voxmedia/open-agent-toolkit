@@ -180,6 +180,12 @@ they conflict.
 **A (verified from a live Codex session):** No `CODEX_MODEL`-style env var exists (only `CODEX_THREAD_ID`/`CODEX_CI`). However, **persisted Codex session metadata** (rollout JSONL under `~/.codex/sessions`) carries machine-readable model and effort fields per session/turn, and `codex exec` accepts `--model <MODEL>` directly. The agent's natural-language self-report is useful only as an observed echo, never as source of truth.
 **Decision:** Codex is high-confidence when OAT launched it with a selected variant/model/effort (`declared`); persisted session metadata is the Codex `observed` cross-check (the analog of Cursor's init-event echo); agent prose alone is never relied on. `codex exec --model` also gives the cross-harness exec path a declared model axis for Codex, not just effort-via-variant.
 
+### Question 22: Live Claude Code identity verification (2026-07-07)
+
+**Q:** Can Claude Code self-identify deterministically?
+**A (verified against a live session transcript containing mid-session `/model` switches):** Yes, at two levels. (1) The harness injects the current model identity into the system prompt per request ("You are powered by … claude-fable-5") — deterministic injection, but relayed through agent prose, so `observed` at best. (2) The session transcript JSONL (`~/.claude/projects/<slug>/<session>.jsonl`) carries an **exact model ID on every assistant message** — the verification transcript showed `claude-opus-4-8` and `claude-fable-5` messages interleaved with per-message granularity across mid-session switches. No `CLAUDE_MODEL` env var (`CLAUDECODE=1` is presence-only); `ANTHROPIC_MODEL`/settings are config inputs (`inferred`), not resolved state.
+**Decision:** Claude Code's machine-readable `observed` source is the transcript's per-message model field — the strongest of the three harnesses (per-turn granularity survives mid-session switches, which is exactly the orchestrator-staleness failure mode). Task dispatch with a `model` arg remains `declared`. All three harnesses now have verified declared + observed paths and no ambient identity env var.
+
 ## Solution Space
 
 ### Approach 1: Model-identity layer + family-aware dispatch _(Recommended, chosen)_
