@@ -30,4 +30,34 @@ run_pnpm() {
   fi
 }
 
+cleanup_pnpm_shim() {
+  if [ -n "${OAT_HOOK_PNPM_SHIM:-}" ] && [ -d "$OAT_HOOK_PNPM_SHIM" ]; then
+    rm -rf "$OAT_HOOK_PNPM_SHIM"
+  fi
+}
+
+install_pnpm_shim() {
+  if ! command -v corepack >/dev/null 2>&1; then
+    return 0
+  fi
+
+  shim_dir=$(mktemp -d "${TMPDIR:-/tmp}/oat-hook-pnpm.XXXXXX" 2>/dev/null || true)
+  if [ -z "$shim_dir" ]; then
+    return 0
+  fi
+
+  cat > "$shim_dir/pnpm" <<'EOF'
+#!/bin/sh
+exec corepack pnpm "$@"
+EOF
+  chmod +x "$shim_dir/pnpm" || return 0
+
+  OAT_HOOK_PNPM_SHIM="$shim_dir"
+  export OAT_HOOK_PNPM_SHIM
+  PATH="$shim_dir:$PATH"
+  export PATH
+  trap cleanup_pnpm_shim EXIT HUP INT TERM
+}
+
 load_repo_node
+install_pnpm_shim
