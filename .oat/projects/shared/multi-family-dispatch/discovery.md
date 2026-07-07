@@ -174,6 +174,12 @@ they conflict.
 **A (verified from a live Cursor session):** Yes, with the fragilities confirmed. `cursor-agent --list-models` shows a `(current)` marker with a slug-shaped value (`composer-2.5 - Composer 2.5 (current)`) and is the fastest source. The init-event probe (`cursor-agent -p --output-format stream-json --trust "ok" | head -1 | jq -r '.model'`, ~1–3s) returns a **display name** (`Composer 2.5 Fast`), not a slug. `~/.cursor/cli-config.json` `.model` is the configured default, not necessarily the active session model. No `CURSOR_MODEL` env var; `CURSOR_AGENT=1` is presence-only. Critically, the three sources **disagreed simultaneously on the same machine** (current `composer-2.5` vs config/display fast variant) — the slug-vs-variant gotcha is empirical fact, not doc speculation.
 **Decision:** The dedicated helper (`oat internal cursor-current-target`) resolves with documented priority: `--list-models (current)` (slug-shaped) → init-event echo (display name, needs mapping) → cli-config default (weakest). All three are `inferred` provenance; exact-match-or-degrade across sources. The revalidation checklist item for the probe surface is marked done; still outstanding: whether `--model` accepts display names, the `cursor-agent models` subcommand, and the **blocking** invalid-`--model` characterization.
 
+### Question 21: Live Codex identity verification (2026-07-07)
+
+**Q:** Can Codex-side producer identity be determined reliably, and from what?
+**A (verified from a live Codex session):** No `CODEX_MODEL`-style env var exists (only `CODEX_THREAD_ID`/`CODEX_CI`). However, **persisted Codex session metadata** (rollout JSONL under `~/.codex/sessions`) carries machine-readable model and effort fields per session/turn, and `codex exec` accepts `--model <MODEL>` directly. The agent's natural-language self-report is useful only as an observed echo, never as source of truth.
+**Decision:** Codex is high-confidence when OAT launched it with a selected variant/model/effort (`declared`); persisted session metadata is the Codex `observed` cross-check (the analog of Cursor's init-event echo); agent prose alone is never relied on. `codex exec --model` also gives the cross-harness exec path a declared model axis for Codex, not just effort-via-variant.
+
 ## Solution Space
 
 ### Approach 1: Model-identity layer + family-aware dispatch _(Recommended, chosen)_

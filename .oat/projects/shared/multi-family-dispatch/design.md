@@ -90,15 +90,21 @@ identity, plus a reader.
 - `declared` — OAT pinned the target and passed it to the harness. Authoritative
   **only if** the harness rejects bad values rather than silently falling back.
 - `observed` — the harness or subagent reported what actually ran (init-event `model`
-  field, subagent report echo). A cross-check, not proof.
+  field, subagent report echo, or **persisted harness session metadata** — Codex rollout
+  JSONL under `~/.codex/sessions` carries machine-readable model + effort fields per
+  turn, live-verified 2026-07-07). A cross-check, not proof; agent **prose** self-report
+  is never more than `observed`.
 - `inferred` — OAT read config or probed current state (`cli-config.json`,
   `--list-models (current)`, orchestrator self-knowledge of its session model).
 - `unknown` — no reliable identity.
 
-Reliability by dispatch path: Claude Task with `model` arg and Cursor `--model <slug>`
-are `declared` by construction; Codex pinned variants declare effort (model is
-`inferred` from codex config); inherited/unpinned dispatches are at best
-`observed`/`inferred`. Two specific failure modes: (1) **silent fallback on invalid
+Reliability by dispatch path: Claude Task with `model` arg, Cursor `--model <slug>`,
+and `codex exec --model <model>` are `declared` by construction; Codex pinned variants
+declare effort (model is `inferred` from codex config unless `--model` was also
+passed, with session metadata as the `observed` cross-check); inherited/unpinned
+dispatches are at best `observed`/`inferred`. No harness exposes an ambient identity
+env var (live-verified 2026-07-07: Cursor has only `CURSOR_AGENT=1`, Codex only
+`CODEX_THREAD_ID`/`CODEX_CI` — no `CURSOR_MODEL`/`CODEX_MODEL`). Two specific failure modes: (1) **silent fallback on invalid
 slug** would make a `declared` stamp lie — characterizing this empirically is a
 **blocking** kickoff item (if fallback is silent, pre-dispatch validation is mandatory
 and the init-event echo becomes the post-dispatch truth check); (2) **mid-session model
