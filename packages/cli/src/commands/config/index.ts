@@ -844,6 +844,18 @@ const WORKFLOW_ENUM_VALUES = {
   ],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
+function closedDispatchProviderValues(
+  provider: string,
+): readonly string[] | undefined {
+  if (provider === 'codex') {
+    return WORKFLOW_ENUM_VALUES['workflow.dispatchCeiling.providers.codex'];
+  }
+  if (provider === 'claude') {
+    return WORKFLOW_ENUM_VALUES['workflow.dispatchCeiling.providers.claude'];
+  }
+  return undefined;
+}
+
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
   'workflow.archiveOnComplete',
   'workflow.createPrOnComplete',
@@ -958,11 +970,17 @@ function parseWorkflowValue(
   }
 
   if (isDispatchCeilingProviderKey(key)) {
-    parseDispatchCeilingProviderConfigKey(key);
+    const { provider } = parseDispatchCeilingProviderConfigKey(key);
     const normalized = rawValue.trim();
     if (normalized.length === 0) {
       throw new Error(
         `Invalid value for ${key}: provider values cannot be empty`,
+      );
+    }
+    const closedValues = closedDispatchProviderValues(provider);
+    if (closedValues && !closedValues.includes(normalized)) {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${closedValues.join(' | ')}, got '${rawValue}'`,
       );
     }
     return normalized;

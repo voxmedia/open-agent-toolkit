@@ -1232,6 +1232,33 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('low | medium | high | xhigh');
     });
 
+    it('rejects invalid closed-provider tier values before validation or save', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'unknown-value' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.claude.high',
+        'opus-4.8',
+        '--shared',
+      ]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        'workflow.dispatchCeiling.providers.claude.high',
+      );
+      expect(capture.error[0]).toContain('haiku | sonnet | opus | fable');
+      expect(validateMatrixCell).not.toHaveBeenCalled();
+
+      await expect(
+        readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
     it('adopts the bundled dispatch matrix recommendation into the shared config with a version stamp', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
