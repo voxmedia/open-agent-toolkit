@@ -16,6 +16,7 @@ import {
   type OatWorkflowConfig,
   type UserConfig,
   type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchMatrixTier,
   type WorkflowDispatchProviderValue,
   type WorkflowDispatchRouteTarget,
   type WorkflowDispatchCeilingPreset,
@@ -46,9 +47,20 @@ import { createConfigDumpCommand } from './dump';
 
 const DISPATCH_CEILING_PROVIDER_KEY_PREFIX =
   'workflow.dispatchCeiling.providers.';
+const DISPATCH_MATRIX_TIERS = [
+  'economy',
+  'balanced',
+  'high',
+  'frontier',
+] as const satisfies readonly WorkflowDispatchMatrixTier[];
 
 type WorkflowDispatchProviderConfigKey =
   `${typeof DISPATCH_CEILING_PROVIDER_KEY_PREFIX}${string}`;
+
+interface DispatchCeilingProviderConfigKeyParts {
+  provider: string;
+  tier?: WorkflowDispatchMatrixTier;
+}
 
 type ConfigKey =
   | 'activeIdea'
@@ -750,10 +762,50 @@ function isDispatchCeilingProviderKey(
   );
 }
 
+function isDispatchMatrixTier(
+  value: string,
+): value is WorkflowDispatchMatrixTier {
+  return (DISPATCH_MATRIX_TIERS as readonly string[]).includes(value);
+}
+
+function parseDispatchCeilingProviderConfigKey(
+  key: WorkflowDispatchProviderConfigKey,
+): DispatchCeilingProviderConfigKeyParts {
+  const suffix = key.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length).trim();
+  const parts = suffix.split('.').map((part) => part.trim());
+  const invalidMessage = `Invalid config key ${key}: expected workflow.dispatchCeiling.providers.<provider> or workflow.dispatchCeiling.providers.<provider>.<tier> with tier one of ${DISPATCH_MATRIX_TIERS.join(
+    ' | ',
+  )}.`;
+
+  if (parts.some((part) => part.length === 0)) {
+    throw new Error(invalidMessage);
+  }
+
+  if (parts.length === 1) {
+    const provider = parts[0];
+    if (!provider) {
+      throw new Error(invalidMessage);
+    }
+    return { provider };
+  }
+
+  const tier = parts[parts.length - 1];
+  if (!tier || !isDispatchMatrixTier(tier)) {
+    throw new Error(invalidMessage);
+  }
+
+  const provider = parts.slice(0, -1).join('.').trim();
+  if (!provider) {
+    throw new Error(invalidMessage);
+  }
+
+  return { provider, tier };
+}
+
 function providerNameFromConfigKey(
   key: WorkflowDispatchProviderConfigKey,
 ): string {
-  return key.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length).trim();
+  return parseDispatchCeilingProviderConfigKey(key).provider;
 }
 
 function normalizeSharedRoot(value: string): string {
@@ -906,6 +958,7 @@ function parseWorkflowValue(
   }
 
   if (isDispatchCeilingProviderKey(key)) {
+    parseDispatchCeilingProviderConfigKey(key);
     const normalized = rawValue.trim();
     if (normalized.length === 0) {
       throw new Error(
@@ -1116,15 +1169,40 @@ function applyWorkflowValue(
     } as OatWorkflowConfig;
   }
 
-  if (subKey.startsWith('dispatchCeiling.providers.')) {
-    const providerKey = subKey.slice('dispatchCeiling.providers.'.length);
+  if (isDispatchCeilingProviderKey(key)) {
+    const { provider, tier } = parseDispatchCeilingProviderConfigKey(key);
+    const providers = workflow.dispatchCeiling?.providers ?? {};
+    if (tier) {
+      const existingProviderValue = providers[provider];
+      const existingTierMap =
+        existingProviderValue &&
+        typeof existingProviderValue === 'object' &&
+        !Array.isArray(existingProviderValue)
+          ? existingProviderValue
+          : {};
+
+      return {
+        ...workflow,
+        dispatchCeiling: {
+          ...workflow.dispatchCeiling,
+          providers: {
+            ...providers,
+            [provider]: {
+              ...existingTierMap,
+              [tier]: value as string,
+            },
+          },
+        },
+      } as OatWorkflowConfig;
+    }
+
     return {
       ...workflow,
       dispatchCeiling: {
         ...workflow.dispatchCeiling,
         providers: {
-          ...workflow.dispatchCeiling?.providers,
-          [providerKey]: value,
+          ...providers,
+          [provider]: value,
         },
       },
     } as OatWorkflowConfig;

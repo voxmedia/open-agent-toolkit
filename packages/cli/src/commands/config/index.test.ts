@@ -1062,6 +1062,69 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it('sets dynamic workflow.dispatchCeiling.providers cursor tier values', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor.high',
+        'composer-2.5',
+        '--shared',
+      ]);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      const parsed = JSON.parse(raw);
+      expect(parsed).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: { cursor: { high: 'composer-2.5' } },
+          },
+        },
+      });
+      expect(
+        Object.prototype.hasOwnProperty.call(
+          parsed.workflow.dispatchCeiling.providers,
+          'cursor.high',
+        ),
+      ).toBe(false);
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'cursor',
+        'composer-2.5',
+        {
+          cwd: root,
+          env: {},
+        },
+      );
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('rejects nested workflow.dispatchCeiling.providers keys with unknown tiers', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor.ultra',
+        'composer-2.5',
+        '--shared',
+      ]);
+
+      expect(capture.error[0]).toContain(
+        'workflow.dispatchCeiling.providers.<provider>.<tier>',
+      );
+      expect(capture.error[0]).toContain(
+        'economy | balanced | high | frontier',
+      );
+      expect(process.exitCode).toBe(1);
+    });
+
     it('warns but saves dynamic workflow.dispatchCeiling.providers values when the oracle reports unknown-value', async () => {
       const root = await createRepoRoot();
       const validateMatrixCell = vi.fn(async () => 'unknown-value' as const);

@@ -29,6 +29,10 @@ import {
 import {
   readOatConfig,
   type OatConfig,
+  type OatLocalConfig,
+  readOatLocalConfig,
+  readUserConfig,
+  type UserConfig,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchProviderValue,
   type WorkflowDispatchRouteTarget,
@@ -68,6 +72,8 @@ interface DoctorDependencies {
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
+  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
   validateMatrixCell: (
     provider: string,
     value: string,
@@ -98,6 +104,7 @@ interface SkillVersionReport {
 }
 
 interface DispatchMatrixCellRef {
+  layer: DispatchMatrixConfigLayer;
   provider: string;
   value: string;
   path: string;
@@ -105,6 +112,13 @@ interface DispatchMatrixCellRef {
 
 interface DispatchMatrixCellIssue extends DispatchMatrixCellRef {
   availability: Exclude<MatrixCellAvailability, 'valid'>;
+}
+
+type DispatchMatrixConfigLayer = 'user' | 'shared' | 'local';
+
+interface DispatchMatrixConfigLayerEntry {
+  layer: DispatchMatrixConfigLayer;
+  config: Pick<OatConfig, 'workflow'>;
 }
 
 async function pathExistsDefault(path: string): Promise<boolean> {
@@ -242,6 +256,8 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     readOatConfig,
+    readOatLocalConfig,
+    readUserConfig,
     validateMatrixCell,
     processEnv: process.env,
     runPjmDoctorChecks,
@@ -261,19 +277,20 @@ function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
 
 function addDispatchMatrixCellRefs(
   refs: DispatchMatrixCellRef[],
+  layer: DispatchMatrixConfigLayer,
   provider: string,
   path: string,
   cell: WorkflowDispatchMatrixCell,
 ): void {
   if (typeof cell === 'string') {
-    refs.push({ provider, value: cell, path });
+    refs.push({ layer, provider, value: cell, path });
     return;
   }
 
   for (const [index, entry] of cell.entries()) {
     const entryPath = `${path}[${index}]`;
     if (typeof entry === 'string') {
-      refs.push({ provider, value: entry, path: entryPath });
+      refs.push({ layer, provider, value: entry, path: entryPath });
       continue;
     }
 
@@ -282,41 +299,60 @@ function addDispatchMatrixCellRefs(
     }
 
     if (entry.model) {
-      refs.push({ provider, value: entry.model, path: `${entryPath}.model` });
+      refs.push({
+        layer,
+        provider,
+        value: entry.model,
+        path: `${entryPath}.model`,
+      });
     }
     if (entry.effort) {
-      refs.push({ provider, value: entry.effort, path: `${entryPath}.effort` });
+      refs.push({
+        layer,
+        provider,
+        value: entry.effort,
+        path: `${entryPath}.effort`,
+      });
     }
   }
 }
 
 function collectDispatchMatrixCellRefs(
-  config: OatConfig,
+  layers: DispatchMatrixConfigLayerEntry[],
 ): DispatchMatrixCellRef[] {
   const refs: DispatchMatrixCellRef[] = [];
-  const providers = config.workflow?.dispatchCeiling?.providers ?? {};
 
-  for (const [provider, providerValue] of Object.entries(providers)) {
-    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
-    if (typeof providerValue === 'string') {
-      refs.push({ provider, value: providerValue, path: providerPath });
-      continue;
-    }
+  for (const { layer, config } of layers) {
+    const providers = config.workflow?.dispatchCeiling?.providers ?? {};
 
-    const tierMap = providerValue as Exclude<
-      WorkflowDispatchProviderValue,
-      string
-    >;
-    for (const [tier, cell] of Object.entries(tierMap)) {
-      if (cell === undefined) {
+    for (const [provider, providerValue] of Object.entries(providers)) {
+      const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
+      if (typeof providerValue === 'string') {
+        refs.push({
+          layer,
+          provider,
+          value: providerValue,
+          path: providerPath,
+        });
         continue;
       }
-      addDispatchMatrixCellRefs(
-        refs,
-        provider,
-        `${providerPath}.${tier}`,
-        cell,
-      );
+
+      const tierMap = providerValue as Exclude<
+        WorkflowDispatchProviderValue,
+        string
+      >;
+      for (const [tier, cell] of Object.entries(tierMap)) {
+        if (cell === undefined) {
+          continue;
+        }
+        addDispatchMatrixCellRefs(
+          refs,
+          layer,
+          provider,
+          `${providerPath}.${tier}`,
+          cell,
+        );
+      }
     }
   }
 
@@ -324,23 +360,26 @@ function collectDispatchMatrixCellRefs(
 }
 
 function formatDispatchMatrixIssueList(
-  issues: DispatchMatrixCellIssue[],
+  issues: DispatchMatrixCellRef[],
 ): string {
-  return issues.map((issue) => `${issue.path}=${issue.value}`).join(', ');
+  return issues
+    .map((issue) => `${issue.path}=${issue.value} (${issue.layer} config)`)
+    .join(', ');
 }
 
 async function createDispatchMatrixDoctorCheck(
   scopeRoot: string,
-  config: OatConfig,
+  layers: DispatchMatrixConfigLayerEntry[],
   dependencies: DoctorDependencies,
 ): Promise<DoctorCheck> {
-  const refs = collectDispatchMatrixCellRefs(config);
+  const refs = collectDispatchMatrixCellRefs(layers);
   if (refs.length === 0) {
     return {
       name: 'project:dispatch_matrix',
       description: 'Dispatch matrix cell availability',
       status: 'pass',
-      message: 'No configured dispatch matrix cells found.',
+      message:
+        'No configured dispatch matrix cells found in user, shared, or local config layers.',
     };
   }
 
@@ -370,7 +409,9 @@ async function createDispatchMatrixDoctorCheck(
       name: 'project:dispatch_matrix',
       description: 'Dispatch matrix cell availability',
       status: 'pass',
-      message: 'All configured dispatch matrix cells are available.',
+      message: `All configured dispatch matrix cells are available: ${formatDispatchMatrixIssueList(
+        refs,
+      )}.`,
     };
   }
 
@@ -412,6 +453,7 @@ async function createDispatchMatrixDoctorCheck(
 async function runChecksForScope(
   scope: ConcreteScope,
   scopeRoot: string,
+  userConfigDir: string,
   dependencies: DoctorDependencies,
 ): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
@@ -659,9 +701,21 @@ async function runChecksForScope(
     }
 
     const repoReferenceRoot = join(scopeRoot, '.oat', 'repo');
-    const config = await dependencies.readOatConfig(scopeRoot);
+    const [userConfig, config, localConfig] = await Promise.all([
+      dependencies.readUserConfig(userConfigDir),
+      dependencies.readOatConfig(scopeRoot),
+      dependencies.readOatLocalConfig(scopeRoot),
+    ]);
     checks.push(
-      await createDispatchMatrixDoctorCheck(scopeRoot, config, dependencies),
+      await createDispatchMatrixDoctorCheck(
+        scopeRoot,
+        [
+          { layer: 'user', config: userConfig },
+          { layer: 'shared', config },
+          { layer: 'local', config: localConfig },
+        ],
+        dependencies,
+      ),
     );
     const projectManagementEnabled =
       config.tools?.['project-management'] === true;
@@ -687,7 +741,12 @@ async function runDoctorCommand(
 
   for (const scope of resolveConcreteScopes(context.scope)) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
-    const scopeChecks = await runChecksForScope(scope, scopeRoot, dependencies);
+    const scopeChecks = await runChecksForScope(
+      scope,
+      scopeRoot,
+      join(context.home, '.oat'),
+      dependencies,
+    );
     checks.push(...scopeChecks);
   }
 

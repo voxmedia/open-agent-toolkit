@@ -1468,7 +1468,7 @@ export function createProjectDispatchCeilingCommand(
       .description('Resolve dispatch policy for a provider')
       .requiredOption(
         '--provider <provider>',
-        'Provider name: codex or claude are enforced; any other provider resolves as advisory (unsupported)',
+        'Provider name: codex, claude, or cursor are enforced; unregistered providers resolve as unsupported advisory',
       )
       .option(
         '--role <role>',

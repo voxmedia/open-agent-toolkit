@@ -3,7 +3,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import type { OatConfig } from '@config/oat-config';
+import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import type { MatrixCellAvailability } from '@providers/identity/availability';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -49,6 +49,8 @@ interface HarnessOptions {
     version: string | null;
   }>;
   oatConfig?: OatConfig;
+  oatLocalConfig?: OatLocalConfig;
+  userConfig?: UserConfig;
   pjmChecks?: DoctorCheck[];
   validateMatrixCell?: (
     provider: string,
@@ -158,6 +160,13 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     readOatConfig: vi.fn(
       async () => options.oatConfig ?? ({ version: 1 } satisfies OatConfig),
+    ),
+    readOatLocalConfig: vi.fn(
+      async () =>
+        options.oatLocalConfig ?? ({ version: 1 } satisfies OatLocalConfig),
+    ),
+    readUserConfig: vi.fn(
+      async () => options.userConfig ?? ({ version: 1 } satisfies UserConfig),
     ),
     resolveAssetsRoot: vi.fn(async () => {
       if (options.resolveAssetsRootThrows) {
@@ -451,6 +460,9 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain(
       'All configured dispatch matrix cells are available',
     );
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.balanced=composer-2.5 (shared config)',
+    );
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
       env: {},
@@ -499,6 +511,9 @@ describe('createDoctorCommand', () => {
       'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high[0].model=missing-model',
     );
     expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.high[0].model=missing-model (shared config)',
+    );
+    expect(capture.info[0]).toContain(
       'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.codex=xhigh',
     );
     expect(capture.info[0]).toContain('oat config set');
@@ -526,7 +541,61 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain(
       'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high=composer-2.5',
     );
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.high=composer-2.5 (shared config)',
+    );
     expect(process.exitCode).toBe(0);
+  });
+
+  it('validates default local dispatch matrix adoption', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatLocalConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: { high: 'composer-2.5' },
+            },
+          },
+        },
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.high=composer-2.5 (local config)',
+    );
+    expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
+      cwd: '/tmp/workspace',
+      env: {},
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns on user dispatch matrix drift and reports the config layer', async () => {
+    const { command, capture } = createHarness({
+      userConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: { high: 'missing-model' },
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => 'unknown-value',
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high=missing-model (user config)',
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('outputs JSON when --json set', async () => {
