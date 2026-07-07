@@ -264,7 +264,7 @@ __EXIT_CODE__=0
 ### Task p01-t03: Decide stamp record format and declaration path
 
 **Status:** completed
-**Commit:** pending
+**Commit:** e8af2821
 
 **Outcome (required when completed):**
 
@@ -349,7 +349,7 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Re-confirm shipped dispatch surfaces against merged main - 3b367095
 - [x] p01-t02: Characterize Cursor invalid-model behavior - bad77fec
-- [x] p01-t03: Decide stamp record format and declaration path - commit pending
+- [x] p01-t03: Decide stamp record format and declaration path - e8af2821
 
 **What changed (high level):**
 
@@ -379,7 +379,7 @@ Chronological log of implementation progress.
 
 - None.
 
-**Session End:** pending
+**Session End:** 2026-07-07 - p01 implementation complete
 
 ---
 

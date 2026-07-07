@@ -319,10 +319,10 @@ The upgrade is a small delta on existing machinery, not a new subsystem:
   `degraded-to-different-slug` / `same-family — no diverse target available` /
   `unknown-producer`) so degradation is auditable, never silent.
 - **Confidence follows stamp provenance:** the high-confidence path is
-  `declared`+`observed` corroboration; uncorroborated `declared` is medium for Cursor
-  until reject-don't-fallback is proven; lower-confidence logging on
-  `observed`/`inferred` alone; on `unknown`, run but state that family diversity cannot
-  be truthfully claimed.
+  `declared`+`observed` corroboration. Uncorroborated `declared` also qualifies as
+  high-confidence for harnesses with proven reject-don't-fallback behavior, including
+  Cursor after p01-t02. Use lower-confidence logging for `observed`/`inferred` alone;
+  on `unknown`, run but state that family diversity cannot be truthfully claimed.
 - **No engineering around single-family accounts.** If no diverse family is available,
   warn and run (flagged). Keep the shipped "no fallback after dispatch" rule: diversity
   selection is pre-dispatch only.
