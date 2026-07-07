@@ -105,9 +105,14 @@ and the init-event echo becomes the post-dispatch truth check); (2) **mid-sessio
 switches** of the orchestrator make self-reported identity stale — orchestrator
 self-knowledge is never `declared`.
 
-Consumption rules: gates enforce family avoidance confidently on `declared`; use
-`observed`/`inferred` but log lower confidence; on `unknown`, OAT cannot truthfully
-claim family diversity and must say so.
+Consumption rules: the **high-confidence path is `declared` corroborated by `observed`**
+(the harness/subagent echo matches what OAT requested). `declared` alone qualifies as
+high-confidence only for harnesses with _proven_ reject-don't-fallback behavior; for
+Cursor, until invalid-`--model` behavior is characterized, uncorroborated `declared` is
+treated as medium confidence. On a declared/observed **mismatch**, the observed value
+wins for gate purposes (it reflects what actually ran) and the mismatch is flagged
+loudly. `observed`/`inferred` alone are usable with lower-confidence logging; on
+`unknown`, OAT cannot truthfully claim family diversity and must say so.
 
 ## Architecture
 
@@ -249,9 +254,11 @@ The upgrade is a small delta on existing machinery, not a new subsystem:
   on every gate outcome (`different-family` / `degraded-to-different-slug` /
   `same-family — no diverse target available` / `unknown-producer`) so degradation is
   auditable, never silent.
-- **Confidence follows stamp provenance:** enforce confidently on `declared`; proceed
-  with lower-confidence logging on `observed`/`inferred`; on `unknown`, run but state
-  that family diversity cannot be truthfully claimed.
+- **Confidence follows stamp provenance:** the high-confidence path is
+  `declared`+`observed` corroboration; uncorroborated `declared` is medium for Cursor
+  until reject-don't-fallback is proven; lower-confidence logging on
+  `observed`/`inferred` alone; on `unknown`, run but state that family diversity cannot
+  be truthfully claimed.
 - **No engineering around single-family accounts.** If no diverse family is available,
   warn and run (flagged). Keep the shipped "no fallback after dispatch" rule: diversity
   selection is pre-dispatch only.
