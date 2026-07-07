@@ -26,12 +26,12 @@ oat_dispatch_policy:
   source: project-state
 oat_workflow_mode: quick
 oat_workflow_origin: native
-oat_docs_updated: null
+oat_docs_updated: complete
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T18:31:54Z'
+oat_project_state_updated: '2026-07-07T18:38:26Z'
 oat_generated: false
 ---
 
@@ -45,8 +45,8 @@ oat_generated: false
 
 Implementation tasks are complete. Phases p01 through p06 have passed their standard
 reviews, and all external phase review gates have been consumed. The final HiLL
-checkpoint after p06 was approved by the user, and documentation/final-review closeout
-is underway.
+checkpoint after p06 was approved by the user, and the documentation pass is complete.
+Final review closeout is underway.
 
 ## Artifacts
 
@@ -88,6 +88,7 @@ is underway.
 - ✓ p06 external phase review gate passed and was consumed
 - ✓ Final HiLL checkpoint approved by the user for final review/closeout
 - ✓ Post-p06 repo-local Git hook toolchain fix applied
+- ✓ Documentation pass complete
 
 ## Blockers
 
@@ -95,8 +96,8 @@ None
 
 ## Next Milestone
 
-Run the documentation pass, apply approved documentation updates, then trigger the final
-Claude/Fable independent code review gate.
+Trigger the final Claude/Fable independent code review gate, then disposition any
+findings autonomously.
 
 ## Notes
 
