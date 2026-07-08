@@ -1201,6 +1201,35 @@ function selectDispatchValue(
   };
 }
 
+function hasCodexVariantDispatchArgs(
+  dispatchArgs: CeilingDispatchArgs,
+): dispatchArgs is { variant: string } {
+  return (
+    dispatchArgs !== null &&
+    'variant' in dispatchArgs &&
+    typeof dispatchArgs.variant === 'string' &&
+    dispatchArgs.variant.length > 0
+  );
+}
+
+function codexEffortAxis(
+  selection: DispatchSelection,
+  dispatchArgs: CeilingDispatchArgs,
+): string {
+  if (hasCodexVariantDispatchArgs(dispatchArgs) && selection.target?.effort) {
+    return `selected:${selection.target.effort}`;
+  }
+
+  if (
+    selection.selectionMode === 'inherit-default' ||
+    selection.selectionMode === 'no-review-target'
+  ) {
+    return 'provider-default';
+  }
+
+  return 'unresolved';
+}
+
 /**
  * Join a resolved ceiling value with the active provider's adapter to compute
  * the enforcement mode, mechanism, dispatch args, and verify-on-upgrade flag.
@@ -1275,13 +1304,7 @@ function buildProviderResolution(
           : 'unresolved',
     effortAxis:
       provider === 'codex'
-        ? selection.target?.effort && dispatchArgs
-          ? `selected:${selection.target.effort}`
-          : selection.selectionMode === 'inherit-default'
-            ? 'provider-default'
-            : dispatchValue
-              ? `selected:${dispatchValue}`
-              : 'unresolved'
+        ? codexEffortAxis(selection, dispatchArgs)
         : 'not-applicable',
     verifyOnDispatch:
       dispatchValue && !isCrossHarness
