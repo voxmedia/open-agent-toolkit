@@ -1078,17 +1078,17 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 
 ## Reviews
 
-| Scope     | Type     | Status  | Date       | Artifact                                                      |
-| --------- | -------- | ------- | ---------- | ------------------------------------------------------------- |
-| p01       | code     | passed  | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
-| p02       | code     | pending | -          | -                                                             |
-| p03       | code     | pending | -          | -                                                             |
-| p04       | code     | pending | -          | -                                                             |
-| final     | code     | pending | -          | -                                                             |
-| discovery | artifact | passed  | 2026-07-08 | `discovery.md`                                                |
-| spec      | artifact | passed  | 2026-07-08 | N/A quick mode                                                |
-| design    | artifact | passed  | 2026-07-08 | N/A quick mode                                                |
-| plan      | artifact | passed  | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
+| Scope     | Type     | Status      | Date       | Artifact                                                               |
+| --------- | -------- | ----------- | ---------- | ---------------------------------------------------------------------- |
+| p01       | code     | passed      | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                             |
+| p02       | code     | fixes_added | 2026-07-08 | `reviews/p02-review-2026-07-08T235031Z.md` (blocked after retry limit) |
+| p03       | code     | pending     | -          | -                                                                      |
+| p04       | code     | pending     | -          | -                                                                      |
+| final     | code     | pending     | -          | -                                                                      |
+| discovery | artifact | passed      | 2026-07-08 | `discovery.md`                                                         |
+| spec      | artifact | passed      | 2026-07-08 | N/A quick mode                                                         |
+| design    | artifact | passed      | 2026-07-08 | N/A quick mode                                                         |
+| plan      | artifact | passed      | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md`          |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`

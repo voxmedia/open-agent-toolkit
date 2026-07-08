@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p02-review
+    reason: 'p02 review still has one Important finding after two fix iterations; retry limit exhausted'
+    since: 2026-07-08
 oat_last_updated: 2026-07-08
 oat_current_task_id: p02-t01
 oat_generated: false
@@ -18,14 +21,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | passed      | 3     | 3/3       |
-| Phase 2 | in_progress | 5     | 0/5       |
-| Phase 3 | pending     | 4     | 0/4       |
-| Phase 4 | pending     | 2     | 0/2       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | passed  | 3     | 3/3       |
+| Phase 2 | blocked | 5     | 5/5       |
+| Phase 3 | pending | 4     | 0/4       |
+| Phase 4 | pending | 2     | 0/2       |
 
-**Total:** 3/14 tasks completed
+**Total:** 8/14 tasks completed
 
 ---
 
@@ -55,33 +58,36 @@ oat_generated: false
 
 ## Phase 2: Replace Hard-Coded Codex Effort Pins
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-07-08
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-08T235031Z.md`
+**Blocker:** Review still has one Important finding after two fix iterations;
+retry limit exhausted.
 
 ### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** aed52a1a
 
 ### Task p02-t02: Sync Materialized Codex Roles from Matrix Targets
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2ed93094
 
 ### Task p02-t03: Dispatch to Materialized Codex Role Names
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e626118d
 
 ### Task p02-t04: Update Doctor and Stray Detection for Materialized Roles
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3eb5d427
 
 ### Task p02-t05: Rewrite Bundled Codex Dispatch Contracts
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 48b227d6
 
 ---
 
@@ -172,6 +178,50 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 2 — 2026-07-08 23:53
+
+**Branch:** codex-family-subagents
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 0 passed, 1 failed, 1 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | fail   | 2/2            | stopped     |
+
+#### Parallel Groups
+
+- p02: sequential
+
+#### Dispatch Notes
+
+- Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:high dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-high
+- Dispatch policy: high; selected=high; cap=xhigh (codex, enforced — variant oat-phase-implementer-high)
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized reviewer target resolved)
+- Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=inherited effort_axis=provider-default dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized fix target resolved)
+- Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized fix target resolved)
+
+#### Outstanding Items
+
+- p02 blocked after retry limit exhaustion. Latest review artifact:
+  `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-08T235031Z.md`.
+- Remaining Important finding: review dispatch scope schema still excludes
+  selected Codex model axes in `.agents/skills/oat-project-implement/SKILL.md`.
+- Remaining Medium finding: dispatch-matrix recommendation adoption still
+  validates Codex route models as closed effort values in
+  `packages/cli/src/commands/config/index.ts`.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -187,6 +237,11 @@ Chronological log of implementation progress.
 - [x] p01-t01: Add Codex Materialization Codec (`6c0437bc`)
 - [x] p01-t02: Add Codex Materialize CLI Command (`a6f83e1d`)
 - [x] p01-t03: Write Materialized Roles and Merge Codex Config (`e6548a82`)
+- [x] p02-t01: Model Codex Materialization Targets from Dispatch Matrix (`aed52a1a`)
+- [x] p02-t02: Sync Materialized Codex Roles from Matrix Targets (`2ed93094`)
+- [x] p02-t03: Dispatch to Materialized Codex Role Names (`e626118d`)
+- [x] p02-t04: Update Doctor and Stray Detection for Materialized Roles (`3eb5d427`)
+- [x] p02-t05: Rewrite Bundled Codex Dispatch Contracts (`48b227d6`)
 
 **What changed (high level):**
 
@@ -196,6 +251,10 @@ Chronological log of implementation progress.
   dry-run, JSON, named-agent, and `--agent-path` behavior.
 - Added write mode that creates materialized Codex role files and idempotently
   merges `.codex/config.toml` with multi-agent settings.
+- Implemented Phase 2 materialized Codex target resolution, sync, dispatch,
+  doctor/stray handling, and bundled dispatch contract updates.
+- Applied review fixes for payload-derived Codex axes, effective-source sync
+  materialization, materialized doctor validation, and Codex model-axis examples.
 
 **Decisions:**
 
@@ -212,7 +271,9 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- None.
+- p02 review still has one Important finding after two fix iterations:
+  `Review dispatch schema still excludes selected Codex model axes`
+  (`.agents/skills/oat-project-implement/SKILL.md`).
 
 ---
 
@@ -224,12 +285,12 @@ Chronological log of implementation progress.
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed | Coverage |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
-| 2     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
-| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
-| 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed         | Coverage |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------- | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no             | phase    |
+| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | yes    | review blocked | phase    |
+| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -              | -        |
+| 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -              | -        |
 
 ## Final Summary (for PR/docs)
 
