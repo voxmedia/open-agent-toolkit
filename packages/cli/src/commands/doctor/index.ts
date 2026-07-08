@@ -43,6 +43,7 @@ import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
@@ -450,6 +451,45 @@ async function createDispatchMatrixDoctorCheck(
   };
 }
 
+function getCodexAgentConfigFile(config: unknown): string | null {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+    return null;
+  }
+
+  const configFile = (config as Record<string, unknown>).config_file;
+  return typeof configFile === 'string' && configFile.startsWith('agents/')
+    ? configFile
+    : null;
+}
+
+function isLikelyOatGeneratedCodexRoleName(roleName: string): boolean {
+  return (
+    roleName === 'oat-phase-implementer' ||
+    roleName === 'oat-reviewer' ||
+    roleName.startsWith('oat-phase-implementer-') ||
+    roleName.startsWith('oat-reviewer-')
+  );
+}
+
+async function isManagedCodexRoleConfig(
+  scopeRoot: string,
+  roleName: string,
+  configFile: string,
+  dependencies: DoctorDependencies,
+): Promise<boolean> {
+  const absoluteRolePath = join(scopeRoot, '.codex', configFile);
+  if (!(await dependencies.pathExists(absoluteRolePath))) {
+    return isLikelyOatGeneratedCodexRoleName(roleName);
+  }
+
+  try {
+    const roleContent = await dependencies.readFile(absoluteRolePath);
+    return isOatManagedCodexRoleFile(roleContent, roleName);
+  } catch {
+    return false;
+  }
+}
+
 async function runChecksForScope(
   scope: ConcreteScope,
   scopeRoot: string,
@@ -637,21 +677,25 @@ async function runChecksForScope(
             ? (parsedConfig.agents as Record<string, unknown>)
             : null;
 
-        const managedRoles = Object.entries(agents ?? {})
-          .filter(([, config]) => {
-            if (
-              !config ||
-              typeof config !== 'object' ||
-              Array.isArray(config)
-            ) {
-              return false;
-            }
-            const configFile = (config as Record<string, unknown>).config_file;
-            return (
-              typeof configFile === 'string' && configFile.startsWith('agents/')
-            );
-          })
-          .map(([roleName]) => roleName);
+        const managedRoles: string[] = [];
+        const roleConfigFiles = new Map<string, string>();
+        for (const [roleName, roleConfig] of Object.entries(agents ?? {})) {
+          const configFile = getCodexAgentConfigFile(roleConfig);
+          if (!configFile) {
+            continue;
+          }
+          roleConfigFiles.set(roleName, configFile);
+          if (
+            await isManagedCodexRoleConfig(
+              scopeRoot,
+              roleName,
+              configFile,
+              dependencies,
+            )
+          ) {
+            managedRoles.push(roleName);
+          }
+        }
 
         if (managedRoles.length > 0) {
           const multiAgentEnabled =
@@ -670,13 +714,8 @@ async function runChecksForScope(
 
           const missingRoleFiles: string[] = [];
           for (const roleName of managedRoles) {
-            const roleConfig = (agents as Record<string, unknown>)[
-              roleName
-            ] as Record<string, unknown>;
-            const configFile = roleConfig.config_file;
-            if (typeof configFile !== 'string') {
-              continue;
-            }
+            const configFile = roleConfigFiles.get(roleName);
+            if (!configFile) continue;
             const absoluteRolePath = join(scopeRoot, '.codex', configFile);
             if (!(await dependencies.pathExists(absoluteRolePath))) {
               missingRoleFiles.push(configFile);
@@ -694,7 +733,7 @@ async function runChecksForScope(
             fix:
               missingRoleFiles.length === 0
                 ? undefined
-                : 'Regenerate codex roles with `oat sync --scope project`.',
+                : 'Regenerate codex roles with `oat sync --scope project`, or materialize a single role with `oat providers codex materialize ...`.',
           });
         }
       }

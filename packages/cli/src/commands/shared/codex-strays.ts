@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import type { CanonicalEntry } from '@engine/index';
 import TOML from '@iarna/toml';
+import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
 import type { CodexExtensionPlan } from '@providers/codex/codec/sync-extension';
 
 export interface CodexRoleStray {
@@ -103,6 +104,10 @@ async function detectFromConfig(
     if (!(await fileExists(absoluteRolePath))) {
       continue;
     }
+    const roleContent = await readFile(absoluteRolePath, 'utf8');
+    if (isOatManagedCodexRoleFile(roleContent, roleName)) {
+      continue;
+    }
 
     strays.push({
       roleName,
@@ -147,10 +152,15 @@ async function detectFromAgentsDirectory(
     ) {
       continue;
     }
+    const providerPath = `.codex/agents/${entry.name}`;
+    const roleContent = await readFile(join(scopeRoot, providerPath), 'utf8');
+    if (isOatManagedCodexRoleFile(roleContent, roleName)) {
+      continue;
+    }
 
     strays.push({
       roleName,
-      providerPath: `.codex/agents/${entry.name}`,
+      providerPath,
     });
   }
 

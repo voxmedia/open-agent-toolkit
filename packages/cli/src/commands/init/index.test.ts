@@ -669,12 +669,36 @@ config_file = "agents/reviewer.toml"
     });
   });
 
-  it('does not offer managed Codex effort-variant roles as adoptable strays', async () => {
+  it('does not offer managed Codex materialized roles as adoptable strays', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-init-managed-variants-'));
     tempDirs.push(root);
 
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
     // Write minimal canonical agent files so computeCodexProjectExtensionPlan
-    // can derive generated effort variants.
+    // can derive generated matrix-backed roles.
     await mkdir(join(root, '.agents', 'agents'), { recursive: true });
     await writeFile(
       join(root, '.agents', 'agents', 'oat-phase-implementer.md'),
@@ -705,26 +729,20 @@ config_file = "agents/reviewer.toml"
       'utf8',
     );
 
-    // Write the generated effort-variant .toml files (simulating a prior sync).
+    // Write the generated materialized .toml files (simulating a prior sync).
     await mkdir(join(root, '.codex', 'agents'), { recursive: true });
-    for (const variant of ['low', 'medium', 'high', 'xhigh']) {
+    for (const [roleName, body] of [
+      ['oat-phase-implementer-gpt-5-6-terra-xhigh', 'Implementer body.'],
+      ['oat-reviewer-gpt-5-6-terra-xhigh', 'Reviewer body.'],
+    ] as const) {
       await writeFile(
-        join(root, '.codex', 'agents', `oat-phase-implementer-${variant}.toml`),
+        join(root, '.codex', 'agents', `${roleName}.toml`),
         [
-          `# oat-role: oat-phase-implementer-${variant}`,
-          `# oat-managed: true`,
-          `model_reasoning_effort = "${variant}"`,
-          `developer_instructions = "Implementer body."`,
-        ].join('\n'),
-        'utf8',
-      );
-      await writeFile(
-        join(root, '.codex', 'agents', `oat-reviewer-${variant}.toml`),
-        [
-          `# oat-role: oat-reviewer-${variant}`,
-          `# oat-managed: true`,
-          `model_reasoning_effort = "${variant}"`,
-          `developer_instructions = "Reviewer body."`,
+          '# oat-managed: true',
+          `# oat-role: ${roleName}`,
+          'model = "gpt-5.6-terra"',
+          'model_reasoning_effort = "xhigh"',
+          `developer_instructions = "${body}"`,
         ].join('\n'),
         'utf8',
       );
@@ -771,7 +789,7 @@ config_file = "agents/reviewer.toml"
 
     // Build a command with useDefaultCollectStrays and scanCanonical returning
     // the canonical entry so computeCodexProjectExtensionPlan discovers the
-    // effort variants as managed, preventing them from appearing as strays.
+    // materialized roles as managed, preventing them from appearing as strays.
     const testCommand = createInitCommand({
       buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
         scope: (globalOptions.scope ?? 'project') as Scope,
@@ -841,7 +859,7 @@ config_file = "agents/reviewer.toml"
     await runInitCommand(testCommand, { globalArgs: ['--scope', 'project'] });
 
     // Only the genuine orphan should appear in the adoption prompt;
-    // the generated effort-variant roles must NOT appear.
+    // the generated materialized roles must NOT appear.
     expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
       label: string;
@@ -850,30 +868,14 @@ config_file = "agents/reviewer.toml"
     const choiceDescriptions = choices.map((c) => c.description ?? '');
     expect(choiceDescriptions.some((d) => d.includes('old-orphan'))).toBe(true);
     expect(
-      choiceDescriptions.some((d) => d.includes('oat-phase-implementer-low')),
-    ).toBe(false);
-    expect(
       choiceDescriptions.some((d) =>
-        d.includes('oat-phase-implementer-medium'),
+        d.includes('oat-phase-implementer-gpt-5-6-terra-xhigh'),
       ),
     ).toBe(false);
     expect(
-      choiceDescriptions.some((d) => d.includes('oat-phase-implementer-high')),
-    ).toBe(false);
-    expect(
-      choiceDescriptions.some((d) => d.includes('oat-phase-implementer-xhigh')),
-    ).toBe(false);
-    expect(choiceDescriptions.some((d) => d.includes('oat-reviewer-low'))).toBe(
-      false,
-    );
-    expect(
-      choiceDescriptions.some((d) => d.includes('oat-reviewer-medium')),
-    ).toBe(false);
-    expect(
-      choiceDescriptions.some((d) => d.includes('oat-reviewer-high')),
-    ).toBe(false);
-    expect(
-      choiceDescriptions.some((d) => d.includes('oat-reviewer-xhigh')),
+      choiceDescriptions.some((d) =>
+        d.includes('oat-reviewer-gpt-5-6-terra-xhigh'),
+      ),
     ).toBe(false);
   });
 

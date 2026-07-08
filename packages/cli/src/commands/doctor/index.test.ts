@@ -668,6 +668,11 @@ multi_agent = true
 [agents.reviewer]
 config_file = "agents/reviewer.toml"
 `,
+        [reviewerRolePath]: [
+          '# oat-managed: true',
+          '# oat-role: reviewer',
+          'developer_instructions = "review"',
+        ].join('\n'),
       },
     });
 
@@ -714,6 +719,11 @@ multi_agent = false
 [agents.reviewer]
 config_file = "agents/reviewer.toml"
 `,
+        [reviewerRolePath]: [
+          '# oat-managed: true',
+          '# oat-role: reviewer',
+          'developer_instructions = "review"',
+        ].join('\n'),
       },
     });
 
@@ -724,19 +734,54 @@ config_file = "agents/reviewer.toml"
     expect(process.exitCode).toBe(1);
   });
 
-  it('warns when codex role config_file points to a missing file', async () => {
+  it('recognizes codex managed roles from generated role-file headers', async () => {
     const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const rolePath =
+      '/tmp/workspace/.codex/agents/custom-gpt-5-6-sol-high.toml';
     const { command, capture } = createHarness({
       pathExists: {
         [codexConfigPath]: true,
-        '/tmp/workspace/.codex/agents/reviewer.toml': false,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]: `[features]
+multi_agent = false
+
+[agents.custom-gpt-5-6-sol-high]
+config_file = "agents/custom-gpt-5-6-sol-high.toml"
+`,
+        [rolePath]: [
+          '# oat-managed: true',
+          '# oat-role: custom-gpt-5-6-sol-high',
+          'model = "gpt-5.6-sol"',
+          'model_reasoning_effort = "high"',
+        ].join('\n'),
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('codex_multi_agent');
+    expect(capture.info[0]).toContain('is not true');
+    expect(capture.info[0]).toContain('codex_role_file_refs');
+    expect(capture.info[0]).toContain('references exist');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns when codex role config_file points to a missing file', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const roleName = 'oat-reviewer-gpt-5-6-terra-xhigh';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [codexConfigPath]: true,
+        [`/tmp/workspace/.codex/agents/${roleName}.toml`]: false,
       },
       fileContents: {
         [codexConfigPath]: `[features]
 multi_agent = true
 
-[agents.reviewer]
-config_file = "agents/reviewer.toml"
+[agents.${roleName}]
+config_file = "agents/${roleName}.toml"
 `,
       },
     });
@@ -745,8 +790,10 @@ config_file = "agents/reviewer.toml"
 
     expect(capture.info[0]).toContain('codex_role_file_refs');
     expect(capture.info[0]).toContain(
-      'Missing codex role files: agents/reviewer.toml',
+      `Missing codex role files: agents/${roleName}.toml`,
     );
+    expect(capture.info[0]).toContain('oat sync --scope project');
+    expect(capture.info[0]).toContain('oat providers codex materialize');
     expect(process.exitCode).toBe(1);
   });
 });
