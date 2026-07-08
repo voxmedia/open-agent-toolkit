@@ -15,7 +15,7 @@ oat_hill_completed:
   - final
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -27,26 +27,23 @@ oat_dispatch_policy:
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/130'
 oat_project_created: '2026-07-06T14:49:31.299Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-07T21:55:09Z'
+oat_project_state_updated: '2026-07-08T01:20:04Z'
 oat_generated: false
 ---
 
 # Project State: multi-family-dispatch
 
-**Status:** Implementation in progress
+**Status:** Implementation — PR open, awaiting human review
 **Started:** 2026-07-06
 **Last Updated:** 2026-07-07
 
 ## Current Phase
 
-Implementation tasks through p07 are complete, all external phase review gates have
-been consumed, and the final Fable re-review passed. The final HiLL checkpoint after
-p06 was approved by the user, the documentation pass is complete, and final-review plus
-Fable re-review fix tasks have been implemented.
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -94,6 +91,8 @@ Fable re-review fix tasks have been implemented.
 - ✓ Fable re-review minor fixes implemented (p07-t03, p07-t04)
 - ✓ Final clean Fable re-review passed
 - ✓ Release validation rerun passed after p07 follow-up fixes
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/130
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -101,7 +100,10 @@ None
 
 ## Next Milestone
 
-Push the branch and proceed with final PR handoff.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
 
 ## Notes
 
