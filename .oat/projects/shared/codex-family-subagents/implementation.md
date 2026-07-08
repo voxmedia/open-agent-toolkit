@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-08
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -20,19 +20,21 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 1/3       |
-| Phase 2 | pending     | 5     | 0/5       |
+| Phase 1 | passed      | 3     | 3/3       |
+| Phase 2 | in_progress | 5     | 0/5       |
 | Phase 3 | pending     | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 1/14 tasks completed
+**Total:** 3/14 tasks completed
 
 ---
 
 ## Phase 1: Generic Codex Role Materialization
 
-**Status:** in_progress
+**Status:** passed
 **Started:** 2026-07-08
+**Completed:** 2026-07-08
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p01-review-2026-07-08T224422Z.md`
 
 ### Task p01-t01: Add Codex Materialization Codec
 
@@ -41,20 +43,20 @@ oat_generated: false
 
 ### Task p01-t02: Add Codex Materialize CLI Command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a6f83e1d
 
 ### Task p01-t03: Write Materialized Roles and Merge Codex Config
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e6548a82
 
 ---
 
 ## Phase 2: Replace Hard-Coded Codex Effort Pins
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-08
 
 ### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
 
@@ -136,6 +138,40 @@ phase outcomes, parallel groups, and outstanding items._
 
 _Orchestration runs from `oat-project-implement` are appended here._
 
+### Run 1 — 2026-07-08 22:45
+
+**Branch:** codex-family-subagents
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Dispatch Notes
+
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:high dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-high
+- Dispatch policy: high; selected=high; cap=xhigh (codex, enforced — variant oat-phase-implementer-high)
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer-xhigh
+- Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-xhigh)
+
+#### Outstanding Items
+
+- None
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -149,13 +185,17 @@ Chronological log of implementation progress.
 **Session Start:** pending
 
 - [x] p01-t01: Add Codex Materialization Codec (`6c0437bc`)
-- [ ] p01-t02: Add Codex Materialize CLI Command
-- [ ] p01-t03: Write Materialized Roles and Merge Codex Config
+- [x] p01-t02: Add Codex Materialize CLI Command (`a6f83e1d`)
+- [x] p01-t03: Write Materialized Roles and Merge Codex Config (`e6548a82`)
 
 **What changed (high level):**
 
 - Added the Codex materialization codec and tests for deterministic managed
   role generation from canonical agents with explicit model and effort.
+- Added the provider-scoped `oat providers codex materialize` command with
+  dry-run, JSON, named-agent, and `--agent-path` behavior.
+- Added write mode that creates materialized Codex role files and idempotently
+  merges `.codex/config.toml` with multi-agent settings.
 
 **Decisions:**
 
@@ -184,12 +224,12 @@ Chronological log of implementation progress.
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                      | Passed | Failed | Coverage   |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ---------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts` | yes    | no     | task-level |
-| 2     | -                                                                                                                                                                                                                                              | -      | -      | -          |
-| 3     | -                                                                                                                                                                                                                                              | -      | -      | -          |
-| 4     | -                                                                                                                                                                                                                                              | -      | -      | -          |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
+| 2     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
