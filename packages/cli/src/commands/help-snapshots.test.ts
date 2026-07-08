@@ -45,6 +45,14 @@ describe('help output snapshots', () => {
       'set',
     ]).helpInformation();
     expect(providersSetHelp).toContain('--scope <scope>');
+
+    // providers codex materialize is a scope consumer
+    const codexMaterializeHelp = getCommandByPath(program, [
+      'providers',
+      'codex',
+      'materialize',
+    ]).helpInformation();
+    expect(codexMaterializeHelp).toContain('--scope <scope>');
   });
 
   it('scope non-consumers do not show --scope', () => {
@@ -420,6 +428,7 @@ describe('help output snapshots', () => {
         inspect [options] <provider>  Inspect provider details and mapping state
         set [options]                 Enable or disable project providers in sync
                                       config
+        codex                         Codex provider utilities
         help [command]                display help for command
       "
     `);
@@ -501,6 +510,68 @@ describe('help output snapshots', () => {
         --json                  Output a single JSON document
         --verbose               Enable verbose debug output
         --cwd <path>            Override working directory
+      "
+    `);
+  });
+
+  it('providers codex --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'providers',
+      'codex',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat providers codex [options] [command]
+
+      Codex provider utilities
+
+      Options:
+        -h, --help                          display help for command
+
+      Global Options:
+        -V, --version                       output the version number
+        --json                              Output a single JSON document
+        --verbose                           Enable verbose debug output
+        --cwd <path>                        Override working directory
+
+      Commands:
+        materialize [options] <agent-name>  Materialize a canonical agent as a Codex
+                                            role
+        help [command]                      display help for command
+      "
+    `);
+  });
+
+  it('providers codex materialize --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'providers',
+      'codex',
+      'materialize',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat providers codex materialize [options] <agent-name>
+
+      Materialize a canonical agent as a Codex role
+
+      Arguments:
+        agent-name           Canonical agent name
+
+      Options:
+        --scope <scope>      Materialization scope (choices: "project", "user",
+                             default: "project")
+        --model <model>      Codex model ID
+        --effort <effort>    Codex reasoning effort
+        --role-name <role>   Override generated Codex role name
+        --agent-path <path>  Path to canonical agent markdown
+        --dry-run            Preview files without writing
+        -h, --help           display help for command
+
+      Global Options:
+        -V, --version        output the version number
+        --json               Output a single JSON document
+        --verbose            Enable verbose debug output
+        --cwd <path>         Override working directory
       "
     `);
   });
