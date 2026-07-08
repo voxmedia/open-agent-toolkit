@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-07-08
 oat_generated: false
@@ -76,8 +76,14 @@ defaults`.
 **Q:** Should OAT represent GPT-5.6 Codex selection by generating concrete
 model-plus-effort pinned role variants, or should it first try to route model
 and effort through the dispatch matrix without expanding the pinned role set?
-**A:** Pending.
-**Decision:** Pending.
+**A:** Use matrix-selected model/effort targets, but compile Codex targets into
+materialized Codex roles because Codex dispatch still needs deterministic
+model/effort pinning. Generalize the materializer so any canonical
+`.agents/agents/*.md` subagent can be materialized as a Codex role when the CLI
+is given a model and reasoning effort string.
+**Decision:** Replace the current hard-coded effort-only pin generation with a
+generic Codex materialization primitive, then route OAT's managed reviewer and
+implementer variants through that primitive.
 
 ## Solution Space
 
@@ -133,11 +139,13 @@ compile the reliable mechanism for each host.
 
 ### Chosen Direction
 
-**Approach:** Pending user validation.
+**Approach:** Approach 3 — Hybrid Matrix-to-Pinned Generation, revised to make
+Codex role materialization a reusable CLI capability rather than a special case
+for `oat-reviewer` and `oat-phase-implementer`.
 **Rationale:** I recommend Approach 3 because it preserves the recent
 multi-family dispatch architecture while avoiding a regression to unreliable
 Codex per-spawn controls.
-**User validated:** No.
+**User validated:** Yes.
 
 ## Options Considered
 
@@ -158,9 +166,11 @@ Codex per-spawn controls.
 - Requires the Codex adapter to preserve both model and effort axes.
 - Requires availability/validation behavior for preview-only model IDs.
 
-**Chosen:** Pending.
+**Chosen:** Yes.
 
-**Summary:** Likely part of the recommended path.
+**Summary:** Matrix entries remain the source of truth for model-family and
+effort targets. Codex compiles matrix-selected targets into materialized roles;
+Cursor uses Task-level model arguments against generic synced agent files.
 
 ### Option B: Add `max` Effort Now
 
@@ -178,7 +188,7 @@ to include `max`, at least for Sol.
 - `ultra` may be a mode rather than a simple reasoning-effort value, so it
   should not be collapsed into the same enum without CLI evidence.
 
-**Chosen:** Pending.
+**Chosen:** Deferred behind provider evidence.
 
 **Summary:** Treat `max` as a likely supported value gated by provider evidence;
 do not model `ultra` as effort unless Codex exposes it that way.
@@ -195,6 +205,21 @@ do not model `ultra` as effort unless Codex exposes it that way.
    pass a non-inherited model through the Task tool's `model` argument.
    Materialized model-specific `.cursor/agents` files are not required for
    dispatch-time model selection.
+5. **Codex Materialization:** The current effort-only Codex pins should be
+   removed as a hard-coded special case. The CLI should provide a reusable
+   command/path that materializes any canonical subagent from `.agents/agents`
+   into a Codex role when supplied a model and reasoning effort string.
+6. **Prompt Safety:** Workflow prompts that present enum-backed options must be
+   generated from, or mechanically verified against, the authoritative CLI enum
+   or canonical skill text. Hand-typed abbreviated option lists are not
+   acceptable.
+7. **Dispatch Policy Wording:** `uncapped`, `inherit host defaults`, and
+   `leave unresolved` need behavior-level descriptions: managed uncapped still
+   lets OAT choose dispatch targets with no cap; inherit disables OAT
+   model/effort selection; unresolved is a planning deferral that must block
+   implementation preflight.
+8. **Implementation Dispatch Policy:** Use the managed `high` dispatch policy
+   for this project.
 
 ## Constraints
 
@@ -208,6 +233,11 @@ do not model `ultra` as effort unless Codex exposes it that way.
   mechanism.
 - Generated provider files must be managed by `oat sync` and not treated as
   custom stray agents.
+- Existing hard-coded Codex effort pins should not remain the main generation
+  mechanism after this project. Compatibility, if any is required during the
+  migration, must be explicit and temporary.
+- Cursor model strings must be validated against Cursor's subagent-eligible
+  model set, not only the broad `cursor-agent models` catalog.
 - Public package lockstep/version/release policy applies if bundled provider
   assets or lifecycle skills change.
 
@@ -215,8 +245,13 @@ do not model `ultra` as effort unless Codex exposes it that way.
 
 - OAT can select GPT-5.6 Sol, Terra, or Luna plus reasoning effort for Codex
   implementer and reviewer dispatch without relying on parent-session defaults.
+- The OAT CLI can materialize any canonical `.agents/agents/*.md` subagent into
+  a Codex role when supplied a model and reasoning effort string.
 - OAT can expose equivalent Cursor subagent markdown under `.cursor/agents/`
   when Cursor provider sync is active.
+- Dispatch policy prompts are rendered from canonical policy data and explain
+  the behavioral difference between capped policies, managed uncapped, inherit
+  host defaults, and unresolved planning deferral.
 - Dispatch stamps/reporting preserve model axis, effort axis, policy, target,
   and provenance accurately.
 - Local validation covers sync output, dispatch resolution, provider identity,
@@ -240,8 +275,9 @@ do not model `ultra` as effort unless Codex exposes it that way.
 
 ## Open Questions
 
-- **Codex Role Count:** Generate all model/effort combinations, only supported
-  combinations from the live catalog, or only matrix-referenced combinations?
+- **Codex Role Count:** Resolved for initial implementation: materialize only
+  explicit CLI requests and matrix-referenced managed roles, not every possible
+  model/effort combination.
 - **Policy Mapping:** Should the default recommendation map `balanced` to Terra,
   `frontier` to Sol, and `economy` to Luna, or should policy rungs remain
   effort-only with model family selected separately?
@@ -299,7 +335,8 @@ do not model `ultra` as effort unless Codex exposes it that way.
 ## Next Steps
 
 Get user buy-in on the recommended hybrid strategy or select one of the other
-approaches before moving to the design-depth decision.
+approaches before moving to the design-depth decision. User buy-in has been
+received; proceed straight to quick-mode plan generation.
 
 Use this discovery artifact to drive the next workflow step:
 

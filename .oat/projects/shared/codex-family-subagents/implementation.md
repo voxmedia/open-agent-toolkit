@@ -14,94 +14,103 @@ oat_generated: false
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> `oat_current_task_id` points at the next plan task to do.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 2 | pending     | 4     | 0/4       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/12 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Generic Codex Role Materialization
 
 **Status:** in_progress
 **Started:** 2026-07-08
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Add Codex Materialization Codec
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t02: Add Codex Materialize CLI Command
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Write Materialized Roles and Merge Codex Config
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Replace Hard-Coded Codex Effort Pins
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Sync Materialized Codex Roles from Matrix Targets
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Dispatch to Materialized Codex Role Names
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t04: Update Doctor and Stray Detection for Materialized Roles
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Cursor Validation and Canonical Prompts
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Validate Cursor Subagent-Eligible Models
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Generate Dispatch Policy Choice Text from Canonical Data
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Harden Workflow Skills Against Hand-Typed Option Lists
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Documentation, Versions, and Release Validation
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Update Public Package Versions and Validate Release
 
 **Status:** pending
 **Commit:** -
@@ -110,15 +119,12 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
+_Each run from `oat-project-implement` appends an entry below with run metadata,
+phase outcomes, parallel groups, and outstanding items._
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_Orchestration runs from `oat-project-implement` are appended here._
 
 <!-- orchestration-runs-end -->
 
@@ -130,42 +136,36 @@ Chronological log of implementation progress.
 
 ### 2026-07-08
 
-**Session Start:** {time}
+**Session Start:** pending
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Add Codex Materialization Codec
+- [ ] p01-t02: Add Codex Materialize CLI Command
+- [ ] p01-t03: Write Materialized Roles and Merge Codex Config
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Pending implementation.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Managed implementation dispatch policy is `high`.
+- Existing hard-coded Codex effort pins should be replaced by generic
+  materialization of canonical agents with explicit model and effort.
+- Cursor remains generic-agent plus Task-level model dispatch, with
+  subagent-eligible model validation.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Verify Cursor GPT-5.6 subagent model slugs after availability:
+  `BL-260708-verify-cursor-gpt-5-6-subagent`.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-08
-
-**Session Start:** {time}
-
-{Continue log...}
+- None.
 
 ---
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +173,36 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Pending implementation.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Pending implementation.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- Pending implementation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Pending implementation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None yet.
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
