@@ -37,7 +37,33 @@ describe('validateMatrixCell', () => {
     ).resolves.toBe('unknown-value');
   });
 
-  it('requires Codex implementer and reviewer effort variants to exist', async () => {
+  it('requires Codex implementer and reviewer materialized target roles to exist', async () => {
+    const pathExists = vi.fn(
+      async (path: string) =>
+        path.endsWith('oat-phase-implementer-gpt-5-6-terra-xhigh.toml') ||
+        path.endsWith('oat-reviewer-gpt-5-6-terra-xhigh.toml'),
+    );
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.6-terra/xhigh', {
+        cwd: '/repo',
+        dependencies: createDependencies({ pathExists }),
+        target: {
+          model: 'gpt-5.6-terra',
+          effort: 'xhigh',
+        },
+      }),
+    ).resolves.toBe('valid');
+
+    expect(pathExists).toHaveBeenCalledWith(
+      '/repo/.codex/agents/oat-phase-implementer-gpt-5-6-terra-xhigh.toml',
+    );
+    expect(pathExists).toHaveBeenCalledWith(
+      '/repo/.codex/agents/oat-reviewer-gpt-5-6-terra-xhigh.toml',
+    );
+  });
+
+  it('does not validate legacy Codex effort-only role files', async () => {
     const pathExists = vi.fn(
       async (path: string) =>
         path.endsWith('oat-phase-implementer-high.toml') ||
@@ -49,17 +75,12 @@ describe('validateMatrixCell', () => {
         cwd: '/repo',
         dependencies: createDependencies({ pathExists }),
       }),
-    ).resolves.toBe('valid');
+    ).resolves.toBe('unknown-value');
 
-    expect(pathExists).toHaveBeenCalledWith(
-      '/repo/.codex/agents/oat-phase-implementer-high.toml',
-    );
-    expect(pathExists).toHaveBeenCalledWith(
-      '/repo/.codex/agents/oat-reviewer-high.toml',
-    );
+    expect(pathExists).not.toHaveBeenCalled();
   });
 
-  it('reports Codex values as unknown when the value or variants are missing', async () => {
+  it('reports Codex values as unknown when the target or materialized roles are missing', async () => {
     await expect(
       validateMatrixCell('codex', 'opus', {
         cwd: '/repo',
@@ -68,9 +89,13 @@ describe('validateMatrixCell', () => {
     ).resolves.toBe('unknown-value');
 
     await expect(
-      validateMatrixCell('codex', 'xhigh', {
+      validateMatrixCell('codex', 'gpt-5.6-terra/xhigh', {
         cwd: '/repo',
         dependencies: createDependencies(),
+        target: {
+          model: 'gpt-5.6-terra',
+          effort: 'xhigh',
+        },
       }),
     ).resolves.toBe('unknown-value');
   });

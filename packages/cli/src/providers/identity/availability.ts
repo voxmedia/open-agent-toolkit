@@ -2,11 +2,9 @@ import { execFile } from 'node:child_process';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import {
-  VALID_CLAUDE_DISPATCH_CEILINGS,
-  VALID_CODEX_DISPATCH_CEILINGS,
-} from '@config/oat-config';
+import { VALID_CLAUDE_DISPATCH_CEILINGS } from '@config/oat-config';
 import { fileExists } from '@fs/io';
+import { buildCodexMaterializedRoleName } from '@providers/codex/codec/materialize';
 
 const execFileAsync = promisify(execFile);
 
@@ -36,6 +34,10 @@ export interface ValidateMatrixCellOptions {
   cwd: string;
   env?: NodeJS.ProcessEnv;
   dependencies?: Partial<AvailabilityOracleDependencies>;
+  target?: {
+    model?: string;
+    effort?: string;
+  } | null;
 }
 
 interface CursorCatalogEntry {
@@ -116,17 +118,30 @@ async function validateCodexCell(
   value: string,
   cwd: string,
   dependencies: AvailabilityOracleDependencies,
+  target?: ValidateMatrixCellOptions['target'],
 ): Promise<MatrixCellAvailability> {
-  if (!(VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(value)) {
+  const model = target?.model?.trim();
+  const effort = target?.effort?.trim();
+  if (!model || !effort || value.trim().length === 0) {
     return 'unknown-value';
   }
 
   try {
+    const implementerRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-phase-implementer',
+      model,
+      effort,
+    });
+    const reviewerRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-reviewer',
+      model,
+      effort,
+    });
     const implementerExists = await dependencies.pathExists(
-      join(cwd, '.codex', 'agents', `oat-phase-implementer-${value}.toml`),
+      join(cwd, '.codex', 'agents', `${implementerRole}.toml`),
     );
     const reviewerExists = await dependencies.pathExists(
-      join(cwd, '.codex', 'agents', `oat-reviewer-${value}.toml`),
+      join(cwd, '.codex', 'agents', `${reviewerRole}.toml`),
     );
     return implementerExists && reviewerExists ? 'valid' : 'unknown-value';
   } catch {
@@ -198,7 +213,12 @@ export async function validateMatrixCell(
   }
 
   if (normalizedProvider === 'codex') {
-    return validateCodexCell(normalizedValue, options.cwd, dependencies);
+    return validateCodexCell(
+      normalizedValue,
+      options.cwd,
+      dependencies,
+      options.target,
+    );
   }
 
   if (normalizedProvider === 'cursor') {

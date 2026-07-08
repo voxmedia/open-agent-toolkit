@@ -5,7 +5,10 @@ import {
 } from '@commands/__tests__/helpers';
 import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
-import type { MatrixCellAvailability } from '@providers/identity/availability';
+import type {
+  MatrixCellAvailability,
+  ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -55,7 +58,7 @@ interface HarnessOptions {
   validateMatrixCell?: (
     provider: string,
     value: string,
-    options: { cwd: string; env: NodeJS.ProcessEnv },
+    options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailability>;
 }
 
@@ -476,6 +479,75 @@ describe('createDoctorCommand', () => {
       env: {},
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('validates materialized Codex targets as model and effort pairs', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.codex.high[0]=gpt-5.6-terra/xhigh (shared config)',
+    );
+    expect(validateMatrixCell).toHaveBeenCalledTimes(1);
+    expect(validateMatrixCell).toHaveBeenCalledWith(
+      'codex',
+      'gpt-5.6-terra/xhigh',
+      {
+        cwd: '/tmp/workspace',
+        env: {},
+        target: {
+          harness: 'codex',
+          model: 'gpt-5.6-terra',
+          effort: 'xhigh',
+        },
+      },
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns for legacy Codex effort-only dispatch cells', async () => {
+    const { command, capture } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: 'high',
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => 'unknown-value',
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.codex=high (shared config)',
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('warns on unknown or unvalidated configured dispatch matrix cells', async () => {

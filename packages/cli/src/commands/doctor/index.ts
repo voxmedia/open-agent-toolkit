@@ -32,6 +32,7 @@ import {
   type OatLocalConfig,
   readOatLocalConfig,
   readUserConfig,
+  isCodexMaterializedRouteTarget,
   type UserConfig,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchProviderValue,
@@ -109,6 +110,7 @@ interface DispatchMatrixCellRef {
   provider: string;
   value: string;
   path: string;
+  target?: WorkflowDispatchRouteTarget;
 }
 
 interface DispatchMatrixCellIssue extends DispatchMatrixCellRef {
@@ -276,6 +278,10 @@ function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
   return typeof entry === 'object' && entry !== null && !Array.isArray(entry);
 }
 
+function formatRouteTargetValue(entry: WorkflowDispatchRouteTarget): string {
+  return [entry.model, entry.effort].filter(Boolean).join('/');
+}
+
 function addDispatchMatrixCellRefs(
   refs: DispatchMatrixCellRef[],
   layer: DispatchMatrixConfigLayer,
@@ -299,10 +305,24 @@ function addDispatchMatrixCellRefs(
       continue;
     }
 
+    const targetProvider = entry.harness ?? provider;
+    if (isCodexMaterializedRouteTarget(provider, entry)) {
+      if (entry.model && entry.effort) {
+        refs.push({
+          layer,
+          provider: targetProvider,
+          value: formatRouteTargetValue(entry),
+          path: entryPath,
+          target: entry,
+        });
+        continue;
+      }
+    }
+
     if (entry.model) {
       refs.push({
         layer,
-        provider,
+        provider: targetProvider,
         value: entry.model,
         path: `${entryPath}.model`,
       });
@@ -310,7 +330,7 @@ function addDispatchMatrixCellRefs(
     if (entry.effort) {
       refs.push({
         layer,
-        provider,
+        provider: targetProvider,
         value: entry.effort,
         path: `${entryPath}.effort`,
       });
@@ -394,6 +414,7 @@ async function createDispatchMatrixDoctorCheck(
         {
           cwd: scopeRoot,
           env: dependencies.processEnv,
+          ...(ref.target ? { target: ref.target } : {}),
         },
       );
     } catch {
