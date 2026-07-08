@@ -802,6 +802,132 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('preserves codex matrix targets with model and effort', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-terra',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'xhigh',
+      providers: {
+        codex: {
+          value: 'xhigh',
+          selection: {
+            selectedValue: 'xhigh',
+            target: {
+              harness: 'codex',
+              model: 'gpt-5.6-terra',
+              effort: 'xhigh',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports incomplete codex materialized targets as unresolved', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: null,
+      providers: {
+        codex: {
+          value: null,
+          mode: 'advisory',
+          dispatchArgs: null,
+          selection: {
+            selectedValue: null,
+            selectionMode: 'unresolved',
+            target: {
+              harness: 'codex',
+              effort: 'xhigh',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+    expect(capture.warn.join('\n')).toContain('model and effort');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('does not use harness as a same-harness route dispatch value', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {

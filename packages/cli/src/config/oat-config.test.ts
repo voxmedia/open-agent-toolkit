@@ -1316,6 +1316,46 @@ describe('oat-config', () => {
         });
       });
 
+      it('accepts codex materialized route targets with model and effort', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  codex: {
+                    high: [
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.6-terra',
+                        effort: 'xhigh',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          codex: {
+            high: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-terra',
+                effort: 'xhigh',
+              },
+            ],
+          },
+        });
+      });
+
       it('drops invalid dispatch matrix provider shapes silently', async () => {
         const repoRoot = await createRepoRoot();
         const configPath = join(repoRoot, '.oat', 'config.json');

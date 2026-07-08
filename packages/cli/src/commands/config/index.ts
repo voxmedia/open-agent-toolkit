@@ -25,6 +25,7 @@ import {
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
+  validateDispatchRouteTarget,
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
@@ -1127,6 +1128,40 @@ function collectDispatchMatrixCellRefs(
   return refs;
 }
 
+function collectDispatchMatrixTargetValidationErrors(
+  providers: Record<string, WorkflowDispatchProviderValue>,
+): string[] {
+  const errors: string[] = [];
+
+  for (const [provider, providerValue] of Object.entries(providers)) {
+    if (typeof providerValue === 'string') {
+      continue;
+    }
+
+    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
+    for (const [tier, cell] of Object.entries(providerValue)) {
+      if (!Array.isArray(cell)) {
+        continue;
+      }
+
+      for (const [index, entry] of cell.entries()) {
+        if (!isRouteTarget(entry)) {
+          continue;
+        }
+
+        const validation = validateDispatchRouteTarget(provider, entry);
+        if (!validation.valid) {
+          errors.push(
+            `${providerPath}.${tier}[${index}]: ${validation.reason}`,
+          );
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
 function applyWorkflowValue(
   workflow: OatWorkflowConfig,
   key: ConfigKey,
@@ -1588,6 +1623,13 @@ async function validateRecommendationCells(
   dependencies: ConfigCommandDependencies,
   warn: (message: string) => void,
 ): Promise<void> {
+  const targetErrors = collectDispatchMatrixTargetValidationErrors(
+    recommendation.providers,
+  );
+  if (targetErrors.length > 0) {
+    throw new Error(targetErrors.join('\n'));
+  }
+
   for (const ref of collectDispatchMatrixCellRefs(recommendation.providers)) {
     const closedValues = closedDispatchProviderValues(ref.provider);
     if (closedValues && !closedValues.includes(ref.value)) {

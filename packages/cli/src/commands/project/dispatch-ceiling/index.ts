@@ -18,6 +18,7 @@ import {
   VALID_CODEX_DISPATCH_CEILINGS,
   VALID_DISPATCH_MATRIX_TIERS,
   VALID_MANAGED_DISPATCH_POLICIES,
+  validateDispatchRouteTarget,
   type ActiveProjectResolution,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchMatrixTier,
@@ -488,6 +489,7 @@ interface MatrixCellResolution {
   cellSource: DispatchCeilingSource;
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
+  warnings: string[];
 }
 
 function routeTargetFromBareValue(
@@ -546,14 +548,27 @@ function resolveRouteMatrixCell(
     typeof entry === 'string'
       ? routeTargetFromBareValue(provider, entry, routeIndex, route.length)
       : routeTargetFromObject(provider, entry, routeIndex, route.length);
-  const value =
-    typeof entry === 'string' ? entry : dispatchValueFromRouteTarget(target);
+  const targetValidation =
+    typeof entry === 'string'
+      ? { valid: true }
+      : validateDispatchRouteTarget(provider, entry);
+  const value = targetValidation.valid
+    ? typeof entry === 'string'
+      ? entry
+      : dispatchValueFromRouteTarget(target)
+    : null;
+  const warnings = targetValidation.valid
+    ? []
+    : [
+        `Ignoring incomplete Codex dispatch target at route index ${routeIndex}: ${targetValidation.reason}`,
+      ];
 
   return {
     value,
     cellSource,
     target,
     selectionBranch: routeIndex > 0 ? 'escalation-target' : 'matrix-pinned',
+    warnings,
   };
 }
 
@@ -574,6 +589,7 @@ function resolveProviderCellFromValue(
       cellSource,
       target: null,
       selectionBranch: 'prompt-persisted',
+      warnings: [],
     };
   }
 
@@ -592,6 +608,7 @@ function resolveProviderCellFromValue(
       cellSource,
       target: null,
       selectionBranch: 'matrix-pinned',
+      warnings: [],
     };
   }
 
@@ -1447,6 +1464,7 @@ async function resolveCeilingValue(
       cellSource: matrixCell.cellSource,
       target: matrixCell.target,
       selectionBranch: matrixCell.selectionBranch,
+      warnings: [...baseCeiling.warnings, ...matrixCell.warnings],
     };
   }
 

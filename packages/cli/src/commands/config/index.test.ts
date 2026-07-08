@@ -1358,6 +1358,38 @@ describe('oat config', () => {
       ).rejects.toMatchObject({ code: 'ENOENT' });
     });
 
+    it('rejects codex route targets missing model or effort during dispatch matrix adoption', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                codex: {
+                  high: [{ harness: 'codex', effort: 'xhigh' }],
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        'workflow.dispatchCeiling.providers.codex.high[0]',
+      );
+      expect(capture.error[0]).toContain('model and effort');
+      expect(validateMatrixCell).not.toHaveBeenCalled();
+      await expect(
+        readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
     it('warns per cell during dispatch matrix recommendation adoption without blocking', async () => {
       const root = await createRepoRoot();
       const validateMatrixCell = vi.fn(
