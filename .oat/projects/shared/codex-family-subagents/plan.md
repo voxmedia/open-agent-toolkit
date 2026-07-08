@@ -821,6 +821,9 @@ Test that shipped workflow skills:
   `frontier`.
 - Preserve the explicit behavior descriptions for `uncapped`, `inherit`, and
   `leave unresolved`.
+- Assert that final-phase HiLL auto-review uses `code final` scope, not a
+  duplicate final phase-only review, because Tier 1 already runs the standard
+  per-phase reviewer.
 
 Run:
 
@@ -836,6 +839,8 @@ Implementation responsibilities:
 
 - Update skill instructions to require generated/canonical dispatch option
   text.
+- Keep `oat-project-implement` guidance explicit that when a HiLL checkpoint is
+  the final implementation phase, auto-review scope is `final`.
 - Bump each changed skill frontmatter `version:` once.
 - Keep prompt wording concise but behaviorally explicit.
 - Update bundle asset lists only if needed.

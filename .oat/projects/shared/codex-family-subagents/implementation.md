@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-08
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -20,12 +20,12 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 1 | in_progress | 3     | 1/3       |
 | Phase 2 | pending     | 5     | 0/5       |
 | Phase 3 | pending     | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 0/14 tasks completed
+**Total:** 1/14 tasks completed
 
 ---
 
@@ -36,8 +36,8 @@ oat_generated: false
 
 ### Task p01-t01: Add Codex Materialization Codec
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6c0437bc
 
 ### Task p01-t02: Add Codex Materialize CLI Command
 
@@ -148,13 +148,14 @@ Chronological log of implementation progress.
 
 **Session Start:** pending
 
-- [ ] p01-t01: Add Codex Materialization Codec
+- [x] p01-t01: Add Codex Materialization Codec (`6c0437bc`)
 - [ ] p01-t02: Add Codex Materialize CLI Command
 - [ ] p01-t03: Write Materialized Roles and Merge Codex Config
 
 **What changed (high level):**
 
-- Pending implementation.
+- Added the Codex materialization codec and tests for deterministic managed
+  role generation from canonical agents with explicit model and effort.
 
 **Decisions:**
 
@@ -183,12 +184,12 @@ Chronological log of implementation progress.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                      | Passed | Failed | Coverage   |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ---------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts` | yes    | no     | task-level |
+| 2     | -                                                                                                                                                                                                                                              | -      | -      | -          |
+| 3     | -                                                                                                                                                                                                                                              | -      | -      | -          |
+| 4     | -                                                                                                                                                                                                                                              | -      | -      | -          |
 
 ## Final Summary (for PR/docs)
 
