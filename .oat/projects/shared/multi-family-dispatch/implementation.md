@@ -1452,7 +1452,7 @@ same-runtime` remains the runtime-avoidance path.
 ### Review Received: p04 standard review
 
 **Date:** 2026-07-07
-**Review artifact:** reviews/p04-review-2026-07-07T154018Z.md
+**Review artifact:** reviews/archived/p04-review-2026-07-07T154018Z.md
 
 **Findings:**
 
@@ -1479,7 +1479,7 @@ same-runtime` remains the runtime-avoidance path.
 ### Review Received: p04 re-review
 
 **Date:** 2026-07-07
-**Review artifact:** reviews/p04-review-2026-07-07T154719Z.md
+**Review artifact:** reviews/archived/p04-review-2026-07-07T154719Z.md
 
 **Findings:**
 
@@ -1564,7 +1564,7 @@ same-runtime` remains the runtime-avoidance path.
 ### Review Received: p05 standard review
 
 **Date:** 2026-07-07
-**Review artifact:** reviews/p05-review-2026-07-07T161421Z.md
+**Review artifact:** reviews/archived/p05-review-2026-07-07T161421Z.md
 
 **Findings:**
 
@@ -1590,7 +1590,7 @@ same-runtime` remains the runtime-avoidance path.
 ### Review Received: p05 re-review
 
 **Date:** 2026-07-07
-**Review artifact:** reviews/p05-review-2026-07-07T162316Z.md
+**Review artifact:** reviews/archived/p05-review-2026-07-07T162316Z.md
 
 **Findings:**
 
@@ -1674,7 +1674,7 @@ same-runtime` remains the runtime-avoidance path.
 ### Review Received: p06 standard review
 
 **Date:** 2026-07-07
-**Review artifact:** reviews/p06-review-2026-07-07T165139Z.md
+**Review artifact:** reviews/archived/p06-review-2026-07-07T165139Z.md
 
 **Findings:**
 
@@ -1703,7 +1703,7 @@ same-runtime` remains the runtime-avoidance path.
 ### Review Received: p06 re-review
 
 **Date:** 2026-07-07
-**Review artifact:** reviews/p06-review-2026-07-07T170507Z.md
+**Review artifact:** reviews/archived/p06-review-2026-07-07T170507Z.md
 
 **Findings:**
 
@@ -2046,7 +2046,7 @@ Track test execution during implementation.
   lifecycle skills, and documentation.
 - Producer identity/provenance stamping and family-aware review-gate diversity.
 - Ordered implementation route resolution with same-harness dispatch targets.
-- Lockstep public package version bump to `0.1.44`.
+- Lockstep public package version bump to `0.1.45`.
 
 **Behavioral changes (user-facing):**
 
