@@ -292,6 +292,20 @@ Remove the current special-case generation of
 Codex dispatch should instead materialize matrix-referenced model-plus-effort
 roles through the generic path.
 
+**Compatibility decision:** No legacy compatibility branch ships in the initial
+implementation. Bare Codex effort-only targets (`low`, `medium`, `high`,
+`xhigh`) remain accepted only as legacy configuration inputs, but they resolve
+as unresolved for model-aware deterministic Codex dispatch until a matrix target
+provides both `model` and `effort`. Full sync removes stale OAT-managed
+effort-only roles. A future project can add a temporary compatibility flag if
+real migration evidence requires it.
+
+**Policy mapping decision:** This project does not ship a default
+policy-to-GPT-5.6-family mapping such as `balanced -> Terra` or
+`frontier -> Sol`. Policy rungs remain abstract caps; concrete Codex model
+families come from dispatch matrix targets. The follow-up backlog item verifies
+Cursor GPT-5.6 slugs before any recommended matrix maps Sol, Terra, or Luna.
+
 ### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
 
 **Files:**
@@ -339,9 +353,8 @@ Implementation responsibilities:
 - Keep `WorkflowDispatchRouteTarget` provider-neutral.
 - Add Codex-specific validation where dispatch matrix cells are validated.
 - Preserve existing non-Codex route target behavior.
-- Make bare Codex effort values a legacy compatibility path only when explicitly
-  retained by the resolver; do not let them silently imply a model-aware
-  materialized role.
+- Treat bare Codex effort values as unresolved for model-aware deterministic
+  dispatch. Do not let them silently imply a model-aware materialized role.
 
 **Step 3: Refactor**
 
@@ -376,14 +389,14 @@ git commit -m "feat(p02-t01): preserve codex model effort matrix targets"
 - Modify: `packages/cli/src/commands/sync/index.ts`
 - Modify: `packages/cli/src/commands/sync/index.test.ts`
 - Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/status/index.test.ts`
 
 **Step 1: Write test (RED)**
 
 Test sync output for a project with Codex matrix targets:
 
 - Generates materialized implementer and reviewer roles with model and effort.
-- Does not generate the old effort-only role set unless a legacy compatibility
-  branch is explicitly enabled.
+- Does not generate the old effort-only role set.
 - Removes stale managed effort-only roles when full sync runs.
 - Partial sync does not remove unrelated managed roles.
 
@@ -556,11 +569,85 @@ git commit -m "fix(p02-t04): recognize materialized codex roles"
 
 ---
 
-## Phase 3: Cursor Validation and Canonical Prompts
+### Task p02-t05: Rewrite Bundled Codex Dispatch Contracts
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)**
+
+Test that shipped workflow contracts:
+
+- No longer require `agent_type` values such as
+  `oat-phase-implementer-low`, `oat-phase-implementer-high`,
+  `oat-reviewer-low`, or `oat-reviewer-xhigh`.
+- Instruct implementers to use the resolver-returned materialized role name for
+  Codex dispatch when `dispatchArgs.variant` or equivalent role identity is
+  present.
+- Keep base/unpinned Codex fallback wording only for explicit inherit/default
+  and unresolved cases.
+- Require model axis and effort axis reporting from resolver output rather than
+  inferring from old role names.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts
+```
+
+Expected: Tests fail because the shipped skill and reviewer agent still name
+the old effort-pinned roles.
+
+**Step 2: Implement (GREEN)**
+
+Implementation responsibilities:
+
+- Rewrite Codex dispatch instructions in
+  `.agents/skills/oat-project-implement/SKILL.md` to consume resolver-returned
+  role names instead of reconstructing `oat-phase-implementer-<effort>`.
+- Rewrite `.agents/agents/oat-reviewer.md` Dispatch Control guidance to refer
+  to materialized reviewer roles selected by dispatch resolution.
+- Bump the changed skill frontmatter `version:` once. If the agent frontmatter
+  has a version field, bump it once as well.
+- Preserve legacy/base fallback guidance for inherit/default behavior.
+
+**Step 3: Refactor**
+
+Keep the wording provider-neutral where possible: the skill should describe
+`dispatchArgs` and resolver output, while Codex-specific text explains why the
+role name is materialized.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts
+```
+
+Expected: Contract tests pass and no bundled dispatch contract hard-requires
+old effort-pinned role names.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .agents/agents/oat-reviewer.md packages/cli/src/commands/init/tools/shared packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p02-t05): rewrite codex dispatch contracts"
+```
+
+---
+
+## Phase 3: Model Validation and Canonical Prompts
 
 Keep Cursor generic-agent dispatch, but validate against Cursor's subagent
-model allow-list. Also remove hand-authored dispatch-policy option lists from
-workflow prompts.
+model allow-list. Validate Codex matrix model IDs against the local Codex model
+catalog when available. Also remove hand-authored dispatch-policy option lists
+from workflow prompts.
 
 ### Task p03-t01: Validate Cursor Subagent-Eligible Models
 
@@ -768,6 +855,74 @@ git commit -m "docs(p03-t03): harden dispatch policy prompt guidance"
 
 ---
 
+### Task p03-t04: Validate Codex Matrix Model Availability
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/identity/availability.ts`
+- Modify: `packages/cli/src/providers/identity/availability.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+Test Codex matrix model availability:
+
+- A Codex target with `model: gpt-5.6-sol` and `effort: xhigh` reports
+  `unknown-value` when `codex debug models` returns only `gpt-5.5`.
+- A Codex target with `model: gpt-5.5` and supported effort reports `valid`
+  when the model catalog includes `gpt-5.5`.
+- If `codex debug models` is unavailable or unparsable, validation reports
+  `unvalidated` and doctor emits a clear warning rather than claiming the
+  materialized role is proven runnable.
+- Effort validation remains separate from model validation.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts
+```
+
+Expected: Tests fail because Codex validation currently checks only effort
+variant files.
+
+**Step 2: Implement (GREEN)**
+
+Implementation responsibilities:
+
+- Add a mockable Codex model-catalog probe using `codex debug models`.
+- Validate route-target `model` and `effort` independently.
+- Keep materialization writes permissive enough for preview IDs, but make
+  config/doctor/preflight warning states explicit.
+- Do not treat unavailable GPT-5.6 preview IDs as host defaults.
+
+**Step 3: Refactor**
+
+Share provider availability result shapes between Cursor and Codex so matrix
+validation reports consistent `valid`, `unknown-value`, and `unvalidated`
+states.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts
+```
+
+Expected: Codex and Cursor availability tests pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/providers/identity packages/cli/src/commands/config packages/cli/src/commands/doctor
+git commit -m "fix(p03-t04): validate codex matrix models"
+```
+
+---
+
 ## Phase 4: Documentation, Versions, and Release Validation
 
 Document the new Codex materialization workflow, update public package versions
@@ -779,8 +934,11 @@ for shipped CLI/asset changes, and run the release validation surface.
 
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- Modify: `apps/oat-docs/docs/provider-sync/config.md`
 - Modify: `apps/oat-docs/docs/provider-sync/providers.md`
 - Modify: `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
 - Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
 - Modify: `apps/oat-docs/index.md` if regenerated by docs tooling
 
@@ -800,6 +958,8 @@ Required docs content:
   catalog.
 - Dispatch policy descriptions clearly distinguish capped managed, managed
   uncapped, inherit host defaults, and unresolved deferral.
+- Grep all docs for old effort-pinned role references and update or explicitly
+  justify every remaining hit.
 
 Run:
 
@@ -824,10 +984,12 @@ requires it. Do not hand-edit generated index sections.
 Run:
 
 ```bash
+grep -rn "oat-phase-implementer-low\\|oat-phase-implementer-xhigh\\|oat-reviewer-low\\|oat-reviewer-xhigh" apps/oat-docs/docs
 pnpm build:docs
 ```
 
-Expected: Docs build passes.
+Expected: Grep has no stale docs references, or every remaining reference is
+explicitly labeled legacy/migration-only; docs build passes.
 
 **Step 5: Commit**
 
@@ -894,7 +1056,7 @@ Expected: All checks pass.
 **Step 5: Commit**
 
 ```bash
-git add package.json pnpm-lock.yaml packages apps .agents
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
 git commit -m "chore(p04-t02): validate codex family subagents release"
 ```
 
@@ -902,17 +1064,17 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 
 ## Reviews
 
-| Scope     | Type     | Status   | Date       | Artifact                                             |
-| --------- | -------- | -------- | ---------- | ---------------------------------------------------- |
-| p01       | code     | pending  | -          | -                                                    |
-| p02       | code     | pending  | -          | -                                                    |
-| p03       | code     | pending  | -          | -                                                    |
-| p04       | code     | pending  | -          | -                                                    |
-| final     | code     | pending  | -          | -                                                    |
-| discovery | artifact | passed   | 2026-07-08 | `discovery.md`                                       |
-| spec      | artifact | pending  | -          | N/A quick mode                                       |
-| design    | artifact | pending  | -          | N/A quick mode                                       |
-| plan      | artifact | received | 2026-07-08 | `reviews/artifact-plan-review-2026-07-08T214156Z.md` |
+| Scope     | Type     | Status          | Date       | Artifact                                                      |
+| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- |
+| p01       | code     | pending         | -          | -                                                             |
+| p02       | code     | pending         | -          | -                                                             |
+| p03       | code     | pending         | -          | -                                                             |
+| p04       | code     | pending         | -          | -                                                             |
+| final     | code     | pending         | -          | -                                                             |
+| discovery | artifact | passed          | 2026-07-08 | `discovery.md`                                                |
+| spec      | artifact | passed          | 2026-07-08 | N/A quick mode                                                |
+| design    | artifact | passed          | 2026-07-08 | N/A quick mode                                                |
+| plan      | artifact | fixes_completed | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T214156Z.md` |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -924,13 +1086,13 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 **Summary:**
 
 - Phase 1: 3 tasks - generic Codex materialization codec and CLI command.
-- Phase 2: 4 tasks - replace hard-coded effort pins with matrix-driven
+- Phase 2: 5 tasks - replace hard-coded effort pins with matrix-driven
   materialized Codex roles.
-- Phase 3: 3 tasks - Cursor subagent validation and canonical dispatch-policy
+- Phase 3: 4 tasks - Cursor/Codex model validation and canonical dispatch-policy
   prompt rendering.
 - Phase 4: 2 tasks - docs, package versions, and release validation.
 
-**Total: 12 tasks**
+**Total: 14 tasks**
 
 Ready for `oat-project-implement`.
 

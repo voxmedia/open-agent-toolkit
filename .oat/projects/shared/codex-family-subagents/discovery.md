@@ -278,9 +278,11 @@ do not model `ultra` as effort unless Codex exposes it that way.
 - **Codex Role Count:** Resolved for initial implementation: materialize only
   explicit CLI requests and matrix-referenced managed roles, not every possible
   model/effort combination.
-- **Policy Mapping:** Should the default recommendation map `balanced` to Terra,
-  `frontier` to Sol, and `economy` to Luna, or should policy rungs remain
-  effort-only with model family selected separately?
+- **Policy Mapping:** Deferred. This project will not ship a default
+  policy-to-GPT-5.6-family mapping such as `balanced -> Terra` or
+  `frontier -> Sol`; concrete Codex model families come from dispatch matrix
+  targets. Recommended mappings can be added after live provider slugs and
+  entitlement behavior are verified.
 - **`max` Support:** Should implementation add `max` immediately behind a
   validation gate, or wait until Codex locally advertises GPT-5.6 support?
 - **Cursor Agent Shape:** Resolved for the model axis: materialized

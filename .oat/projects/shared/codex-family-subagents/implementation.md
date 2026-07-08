@@ -21,11 +21,11 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | in_progress | 3     | 0/3       |
-| Phase 2 | pending     | 4     | 0/4       |
-| Phase 3 | pending     | 3     | 0/3       |
+| Phase 2 | pending     | 5     | 0/5       |
+| Phase 3 | pending     | 4     | 0/4       |
 | Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 0/12 tasks completed
+**Total:** 0/14 tasks completed
 
 ---
 
@@ -76,9 +76,14 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+### Task p02-t05: Rewrite Bundled Codex Dispatch Contracts
+
+**Status:** pending
+**Commit:** -
+
 ---
 
-## Phase 3: Cursor Validation and Canonical Prompts
+## Phase 3: Model Validation and Canonical Prompts
 
 **Status:** pending
 **Started:** -
@@ -94,6 +99,11 @@ oat_generated: false
 **Commit:** -
 
 ### Task p03-t03: Harden Workflow Skills Against Hand-Typed Option Lists
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t04: Validate Codex Matrix Model Availability
 
 **Status:** pending
 **Commit:** -
