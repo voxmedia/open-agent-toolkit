@@ -287,9 +287,10 @@ do not model `ultra` as effort unless Codex exposes it that way.
   validation gate, or wait until Codex locally advertises GPT-5.6 support?
 - **Cursor Agent Shape:** Resolved for the model axis: materialized
   model-specific `.cursor/agents/` files are unnecessary when OAT can pass the
-  Task tool `model` argument. Still open: whether OAT should generate `model`
-  frontmatter for default/fallback behavior, and whether `readonly` and
-  `is_background` should be generated from canonical/OAT role metadata.
+  Task tool `model` argument. Deferred to a separate Cursor provider-shape
+  follow-up: whether OAT should generate `model` frontmatter for
+  default/fallback behavior, and whether `readonly` and `is_background` should
+  be generated from canonical/OAT role metadata.
 
 ## Assumptions
 

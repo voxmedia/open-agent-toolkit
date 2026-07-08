@@ -66,6 +66,7 @@ reasoning effort string.
 - Create: `packages/cli/src/providers/codex/codec/materialize.ts`
 - Create: `packages/cli/src/providers/codex/codec/materialize.test.ts`
 - Modify: `packages/cli/src/providers/codex/codec/export-to-codex.ts`
+- Modify: `packages/cli/src/providers/codex/codec/export-to-codex.test.ts`
 - Modify: `packages/cli/src/providers/codex/codec/shared.ts`
 
 **Step 1: Write test (RED)**
@@ -649,6 +650,12 @@ model allow-list. Validate Codex matrix model IDs against the local Codex model
 catalog when available. Also remove hand-authored dispatch-policy option lists
 from workflow prompts.
 
+**Cursor agent-shape deferral:** This project ships Cursor dispatch through
+generic `.cursor/agents` files plus Task-level `model` arguments. Generating
+Cursor `model` frontmatter for default/fallback behavior, and deriving
+`readonly` or `is_background` from canonical/OAT role metadata, is deferred to a
+separate Cursor provider-shape follow-up.
+
 ### Task p03-t01: Validate Cursor Subagent-Eligible Models
 
 **Files:**
@@ -984,7 +991,7 @@ requires it. Do not hand-edit generated index sections.
 Run:
 
 ```bash
-grep -rn "oat-phase-implementer-low\\|oat-phase-implementer-xhigh\\|oat-reviewer-low\\|oat-reviewer-xhigh" apps/oat-docs/docs
+grep -rnE "oat-phase-implementer-(low|medium|high|xhigh)|oat-reviewer-(low|medium|high|xhigh)" apps/oat-docs/docs
 pnpm build:docs
 ```
 
@@ -1064,17 +1071,17 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 
 ## Reviews
 
-| Scope     | Type     | Status   | Date       | Artifact                                             |
-| --------- | -------- | -------- | ---------- | ---------------------------------------------------- |
-| p01       | code     | pending  | -          | -                                                    |
-| p02       | code     | pending  | -          | -                                                    |
-| p03       | code     | pending  | -          | -                                                    |
-| p04       | code     | pending  | -          | -                                                    |
-| final     | code     | pending  | -          | -                                                    |
-| discovery | artifact | passed   | 2026-07-08 | `discovery.md`                                       |
-| spec      | artifact | passed   | 2026-07-08 | N/A quick mode                                       |
-| design    | artifact | passed   | 2026-07-08 | N/A quick mode                                       |
-| plan      | artifact | received | 2026-07-08 | `reviews/artifact-plan-review-2026-07-08T215336Z.md` |
+| Scope     | Type     | Status  | Date       | Artifact                                                      |
+| --------- | -------- | ------- | ---------- | ------------------------------------------------------------- |
+| p01       | code     | pending | -          | -                                                             |
+| p02       | code     | pending | -          | -                                                             |
+| p03       | code     | pending | -          | -                                                             |
+| p04       | code     | pending | -          | -                                                             |
+| final     | code     | pending | -          | -                                                             |
+| discovery | artifact | passed  | 2026-07-08 | `discovery.md`                                                |
+| spec      | artifact | passed  | 2026-07-08 | N/A quick mode                                                |
+| design    | artifact | passed  | 2026-07-08 | N/A quick mode                                                |
+| plan      | artifact | passed  | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
