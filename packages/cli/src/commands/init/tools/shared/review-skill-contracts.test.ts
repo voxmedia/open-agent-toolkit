@@ -110,6 +110,40 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('documents codex dispatch through resolver-returned materialized roles', () => {
+    const implementerContent = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewerContent = readRepoFile('.agents/agents/oat-reviewer.md');
+    const combined = `${implementerContent}\n${reviewerContent}`;
+
+    for (const legacyRole of [
+      'oat-phase-implementer-low',
+      'oat-phase-implementer-medium',
+      'oat-phase-implementer-high',
+      'oat-phase-implementer-xhigh',
+      'oat-reviewer-low',
+      'oat-reviewer-medium',
+      'oat-reviewer-high',
+      'oat-reviewer-xhigh',
+    ]) {
+      expect(combined).not.toContain(legacyRole);
+    }
+
+    expect(combined).toContain('materialized Codex role name');
+    expect(combined).toContain('providers.codex.dispatchArgs.variant');
+    expect(combined).toContain('providers.codex.selection.target');
+    expect(combined).toContain(
+      'Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`',
+    );
+    expect(combined).toContain(
+      'Use base `oat-phase-implementer` only when the resolver returns no `dispatchArgs.variant`',
+    );
+    expect(combined).toContain(
+      'derive `model_axis` and `effort_axis` from resolver output',
+    );
+  });
+
   it('routes phase-range review fixes into the last phase in the range', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-receive/SKILL.md',
