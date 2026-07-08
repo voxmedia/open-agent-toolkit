@@ -1,14 +1,23 @@
 import { createHash } from 'node:crypto';
-import { readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 
 import { parseCanonicalAgentFile } from '@agents/canonical';
+import {
+  isCodexMaterializedRouteTarget,
+  readOatConfig,
+  validateDispatchRouteTarget,
+  type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRouteEntry,
+} from '@config/oat-config';
 import type { CanonicalEntry } from '@engine/index';
 import { ensureDir, fileExists } from '@fs/io';
 import TOML from '@iarna/toml';
 
 import { type CodexManagedRoleConfig, mergeCodexConfig } from './config-merge';
 import { exportCanonicalAgentToCodexRole } from './export-to-codex';
+import { materializeCodexRole } from './materialize';
 import { isOatManagedCodexRoleFile } from './shared';
 
 export type CodexExtensionAction = 'create' | 'update' | 'remove' | 'skip';
@@ -46,8 +55,12 @@ interface DesiredCodexRole {
   content: string;
 }
 
-const CODEX_EFFORT_VARIANTS = ['low', 'medium', 'high', 'xhigh'] as const;
-const CODEX_EFFORT_VARIANT_BASE_ROLES = new Set([
+interface CodexMaterializationTarget {
+  model: string;
+  effort: string;
+}
+
+const CODEX_MATERIALIZED_BASE_ROLES = new Set([
   'oat-phase-implementer',
   'oat-reviewer',
 ]);
@@ -99,66 +112,10 @@ function normalizeManagedRolesConfig(
   }));
 }
 
-function codexEffortVariantContent(
-  baseContent: string,
-  baseRoleName: string,
-  variantRoleName: string,
-  effort: string,
-): string {
-  return baseContent
-    .replace(`# oat-role: ${baseRoleName}`, `# oat-role: ${variantRoleName}`)
-    .replace(
-      'developer_instructions =',
-      `model_reasoning_effort = "${effort}"\ndeveloper_instructions =`,
-    );
-}
-
-function codexEffortVariantDescription(
-  baseRoleName: string,
-  effort: string,
-): string {
-  const roleLabel =
-    baseRoleName === 'oat-reviewer' ? 'reviewer' : 'phase implementer';
-  if (effort === 'low') {
-    return `OAT ${roleLabel} pinned to low reasoning effort for narrow mechanical implementation, fix, or review phases.`;
-  }
-  if (effort === 'medium') {
-    return `OAT ${roleLabel} pinned to medium reasoning effort for normal multi-file implementation, fix, or review phases.`;
-  }
-  if (effort === 'high') {
-    return `OAT ${roleLabel} pinned to high reasoning effort for broad, subtle, or higher-risk implementation, fix, or review phases.`;
-  }
-  return `OAT ${roleLabel} pinned to xhigh reasoning effort for the highest configured Codex dispatch policy cap.`;
-}
-
-function codexEffortVariantsFromBase(
-  exported: DesiredCodexRole,
-): DesiredCodexRole[] {
-  if (!CODEX_EFFORT_VARIANT_BASE_ROLES.has(exported.roleName)) {
-    return [];
-  }
-
-  return CODEX_EFFORT_VARIANTS.map((effort) => {
-    const variantRoleName = `${exported.roleName}-${effort}`;
-    const configFile = `agents/${variantRoleName}.toml`;
-    return {
-      roleName: variantRoleName,
-      description: codexEffortVariantDescription(exported.roleName, effort),
-      configFile,
-      rolePath: join(dirname(exported.rolePath), `${variantRoleName}.toml`),
-      content: codexEffortVariantContent(
-        exported.content,
-        exported.roleName,
-        variantRoleName,
-        effort,
-      ),
-    };
-  });
-}
-
 async function desiredRolesFromCanonical(
   canonicalEntries: CanonicalEntry[],
   scopeRoot: string,
+  materializationTargets: CodexMaterializationTarget[],
 ): Promise<DesiredCodexRole[]> {
   const roles: DesiredCodexRole[] = [];
 
@@ -182,11 +139,93 @@ async function desiredRolesFromCanonical(
       content: exported.content,
     });
 
-    roles.push(...codexEffortVariantsFromBase(roles[roles.length - 1]!));
+    if (CODEX_MATERIALIZED_BASE_ROLES.has(exported.roleName)) {
+      for (const target of materializationTargets) {
+        const materialized = materializeCodexRole({
+          agent: parsed,
+          model: target.model,
+          effort: target.effort,
+        });
+        roles.push({
+          roleName: materialized.roleName,
+          description: materialized.description,
+          configFile: materialized.configFile,
+          rolePath: join(scopeRoot, '.codex', materialized.configFile),
+          content: materialized.content,
+        });
+      }
+    }
   }
 
   return roles.sort((left, right) =>
     left.roleName.localeCompare(right.roleName),
+  );
+}
+
+function collectCodexTargetFromEntry(
+  entry: WorkflowDispatchRouteEntry,
+  targets: Map<string, CodexMaterializationTarget>,
+): void {
+  if (typeof entry === 'string') {
+    return;
+  }
+
+  if (!isCodexMaterializedRouteTarget('codex', entry)) {
+    return;
+  }
+
+  const validation = validateDispatchRouteTarget('codex', entry);
+  if (!validation.valid || !entry.model || !entry.effort) {
+    return;
+  }
+
+  targets.set(`${entry.model}\0${entry.effort}`, {
+    model: entry.model,
+    effort: entry.effort,
+  });
+}
+
+function collectCodexTargetsFromCell(
+  cell: WorkflowDispatchMatrixCell,
+  targets: Map<string, CodexMaterializationTarget>,
+): void {
+  if (typeof cell === 'string') {
+    return;
+  }
+
+  for (const entry of cell) {
+    collectCodexTargetFromEntry(entry, targets);
+  }
+}
+
+function collectCodexMaterializationTargetsFromProvider(
+  providerValue: WorkflowDispatchProviderValue | undefined,
+): CodexMaterializationTarget[] {
+  const targets = new Map<string, CodexMaterializationTarget>();
+  if (providerValue === undefined || typeof providerValue === 'string') {
+    return [];
+  }
+
+  for (const cell of Object.values(providerValue)) {
+    if (cell !== undefined) {
+      collectCodexTargetsFromCell(cell, targets);
+    }
+  }
+
+  return [...targets.values()].sort((left, right) => {
+    const modelOrder = left.model.localeCompare(right.model);
+    return modelOrder === 0
+      ? left.effort.localeCompare(right.effort)
+      : modelOrder;
+  });
+}
+
+async function readCodexMaterializationTargets(
+  scopeRoot: string,
+): Promise<CodexMaterializationTarget[]> {
+  const config = await readOatConfig(scopeRoot);
+  return collectCodexMaterializationTargetsFromProvider(
+    config.workflow?.dispatchCeiling?.providers?.codex,
   );
 }
 
@@ -229,7 +268,7 @@ async function collectStaleManagedRoles(
   desiredRoleNames: Set<string>,
 ): Promise<string[]> {
   const agents = parseConfigAgentTable(existingConfigContent);
-  const stale: string[] = [];
+  const stale = new Set<string>();
 
   for (const [roleName, roleConfig] of Object.entries(agents)) {
     if (desiredRoleNames.has(roleName)) {
@@ -247,10 +286,37 @@ async function collectStaleManagedRoles(
       continue;
     }
 
-    stale.push(roleName);
+    stale.add(roleName);
   }
 
-  return stale.sort((left, right) => left.localeCompare(right));
+  const agentsDir = join(scopeRoot, '.codex', 'agents');
+  let roleFiles: string[];
+  try {
+    roleFiles = await readdir(agentsDir);
+  } catch {
+    roleFiles = [];
+  }
+
+  for (const roleFile of roleFiles) {
+    if (!roleFile.endsWith('.toml')) {
+      continue;
+    }
+
+    const roleName = basename(roleFile, '.toml');
+    if (desiredRoleNames.has(roleName) || stale.has(roleName)) {
+      continue;
+    }
+
+    const rolePath = join(agentsDir, roleFile);
+    const roleContent = await readOptionalFile(rolePath);
+    if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
+      continue;
+    }
+
+    stale.add(roleName);
+  }
+
+  return [...stale].sort((left, right) => left.localeCompare(right));
 }
 
 export async function computeCodexProjectExtensionPlan(
@@ -260,11 +326,14 @@ export async function computeCodexProjectExtensionPlan(
 ): Promise<CodexExtensionPlan> {
   const isPartialSync =
     allowedCanonicalPaths !== undefined && allowedCanonicalPaths.length > 0;
+  const materializationTargets =
+    await readCodexMaterializationTargets(scopeRoot);
   const desiredRoles = await desiredRolesFromCanonical(
     canonicalEntries.filter((entry) =>
       canonicalPathAllowed(scopeRoot, entry, allowedCanonicalPaths),
     ),
     scopeRoot,
+    materializationTargets,
   );
   const desiredRoleNames = new Set(desiredRoles.map((role) => role.roleName));
   const existingConfigPath = configPath(scopeRoot);
@@ -371,7 +440,7 @@ export async function computeCodexProjectExtensionPlan(
 
   return {
     operations,
-    managedRoles: desiredRoles.map((role) => role.roleName),
+    managedRoles: [...desiredRoles.map((role) => role.roleName), ...staleRoles],
     aggregateConfigHash: hashContent(configMerge.mergedContent),
   };
 }

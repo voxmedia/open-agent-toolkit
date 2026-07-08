@@ -76,9 +76,33 @@ describe('codex sync extension', () => {
     );
   });
 
-  it('generates effort-specific codex variants for oat-phase-implementer', async () => {
+  it('generates materialized codex roles from matrix targets for oat-phase-implementer', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);
+
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
 
     const canonicalDir = join(root, '.agents', 'agents');
     await mkdir(canonicalDir, { recursive: true });
@@ -101,31 +125,20 @@ describe('codex sync extension', () => {
     const rolePaths = plan.operations
       .filter((op) => op.target === 'role')
       .map((op) => op.path);
+    const roleName = 'oat-phase-implementer-gpt-5-6-terra-xhigh';
 
     expect(rolePaths).toContain('.codex/agents/oat-phase-implementer.toml');
-    expect(rolePaths).toContain('.codex/agents/oat-phase-implementer-low.toml');
-    expect(rolePaths).toContain(
-      '.codex/agents/oat-phase-implementer-medium.toml',
-    );
-    expect(rolePaths).toContain(
+    expect(rolePaths).toContain(`.codex/agents/${roleName}.toml`);
+    expect(rolePaths).not.toContain(
       '.codex/agents/oat-phase-implementer-high.toml',
     );
-    expect(rolePaths).toContain(
-      '.codex/agents/oat-phase-implementer-xhigh.toml',
-    );
-    expect(plan.managedRoles).toEqual([
-      'oat-phase-implementer',
-      'oat-phase-implementer-high',
-      'oat-phase-implementer-low',
-      'oat-phase-implementer-medium',
-      'oat-phase-implementer-xhigh',
-    ]);
+    expect(plan.managedRoles).toEqual(['oat-phase-implementer', roleName]);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
     expect(applyResult.failed).toBe(0);
 
-    const lowRole = await readFile(
-      join(root, '.codex', 'agents', 'oat-phase-implementer-low.toml'),
+    const materializedRole = await readFile(
+      join(root, '.codex', 'agents', `${roleName}.toml`),
       'utf8',
     );
     const configFile = await readFile(
@@ -133,15 +146,39 @@ describe('codex sync extension', () => {
       'utf8',
     );
 
-    expect(lowRole).toContain('# oat-role: oat-phase-implementer-low');
-    expect(lowRole).toContain('model_reasoning_effort = "low"');
-    expect(configFile).toContain('[agents.oat-phase-implementer-low]');
-    expect(configFile).toContain('[agents.oat-phase-implementer-xhigh]');
+    expect(materializedRole).toContain(`# oat-role: ${roleName}`);
+    expect(materializedRole).toContain('model = "gpt-5.6-terra"');
+    expect(materializedRole).toContain('model_reasoning_effort = "xhigh"');
+    expect(configFile).toContain(`[agents.${roleName}]`);
   });
 
-  it('generates effort-specific codex variants for oat-reviewer', async () => {
+  it('generates materialized codex roles from matrix targets for oat-reviewer', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);
+
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
 
     const canonicalDir = join(root, '.agents', 'agents');
     await mkdir(canonicalDir, { recursive: true });
@@ -161,25 +198,18 @@ describe('codex sync extension', () => {
     const rolePaths = plan.operations
       .filter((op) => op.target === 'role')
       .map((op) => op.path);
+    const roleName = 'oat-reviewer-gpt-5-6-terra-xhigh';
 
     expect(rolePaths).toContain('.codex/agents/oat-reviewer.toml');
-    expect(rolePaths).toContain('.codex/agents/oat-reviewer-low.toml');
-    expect(rolePaths).toContain('.codex/agents/oat-reviewer-medium.toml');
-    expect(rolePaths).toContain('.codex/agents/oat-reviewer-high.toml');
-    expect(rolePaths).toContain('.codex/agents/oat-reviewer-xhigh.toml');
-    expect(plan.managedRoles).toEqual([
-      'oat-reviewer',
-      'oat-reviewer-high',
-      'oat-reviewer-low',
-      'oat-reviewer-medium',
-      'oat-reviewer-xhigh',
-    ]);
+    expect(rolePaths).toContain(`.codex/agents/${roleName}.toml`);
+    expect(rolePaths).not.toContain('.codex/agents/oat-reviewer-high.toml');
+    expect(plan.managedRoles).toEqual(['oat-reviewer', roleName]);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
     expect(applyResult.failed).toBe(0);
 
-    const highRole = await readFile(
-      join(root, '.codex', 'agents', 'oat-reviewer-high.toml'),
+    const materializedRole = await readFile(
+      join(root, '.codex', 'agents', `${roleName}.toml`),
       'utf8',
     );
     const configFile = await readFile(
@@ -187,10 +217,10 @@ describe('codex sync extension', () => {
       'utf8',
     );
 
-    expect(highRole).toContain('# oat-role: oat-reviewer-high');
-    expect(highRole).toContain('model_reasoning_effort = "high"');
-    expect(configFile).toContain('[agents.oat-reviewer-high]');
-    expect(configFile).toContain('[agents.oat-reviewer-xhigh]');
+    expect(materializedRole).toContain(`# oat-role: ${roleName}`);
+    expect(materializedRole).toContain('model = "gpt-5.6-terra"');
+    expect(materializedRole).toContain('model_reasoning_effort = "xhigh"');
+    expect(configFile).toContain(`[agents.${roleName}]`);
 
     const secondPlan = await computeCodexProjectExtensionPlan(
       root,
@@ -198,6 +228,46 @@ describe('codex sync extension', () => {
     );
     expect(secondPlan.operations.every((op) => op.action === 'skip')).toBe(
       true,
+    );
+  });
+
+  it('removes stale managed effort-only roles during full sync', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalFile, canonicalAgentFileContent('oat-reviewer'));
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'agents', 'oat-reviewer-high.toml'),
+      '# oat-managed: true\n# oat-role: oat-reviewer-high\ndeveloper_instructions = "review"\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents.oat-reviewer-high]\ndescription = "stale"\nconfig_file = "agents/oat-reviewer-high.toml"\n\n[features]\nmulti_agent = true\n',
+      'utf8',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, [
+      {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath: canonicalFile,
+        isFile: true,
+      },
+    ]);
+
+    expect(plan.operations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'remove',
+          target: 'role',
+          roleName: 'oat-reviewer-high',
+        }),
+      ]),
     );
   });
 
