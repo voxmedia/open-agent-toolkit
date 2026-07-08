@@ -115,6 +115,7 @@ export interface SyncCommandDependencies {
     scopeRoot: string,
     canonicalEntries: CanonicalEntry[],
     allowedCanonicalPaths?: string[],
+    options?: { userConfigDir?: string; env?: NodeJS.ProcessEnv },
   ) => Promise<CodexExtensionPlan>;
   toCodexExtensionOperations: (
     plan: CodexExtensionPlan,

@@ -133,6 +133,8 @@ interface StatusDependencies {
   computeCodexProjectExtensionPlan: (
     scopeRoot: string,
     canonicalEntries: CanonicalEntry[],
+    allowedCanonicalPaths?: string[],
+    options?: { userConfigDir?: string; env?: NodeJS.ProcessEnv },
   ) => Promise<CodexExtensionPlan>;
   applyCodexProjectExtensionPlan: (
     scopeRoot: string,
@@ -431,6 +433,8 @@ async function collectScopeReports(
       await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
         canonicalEntries,
+        undefined,
+        { userConfigDir: join(context.home, '.oat') },
       );
     for (const operation of codexExtensionPlan.operations) {
       if (operation.action === 'skip') {

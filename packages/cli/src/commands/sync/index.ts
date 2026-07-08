@@ -273,6 +273,7 @@ async function computePlans(
         scopeRoot,
         canonical,
         allowedCanonicalPaths,
+        { userConfigDir: join(context.home, '.oat') },
       );
       codexExtension = {
         operations: dependencies.toCodexExtensionOperations(codexExtensionPlan),
