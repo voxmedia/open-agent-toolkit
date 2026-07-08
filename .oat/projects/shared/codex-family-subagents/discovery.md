@@ -44,6 +44,19 @@ defaults`.
 - The GPT-5.6 launch notes introduce a new `max` reasoning effort for Sol and
   an `ultra` mode, but local Codex support for those controls is not yet
   visible from `codex debug models`.
+- Official Cursor subagent docs define a `model` frontmatter field. Its default
+  is `inherit`, and a specific model ID can be provided with bracketed
+  parameters for options such as reasoning effort, speed, and context.
+- Local Cursor CLI smoke test used `CURSOR_API_KEY` with
+  `AGENT_CLI_CREDENTIAL_STORE=file` because the macOS keychain was locked.
+  `cursor-agent models` showed account-visible model IDs but no GPT-5.6 family
+  IDs yet.
+- Local Cursor CLI smoke test with parent `--model composer-2.5` confirmed:
+  `.cursor/agents/model-pinned-probe.md` with `model: gpt-5.3-codex-low`
+  produced a subagent Task call with `model: "gpt-5.3-codex-low"`, while
+  `.cursor/agents/model-inherit-probe.md` with `model: inherit` produced Task
+  calls with `model: "composer-2.5"`. The inherit probe had transient subagent
+  teardown noise, but returned the expected probe output after retry.
 
 ## Clarifying Questions
 
@@ -94,8 +107,10 @@ generated surface remains manageable.
 **Description:** Keep dispatch policy and sparse matrices as the source of
 truth for abstract rungs and concrete model-family choices, but teach the Codex
 sync/dispatch layer to materialize concrete pinned variants when a Codex route
-target requires model-plus-effort controls. Cursor continues to use model-arg
-routes and `.cursor/agents` markdown sync.
+target requires model-plus-effort controls. Cursor should materialize
+`.cursor/agents` markdown files with explicit `model` frontmatter for
+cross-model subagents, using `model: inherit` only when host/default behavior is
+intended.
 
 **When this is the right choice:** Best when OAT needs deterministic Codex
 behavior now and still wants model-family choices to live in the provider-neutral
@@ -123,7 +138,8 @@ Codex per-spawn controls.
 **Pros:**
 
 - Aligns with `multi-family-dispatch`.
-- Lets Cursor stay model-argument based.
+- Lets Cursor stay model-frontmatter/model-argument based instead of needing
+  pinned role TOML.
 - Keeps policy rungs separate from model IDs.
 
 **Cons:**
@@ -164,6 +180,9 @@ do not model `ultra` as effort unless Codex exposes it that way.
    behavior over stale assumptions.
 3. **CLI Surface:** Use the repo-local CLI for current OAT behavior; global
    `oat` is stale in this checkout.
+4. **Cursor Subagents:** Generated `.cursor/agents` files must include `model`
+   frontmatter when OAT needs a concrete Cursor model; omitting it or using
+   `inherit` intentionally means "use the parent agent model."
 
 ## Constraints
 
@@ -172,7 +191,8 @@ do not model `ultra` as effort unless Codex exposes it that way.
 - Dispatch policy semantics from the archived projects must remain intact:
   capped managed, managed uncapped, and inherit/default are distinct.
 - Cursor support should use the existing markdown-agent/provider-sync path where
-  possible, and model selection should remain model-argument based for Cursor.
+  possible, and concrete model selection should be represented in `.cursor/agents`
+  frontmatter when OAT wants cross-model subagents.
 - Generated provider files must be managed by `oat sync` and not treated as
   custom stray agents.
 - Public package lockstep/version/release policy applies if bundled provider
@@ -214,16 +234,19 @@ do not model `ultra` as effort unless Codex exposes it that way.
   effort-only with model family selected separately?
 - **`max` Support:** Should implementation add `max` immediately behind a
   validation gate, or wait until Codex locally advertises GPT-5.6 support?
-- **Cursor Agent Shape:** Is Cursor's `.cursor/agents/` markdown surface enough
-  for this use case, or does it need extra frontmatter/model metadata beyond the
-  canonical agent format?
+- **Cursor Agent Shape:** Resolved for the model axis: generated
+  `.cursor/agents/` markdown should include Cursor's `model` frontmatter for
+  concrete model selection. Still open: whether OAT should also generate
+  `readonly` and `is_background` from canonical/OAT role metadata.
 
 ## Assumptions
 
 - `model = "<slug>"` in Codex role TOML is supported by the current codec path,
   but dispatch/runtime behavior still needs live verification.
-- Cursor invalid-model behavior still hard-errors rather than silently falling
-  back, as recorded by the archived `multi-family-dispatch` project.
+- Cursor subagent model selection is controlled by the subagent file's `model`
+  frontmatter when available. Cursor may fall back to a compatible model when
+  the configured model is blocked, unavailable, or requires Max Mode that is not
+  enabled.
 - OpenAI model IDs from the preview material are the right initial slugs:
   `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`.
 
