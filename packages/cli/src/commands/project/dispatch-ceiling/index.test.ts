@@ -158,9 +158,9 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'high',
-          mode: 'enforced',
+          mode: 'advisory',
           mechanism: 'pinned-variant',
-          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+          dispatchArgs: null,
         },
       },
     });
@@ -205,9 +205,9 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'xhigh',
-          mode: 'enforced',
+          mode: 'advisory',
           mechanism: 'pinned-variant',
-          dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+          dispatchArgs: null,
         },
       },
     });
@@ -252,9 +252,9 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'high',
-          mode: 'enforced',
+          mode: 'advisory',
           mechanism: 'pinned-variant',
-          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+          dispatchArgs: null,
         },
       },
     });
@@ -643,7 +643,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       value: 'medium',
       providers: {
         codex: {
-          dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+          dispatchArgs: null,
           selection: {
             preferredValue: 'xhigh',
             selectedValue: 'medium',
@@ -786,7 +786,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         codex: {
           value: 'high',
           mode: 'enforced',
-          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+          dispatchArgs: { variant: 'oat-phase-implementer-gpt-5-5-high' },
           selection: {
             selectedValue: 'high',
             target: {
@@ -849,6 +849,11 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'xhigh',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-terra-xhigh',
+          },
+          modelAxis: 'selected:gpt-5.6-terra',
+          effortAxis: 'selected:xhigh',
           selection: {
             selectedValue: 'xhigh',
             target: {
@@ -856,6 +861,76 @@ describe('oat project dispatch-ceiling resolve', () => {
               model: 'gpt-5.6-terra',
               effort: 'xhigh',
               crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('dispatches reviewer codex matrix targets to reviewer materialized roles', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providers: {
+        codex: {
+          value: 'xhigh',
+          dispatchArgs: {
+            variant: 'oat-reviewer-gpt-5-6-sol-xhigh',
+          },
+          modelAxis: 'selected:gpt-5.6-sol',
+          effortAxis: 'selected:xhigh',
+          selection: {
+            role: 'reviewer',
+            selectedValue: 'xhigh',
+            target: {
+              harness: 'codex',
+              model: 'gpt-5.6-sol',
+              effort: 'xhigh',
             },
           },
         },
@@ -1533,7 +1608,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-reviewer-high' },
+            dispatchArgs: null,
           },
         },
       });
@@ -1562,7 +1637,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           codex: {
             value: 'xhigh',
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               role: 'implementer',
               preferredValue: 'medium',
@@ -1599,7 +1674,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         value: 'medium',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               role: 'implementer',
               preferredValue: 'xhigh',
@@ -1769,7 +1844,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-reviewer-xhigh' },
+            dispatchArgs: null,
             selection: {
               role: 'reviewer',
               preferredValue: 'medium',
@@ -1823,8 +1898,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           codex: {
             value: null,
-            mode: 'enforced',
-            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            mode: 'advisory',
+            dispatchArgs: null,
             selection: {
               role: 'implementer',
               preferredValue: 'xhigh',
@@ -1867,9 +1942,9 @@ describe('oat project dispatch-ceiling resolve', () => {
         preset: 'uncapped',
         providers: {
           codex: {
-            mode: 'enforced',
+            mode: 'advisory',
             mechanism: 'pinned-variant',
-            dispatchArgs: { variant: 'oat-phase-implementer-high' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'high',
               selectedValue: 'high',
@@ -1913,7 +1988,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         policy: 'legacy-ceiling',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'xhigh',
               selectedValue: 'medium',
@@ -1957,7 +2032,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         policy: 'legacy-ceiling',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'xhigh',
               selectedValue: 'medium',
@@ -2005,7 +2080,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         preset: 'uncapped',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'xhigh',
               selectedValue: 'xhigh',

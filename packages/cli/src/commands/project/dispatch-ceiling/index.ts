@@ -71,6 +71,8 @@ interface ProviderResolution {
   mode: DispatchCeilingMode;
   mechanism: EnforcementMechanism;
   dispatchArgs: CeilingDispatchArgs;
+  modelAxis: string;
+  effortAxis: string;
   verifyOnDispatch: boolean;
   cellSource: DispatchCeilingSource | null;
   target: ResolvedDispatchRouteTarget | null;
@@ -1219,6 +1221,8 @@ function buildProviderResolution(
       mode: adapter.supportsCeiling ? 'advisory' : 'unsupported',
       mechanism: adapter.mechanism,
       dispatchArgs: null,
+      modelAxis: 'unresolved',
+      effortAxis: provider === 'codex' ? 'provider-default' : 'not-applicable',
       verifyOnDispatch: false,
       cellSource: null,
       target: null,
@@ -1245,6 +1249,7 @@ function buildProviderResolution(
     dispatchValue && !isCrossHarness
       ? adapter.compileToDispatchArgs(dispatchValue, role, {
           orchestratorTier,
+          target: selection.target,
         })
       : null;
 
@@ -1262,10 +1267,27 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
+    modelAxis:
+      selection.target?.model && dispatchArgs
+        ? `selected:${selection.target.model}`
+        : selection.selectionMode === 'inherit-default'
+          ? 'inherited'
+          : 'unresolved',
+    effortAxis:
+      provider === 'codex'
+        ? selection.target?.effort && dispatchArgs
+          ? `selected:${selection.target.effort}`
+          : selection.selectionMode === 'inherit-default'
+            ? 'provider-default'
+            : dispatchValue
+              ? `selected:${dispatchValue}`
+              : 'unresolved'
+        : 'not-applicable',
     verifyOnDispatch:
       dispatchValue && !isCrossHarness
         ? adapter.verifyOnDispatch(dispatchValue, {
             orchestratorTier,
+            target: selection.target,
           })
         : false,
     cellSource: policy.cellSource,

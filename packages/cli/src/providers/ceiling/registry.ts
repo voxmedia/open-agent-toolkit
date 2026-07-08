@@ -2,6 +2,7 @@ import {
   VALID_CLAUDE_DISPATCH_CEILINGS,
   VALID_CODEX_DISPATCH_CEILINGS,
 } from '@config/oat-config';
+import { buildCodexMaterializedRoleName } from '@providers/codex/codec/materialize';
 
 /**
  * Provider ceiling adapter registry.
@@ -13,11 +14,9 @@ import {
  * ceiling intent with these adapters to decide enforced/advisory/unsupported and
  * to produce concrete dispatch args — skills never re-implement this logic.
  *
- * Codex enforces via sync-time pinned role variants
- * (`oat-phase-implementer-<effort>` / `oat-reviewer-<effort>`); the adapter only
- * *consumes* those existing names and never generates new variant files. Claude
- * enforces via the per-call Task `model` argument (no variant files). Every other
- * provider is advisory by default.
+ * Codex enforces via sync-time materialized role variants selected from matrix
+ * model+effort targets. Claude enforces via the per-call Task `model` argument
+ * (no variant files). Every other provider is advisory by default.
  */
 
 export type EnforcementMechanism = 'pinned-variant' | 'model-arg' | 'none';
@@ -27,6 +26,10 @@ export type CeilingRole = 'implementer' | 'reviewer';
 export interface CeilingCompileContext {
   /** The orchestrator's own tier, used to detect above-orchestrator upgrades. */
   orchestratorTier?: string;
+  target?: {
+    model?: string;
+    effort?: string;
+  } | null;
 }
 
 export type CeilingDispatchArgs =
@@ -56,7 +59,7 @@ export interface ProviderCeilingAdapter {
   verifyOnDispatch(value: string, ctx: CeilingCompileContext): boolean;
 }
 
-/** Codex pinned-variant base role names (must match sync-extension output). */
+/** Codex materialized-role base names (must match sync-extension output). */
 const CODEX_IMPLEMENTER_ROLE = 'oat-phase-implementer';
 const CODEX_REVIEWER_ROLE = 'oat-reviewer';
 
@@ -73,16 +76,26 @@ const codexAdapter: ProviderCeilingAdapter = {
   supportsCeiling: true,
   validValues: [...VALID_CODEX_DISPATCH_CEILINGS],
   mechanism: 'pinned-variant',
-  compileToDispatchArgs(value, role) {
+  compileToDispatchArgs(value, role, ctx) {
     if (!VALID_CODEX_DISPATCH_CEILINGS.includes(value as never)) {
+      return null;
+    }
+    const target = ctx.target;
+    if (!target?.model || !target.effort) {
       return null;
     }
     const baseRole =
       role === 'reviewer' ? CODEX_REVIEWER_ROLE : CODEX_IMPLEMENTER_ROLE;
-    return { variant: `${baseRole}-${value}` };
+    return {
+      variant: buildCodexMaterializedRoleName({
+        agentName: baseRole,
+        model: target.model,
+        effort: target.effort,
+      }),
+    };
   },
-  // Codex enforces via effort variants, not model tier; there is no
-  // above-orchestrator upgrade path to verify.
+  // Codex enforces via materialized model+effort roles, not model tier; there
+  // is no above-orchestrator upgrade path to verify.
   verifyOnDispatch() {
     return false;
   },
