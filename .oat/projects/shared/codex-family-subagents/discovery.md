@@ -57,6 +57,17 @@ defaults`.
   `.cursor/agents/model-inherit-probe.md` with `model: inherit` produced Task
   calls with `model: "composer-2.5"`. The inherit probe had transient subagent
   teardown noise, but returned the expected probe output after retry.
+- Follow-up Cursor CLI smoke test confirmed dispatch-time model override works
+  without materializing model-specific subagent files. With parent
+  `--model composer-2.5`, `.cursor/agents/no-model-probe.md` with no `model`
+  field successfully launched with Task args `model: "gpt-5.3-codex"`, and
+  `.cursor/agents/inherit-model-probe.md` with `model: inherit` also launched
+  with Task args `model: "gpt-5.3-codex"`.
+- Cursor's Task model allow-list for subagents is narrower than
+  `cursor-agent models`: `gpt-5.3-codex-low` was visible in the general model
+  list but rejected as an invalid subagent model; the error said the Task
+  `model` parameter is optional and omitted means the subagent uses the parent
+  agent's model.
 
 ## Clarifying Questions
 
@@ -107,10 +118,10 @@ generated surface remains manageable.
 **Description:** Keep dispatch policy and sparse matrices as the source of
 truth for abstract rungs and concrete model-family choices, but teach the Codex
 sync/dispatch layer to materialize concrete pinned variants when a Codex route
-target requires model-plus-effort controls. Cursor should materialize
-`.cursor/agents` markdown files with explicit `model` frontmatter for
-cross-model subagents, using `model: inherit` only when host/default behavior is
-intended.
+target requires model-plus-effort controls. Cursor can keep generic
+`.cursor/agents` markdown files and pass concrete model selection through the
+Task tool's dispatch-time `model` argument; `model` frontmatter remains useful
+as a default/fallback, not as the required cross-model mechanism.
 
 **When this is the right choice:** Best when OAT needs deterministic Codex
 behavior now and still wants model-family choices to live in the provider-neutral
@@ -138,8 +149,8 @@ Codex per-spawn controls.
 **Pros:**
 
 - Aligns with `multi-family-dispatch`.
-- Lets Cursor stay model-frontmatter/model-argument based instead of needing
-  pinned role TOML.
+- Lets Cursor stay dispatch-argument based instead of needing generated
+  model-specific agent files.
 - Keeps policy rungs separate from model IDs.
 
 **Cons:**
@@ -180,9 +191,10 @@ do not model `ultra` as effort unless Codex exposes it that way.
    behavior over stale assumptions.
 3. **CLI Surface:** Use the repo-local CLI for current OAT behavior; global
    `oat` is stale in this checkout.
-4. **Cursor Subagents:** Generated `.cursor/agents` files must include `model`
-   frontmatter when OAT needs a concrete Cursor model; omitting it or using
-   `inherit` intentionally means "use the parent agent model."
+4. **Cursor Subagents:** Cursor can use existing generic subagent files and
+   pass a non-inherited model through the Task tool's `model` argument.
+   Materialized model-specific `.cursor/agents` files are not required for
+   dispatch-time model selection.
 
 ## Constraints
 
@@ -191,8 +203,9 @@ do not model `ultra` as effort unless Codex exposes it that way.
 - Dispatch policy semantics from the archived projects must remain intact:
   capped managed, managed uncapped, and inherit/default are distinct.
 - Cursor support should use the existing markdown-agent/provider-sync path where
-  possible, and concrete model selection should be represented in `.cursor/agents`
-  frontmatter when OAT wants cross-model subagents.
+  possible. Concrete model selection should be passed at Task dispatch time when
+  OAT controls the subagent invocation; model frontmatter is a default/fallback
+  mechanism.
 - Generated provider files must be managed by `oat sync` and not treated as
   custom stray agents.
 - Public package lockstep/version/release policy applies if bundled provider
@@ -234,18 +247,21 @@ do not model `ultra` as effort unless Codex exposes it that way.
   effort-only with model family selected separately?
 - **`max` Support:** Should implementation add `max` immediately behind a
   validation gate, or wait until Codex locally advertises GPT-5.6 support?
-- **Cursor Agent Shape:** Resolved for the model axis: generated
-  `.cursor/agents/` markdown should include Cursor's `model` frontmatter for
-  concrete model selection. Still open: whether OAT should also generate
-  `readonly` and `is_background` from canonical/OAT role metadata.
+- **Cursor Agent Shape:** Resolved for the model axis: materialized
+  model-specific `.cursor/agents/` files are unnecessary when OAT can pass the
+  Task tool `model` argument. Still open: whether OAT should generate `model`
+  frontmatter for default/fallback behavior, and whether `readonly` and
+  `is_background` should be generated from canonical/OAT role metadata.
 
 ## Assumptions
 
 - `model = "<slug>"` in Codex role TOML is supported by the current codec path,
   but dispatch/runtime behavior still needs live verification.
-- Cursor subagent model selection is controlled by the subagent file's `model`
-  frontmatter when available. Cursor may fall back to a compatible model when
-  the configured model is blocked, unavailable, or requires Max Mode that is not
+- Cursor subagent model selection can be controlled either by Task dispatch
+  args or by the subagent file's `model` frontmatter. Dispatch-time Task args
+  are sufficient for cross-model routing when the selected model is in Cursor's
+  subagent allow-list. Cursor may fall back to a compatible model when the
+  configured model is blocked, unavailable, or requires Max Mode that is not
   enabled.
 - OpenAI model IDs from the preview material are the right initial slugs:
   `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`.
