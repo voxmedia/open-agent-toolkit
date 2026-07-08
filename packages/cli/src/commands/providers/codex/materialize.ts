@@ -1,4 +1,5 @@
-import { isAbsolute, join, resolve } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 
 import { parseCanonicalAgentFile } from '@agents/canonical';
 import { buildCommandContext, type CommandContext } from '@app/command-context';
@@ -8,7 +9,10 @@ import type {
 } from '@commands/providers/providers.types';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/index';
+import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { mergeCodexConfigForRole } from '@providers/codex/codec/config-merge';
+import type { CodexRoleExport } from '@providers/codex/codec/export-to-codex';
 import { materializeCodexRole } from '@providers/codex/codec/materialize';
 import type { ConcreteScope } from '@shared/types';
 import { Command, Option } from 'commander';
@@ -19,6 +23,11 @@ interface CodexMaterializeOptions {
   roleName?: string;
   agentPath?: string;
   scope: ConcreteScope;
+}
+
+interface CodexMaterializePlan {
+  result: CodexMaterializeResult;
+  role: CodexRoleExport;
 }
 
 function createDependencies(): ProvidersCodexMaterializeDependencies {
@@ -77,12 +86,12 @@ export function formatCodexMaterializeResult(
   ].join('\n');
 }
 
-async function buildCodexMaterializeResult(
+async function buildCodexMaterializePlan(
   agentName: string,
   options: CodexMaterializeOptions,
   context: CommandContext,
   dependencies: ProvidersCodexMaterializeDependencies,
-): Promise<CodexMaterializeResult> {
+): Promise<CodexMaterializePlan> {
   const model = requireOption(options.model, '--model');
   const effort = requireOption(options.effort, '--effort');
   const scope = options.scope;
@@ -99,16 +108,48 @@ async function buildCodexMaterializeResult(
   const configPath = join(scopeRoot, '.codex', 'config.toml');
 
   return {
-    status: 'preview',
-    dryRun: true,
-    scope,
-    agentPath,
-    roleName: role.roleName,
-    rolePath,
-    configPath,
-    configFile: role.configFile,
-    tomlPreview: role.content,
+    role,
+    result: {
+      status: context.dryRun ? 'preview' : 'written',
+      dryRun: context.dryRun,
+      scope,
+      agentPath,
+      roleName: role.roleName,
+      rolePath,
+      configPath,
+      configFile: role.configFile,
+      tomlPreview: role.content,
+    },
   };
+}
+
+async function readOptionalFile(filePath: string): Promise<string | null> {
+  if (!(await fileExists(filePath))) {
+    return null;
+  }
+
+  return readFile(filePath, 'utf8');
+}
+
+async function applyCodexMaterializePlan({
+  result,
+  role,
+}: CodexMaterializePlan): Promise<void> {
+  await ensureDir(dirname(result.rolePath));
+  await writeFile(result.rolePath, role.content, 'utf8');
+
+  const existingConfig = await readOptionalFile(result.configPath);
+  const mergedConfig = mergeCodexConfigForRole({
+    existingContent: existingConfig,
+    role: {
+      roleName: role.roleName,
+      description: role.description,
+      configFile: role.configFile,
+    },
+  });
+
+  await ensureDir(dirname(result.configPath));
+  await writeFile(result.configPath, mergedConfig.mergedContent, 'utf8');
 }
 
 async function runCodexMaterializeCommand(
@@ -118,19 +159,18 @@ async function runCodexMaterializeCommand(
   dependencies: ProvidersCodexMaterializeDependencies,
 ): Promise<void> {
   try {
-    if (!context.dryRun) {
-      throw new CliError(
-        'Writing materialized Codex roles is not implemented yet. Pass --dry-run to preview.',
-      );
-    }
-
-    const result = await buildCodexMaterializeResult(
+    const plan = await buildCodexMaterializePlan(
       agentName,
       options,
       context,
       dependencies,
     );
 
+    if (!context.dryRun) {
+      await applyCodexMaterializePlan(plan);
+    }
+
+    const { result } = plan;
     if (context.json) {
       context.logger.json(result);
     } else {

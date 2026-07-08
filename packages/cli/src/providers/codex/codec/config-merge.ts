@@ -15,6 +15,12 @@ export interface CodexConfigMergeArgs {
   staleManagedRoles?: string[];
 }
 
+export interface CodexSingleRoleConfigMergeArgs {
+  existingContent: string | null;
+  role: CodexManagedRoleConfig;
+  staleManagedRoles?: string[];
+}
+
 export interface CodexConfigMergeResult {
   mergedContent: string;
   changed: boolean;
@@ -94,4 +100,16 @@ export function mergeCodexConfig({
     changed,
     removedRoles,
   };
+}
+
+export function mergeCodexConfigForRole({
+  existingContent,
+  role,
+  staleManagedRoles = [],
+}: CodexSingleRoleConfigMergeArgs): CodexConfigMergeResult {
+  return mergeCodexConfig({
+    existingContent,
+    desiredRoles: [role],
+    staleManagedRoles,
+  });
 }

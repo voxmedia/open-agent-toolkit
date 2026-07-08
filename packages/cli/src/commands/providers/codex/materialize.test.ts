@@ -7,6 +7,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import TOML from '@iarna/toml';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -220,5 +221,75 @@ describe('oat providers codex materialize', () => {
 
     expect(process.exitCode).toBe(1);
     expect(secondHarness.capture.error[0]).toContain('--effort');
+  });
+
+  it('writes materialized role files and merges Codex config idempotently', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-'));
+    tempDirs.push(root);
+    await writeAgent(root, 'oat-reviewer');
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      `title = "Custom"\n[features]\ncustom = true\n[agents.custom]\ndescription = "Keep me"\nconfig_file = "agents/custom.toml"\n`,
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+    const commandArgs = [
+      'oat-reviewer',
+      '--model',
+      'gpt-5.6-sol',
+      '--effort',
+      'xhigh',
+    ];
+
+    await runCommand(command, {
+      globalArgs: ['--cwd', root, '--json'],
+      commandArgs,
+    });
+
+    expect(process.exitCode).toBe(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      dryRun: false,
+      status: 'written',
+      roleName: 'oat-reviewer-gpt-5-6-sol-xhigh',
+    });
+
+    const rolePath = join(
+      root,
+      '.codex',
+      'agents',
+      'oat-reviewer-gpt-5-6-sol-xhigh.toml',
+    );
+    const configPath = join(root, '.codex', 'config.toml');
+    const roleContent = await readFile(rolePath, 'utf8');
+    const configContent = await readFile(configPath, 'utf8');
+    const parsedConfig = TOML.parse(configContent) as Record<string, unknown>;
+    const features = parsedConfig.features as Record<string, unknown>;
+    const agents = parsedConfig.agents as Record<string, unknown>;
+    const materializedAgent = agents[
+      'oat-reviewer-gpt-5-6-sol-xhigh'
+    ] as Record<string, unknown>;
+
+    expect(roleContent).toContain('model = "gpt-5.6-sol"');
+    expect(roleContent).toContain('model_reasoning_effort = "xhigh"');
+    expect(parsedConfig.title).toBe('Custom');
+    expect(features.custom).toBe(true);
+    expect(features.multi_agent).toBe(true);
+    expect(agents.custom).toBeDefined();
+    expect(materializedAgent.description).toBe('Reviewer');
+    expect(materializedAgent.config_file).toBe(
+      'agents/oat-reviewer-gpt-5-6-sol-xhigh.toml',
+    );
+
+    process.exitCode = undefined;
+    const secondHarness = createHarness({ cwd: root });
+    await runCommand(secondHarness.command, {
+      globalArgs: ['--cwd', root, '--json'],
+      commandArgs,
+    });
+
+    expect(process.exitCode).toBe(0);
+    expect(await readFile(rolePath, 'utf8')).toBe(roleContent);
+    expect(await readFile(configPath, 'utf8')).toBe(configContent);
   });
 });
