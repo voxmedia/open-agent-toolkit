@@ -1,7 +1,12 @@
+import { readFile as readFileDefault } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  confirmAction,
+  type PromptContext,
+} from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { compileDispatchCeilingPreset } from '@config/dispatch-ceiling-preset';
 import {
@@ -10,6 +15,10 @@ import {
   type OatToolsConfig,
   type OatWorkflowConfig,
   type UserConfig,
+  type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchMatrixTier,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRouteTarget,
   type WorkflowDispatchCeilingPreset,
   type WorkflowDispatchPolicyMode,
   type WorkflowManagedDispatchPolicy,
@@ -25,10 +34,33 @@ import {
   type ResolvedConfig,
   type ResolvedConfigSource,
 } from '@config/resolve';
+import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
+import {
+  validateMatrixCell,
+  type MatrixCellAvailability,
+  type ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import { Command } from 'commander';
 
 import { createConfigDumpCommand } from './dump';
+
+const DISPATCH_CEILING_PROVIDER_KEY_PREFIX =
+  'workflow.dispatchCeiling.providers.';
+const DISPATCH_MATRIX_TIERS = [
+  'economy',
+  'balanced',
+  'high',
+  'frontier',
+] as const satisfies readonly WorkflowDispatchMatrixTier[];
+
+type WorkflowDispatchProviderConfigKey =
+  `${typeof DISPATCH_CEILING_PROVIDER_KEY_PREFIX}${string}`;
+
+interface DispatchCeilingProviderConfigKeyParts {
+  provider: string;
+  tier?: WorkflowDispatchMatrixTier;
+}
 
 type ConfigKey =
   | 'activeIdea'
@@ -67,6 +99,7 @@ type ConfigKey =
   | 'workflow.dispatchCeiling.preset'
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
+  | WorkflowDispatchProviderConfigKey
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
   | 'workflow.reviewExecutionModel'
@@ -113,6 +146,14 @@ interface ConfigCommandDependencies {
     userConfigDir: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<ResolvedConfig>;
+  resolveAssetsRoot: () => Promise<string>;
+  readFile: (path: string) => Promise<string>;
+  confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
+  validateMatrixCell: (
+    provider: string,
+    value: string,
+    options: ValidateMatrixCellOptions,
+  ) => Promise<MatrixCellAvailability>;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -698,11 +739,73 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   writeUserConfig,
   resolveProjectsRoot,
   resolveEffectiveConfig,
+  resolveAssetsRoot,
+  readFile: (path) => readFileDefault(path, 'utf8'),
+  confirmAction,
+  validateMatrixCell,
   processEnv: process.env,
 };
 
 function isConfigKey(value: string): value is ConfigKey {
-  return KEY_ORDER.includes(value as ConfigKey);
+  return (
+    KEY_ORDER.includes(value as ConfigKey) ||
+    isDispatchCeilingProviderKey(value)
+  );
+}
+
+function isDispatchCeilingProviderKey(
+  value: string,
+): value is WorkflowDispatchProviderConfigKey {
+  return (
+    value.startsWith(DISPATCH_CEILING_PROVIDER_KEY_PREFIX) &&
+    value.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length).trim().length > 0
+  );
+}
+
+function isDispatchMatrixTier(
+  value: string,
+): value is WorkflowDispatchMatrixTier {
+  return (DISPATCH_MATRIX_TIERS as readonly string[]).includes(value);
+}
+
+function parseDispatchCeilingProviderConfigKey(
+  key: WorkflowDispatchProviderConfigKey,
+): DispatchCeilingProviderConfigKeyParts {
+  const suffix = key.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length).trim();
+  const parts = suffix.split('.').map((part) => part.trim());
+  const invalidMessage = `Invalid config key ${key}: expected workflow.dispatchCeiling.providers.<provider> or workflow.dispatchCeiling.providers.<provider>.<tier> with tier one of ${DISPATCH_MATRIX_TIERS.join(
+    ' | ',
+  )}.`;
+
+  if (parts.some((part) => part.length === 0)) {
+    throw new Error(invalidMessage);
+  }
+
+  if (parts.length === 1) {
+    const provider = parts[0];
+    if (!provider) {
+      throw new Error(invalidMessage);
+    }
+    return { provider };
+  }
+
+  const tier = parts[parts.length - 1];
+  if (!tier || !isDispatchMatrixTier(tier)) {
+    throw new Error(invalidMessage);
+  }
+
+  const provider = parts.slice(0, -1).join('.').trim();
+  if (!provider) {
+    throw new Error(invalidMessage);
+  }
+
+  return { provider, tier };
+}
+
+function providerNameFromConfigKey(
+  key: WorkflowDispatchProviderConfigKey,
+): string {
+  return parseDispatchCeilingProviderConfigKey(key).provider;
 }
 
 function normalizeSharedRoot(value: string): string {
@@ -740,6 +843,18 @@ const WORKFLOW_ENUM_VALUES = {
     'fable',
   ],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
+
+function closedDispatchProviderValues(
+  provider: string,
+): readonly string[] | undefined {
+  if (provider === 'codex') {
+    return WORKFLOW_ENUM_VALUES['workflow.dispatchCeiling.providers.codex'];
+  }
+  if (provider === 'claude') {
+    return WORKFLOW_ENUM_VALUES['workflow.dispatchCeiling.providers.claude'];
+  }
+  return undefined;
+}
 
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
   'workflow.archiveOnComplete',
@@ -854,7 +969,162 @@ function parseWorkflowValue(
     return normalized;
   }
 
+  if (isDispatchCeilingProviderKey(key)) {
+    const { provider } = parseDispatchCeilingProviderConfigKey(key);
+    const normalized = rawValue.trim();
+    if (normalized.length === 0) {
+      throw new Error(
+        `Invalid value for ${key}: provider values cannot be empty`,
+      );
+    }
+    const closedValues = closedDispatchProviderValues(provider);
+    if (closedValues && !closedValues.includes(normalized)) {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${closedValues.join(' | ')}, got '${rawValue}'`,
+      );
+    }
+    return normalized;
+  }
+
   throw new Error(`Unknown workflow key: ${key}`);
+}
+
+function dispatchProviderAvailabilityWarning(
+  key: WorkflowDispatchProviderConfigKey,
+  value: string,
+  availability: MatrixCellAvailability,
+): string | null {
+  return matrixCellAvailabilityWarning(key, value, availability);
+}
+
+const DISPATCH_MATRIX_RECOMMENDATION_ASSET = join(
+  'config',
+  'dispatch-matrix-recommendation.json',
+);
+
+interface DispatchMatrixRecommendation {
+  version: string;
+  providers: Record<string, WorkflowDispatchProviderValue>;
+}
+
+interface DispatchMatrixCellRef {
+  provider: string;
+  value: string;
+  path: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function matrixCellAvailabilityWarning(
+  path: string,
+  value: string,
+  availability: MatrixCellAvailability,
+): string | null {
+  if (availability === 'valid') {
+    return null;
+  }
+
+  if (availability === 'unknown-value') {
+    return `${path} value '${value}' was not recognized by the provider availability oracle; saving anyway.`;
+  }
+
+  return `${path} value '${value}' could not be validated because the provider availability oracle is unavailable; saving anyway.`;
+}
+
+function parseDispatchMatrixRecommendation(
+  raw: string,
+): DispatchMatrixRecommendation {
+  const parsed = JSON.parse(raw) as unknown;
+  if (!isRecord(parsed)) {
+    throw new Error('Dispatch matrix recommendation asset must be an object.');
+  }
+
+  const version =
+    typeof parsed.version === 'string' ? parsed.version.trim() : '';
+  if (!version) {
+    throw new Error(
+      'Dispatch matrix recommendation asset is missing a version.',
+    );
+  }
+
+  if (!isRecord(parsed.providers)) {
+    throw new Error(
+      'Dispatch matrix recommendation asset is missing providers.',
+    );
+  }
+
+  return {
+    version,
+    providers: parsed.providers as Record<
+      string,
+      WorkflowDispatchProviderValue
+    >,
+  };
+}
+
+function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
+  return isRecord(entry);
+}
+
+function addDispatchMatrixCellRefs(
+  refs: DispatchMatrixCellRef[],
+  provider: string,
+  path: string,
+  cell: WorkflowDispatchMatrixCell,
+): void {
+  if (typeof cell === 'string') {
+    refs.push({ provider, value: cell, path });
+    return;
+  }
+
+  for (const [index, entry] of cell.entries()) {
+    const entryPath = `${path}[${index}]`;
+    if (typeof entry === 'string') {
+      refs.push({ provider, value: entry, path: entryPath });
+      continue;
+    }
+
+    if (!isRouteTarget(entry)) {
+      continue;
+    }
+
+    if (entry.model) {
+      refs.push({ provider, value: entry.model, path: `${entryPath}.model` });
+    }
+    if (entry.effort) {
+      refs.push({ provider, value: entry.effort, path: `${entryPath}.effort` });
+    }
+  }
+}
+
+function collectDispatchMatrixCellRefs(
+  providers: Record<string, WorkflowDispatchProviderValue>,
+): DispatchMatrixCellRef[] {
+  const refs: DispatchMatrixCellRef[] = [];
+
+  for (const [provider, providerValue] of Object.entries(providers)) {
+    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
+    if (typeof providerValue === 'string') {
+      refs.push({ provider, value: providerValue, path: providerPath });
+      continue;
+    }
+
+    for (const [tier, cell] of Object.entries(providerValue)) {
+      if (cell === undefined) {
+        continue;
+      }
+      addDispatchMatrixCellRefs(
+        refs,
+        provider,
+        `${providerPath}.${tier}`,
+        cell,
+      );
+    }
+  }
+
+  return refs;
 }
 
 function applyWorkflowValue(
@@ -917,15 +1187,40 @@ function applyWorkflowValue(
     } as OatWorkflowConfig;
   }
 
-  if (subKey.startsWith('dispatchCeiling.providers.')) {
-    const providerKey = subKey.slice('dispatchCeiling.providers.'.length);
+  if (isDispatchCeilingProviderKey(key)) {
+    const { provider, tier } = parseDispatchCeilingProviderConfigKey(key);
+    const providers = workflow.dispatchCeiling?.providers ?? {};
+    if (tier) {
+      const existingProviderValue = providers[provider];
+      const existingTierMap =
+        existingProviderValue &&
+        typeof existingProviderValue === 'object' &&
+        !Array.isArray(existingProviderValue)
+          ? existingProviderValue
+          : {};
+
+      return {
+        ...workflow,
+        dispatchCeiling: {
+          ...workflow.dispatchCeiling,
+          providers: {
+            ...providers,
+            [provider]: {
+              ...existingTierMap,
+              [tier]: value as string,
+            },
+          },
+        },
+      } as OatWorkflowConfig;
+    }
+
     return {
       ...workflow,
       dispatchCeiling: {
         ...workflow.dispatchCeiling,
         providers: {
-          ...workflow.dispatchCeiling?.providers,
-          [providerKey]: value,
+          ...providers,
+          [provider]: value,
         },
       },
     } as OatWorkflowConfig;
@@ -988,6 +1283,25 @@ async function getConfigValue(
   };
 }
 
+async function listConfigKeys(
+  repoRoot: string,
+  userConfigDir: string,
+  dependencies: ConfigCommandDependencies,
+): Promise<ConfigKey[]> {
+  const resolved = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    userConfigDir,
+    dependencies.processEnv,
+  );
+  const staticKeys = new Set<string>(KEY_ORDER);
+  const dynamicProviderKeys = Object.keys(resolved.resolved)
+    .filter(isDispatchCeilingProviderKey)
+    .filter((key) => !staticKeys.has(key))
+    .sort();
+
+  return [...KEY_ORDER, ...dynamicProviderKeys];
+}
+
 async function setConfigValue(
   repoRoot: string,
   userConfigDir: string,
@@ -995,6 +1309,7 @@ async function setConfigValue(
   rawValue: string,
   surface: ConfigSurface,
   dependencies: ConfigCommandDependencies,
+  warn: (message: string) => void,
 ): Promise<ConfigValue> {
   validateSurfaceForKey(key, surface);
 
@@ -1005,6 +1320,24 @@ async function setConfigValue(
     const parsedValue = parseWorkflowValue(key, rawValue);
     const displayValue =
       typeof parsedValue === 'boolean' ? String(parsedValue) : parsedValue;
+    if (typeof parsedValue === 'string' && isDispatchCeilingProviderKey(key)) {
+      const availability = await dependencies.validateMatrixCell(
+        providerNameFromConfigKey(key),
+        parsedValue,
+        {
+          cwd: repoRoot,
+          env: dependencies.processEnv,
+        },
+      );
+      const warning = dispatchProviderAvailabilityWarning(
+        key,
+        parsedValue,
+        availability,
+      );
+      if (warning) {
+        warn(warning);
+      }
+    }
 
     if (effectiveSurface === 'user') {
       const userConfig = await dependencies.readUserConfig(userConfigDir);
@@ -1221,6 +1554,214 @@ async function setConfigValue(
   };
 }
 
+interface AdoptDispatchMatrixOptions {
+  surface: ConfigSurface;
+  yes: boolean;
+}
+
+interface AdoptDispatchMatrixResult {
+  key: string;
+  value: string;
+  source: Exclude<ConfigSurface, 'auto'>;
+}
+
+function hasExistingDispatchMatrix(config: {
+  workflow?: OatWorkflowConfig;
+}): boolean {
+  const providers = config.workflow?.dispatchCeiling?.providers;
+  return providers !== undefined && Object.keys(providers).length > 0;
+}
+
+async function loadDispatchMatrixRecommendation(
+  dependencies: ConfigCommandDependencies,
+): Promise<DispatchMatrixRecommendation> {
+  const assetsRoot = await dependencies.resolveAssetsRoot();
+  const assetPath = join(assetsRoot, DISPATCH_MATRIX_RECOMMENDATION_ASSET);
+  return parseDispatchMatrixRecommendation(
+    await dependencies.readFile(assetPath),
+  );
+}
+
+async function validateRecommendationCells(
+  repoRoot: string,
+  recommendation: DispatchMatrixRecommendation,
+  dependencies: ConfigCommandDependencies,
+  warn: (message: string) => void,
+): Promise<void> {
+  for (const ref of collectDispatchMatrixCellRefs(recommendation.providers)) {
+    const closedValues = closedDispatchProviderValues(ref.provider);
+    if (closedValues && !closedValues.includes(ref.value)) {
+      throw new Error(
+        `Invalid value for ${ref.path}: expected one of ${closedValues.join(' | ')}, got '${ref.value}'`,
+      );
+    }
+
+    let availability: MatrixCellAvailability;
+    try {
+      availability = await dependencies.validateMatrixCell(
+        ref.provider,
+        ref.value,
+        {
+          cwd: repoRoot,
+          env: dependencies.processEnv,
+        },
+      );
+    } catch {
+      availability = 'unvalidated';
+    }
+
+    const warning = matrixCellAvailabilityWarning(
+      ref.path,
+      ref.value,
+      availability,
+    );
+    if (warning) {
+      warn(warning);
+    }
+  }
+}
+
+function applyDispatchMatrixRecommendation(
+  workflow: OatWorkflowConfig | undefined,
+  recommendation: DispatchMatrixRecommendation,
+): OatWorkflowConfig {
+  return {
+    ...(workflow ?? {}),
+    dispatchCeiling: {
+      ...workflow?.dispatchCeiling,
+      recommendationVersion: recommendation.version,
+      providers: recommendation.providers,
+    },
+  };
+}
+
+async function confirmDispatchMatrixOverwrite(
+  context: CommandContext,
+  dependencies: ConfigCommandDependencies,
+  source: Exclude<ConfigSurface, 'auto'>,
+  yes: boolean,
+): Promise<void> {
+  if (yes) {
+    return;
+  }
+
+  if (!context.interactive) {
+    throw new Error(
+      'Dispatch matrix already exists; rerun interactively or pass --yes to replace it.',
+    );
+  }
+
+  const shouldReplace = await dependencies.confirmAction(
+    `Replace existing dispatch matrix in ${source} config?`,
+    { interactive: context.interactive },
+  );
+  if (!shouldReplace) {
+    throw new Error(
+      'Dispatch matrix adoption cancelled; existing matrix unchanged.',
+    );
+  }
+}
+
+async function adoptDispatchMatrixRecommendation(
+  repoRoot: string,
+  userConfigDir: string,
+  options: AdoptDispatchMatrixOptions,
+  context: CommandContext,
+  dependencies: ConfigCommandDependencies,
+): Promise<AdoptDispatchMatrixResult> {
+  const source: Exclude<ConfigSurface, 'auto'> =
+    options.surface === 'auto' ? 'local' : options.surface;
+  const recommendation = await loadDispatchMatrixRecommendation(dependencies);
+
+  if (source === 'user') {
+    const userConfig = await dependencies.readUserConfig(userConfigDir);
+    if (hasExistingDispatchMatrix(userConfig)) {
+      await confirmDispatchMatrixOverwrite(
+        context,
+        dependencies,
+        source,
+        options.yes,
+      );
+    }
+    await validateRecommendationCells(
+      repoRoot,
+      recommendation,
+      dependencies,
+      context.logger.warn,
+    );
+    await dependencies.writeUserConfig(userConfigDir, {
+      ...userConfig,
+      workflow: applyDispatchMatrixRecommendation(
+        userConfig.workflow,
+        recommendation,
+      ),
+    });
+    return {
+      key: 'workflow.dispatchCeiling.providers',
+      value: recommendation.version,
+      source,
+    };
+  }
+
+  if (source === 'local') {
+    const localConfig = await dependencies.readOatLocalConfig(repoRoot);
+    if (hasExistingDispatchMatrix(localConfig)) {
+      await confirmDispatchMatrixOverwrite(
+        context,
+        dependencies,
+        source,
+        options.yes,
+      );
+    }
+    await validateRecommendationCells(
+      repoRoot,
+      recommendation,
+      dependencies,
+      context.logger.warn,
+    );
+    await dependencies.writeOatLocalConfig(repoRoot, {
+      ...localConfig,
+      workflow: applyDispatchMatrixRecommendation(
+        localConfig.workflow,
+        recommendation,
+      ),
+    });
+    return {
+      key: 'workflow.dispatchCeiling.providers',
+      value: recommendation.version,
+      source,
+    };
+  }
+
+  const sharedConfig = await dependencies.readOatConfig(repoRoot);
+  if (hasExistingDispatchMatrix(sharedConfig)) {
+    await confirmDispatchMatrixOverwrite(
+      context,
+      dependencies,
+      source,
+      options.yes,
+    );
+  }
+  await validateRecommendationCells(
+    repoRoot,
+    recommendation,
+    dependencies,
+    context.logger.warn,
+  );
+  await dependencies.writeOatConfig(repoRoot, {
+    ...sharedConfig,
+    workflow: applyDispatchMatrixRecommendation(
+      sharedConfig.workflow,
+      recommendation,
+    ),
+  });
+  return {
+    key: 'workflow.dispatchCeiling.providers',
+    value: recommendation.version,
+    source,
+  };
+}
+
 function formatList(values: ConfigValue[]): string {
   const keyWidth = Math.max(
     'Key'.length,
@@ -1359,6 +1900,7 @@ async function runSet(
       rawValue,
       surface,
       dependencies,
+      context.logger.warn,
     );
     if (context.json) {
       context.logger.json({
@@ -1380,6 +1922,49 @@ async function runSet(
   }
 }
 
+async function runAdopt(
+  templateArg: string,
+  options: AdoptDispatchMatrixOptions,
+  context: CommandContext,
+  dependencies: ConfigCommandDependencies,
+): Promise<void> {
+  try {
+    if (templateArg !== 'dispatch-matrix') {
+      throw new Error(`Unknown config adoption template: ${templateArg}`);
+    }
+
+    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
+    const result = await adoptDispatchMatrixRecommendation(
+      repoRoot,
+      userConfigDir,
+      options,
+      context,
+      dependencies,
+    );
+
+    if (context.json) {
+      context.logger.json({
+        status: 'ok',
+        ...result,
+      });
+    } else {
+      context.logger.info(
+        `Adopted dispatch matrix recommendation ${result.value} to ${result.source} config.`,
+      );
+    }
+    process.exitCode = 0;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (context.json) {
+      context.logger.json({ status: 'error', message });
+    } else {
+      context.logger.error(message);
+    }
+    process.exitCode = 1;
+  }
+}
+
 async function runList(
   context: CommandContext,
   dependencies: ConfigCommandDependencies,
@@ -1388,7 +1973,11 @@ async function runList(
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
     const values: ConfigValue[] = [];
-    for (const key of KEY_ORDER) {
+    for (const key of await listConfigKeys(
+      repoRoot,
+      userConfigDir,
+      dependencies,
+    )) {
       values.push(
         await getConfigValue(repoRoot, userConfigDir, key, dependencies),
       );
@@ -1512,6 +2101,68 @@ export function createConfigCommand(
               else if (options.local) surface = 'local';
               else if (options.user) surface = 'user';
               await runSet(key, value, surface, context, dependencies);
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              if (context.json) {
+                context.logger.json({ status: 'error', message });
+              } else {
+                context.logger.error(message);
+              }
+              process.exitCode = 1;
+            }
+          },
+        ),
+    )
+    .addCommand(
+      new Command('adopt')
+        .description('Adopt a bundled OAT config recommendation')
+        .argument('<template>', 'Recommendation template to adopt')
+        .option(
+          '--shared',
+          'Write to the shared repo config (.oat/config.json)',
+        )
+        .option(
+          '--local',
+          'Write to the repo-local config (.oat/config.local.json)',
+        )
+        .option('--user', 'Write to the user-level config (~/.oat/config.json)')
+        .option('--yes', 'Replace an existing adopted matrix without prompting')
+        .action(
+          async (
+            template: string,
+            options: {
+              shared?: boolean;
+              local?: boolean;
+              user?: boolean;
+              yes?: boolean;
+            },
+            command: Command,
+          ) => {
+            const context = dependencies.buildCommandContext(
+              readGlobalOptions(command),
+            );
+            try {
+              const flagsPresent = [
+                options.shared,
+                options.local,
+                options.user,
+              ].filter(Boolean).length;
+              if (flagsPresent > 1) {
+                throw new Error(
+                  '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
+                );
+              }
+              let surface: ConfigSurface = 'auto';
+              if (options.shared) surface = 'shared';
+              else if (options.local) surface = 'local';
+              else if (options.user) surface = 'user';
+              await runAdopt(
+                template,
+                { surface, yes: options.yes === true },
+                context,
+                dependencies,
+              );
             } catch (error) {
               const message =
                 error instanceof Error ? error.message : String(error);

@@ -40,6 +40,17 @@ import {
 } from '@config/resolve';
 import { dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, resolveProjectRoot } from '@fs/paths';
+import {
+  classifyModelFamily,
+  type ModelFamily,
+} from '@providers/identity/family';
+import {
+  resolveIdentityConfidence,
+  type IdentityConfidence,
+  type IdentityProvenance,
+  type IdentityRecord,
+} from '@providers/identity/provenance';
+import { parseDispatchStamps } from '@providers/identity/stamp';
 import { Command } from 'commander';
 
 import {
@@ -104,6 +115,7 @@ interface CrossProviderExecOptions {
   target?: string;
   avoid?: string;
   currentRuntime?: string;
+  producerIdentity?: string;
 }
 
 interface ReviewGateOptions extends CrossProviderExecOptions {
@@ -118,13 +130,20 @@ interface ProcessRunOptions {
   env: NodeJS.ProcessEnv;
   purpose: 'host-detection' | 'availability' | 'execute';
   stdio: 'ignore' | 'inherit';
+  timeoutMs: number;
 }
 
 interface ProcessRunResult {
   exitCode: number;
+  timedOut?: boolean;
 }
 
-type CrossProviderAvoid = 'same-runtime' | 'none';
+type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
+type GateDiversityAchieved =
+  | 'different-family'
+  | 'degraded-to-different-slug'
+  | 'same-family - no diverse target available'
+  | 'unknown-producer';
 type GateWriteLayer = 'shared' | 'local' | 'user';
 type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
 type GateConfigContainer = OatConfig | OatLocalConfig | UserConfig;
@@ -133,6 +152,40 @@ type GateConfigMutation = (config: GateConfigContainer) => GateConfigContainer;
 export interface SelectedExecTarget {
   id: string;
   target: ExecTarget;
+  model?: string;
+  family: ModelFamily;
+  diversity?: GateDiversityMetadata;
+  noDiverseFamilyFallback?: boolean;
+}
+
+interface GateProducerIdentity {
+  value: string;
+  provenance: IdentityProvenance;
+  confidence: IdentityConfidence;
+  family: ModelFamily;
+  avoidFamilies: ModelFamily[];
+  diversityClaimable: boolean;
+  source: 'flag' | 'stamp' | 'unknown';
+}
+
+interface GateDiversityMetadata {
+  avoid: CrossProviderAvoid;
+  achieved: GateDiversityAchieved;
+  producer: {
+    value: string;
+    provenance: IdentityProvenance;
+    confidence: IdentityConfidence;
+    family: ModelFamily;
+    source: GateProducerIdentity['source'];
+    avoidFamilies: ModelFamily[];
+  };
+  reviewer: {
+    target: string;
+    runtime: string;
+    family: ModelFamily;
+    model?: string;
+  };
+  warning?: string;
 }
 
 interface ReviewGateArtifactCandidate extends LatestReview {
@@ -162,6 +215,7 @@ const VALID_WRITE_LAYERS: readonly GateWriteLayer[] = [
   'user',
 ];
 const VALID_CROSS_PROVIDER_AVOIDS: readonly CrossProviderAvoid[] = [
+  'same-family',
   'same-runtime',
   'none',
 ];
@@ -171,8 +225,16 @@ const VALID_REVIEW_GATE_THRESHOLDS: readonly ReviewGateThreshold[] = [
   'medium',
   'minor',
 ];
+const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
+  'declared',
+  'observed',
+  'inferred',
+  'unknown',
+];
 const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
+const GATE_CHECK_TIMEOUT_MS = 5_000;
+const GATE_EXEC_TIMEOUT_MS = 10 * 60 * 1_000;
 
 function reviewGateProjectContext(projectPath: string): string {
   return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
@@ -191,15 +253,39 @@ async function runChildProcess(
   options: ProcessRunOptions,
 ): Promise<ProcessRunResult> {
   return new Promise((resolve, reject) => {
+    let timedOut = false;
+    let killTimeout: NodeJS.Timeout | null = null;
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env,
       stdio: options.stdio,
     });
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+      killTimeout = setTimeout(() => {
+        child.kill('SIGKILL');
+      }, 5_000);
+      killTimeout.unref();
+    }, options.timeoutMs);
+    timeout.unref();
 
-    child.on('error', reject);
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      if (killTimeout) {
+        clearTimeout(killTimeout);
+      }
+      reject(error);
+    });
     child.on('close', (code) => {
-      resolve({ exitCode: code ?? 1 });
+      clearTimeout(timeout);
+      if (killTimeout) {
+        clearTimeout(killTimeout);
+      }
+      resolve({
+        exitCode: timedOut ? 124 : (code ?? 1),
+        ...(timedOut ? { timedOut: true } : {}),
+      });
     });
   });
 }
@@ -260,9 +346,11 @@ function parseLayer(value: string | undefined): GateWriteLayer {
 function parseCrossProviderAvoid(
   value: string | undefined,
 ): CrossProviderAvoid {
-  const avoid = value?.trim() || 'same-runtime';
+  const avoid = value?.trim() || 'same-family';
   if (!(VALID_CROSS_PROVIDER_AVOIDS as readonly string[]).includes(avoid)) {
-    throw new Error('--avoid must be one of same-runtime | none.');
+    throw new Error(
+      '--avoid must be one of same-family | same-runtime | none.',
+    );
   }
   return avoid as CrossProviderAvoid;
 }
@@ -317,6 +405,20 @@ function parseNumericFlag(
   if (!Number.isFinite(parsed)) {
     throw new Error(`${flag} must be a finite number.`);
   }
+  return parsed;
+}
+
+function resolveGateExecTimeoutMs(env: NodeJS.ProcessEnv): number {
+  const rawValue = env.OAT_GATE_EXEC_TIMEOUT_MS?.trim();
+  if (!rawValue) {
+    return GATE_EXEC_TIMEOUT_MS;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return GATE_EXEC_TIMEOUT_MS;
+  }
+
   return parsed;
 }
 
@@ -499,7 +601,7 @@ async function readEffectiveConfig(
 
 function sortedExecTargetEntries(
   registry: Readonly<Record<string, ExecTarget>>,
-): SelectedExecTarget[] {
+): Array<{ id: string; target: ExecTarget }> {
   return Object.entries(registry)
     .map(([id, target]) => ({ id, target }))
     .sort((left, right) => {
@@ -513,12 +615,315 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
     runtime: target.runtime,
     baseCommand: [...target.baseCommand],
     priority: target.priority,
+    ...(target.models ? { models: [...target.models] } : {}),
     ...(target.hostDetectionCommand
       ? { hostDetectionCommand: [...target.hostDetectionCommand] }
       : {}),
     ...(target.availabilityCommand
       ? { availabilityCommand: [...target.availabilityCommand] }
       : {}),
+  };
+}
+
+function identityFromRecords(
+  records: IdentityRecord[],
+  source: GateProducerIdentity['source'],
+): GateProducerIdentity {
+  const resolved = resolveIdentityConfidence(records);
+  const family = classifyModelFamily({ value: resolved.value });
+  return {
+    value: resolved.value,
+    provenance: resolved.provenance,
+    confidence: resolved.confidence,
+    family,
+    avoidFamilies:
+      resolved.diversityClaimable && family !== 'unknown' ? [family] : [],
+    diversityClaimable: resolved.diversityClaimable,
+    source,
+  };
+}
+
+function unknownProducerIdentity(): GateProducerIdentity {
+  return identityFromRecords([], 'unknown');
+}
+
+function parseProducerIdentityOption(
+  value: string | undefined,
+): GateProducerIdentity {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return unknownProducerIdentity();
+  }
+
+  const separator = trimmed.lastIndexOf(':');
+  const producer = separator > 0 ? trimmed.slice(0, separator).trim() : '';
+  const provenance = separator > 0 ? trimmed.slice(separator + 1).trim() : '';
+  if (!producer || !provenance) {
+    throw new Error(
+      '--producer-identity must use <value>:<declared|observed|inferred|unknown>.',
+    );
+  }
+  if (!(VALID_IDENTITY_PROVENANCES as readonly string[]).includes(provenance)) {
+    throw new Error(
+      '--producer-identity provenance must be one of declared | observed | inferred | unknown.',
+    );
+  }
+
+  return identityFromRecords(
+    [{ value: producer, provenance: provenance as IdentityProvenance }],
+    'flag',
+  );
+}
+
+function identityFromStamps(
+  stamps: ReturnType<typeof parseDispatchStamps>,
+): GateProducerIdentity {
+  const identities = stamps
+    .map((stamp) =>
+      identityFromRecords(
+        [{ value: stamp.producer, provenance: stamp.provenance }],
+        'stamp',
+      ),
+    )
+    .filter(
+      (identity) =>
+        identity.diversityClaimable && identity.family !== 'unknown',
+    );
+  const latest = identities.at(-1);
+  if (!latest) {
+    return unknownProducerIdentity();
+  }
+
+  return {
+    ...latest,
+    avoidFamilies: [...new Set(identities.map((identity) => identity.family))],
+  };
+}
+
+function phaseNumber(scope: string): number | undefined {
+  const match = scope.match(/^p(\d+)(?:$|-t\d+$)/);
+  const value = match?.[1];
+  return value === undefined ? undefined : Number.parseInt(value, 10);
+}
+
+function reviewScopeRange(
+  scope: string,
+): { start: number; end: number } | null {
+  if (scope === 'final') {
+    return { start: 1, end: Number.MAX_SAFE_INTEGER };
+  }
+
+  const range = scope.match(/^p(\d+)-p(\d+)$/);
+  if (!range) {
+    return null;
+  }
+
+  return {
+    start: Number.parseInt(range[1] ?? '0', 10),
+    end: Number.parseInt(range[2] ?? '0', 10),
+  };
+}
+
+function stampInReviewScope(stampScope: string, reviewScope: string): boolean {
+  const range = reviewScopeRange(reviewScope);
+  if (!range) {
+    return false;
+  }
+
+  const stampPhase = phaseNumber(stampScope);
+  return (
+    stampPhase !== undefined &&
+    stampPhase >= range.start &&
+    stampPhase <= range.end
+  );
+}
+
+async function readStampedProducerIdentity(options: {
+  repoRoot: string;
+  projectPath: string;
+  reviewScope?: string;
+}): Promise<GateProducerIdentity> {
+  const scope = options.reviewScope?.trim();
+  if (!scope) {
+    return unknownProducerIdentity();
+  }
+
+  let markdown: string;
+  try {
+    markdown = await readFile(
+      join(options.repoRoot, options.projectPath, 'implementation.md'),
+      'utf8',
+    );
+  } catch {
+    return unknownProducerIdentity();
+  }
+
+  const stamps = parseDispatchStamps(markdown).filter(
+    (candidate) => candidate.role === 'implementer' || candidate.role === 'fix',
+  );
+  const exactStamp = [...stamps]
+    .reverse()
+    .find((candidate) => candidate.scope === scope);
+  if (exactStamp) {
+    return identityFromStamps([exactStamp]);
+  }
+
+  return identityFromStamps(
+    stamps.filter((candidate) => stampInReviewScope(candidate.scope, scope)),
+  );
+}
+
+async function resolveReviewProducerIdentity(options: {
+  explicit?: string;
+  repoRoot: string;
+  projectPath: string;
+  reviewScope?: string;
+}): Promise<GateProducerIdentity> {
+  if (options.explicit?.trim()) {
+    return parseProducerIdentityOption(options.explicit);
+  }
+
+  return readStampedProducerIdentity(options);
+}
+
+function findPinnedModelArg(argv: readonly string[]): string | undefined {
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--model') {
+      const value = argv[index + 1]?.trim();
+      return value || undefined;
+    }
+    if (arg?.startsWith('--model=')) {
+      const value = arg.slice('--model='.length).trim();
+      return value || undefined;
+    }
+  }
+
+  return undefined;
+}
+
+function targetCandidateModels(target: ExecTarget): string[] | undefined {
+  const pinnedModel = findPinnedModelArg(target.baseCommand);
+  if (pinnedModel) {
+    return [pinnedModel];
+  }
+
+  if (target.models && target.models.length > 0) {
+    return [...target.models];
+  }
+
+  return undefined;
+}
+
+function candidateFamily(
+  target: ExecTarget,
+  model: string | undefined,
+): ModelFamily {
+  if (model) {
+    return classifyModelFamily({ value: model });
+  }
+
+  return classifyModelFamily({ value: '', providerId: target.runtime });
+}
+
+function expandExecTargetCandidates(
+  id: string,
+  target: ExecTarget,
+): SelectedExecTarget[] {
+  const models = targetCandidateModels(target);
+  if (!models) {
+    return [
+      {
+        id,
+        target: cloneExecTarget(target),
+        family: candidateFamily(target, undefined),
+      },
+    ];
+  }
+
+  return models.map((model) => ({
+    id,
+    target: cloneExecTarget(target),
+    model,
+    family: candidateFamily(target, model),
+  }));
+}
+
+function producerHasKnownFamily(identity: GateProducerIdentity): boolean {
+  return identity.diversityClaimable && identity.avoidFamilies.length > 0;
+}
+
+function shouldAttemptNoDiverseFallback(avoid: CrossProviderAvoid): boolean {
+  return avoid === 'same-family';
+}
+
+function achievedDiversity(
+  selected: SelectedExecTarget,
+  producerIdentity: GateProducerIdentity,
+): GateDiversityAchieved {
+  if (!producerHasKnownFamily(producerIdentity)) {
+    return 'unknown-producer';
+  }
+
+  if (
+    selected.family !== 'unknown' &&
+    !producerIdentity.avoidFamilies.includes(selected.family)
+  ) {
+    return 'different-family';
+  }
+
+  if (selected.model && selected.model !== producerIdentity.value) {
+    return 'degraded-to-different-slug';
+  }
+
+  return 'same-family - no diverse target available';
+}
+
+function diversityFallbackWarning(
+  achieved: GateDiversityAchieved,
+): string | undefined {
+  if (
+    achieved !== 'unknown-producer' &&
+    achieved !== 'degraded-to-different-slug' &&
+    achieved !== 'same-family - no diverse target available'
+  ) {
+    return undefined;
+  }
+
+  return `No different-family gate target was available; running with achieved=${achieved}.`;
+}
+
+function attachDiversityMetadata(
+  selected: SelectedExecTarget,
+  avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity,
+): SelectedExecTarget {
+  const achieved = achievedDiversity(selected, producerIdentity);
+  const warning = selected.noDiverseFamilyFallback
+    ? diversityFallbackWarning(achieved)
+    : undefined;
+
+  return {
+    ...selected,
+    diversity: {
+      avoid,
+      achieved,
+      producer: {
+        value: producerIdentity.value,
+        provenance: producerIdentity.provenance,
+        confidence: producerIdentity.confidence,
+        family: producerIdentity.family,
+        source: producerIdentity.source,
+        avoidFamilies: producerIdentity.avoidFamilies,
+      },
+      reviewer: {
+        target: selected.id,
+        runtime: selected.target.runtime,
+        family: selected.family,
+        ...(selected.model ? { model: selected.model } : {}),
+      },
+      ...(warning ? { warning } : {}),
+    },
   };
 }
 
@@ -530,24 +935,66 @@ function listExecTargetCandidates(
   registry: Readonly<Record<string, ExecTarget>>,
   currentRuntime: string,
   avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity = unknownProducerIdentity(),
 ): SelectedExecTarget[] {
+  const shouldAvoidSameFamily =
+    avoid === 'same-family' && producerHasKnownFamily(producerIdentity);
   const shouldAvoidSameRuntime =
-    avoid === 'same-runtime' && currentRuntime !== 'unknown';
+    currentRuntime !== 'unknown' &&
+    (avoid === 'same-runtime' ||
+      (avoid === 'same-family' && !producerHasKnownFamily(producerIdentity)));
 
   return sortedExecTargetEntries(registry)
     .filter(
       ({ target }) =>
         !shouldAvoidSameRuntime || target.runtime !== currentRuntime,
     )
-    .map(({ id, target }) => ({ id, target: cloneExecTarget(target) }));
+    .flatMap(({ id, target }) => expandExecTargetCandidates(id, target))
+    .filter(
+      (candidate) =>
+        !shouldAvoidSameFamily ||
+        (candidate.family !== 'unknown' &&
+          !producerIdentity.avoidFamilies.includes(candidate.family)),
+    );
 }
 
 export function selectExecTarget(
   registry: Readonly<Record<string, ExecTarget>>,
   currentRuntime: string,
   avoid: CrossProviderAvoid,
+  producerIdentity?: GateProducerIdentity,
 ): SelectedExecTarget | null {
-  return listExecTargetCandidates(registry, currentRuntime, avoid)[0] ?? null;
+  return (
+    listExecTargetCandidates(
+      registry,
+      currentRuntime,
+      avoid,
+      producerIdentity,
+    )[0] ?? null
+  );
+}
+
+async function firstAvailableExecTarget(
+  candidates: SelectedExecTarget[],
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<SelectedExecTarget | null> {
+  for (const candidate of candidates) {
+    const availabilityCommand = candidate.target.availabilityCommand;
+    if (
+      !availabilityCommand ||
+      (await checkArgv(
+        availabilityCommand,
+        'availability',
+        context,
+        dependencies,
+      ))
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
 }
 
 async function checkArgv(
@@ -567,6 +1014,7 @@ async function checkArgv(
       env: dependencies.processEnv,
       purpose,
       stdio: 'ignore',
+      timeoutMs: GATE_CHECK_TIMEOUT_MS,
     });
     return result.exitCode === 0;
   } catch {
@@ -605,34 +1053,41 @@ async function selectAvailableExecTarget(
   registry: Readonly<Record<string, ExecTarget>>,
   currentRuntime: string,
   avoid: CrossProviderAvoid,
+  producerIdentity: GateProducerIdentity,
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<SelectedExecTarget | null> {
-  for (const candidate of listExecTargetCandidates(
-    registry,
-    currentRuntime,
-    avoid,
-  )) {
-    const availabilityCommand = candidate.target.availabilityCommand;
-    if (
-      !availabilityCommand ||
-      (await checkArgv(
-        availabilityCommand,
-        'availability',
-        context,
-        dependencies,
-      ))
-    ) {
-      return candidate;
-    }
+  const selected = await firstAvailableExecTarget(
+    listExecTargetCandidates(registry, currentRuntime, avoid, producerIdentity),
+    context,
+    dependencies,
+  );
+  if (selected) {
+    return selected;
   }
 
-  return null;
+  if (!shouldAttemptNoDiverseFallback(avoid)) {
+    return null;
+  }
+
+  const fallback = await firstAvailableExecTarget(
+    listExecTargetCandidates(
+      registry,
+      currentRuntime,
+      'none',
+      unknownProducerIdentity(),
+    ),
+    context,
+    dependencies,
+  );
+
+  return fallback ? { ...fallback, noDiverseFamilyFallback: true } : null;
 }
 
 async function resolveSelectedExecTarget(
   targets: Readonly<Record<string, ExecTarget>>,
   options: CrossProviderExecOptions,
+  producerIdentity: GateProducerIdentity,
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<SelectedExecTarget> {
@@ -644,7 +1099,11 @@ async function resolveSelectedExecTarget(
       throw new Error(`Unknown exec target "${explicitTarget}".`);
     }
 
-    return { id: explicitTarget, target: cloneExecTarget(target) };
+    return attachDiversityMetadata(
+      expandExecTargetCandidates(explicitTarget, target)[0]!,
+      'none',
+      producerIdentity,
+    );
   }
 
   const avoid = parseCrossProviderAvoid(options.avoid);
@@ -657,6 +1116,7 @@ async function resolveSelectedExecTarget(
     targets,
     currentRuntime,
     avoid,
+    producerIdentity,
     context,
     dependencies,
   );
@@ -665,7 +1125,7 @@ async function resolveSelectedExecTarget(
     throw new Error(noEligibleTargetMessage(currentRuntime, avoid));
   }
 
-  return selected;
+  return attachDiversityMetadata(selected, avoid, producerIdentity);
 }
 
 async function executeTarget(
@@ -673,24 +1133,36 @@ async function executeTarget(
   prompt: string[],
   context: CommandContext,
   dependencies: GateCommandDependencies,
-): Promise<number> {
+): Promise<ProcessRunResult> {
   const [command, baseArgs] = argvHead(selected.target.baseCommand);
   if (!command) {
     throw new Error(`Exec target "${selected.id}" has an empty base command.`);
   }
 
+  const modelArgs =
+    selected.model && !findPinnedModelArg(selected.target.baseCommand)
+      ? ['--model', selected.model]
+      : [];
+  const timeoutMs = resolveGateExecTimeoutMs(dependencies.processEnv);
+
+  if (!context.json) {
+    context.logger.info(
+      `Running gate target ${selected.id} (${selected.target.runtime}); timeout=${timeoutMs}ms.`,
+    );
+  }
+
   try {
-    const result = await dependencies.runProcess(
+    return await dependencies.runProcess(
       command,
-      [...baseArgs, ...prompt],
+      [...baseArgs, ...modelArgs, ...prompt],
       {
         cwd: context.cwd,
         env: dependencies.processEnv,
         purpose: 'execute',
         stdio: 'inherit',
+        timeoutMs,
       },
     );
-    return result.exitCode;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
@@ -698,6 +1170,24 @@ async function executeTarget(
       { cause: error },
     );
   }
+}
+
+function logGateDiversity(
+  selected: SelectedExecTarget,
+  context: CommandContext,
+): void {
+  const diversity = selected.diversity;
+  if (!diversity || context.json) {
+    return;
+  }
+
+  if (diversity.warning) {
+    context.logger.warn(diversity.warning);
+  }
+
+  context.logger.info(
+    `Gate diversity: achieved=${diversity.achieved} producer=${diversity.producer.value} producer_family=${diversity.producer.family} provenance=${diversity.producer.provenance} confidence=${diversity.producer.confidence} reviewer=${diversity.reviewer.target} reviewer_family=${diversity.reviewer.family}`,
+  );
 }
 
 function noEligibleTargetMessage(
@@ -1112,6 +1602,7 @@ function writeReviewGateResult(
     invocation: string | null;
     normalization?: ReviewGateVerdict['normalization'];
     handoff: string;
+    diversity?: GateDiversityMetadata;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -1141,6 +1632,14 @@ function writeReviewGateResult(
   context.logger.info(
     `Verdict: ${payload.status} (critical=${payload.counts.critical}, important=${payload.counts.important}, medium=${payload.counts.medium}, minor=${payload.counts.minor})`,
   );
+  if (payload.diversity) {
+    if (payload.diversity.warning) {
+      context.logger.warn(payload.diversity.warning);
+    }
+    context.logger.info(
+      `Gate diversity: achieved=${payload.diversity.achieved} producer=${payload.diversity.producer.value} producer_family=${payload.diversity.producer.family} provenance=${payload.diversity.producer.provenance} confidence=${payload.diversity.producer.confidence} reviewer=${payload.diversity.reviewer.target} reviewer_family=${payload.diversity.reviewer.family}`,
+    );
+  }
   context.logger.info(payload.handoff);
 }
 
@@ -1151,9 +1650,13 @@ function writeReviewGateExecutionFailure(
     target: string;
     project: string;
     exitCode: number;
+    timedOut?: boolean;
+    timeoutMs?: number;
   },
 ): void {
-  const message = `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
+  const message = payload.timedOut
+    ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
+    : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -1162,6 +1665,10 @@ function writeReviewGateExecutionFailure(
       target: payload.target,
       project: payload.project,
       exitCode: payload.exitCode,
+      timedOut: payload.timedOut ?? false,
+      ...(payload.timeoutMs !== undefined
+        ? { timeoutMs: payload.timeoutMs }
+        : {}),
       message,
     });
     return;
@@ -1348,19 +1855,20 @@ async function runCrossProviderExec(
   try {
     const effective = await readEffectiveConfig(context, dependencies);
     const targets = resolveExecTargets(effective);
+    const producerIdentity = parseProducerIdentityOption(
+      options.producerIdentity,
+    );
     const selected = await resolveSelectedExecTarget(
       targets,
       options,
+      producerIdentity,
       context,
       dependencies,
     );
 
-    process.exitCode = await executeTarget(
-      selected,
-      prompt,
-      context,
-      dependencies,
-    );
+    logGateDiversity(selected, context);
+    const result = await executeTarget(selected, prompt, context, dependencies);
+    process.exitCode = result.exitCode;
   } catch (error) {
     writeError(context, error);
   }
@@ -1387,9 +1895,16 @@ async function runReviewGate(
       project: options.project,
     });
     const targets = resolveExecTargets(effective);
+    const producerIdentity = await resolveReviewProducerIdentity({
+      explicit: options.producerIdentity,
+      repoRoot,
+      projectPath,
+      reviewScope: options.reviewScope,
+    });
     const selected = await resolveSelectedExecTarget(
       targets,
       options,
+      producerIdentity,
       context,
       dependencies,
     );
@@ -1409,12 +1924,13 @@ async function runReviewGate(
         : []),
       prompt.join(' '),
     ]);
-    const childExitCode = await executeTarget(
+    const childResult = await executeTarget(
       selected,
       [reviewPrompt],
       context,
       dependencies,
     );
+    const childExitCode = childResult.exitCode;
 
     if (childExitCode !== 0) {
       writeReviewGateExecutionFailure(context, {
@@ -1422,6 +1938,8 @@ async function runReviewGate(
         target: selected.id,
         project: projectPath,
         exitCode: childExitCode,
+        timedOut: childResult.timedOut ?? false,
+        timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
       });
       process.exitCode = childExitCode;
       return;
@@ -1492,6 +2010,7 @@ async function runReviewGate(
       invocation: verdict.invocation,
       normalization: verdict.normalization,
       handoff,
+      diversity: selected.diversity,
     });
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
@@ -1563,10 +2082,17 @@ export function createGateCommand(
     .command('cross-provider-exec')
     .description('Run a prompt through an alternate configured runtime target')
     .option('--target <id>', 'Run this exact exec target')
-    .option('--avoid <mode>', 'Avoidance mode: same-runtime or none')
+    .option(
+      '--avoid <mode>',
+      'Avoidance mode: same-family, same-runtime, or none',
+    )
     .option(
       '--current-runtime <runtime>',
       'Override detected runtime for testing or manual routing',
+    )
+    .option(
+      '--producer-identity <identity>',
+      'Producer identity as <value>:<declared|observed|inferred|unknown>',
     )
     .argument('<prompt...>', 'Prompt arguments appended to the target command')
     .action(
@@ -1586,10 +2112,17 @@ export function createGateCommand(
     .command('review')
     .description('Run a review gate and map review findings to exit status')
     .option('--target <id>', 'Run this exact exec target')
-    .option('--avoid <mode>', 'Avoidance mode: same-runtime or none')
+    .option(
+      '--avoid <mode>',
+      'Avoidance mode: same-family, same-runtime, or none',
+    )
     .option(
       '--current-runtime <runtime>',
       'Override detected runtime for testing or manual routing',
+    )
+    .option(
+      '--producer-identity <identity>',
+      'Producer identity as <value>:<declared|observed|inferred|unknown>',
     )
     .option(
       '--project <path-or-name>',

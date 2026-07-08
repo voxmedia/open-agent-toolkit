@@ -173,8 +173,8 @@ oat config describe activeIdea
 Dispatch policy is the workflow setting that tells OAT whether to manage
 subagent model/effort selection and, if so, which managed policy to use.
 
-For the full conceptual model - managed capped tiers, managed `Uncapped`,
-`Inherit Host Defaults`, and provider-specific enforcement - see
+For the full conceptual model - managed capped tiers, dispatch matrix cells,
+managed `Uncapped`, `Inherit Host Defaults`, and provider-specific enforcement - see
 [Dispatch Policy](../workflows/projects/dispatch-ceiling.md).
 
 ### Config keys
@@ -196,13 +196,44 @@ Managed policies compile to:
 | `frontier` | `xhigh`  | `fable`  |
 | `uncapped` | none     | none     |
 
-Legacy compatibility keys remain supported for capped managed behavior:
+Dispatch matrix and legacy compatibility keys:
 
-| Key                                         | Values                                  | Purpose                                                                      |
-| ------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
-| `workflow.dispatchCeiling.preset`           | `balanced`, `maximum`, `cost-conscious` | Legacy preset alias; `maximum` maps to `high`, `cost-conscious` to `economy` |
-| `workflow.dispatchCeiling.providers.codex`  | `low`, `medium`, `high`, `xhigh`        | Legacy concrete Codex capped target                                          |
-| `workflow.dispatchCeiling.providers.claude` | `haiku`, `sonnet`, `opus`, `fable`      | Legacy concrete Claude capped target                                         |
+| Key                                                    | Values                                  | Purpose                                                                                |
+| ------------------------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `workflow.dispatchCeiling.preset`                      | `balanced`, `maximum`, `cost-conscious` | Legacy preset alias; `maximum` maps to `high`, `cost-conscious` to `economy`           |
+| `workflow.dispatchCeiling.providers.<provider>`        | bare value or tier map                  | Provider column; bare Codex/Claude values remain legacy capped targets                 |
+| `workflow.dispatchCeiling.providers.<provider>.<tier>` | bare value or ordered route             | One matrix cell for `economy`, `balanced`, `high`, or `frontier`                       |
+| `workflow.dispatchCeiling.recommendationVersion`       | string                                  | Version stamp written by `oat config adopt dispatch-matrix`; used for drift visibility |
+
+Examples:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config set workflow.dispatchCeiling.providers.cursor.balanced composer-2.5 --shared
+oat config set workflow.dispatchCeiling.providers.codex high --shared
+oat config set workflow.dispatchCeiling.providers.claude opus --shared
+```
+
+For ordered routes, edit the config JSON so a tier cell is an array. Route
+entries are either bare slugs or objects with `harness`, `model`, and optional
+`effort`:
+
+```json
+{
+  "workflow": {
+    "dispatchCeiling": {
+      "providers": {
+        "cursor": {
+          "high": [
+            "composer-2.5",
+            { "harness": "cursor", "model": "gpt-5.5-xhigh" }
+          ]
+        }
+      }
+    }
+  }
+}
+```
 
 `Uncapped` is explicit managed state. Do not represent it by leaving policy
 state absent. To request no OAT model/effort selection, set:
@@ -214,17 +245,20 @@ oat config set workflow.dispatchPolicy.mode inherit
 ### How enforcement works
 
 OAT applies managed policies where the provider exposes a reliable mechanism.
-Other providers receive them as advisory/unsupported.
+Providers without an adapter receive them as advisory/unsupported.
 
-| Provider | Mechanism                 | Enforcement mode           |
-| -------- | ------------------------- | -------------------------- |
-| Codex    | Pinned role variants      | `enforced`                 |
-| Claude   | Task `model` parameter    | `enforced`                 |
-| Others   | None (informational only) | `advisory` / `unsupported` |
+| Provider | Mechanism                 | Enforcement mode                |
+| -------- | ------------------------- | ------------------------------- |
+| Codex    | Pinned role variants      | `enforced`                      |
+| Claude   | Task `model` parameter    | `enforced`                      |
+| Cursor   | `--model` argument        | `enforced` when a cell resolves |
+| Others   | None (informational only) | `advisory` / `unsupported`      |
 
 Codex uses effort (`low < medium < high < xhigh`) and pinned OAT role variants.
 Claude uses Task `model` (`haiku < sonnet < opus < fable`) and keeps
-`effort_axis=not-applicable`.
+`effort_axis=not-applicable`. Cursor and other model-arg providers use opaque
+matrix slugs; OAT validates availability when a provider oracle is available,
+but the configured matrix owns tier meaning.
 
 **Verify-on-upgrade:** when the requested tier exceeds the current orchestrator
 tier (an upgrade request), the resolver sets `verifyOnDispatch: true`. The skill
@@ -249,12 +283,14 @@ oat project dispatch-ceiling resolve --provider codex --json
 oat project dispatch-ceiling resolve --provider codex --role implementer --preferred medium --json
 oat project dispatch-ceiling resolve --provider claude --role implementer --preferred sonnet --orchestrator-tier sonnet --json
 oat project dispatch-ceiling resolve --provider claude --orchestrator-tier sonnet --json
+oat project dispatch-ceiling resolve --provider cursor --role implementer --preferred high --escalation-level 0 --json
 ```
 
 The resolver checks effective config first, then project `state.md`
-`oat_dispatch_policy` frontmatter, then legacy `oat_dispatch_ceiling`.
-For Codex it also reports `providerDefaultEffort`, which is informational only
-for explicit inherit/default behavior or base/unpinned fallback paths.
+`oat_dispatch_policy` frontmatter, including sparse `matrix` overrides, then
+legacy `oat_dispatch_ceiling`. For Codex it also reports
+`providerDefaultEffort`, which is informational only for explicit
+inherit/default behavior or base/unpinned fallback paths.
 
 For non-interactive preflight checks, use:
 
@@ -286,8 +322,9 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchPolicy.mode` — `managed` or `inherit`. `managed` means OAT selects model/effort controls from `workflow.dispatchPolicy.policy`; `inherit` means OAT leaves controls to host/provider defaults.
 - `workflow.dispatchPolicy.policy` — `economy`, `balanced`, `high`, `frontier`, or `uncapped`. `economy` through `frontier` are capped managed policies; `uncapped` keeps OAT-managed preferred selection without provider caps.
 - `workflow.dispatchCeiling.preset` — legacy compatibility alias (`balanced`, `maximum`, or `cost-conscious`) for capped managed policy setup.
-- `workflow.dispatchCeiling.providers.codex` — legacy concrete Codex cap (`low`, `medium`, `high`, or `xhigh`).
-- `workflow.dispatchCeiling.providers.claude` — legacy concrete Claude cap (`haiku`, `sonnet`, `opus`, or `fable`). Claude has no separate per-dispatch effort axis, so the effort axis remains `not-applicable`.
+- `workflow.dispatchCeiling.providers.<provider>` — dispatch matrix provider column or legacy bare provider target.
+- `workflow.dispatchCeiling.providers.<provider>.<tier>` — one matrix cell for `economy`, `balanced`, `high`, or `frontier`.
+- `workflow.dispatchCeiling.recommendationVersion` — version of the adopted recommended matrix.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 
 ### Auto artifact-review preferences
@@ -324,6 +361,7 @@ oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.autoNarrowReReviewScope true --user
 oat config set workflow.designMode selective --user
 oat config set workflow.dispatchCeiling.preset balanced --user
+oat config adopt dispatch-matrix --user
 oat config set workflow.autoArtifactReview.plan true --user
 oat config set workflow.autoArtifactReview.analysis true --user
 
@@ -331,6 +369,7 @@ oat config set workflow.autoArtifactReview.analysis true --user
 oat config set workflow.createPrOnComplete false --shared
 oat config set workflow.designMode collaborative --shared
 oat config set workflow.dispatchCeiling.preset balanced --shared
+oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared
 oat config set workflow.autoArtifactReview.plan false --shared
 
 # Repo-local: personal override for this repo (default when no flag)

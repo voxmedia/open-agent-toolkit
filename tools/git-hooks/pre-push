@@ -1,7 +1,13 @@
 #!/bin/sh
+set -u
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=tools/git-hooks/repo-toolchain.sh
+. "$script_dir/repo-toolchain.sh"
+
 # Fast quality gate before pushing — CI handles tests and full builds
-pnpm release:check-versions
-pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
-pnpm run type-check
-pnpm run lint
-pnpm run format
+run_pnpm release:check-versions
+run_pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+run_pnpm run type-check
+run_pnpm run lint
+run_pnpm run format

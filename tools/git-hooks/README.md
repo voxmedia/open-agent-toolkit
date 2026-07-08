@@ -9,6 +9,29 @@ Repository git hooks for code quality and consistency.
 - `pre-push` - runs public package version-bump validation, canonical skill version-bump validation, plus `type-check`, `lint`, and `format`
 - `post-checkout` - runs `pnpm install` when lockfile-sensitive branch switches happen
 
+## Toolchain Resolution
+
+All managed repo hooks source `repo-toolchain.sh` before running workspace
+commands. The helper:
+
+- changes to the current checkout root
+- loads `.nvmrc` through nvm when available
+- runs pnpm through Corepack, falling back to the current `pnpm` only when
+  Corepack is unavailable
+
+This keeps hooks on the repo's declared Node/pnpm toolchain even when a shell
+has multiple Node versions or a Codex/runtime pnpm earlier in `PATH`.
+
+The `pre-commit` OAT status check uses the repo-local source CLI when this
+repository's source tree is present:
+
+```bash
+corepack pnpm run --silent cli:source -- status --scope project --hook
+```
+
+It falls back to global `oat status --scope project --hook` only when the
+repo-local source CLI is not present.
+
 ## Default Behavior
 
 Hooks are installed automatically on `pnpm install`.

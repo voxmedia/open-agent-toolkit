@@ -14,8 +14,12 @@ Unit tests guard the command builder, and shimmed CLI smoke tests verify the rea
 
 ## Decision
 
-TODO
+Verify provider command shape at the CLI argv boundary. Unit tests cover command
+assembly, and shimmed CLI smoke tests verify `codex-default`, `claude-default`,
+and `cursor-default` dispatch without invoking real providers.
 
 ## Consequences
 
-TODO
+Provider-specific prompt-argument regressions should be caught where OAT builds
+and dispatches argv. Tests should assert the real command path receives the
+expected single prompt argument for review gates.

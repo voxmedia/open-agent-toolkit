@@ -56,15 +56,28 @@ export type WorkflowManagedDispatchPolicy =
   | 'high'
   | 'frontier'
   | 'uncapped';
+export type WorkflowDispatchMatrixTier = Exclude<
+  WorkflowManagedDispatchPolicy,
+  'uncapped'
+>;
+export interface WorkflowDispatchRouteTarget {
+  harness?: string;
+  model?: string;
+  effort?: string;
+}
+export type WorkflowDispatchRouteEntry = string | WorkflowDispatchRouteTarget;
+export type WorkflowDispatchRoute = WorkflowDispatchRouteEntry[];
+export type WorkflowDispatchMatrixCell = string | WorkflowDispatchRoute;
+export type WorkflowDispatchProviderValue =
+  | string
+  | Partial<Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>>;
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
-export type GateAvoid = 'same-runtime' | 'none';
+export type GateAvoid = 'same-family' | 'same-runtime' | 'none';
 
 export interface WorkflowDispatchCeiling {
   preset?: WorkflowDispatchCeilingPreset;
-  providers?: {
-    codex?: WorkflowCodexDispatchCeiling;
-    claude?: WorkflowClaudeDispatchCeiling;
-  };
+  recommendationVersion?: string;
+  providers?: Record<string, WorkflowDispatchProviderValue>;
 }
 
 export interface WorkflowDispatchPolicy {
@@ -87,6 +100,7 @@ export interface GateConfig {
 export interface ExecTarget {
   runtime: string;
   baseCommand: string[];
+  models?: string[];
   hostDetectionCommand?: string[];
   availabilityCommand?: string[];
   priority: number;
@@ -138,6 +152,8 @@ export const VALID_DISPATCH_POLICY_MODES: readonly WorkflowDispatchPolicyMode[] 
   ['managed', 'inherit'];
 export const VALID_MANAGED_DISPATCH_POLICIES: readonly WorkflowManagedDispatchPolicy[] =
   ['economy', 'balanced', 'high', 'frontier', 'uncapped'];
+export const VALID_DISPATCH_MATRIX_TIERS: readonly WorkflowDispatchMatrixTier[] =
+  ['economy', 'balanced', 'high', 'frontier'];
 const VALID_GATE_ON_FAILURES: readonly GateOnFailure[] = [
   'block',
   'prompt',
@@ -167,7 +183,11 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
     runtime: 'cursor',
     baseCommand: ['cursor-agent', '-p'],
     hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
-    availabilityCommand: ['cursor-agent', '--version'],
+    availabilityCommand: [
+      'sh',
+      '-c',
+      'command -v cursor-agent || command -v agent',
+    ],
     priority: 70,
   },
 };
@@ -196,6 +216,21 @@ function normalizeArgv(value: unknown): string[] | undefined {
   }
 
   return [...value];
+}
+
+function normalizeStringList(value: unknown): string[] | undefined {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every(
+      (item): item is string =>
+        typeof item === 'string' && item.trim().length > 0,
+    )
+  ) {
+    return undefined;
+  }
+
+  return value.map((item) => item.trim());
 }
 
 function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
@@ -228,6 +263,116 @@ function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
   return gate;
 }
 
+function normalizeProviderBareValue(
+  providerKey: string,
+  value: unknown,
+): string | undefined {
+  const trimmed = trimNonEmptyString(value);
+  if (trimmed === undefined) {
+    return undefined;
+  }
+
+  if (
+    providerKey === 'codex' &&
+    !(VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(trimmed)
+  ) {
+    return undefined;
+  }
+
+  if (
+    providerKey === 'claude' &&
+    !(VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(trimmed)
+  ) {
+    return undefined;
+  }
+
+  return trimmed;
+}
+
+function normalizeDispatchRouteTarget(
+  value: unknown,
+): WorkflowDispatchRouteTarget | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const target: WorkflowDispatchRouteTarget = {};
+  const harness = trimNonEmptyString(value.harness);
+  if (harness !== undefined) {
+    target.harness = harness;
+  }
+  const model = trimNonEmptyString(value.model);
+  if (model !== undefined) {
+    target.model = model;
+  }
+  const effort = trimNonEmptyString(value.effort);
+  if (effort !== undefined) {
+    target.effort = effort;
+  }
+
+  return Object.keys(target).length > 0 ? target : undefined;
+}
+
+function normalizeDispatchMatrixCell(
+  providerKey: string,
+  value: unknown,
+): WorkflowDispatchMatrixCell | undefined {
+  const bareValue = normalizeProviderBareValue(providerKey, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (!Array.isArray(value) || value.length === 0) {
+    return undefined;
+  }
+
+  const route: WorkflowDispatchRoute = [];
+  for (const entry of value) {
+    const bareEntry = normalizeProviderBareValue(providerKey, entry);
+    if (bareEntry !== undefined) {
+      route.push(bareEntry);
+      continue;
+    }
+
+    const target = normalizeDispatchRouteTarget(entry);
+    if (target !== undefined) {
+      route.push(target);
+    }
+  }
+
+  return route.length > 0 ? route : undefined;
+}
+
+function normalizeDispatchProviderValue(
+  providerKey: string,
+  value: unknown,
+): WorkflowDispatchProviderValue | undefined {
+  const bareValue = normalizeProviderBareValue(providerKey, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const tierMap: Partial<
+    Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
+  > = {};
+  for (const [tier, rawCell] of Object.entries(value)) {
+    if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {
+      continue;
+    }
+
+    const normalized = normalizeDispatchMatrixCell(providerKey, rawCell);
+    if (normalized !== undefined) {
+      tierMap[tier as WorkflowDispatchMatrixTier] = normalized;
+    }
+  }
+
+  return Object.keys(tierMap).length > 0 ? tierMap : undefined;
+}
+
 function normalizeExecTarget(
   value: unknown,
 ): ExecTargetConfig | null | undefined {
@@ -248,6 +393,11 @@ function normalizeExecTarget(
   const baseCommand = normalizeArgv(value.baseCommand);
   if (baseCommand !== undefined) {
     target.baseCommand = baseCommand;
+  }
+
+  const models = normalizeStringList(value.models);
+  if (models !== undefined) {
+    target.models = models;
   }
 
   if ('priority' in value) {
@@ -405,25 +555,25 @@ function normalizeWorkflowConfig(
         .preset as WorkflowDispatchCeilingPreset;
     }
 
+    const recommendationVersion = trimNonEmptyString(
+      parsed.dispatchCeiling.recommendationVersion,
+    );
+    if (recommendationVersion !== undefined) {
+      dispatchCeiling.recommendationVersion = recommendationVersion;
+    }
+
     if (isRecord(parsed.dispatchCeiling.providers)) {
       const providers: WorkflowDispatchCeiling['providers'] = {};
-      if (
-        typeof parsed.dispatchCeiling.providers.codex === 'string' &&
-        (VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(
-          parsed.dispatchCeiling.providers.codex,
-        )
-      ) {
-        providers.codex = parsed.dispatchCeiling.providers
-          .codex as WorkflowCodexDispatchCeiling;
-      }
-      if (
-        typeof parsed.dispatchCeiling.providers.claude === 'string' &&
-        (VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(
-          parsed.dispatchCeiling.providers.claude,
-        )
-      ) {
-        providers.claude = parsed.dispatchCeiling.providers
-          .claude as WorkflowClaudeDispatchCeiling;
+      for (const [providerKey, rawProviderValue] of Object.entries(
+        parsed.dispatchCeiling.providers,
+      )) {
+        const normalized = normalizeDispatchProviderValue(
+          providerKey,
+          rawProviderValue,
+        );
+        if (normalized !== undefined) {
+          providers[providerKey] = normalized;
+        }
       }
       if (Object.keys(providers).length > 0) {
         dispatchCeiling.providers = providers;

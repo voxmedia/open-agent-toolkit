@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
 MIGRATION_PROMPT_SOURCE="${REPO_ROOT}/packages/cli/assets/migration/pjm-restructure.md"
+DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/packages/cli/config/dispatch-matrix-recommendation.json"
 MIGRATION_PROMPT_TMP=""
 
 if [ -f "${MIGRATION_PROMPT_SOURCE}" ]; then
@@ -13,7 +14,7 @@ if [ -f "${MIGRATION_PROMPT_SOURCE}" ]; then
 fi
 
 rm -rf "${ASSETS}"
-mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts" "${ASSETS}/docs" "${ASSETS}/migration"
+mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/scripts" "${ASSETS}/docs" "${ASSETS}/migration" "${ASSETS}/config"
 
 SKILLS=(
   authoring-docs
@@ -133,3 +134,5 @@ if [ -n "${MIGRATION_PROMPT_TMP}" ]; then
   cp "${MIGRATION_PROMPT_TMP}" "${ASSETS}/migration/pjm-restructure.md"
   rm -f "${MIGRATION_PROMPT_TMP}"
 fi
+
+cp "${DISPATCH_MATRIX_RECOMMENDATION_SOURCE}" "${ASSETS}/config/dispatch-matrix-recommendation.json"

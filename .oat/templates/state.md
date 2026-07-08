@@ -20,6 +20,11 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #   providers: # present for capped managed policies; omitted for uncapped/inherit
 #     codex: high # low|medium|high|xhigh
 #     claude: sonnet # haiku|sonnet|opus|fable
+#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
+#     cursor:
+#       high:
+#         - composer-2.5
+#         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import

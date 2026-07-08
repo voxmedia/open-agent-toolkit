@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.9
+version: 2.1.10
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -475,7 +475,7 @@ dispatch policy.
 Resolution order:
 
 1. Config keys `workflow.dispatchPolicy.mode` / `workflow.dispatchPolicy.policy` via the resolver CLI
-2. Compatibility config keys `workflow.dispatchCeiling.providers.<provider>`
+2. Layered dispatch matrix / compatibility config under `workflow.dispatchCeiling.providers.<provider>` and `workflow.dispatchCeiling.providers.<provider>.<tier>`
 3. Project `state.md` frontmatter key `oat_dispatch_policy`
 4. Legacy project `state.md` frontmatter key `oat_dispatch_ceiling`
 5. Interactive quick-planning prompt (below)
@@ -501,13 +501,32 @@ Set the dispatch policy — how OAT should choose subagent model/effort controls
 
 OAT applies managed policies where the provider exposes a reliable mechanism
 (Codex: pinned variants; Claude: Task model parameter). Other providers may
-treat managed policies as advisory.
+treat managed policies as advisory until their provider column has a resolvable
+matrix cell.
+
+For multi-family providers such as Cursor, these options choose the abstract
+policy rung; concrete model values live in the dispatch matrix under
+`workflow.dispatchCeiling.providers.*`. If the user wants OAT's recommended
+starting matrix, offer `oat config adopt dispatch-matrix` for the chosen config
+layer before finalizing `plan.md`.
 ```
 
 **Managed capped policy selection (options 1-4)** persists `mode: managed`,
 `policy`, and the compiled provider targets. On selection, print the exact
 compiled result (e.g., "Dispatch policy set: balanced → Codex: high · Claude:
 sonnet") before proceeding.
+
+If the resolver reports that the selected policy has a missing matrix cell for
+the active provider/tier, run prompt-and-persist once before final review:
+
+1. Ask for the exact provider value for the missing cell, using the provider's
+   native vocabulary (for example, `composer-2.5`, `gpt-5.5-xhigh`, `opus`, or
+   `xhigh`), or an ordered route when escalation needs multiple targets.
+2. Persist the answer to the selected config layer with
+   `workflow.dispatchCeiling.providers.<provider>.<tier>`. Use project
+   `state.md` only for sparse project-specific matrix overrides.
+3. Re-run the resolver. Do not silently treat a missing cell as uncapped,
+   inherited, or provider-default behavior.
 
 **Uncapped (option 5)** persists explicit managed uncapped state. It does not
 write provider caps, and it must not be represented by leaving dispatch policy

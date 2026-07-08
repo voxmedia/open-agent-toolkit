@@ -120,6 +120,22 @@ const claudeAdapter: ProviderCeilingAdapter = {
   },
 };
 
+const cursorAdapter: ProviderCeilingAdapter = {
+  provider: 'cursor',
+  supportsCeiling: true,
+  validValues: [],
+  mechanism: 'model-arg',
+  compileToDispatchArgs(value) {
+    const model = value.trim();
+    return model ? { model } : null;
+  },
+  // Cursor model slugs do not share a total order, so upgrade verification is
+  // not meaningful here; availability is checked by the identity oracle layer.
+  verifyOnDispatch() {
+    return false;
+  },
+};
+
 function advisoryAdapter(provider: string): ProviderCeilingAdapter {
   return {
     provider,
@@ -138,6 +154,7 @@ function advisoryAdapter(provider: string): ProviderCeilingAdapter {
 const REGISTERED_ADAPTERS: Record<string, ProviderCeilingAdapter> = {
   codex: codexAdapter,
   claude: claudeAdapter,
+  cursor: cursorAdapter,
 };
 
 /**

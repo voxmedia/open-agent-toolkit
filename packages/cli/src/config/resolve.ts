@@ -259,6 +259,7 @@ function mergeExecTargetLayer(
       targets[id] = cloneExecTarget({
         runtime: override.runtime ?? existing.runtime,
         baseCommand: override.baseCommand ?? existing.baseCommand,
+        models: override.models ?? existing.models,
         hostDetectionCommand:
           override.hostDetectionCommand ?? existing.hostDetectionCommand,
         availabilityCommand:
@@ -299,6 +300,9 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
   if (target.availabilityCommand) {
     next.availabilityCommand = [...target.availabilityCommand];
   }
+  if (target.models) {
+    next.models = [...target.models];
+  }
 
   return next;
 }
@@ -325,8 +329,22 @@ function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
   if (isValidArgv(target.availabilityCommand)) {
     completeTarget.availabilityCommand = [...target.availabilityCommand];
   }
+  if (isValidStringList(target.models)) {
+    completeTarget.models = target.models.map((model) => model.trim());
+  }
 
   return completeTarget;
+}
+
+function isValidStringList(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (part): part is string =>
+        typeof part === 'string' && part.trim().length > 0,
+    )
+  );
 }
 
 function isValidArgv(value: unknown): value is string[] {

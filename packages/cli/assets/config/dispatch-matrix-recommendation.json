@@ -1,0 +1,23 @@
+{
+  "version": "2026-07-07.1",
+  "providers": {
+    "codex": {
+      "economy": "low",
+      "balanced": "medium",
+      "high": "high",
+      "frontier": "xhigh"
+    },
+    "claude": {
+      "economy": "haiku",
+      "balanced": "sonnet",
+      "high": "opus",
+      "frontier": "fable"
+    },
+    "cursor": {
+      "economy": "composer-2.5",
+      "balanced": "composer-2.5-fast",
+      "high": "gpt-5.5-high",
+      "frontier": "fable-5"
+    }
+  }
+}

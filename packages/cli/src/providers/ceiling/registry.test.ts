@@ -109,11 +109,48 @@ describe('provider ceiling adapters', () => {
     });
   });
 
+  describe('cursor adapter', () => {
+    const cursor = getCeilingAdapter('cursor');
+
+    it('declares model-arg mechanism and supports the ceiling', () => {
+      expect(cursor.provider).toBe('cursor');
+      expect(cursor.supportsCeiling).toBe(true);
+      expect(cursor.mechanism).toBe('model-arg');
+      expect(cursor.validValues).toEqual([]);
+    });
+
+    it('compiles opaque slugs to model args for implementer and reviewer roles', () => {
+      expect(
+        cursor.compileToDispatchArgs('composer-2.5', 'implementer', {}),
+      ).toEqual({
+        model: 'composer-2.5',
+      });
+      expect(
+        cursor.compileToDispatchArgs('gpt-5.3-codex-high', 'reviewer', {}),
+      ).toEqual({
+        model: 'gpt-5.3-codex-high',
+      });
+    });
+
+    it('returns null for blank model values', () => {
+      expect(cursor.compileToDispatchArgs('', 'implementer', {})).toBeNull();
+      expect(cursor.compileToDispatchArgs('   ', 'reviewer', {})).toBeNull();
+    });
+
+    it('never flags verifyOnDispatch because Cursor has no total order', () => {
+      expect(
+        cursor.verifyOnDispatch('gpt-5.3-codex-high', {
+          orchestratorTier: 'composer-2.5',
+        }),
+      ).toBe(false);
+    });
+  });
+
   describe('unknown provider', () => {
-    const unknown: ProviderCeilingAdapter = getCeilingAdapter('cursor');
+    const unknown: ProviderCeilingAdapter = getCeilingAdapter('other-provider');
 
     it('falls back to an advisory no-op adapter', () => {
-      expect(unknown.provider).toBe('cursor');
+      expect(unknown.provider).toBe('other-provider');
       expect(unknown.supportsCeiling).toBe(false);
       expect(unknown.mechanism).toBe('none');
       expect(unknown.validValues).toEqual([]);

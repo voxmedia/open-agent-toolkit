@@ -1,2 +1,9 @@
+#!/bin/sh
+set -u
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=tools/git-hooks/repo-toolchain.sh
+. "$script_dir/repo-toolchain.sh"
+
 # Install dependencies when switching branches (if package.json changed)
-pnpm install --frozen-lockfile
+run_pnpm install --frozen-lockfile

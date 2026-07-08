@@ -337,6 +337,40 @@ describe('bundle-assets.sh consistency', () => {
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
 
+  it(
+    'bundles the dispatch matrix recommendation asset',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        const recommendationPath = join(
+          assetsRoot,
+          'config',
+          'dispatch-matrix-recommendation.json',
+        );
+        const recommendation = JSON.parse(
+          readFileSync(recommendationPath, 'utf8'),
+        ) as {
+          version?: unknown;
+          providers?: Record<string, unknown>;
+        };
+
+        expect(recommendation.version).toBe('2026-07-07.1');
+        expect(recommendation.providers?.codex).toBeDefined();
+        expect(recommendation.providers?.claude).toBeDefined();
+        expect(recommendation.providers?.cursor).toBeDefined();
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
   describe('migration prompt decision-index contract', () => {
     const promptContent = readFileSync(getMigrationPromptSourcePath(), 'utf8');
 
