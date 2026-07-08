@@ -167,9 +167,11 @@ shared identity/matrix foundation plus the two concerns.
    observed, or probed. The three probe sources were **live-verified 2026-07-07** and
    can **mutually disagree on the same machine at the same time**, and the p01-t02 live
    experiment found `cursor-agent --api-key "$CURSOR_API_KEY" models` can return the
-   catalog while `--list-models` still fails against a locked login keychain. The helper
-   needs a
-   documented priority:
+   catalog while unauthenticated subcommands such as `status` and `--list-models` can
+   still fail against a locked login keychain. No `cursor-agent` subcommand is treated as
+   keychain-free for availability; binary availability uses `command -v cursor-agent` /
+   `command -v agent`, while authenticated behavior checks are reserved for subcommands
+   known to honor `--api-key`, such as `models`. The helper needs a documented priority:
    1. Catalog current marker from `cursor-agent models` / `--list-models` — slug-shaped, closest
       to dispatch truth (returned `composer-2.5`).
    2. Init-event probe (`cursor-agent -p --output-format stream-json --trust "ok" |
@@ -458,7 +460,9 @@ active design questions remain for p01.
       `CURSOR_MODEL` env var; p01-t02 additionally confirmed display names such as
       `"Composer 2.5"` are accepted by `--model`, `cursor-agent models` returns a
       slug/display catalog with `(current)` and `(default)` markers when an API key is
-      supplied, and `--list-models` can still fail when the login keychain is locked).
+      supplied, and unauthenticated subcommands such as `status` and `--list-models` can
+      still fail when the login keychain is locked; availability therefore uses
+      `command -v cursor-agent` / `command -v agent`).
 - [x] **Blocking:** characterize invalid/unavailable `--model` behavior empirically
       (error vs silent fallback) — invalid values hard-error with exit code 1, so
       uncorroborated Cursor `declared` stamps qualify as high-confidence for OAT-pinned

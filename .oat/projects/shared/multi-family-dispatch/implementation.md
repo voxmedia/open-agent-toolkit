@@ -68,8 +68,9 @@ oat_generated: false
 - Result: pass (p01-t01)
 - Run: live `cursor-agent` experiment commands listed under p01-t02
 - Result: pass (valid slug exit 0; invalid slug exit 1 hard error; display name
-  exit 0; `models` catalog exit 0 with API key; `--list-models` exit 1 under
-  locked keychain)
+  exit 0; `models` catalog exit 0 with API key; unauthenticated Cursor
+  subcommands, including `status` and `--list-models`, can fail with exit 1 under
+  a locked keychain)
 - Run: `grep -n "producer=" .oat/projects/shared/multi-family-dispatch/design.md`
 - Result: pass (exit code 0; grammar appears in the design)
 
@@ -179,8 +180,9 @@ command -v cursor-agent
 /Users/tstang/.local/bin/cursor-agent
 
 cursor-agent status
-✓ Logged in as <redacted>
-__EXIT_CODE__=0
+Error: Your macOS login keychain is locked.
+Run security unlock-keychain and try again.
+__EXIT_CODE__=1
 
 cursor-agent models
 Error: Your macOS login keychain is locked.
@@ -263,6 +265,10 @@ __EXIT_CODE__=0
   it failed with the login keychain locked even when `--api-key` was supplied.
   `cursor-agent --api-key "$CURSOR_API_KEY" models` succeeded and exposed both
   `(current)` and `(default)` markers.
+- Do not treat any `cursor-agent` subcommand as keychain-free for availability.
+  Use `command -v cursor-agent`/`command -v agent` for binary availability, and
+  reserve authenticated behavior checks for subcommands known to honor
+  `--api-key`, such as `models`.
 
 ---
 

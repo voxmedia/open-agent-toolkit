@@ -12,7 +12,7 @@ oat_project: .oat/projects/shared/multi-family-dispatch
 
 This PR extends OAT dispatch from the shipped single-family Codex/Claude contract to a multi-family dispatch system that can reason about Cursor and future model-argument providers. It adds producer identity stamps, model-family classification, layered provider/tier matrices, family-aware review-gate selection, ordered implementation route resolution, lifecycle guidance, docs, generated assets, and lockstep public package releases through `0.1.45`.
 
-The final audit fixes are included: Cursor availability no longer probes `cursor-agent --version`, final/range gates aggregate producer families from implementation/fix stamps, and programmatic gate dispatch now has timeout/failure visibility.
+The final audit fixes are included: Cursor availability now uses binary discovery instead of any keychain-sensitive `cursor-agent` subcommand, final/range gates aggregate producer families from implementation/fix stamps, and programmatic gate dispatch now has timeout/failure visibility.
 
 ## Goals / Non-Goals
 
