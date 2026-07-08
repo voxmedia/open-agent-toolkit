@@ -142,6 +142,18 @@ describe('review skill contracts', () => {
     expect(combined).toContain(
       'derive `model_axis` and `effort_axis` from resolver output',
     );
+
+    const inheritedMaterializedCodexExamples = Array.from(
+      implementerContent.matchAll(/```text\n(?<example>[\s\S]*?)\n```/g),
+      (match) => match.groups?.example ?? '',
+    ).filter(
+      (example) =>
+        /Dispatch target: oat-(?:phase-implementer|reviewer)-gpt-5-6-/.test(
+          example,
+        ) && example.includes('Model axis: inherited'),
+    );
+
+    expect(inheritedMaterializedCodexExamples).toEqual([]);
   });
 
   it('routes phase-range review fixes into the last phase in the range', () => {

@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.29
+version: 2.0.30
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -384,7 +384,7 @@ Codex rules:
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
-8. Codex payload-first assertion applies only when the resolver returns a materialized variant. If `effort_axis=selected:<value>`, the actual `spawn_agent` payload MUST use `providers.codex.dispatchArgs.variant` as `agent_type`. If the resolver returns no variant, use the base role and log provider-default. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing.
+8. Codex payload-first assertion applies only when the resolver returns a materialized model+effort variant. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST use it as `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. If the resolver returns no variant, use the base role and log provider-default. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing.
 9. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
 
 Claude rules:
@@ -412,13 +412,13 @@ Payload-first invariant:
   `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
   Derive `producer` and `provenance` from the resolver payload and actual host
   arguments. Only concrete model arguments, including same-harness route model
-  args for model-arg providers, declare producer identity. Codex pinned
-  variants declare the effort axis only; record `effort_axis=selected:<value>`
-  and keep `producer=unknown provenance=unknown` unless an observed/inferred
-  model identity is available. Base/unpinned or deferred cross-harness paths are
-  also `producer=unknown provenance=unknown` unless an observed/inferred
-  identity is available. Do not write prose-only or legacy comma-separated stamp
-  forms.
+  args for model-arg providers, declare producer identity. Codex materialized
+  model+effort variants declare `model_axis=selected:<model>` and
+  `effort_axis=selected:<effort>` from resolver output, but keep
+  `producer=unknown provenance=unknown` unless an observed/inferred model
+  identity is available. Base/unpinned or deferred cross-harness paths are also
+  `producer=unknown provenance=unknown` unless an observed/inferred identity is
+  available. Do not write prose-only or legacy comma-separated stamp forms.
 
 Structured dispatch log:
 
@@ -452,7 +452,7 @@ Selected effort: medium
 Policy source: repo config
 Provider default effort: high
 Selection mode: capped
-Model axis: inherited
+Model axis: selected:gpt-5.6-sol
 Effort axis: selected:medium
 Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
 Rationale: normal multi-file implementation; high preferred due to integration risk, capped by configured policy.
@@ -470,7 +470,7 @@ Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: uncapped
-Model axis: inherited
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:xhigh
 Dispatch target: oat-phase-implementer-gpt-5-6-terra-xhigh
 Rationale: high-risk phase; managed uncapped policy allows the preferred pinned variant. Actual host support for upward effort selection must be verified by the dispatching host.
@@ -488,7 +488,7 @@ Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: review-target
-Model axis: inherited
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:xhigh
 Dispatch target: oat-reviewer-gpt-5-6-terra-xhigh
 Rationale: reviewer runs at the configured policy cap for deterministic quality gate behavior.
