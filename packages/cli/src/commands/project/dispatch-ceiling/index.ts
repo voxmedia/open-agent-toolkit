@@ -1212,6 +1212,36 @@ function hasCodexVariantDispatchArgs(
   );
 }
 
+function hasModelDispatchArgs(
+  dispatchArgs: CeilingDispatchArgs,
+): dispatchArgs is { model: string } {
+  return (
+    dispatchArgs !== null &&
+    'model' in dispatchArgs &&
+    typeof dispatchArgs.model === 'string' &&
+    dispatchArgs.model.length > 0
+  );
+}
+
+function modelAxis(
+  selection: DispatchSelection,
+  dispatchArgs: CeilingDispatchArgs,
+): string {
+  if (selection.target?.model && dispatchArgs) {
+    return `selected:${selection.target.model}`;
+  }
+
+  if (hasModelDispatchArgs(dispatchArgs)) {
+    return `selected:${dispatchArgs.model}`;
+  }
+
+  if (selection.selectionMode === 'inherit-default') {
+    return 'inherited';
+  }
+
+  return 'unresolved';
+}
+
 function codexEffortAxis(
   selection: DispatchSelection,
   dispatchArgs: CeilingDispatchArgs,
@@ -1296,12 +1326,7 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
-    modelAxis:
-      selection.target?.model && dispatchArgs
-        ? `selected:${selection.target.model}`
-        : selection.selectionMode === 'inherit-default'
-          ? 'inherited'
-          : 'unresolved',
+    modelAxis: modelAxis(selection, dispatchArgs),
     effortAxis:
       provider === 'codex'
         ? codexEffortAxis(selection, dispatchArgs)

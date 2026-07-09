@@ -456,6 +456,8 @@ describe('oat project dispatch-ceiling resolve', () => {
           mode: 'enforced',
           mechanism: 'model-arg',
           dispatchArgs: { model: 'glm-5.2-max' },
+          modelAxis: 'selected:glm-5.2-max',
+          effortAxis: 'not-applicable',
           cellSource: 'project-state',
           selection: {
             selectedValue: 'glm-5.2-max',
@@ -1391,7 +1393,13 @@ describe('oat project dispatch-ceiling resolve', () => {
     });
 
     const { command, capture } = createHarness({ cwd: root, home });
-    await runCommand(command, ['--provider', 'claude', '--json']);
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--role',
+      'reviewer',
+      '--json',
+    ]);
 
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'resolved',
@@ -1405,6 +1413,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           mode: 'enforced',
           mechanism: 'model-arg',
           dispatchArgs: { model: 'fable' },
+          modelAxis: 'selected:fable',
+          effortAxis: 'not-applicable',
+          selection: {
+            role: 'reviewer',
+            selectedValue: 'fable',
+          },
         },
       },
     });
@@ -1885,6 +1899,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           claude: {
             dispatchArgs: { model: 'sonnet' },
+            modelAxis: 'selected:sonnet',
+            effortAxis: 'not-applicable',
             selection: {
               role: 'implementer',
               preferredValue: 'opus',
@@ -2266,6 +2282,8 @@ describe('oat project dispatch-ceiling resolve', () => {
             mode: 'enforced',
             mechanism: 'model-arg',
             dispatchArgs: { model: 'fable' },
+            modelAxis: 'selected:fable',
+            effortAxis: 'not-applicable',
             selection: {
               preferredValue: 'fable',
               selectedValue: 'fable',
