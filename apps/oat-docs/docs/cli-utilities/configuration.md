@@ -235,30 +235,70 @@ entries are either bare slugs or objects with `harness`, `model`, and optional
 }
 ```
 
-`Uncapped` is explicit managed state. Do not represent it by leaving policy
-state absent. To request no OAT model/effort selection, set:
+`Uncapped` is explicit managed state: OAT still selects the preferred
+provider-specific dispatch target, but does not apply a maximum cap. Do not
+represent it by leaving policy state absent. To request no OAT model/effort
+selection, set:
 
 ```bash
 oat config set workflow.dispatchPolicy.mode inherit
 ```
+
+If no managed policy, legacy cap, or inherit/default mode resolves during an
+implementation preflight, the policy remains unresolved. Interactive
+implementation may ask once and persist a choice; non-interactive
+implementation blocks rather than silently falling back to host defaults.
 
 ### How enforcement works
 
 OAT applies managed policies where the provider exposes a reliable mechanism.
 Providers without an adapter receive them as advisory/unsupported.
 
-| Provider | Mechanism                 | Enforcement mode                |
-| -------- | ------------------------- | ------------------------------- |
-| Codex    | Pinned role variants      | `enforced`                      |
-| Claude   | Task `model` parameter    | `enforced`                      |
-| Cursor   | `--model` argument        | `enforced` when a cell resolves |
-| Others   | None (informational only) | `advisory` / `unsupported`      |
+| Provider | Mechanism                            | Enforcement mode                |
+| -------- | ------------------------------------ | ------------------------------- |
+| Codex    | Materialized model+effort role names | `enforced`                      |
+| Claude   | Task `model` parameter               | `enforced`                      |
+| Cursor   | `--model` argument / Task `model`    | `enforced` when a cell resolves |
+| Others   | None (informational only)            | `advisory` / `unsupported`      |
 
-Codex uses effort (`low < medium < high < xhigh`) and pinned OAT role variants.
+Codex managed dispatch compiles an explicit `model` plus reasoning `effort`
+target into a materialized OAT role name, for example
+`oat-phase-implementer-gpt-5-6-terra-xhigh`. OAT-managed Codex roles are not
+the old hard-coded effort-only pins; they come from resolver targets, dispatch
+matrix cells, or an explicit materialization command. Base roles such as
+`oat-phase-implementer` and `oat-reviewer` are fallback paths that follow the
+provider default effort when inherit/default behavior is selected or no
+materialized target resolves.
+
 Claude uses Task `model` (`haiku < sonnet < opus < fable`) and keeps
 `effort_axis=not-applicable`. Cursor and other model-arg providers use opaque
 matrix slugs; OAT validates availability when a provider oracle is available,
-but the configured matrix owns tier meaning.
+but the configured matrix owns tier meaning. For Cursor subagents, validation
+checks the model can actually be used by Task subagent dispatch, not just that
+the broad `cursor-agent models` catalog lists the slug.
+
+### Codex role materialization
+
+Use `oat providers codex materialize` when you need to materialize one
+canonical agent as a Codex role outside a full sync run:
+
+```bash
+oat providers codex materialize oat-reviewer --model gpt-5.6-terra --effort xhigh --dry-run
+oat providers codex materialize oat-phase-implementer --model gpt-5.6-terra --effort high
+```
+
+Required inputs are the canonical agent name, `--model <model-id>`, and
+`--effort <reasoning-effort>`. The command defaults to project scope, reads
+`.agents/agents/<agent-name>.md`, writes `.codex/agents/<role>.toml`, and
+upserts `.codex/config.toml` unless `--dry-run` is present. `--agent-path` can
+point at a specific canonical agent markdown file, and `--role-name` can
+override the generated role name.
+
+Normal project sync also materializes Codex roles for configured matrix targets:
+
+```bash
+oat sync --scope project
+```
 
 **Verify-on-upgrade:** when the requested tier exceeds the current orchestrator
 tier (an upgrade request), the resolver sets `verifyOnDispatch: true`. The skill
@@ -320,7 +360,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.autoArtifactReview.plan` — boolean, default `true`. Automatically run the bounded artifact-review loop for generated `plan.md` files before implementation handoff. Set to `false` only when you intentionally want to skip the plan artifact review.
 - `workflow.autoArtifactReview.analysis` — boolean, default `true`. Automatically run the bounded accuracy-review loop for generated docs and agent-instructions analysis artifacts before the matching apply workflow consumes them.
 - `workflow.dispatchPolicy.mode` — `managed` or `inherit`. `managed` means OAT selects model/effort controls from `workflow.dispatchPolicy.policy`; `inherit` means OAT leaves controls to host/provider defaults.
-- `workflow.dispatchPolicy.policy` — `economy`, `balanced`, `high`, `frontier`, or `uncapped`. `economy` through `frontier` are capped managed policies; `uncapped` keeps OAT-managed preferred selection without provider caps.
+- `workflow.dispatchPolicy.policy` — `economy`, `balanced`, `high`, `frontier`, or `uncapped`. `economy` through `frontier` are capped managed policies; `uncapped` keeps OAT-managed preferred selection without provider caps. It is distinct from `workflow.dispatchPolicy.mode=inherit`, which leaves controls to the host/provider.
 - `workflow.dispatchCeiling.preset` — legacy compatibility alias (`balanced`, `maximum`, or `cost-conscious`) for capped managed policy setup.
 - `workflow.dispatchCeiling.providers.<provider>` — dispatch matrix provider column or legacy bare provider target.
 - `workflow.dispatchCeiling.providers.<provider>.<tier>` — one matrix cell for `economy`, `balanced`, `high`, or `frontier`.

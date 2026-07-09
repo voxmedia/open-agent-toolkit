@@ -113,6 +113,13 @@ Use `oat config` for repo runtime config inspection and supported key mutation.
 
 Use `oat config dump --json` when you need the whole resolved config in one machine-readable response rather than a single key or a human-oriented list view.
 
+Dispatch policy keys are part of this surface, but provider-specific generation
+still belongs to provider commands. Use `oat config describe
+workflow.dispatchPolicy.policy` to inspect capped managed, managed uncapped,
+inherit/default, and unresolved behavior; use `oat providers codex materialize`
+or `oat sync --scope project` to create materialized Codex roles from explicit
+model+effort targets.
+
 Archive lifecycle settings live here as shared repo config:
 
 - `archive.s3Uri`

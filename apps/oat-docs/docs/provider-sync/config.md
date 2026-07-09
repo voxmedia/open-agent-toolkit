@@ -95,7 +95,11 @@ canonical `.agents/skills` inventory.
   - unset: provider falls back to directory detection.
 - `defaultStrategy` is used when no provider-specific `strategy` is set.
 - At runtime, config is normalized so `providers` is always present in memory.
-- Codex project sync also manages generated role variants derived from canonical agents. `oat-phase-implementer-low|medium|high|xhigh` and `oat-reviewer-low|medium|high|xhigh` are managed outputs used by dispatch-ceiling-aware implementation. They should not be adopted as stray roles.
+- Codex project sync also manages generated materialized roles derived from
+  canonical agents and explicit model+effort targets. Dispatch-aware roles such
+  as `oat-phase-implementer-gpt-5-6-terra-xhigh` and
+  `oat-reviewer-gpt-5-6-terra-xhigh` are managed outputs and should not be
+  adopted as stray roles.
 
 ## Recommended management flow
 
