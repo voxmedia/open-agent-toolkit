@@ -2122,6 +2122,70 @@ describe('oat project dispatch-ceiling resolve', () => {
       });
     });
 
+    it('maps preferred xhigh Codex effort to frontier matrix target for managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                frontier: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'repo-config',
+        preset: 'uncapped',
+        providers: {
+          codex: {
+            mode: 'enforced',
+            mechanism: 'pinned-variant',
+            dispatchArgs: {
+              variant: 'oat-phase-implementer-gpt-5-6-sol-xhigh',
+            },
+            modelAxis: 'selected:gpt-5.6-sol',
+            effortAxis: 'selected:xhigh',
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'xhigh',
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
+              target: {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: 'xhigh',
+                crossHarness: false,
+              },
+            },
+          },
+        },
+      });
+    });
+
     it('keeps repo legacy cap over lower-precedence user managed uncapped policy', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {

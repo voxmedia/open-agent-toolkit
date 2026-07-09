@@ -483,6 +483,35 @@ function policyTier(
     : null;
 }
 
+function uncappedPreferredTier(
+  provider: DispatchCeilingProvider,
+  role: CeilingRole,
+  preferredValue: DispatchCeilingValue | null,
+): WorkflowDispatchMatrixTier | null {
+  if (provider !== 'codex' || role === 'reviewer' || preferredValue === null) {
+    return null;
+  }
+
+  if (
+    (VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(preferredValue)
+  ) {
+    return preferredValue as WorkflowDispatchMatrixTier;
+  }
+
+  let matchedTier: WorkflowDispatchMatrixTier | null = null;
+  for (const tier of VALID_DISPATCH_MATRIX_TIERS) {
+    const compiledValue = compiledPolicyValueForProvider(
+      provider,
+      compileDispatchPolicyPreset(tier),
+    );
+    if (compiledValue === preferredValue) {
+      matchedTier = tier;
+    }
+  }
+
+  return matchedTier;
+}
+
 function dispatchValueFromRouteTarget(
   target: ResolvedDispatchRouteTarget,
 ): string | null {
@@ -1543,15 +1572,7 @@ async function resolveCeilingValue(
   }
 
   if (baseCeiling.policy === 'uncapped') {
-    const preferredTier =
-      provider === 'codex' &&
-      role !== 'reviewer' &&
-      preferredValue !== null &&
-      (VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(
-        preferredValue,
-      )
-        ? (preferredValue as WorkflowDispatchMatrixTier)
-        : null;
+    const preferredTier = uncappedPreferredTier(provider, role, preferredValue);
 
     if (preferredTier) {
       const matrixCell = resolveProviderMatrixCell(
