@@ -9,12 +9,14 @@
 - The `multi-family-dispatch` final review added follow-ups for matrix helper consolidation, per-pass Cursor catalog caching, and producer aggregation for final/range review gates.
 - The `codex-family-subagents` discovery added a 2026-07-09 follow-up to verify Cursor's actual GPT-5.6 subagent model slugs before OAT wires Sol, Terra, or Luna into Cursor dispatch configuration.
 - High-priority review throughput work now tracks `oat-reviewer` orchestration of cheaper/faster reconnaissance subagents while preserving primary-reviewer judgment for synthesis, severity, and final findings.
+- The `codex-family-subagents` dispatch UX supplement is split: human-facing display guidance is folded into project p03-t05, while reusable machine schema/formatter work is tracked as `BL-260709-add-dispatch-machine-schema`.
 
 <!-- OAT BACKLOG-INDEX -->
 
 | ID                                       | Title                                                                  | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | ---------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews    | open   | high     | feature | M        |
+| BL-260709-add-dispatch-machine-schema    | Add dispatch machine schema and formatter                              | open   | medium   | feature | M        |
 | BL-260707-ask-to-enable-phase-review     | Ask to enable phase review gates when gate config exists               | open   | medium   | task    | S        |
 | BL-260707-cache-cursor-model-catalog     | Cache Cursor model catalog during matrix validation                    | open   | medium   | task    | S        |
 | BL-260707-consolidate-dispatch-matrix    | Consolidate dispatch matrix normalization and traversal                | open   | medium   | task    | M        |

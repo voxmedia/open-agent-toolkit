@@ -25,10 +25,10 @@ oat_generated: false
 | ------- | ------- | ----- | --------- |
 | Phase 1 | passed  | 3     | 3/3       |
 | Phase 2 | blocked | 5     | 5/5       |
-| Phase 3 | pending | 4     | 0/4       |
+| Phase 3 | pending | 5     | 0/5       |
 | Phase 4 | pending | 2     | 0/2       |
 
-**Total:** 8/14 tasks completed
+**Total:** 8/15 tasks completed
 
 ---
 
@@ -113,6 +113,11 @@ dispatch.
 **Commit:** -
 
 ### Task p03-t04: Validate Codex Matrix Model Availability
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t05: Clarify Human-Facing Dispatch Display
 
 **Status:** pending
 **Commit:** -
@@ -309,11 +314,16 @@ Chronological log of implementation progress.
   materialization of canonical agents with explicit model and effort.
 - Cursor remains generic-agent plus Task-level model dispatch, with
   subagent-eligible model validation.
+- Dispatch UX supplement disposition: fold human-facing display guidance into
+  this project as p03-t05; defer reusable machine schema/formatter work to
+  `BL-260709-add-dispatch-machine-schema`.
 
 **Follow-ups / TODO:**
 
 - Verify Cursor GPT-5.6 subagent model slugs after availability:
   `BL-260708-verify-cursor-gpt-5-6-subagent`.
+- Build a reusable dispatch machine schema/formatter:
+  `BL-260709-add-dispatch-machine-schema`.
 
 **Blockers:**
 

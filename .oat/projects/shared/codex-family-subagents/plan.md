@@ -650,7 +650,11 @@ git commit -m "fix(p02-t05): rewrite codex dispatch contracts"
 Keep Cursor generic-agent dispatch, but validate against Cursor's subagent
 model allow-list. Validate Codex matrix model IDs against the local Codex model
 catalog when available. Also remove hand-authored dispatch-policy option lists
-from workflow prompts.
+from workflow prompts. This phase also incorporates the bounded human-facing
+dispatch display guidance from
+`references/dispatch-ux-supplement.md`; reusable machine-readable dispatch
+schema/formatter work is deferred to backlog item
+`BL-260709-add-dispatch-machine-schema`.
 
 **Cursor agent-shape deferral:** This project ships Cursor dispatch through
 generic `.cursor/agents` files plus Task-level `model` arguments. Generating
@@ -933,6 +937,77 @@ Expected: Codex and Cursor availability tests pass.
 ```bash
 git add packages/cli/src/providers/identity packages/cli/src/commands/config packages/cli/src/commands/doctor
 git commit -m "fix(p03-t04): validate codex matrix models"
+```
+
+---
+
+### Task p03-t05: Clarify Human-Facing Dispatch Display
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Reference: `.oat/projects/shared/codex-family-subagents/references/dispatch-ux-supplement.md`
+
+**Step 1: Write test (RED)**
+
+Test that the bundled implementation workflow guidance:
+
+- Uses `Invocation target` / `Dispatch target` as the primary human-facing
+  statement of what OAT asked the host to run.
+- Uses `OAT Dispatch Tier` for OAT policy names such as `economy`,
+  `balanced`, `high`, `frontier`, `uncapped`, and `inherit host defaults`.
+- Separates requested controls from runtime confirmation.
+- Describes unknown producer identity as runtime identity not reported or
+  unverified, rather than leading the user-facing block with
+  `producer=unknown`.
+- Keeps the formal `Dispatch:` stamp parseable and conservative for gate and
+  diversity logic.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts
+```
+
+Expected: Tests fail until the shipped workflow guidance reflects the
+dispatch-UX split.
+
+**Step 2: Implement (GREEN)**
+
+Implementation responsibilities:
+
+- Update the `OAT Dispatch` display guidance to organize the primary output
+  around route/invocation target, OAT policy, requested controls, configured
+  defaults, and runtime confirmation.
+- Keep `producer` / `provenance` wording in the formal debug stamp, not as the
+  headline user-facing display.
+- Preserve provider-specific examples for materialized Codex roles, Codex base
+  fallback, and Task-model-argument providers.
+- Add a short note pointing future schema/formatter work to
+  `BL-260709-add-dispatch-machine-schema`.
+
+**Step 3: Refactor**
+
+Avoid introducing a reusable formatter in this task. Keep this p03 task scoped
+to shipped workflow guidance and contract tests.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts
+```
+
+Expected: Skill contract and bundle tests pass.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md packages/cli/src/commands/init/tools/shared .oat/projects/shared/codex-family-subagents/references/dispatch-ux-supplement.md
+git commit -m "docs(p03-t05): clarify dispatch display guidance"
 ```
 
 ---
