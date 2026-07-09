@@ -3,9 +3,9 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
   - task_id: p02-review
-    reason: 'p02 review still has one Important finding after two fix iterations; retry limit exhausted'
-    since: 2026-07-08
-oat_last_updated: 2026-07-08
+    reason: 'p02 re-review still has one Important finding after an explicit narrow retry override; resolver reports unresolved model axes for selected model-arg dispatch'
+    since: 2026-07-09
+oat_last_updated: 2026-07-09
 oat_current_task_id: p02-t01
 oat_generated: false
 ---
@@ -13,7 +13,7 @@ oat_generated: false
 # Implementation: codex-family-subagents
 
 **Started:** 2026-07-08
-**Last Updated:** 2026-07-08
+**Last Updated:** 2026-07-09
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -60,9 +60,10 @@ oat_generated: false
 
 **Status:** blocked
 **Started:** 2026-07-08
-**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-08T235031Z.md`
-**Blocker:** Review still has one Important finding after two fix iterations;
-retry limit exhausted.
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T013018Z.md`
+**Blocker:** Re-review still has one Important finding after an explicit narrow
+retry override; resolver reports unresolved model axes for selected model-arg
+dispatch.
 
 ### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
 
@@ -208,10 +209,53 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 #### Outstanding Items
 
-- p02 blocked after retry limit exhaustion. Latest review artifact:
+- p02 blocked after retry limit exhaustion. Review artifact:
   `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-08T235031Z.md`.
-- Remaining Important finding: review dispatch scope schema still excludes
-  selected Codex model axes in `.agents/skills/oat-project-implement/SKILL.md`.
+- Important finding fixed by explicit narrow retry override:
+  review dispatch scope schema now allows selected Codex model axes in
+  `.agents/skills/oat-project-implement/SKILL.md` (`40ae8413`).
+- Remaining Medium finding: dispatch-matrix recommendation adoption still
+  validates Codex route models as closed effort values in
+  `packages/cli/src/commands/config/index.ts`.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
+### Run 3 — 2026-07-09 01:32
+
+**Branch:** codex-family-subagents
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2 plus explicit narrow override
+**Phases:** 1 executed, 0 passed, 1 failed, 1 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | fail   | override       | stopped     |
+
+#### Parallel Groups
+
+- p02: sequential
+
+#### Dispatch Notes
+
+- Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized fix target resolved)
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized reviewer target resolved)
+
+#### Outstanding Items
+
+- Prior Important finding fixed: review dispatch schema no longer excludes
+  selected Codex model axes (`40ae8413`).
+- New remaining Important finding: model-argument dispatch reports
+  `modelAxis: "unresolved"` even when `dispatchArgs.model` selects a concrete
+  Claude/Cursor model. Latest review artifact:
+  `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T013018Z.md`.
 - Remaining Medium finding: dispatch-matrix recommendation adoption still
   validates Codex route models as closed effort values in
   `packages/cli/src/commands/config/index.ts`.
@@ -255,6 +299,8 @@ Chronological log of implementation progress.
   doctor/stray handling, and bundled dispatch contract updates.
 - Applied review fixes for payload-derived Codex axes, effective-source sync
   materialization, materialized doctor validation, and Codex model-axis examples.
+- Applied an explicit narrow retry override for the final p02 Important finding
+  in the review dispatch schema; re-review found that blocker fixed.
 
 **Decisions:**
 
@@ -271,9 +317,9 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- p02 review still has one Important finding after two fix iterations:
-  `Review dispatch schema still excludes selected Codex model axes`
-  (`.agents/skills/oat-project-implement/SKILL.md`).
+- p02 re-review still has one Important finding after an explicit narrow retry
+  override: `Model-argument dispatch reports unresolved model axes`
+  (`packages/cli/src/commands/project/dispatch-ceiling/index.ts`).
 
 ---
 
