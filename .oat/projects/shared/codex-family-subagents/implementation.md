@@ -34,7 +34,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-07-08
 **Completed:** 2026-07-08
-**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p01-review-2026-07-08T224422Z.md`
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/archived/p01-review-2026-07-08T224422Z.md`
 
 ### Task p01-t01: Add Codex Materialization Codec
 
@@ -58,7 +58,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-07-08
 **Completed:** 2026-07-09
-**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T020945Z.md`
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/archived/p02-review-2026-07-09T020945Z.md`
 
 ### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
 
@@ -92,7 +92,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-07-09
 **Completed:** 2026-07-09
-**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p03-review-2026-07-09T030955Z.md`
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/archived/p03-review-2026-07-09T030955Z.md`
 
 ### Task p03-t01: Validate Cursor Subagent-Eligible Models
 
@@ -128,7 +128,7 @@ oat_generated: false
 **Status:** passed
 **Started:** 2026-07-09
 **Completed:** 2026-07-09
-**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/archived/p04-review-2026-07-09T033119Z.md`
 
 ### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
 
@@ -231,7 +231,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 #### Outstanding Items
 
 - p02 blocked after retry limit exhaustion. Review artifact:
-  `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-08T235031Z.md`.
+  `.oat/projects/shared/codex-family-subagents/reviews/archived/p02-review-2026-07-08T235031Z.md`.
 - Important finding fixed by explicit narrow retry override:
   review dispatch scope schema now allows selected Codex model axes in
   `.agents/skills/oat-project-implement/SKILL.md` (`40ae8413`).
@@ -276,7 +276,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - New remaining Important finding: model-argument dispatch reports
   `modelAxis: "unresolved"` even when `dispatchArgs.model` selects a concrete
   Claude/Cursor model. Latest review artifact:
-  `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T013018Z.md`.
+  `.oat/projects/shared/codex-family-subagents/reviews/archived/p02-review-2026-07-09T013018Z.md`.
 - Remaining Medium finding: dispatch-matrix recommendation adoption still
   validates Codex route models as closed effort values in
   `packages/cli/src/commands/config/index.ts`.
@@ -313,7 +313,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 #### Outstanding Items
 
 - p02 passed with 0 Critical and 0 Important findings. Review artifact:
-  `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T020945Z.md`.
+  `.oat/projects/shared/codex-family-subagents/reviews/archived/p02-review-2026-07-09T020945Z.md`.
 - Deferred Medium finding: dispatch-matrix recommendation adoption still
   validates Codex route models as closed effort values in
   `packages/cli/src/commands/config/index.ts`.
@@ -356,7 +356,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 - p03 passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
   Review artifact:
-  `.oat/projects/shared/codex-family-subagents/reviews/p03-review-2026-07-09T030955Z.md`.
+  `.oat/projects/shared/codex-family-subagents/reviews/archived/p03-review-2026-07-09T030955Z.md`.
 
 #### Artifact / Design Deltas
 
@@ -392,7 +392,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 - p04 passed with 0 Critical, 0 Important, 0 Medium, and 1 Minor finding.
   Review artifact:
-  `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`.
+  `.oat/projects/shared/codex-family-subagents/reviews/archived/p04-review-2026-07-09T033119Z.md`.
 - Minor follow-up: clarify that user-scope Codex role generation via provider
   sync remains deferred while direct one-off materialization supports
   `--scope user` (`apps/oat-docs/docs/provider-sync/providers.md`).
@@ -574,7 +574,7 @@ After the fix tasks are complete:
 ### Review Received: final re-review pass
 
 **Date:** 2026-07-09
-**Review artifact:** `reviews/final-review-2026-07-09T041259Z.md`
+**Review artifact:** `reviews/archived/final-review-2026-07-09T041259Z.md`
 
 **Findings:**
 
@@ -622,7 +622,7 @@ After the fix tasks are complete:
 ### Review Received: final pass
 
 **Date:** 2026-07-09
-**Review artifact:** `reviews/final-review-2026-07-09T125650Z.md`
+**Review artifact:** `reviews/archived/final-review-2026-07-09T125650Z.md`
 
 **Findings:**
 
@@ -642,12 +642,12 @@ After the fix tasks are complete:
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Passed | Failed | Coverage |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | yes    | no     | phase    |
-| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | yes    | no     | phase    |
-| 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | yes    | no     | phase    |
-| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`; final review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`, `pnpm build:docs`; final re-review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; final re-review pass verification: `git diff --check f02e44a163cece6d1b0b5967b7d2651733d73978..HEAD`, CLI dispatch-ceiling tests, focused uncapped Codex `xhigh` smoke, `pnpm build:docs`, `pnpm release:validate`; final-pass verification: `oat sync --scope project`, `oat status --scope project`, `pnpm build:docs`, `pnpm release:validate`, full CLI Vitest suite (234 files / 2355 tests), Codex materialize dry-run for `gpt-5.6-sol` `xhigh`, final review artifact `reviews/final-review-2026-07-09T125650Z.md` | yes    | no     | phase    |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | yes    | no     | phase    |
+| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | yes    | no     | phase    |
+| 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | yes    | no     | phase    |
+| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`; final review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`, `pnpm build:docs`; final re-review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`; final re-review pass verification: `git diff --check f02e44a163cece6d1b0b5967b7d2651733d73978..HEAD`, CLI dispatch-ceiling tests, focused uncapped Codex `xhigh` smoke, `pnpm build:docs`, `pnpm release:validate`; final-pass verification: `oat sync --scope project`, `oat status --scope project`, `pnpm build:docs`, `pnpm release:validate`, full CLI Vitest suite (234 files / 2355 tests), Codex materialize dry-run for `gpt-5.6-sol` `xhigh`, final review artifact `reviews/archived/final-review-2026-07-09T125650Z.md` | yes    | no     | phase    |
 
 ## Final Summary (for PR/docs)
 

@@ -1285,11 +1285,11 @@ git commit -m "fix(p04-t05): map uncapped codex effort to matrix tier"
 
 | Scope     | Type     | Status | Date       | Artifact                                                      |
 | --------- | -------- | ------ | ---------- | ------------------------------------------------------------- |
-| p01       | code     | passed | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
-| p02       | code     | passed | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
-| p03       | code     | passed | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
-| p04       | code     | passed | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
-| final     | code     | passed | 2026-07-09 | `reviews/final-review-2026-07-09T125650Z.md`                  |
+| p01       | code     | passed | 2026-07-08 | `reviews/archived/p01-review-2026-07-08T224422Z.md`           |
+| p02       | code     | passed | 2026-07-09 | `reviews/archived/p02-review-2026-07-09T020945Z.md`           |
+| p03       | code     | passed | 2026-07-09 | `reviews/archived/p03-review-2026-07-09T030955Z.md`           |
+| p04       | code     | passed | 2026-07-09 | `reviews/archived/p04-review-2026-07-09T033119Z.md`           |
+| final     | code     | passed | 2026-07-09 | `reviews/archived/final-review-2026-07-09T125650Z.md`         |
 | discovery | artifact | passed | 2026-07-08 | `discovery.md`                                                |
 | spec      | artifact | passed | 2026-07-08 | N/A quick mode                                                |
 | design    | artifact | passed | 2026-07-08 | N/A quick mode                                                |
