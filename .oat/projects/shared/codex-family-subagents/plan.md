@@ -1158,7 +1158,7 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 | p01       | code     | passed  | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
 | p02       | code     | passed  | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
 | p03       | code     | passed  | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
-| p04       | code     | pending | -          | -                                                             |
+| p04       | code     | passed  | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
 | final     | code     | pending | -          | -                                                             |
 | discovery | artifact | passed  | 2026-07-08 | `discovery.md`                                                |
 | spec      | artifact | passed  | 2026-07-08 | N/A quick mode                                                |

@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,14 +18,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | passed  | 3     | 3/3       |
-| Phase 2 | passed  | 5     | 5/5       |
-| Phase 3 | passed  | 5     | 5/5       |
-| Phase 4 | pending | 2     | 0/2       |
+| Phase   | Status | Tasks | Completed |
+| ------- | ------ | ----- | --------- |
+| Phase 1 | passed | 3     | 3/3       |
+| Phase 2 | passed | 5     | 5/5       |
+| Phase 3 | passed | 5     | 5/5       |
+| Phase 4 | passed | 2     | 2/2       |
 
-**Total:** 13/15 tasks completed
+**Total:** 15/15 tasks completed
 
 ---
 
@@ -125,18 +125,20 @@ oat_generated: false
 
 ## Phase 4: Documentation, Versions, and Release Validation
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-07-09
+**Completed:** 2026-07-09
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`
 
 ### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c05ae475
 
 ### Task p04-t02: Update Public Package Versions and Validate Release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 218196eb
 
 ---
 
@@ -347,6 +349,45 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 6 — 2026-07-09 03:32
+
+**Branch:** codex-family-subagents
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p04   | DONE        | pass   | 0/2            | passed      |
+
+#### Parallel Groups
+
+- p04: sequential
+
+#### Dispatch Notes
+
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized implementer target resolved)
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized reviewer target resolved)
+
+#### Outstanding Items
+
+- p04 passed with 0 Critical, 0 Important, 0 Medium, and 1 Minor finding.
+  Review artifact:
+  `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`.
+- Minor follow-up: clarify that user-scope Codex role generation via provider
+  sync remains deferred while direct one-off materialization supports
+  `--scope user` (`apps/oat-docs/docs/provider-sync/providers.md`).
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -374,6 +415,8 @@ Chronological log of implementation progress.
 - [x] p03-t05: Clarify Human-Facing Dispatch Display (`92cb2736`)
 - [x] p03 review fixes: sentinel validation, unvalidated doctor warnings, and
       `OAT Dispatch Tier` primary display wording (`5c7d72a3`)
+- [x] p04-t01: Document Materialized Codex and Cursor Dispatch Behavior (`c05ae475`)
+- [x] p04-t02: Update Public Package Versions and Validate Release (`218196eb`)
 
 **What changed (high level):**
 
@@ -397,6 +440,11 @@ Chronological log of implementation progress.
 - Applied p03 review fixes for Cursor Task-probe sentinel validation, doctor
   warning status for unvalidated matrix cells, and `OAT Dispatch Tier` display
   wording; p03 re-review passed with no findings.
+- Documented materialized Codex model+effort dispatch, Cursor generic-agent
+  plus Task-level model dispatch, subagent eligibility validation, dispatch
+  policy modes, and materialized-role filesystem/config behavior.
+- Bumped the five public packages to `0.1.46`, refreshed public package version
+  assets, and passed the full release validation suite.
 
 **Decisions:**
 
@@ -418,6 +466,8 @@ Chronological log of implementation progress.
 - Deferred Medium from p02 review: dispatch-matrix recommendation adoption
   still validates Codex route models as closed effort values in
   `packages/cli/src/commands/config/index.ts`.
+- p04 Minor: clarify the provider-sync docs wording for user-scope Codex role
+  generation versus direct `--scope user` materialization.
 
 **Blockers:**
 
@@ -438,29 +488,51 @@ Chronological log of implementation progress.
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
 | 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                           | yes    | no     | phase    |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                      | yes    | no     | phase    |
-| 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`                                                                                                                                                                                                                                                            | yes    | no     | phase    |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Pending implementation.
+- Generic Codex role materialization for canonical agents with explicit model
+  and reasoning effort.
+- Dispatch-matrix-driven Codex materialized roles, plus Cursor and Claude model
+  argument dispatch handling.
+- Cursor and Codex matrix model availability validation with explicit warning
+  states for unknown or unvalidated cells.
+- Canonical dispatch-policy option rendering and hardened workflow guidance.
+- Documentation and lockstep public package version updates for the shipped CLI
+  and bundled asset changes.
 
 **Behavioral changes (user-facing):**
 
-- Pending implementation.
+- `oat providers codex materialize` can generate deterministic Codex roles from
+  a canonical agent, model, and effort.
+- OAT-managed Codex dispatch uses materialized model+effort roles when the
+  resolver returns them; base roles are explicit provider-default fallbacks.
+- Cursor dispatch keeps generic `.cursor/agents` files and applies model
+  control through Task-level arguments after subagent eligibility validation.
+- Dispatch prompts and docs distinguish capped managed, managed uncapped,
+  inherit host defaults, and unresolved deferral behavior.
 
 **Key files / modules:**
 
-- Pending implementation.
+- `packages/cli/src/providers/codex/codec/*`
+- `packages/cli/src/commands/providers/codex/*`
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- `packages/cli/src/providers/identity/availability.ts`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `apps/oat-docs/docs/**`
 
 **Verification performed:**
 
-- Pending implementation.
+- Phase-scoped CLI Vitest suites, CLI type-check, docs build, stale-role docs
+  grep, full `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm test`,
+  `pnpm build`, `pnpm build:docs`, and `pnpm release:validate`.
 
 **Design deltas (if any):**
 
-- None yet.
+- None.
 
 ## References
 
