@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -18,14 +18,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status | Tasks | Completed |
-| ------- | ------ | ----- | --------- |
-| Phase 1 | passed | 3     | 3/3       |
-| Phase 2 | passed | 5     | 5/5       |
-| Phase 3 | passed | 5     | 5/5       |
-| Phase 4 | passed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | passed      | 3     | 3/3       |
+| Phase 2 | passed      | 5     | 5/5       |
+| Phase 3 | passed      | 5     | 5/5       |
+| Phase 4 | in_progress | 4     | 2/4       |
 
-**Total:** 15/15 tasks completed
+**Total:** 15/17 tasks completed
 
 ---
 
@@ -125,9 +125,9 @@ oat_generated: false
 
 ## Phase 4: Documentation, Versions, and Release Validation
 
-**Status:** passed
+**Status:** in_progress
 **Started:** 2026-07-09
-**Completed:** 2026-07-09
+**Completed:** -
 **Review:** `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`
 
 ### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
@@ -139,6 +139,16 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 218196eb
+
+### Task p04-t03: (review) Resolve Uncapped Codex Materialized Dispatch
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t04: (review) Clarify Codex User-Scope Materialization Docs
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -417,6 +427,8 @@ Chronological log of implementation progress.
       `OAT Dispatch Tier` primary display wording (`5c7d72a3`)
 - [x] p04-t01: Document Materialized Codex and Cursor Dispatch Behavior (`c05ae475`)
 - [x] p04-t02: Update Public Package Versions and Validate Release (`218196eb`)
+- [ ] p04-t03: Resolve Uncapped Codex Materialized Dispatch
+- [ ] p04-t04: Clarify Codex User-Scope Materialization Docs
 
 **What changed (high level):**
 
@@ -468,6 +480,8 @@ Chronological log of implementation progress.
   `packages/cli/src/commands/config/index.ts`.
 - p04 Minor: clarify the provider-sync docs wording for user-scope Codex role
   generation versus direct `--scope user` materialization.
+- Final review Important: managed uncapped Codex implementer/fix dispatch must
+  resolve the preferred matrix target into materialized dispatch args.
 
 **Blockers:**
 
@@ -480,6 +494,45 @@ Chronological log of implementation progress.
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | -             | -               | -                    | -                 | -      | -               | -         |
+
+### Review Received: final
+
+**Date:** 2026-07-09
+**Review artifact:** `reviews/archived/final-review-2026-07-09T033502Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**Finding disposition map:**
+
+- I1 -> converted: p04-t03 resolves managed uncapped Codex implementer/fix
+  dispatch so it attaches the preferred matrix target and compiles a
+  materialized Codex variant.
+- m1 -> converted: p04-t04 clarifies provider-sync user-scope wording while
+  preserving direct one-off `--scope user` materialization docs.
+
+**New tasks added:** p04-t03, p04-t04
+
+**Deferred Medium Ledger:**
+
+- p02 Medium resolved by p03: recommendation adoption now keeps Codex route
+  target model/effort pairs together with target context.
+
+**Design drift / artifact alignment notes:**
+
+- None.
+
+**Next:** Execute final review fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update the final review row status to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then
+  `oat-project-review-receive` to reach `passed`
 
 ## Test Results
 

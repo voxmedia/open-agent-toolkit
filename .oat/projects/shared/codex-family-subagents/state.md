@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 218196eb
+oat_current_task: p04-t03
+oat_last_commit: 975892f9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -41,7 +41,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-08T19:35:02.205Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-09T03:32:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-09T03:44:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -53,7 +53,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review.
+Implementation - Final review fixes queued; ready for p04-t03.
 
 ## Artifacts
 
@@ -69,8 +69,7 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ Execution artifacts scaffolded
 - ✓ Discovery complete
 - ✓ Plan generated
-- ✓ Implementation tasks complete
-- ⧗ Awaiting final review
+- ⧗ Final review fixes queued
 
 ## Blockers
 
@@ -78,4 +77,4 @@ Implementation - Tasks complete; awaiting final review.
 
 ## Next Milestone
 
-Run final code review for the completed implementation.
+Execute p04-t03: resolve uncapped Codex materialized dispatch.

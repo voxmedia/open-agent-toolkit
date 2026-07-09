@@ -1151,19 +1151,103 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 
 ---
 
+### Task p04-t03: (review) Resolve Uncapped Codex Materialized Dispatch
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Managed `uncapped` Codex implementer/fix dispatch is documented
+as OAT-managed materialized model+effort selection, but the resolver returns
+before matrix target resolution and produces `dispatchArgs: null`.
+
+Location: `packages/cli/src/commands/project/dispatch-ceiling/index.ts:1528`
+
+**Step 2: Implement fix**
+
+Teach uncapped implementer/fix resolution to attach the preferred tier's matrix
+target before building provider dispatch args, while preserving the existing
+no-target reviewer fallback for managed uncapped review dispatch.
+
+Add regression coverage where `workflow.dispatchPolicy.policy=uncapped` plus a
+Codex matrix target returns `dispatchArgs.variant`,
+`modelAxis=selected:<model>`, and `effortAxis=selected:<effort>`.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts
+```
+
+Expected: Dispatch resolution, config, and Codex sync-extension tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts
+git commit -m "fix(p04-t03): resolve uncapped codex materialized dispatch"
+```
+
+---
+
+### Task p04-t04: (review) Clarify Codex User-Scope Materialization Docs
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
+
+**Step 1: Understand the issue**
+
+Review finding: The Codex provider docs mention direct
+`oat providers codex materialize ...` usage and the command supports
+`--scope project|user`, but the same section says user-scope Codex role
+generation remains deferred. That wording is ambiguous unless it is limited to
+provider-sync-generated user-scope roles.
+
+Location: `apps/oat-docs/docs/provider-sync/providers.md:50`
+
+**Step 2: Implement fix**
+
+Reword the deferred-user-scope sentence to specify provider sync, and mention
+that direct one-off materialization can use `--scope user`.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm build:docs
+```
+
+Expected: Docs build passes.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/provider-sync/providers.md
+git commit -m "docs(p04-t04): clarify codex user-scope materialization"
+```
+
+---
+
 ## Reviews
 
-| Scope     | Type     | Status   | Date       | Artifact                                                      |
-| --------- | -------- | -------- | ---------- | ------------------------------------------------------------- |
-| p01       | code     | passed   | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
-| p02       | code     | passed   | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
-| p03       | code     | passed   | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
-| p04       | code     | passed   | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
-| final     | code     | received | 2026-07-09 | `reviews/final-review-2026-07-09T033502Z.md`                  |
-| discovery | artifact | passed   | 2026-07-08 | `discovery.md`                                                |
-| spec      | artifact | passed   | 2026-07-08 | N/A quick mode                                                |
-| design    | artifact | passed   | 2026-07-08 | N/A quick mode                                                |
-| plan      | artifact | passed   | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
+| Scope     | Type     | Status      | Date       | Artifact                                                      |
+| --------- | -------- | ----------- | ---------- | ------------------------------------------------------------- |
+| p01       | code     | passed      | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
+| p02       | code     | passed      | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
+| p03       | code     | passed      | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
+| p04       | code     | passed      | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
+| final     | code     | fixes_added | 2026-07-09 | `reviews/archived/final-review-2026-07-09T033502Z.md`         |
+| discovery | artifact | passed      | 2026-07-08 | `discovery.md`                                                |
+| spec      | artifact | passed      | 2026-07-08 | N/A quick mode                                                |
+| design    | artifact | passed      | 2026-07-08 | N/A quick mode                                                |
+| plan      | artifact | passed      | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -1179,9 +1263,10 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
   materialized Codex roles.
 - Phase 3: 5 tasks - Cursor/Codex model validation, canonical dispatch-policy
   prompt rendering, and human-facing dispatch display guidance.
-- Phase 4: 2 tasks - docs, package versions, and release validation.
+- Phase 4: 4 tasks - docs, package versions, release validation, and final
+  review fixes.
 
-**Total: 15 tasks**
+**Total: 17 tasks**
 
 Ready for `oat-project-implement`.
 
