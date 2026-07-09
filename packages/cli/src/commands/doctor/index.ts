@@ -472,11 +472,12 @@ async function createDispatchMatrixDoctorCheck(
   }
 
   const hasUnknown = unknown.length > 0;
+  const hasUnvalidated = unvalidated.length > 0;
 
   return {
     name: 'project:dispatch_matrix',
     description: 'Dispatch matrix cell availability',
-    status: hasUnknown ? 'warn' : 'pass',
+    status: hasUnknown || hasUnvalidated ? 'warn' : 'pass',
     message: messageParts.join('. '),
     fix: hasUnknown
       ? 'Run `oat config set workflow.dispatchCeiling.providers.<provider> <value>` with an available value, or refresh provider assets with `oat sync --scope project`.'

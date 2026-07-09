@@ -308,6 +308,34 @@ describe('validateMatrixCell', () => {
     );
   });
 
+  it('does not validate Cursor models when the probe succeeds without the sentinel', async () => {
+    const runCursorAgent = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        stdout:
+          'The parent agent completed, but OAT_CURSOR_SUBAGENT_MODEL_VALID was not reported by a Task result.',
+        stderr: '',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        stdout: 'gpt-5.3-codex - GPT 5.3 Codex\n',
+        stderr: '',
+      });
+
+    await expect(
+      validateCursorSubagentModel('gpt-5.3-codex', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      availability: 'unvalidated',
+      message:
+        "Cursor's broad model catalog lists 'gpt-5.3-codex', but subagent Task dispatch could not be validated.",
+    });
+    expect(runCursorAgent).toHaveBeenCalledTimes(2);
+  });
+
   it('does not treat cursor-agent models as proof of subagent eligibility', async () => {
     const runCursorAgent = vi
       .fn()

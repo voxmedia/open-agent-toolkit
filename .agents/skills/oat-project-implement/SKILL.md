@@ -238,7 +238,7 @@ point.
 Print before phase work:
 
 ```text
-Dispatch policy: balanced (codex, managed capped — pinned-variant)
+OAT Dispatch Tier: balanced (codex, managed capped — pinned-variant)
 Resolved cap: high
 Source: project state
 Provider default effort: medium
@@ -433,7 +433,7 @@ Payload-first invariant:
 
 Human-facing dispatch display rules:
 
-- Lead with route, policy, requested controls, configured defaults, and runtime confirmation. These are the fields humans use to understand what OAT asked for and what the host appears to be running.
+- Lead with route, OAT dispatch tier, requested controls, configured defaults, and runtime confirmation. These are the fields humans use to understand what OAT asked for and what the host appears to be running.
 - Do not headline `producer=unknown` or `provenance=unknown`. Those values are
   audit fields for the formal stamp, not the primary status. Put unknown
   producer/provenance only in `Dispatch stamp:` or in a low-priority note after
@@ -459,7 +459,7 @@ Requested controls: {model=<value|none>, effort=<value|none>, target=<value|unkn
 Configured defaults: {provider default effort/model | unknown | not-applicable}
 Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}
 Preferred effort: {low | medium | high | xhigh | provider-default | not-applicable}
-Dispatch policy: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
+OAT Dispatch Tier: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
 Resolved cap: {resolved cap value | none}
 Selected effort: {low | medium | high | xhigh | provider-default | not-applicable}
 Policy source: {repo config | project state | preflight prompt}
@@ -483,7 +483,7 @@ Requested controls: model=gpt-5.6-sol, effort=medium, target=oat-phase-implement
 Configured defaults: provider default effort=high
 Runtime confirmation: declared:gpt-5.6-sol/medium
 Preferred effort: high
-Dispatch policy: economy
+OAT Dispatch Tier: economy
 Resolved cap: medium
 Selected effort: medium
 Policy source: repo config
@@ -505,7 +505,7 @@ Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-phase-implemen
 Configured defaults: provider default effort=medium
 Runtime confirmation: declared:gpt-5.6-terra/xhigh
 Preferred effort: xhigh
-Dispatch policy: uncapped
+OAT Dispatch Tier: uncapped
 Resolved cap: none
 Selected effort: xhigh
 Policy source: project state
@@ -527,7 +527,7 @@ Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-reviewer-gpt-5
 Configured defaults: provider default effort=medium
 Runtime confirmation: declared:gpt-5.6-terra/xhigh
 Preferred effort: high
-Dispatch policy: high
+OAT Dispatch Tier: high
 Resolved cap: xhigh
 Selected effort: xhigh
 Policy source: project state
@@ -549,7 +549,7 @@ Requested controls: model=none, effort=provider-default, target=oat-reviewer
 Configured defaults: provider default effort=medium
 Runtime confirmation: not-observable
 Preferred effort: provider-default
-Dispatch policy: inherit host defaults
+OAT Dispatch Tier: inherit host defaults
 Resolved cap: none
 Selected effort: provider-default
 Policy source: project state
@@ -578,7 +578,7 @@ Requested controls: model=none, effort=provider-default, target=explorer
 Configured defaults: provider default effort=xhigh
 Runtime confirmation: not-observable
 Preferred effort: provider-default
-Dispatch policy: high
+OAT Dispatch Tier: high
 Resolved cap: xhigh
 Selected effort: provider-default
 Policy source: project state

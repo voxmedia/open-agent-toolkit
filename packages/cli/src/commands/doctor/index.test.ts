@@ -681,7 +681,7 @@ describe('createDoctorCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('reports unvalidated dispatch matrix cells without warning exit status', async () => {
+  it('warns on unvalidated dispatch matrix cells', async () => {
     const { command, capture } = createHarness({
       oatConfig: {
         version: 1,
@@ -705,7 +705,7 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain(
       'workflow.dispatchCeiling.providers.cursor.high=composer-2.5 (shared config)',
     );
-    expect(process.exitCode).toBe(0);
+    expect(process.exitCode).toBe(1);
   });
 
   it('validates default local dispatch matrix adoption', async () => {

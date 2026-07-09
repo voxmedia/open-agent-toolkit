@@ -151,14 +151,26 @@ describe('review skill contracts', () => {
 
     expect(content).toContain('Human-facing dispatch display rules');
     expect(content).toMatch(
-      /Lead with route, policy, requested controls, configured defaults, and runtime\s+confirmation/,
+      /Lead with route, OAT dispatch tier, requested controls, configured defaults, and runtime\s+confirmation/,
     );
     expect(content).toContain('Do not headline `producer=unknown`');
     expect(content).toContain(
       'Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}',
     );
+    const primaryDisplaySection =
+      content.match(
+        /Print before phase work:[\s\S]*?### Dispatch Policy Enforcement Log/,
+      )?.[0] ?? '';
+    expect(primaryDisplaySection).toContain('OAT Dispatch Tier: balanced');
+    expect(primaryDisplaySection).toContain(
+      'OAT Dispatch Tier: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}',
+    );
+    expect(primaryDisplaySection).not.toMatch(/^Dispatch policy:/m);
     expect(content).toContain(
       'Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown>',
+    );
+    expect(content).toContain(
+      'Dispatch policy: {policy}; selected={selected value | none}; cap={value | none}',
     );
     expect(content).not.toContain('Producer: {slug | unknown}');
   });

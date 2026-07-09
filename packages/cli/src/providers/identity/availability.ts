@@ -179,10 +179,18 @@ function availabilityFromCursorCatalog(
     : 'unknown-value';
 }
 
+const CURSOR_SUBAGENT_PROBE_SENTINEL = 'OAT_CURSOR_SUBAGENT_MODEL_VALID';
+
+function hasCursorSubagentProbeSentinel(stdout: string): boolean {
+  return stdout
+    .split(/\r?\n/)
+    .some((line) => line.trim() === CURSOR_SUBAGENT_PROBE_SENTINEL);
+}
+
 function cursorSubagentProbePrompt(model: string): string {
   return [
     'Validate whether a Cursor subagent Task can be launched with a specific model.',
-    `Use the Task tool once with model "${model}" and ask the subagent to reply exactly: OAT_CURSOR_SUBAGENT_MODEL_VALID.`,
+    `Use the Task tool once with model "${model}" and ask the subagent to reply exactly: ${CURSOR_SUBAGENT_PROBE_SENTINEL}.`,
     'After the subagent returns, print only its exact reply.',
   ].join('\n');
 }
@@ -435,12 +443,12 @@ export async function validateCursorSubagentModel(
     cursorSubagentProbeArgs(value, env),
     runOptions,
   );
+  const probeOutput = `${probeResult.stdout}\n${probeResult.stderr}`;
 
-  if (probeResult.ok) {
+  if (probeResult.ok && hasCursorSubagentProbeSentinel(probeResult.stdout)) {
     return { availability: 'valid' };
   }
 
-  const probeOutput = `${probeResult.stdout}\n${probeResult.stderr}`;
   const allowedValues = parseCursorAllowedSubagentModels(probeOutput);
   if (allowedValues.length > 0) {
     const availability = allowedValues.includes(value)
