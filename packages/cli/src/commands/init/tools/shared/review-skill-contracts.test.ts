@@ -143,6 +143,20 @@ describe('review skill contracts', () => {
       'derive `model_axis` and `effort_axis` from resolver output',
     );
 
+    const reviewScopeBlock = implementerContent.match(
+      /Tier 1: dispatch the selected reviewer target[\s\S]*?```(?<scope>[\s\S]*?)```/,
+    )?.groups?.scope;
+    expect(reviewScopeBlock).toBeDefined();
+    expect(reviewScopeBlock).toContain(
+      'model_axis: { selected:<value> | inherited | not-applicable | host-auto }',
+    );
+    expect(reviewScopeBlock).not.toContain(
+      'model_axis: {inherited | selected:<Claude model>}',
+    );
+    expect(implementerContent).toContain(
+      'Codex materialized reviewer role selected from a model+effort target',
+    );
+
     const inheritedMaterializedCodexExamples = Array.from(
       implementerContent.matchAll(/```text\n(?<example>[\s\S]*?)\n```/g),
       (match) => match.groups?.example ?? '',
