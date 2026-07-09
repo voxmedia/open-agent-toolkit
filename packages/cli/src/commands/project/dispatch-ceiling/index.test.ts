@@ -2058,12 +2058,25 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('selects preferred Codex pinned variant for repo-config managed uncapped policy', async () => {
+    it('selects preferred Codex matrix target for repo-config managed uncapped policy', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
         workflow: {
           dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
         },
       });
 
@@ -2085,14 +2098,24 @@ describe('oat project dispatch-ceiling resolve', () => {
         preset: 'uncapped',
         providers: {
           codex: {
-            mode: 'advisory',
+            mode: 'enforced',
             mechanism: 'pinned-variant',
-            dispatchArgs: null,
+            dispatchArgs: {
+              variant: 'oat-phase-implementer-gpt-5-6-terra-high',
+            },
+            modelAxis: 'selected:gpt-5.6-terra',
+            effortAxis: 'selected:high',
             selection: {
               preferredValue: 'high',
               selectedValue: 'high',
               selectionMode: 'uncapped',
               policy: 'uncapped',
+              target: {
+                harness: 'codex',
+                model: 'gpt-5.6-terra',
+                effort: 'high',
+                crossHarness: false,
+              },
             },
           },
         },

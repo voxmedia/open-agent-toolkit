@@ -1140,16 +1140,25 @@ function selectDispatchValue(
   }
 
   if (policy.policy === 'uncapped') {
-    const selectedValue = role === 'reviewer' ? null : preferredValue;
+    const targetValue = policy.target
+      ? dispatchValueFromRouteTarget(policy.target)
+      : null;
+    const selectedValue =
+      role === 'reviewer' ? null : (targetValue ?? preferredValue);
+    const target = role === 'reviewer' || !targetValue ? null : policy.target;
     return {
       ...baseSelection,
       preferredValue: role === 'reviewer' ? null : preferredValue,
       selectedValue,
       capped: false,
       selectionMode: role === 'reviewer' ? 'no-review-target' : 'uncapped',
-      selectionBranch: selectedValue ? 'prompt-persisted' : 'unresolved',
-      family: selectionFamily(provider, selectedValue, null),
-      target: null,
+      selectionBranch: target
+        ? policy.selectionBranch
+        : selectedValue
+          ? 'prompt-persisted'
+          : 'unresolved',
+      family: selectionFamily(provider, selectedValue, target),
+      target,
     };
   }
 
@@ -1432,6 +1441,8 @@ async function resolveDispatchCeiling(
     projectPath,
     dependencies,
     escalationLevel,
+    role,
+    preferredValue,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);
@@ -1512,6 +1523,8 @@ async function resolveCeilingValue(
   projectPath: string | null,
   dependencies: DispatchCeilingDependencies,
   escalationLevel: number,
+  role: CeilingRole,
+  preferredValue: DispatchCeilingValue | null,
 ): Promise<ResolvedCeilingValue | null> {
   const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
   const projectCeiling = await resolveProjectStateCeiling(
@@ -1525,7 +1538,40 @@ async function resolveCeilingValue(
     return null;
   }
 
-  if (baseCeiling.mode === 'inherit' || baseCeiling.policy === 'uncapped') {
+  if (baseCeiling.mode === 'inherit') {
+    return baseCeiling;
+  }
+
+  if (baseCeiling.policy === 'uncapped') {
+    const preferredTier =
+      provider === 'codex' &&
+      role !== 'reviewer' &&
+      preferredValue !== null &&
+      (VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(
+        preferredValue,
+      )
+        ? (preferredValue as WorkflowDispatchMatrixTier)
+        : null;
+
+    if (preferredTier) {
+      const matrixCell = resolveProviderMatrixCell(
+        provider,
+        preferredTier,
+        resolvedConfig,
+        projectCeiling?.matrix ?? null,
+        escalationLevel,
+      );
+      if (matrixCell) {
+        return {
+          ...baseCeiling,
+          cellSource: matrixCell.cellSource,
+          target: matrixCell.target,
+          selectionBranch: matrixCell.selectionBranch,
+          warnings: [...baseCeiling.warnings, ...matrixCell.warnings],
+        };
+      }
+    }
+
     return baseCeiling;
   }
 
