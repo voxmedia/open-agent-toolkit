@@ -1235,19 +1235,65 @@ git commit -m "docs(p04-t04): clarify codex user-scope materialization"
 
 ---
 
+### Task p04-t05: (review) Map Uncapped Codex Preferred Effort to Matrix Tier
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: The first uncapped Codex fix only resolves materialized matrix
+targets when `--preferred` is also a dispatch matrix tier. The implementation
+workflow passes Codex provider efforts such as `xhigh`, so managed uncapped
+dispatch with a `frontier` matrix target still falls back to the base role with
+`dispatchArgs: null`.
+
+Location: `packages/cli/src/commands/project/dispatch-ceiling/index.ts:1545`
+
+**Step 2: Implement fix**
+
+Map uncapped Codex implementer/fix preferred effort values to matrix tier lookup
+before resolving matrix targets. Preserve the no-target reviewer fallback and
+the existing base-role fallback when no matrix target exists.
+
+Add regression coverage for `--preferred xhigh` selecting a Codex `frontier`
+matrix target with a materialized variant, selected model axis, and selected
+`xhigh` effort axis.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts
+```
+
+Expected: Dispatch resolution, config, and Codex sync-extension tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts
+git commit -m "fix(p04-t05): map uncapped codex effort to matrix tier"
+```
+
+---
+
 ## Reviews
 
-| Scope     | Type     | Status          | Date       | Artifact                                                      |
-| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01       | code     | passed          | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
-| p02       | code     | passed          | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
-| p03       | code     | passed          | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
-| p04       | code     | passed          | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
-| final     | code     | fixes_completed | 2026-07-09 | `reviews/archived/final-review-2026-07-09T033502Z.md`         |
-| discovery | artifact | passed          | 2026-07-08 | `discovery.md`                                                |
-| spec      | artifact | passed          | 2026-07-08 | N/A quick mode                                                |
-| design    | artifact | passed          | 2026-07-08 | N/A quick mode                                                |
-| plan      | artifact | passed          | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
+| Scope     | Type     | Status      | Date       | Artifact                                                      |
+| --------- | -------- | ----------- | ---------- | ------------------------------------------------------------- |
+| p01       | code     | passed      | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
+| p02       | code     | passed      | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
+| p03       | code     | passed      | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
+| p04       | code     | passed      | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
+| final     | code     | fixes_added | 2026-07-09 | `reviews/final-review-2026-07-09T035627Z.md`                  |
+| discovery | artifact | passed      | 2026-07-08 | `discovery.md`                                                |
+| spec      | artifact | passed      | 2026-07-08 | N/A quick mode                                                |
+| design    | artifact | passed      | 2026-07-08 | N/A quick mode                                                |
+| plan      | artifact | passed      | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -1263,10 +1309,10 @@ git commit -m "docs(p04-t04): clarify codex user-scope materialization"
   materialized Codex roles.
 - Phase 3: 5 tasks - Cursor/Codex model validation, canonical dispatch-policy
   prompt rendering, and human-facing dispatch display guidance.
-- Phase 4: 4 tasks - docs, package versions, release validation, and final
+- Phase 4: 5 tasks - docs, package versions, release validation, and final
   review fixes.
 
-**Total: 17 tasks**
+**Total: 18 tasks**
 
 Ready for `oat-project-implement`.
 

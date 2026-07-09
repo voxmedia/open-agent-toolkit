@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: null
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -18,14 +18,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status | Tasks | Completed |
-| ------- | ------ | ----- | --------- |
-| Phase 1 | passed | 3     | 3/3       |
-| Phase 2 | passed | 5     | 5/5       |
-| Phase 3 | passed | 5     | 5/5       |
-| Phase 4 | passed | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | passed      | 3     | 3/3       |
+| Phase 2 | passed      | 5     | 5/5       |
+| Phase 3 | passed      | 5     | 5/5       |
+| Phase 4 | in_progress | 5     | 4/5       |
 
-**Total:** 17/17 tasks completed
+**Total:** 17/18 tasks completed
 
 ---
 
@@ -125,9 +125,9 @@ oat_generated: false
 
 ## Phase 4: Documentation, Versions, and Release Validation
 
-**Status:** passed
+**Status:** in_progress
 **Started:** 2026-07-09
-**Completed:** 2026-07-09
+**Completed:** -
 **Review:** `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`
 
 ### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
@@ -149,6 +149,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** d0363d7f
+
+### Task p04-t05: (review) Map Uncapped Codex Preferred Effort to Matrix Tier
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -429,6 +434,7 @@ Chronological log of implementation progress.
 - [x] p04-t02: Update Public Package Versions and Validate Release (`218196eb`)
 - [x] p04-t03: Resolve Uncapped Codex Materialized Dispatch (`abfabe78`)
 - [x] p04-t04: Clarify Codex User-Scope Materialization Docs (`d0363d7f`)
+- [ ] p04-t05: Map Uncapped Codex Preferred Effort to Matrix Tier
 
 **What changed (high level):**
 
@@ -485,6 +491,9 @@ Chronological log of implementation progress.
 - Applied final review fixes: managed uncapped Codex implementer/fix dispatch
   now materializes preferred matrix targets, and provider-sync docs now
   distinguish direct user-scope materialization from deferred user-scope sync.
+- Final re-review Important: managed uncapped Codex implementer/fix dispatch
+  still needs to map provider preferred effort values such as `xhigh` to matrix
+  tier lookup before falling back to the base role.
 
 **Blockers:**
 
@@ -537,6 +546,28 @@ After the fix tasks are complete:
 - Re-run `oat-project-review-provide code final` then
   `oat-project-review-receive` to reach `passed`
 
+### Review Received: final re-review
+
+**Date:** 2026-07-09
+**Review artifact:** `reviews/final-review-2026-07-09T035627Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**Finding disposition map:**
+
+- I1 -> converted: p04-t05 maps managed uncapped Codex preferred effort values
+  such as `xhigh` to dispatch matrix tier lookup before compiling materialized
+  dispatch args.
+
+**New tasks added:** p04-t05
+
+**Next:** Execute p04-t05 via the `oat-project-implement` skill.
+
 ## Test Results
 
 | Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed | Coverage |
@@ -569,6 +600,9 @@ After the fix tasks are complete:
 - Managed uncapped Codex implementer/fix dispatch resolves preferred matrix
   targets into materialized model+effort variants when available, while
   uncapped reviewer dispatch keeps its base-role fallback.
+- Managed uncapped Codex implementer/fix dispatch maps preferred effort values
+  such as `xhigh` to dispatch matrix tier lookup before using the base-role
+  fallback.
 - Cursor dispatch keeps generic `.cursor/agents` files and applies model
   control through Task-level arguments after subagent eligibility validation.
 - Dispatch prompts and docs distinguish capped managed, managed uncapped,
