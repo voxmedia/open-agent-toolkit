@@ -1153,17 +1153,17 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 
 ## Reviews
 
-| Scope     | Type     | Status      | Date       | Artifact                                                                                  |
-| --------- | -------- | ----------- | ---------- | ----------------------------------------------------------------------------------------- |
-| p01       | code     | passed      | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                                                |
-| p02       | code     | fixes_added | 2026-07-09 | `reviews/p02-review-2026-07-09T013018Z.md` (blocked after explicit narrow retry override) |
-| p03       | code     | pending     | -          | -                                                                                         |
-| p04       | code     | pending     | -          | -                                                                                         |
-| final     | code     | pending     | -          | -                                                                                         |
-| discovery | artifact | passed      | 2026-07-08 | `discovery.md`                                                                            |
-| spec      | artifact | passed      | 2026-07-08 | N/A quick mode                                                                            |
-| design    | artifact | passed      | 2026-07-08 | N/A quick mode                                                                            |
-| plan      | artifact | passed      | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md`                             |
+| Scope     | Type     | Status  | Date       | Artifact                                                      |
+| --------- | -------- | ------- | ---------- | ------------------------------------------------------------- |
+| p01       | code     | passed  | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
+| p02       | code     | passed  | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
+| p03       | code     | pending | -          | -                                                             |
+| p04       | code     | pending | -          | -                                                             |
+| final     | code     | pending | -          | -                                                             |
+| discovery | artifact | passed  | 2026-07-08 | `discovery.md`                                                |
+| spec      | artifact | passed  | 2026-07-08 | N/A quick mode                                                |
+| design    | artifact | passed  | 2026-07-08 | N/A quick mode                                                |
+| plan      | artifact | passed  | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -1177,11 +1177,11 @@ git commit -m "chore(p04-t02): validate codex family subagents release"
 - Phase 1: 3 tasks - generic Codex materialization codec and CLI command.
 - Phase 2: 5 tasks - replace hard-coded effort pins with matrix-driven
   materialized Codex roles.
-- Phase 3: 4 tasks - Cursor/Codex model validation and canonical dispatch-policy
-  prompt rendering.
+- Phase 3: 5 tasks - Cursor/Codex model validation, canonical dispatch-policy
+  prompt rendering, and human-facing dispatch display guidance.
 - Phase 4: 2 tasks - docs, package versions, and release validation.
 
-**Total: 14 tasks**
+**Total: 15 tasks**
 
 Ready for `oat-project-implement`.
 

@@ -1,10 +1,7 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 40ae8413
-oat_blockers:
-  - task_id: p02-review
-    reason: 'p02 re-review still has one Important finding after an explicit narrow retry override; resolver reports unresolved model axes for selected model-arg dispatch'
-    since: 2026-07-09
+oat_current_task: p03-t01
+oat_last_commit: 27890802
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -44,19 +41,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-08T19:35:02.205Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-09T01:32:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-09T02:11:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: codex-family-subagents
 
-**Status:** Implementation blocked
+**Status:** Implementation in progress
 **Started:** 2026-07-08
 **Last Updated:** 2026-07-09
 
 ## Current Phase
 
-Implementation - Blocked in p02 review
+Implementation - Phase 2 passed; ready for p03-t01
 
 ## Artifacts
 
@@ -76,10 +73,8 @@ Implementation - Blocked in p02 review
 
 ## Blockers
 
-- p02 re-review still has one Important finding after an explicit narrow retry
-  override; resolver reports unresolved model axes for selected model-arg
-  dispatch.
+- None.
 
 ## Next Milestone
 
-Resolve p02 review blocker or explicitly approve another retry-limit override.
+Execute p03-t01: validate Cursor subagent-eligible models.

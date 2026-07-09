@@ -1,12 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-review
-    reason: 'p02 re-review still has one Important finding after an explicit narrow retry override; resolver reports unresolved model axes for selected model-arg dispatch'
-    since: 2026-07-09
+oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,7 +21,7 @@ oat_generated: false
 | Phase   | Status  | Tasks | Completed |
 | ------- | ------- | ----- | --------- |
 | Phase 1 | passed  | 3     | 3/3       |
-| Phase 2 | blocked | 5     | 5/5       |
+| Phase 2 | passed  | 5     | 5/5       |
 | Phase 3 | pending | 5     | 0/5       |
 | Phase 4 | pending | 2     | 0/2       |
 
@@ -58,12 +55,10 @@ oat_generated: false
 
 ## Phase 2: Replace Hard-Coded Codex Effort Pins
 
-**Status:** blocked
+**Status:** passed
 **Started:** 2026-07-08
-**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T013018Z.md`
-**Blocker:** Re-review still has one Important finding after an explicit narrow
-retry override; resolver reports unresolved model axes for selected model-arg
-dispatch.
+**Completed:** 2026-07-09
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T020945Z.md`
 
 ### Task p02-t01: Model Codex Materialization Targets from Dispatch Matrix
 
@@ -271,6 +266,43 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 4 — 2026-07-09 02:11
+
+**Branch:** codex-family-subagents
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2 plus explicit retry override
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p02   | DONE        | pass   | override+1     | passed      |
+
+#### Parallel Groups
+
+- p02: sequential
+
+#### Dispatch Notes
+
+- Inline approved retry fix: `27890802` reports selected model axes from `dispatchArgs.model` for model-argument providers.
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized reviewer target resolved)
+
+#### Outstanding Items
+
+- p02 passed with 0 Critical and 0 Important findings. Review artifact:
+  `.oat/projects/shared/codex-family-subagents/reviews/p02-review-2026-07-09T020945Z.md`.
+- Deferred Medium finding: dispatch-matrix recommendation adoption still
+  validates Codex route models as closed effort values in
+  `packages/cli/src/commands/config/index.ts`.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -306,6 +338,8 @@ Chronological log of implementation progress.
   materialization, materialized doctor validation, and Codex model-axis examples.
 - Applied an explicit narrow retry override for the final p02 Important finding
   in the review dispatch schema; re-review found that blocker fixed.
+- Applied an additional approved retry override for model-argument dispatch
+  axes; p02 re-review passed with no Critical or Important findings.
 
 **Decisions:**
 
@@ -324,12 +358,13 @@ Chronological log of implementation progress.
   `BL-260708-verify-cursor-gpt-5-6-subagent`.
 - Build a reusable dispatch machine schema/formatter:
   `BL-260709-add-dispatch-machine-schema`.
+- Deferred Medium from p02 review: dispatch-matrix recommendation adoption
+  still validates Codex route models as closed effort values in
+  `packages/cli/src/commands/config/index.ts`.
 
 **Blockers:**
 
-- p02 re-review still has one Important finding after an explicit narrow retry
-  override: `Model-argument dispatch reports unresolved model axes`
-  (`packages/cli/src/commands/project/dispatch-ceiling/index.ts`).
+- None.
 
 ---
 
@@ -341,12 +376,12 @@ Chronological log of implementation progress.
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed         | Coverage |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------- | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no             | phase    |
-| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | yes    | review blocked | phase    |
-| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -              | -        |
-| 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -              | -        |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
+| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                           | yes    | no     | phase    |
+| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
