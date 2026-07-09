@@ -110,6 +110,40 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('requires workflow skills to use canonical dispatch policy choices', () => {
+    const quickStartContent = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const implementContent = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    for (const content of [quickStartContent, implementContent]) {
+      expect(content).toContain(
+        'oat project dispatch-ceiling choices --format markdown',
+      );
+      expect(content).toContain('Do not hand-type the dispatch policy menu');
+      expect(content).toContain('OAT still manages dispatch selection');
+      expect(content).toContain('OAT does not choose model or effort');
+      expect(content).toContain('Implementation preflight must block');
+      expect(content).not.toContain('Managed capped policies:');
+      expect(content).not.toContain('1. Economy   ');
+    }
+  });
+
+  it('uses final code review scope for final-phase HiLL auto-review', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'If this is the final implementation phase checkpoint, run `oat-project-review-provide code final`',
+    );
+    expect(content).toContain(
+      'do not run a duplicate final phase-only lifecycle review',
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',

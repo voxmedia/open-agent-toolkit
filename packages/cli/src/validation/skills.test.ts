@@ -840,7 +840,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.10');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.11');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

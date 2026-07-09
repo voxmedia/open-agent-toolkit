@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.30
+version: 2.0.31
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -248,40 +248,51 @@ Note: OAT will use resolver-returned materialized Codex role names up to high. B
 If no policy resolves and the session is interactive, present the dispatch
 policy prompt once before starting work:
 
-```text
-No dispatch policy is configured for this project.
+Print the unresolved-policy heading, then generate the choice text from
+canonical CLI metadata immediately before presenting it:
 
-Set the dispatch policy — how OAT should choose subagent model/effort controls.
+```bash
+oat project dispatch-ceiling choices --format markdown
+```
 
-  Managed capped policies:
-  1. Economy   — Codex: medium · Claude: sonnet
-  2. Balanced  — Codex: high   · Claude: sonnet  (recommended)
-  3. High      — Codex: xhigh  · Claude: opus
-  4. Frontier  — Codex: xhigh  · Claude: fable
+Do not hand-type the dispatch policy menu or omit canonical choices. If the CLI
+is unavailable in this environment, derive the same labels and descriptions from
+`packages/cli/src/config/dispatch-policy-options.ts`; include every managed
+policy returned by `VALID_MANAGED_DISPATCH_POLICIES` plus `Uncapped`, `Inherit
+Host Defaults`, and `Leave Unresolved`.
 
-  Managed uncapped:
-  5. Uncapped — OAT selects the preferred implementer/fix target without a stored maximum cap.
+At minimum, preserve these semantics in any fallback text:
 
-  Host defaults:
-  6. Inherit Host Defaults — OAT does not select model/effort controls.
+- `Uncapped`: OAT still manages dispatch selection, but stores no maximum cap.
+  It is not host/default behavior and must not be represented by absent policy
+  state.
+- `Inherit Host Defaults`: OAT does not choose model or effort controls; the
+  executing host/provider owns implementation, fix, and review defaults.
+- `Leave Unresolved`: planning/preflight deferral only. It records no runtime
+  policy and is not a runnable implementation setting. Implementation preflight
+  must block until a policy resolves.
 
 OAT applies managed policies where the provider exposes a reliable mechanism
 (Codex: pinned variants; Claude: Task model parameter). Other providers may
 treat managed policies as advisory.
-```
 
-**Managed capped policy selection (options 1-4)** persists `mode: managed`,
+**Managed capped policy selection** persists `mode: managed`,
 `policy`, and the compiled provider targets. On selection, print the exact
 compiled result (e.g., "Dispatch policy set: balanced -> Codex: high · Claude:
 sonnet") before proceeding.
 
-**Uncapped (option 5)** persists explicit managed uncapped state. It does not
-write provider caps, and it must not be represented by leaving dispatch policy
-state absent.
+**Uncapped** persists explicit managed uncapped state. OAT still manages
+dispatch selection. It does not write provider caps, and it must not be
+represented by leaving dispatch policy state absent.
 
-**Inherit Host Defaults (option 6)** persists explicit inherit/default state.
-Use this only when the user wants OAT to leave implementation, fix, and review
-model/effort controls to the executing host/provider.
+**Inherit Host Defaults** persists explicit inherit/default state. Use this only
+when the user wants OAT to leave implementation, fix, and review model/effort
+controls to the executing host/provider. OAT does not choose model or effort in
+this mode.
+
+**Leave Unresolved** records no runtime policy for implementation. Stop before
+phase work and report the unresolved state; Implementation preflight must block
+until a policy resolves.
 
 Persist in project `state.md` frontmatter using the normalized shape:
 
@@ -1273,7 +1284,7 @@ Before pausing at a checkpoint, check if auto-review is enabled:
 1. Read `oat_auto_review_at_hill_checkpoints` from plan.md frontmatter. If not present, fall back to legacy `oat_auto_review_at_checkpoints`. If neither is present, fall back to `oat config get workflow.autoReviewAtHillCheckpoints` (which itself falls back to legacy `.oat/config.json` `autoReviewAtCheckpoints` when unset).
 
 2. If enabled and this is a checkpoint phase:
-   a. **Determine review scope:** Find the highest completed implementation phase already covered by a **`passed`** code-review row in plan.md Reviews table. Count only whole-phase scopes: `pNN` or `pNN-pMM`. Ignore task scopes (`pNN-tNN`) and rows with `fixes_added` or `fixes_completed` because those reviews did not pass and must be re-covered. Scope = every implementation phase after that passed coverage through the current phase, inclusive. If no earlier passed whole-phase review exists, start from the first implementation phase. Use `pNN-pMM` when the scope spans multiple phases. If this is the final implementation phase checkpoint, use scope `final`.
+   a. **Determine review scope:** Find the highest completed implementation phase already covered by a **`passed`** code-review row in plan.md Reviews table. Count only whole-phase scopes: `pNN` or `pNN-pMM`. Ignore task scopes (`pNN-tNN`) and rows with `fixes_added` or `fixes_completed` because those reviews did not pass and must be re-covered. Scope = every implementation phase after that passed coverage through the current phase, inclusive. If no earlier passed whole-phase review exists, start from the first implementation phase. Use `pNN-pMM` when the scope spans multiple phases. If this is the final implementation phase checkpoint, run `oat-project-review-provide code final`; use scope `final` and do not run a duplicate final phase-only lifecycle review, because Tier 1 already runs the standard per-phase reviewer before the final checkpoint branch.
    - Example: prior passed row `p01`, current checkpoint `p03` → review `p02-p03`
    - Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`
    - Example: current checkpoint is the last implementation phase → review `final`

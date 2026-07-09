@@ -315,6 +315,41 @@ describe('bundle-assets.sh consistency', () => {
   );
 
   it(
+    'bundles workflow skills with canonical dispatch policy prompt guidance',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        for (const skill of [
+          'oat-project-quick-start',
+          'oat-project-implement',
+        ]) {
+          const content = readFileSync(
+            join(assetsRoot, 'skills', skill, 'SKILL.md'),
+            'utf8',
+          );
+
+          expect(content).toContain(
+            'oat project dispatch-ceiling choices --format markdown',
+          );
+          expect(content).toContain(
+            'Do not hand-type the dispatch policy menu',
+          );
+          expect(content).not.toContain('Managed capped policies:');
+        }
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
     'bundles the PJM migration prompt asset',
     () => {
       const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
