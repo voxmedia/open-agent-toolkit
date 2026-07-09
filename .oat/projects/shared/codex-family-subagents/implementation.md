@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: p04-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,14 +18,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | passed      | 3     | 3/3       |
-| Phase 2 | passed      | 5     | 5/5       |
-| Phase 3 | passed      | 5     | 5/5       |
-| Phase 4 | in_progress | 5     | 4/5       |
+| Phase   | Status | Tasks | Completed |
+| ------- | ------ | ----- | --------- |
+| Phase 1 | passed | 3     | 3/3       |
+| Phase 2 | passed | 5     | 5/5       |
+| Phase 3 | passed | 5     | 5/5       |
+| Phase 4 | passed | 5     | 5/5       |
 
-**Total:** 17/18 tasks completed
+**Total:** 18/18 tasks completed
 
 ---
 
@@ -125,9 +125,9 @@ oat_generated: false
 
 ## Phase 4: Documentation, Versions, and Release Validation
 
-**Status:** in_progress
+**Status:** passed
 **Started:** 2026-07-09
-**Completed:** -
+**Completed:** 2026-07-09
 **Review:** `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`
 
 ### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
@@ -152,8 +152,8 @@ oat_generated: false
 
 ### Task p04-t05: (review) Map Uncapped Codex Preferred Effort to Matrix Tier
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9acffffd
 
 ---
 
@@ -434,7 +434,7 @@ Chronological log of implementation progress.
 - [x] p04-t02: Update Public Package Versions and Validate Release (`218196eb`)
 - [x] p04-t03: Resolve Uncapped Codex Materialized Dispatch (`abfabe78`)
 - [x] p04-t04: Clarify Codex User-Scope Materialization Docs (`d0363d7f`)
-- [ ] p04-t05: Map Uncapped Codex Preferred Effort to Matrix Tier
+- [x] p04-t05: Map Uncapped Codex Preferred Effort to Matrix Tier (`9acffffd`)
 
 **What changed (high level):**
 
@@ -494,6 +494,9 @@ Chronological log of implementation progress.
 - Final re-review Important: managed uncapped Codex implementer/fix dispatch
   still needs to map provider preferred effort values such as `xhigh` to matrix
   tier lookup before falling back to the base role.
+- Applied final re-review fix: managed uncapped Codex implementer/fix dispatch
+  maps preferred effort values such as `xhigh` to dispatch matrix tier lookup
+  before using the base-role fallback.
 
 **Blockers:**
 
@@ -566,16 +569,16 @@ After the fix tasks are complete:
 
 **New tasks added:** p04-t05
 
-**Next:** Execute p04-t05 via the `oat-project-implement` skill.
+**Next:** Re-run final code review.
 
 ## Test Results
 
-| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Passed | Failed | Coverage |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
-| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                           | yes    | no     | phase    |
-| 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                      | yes    | no     | phase    |
-| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`; final review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`, `pnpm build:docs`                  | yes    | no     | phase    |
+| Phase | Tests Run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Passed | Failed | Coverage |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check                                                                                                                                                                                                          | yes    | no     | phase    |
+| 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | yes    | no     | phase    |
+| 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                                                                                                                                                                                                                               | yes    | no     | phase    |
+| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`; final review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`, `pnpm build:docs`; final re-review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts` | yes    | no     | phase    |
 
 ## Final Summary (for PR/docs)
 

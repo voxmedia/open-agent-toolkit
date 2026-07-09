@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t05
-oat_last_commit: 9f49de4a
+oat_current_task: null
+oat_last_commit: 9acffffd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -41,7 +41,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-08T19:35:02.205Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-09T04:06:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-09T04:11:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -53,7 +53,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final re-review fix queued; ready for p04-t05.
+Implementation - Final re-review fix complete; awaiting final re-review.
 
 ## Artifacts
 
@@ -69,7 +69,8 @@ Implementation - Final re-review fix queued; ready for p04-t05.
 - ✓ Execution artifacts scaffolded
 - ✓ Discovery complete
 - ✓ Plan generated
-- ⧗ Final re-review fix queued
+- ✓ Implementation tasks complete
+- ⧗ Awaiting final re-review
 
 ## Blockers
 
@@ -77,4 +78,4 @@ Implementation - Final re-review fix queued; ready for p04-t05.
 
 ## Next Milestone
 
-Execute p04-t05: map uncapped Codex preferred effort to matrix tier lookup.
+Re-run final code review for the completed implementation.
