@@ -13,6 +13,11 @@ import {
   type DispatchPolicyCompileResult,
 } from '@config/dispatch-ceiling-preset';
 import {
+  getDispatchPolicyChoices,
+  managedDispatchPolicyValueList,
+  renderDispatchPolicyChoicesMarkdown,
+} from '@config/dispatch-policy-options';
+import {
   resolveActiveProject,
   VALID_CLAUDE_DISPATCH_CEILINGS,
   VALID_CODEX_DISPATCH_CEILINGS,
@@ -102,6 +107,11 @@ interface DispatchCeilingResolveOptions {
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
+  json?: boolean;
+}
+
+interface DispatchCeilingChoicesOptions {
+  format?: string;
   json?: boolean;
 }
 
@@ -298,7 +308,7 @@ function isValidManagedPolicy(
 }
 
 function validManagedPolicyList(): string {
-  return VALID_MANAGED_DISPATCH_POLICIES.join(', ');
+  return managedDispatchPolicyValueList(', ');
 }
 
 function validProviderValueList(provider: DispatchCeilingProvider): string {
@@ -1686,6 +1696,31 @@ async function runDispatchCeilingResolve(
   }
 }
 
+async function runDispatchCeilingChoices(
+  context: CommandContext,
+  options: DispatchCeilingChoicesOptions,
+): Promise<void> {
+  const choices = getDispatchPolicyChoices();
+  const format = (options.format ?? 'markdown').trim().toLowerCase();
+
+  if (context.json || options.json) {
+    context.logger.json({ status: 'ok', choices });
+    process.exitCode = 0;
+    return;
+  }
+
+  if (format !== 'markdown') {
+    context.logger.error(
+      `Invalid choices format "${options.format}". Valid formats: markdown.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  context.logger.info(renderDispatchPolicyChoicesMarkdown(choices));
+  process.exitCode = 0;
+}
+
 export function createProjectDispatchCeilingCommand(
   overrides: Partial<DispatchCeilingDependencies> = {},
 ): Command {
@@ -1696,6 +1731,21 @@ export function createProjectDispatchCeilingCommand(
 
   const command = new Command('dispatch-ceiling').description(
     'Resolve OAT project dispatch ceiling metadata',
+  );
+
+  command.addCommand(
+    new Command('choices')
+      .description('Print canonical dispatch policy choices')
+      .option('--format <format>', 'Output format: markdown', 'markdown')
+      .option('--json', 'Output machine-readable JSON')
+      .action(async (options: DispatchCeilingChoicesOptions, cmd: Command) => {
+        const globalOptions = readGlobalOptions(cmd);
+        const context = dependencies.buildCommandContext({
+          ...globalOptions,
+          json: globalOptions.json === true || options.json === true,
+        });
+        await runDispatchCeilingChoices(context, options);
+      }),
   );
 
   command.addCommand(

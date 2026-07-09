@@ -1758,6 +1758,23 @@ describe('oat config', () => {
       );
     });
 
+    it('describe workflow.dispatchPolicy.policy uses canonical policy option wording', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.dispatchPolicy.policy']);
+
+      expect(capture.info[0]).toContain(
+        'economy | balanced | high | frontier | uncapped',
+      );
+      expect(capture.info[0]).toContain(
+        'uncapped keeps OAT-managed preferred selection without provider caps',
+      );
+      expect(capture.info[0]).toContain(
+        'inherit leaves dispatch controls to host/provider defaults',
+      );
+    });
+
     it('workflow.autoReviewAtHillCheckpoints overrides legacy autoReviewAtCheckpoints', async () => {
       const root = await createRepoRoot();
       const home = await createHome();

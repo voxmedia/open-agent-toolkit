@@ -10,6 +10,13 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { compileDispatchCeilingPreset } from '@config/dispatch-ceiling-preset';
 import {
+  dispatchPolicyModeDescription,
+  dispatchPolicyPolicyDescription,
+  managedDispatchPolicyValueList,
+} from '@config/dispatch-policy-options';
+import {
+  VALID_DISPATCH_POLICY_MODES,
+  VALID_MANAGED_DISPATCH_POLICIES,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -652,8 +659,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.dispatchPolicy.mode <value>',
-    description:
-      'Dispatch policy mode. "managed" means OAT selects model/effort from workflow.dispatchPolicy.policy; "inherit" means OAT leaves dispatch controls to the host/provider defaults. Set workflow.dispatchPolicy.policy to choose a managed policy. Resolution: local > shared > user > default.',
+    description: dispatchPolicyModeDescription(),
   },
   {
     key: 'workflow.dispatchPolicy.policy',
@@ -664,8 +670,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.dispatchPolicy.policy <value>',
-    description:
-      'Managed dispatch policy. economy, balanced, high, and frontier are capped managed policies; uncapped keeps OAT-managed preferred selection without provider caps. Setting this key writes workflow.dispatchPolicy.mode=managed. Resolution: local > shared > user > default.',
+    description: dispatchPolicyPolicyDescription(),
   },
   {
     key: 'workflow.dispatchCeiling.providers.codex',
@@ -823,14 +828,8 @@ const WORKFLOW_ENUM_VALUES = {
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
   'workflow.designMode': ['collaborative', 'selective', 'draft'],
-  'workflow.dispatchPolicy.mode': ['managed', 'inherit'],
-  'workflow.dispatchPolicy.policy': [
-    'economy',
-    'balanced',
-    'high',
-    'frontier',
-    'uncapped',
-  ],
+  'workflow.dispatchPolicy.mode': [...VALID_DISPATCH_POLICY_MODES],
+  'workflow.dispatchPolicy.policy': [...VALID_MANAGED_DISPATCH_POLICIES],
   'workflow.dispatchCeiling.preset': ['balanced', 'maximum', 'cost-conscious'],
   'workflow.dispatchCeiling.providers.codex': [
     'low',
@@ -1184,7 +1183,7 @@ function applyWorkflowValue(
     const policy = workflow.dispatchPolicy?.policy;
     if (!policy) {
       throw new Error(
-        'Cannot set workflow.dispatchPolicy.mode to managed without an existing workflow.dispatchPolicy.policy. Set workflow.dispatchPolicy.policy <economy|balanced|high|frontier|uncapped> instead.',
+        `Cannot set workflow.dispatchPolicy.mode to managed without an existing workflow.dispatchPolicy.policy. Set workflow.dispatchPolicy.policy <${managedDispatchPolicyValueList('|')}> instead.`,
       );
     }
 

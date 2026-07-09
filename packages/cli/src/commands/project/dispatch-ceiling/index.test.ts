@@ -57,6 +57,18 @@ async function runCommand(
   commandArgs: string[],
   globalArgs: string[] = [],
 ): Promise<void> {
+  await runDispatchCeilingCommand(
+    command,
+    ['resolve', ...commandArgs],
+    globalArgs,
+  );
+}
+
+async function runDispatchCeilingCommand(
+  command: Command,
+  commandArgs: string[],
+  globalArgs: string[] = [],
+): Promise<void> {
   const program = new Command()
     .name('oat')
     .option('--json')
@@ -70,7 +82,7 @@ async function runCommand(
   program.addCommand(project);
 
   await program.parseAsync(
-    [...globalArgs, 'project', 'dispatch-ceiling', 'resolve', ...commandArgs],
+    [...globalArgs, 'project', 'dispatch-ceiling', ...commandArgs],
     { from: 'user' },
   );
 }
@@ -121,6 +133,48 @@ describe('oat project dispatch-ceiling resolve', () => {
     tempDirs.push(repo.root, repo.home);
     return repo;
   }
+
+  it('prints dispatch policy choices as markdown from canonical metadata', async () => {
+    const { root, home } = await setup();
+    const { command, capture } = createHarness({ cwd: root, home });
+
+    await runDispatchCeilingCommand(command, [
+      'choices',
+      '--format',
+      'markdown',
+    ]);
+
+    expect(capture.info.join('\n')).toContain('4. Frontier');
+    expect(capture.info.join('\n')).toContain('5. Uncapped');
+    expect(capture.info.join('\n')).toContain('6. Inherit Host Defaults');
+    expect(capture.info.join('\n')).toContain('7. Leave Unresolved');
+    expect(capture.info.join('\n')).toContain('planning/preflight deferral');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints dispatch policy choices as json', async () => {
+    const { root, home } = await setup();
+    const { command, capture } = createHarness({ cwd: root, home });
+
+    await runDispatchCeilingCommand(command, ['choices', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      choices: expect.arrayContaining([
+        expect.objectContaining({
+          value: 'frontier',
+          kind: 'managed-capped',
+          runtimePolicy: true,
+        }),
+        expect.objectContaining({
+          value: 'leave-unresolved',
+          kind: 'unresolved',
+          runtimePolicy: false,
+        }),
+      ]),
+    });
+    expect(process.exitCode).toBe(0);
+  });
 
   it('resolves repo config before project state', async () => {
     const { root, home } = await setup();

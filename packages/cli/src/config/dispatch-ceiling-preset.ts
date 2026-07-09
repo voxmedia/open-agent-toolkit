@@ -98,6 +98,15 @@ export function compileAdvancedDispatchCeiling(
   return { providers };
 }
 
+export function dispatchPolicyProviderTargets(
+  policy: CappedManagedDispatchPolicy,
+): {
+  codex: WorkflowCodexDispatchCeiling;
+  claude: DispatchPolicyClaudeValue;
+} {
+  return { ...DISPATCH_POLICY_PRESETS[policy] };
+}
+
 /**
  * Compile the managed dispatch-policy ladder into concrete provider caps.
  * `uncapped` is intentionally explicit but has no provider caps.
