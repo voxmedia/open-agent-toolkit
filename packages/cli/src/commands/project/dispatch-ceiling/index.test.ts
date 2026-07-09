@@ -57,6 +57,18 @@ async function runCommand(
   commandArgs: string[],
   globalArgs: string[] = [],
 ): Promise<void> {
+  await runDispatchCeilingCommand(
+    command,
+    ['resolve', ...commandArgs],
+    globalArgs,
+  );
+}
+
+async function runDispatchCeilingCommand(
+  command: Command,
+  commandArgs: string[],
+  globalArgs: string[] = [],
+): Promise<void> {
   const program = new Command()
     .name('oat')
     .option('--json')
@@ -70,7 +82,7 @@ async function runCommand(
   program.addCommand(project);
 
   await program.parseAsync(
-    [...globalArgs, 'project', 'dispatch-ceiling', 'resolve', ...commandArgs],
+    [...globalArgs, 'project', 'dispatch-ceiling', ...commandArgs],
     { from: 'user' },
   );
 }
@@ -122,6 +134,48 @@ describe('oat project dispatch-ceiling resolve', () => {
     return repo;
   }
 
+  it('prints dispatch policy choices as markdown from canonical metadata', async () => {
+    const { root, home } = await setup();
+    const { command, capture } = createHarness({ cwd: root, home });
+
+    await runDispatchCeilingCommand(command, [
+      'choices',
+      '--format',
+      'markdown',
+    ]);
+
+    expect(capture.info.join('\n')).toContain('4. Frontier');
+    expect(capture.info.join('\n')).toContain('5. Uncapped');
+    expect(capture.info.join('\n')).toContain('6. Inherit Host Defaults');
+    expect(capture.info.join('\n')).toContain('7. Leave Unresolved');
+    expect(capture.info.join('\n')).toContain('planning/preflight deferral');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prints dispatch policy choices as json', async () => {
+    const { root, home } = await setup();
+    const { command, capture } = createHarness({ cwd: root, home });
+
+    await runDispatchCeilingCommand(command, ['choices', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      choices: expect.arrayContaining([
+        expect.objectContaining({
+          value: 'frontier',
+          kind: 'managed-capped',
+          runtimePolicy: true,
+        }),
+        expect.objectContaining({
+          value: 'leave-unresolved',
+          kind: 'unresolved',
+          runtimePolicy: false,
+        }),
+      ]),
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('resolves repo config before project state', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
@@ -158,9 +212,11 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'high',
-          mode: 'enforced',
+          mode: 'advisory',
           mechanism: 'pinned-variant',
-          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+          dispatchArgs: null,
+          modelAxis: 'unresolved',
+          effortAxis: 'unresolved',
         },
       },
     });
@@ -205,9 +261,11 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'xhigh',
-          mode: 'enforced',
+          mode: 'advisory',
           mechanism: 'pinned-variant',
-          dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+          dispatchArgs: null,
+          modelAxis: 'unresolved',
+          effortAxis: 'unresolved',
         },
       },
     });
@@ -252,9 +310,11 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           value: 'high',
-          mode: 'enforced',
+          mode: 'advisory',
           mechanism: 'pinned-variant',
-          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+          dispatchArgs: null,
+          modelAxis: 'unresolved',
+          effortAxis: 'unresolved',
         },
       },
     });
@@ -450,6 +510,8 @@ describe('oat project dispatch-ceiling resolve', () => {
           mode: 'enforced',
           mechanism: 'model-arg',
           dispatchArgs: { model: 'glm-5.2-max' },
+          modelAxis: 'selected:glm-5.2-max',
+          effortAxis: 'not-applicable',
           cellSource: 'project-state',
           selection: {
             selectedValue: 'glm-5.2-max',
@@ -643,7 +705,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       value: 'medium',
       providers: {
         codex: {
-          dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+          dispatchArgs: null,
           selection: {
             preferredValue: 'xhigh',
             selectedValue: 'medium',
@@ -786,7 +848,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         codex: {
           value: 'high',
           mode: 'enforced',
-          dispatchArgs: { variant: 'oat-phase-implementer-high' },
+          dispatchArgs: { variant: 'oat-phase-implementer-gpt-5-5-high' },
           selection: {
             selectedValue: 'high',
             target: {
@@ -799,6 +861,272 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves codex matrix targets with model and effort', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-terra',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'xhigh',
+      providers: {
+        codex: {
+          value: 'xhigh',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-terra-xhigh',
+          },
+          modelAxis: 'selected:gpt-5.6-terra',
+          effortAxis: 'selected:xhigh',
+          selection: {
+            selectedValue: 'xhigh',
+            target: {
+              harness: 'codex',
+              model: 'gpt-5.6-terra',
+              effort: 'xhigh',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('dispatches reviewer codex matrix targets to reviewer materialized roles', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providers: {
+        codex: {
+          value: 'xhigh',
+          dispatchArgs: {
+            variant: 'oat-reviewer-gpt-5-6-sol-xhigh',
+          },
+          modelAxis: 'selected:gpt-5.6-sol',
+          effortAxis: 'selected:xhigh',
+          selection: {
+            role: 'reviewer',
+            selectedValue: 'xhigh',
+            target: {
+              harness: 'codex',
+              model: 'gpt-5.6-sol',
+              effort: 'xhigh',
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports lower preferred codex matrix selections without a variant as unresolved axes', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-terra',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preferred',
+      'medium',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      value: 'xhigh',
+      providers: {
+        codex: {
+          dispatchArgs: null,
+          modelAxis: 'unresolved',
+          effortAxis: 'unresolved',
+          selection: {
+            preferredValue: 'medium',
+            selectedValue: 'medium',
+            target: null,
+          },
+        },
+      },
+    });
+  });
+
+  it('reports incomplete codex materialized targets as unresolved', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: null,
+      providers: {
+        codex: {
+          value: null,
+          mode: 'advisory',
+          dispatchArgs: null,
+          selection: {
+            selectedValue: null,
+            selectionMode: 'unresolved',
+            target: {
+              harness: 'codex',
+              effort: 'xhigh',
+              crossHarness: false,
+            },
+          },
+        },
+      },
+    });
+    expect(capture.warn.join('\n')).toContain('model and effort');
     expect(process.exitCode).toBe(0);
   });
 
@@ -1119,7 +1447,13 @@ describe('oat project dispatch-ceiling resolve', () => {
     });
 
     const { command, capture } = createHarness({ cwd: root, home });
-    await runCommand(command, ['--provider', 'claude', '--json']);
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--role',
+      'reviewer',
+      '--json',
+    ]);
 
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'resolved',
@@ -1133,6 +1467,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           mode: 'enforced',
           mechanism: 'model-arg',
           dispatchArgs: { model: 'fable' },
+          modelAxis: 'selected:fable',
+          effortAxis: 'not-applicable',
+          selection: {
+            role: 'reviewer',
+            selectedValue: 'fable',
+          },
         },
       },
     });
@@ -1407,7 +1747,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-reviewer-high' },
+            dispatchArgs: null,
           },
         },
       });
@@ -1436,7 +1776,9 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           codex: {
             value: 'xhigh',
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
+            modelAxis: 'unresolved',
+            effortAxis: 'unresolved',
             selection: {
               role: 'implementer',
               preferredValue: 'medium',
@@ -1473,7 +1815,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         value: 'medium',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               role: 'implementer',
               preferredValue: 'xhigh',
@@ -1611,6 +1953,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           claude: {
             dispatchArgs: { model: 'sonnet' },
+            modelAxis: 'selected:sonnet',
+            effortAxis: 'not-applicable',
             selection: {
               role: 'implementer',
               preferredValue: 'opus',
@@ -1643,7 +1987,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-reviewer-xhigh' },
+            dispatchArgs: null,
             selection: {
               role: 'reviewer',
               preferredValue: 'medium',
@@ -1697,8 +2041,8 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           codex: {
             value: null,
-            mode: 'enforced',
-            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            mode: 'advisory',
+            dispatchArgs: null,
             selection: {
               role: 'implementer',
               preferredValue: 'xhigh',
@@ -1714,12 +2058,25 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('selects preferred Codex pinned variant for repo-config managed uncapped policy', async () => {
+    it('selects preferred Codex matrix target for repo-config managed uncapped policy', async () => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
         workflow: {
           dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
         },
       });
 
@@ -1743,12 +2100,86 @@ describe('oat project dispatch-ceiling resolve', () => {
           codex: {
             mode: 'enforced',
             mechanism: 'pinned-variant',
-            dispatchArgs: { variant: 'oat-phase-implementer-high' },
+            dispatchArgs: {
+              variant: 'oat-phase-implementer-gpt-5-6-terra-high',
+            },
+            modelAxis: 'selected:gpt-5.6-terra',
+            effortAxis: 'selected:high',
             selection: {
               preferredValue: 'high',
               selectedValue: 'high',
               selectionMode: 'uncapped',
               policy: 'uncapped',
+              target: {
+                harness: 'codex',
+                model: 'gpt-5.6-terra',
+                effort: 'high',
+                crossHarness: false,
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('maps preferred xhigh Codex effort to frontier matrix target for managed uncapped policy', async () => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'uncapped' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                frontier: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        'xhigh',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: null,
+        source: 'repo-config',
+        preset: 'uncapped',
+        providers: {
+          codex: {
+            mode: 'enforced',
+            mechanism: 'pinned-variant',
+            dispatchArgs: {
+              variant: 'oat-phase-implementer-gpt-5-6-sol-xhigh',
+            },
+            modelAxis: 'selected:gpt-5.6-sol',
+            effortAxis: 'selected:xhigh',
+            selection: {
+              preferredValue: 'xhigh',
+              selectedValue: 'xhigh',
+              selectionMode: 'uncapped',
+              policy: 'uncapped',
+              target: {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: 'xhigh',
+                crossHarness: false,
+              },
             },
           },
         },
@@ -1787,7 +2218,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         policy: 'legacy-ceiling',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'xhigh',
               selectedValue: 'medium',
@@ -1831,7 +2262,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         policy: 'legacy-ceiling',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-medium' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'xhigh',
               selectedValue: 'medium',
@@ -1879,7 +2310,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         preset: 'uncapped',
         providers: {
           codex: {
-            dispatchArgs: { variant: 'oat-phase-implementer-xhigh' },
+            dispatchArgs: null,
             selection: {
               preferredValue: 'xhigh',
               selectedValue: 'xhigh',
@@ -1992,6 +2423,8 @@ describe('oat project dispatch-ceiling resolve', () => {
             mode: 'enforced',
             mechanism: 'model-arg',
             dispatchArgs: { model: 'fable' },
+            modelAxis: 'selected:fable',
+            effortAxis: 'not-applicable',
             selection: {
               preferredValue: 'fable',
               selectedValue: 'fable',

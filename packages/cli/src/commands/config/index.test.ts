@@ -7,7 +7,11 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import type { MatrixCellAvailability } from '@providers/identity/availability';
+import type {
+  MatrixCellAvailability,
+  MatrixCellAvailabilityResult,
+  ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,8 +24,8 @@ interface HarnessOptions {
   validateMatrixCell?: (
     provider: string,
     value: string,
-    options: { cwd: string; env: NodeJS.ProcessEnv },
-  ) => Promise<MatrixCellAvailability>;
+    options: ValidateMatrixCellOptions,
+  ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
   assetFiles?: Record<string, string>;
   confirmResponses?: boolean[];
 }
@@ -1087,6 +1091,7 @@ describe('oat config', () => {
         {
           cwd: root,
           env: {},
+          detailed: true,
         },
       );
       expect(capture.warn).toHaveLength(0);
@@ -1130,6 +1135,7 @@ describe('oat config', () => {
         {
           cwd: root,
           env: {},
+          detailed: true,
         },
       );
       expect(capture.warn).toHaveLength(0);
@@ -1184,6 +1190,43 @@ describe('oat config', () => {
       expect(capture.warn[0]).toContain('missing-model');
       expect(capture.warn[0]).toContain('not recognized');
       expect(process.exitCode).toBe(0);
+    });
+
+    it('includes Cursor subagent allowed-list details in availability warnings', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => ({
+        availability: 'unknown-value' as const,
+        allowedValues: ['gpt-5.3-codex', 'composer-2.5'],
+        message:
+          'Cursor rejected this model for subagent Task dispatch. Allowed subagent models: gpt-5.3-codex, composer-2.5.',
+      }));
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor.high',
+        'gpt-5.3-codex-low',
+        '--shared',
+      ]);
+
+      expect(capture.warn[0]).toContain(
+        'workflow.dispatchCeiling.providers.cursor.high',
+      );
+      expect(capture.warn[0]).toContain('gpt-5.3-codex-low');
+      expect(capture.warn[0]).toContain('Allowed subagent models');
+      expect(capture.warn[0]).toContain('gpt-5.3-codex');
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'cursor',
+        'gpt-5.3-codex-low',
+        {
+          cwd: root,
+          env: {},
+          detailed: true,
+        },
+      );
     });
 
     it('warns but saves provider values when the availability oracle is unavailable', async () => {
@@ -1308,20 +1351,23 @@ describe('oat config', () => {
         {
           cwd: root,
           env: {},
+          detailed: true,
         },
       );
       expect(validateMatrixCell).toHaveBeenCalledWith(
         'cursor',
         'composer-2.5-fast',
-        { cwd: root, env: {} },
+        { cwd: root, env: {}, detailed: true },
       );
       expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
         cwd: root,
         env: {},
+        detailed: true,
       });
       expect(validateMatrixCell).toHaveBeenCalledWith('claude', 'fable', {
         cwd: root,
         env: {},
+        detailed: true,
       });
       expect(capture.info[0]).toContain('2026-07-07.1');
       expect(capture.warn).toHaveLength(0);
@@ -1356,6 +1402,104 @@ describe('oat config', () => {
       await expect(
         readFile(join(root, '.oat', 'config.json'), 'utf8'),
       ).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
+    it('rejects codex route targets missing model or effort during dispatch matrix adoption', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                codex: {
+                  high: [{ harness: 'codex', effort: 'xhigh' }],
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        'workflow.dispatchCeiling.providers.codex.high[0]',
+      );
+      expect(capture.error[0]).toContain('model and effort');
+      expect(validateMatrixCell).not.toHaveBeenCalled();
+      await expect(
+        readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
+    it('validates codex route targets as model and effort pairs during dispatch matrix adoption', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                codex: {
+                  high: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.5',
+                      effort: 'xhigh',
+                    },
+                  ],
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: '2026-07-07.1',
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.5',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+      expect(validateMatrixCell).toHaveBeenCalledTimes(1);
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'codex',
+        'gpt-5.5/xhigh',
+        {
+          cwd: root,
+          env: {},
+          detailed: true,
+          target: {
+            harness: 'codex',
+            model: 'gpt-5.5',
+            effort: 'xhigh',
+          },
+        },
+      );
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
     });
 
     it('warns per cell during dispatch matrix recommendation adoption without blocking', async () => {
@@ -1677,6 +1821,23 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(1);
       expect(capture.error[0]).toContain(
         'economy | balanced | high | frontier | uncapped',
+      );
+    });
+
+    it('describe workflow.dispatchPolicy.policy uses canonical policy option wording', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'workflow.dispatchPolicy.policy']);
+
+      expect(capture.info[0]).toContain(
+        'economy | balanced | high | frontier | uncapped',
+      );
+      expect(capture.info[0]).toContain(
+        'uncapped keeps OAT-managed preferred selection without provider caps',
+      );
+      expect(capture.info[0]).toContain(
+        'inherit leaves dispatch controls to host/provider defaults',
       );
     });
 

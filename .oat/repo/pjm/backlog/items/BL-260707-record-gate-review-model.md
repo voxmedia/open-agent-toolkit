@@ -1,29 +1,60 @@
 ---
 id: BL-260707-record-gate-review-model
-title: 'Record gate review model provenance in artifacts'
+title: 'Stamp gate invocation target metadata on review artifacts'
 status: open # open | in_progress | closed | wont_do
-priority: medium # urgent | high | medium | low | none
-scope: task # idea | task | feature | initiative
-scope_estimate: S # XS | S | M | L | XL | XXL
+priority: high
+scope: feature
+scope_estimate: M
 labels: [reviews, workflow-gates, provenance]
 assignee: null
 created: '2026-07-07T05:23:03Z'
-updated: '2026-07-07T05:23:03Z'
+updated: '2026-07-09T14:55:19Z'
 associated_issues: [BL-260707-ask-to-enable-phase-review]
-oat_template: true
-oat_template_name: backlog-item
 ---
 
 ## Description
 
-Gate-generated review artifacts should record historical provenance for the model or target that ran the review. Phase review gates and other `oat gate review` runs are dispatched through a configured target, so OAT should be able to include useful provenance in the review artifact without relying on transcript archaeology.
+Gate-generated review artifacts should record the configured invocation target
+that ran the review. Phase review gates and other `oat gate review` runs are
+dispatched through `workflow.gates.execTargets`, so OAT knows the selected
+target before the model starts. That target identity should be injected into the
+gate prompt and stamped into the review artifact, instead of asking the model to
+self-identify or inferring identity from transcript archaeology.
 
-The exact fields may need a little design care because providers differ in what they expose. At minimum, the artifact should identify the gate target and the intended provider/model selection when known; where the actual runtime model can be confirmed, the artifact should capture that distinction clearly.
+Make target identity explicit in exec target config, for example:
+
+```json
+{
+  "workflow": {
+    "gates": {
+      "execTargets": {
+        "codex-5.5-xhigh": {
+          "runtime": "codex",
+          "baseCommand": ["codex", "exec", "--model", "gpt-5.5"],
+          "invocation": {
+            "model": "gpt-5.5",
+            "reasoningEffort": "xhigh"
+          },
+          "priority": 120
+        }
+      }
+    }
+  }
+}
+```
+
+Then `oat gate review` should include a prompt block such as "This is the OAT
+invocation target you were dispatched with; stamp these exact values in the
+review artifact." The artifact should distinguish this configured invocation
+target from any optional model self-report or observed producer identity.
 
 ## Acceptance Criteria
 
-- Review artifacts produced through `oat gate review` include frontmatter provenance identifying that the artifact came from a gate run and which configured gate target executed it.
-- The artifact records intended provider/model or tier information when the gate target configuration supplies it.
-- If the actual model can be reliably detected from the gate runner, that value is recorded separately from the intended/requested model.
-- The provenance field names and docs make unknown or provider-advisory cases explicit rather than implying certainty.
-- Existing review artifact parsing and review-receive flows continue to work for artifacts without the new provenance fields.
+- `workflow.gates.execTargets` supports explicit invocation metadata for model and reasoning effort, using clear provider-neutral field names.
+- `oat gate review` injects the resolved target id, runtime, invocation model, invocation reasoning effort, and metadata source into the assembled review prompt after target selection.
+- Review artifacts produced through `oat gate review` include frontmatter fields for the invocation target, for example `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`, `oat_invocation_reasoning_effort`, and `oat_invocation_source`.
+- The review prompt tells the reviewer to stamp the OAT-provided invocation fields exactly and not replace them with model self-identification.
+- Unknown or provider-default values are explicit in both prompt copy and artifact fields; OAT does not guess when an exec target does not declare invocation metadata.
+- Gate JSON output includes the same invocation target metadata so orchestrators and logs can correlate artifacts with the target that ran them.
+- `oat-project-review-provide` and review artifact docs explain the difference between configured invocation target and optional self-reported or observed model identity.
+- Tests cover explicit Codex model plus reasoning effort, explicit Claude model, provider-default or unknown Cursor targets, and artifact parsing compatibility.

@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.1.4
+version: 1.1.5
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write
 color: yellow
@@ -68,7 +68,7 @@ You will be given a "Review Scope" block including:
 
 The orchestrator owns dispatch control. Do not read `plan.md` Dispatch Profile rows to self-select a tier.
 
-For Codex, deterministic review dispatch under a capped managed policy uses pinned reviewer variants (`oat-reviewer-low`, `oat-reviewer-medium`, `oat-reviewer-high`, or `oat-reviewer-xhigh`) selected by the resolved OAT dispatch policy cap. Managed `Uncapped` and inherit/default policies have no reviewer target, so the base `oat-reviewer` role is used as a provider-default/unpinned fallback. If you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as managed uncapped selection or an OAT cap.
+For Codex, deterministic review dispatch under a capped managed policy uses the materialized Codex role name returned by `providers.codex.dispatchArgs.variant`; the orchestrator also supplies `providers.codex.selection.target` context when available and should derive `model_axis` and `effort_axis` from resolver output. Managed `Uncapped` and inherit/default policies have no reviewer target, so the base `oat-reviewer` role is used only when the resolver returns no `dispatchArgs.variant`, as a provider-default/unpinned fallback. If you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as managed uncapped selection or an OAT cap. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`.
 
 For Claude Code, review dispatch is model-axis based and the effort axis is `not-applicable`.
 

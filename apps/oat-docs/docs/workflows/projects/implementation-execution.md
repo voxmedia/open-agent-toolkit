@@ -70,16 +70,16 @@ Runtime dispatch reads the resolved policy and provider-specific selection only.
 For Codex, provider default effort is displayed when available but is not treated as managed `Uncapped` or as a cap. Provider defaults apply only to explicit inherit/default behavior or base/unpinned fallback paths.
 
 ```text
-Dispatch policy: balanced (codex, managed capped — pinned-variant)
+Dispatch policy: balanced (codex, managed capped — materialized-role)
 Resolved cap: high
 Source: project state
 Provider default effort: medium
-Note: OAT will use pinned subagent variants up to high. Base/unpinned roles resolve through the provider default only on fallback paths.
+Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only on fallback paths.
 ```
 
 **Enforcement modes** (from resolver):
 
-- `enforced` — the adapter compiled concrete dispatch args and the provider accepted them (Codex: pinned variants; Claude: Task `model` parameter).
+- `enforced` — the adapter compiled concrete dispatch args and the provider accepted them (Codex: materialized model+effort roles; Claude: Task `model` parameter).
 - `advisory` — the provider is supported but no value resolved, or an upgrade request was not honored by the provider.
 - `unsupported` — the provider has no registered adapter; the policy is informational only. Dispatch follows provider behavior.
 
@@ -112,7 +112,14 @@ Model and effort are separate axes. Each axis logs one of these states:
 - `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
 - `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
 
-In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, or `xhigh`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. For capped managed policies, the resolver selects `min(preferred, resolved_cap)` and returns the matching pinned role. For managed `Uncapped`, the resolver selects the preferred pinned role with no cap. For inherit/default mode, it returns no pinned role and OAT uses the base/unpinned role. Reviewer dispatch targets the configured cap only when a capped managed policy exists; managed `Uncapped` and inherit/default use base `oat-reviewer` fallback.
+In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, or `xhigh`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. For capped managed policies, the resolver selects `min(preferred, resolved_cap)` and returns a materialized role name compiled from an explicit model+effort target. For managed `Uncapped`, the resolver selects the preferred materialized role with no cap. For inherit/default mode, it returns no materialized role and OAT uses the base/unpinned role. Reviewer dispatch targets the configured cap only when a capped managed policy exists; managed `Uncapped` and inherit/default use base `oat-reviewer` fallback.
+
+Because Codex preferred values are effort names while dispatch matrix cells are
+keyed by OAT tiers, managed `Uncapped` maps preferred efforts through the
+managed tier table before resolving matrix targets. For example, `xhigh` maps to
+the highest matching tier, `frontier`, so `--preferred xhigh` can resolve a
+`frontier` Codex matrix target such as
+`oat-phase-implementer-gpt-5-6-sol-xhigh`.
 
 In Claude Code, implementation and fix dispatch classify a preferred model tier (`haiku`, `sonnet`, `opus`, or `fable`) and pass it to `oat project dispatch-ceiling resolve --provider claude --role implementer --preferred <model> --orchestrator-tier <current-orchestrator-tier>`. Capped policies select `min(preferred, resolved_cap)`, managed `Uncapped` selects the preferred model, and inherit/default omits `model`. Reviewer dispatch passes a `model` only when the resolver returns one. The separate effort axis is `not-applicable`.
 
@@ -135,9 +142,9 @@ Selected effort: medium
 Policy source: repo config
 Provider default effort: high
 Selection mode: capped
-Model axis: inherited
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:medium
-Dispatch target: oat-phase-implementer-medium
+Dispatch target: oat-phase-implementer-gpt-5-6-terra-medium
 Rationale: shared TypeScript/config substrate; high preferred due to integration risk, capped by configured policy.
 
 OAT Dispatch: Phase p03 review
@@ -148,9 +155,9 @@ Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: review-target
-Model axis: inherited
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:xhigh
-Dispatch target: oat-reviewer-xhigh
+Dispatch target: oat-reviewer-gpt-5-6-terra-xhigh
 Rationale: reviewer runs at the configured policy cap for deterministic quality gate behavior.
 
 OAT Dispatch: Phase p03 implementation
@@ -162,10 +169,10 @@ Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: uncapped
-Model axis: inherited
+Model axis: selected:gpt-5.6-sol
 Effort axis: selected:xhigh
-Dispatch target: oat-phase-implementer-xhigh
-Rationale: high-risk phase; managed uncapped policy allows the preferred pinned variant.
+Dispatch target: oat-phase-implementer-gpt-5-6-sol-xhigh
+Rationale: high-risk phase; managed uncapped policy allows the preferred materialized target.
 
 OAT Dispatch: Phase p04 implementation
 Host: Other
@@ -203,10 +210,10 @@ Add Dispatch Profile rows only when the user has an explicit constraint or prefe
 For each phase in the plan (whether sequential or inside a parallel group):
 
 1. **Select runtime dispatch control** for the phase and log the chosen control plus rationale.
-2. **Dispatch the selected implementer role** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known). In Codex, `effort_axis=selected:low|medium|high|xhigh` uses `oat-phase-implementer-low|medium|high|xhigh`. Base `oat-phase-implementer` means provider-default/unpinned fallback.
+2. **Dispatch the selected implementer role** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known). In Codex, selected model+effort axes use the resolver-returned materialized role name, such as `oat-phase-implementer-gpt-5-6-terra-xhigh`. Base `oat-phase-implementer` means provider-default/unpinned fallback.
 3. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
    - `BLOCKED` stops the run and surfaces the blocker to the user.
-4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use an `oat-reviewer-<value>` variant only for capped managed policies, and use base `oat-reviewer` for managed `Uncapped` or inherit/default. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
+4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use the resolver-returned materialized reviewer role only for capped managed policies, and use base `oat-reviewer` for managed `Uncapped` or inherit/default. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
 5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 6. **On fail, run the bounded fix loop** (see below).
 7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.

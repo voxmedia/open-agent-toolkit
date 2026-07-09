@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.10
+version: 2.1.11
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -484,20 +484,28 @@ Resolution order:
 If no policy resolves and the session is interactive, present the dispatch
 policy prompt once before finalizing `plan.md`:
 
-```text
-Set the dispatch policy — how OAT should choose subagent model/effort controls.
+Generate the choice text from canonical CLI metadata immediately before
+presenting it:
 
-  Managed capped policies:
-  1. Economy   — Codex: medium · Claude: sonnet
-  2. Balanced  — Codex: high   · Claude: sonnet  (recommended)
-  3. High      — Codex: xhigh  · Claude: opus
-  4. Frontier  — Codex: xhigh  · Claude: fable
+```bash
+oat project dispatch-ceiling choices --format markdown
+```
 
-  Managed uncapped:
-  5. Uncapped — OAT selects the preferred implementer/fix target without a stored maximum cap.
+Do not hand-type the dispatch policy menu or omit canonical choices. If the CLI
+is unavailable in this environment, derive the same labels and descriptions from
+`packages/cli/src/config/dispatch-policy-options.ts`; include every managed
+policy returned by `VALID_MANAGED_DISPATCH_POLICIES` plus `Uncapped`, `Inherit
+Host Defaults`, and `Leave Unresolved`.
 
-  Host defaults:
-  6. Inherit Host Defaults — OAT does not select model/effort controls.
+At minimum, preserve these semantics in any fallback text:
+
+- `Uncapped`: OAT still manages dispatch selection, but stores no maximum cap.
+  It is not host/default behavior and must not be represented by absent policy
+  state.
+- `Inherit Host Defaults`: OAT does not choose model or effort controls; the
+  executing host/provider owns implementation, fix, and review defaults.
+- `Leave Unresolved`: planning/preflight deferral only. It records no runtime
+  policy. Implementation preflight must block until a policy resolves.
 
 OAT applies managed policies where the provider exposes a reliable mechanism
 (Codex: pinned variants; Claude: Task model parameter). Other providers may
@@ -509,9 +517,8 @@ policy rung; concrete model values live in the dispatch matrix under
 `workflow.dispatchCeiling.providers.*`. If the user wants OAT's recommended
 starting matrix, offer `oat config adopt dispatch-matrix` for the chosen config
 layer before finalizing `plan.md`.
-```
 
-**Managed capped policy selection (options 1-4)** persists `mode: managed`,
+**Managed capped policy selection** persists `mode: managed`,
 `policy`, and the compiled provider targets. On selection, print the exact
 compiled result (e.g., "Dispatch policy set: balanced → Codex: high · Claude:
 sonnet") before proceeding.
@@ -528,13 +535,18 @@ the active provider/tier, run prompt-and-persist once before final review:
 3. Re-run the resolver. Do not silently treat a missing cell as uncapped,
    inherited, or provider-default behavior.
 
-**Uncapped (option 5)** persists explicit managed uncapped state. It does not
-write provider caps, and it must not be represented by leaving dispatch policy
-state absent.
+**Uncapped** persists explicit managed uncapped state. OAT still manages
+dispatch selection. It does not write provider caps, and it must not be
+represented by leaving dispatch policy state absent.
 
-**Inherit Host Defaults (option 6)** persists explicit inherit/default state.
-Use this only when the user wants OAT to leave implementation, fix, and review
-model/effort controls to the executing host/provider.
+**Inherit Host Defaults** persists explicit inherit/default state. Use this only
+when the user wants OAT to leave implementation, fix, and review model/effort
+controls to the executing host/provider. OAT does not choose model or effort in
+this mode.
+
+**Leave Unresolved** leaves dispatch policy unset for implementation preflight.
+Use this only when non-interactive planning cannot choose a policy yet.
+Implementation preflight must block until a policy resolves.
 
 Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter using the
 normalized shape:

@@ -10,6 +10,14 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { compileDispatchCeilingPreset } from '@config/dispatch-ceiling-preset';
 import {
+  dispatchPolicyModeDescription,
+  dispatchPolicyPolicyDescription,
+  managedDispatchPolicyValueList,
+} from '@config/dispatch-policy-options';
+import {
+  VALID_DISPATCH_POLICY_MODES,
+  VALID_MANAGED_DISPATCH_POLICIES,
+  isCodexMaterializedRouteTarget,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -25,6 +33,7 @@ import {
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
+  validateDispatchRouteTarget,
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
@@ -37,8 +46,9 @@ import {
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import {
+  normalizeMatrixCellAvailability,
   validateMatrixCell,
-  type MatrixCellAvailability,
+  type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
 import { Command } from 'commander';
@@ -153,7 +163,7 @@ interface ConfigCommandDependencies {
     provider: string,
     value: string,
     options: ValidateMatrixCellOptions,
-  ) => Promise<MatrixCellAvailability>;
+  ) => Promise<MatrixCellAvailabilityResponse>;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -650,8 +660,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.dispatchPolicy.mode <value>',
-    description:
-      'Dispatch policy mode. "managed" means OAT selects model/effort from workflow.dispatchPolicy.policy; "inherit" means OAT leaves dispatch controls to the host/provider defaults. Set workflow.dispatchPolicy.policy to choose a managed policy. Resolution: local > shared > user > default.',
+    description: dispatchPolicyModeDescription(),
   },
   {
     key: 'workflow.dispatchPolicy.policy',
@@ -662,8 +671,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.dispatchPolicy.policy <value>',
-    description:
-      'Managed dispatch policy. economy, balanced, high, and frontier are capped managed policies; uncapped keeps OAT-managed preferred selection without provider caps. Setting this key writes workflow.dispatchPolicy.mode=managed. Resolution: local > shared > user > default.',
+    description: dispatchPolicyPolicyDescription(),
   },
   {
     key: 'workflow.dispatchCeiling.providers.codex',
@@ -821,14 +829,8 @@ const WORKFLOW_ENUM_VALUES = {
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
   'workflow.reviewExecutionModel': ['subagent', 'inline', 'fresh-session'],
   'workflow.designMode': ['collaborative', 'selective', 'draft'],
-  'workflow.dispatchPolicy.mode': ['managed', 'inherit'],
-  'workflow.dispatchPolicy.policy': [
-    'economy',
-    'balanced',
-    'high',
-    'frontier',
-    'uncapped',
-  ],
+  'workflow.dispatchPolicy.mode': [...VALID_DISPATCH_POLICY_MODES],
+  'workflow.dispatchPolicy.policy': [...VALID_MANAGED_DISPATCH_POLICIES],
   'workflow.dispatchCeiling.preset': ['balanced', 'maximum', 'cost-conscious'],
   'workflow.dispatchCeiling.providers.codex': [
     'low',
@@ -992,7 +994,7 @@ function parseWorkflowValue(
 function dispatchProviderAvailabilityWarning(
   key: WorkflowDispatchProviderConfigKey,
   value: string,
-  availability: MatrixCellAvailability,
+  availability: MatrixCellAvailabilityResponse,
 ): string | null {
   return matrixCellAvailabilityWarning(key, value, availability);
 }
@@ -1011,6 +1013,7 @@ interface DispatchMatrixCellRef {
   provider: string;
   value: string;
   path: string;
+  target?: WorkflowDispatchRouteTarget;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -1020,17 +1023,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function matrixCellAvailabilityWarning(
   path: string,
   value: string,
-  availability: MatrixCellAvailability,
+  availability: MatrixCellAvailabilityResponse,
 ): string | null {
-  if (availability === 'valid') {
+  const result = normalizeMatrixCellAvailability(availability);
+  if (result.availability === 'valid') {
     return null;
   }
+  const details = result.message ? ` ${result.message}` : '';
 
-  if (availability === 'unknown-value') {
-    return `${path} value '${value}' was not recognized by the provider availability oracle; saving anyway.`;
+  if (result.availability === 'unknown-value') {
+    return `${path} value '${value}' was not recognized by the provider availability oracle; saving anyway.${details}`;
   }
 
-  return `${path} value '${value}' could not be validated because the provider availability oracle is unavailable; saving anyway.`;
+  return `${path} value '${value}' could not be validated because the provider availability oracle is unavailable; saving anyway.${details}`;
 }
 
 function parseDispatchMatrixRecommendation(
@@ -1068,6 +1073,10 @@ function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
   return isRecord(entry);
 }
 
+function formatRouteTargetValue(entry: WorkflowDispatchRouteTarget): string {
+  return [entry.model, entry.effort].filter(Boolean).join('/');
+}
+
 function addDispatchMatrixCellRefs(
   refs: DispatchMatrixCellRef[],
   provider: string,
@@ -1090,11 +1099,32 @@ function addDispatchMatrixCellRefs(
       continue;
     }
 
+    const targetProvider = entry.harness ?? provider;
+    if (isCodexMaterializedRouteTarget(provider, entry)) {
+      if (entry.model && entry.effort) {
+        refs.push({
+          provider: targetProvider,
+          value: formatRouteTargetValue(entry),
+          path: entryPath,
+          target: entry,
+        });
+        continue;
+      }
+    }
+
     if (entry.model) {
-      refs.push({ provider, value: entry.model, path: `${entryPath}.model` });
+      refs.push({
+        provider: targetProvider,
+        value: entry.model,
+        path: `${entryPath}.model`,
+      });
     }
     if (entry.effort) {
-      refs.push({ provider, value: entry.effort, path: `${entryPath}.effort` });
+      refs.push({
+        provider: targetProvider,
+        value: entry.effort,
+        path: `${entryPath}.effort`,
+      });
     }
   }
 }
@@ -1127,6 +1157,40 @@ function collectDispatchMatrixCellRefs(
   return refs;
 }
 
+function collectDispatchMatrixTargetValidationErrors(
+  providers: Record<string, WorkflowDispatchProviderValue>,
+): string[] {
+  const errors: string[] = [];
+
+  for (const [provider, providerValue] of Object.entries(providers)) {
+    if (typeof providerValue === 'string') {
+      continue;
+    }
+
+    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
+    for (const [tier, cell] of Object.entries(providerValue)) {
+      if (!Array.isArray(cell)) {
+        continue;
+      }
+
+      for (const [index, entry] of cell.entries()) {
+        if (!isRouteTarget(entry)) {
+          continue;
+        }
+
+        const validation = validateDispatchRouteTarget(provider, entry);
+        if (!validation.valid) {
+          errors.push(
+            `${providerPath}.${tier}[${index}]: ${validation.reason}`,
+          );
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
 function applyWorkflowValue(
   workflow: OatWorkflowConfig,
   key: ConfigKey,
@@ -1146,7 +1210,7 @@ function applyWorkflowValue(
     const policy = workflow.dispatchPolicy?.policy;
     if (!policy) {
       throw new Error(
-        'Cannot set workflow.dispatchPolicy.mode to managed without an existing workflow.dispatchPolicy.policy. Set workflow.dispatchPolicy.policy <economy|balanced|high|frontier|uncapped> instead.',
+        `Cannot set workflow.dispatchPolicy.mode to managed without an existing workflow.dispatchPolicy.policy. Set workflow.dispatchPolicy.policy <${managedDispatchPolicyValueList('|')}> instead.`,
       );
     }
 
@@ -1327,6 +1391,7 @@ async function setConfigValue(
         {
           cwd: repoRoot,
           env: dependencies.processEnv,
+          detailed: true,
         },
       );
       const warning = dispatchProviderAvailabilityWarning(
@@ -1588,15 +1653,22 @@ async function validateRecommendationCells(
   dependencies: ConfigCommandDependencies,
   warn: (message: string) => void,
 ): Promise<void> {
+  const targetErrors = collectDispatchMatrixTargetValidationErrors(
+    recommendation.providers,
+  );
+  if (targetErrors.length > 0) {
+    throw new Error(targetErrors.join('\n'));
+  }
+
   for (const ref of collectDispatchMatrixCellRefs(recommendation.providers)) {
     const closedValues = closedDispatchProviderValues(ref.provider);
-    if (closedValues && !closedValues.includes(ref.value)) {
+    if (!ref.target && closedValues && !closedValues.includes(ref.value)) {
       throw new Error(
         `Invalid value for ${ref.path}: expected one of ${closedValues.join(' | ')}, got '${ref.value}'`,
       );
     }
 
-    let availability: MatrixCellAvailability;
+    let availability: MatrixCellAvailabilityResponse;
     try {
       availability = await dependencies.validateMatrixCell(
         ref.provider,
@@ -1604,6 +1676,8 @@ async function validateRecommendationCells(
         {
           cwd: repoRoot,
           env: dependencies.processEnv,
+          detailed: true,
+          ...(ref.target ? { target: ref.target } : {}),
         },
       );
     } catch {

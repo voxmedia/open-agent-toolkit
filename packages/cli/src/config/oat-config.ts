@@ -65,6 +65,10 @@ export interface WorkflowDispatchRouteTarget {
   model?: string;
   effort?: string;
 }
+export interface DispatchRouteTargetValidation {
+  valid: boolean;
+  reason?: string;
+}
 export type WorkflowDispatchRouteEntry = string | WorkflowDispatchRouteTarget;
 export type WorkflowDispatchRoute = WorkflowDispatchRouteEntry[];
 export type WorkflowDispatchMatrixCell = string | WorkflowDispatchRoute;
@@ -191,6 +195,32 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
     priority: 70,
   },
 };
+
+export function isCodexMaterializedRouteTarget(
+  provider: string,
+  target: WorkflowDispatchRouteTarget,
+): boolean {
+  return (target.harness ?? provider) === 'codex';
+}
+
+export function validateDispatchRouteTarget(
+  provider: string,
+  target: WorkflowDispatchRouteTarget,
+): DispatchRouteTargetValidation {
+  if (!isCodexMaterializedRouteTarget(provider, target)) {
+    return { valid: true };
+  }
+
+  if (!target.model || !target.effort) {
+    return {
+      valid: false,
+      reason:
+        'Codex materialized dispatch targets must provide both model and effort.',
+    };
+  }
+
+  return { valid: true };
+}
 
 function normalizeMaxAttempts(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {

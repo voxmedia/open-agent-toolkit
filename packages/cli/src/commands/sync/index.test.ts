@@ -771,6 +771,7 @@ describe('createSyncCommand', () => {
       '/tmp/workspace',
       expect.any(Array),
       ['.agents/skills/oat-docs-analyze'],
+      { userConfigDir: '/tmp/home/.oat' },
     );
   });
 

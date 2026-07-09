@@ -110,6 +110,131 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('requires workflow skills to use canonical dispatch policy choices', () => {
+    const quickStartContent = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const implementContent = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    for (const content of [quickStartContent, implementContent]) {
+      expect(content).toContain(
+        'oat project dispatch-ceiling choices --format markdown',
+      );
+      expect(content).toContain('Do not hand-type the dispatch policy menu');
+      expect(content).toContain('OAT still manages dispatch selection');
+      expect(content).toContain('OAT does not choose model or effort');
+      expect(content).toContain('Implementation preflight must block');
+      expect(content).not.toContain('Managed capped policies:');
+      expect(content).not.toContain('1. Economy   ');
+    }
+  });
+
+  it('uses final code review scope for final-phase HiLL auto-review', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'If this is the final implementation phase checkpoint, run `oat-project-review-provide code final`',
+    );
+    expect(content).toContain(
+      'do not run a duplicate final phase-only lifecycle review',
+    );
+  });
+
+  it('keeps dispatch display human-facing while preserving parseable stamps', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toContain('Human-facing dispatch display rules');
+    expect(content).toMatch(
+      /Lead with route, OAT dispatch tier, requested controls, configured defaults, and runtime\s+confirmation/,
+    );
+    expect(content).toContain('Do not headline `producer=unknown`');
+    expect(content).toContain(
+      'Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}',
+    );
+    const primaryDisplaySection =
+      content.match(
+        /Print before phase work:[\s\S]*?### Dispatch Policy Enforcement Log/,
+      )?.[0] ?? '';
+    expect(primaryDisplaySection).toContain('OAT Dispatch Tier: balanced');
+    expect(primaryDisplaySection).toContain(
+      'OAT Dispatch Tier: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}',
+    );
+    expect(primaryDisplaySection).not.toMatch(/^Dispatch policy:/m);
+    expect(content).toContain(
+      'Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown>',
+    );
+    expect(content).toContain(
+      'Dispatch policy: {policy}; selected={selected value | none}; cap={value | none}',
+    );
+    expect(content).not.toContain('Producer: {slug | unknown}');
+  });
+
+  it('documents codex dispatch through resolver-returned materialized roles', () => {
+    const implementerContent = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewerContent = readRepoFile('.agents/agents/oat-reviewer.md');
+    const combined = `${implementerContent}\n${reviewerContent}`;
+
+    for (const legacyRole of [
+      'oat-phase-implementer-low',
+      'oat-phase-implementer-medium',
+      'oat-phase-implementer-high',
+      'oat-phase-implementer-xhigh',
+      'oat-reviewer-low',
+      'oat-reviewer-medium',
+      'oat-reviewer-high',
+      'oat-reviewer-xhigh',
+    ]) {
+      expect(combined).not.toContain(legacyRole);
+    }
+
+    expect(combined).toContain('materialized Codex role name');
+    expect(combined).toContain('providers.codex.dispatchArgs.variant');
+    expect(combined).toContain('providers.codex.selection.target');
+    expect(combined).toContain(
+      'Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`',
+    );
+    expect(combined).toContain(
+      'Use base `oat-phase-implementer` only when the resolver returns no `dispatchArgs.variant`',
+    );
+    expect(combined).toContain(
+      'derive `model_axis` and `effort_axis` from resolver output',
+    );
+
+    const reviewScopeBlock = implementerContent.match(
+      /Tier 1: dispatch the selected reviewer target[\s\S]*?```(?<scope>[\s\S]*?)```/,
+    )?.groups?.scope;
+    expect(reviewScopeBlock).toBeDefined();
+    expect(reviewScopeBlock).toContain(
+      'model_axis: { selected:<value> | inherited | not-applicable | host-auto }',
+    );
+    expect(reviewScopeBlock).not.toContain(
+      'model_axis: {inherited | selected:<Claude model>}',
+    );
+    expect(implementerContent).toContain(
+      'Codex materialized reviewer role selected from a model+effort target',
+    );
+
+    const inheritedMaterializedCodexExamples = Array.from(
+      implementerContent.matchAll(/```text\n(?<example>[\s\S]*?)\n```/g),
+      (match) => match.groups?.example ?? '',
+    ).filter(
+      (example) =>
+        /Dispatch target: oat-(?:phase-implementer|reviewer)-gpt-5-6-/.test(
+          example,
+        ) && example.includes('Model axis: inherited'),
+    );
+
+    expect(inheritedMaterializedCodexExamples).toEqual([]);
+  });
+
   it('routes phase-range review fixes into the last phase in the range', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-receive/SKILL.md',

@@ -63,6 +63,31 @@ describe('dispatch identity stamps', () => {
     ]);
   });
 
+  it('formats materialized codex targets with explicit model and effort axes', () => {
+    const line = formatDispatchStamp({
+      scope: 'p02',
+      action: 'implementation',
+      role: 'implementer',
+      producer: 'unknown',
+      provenance: 'unknown',
+      modelAxis: 'selected:gpt-5.6-sol',
+      effortAxis: 'selected:xhigh',
+      dispatchPolicy: 'high',
+      dispatchCeiling: 'xhigh',
+      target: 'oat-phase-implementer-gpt-5-6-sol-xhigh',
+    });
+
+    expect(parseDispatchStamps(line)).toMatchObject([
+      {
+        modelAxis: 'selected:gpt-5.6-sol',
+        effortAxis: 'selected:xhigh',
+        dispatchPolicy: 'high',
+        dispatchCeiling: 'xhigh',
+        target: 'oat-phase-implementer-gpt-5-6-sol-xhigh',
+      },
+    ]);
+  });
+
   it('returns producer identities grouped by phase scope', () => {
     const markdown = [
       '## Orchestration Runs',

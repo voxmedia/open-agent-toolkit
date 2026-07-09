@@ -85,38 +85,38 @@ describe('detectCodexRoleStrays', () => {
     expect(strays).toEqual([]);
   });
 
-  it('does not flag generated variants that are in managedRoles', async () => {
+  it('does not flag managed materialized roles identified by file header', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-strays-'));
     tempDirs.push(root);
 
     await mkdir(join(root, '.codex', 'agents'), { recursive: true });
-    // Effort variants have no canonical .md counterpart, but are listed in
-    // managedRoles after the Codex extension derives them from base roles.
-    for (const variant of ['low', 'medium', 'high', 'xhigh']) {
-      await writeFile(
-        join(root, '.codex', 'agents', `oat-phase-implementer-${variant}.toml`),
-        `model_reasoning_effort = "${variant}"`,
-        'utf8',
-      );
-      await writeFile(
-        join(root, '.codex', 'agents', `oat-reviewer-${variant}.toml`),
-        `model_reasoning_effort = "${variant}"`,
-        'utf8',
-      );
-    }
+    await writeFile(
+      join(
+        root,
+        '.codex',
+        'agents',
+        'oat-phase-implementer-gpt-5-6-terra-xhigh.toml',
+      ),
+      [
+        '# oat-managed: true',
+        '# oat-role: oat-phase-implementer-gpt-5-6-terra-xhigh',
+        'model = "gpt-5.6-terra"',
+        'model_reasoning_effort = "xhigh"',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'agents', 'oat-reviewer-gpt-5-6-sol-high.toml'),
+      [
+        '# oat-managed: true',
+        '# oat-role: oat-reviewer-gpt-5-6-sol-high',
+        'model = "gpt-5.6-sol"',
+        'model_reasoning_effort = "high"',
+      ].join('\n'),
+      'utf8',
+    );
 
-    const managedRoleNames = new Set([
-      'oat-phase-implementer-low',
-      'oat-phase-implementer-medium',
-      'oat-phase-implementer-high',
-      'oat-phase-implementer-xhigh',
-      'oat-reviewer-low',
-      'oat-reviewer-medium',
-      'oat-reviewer-high',
-      'oat-reviewer-xhigh',
-    ]);
-
-    const strays = await detectCodexRoleStrays(root, [], managedRoleNames);
+    const strays = await detectCodexRoleStrays(root, []);
 
     expect(strays).toEqual([]);
   });
@@ -142,6 +142,45 @@ describe('detectCodexRoleStrays', () => {
     const managedRoleNames = new Set(['oat-phase-implementer-low']);
 
     const strays = await detectCodexRoleStrays(root, [], managedRoleNames);
+
+    expect(strays).toEqual([
+      {
+        roleName: 'old-orphan',
+        providerPath: '.codex/agents/old-orphan.toml',
+      },
+    ]);
+  });
+
+  it('does not report config entries backed by managed materialized files', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-strays-'));
+    tempDirs.push(root);
+
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      `[agents.custom-gpt-5-6-sol-high]
+description = "Generated custom role"
+config_file = "agents/custom-gpt-5-6-sol-high.toml"
+`,
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'agents', 'custom-gpt-5-6-sol-high.toml'),
+      [
+        '# oat-managed: true',
+        '# oat-role: custom-gpt-5-6-sol-high',
+        'model = "gpt-5.6-sol"',
+        'model_reasoning_effort = "high"',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'agents', 'old-orphan.toml'),
+      'developer_instructions = "leftover"',
+      'utf8',
+    );
+
+    const strays = await detectCodexRoleStrays(root, []);
 
     expect(strays).toEqual([
       {

@@ -28,18 +28,20 @@ per-tier value, or an ordered route for escalation.
 
 ## Policy Choices
 
-| Policy                  | Mode    | Codex target | Claude target | Meaning                                      |
-| ----------------------- | ------- | ------------ | ------------- | -------------------------------------------- |
-| `Economy`               | managed | `medium`     | `sonnet`      | Lower-cost managed cap                       |
-| `Balanced`              | managed | `high`       | `sonnet`      | Default managed cap                          |
-| `High`                  | managed | `xhigh`      | `opus`        | High-capability managed cap                  |
-| `Frontier`              | managed | `xhigh`      | `fable`       | Top managed tier currently exposed by OAT    |
-| `Uncapped`              | managed | none         | none          | OAT selects preferred controls without a cap |
-| `Inherit Host Defaults` | inherit | none         | none          | OAT does not select model/effort controls    |
+| Policy                  | Mode    | Codex cap | Claude target | Meaning                                      |
+| ----------------------- | ------- | --------- | ------------- | -------------------------------------------- |
+| `Economy`               | managed | `medium`  | `sonnet`      | Lower-cost managed cap                       |
+| `Balanced`              | managed | `high`    | `sonnet`      | Default managed cap                          |
+| `High`                  | managed | `xhigh`   | `opus`        | High-capability managed cap                  |
+| `Frontier`              | managed | `xhigh`   | `fable`       | Top managed tier currently exposed by OAT    |
+| `Uncapped`              | managed | none      | none          | OAT selects preferred controls without a cap |
+| `Inherit Host Defaults` | inherit | none      | none          | OAT does not select model/effort controls    |
 
 `Uncapped` is explicit managed state. It is not represented by omitting policy
 state. Existing projects with absent legacy ceiling state remain unresolved or
-legacy-compatible; they do not silently become managed `Uncapped`.
+legacy-compatible; they do not silently become managed `Uncapped`. `Unresolved`
+is a deferral state for planning/preflight only. Implementation preflight must
+resolve a managed policy or inherit/default mode before work starts.
 
 ## Config Shapes
 
@@ -173,18 +175,25 @@ Selection modes:
 
 ## Provider Behavior
 
-|                   | Codex                                       | Claude Code                             | Cursor / model-arg providers | Unsupported provider |
-| ----------------- | ------------------------------------------- | --------------------------------------- | ---------------------------- | -------------------- |
-| Managed mechanism | Pinned role variants                        | Task `model` argument                   | `--model` argument           | None                 |
-| Axis              | effort (`low < medium < high < xhigh`)      | model (`haiku < sonnet < opus < fable`) | opaque model slug            | None                 |
-| Capped policy     | selected pinned variant up to cap           | selected Task model up to cap           | selected matrix cell         | advisory/unsupported |
-| Uncapped          | preferred pinned variant, no cap            | preferred Task model, no cap            | preferred matrix cell        | advisory/unsupported |
-| Inherit/default   | base/unpinned role follows provider default | omit `model`                            | omit `--model`               | normal behavior      |
+|                   | Codex                                                 | Claude Code                             | Cursor / model-arg providers | Unsupported provider |
+| ----------------- | ----------------------------------------------------- | --------------------------------------- | ---------------------------- | -------------------- |
+| Managed mechanism | Materialized roles with explicit `model` and `effort` | Task `model` argument                   | Task/CLI `model` argument    | None                 |
+| Axis              | model plus effort (`low < medium < high < xhigh`)     | model (`haiku < sonnet < opus < fable`) | opaque model slug            | None                 |
+| Capped policy     | materialized target selected up to cap                | selected Task model up to cap           | selected matrix cell         | advisory/unsupported |
+| Uncapped          | preferred materialized target, no cap                 | preferred Task model, no cap            | preferred matrix cell        | advisory/unsupported |
+| Inherit/default   | base/unpinned role follows provider default           | omit `model`                            | omit model selection         | normal behavior      |
 
-Codex uses pinned variants because per-call effort controls were unreliable in
-dogfooding. For managed `Uncapped`, OAT still selects the preferred pinned
-variant; the dispatching host should verify whether upward effort selection is
-actually honored in the current session.
+Codex uses materialized roles because per-call model/effort controls were
+unreliable in dogfooding. The resolver compiles an explicit model+effort target
+into a role name such as `oat-phase-implementer-gpt-5-6-terra-xhigh`, and the
+Codex spawn payload uses that role as `agent_type`. For managed `Uncapped`, OAT
+still selects the preferred materialized target. If the Codex preferred value is
+an effort rather than a matrix tier, OAT looks up the highest managed tier that
+compiles to that effort before resolving the matrix target; for example,
+`--preferred xhigh` resolves through the `frontier` matrix cell. The dispatching
+host should verify whether upward effort selection is actually honored in the
+current session. The old effort-only Codex pins are not the managed dispatch
+contract for new projects.
 
 Claude Code uses the per-call Task `model` argument. It has no OAT-managed
 per-dispatch effort axis, so dispatch logs use `effort_axis=not-applicable`.
@@ -192,7 +201,10 @@ per-dispatch effort axis, so dispatch logs use `effort_axis=not-applicable`.
 
 Cursor and other model-arg providers use matrix values as opaque slugs. OAT
 validates availability with provider oracles when possible, but tier semantics
-come from the configured matrix, not from a built-in model catalog.
+come from the configured matrix, not from a built-in model catalog. For Cursor,
+that validation checks subagent Task eligibility, not just broad catalog
+visibility, because a slug can appear in `cursor-agent models` and still be
+rejected for subagent dispatch.
 
 ## Producer Provenance
 
@@ -205,9 +217,10 @@ Dispatch: scope=p06 action=implementation role=implementer producer=gpt-5.5-xhig
 
 `producer` is the resolved model slug when OAT knows it, otherwise `unknown`.
 `provenance` is one of `declared`, `observed`, `inferred`, or `unknown`.
-Concrete same-harness model arguments can be declared. Codex pinned effort
-variants declare effort, not concrete producer identity, unless an observed or
-inferred model is available.
+Concrete same-harness model arguments can be declared. Codex materialized
+model+effort roles declare `model_axis=selected:<model>` and
+`effort_axis=selected:<effort>` from resolver output, but producer identity
+remains `unknown` unless an observed or inferred model identity is available.
 
 ## Implementer, Fix, and Reviewer Behavior
 
@@ -234,9 +247,9 @@ say `provider-default`.
 Examples:
 
 ```text
-Dispatch policy: balanced; selected=high; cap=high (codex, enforced — variant oat-phase-implementer-high)
-Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-xhigh)
-Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-xhigh)
+Dispatch policy: balanced; selected=high; cap=high (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-high)
+Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-gpt-5-6-terra-xhigh)
+Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-gpt-5-6-sol-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
 Dispatch policy: frontier; selected=fable; cap=fable (claude, enforced — Task model arg)
 ```

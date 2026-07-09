@@ -32,6 +32,7 @@ import {
   type OatLocalConfig,
   readOatLocalConfig,
   readUserConfig,
+  isCodexMaterializedRouteTarget,
   type UserConfig,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchProviderValue,
@@ -43,12 +44,15 @@ import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
+import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
 import {
+  normalizeMatrixCellAvailability,
   validateMatrixCell,
   type MatrixCellAvailability,
+  type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
 import type { ConcreteScope } from '@shared/types';
@@ -78,7 +82,7 @@ interface DoctorDependencies {
     provider: string,
     value: string,
     options: ValidateMatrixCellOptions,
-  ) => Promise<MatrixCellAvailability>;
+  ) => Promise<MatrixCellAvailabilityResponse>;
   processEnv: NodeJS.ProcessEnv;
   runPjmDoctorChecks: (
     repoRoot: string,
@@ -108,10 +112,12 @@ interface DispatchMatrixCellRef {
   provider: string;
   value: string;
   path: string;
+  target?: WorkflowDispatchRouteTarget;
 }
 
 interface DispatchMatrixCellIssue extends DispatchMatrixCellRef {
   availability: Exclude<MatrixCellAvailability, 'valid'>;
+  message?: string;
 }
 
 type DispatchMatrixConfigLayer = 'user' | 'shared' | 'local';
@@ -275,6 +281,10 @@ function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
   return typeof entry === 'object' && entry !== null && !Array.isArray(entry);
 }
 
+function formatRouteTargetValue(entry: WorkflowDispatchRouteTarget): string {
+  return [entry.model, entry.effort].filter(Boolean).join('/');
+}
+
 function addDispatchMatrixCellRefs(
   refs: DispatchMatrixCellRef[],
   layer: DispatchMatrixConfigLayer,
@@ -298,10 +308,24 @@ function addDispatchMatrixCellRefs(
       continue;
     }
 
+    const targetProvider = entry.harness ?? provider;
+    if (isCodexMaterializedRouteTarget(provider, entry)) {
+      if (entry.model && entry.effort) {
+        refs.push({
+          layer,
+          provider: targetProvider,
+          value: formatRouteTargetValue(entry),
+          path: entryPath,
+          target: entry,
+        });
+        continue;
+      }
+    }
+
     if (entry.model) {
       refs.push({
         layer,
-        provider,
+        provider: targetProvider,
         value: entry.model,
         path: `${entryPath}.model`,
       });
@@ -309,7 +333,7 @@ function addDispatchMatrixCellRefs(
     if (entry.effort) {
       refs.push({
         layer,
-        provider,
+        provider: targetProvider,
         value: entry.effort,
         path: `${entryPath}.effort`,
       });
@@ -363,7 +387,13 @@ function formatDispatchMatrixIssueList(
   issues: DispatchMatrixCellRef[],
 ): string {
   return issues
-    .map((issue) => `${issue.path}=${issue.value} (${issue.layer} config)`)
+    .map((issue) => {
+      const suffix =
+        'message' in issue && typeof issue.message === 'string'
+          ? `; ${issue.message}`
+          : '';
+      return `${issue.path}=${issue.value} (${issue.layer} config)${suffix}`;
+    })
     .join(', ');
 }
 
@@ -385,22 +415,26 @@ async function createDispatchMatrixDoctorCheck(
 
   const issues: DispatchMatrixCellIssue[] = [];
   for (const ref of refs) {
-    let availability: MatrixCellAvailability;
+    let result: ReturnType<typeof normalizeMatrixCellAvailability>;
     try {
-      availability = await dependencies.validateMatrixCell(
-        ref.provider,
-        ref.value,
-        {
+      result = normalizeMatrixCellAvailability(
+        await dependencies.validateMatrixCell(ref.provider, ref.value, {
           cwd: scopeRoot,
           env: dependencies.processEnv,
-        },
+          detailed: true,
+          ...(ref.target ? { target: ref.target } : {}),
+        }),
       );
     } catch {
-      availability = 'unvalidated';
+      result = { availability: 'unvalidated' };
     }
 
-    if (availability !== 'valid') {
-      issues.push({ ...ref, availability });
+    if (result.availability !== 'valid') {
+      issues.push({
+        ...ref,
+        availability: result.availability,
+        ...(result.message ? { message: result.message } : {}),
+      });
     }
   }
 
@@ -438,16 +472,56 @@ async function createDispatchMatrixDoctorCheck(
   }
 
   const hasUnknown = unknown.length > 0;
+  const hasUnvalidated = unvalidated.length > 0;
 
   return {
     name: 'project:dispatch_matrix',
     description: 'Dispatch matrix cell availability',
-    status: hasUnknown ? 'warn' : 'pass',
+    status: hasUnknown || hasUnvalidated ? 'warn' : 'pass',
     message: messageParts.join('. '),
     fix: hasUnknown
       ? 'Run `oat config set workflow.dispatchCeiling.providers.<provider> <value>` with an available value, or refresh provider assets with `oat sync --scope project`.'
       : undefined,
   };
+}
+
+function getCodexAgentConfigFile(config: unknown): string | null {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+    return null;
+  }
+
+  const configFile = (config as Record<string, unknown>).config_file;
+  return typeof configFile === 'string' && configFile.startsWith('agents/')
+    ? configFile
+    : null;
+}
+
+function isLikelyOatGeneratedCodexRoleName(roleName: string): boolean {
+  return (
+    roleName === 'oat-phase-implementer' ||
+    roleName === 'oat-reviewer' ||
+    roleName.startsWith('oat-phase-implementer-') ||
+    roleName.startsWith('oat-reviewer-')
+  );
+}
+
+async function isManagedCodexRoleConfig(
+  scopeRoot: string,
+  roleName: string,
+  configFile: string,
+  dependencies: DoctorDependencies,
+): Promise<boolean> {
+  const absoluteRolePath = join(scopeRoot, '.codex', configFile);
+  if (!(await dependencies.pathExists(absoluteRolePath))) {
+    return isLikelyOatGeneratedCodexRoleName(roleName);
+  }
+
+  try {
+    const roleContent = await dependencies.readFile(absoluteRolePath);
+    return isOatManagedCodexRoleFile(roleContent, roleName);
+  } catch {
+    return false;
+  }
 }
 
 async function runChecksForScope(
@@ -637,21 +711,25 @@ async function runChecksForScope(
             ? (parsedConfig.agents as Record<string, unknown>)
             : null;
 
-        const managedRoles = Object.entries(agents ?? {})
-          .filter(([, config]) => {
-            if (
-              !config ||
-              typeof config !== 'object' ||
-              Array.isArray(config)
-            ) {
-              return false;
-            }
-            const configFile = (config as Record<string, unknown>).config_file;
-            return (
-              typeof configFile === 'string' && configFile.startsWith('agents/')
-            );
-          })
-          .map(([roleName]) => roleName);
+        const managedRoles: string[] = [];
+        const roleConfigFiles = new Map<string, string>();
+        for (const [roleName, roleConfig] of Object.entries(agents ?? {})) {
+          const configFile = getCodexAgentConfigFile(roleConfig);
+          if (!configFile) {
+            continue;
+          }
+          roleConfigFiles.set(roleName, configFile);
+          if (
+            await isManagedCodexRoleConfig(
+              scopeRoot,
+              roleName,
+              configFile,
+              dependencies,
+            )
+          ) {
+            managedRoles.push(roleName);
+          }
+        }
 
         if (managedRoles.length > 0) {
           const multiAgentEnabled =
@@ -670,13 +748,8 @@ async function runChecksForScope(
 
           const missingRoleFiles: string[] = [];
           for (const roleName of managedRoles) {
-            const roleConfig = (agents as Record<string, unknown>)[
-              roleName
-            ] as Record<string, unknown>;
-            const configFile = roleConfig.config_file;
-            if (typeof configFile !== 'string') {
-              continue;
-            }
+            const configFile = roleConfigFiles.get(roleName);
+            if (!configFile) continue;
             const absoluteRolePath = join(scopeRoot, '.codex', configFile);
             if (!(await dependencies.pathExists(absoluteRolePath))) {
               missingRoleFiles.push(configFile);
@@ -694,7 +767,7 @@ async function runChecksForScope(
             fix:
               missingRoleFiles.length === 0
                 ? undefined
-                : 'Regenerate codex roles with `oat sync --scope project`.',
+                : 'Regenerate codex roles with `oat sync --scope project`, or materialize a single role with `oat providers codex materialize ...`.',
           });
         }
       }

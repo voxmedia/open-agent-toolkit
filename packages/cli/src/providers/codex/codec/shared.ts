@@ -4,7 +4,16 @@ export const OAT_MANAGED_ROLE_HEADER = '# oat-managed: true';
 export const OAT_MANAGED_ROLE_NAME_PREFIX = '# oat-role: ';
 
 export function sanitizeCodexRoleName(input: string): string {
-  return input.trim().replace(/\.md$/i, '');
+  return normalizeCodexRoleName(input.replace(/\.md$/i, ''));
+}
+
+export function normalizeCodexRoleName(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 export function isOatManagedCodexRoleFile(

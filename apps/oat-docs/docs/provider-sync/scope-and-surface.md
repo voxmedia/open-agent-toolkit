@@ -34,6 +34,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - `oat providers list`
 - `oat providers inspect`
 - `oat providers set`
+- `oat providers codex materialize`
 
 ## Adjacent CLI commands (commonly used with provider interop)
 
@@ -46,7 +47,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
-- Codex project-scope subagent sync is generated output (`.codex/agents/*.toml` + `.codex/config.toml`) computed at command layer after path-mapping sync. Generated Codex roles — including the effort-specific implementer variants — are tracked as managed by `oat status` and `oat init`, not as strays.
+- Codex project-scope subagent sync is generated output (`.codex/agents/*.toml` + `.codex/config.toml`) computed at command layer after path-mapping sync. Generated Codex roles - including materialized model+effort implementer and reviewer variants - are tracked as managed by `oat status` and `oat init`, not as strays.
 - Codex aggregate config drift is reported via sync/status extension metadata (`aggregateConfigHash`); it is not persisted as a separate manifest schema entry.
 - Codex user-scope role generation remains intentionally deferred in this release.
 

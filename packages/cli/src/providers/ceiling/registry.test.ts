@@ -17,16 +17,28 @@ describe('provider ceiling adapters', () => {
       expect(codex.validValues).toEqual(['low', 'medium', 'high', 'xhigh']);
     });
 
-    it('compiles a value to the implementer pinned-variant name', () => {
-      expect(codex.compileToDispatchArgs('high', 'implementer', {})).toEqual({
-        variant: 'oat-phase-implementer-high',
+    it('compiles a codex model-effort target to the implementer materialized role name', () => {
+      expect(
+        codex.compileToDispatchArgs('xhigh', 'implementer', {
+          target: { model: 'gpt-5.6-sol', effort: 'xhigh' },
+        }),
+      ).toEqual({
+        variant: 'oat-phase-implementer-gpt-5-6-sol-xhigh',
       });
     });
 
-    it('compiles a value to the reviewer pinned-variant name', () => {
-      expect(codex.compileToDispatchArgs('xhigh', 'reviewer', {})).toEqual({
-        variant: 'oat-reviewer-xhigh',
+    it('compiles a codex model-effort target to the reviewer materialized role name', () => {
+      expect(
+        codex.compileToDispatchArgs('xhigh', 'reviewer', {
+          target: { model: 'gpt-5.6-sol', effort: 'xhigh' },
+        }),
+      ).toEqual({
+        variant: 'oat-reviewer-gpt-5-6-sol-xhigh',
       });
+    });
+
+    it('does not compile bare legacy effort values to deterministic dispatch args', () => {
+      expect(codex.compileToDispatchArgs('high', 'implementer', {})).toBeNull();
     });
 
     it('returns null for an invalid value', () => {

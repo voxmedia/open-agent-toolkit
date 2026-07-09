@@ -1,7 +1,7 @@
 import TOML from '@iarna/toml';
 import { describe, expect, it } from 'vitest';
 
-import { mergeCodexConfig } from './config-merge';
+import { mergeCodexConfig, mergeCodexConfigForRole } from './config-merge';
 
 describe('mergeCodexConfig', () => {
   it('upserts features.multi_agent and managed role entries', () => {
@@ -49,5 +49,25 @@ describe('mergeCodexConfig', () => {
     expect(agents['oat-old']).toBeUndefined();
     expect(agents['oat-reviewer']).toBeDefined();
     expect(result.removedRoles).toEqual(['oat-old']);
+  });
+
+  it('merges a single role idempotently', () => {
+    const role = {
+      roleName: 'oat-reviewer-gpt-5-6-sol-xhigh',
+      description: 'Reviewer',
+      configFile: 'agents/oat-reviewer-gpt-5-6-sol-xhigh.toml',
+    };
+    const first = mergeCodexConfigForRole({
+      existingContent: null,
+      role,
+    });
+    const second = mergeCodexConfigForRole({
+      existingContent: first.mergedContent,
+      role,
+    });
+
+    expect(first.changed).toBe(true);
+    expect(second.changed).toBe(false);
+    expect(second.mergedContent).toBe(first.mergedContent);
   });
 });

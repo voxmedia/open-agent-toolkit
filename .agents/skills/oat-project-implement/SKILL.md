@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.28
+version: 2.0.31
 description: Use when plan.md is ready for execution. Dispatches phase-level subagents with bounded fix loops; supports plan-declared parallel phase groups with worktree-isolated execution and ordered fan-in.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -209,7 +209,9 @@ Resolution order:
       "value": "high",
       "mode": "enforced",
       "mechanism": "pinned-variant",
-      "dispatchArgs": { "variant": "oat-phase-implementer-high" },
+      "dispatchArgs": {
+        "variant": "oat-phase-implementer-gpt-5-6-terra-high"
+      },
       "verifyOnDispatch": false,
       "selection": {
         "role": "implementer",
@@ -236,50 +238,61 @@ point.
 Print before phase work:
 
 ```text
-Dispatch policy: balanced (codex, managed capped — pinned-variant)
+OAT Dispatch Tier: balanced (codex, managed capped — pinned-variant)
 Resolved cap: high
 Source: project state
 Provider default effort: medium
-Note: OAT will use pinned subagent variants up to high. Base/unpinned roles resolve through the provider default only on fallback paths.
+Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only on fallback paths.
 ```
 
 If no policy resolves and the session is interactive, present the dispatch
 policy prompt once before starting work:
 
-```text
-No dispatch policy is configured for this project.
+Print the unresolved-policy heading, then generate the choice text from
+canonical CLI metadata immediately before presenting it:
 
-Set the dispatch policy — how OAT should choose subagent model/effort controls.
+```bash
+oat project dispatch-ceiling choices --format markdown
+```
 
-  Managed capped policies:
-  1. Economy   — Codex: medium · Claude: sonnet
-  2. Balanced  — Codex: high   · Claude: sonnet  (recommended)
-  3. High      — Codex: xhigh  · Claude: opus
-  4. Frontier  — Codex: xhigh  · Claude: fable
+Do not hand-type the dispatch policy menu or omit canonical choices. If the CLI
+is unavailable in this environment, derive the same labels and descriptions from
+`packages/cli/src/config/dispatch-policy-options.ts`; include every managed
+policy returned by `VALID_MANAGED_DISPATCH_POLICIES` plus `Uncapped`, `Inherit
+Host Defaults`, and `Leave Unresolved`.
 
-  Managed uncapped:
-  5. Uncapped — OAT selects the preferred implementer/fix target without a stored maximum cap.
+At minimum, preserve these semantics in any fallback text:
 
-  Host defaults:
-  6. Inherit Host Defaults — OAT does not select model/effort controls.
+- `Uncapped`: OAT still manages dispatch selection, but stores no maximum cap.
+  It is not host/default behavior and must not be represented by absent policy
+  state.
+- `Inherit Host Defaults`: OAT does not choose model or effort controls; the
+  executing host/provider owns implementation, fix, and review defaults.
+- `Leave Unresolved`: planning/preflight deferral only. It records no runtime
+  policy and is not a runnable implementation setting. Implementation preflight
+  must block until a policy resolves.
 
 OAT applies managed policies where the provider exposes a reliable mechanism
 (Codex: pinned variants; Claude: Task model parameter). Other providers may
 treat managed policies as advisory.
-```
 
-**Managed capped policy selection (options 1-4)** persists `mode: managed`,
+**Managed capped policy selection** persists `mode: managed`,
 `policy`, and the compiled provider targets. On selection, print the exact
 compiled result (e.g., "Dispatch policy set: balanced -> Codex: high · Claude:
 sonnet") before proceeding.
 
-**Uncapped (option 5)** persists explicit managed uncapped state. It does not
-write provider caps, and it must not be represented by leaving dispatch policy
-state absent.
+**Uncapped** persists explicit managed uncapped state. OAT still manages
+dispatch selection. It does not write provider caps, and it must not be
+represented by leaving dispatch policy state absent.
 
-**Inherit Host Defaults (option 6)** persists explicit inherit/default state.
-Use this only when the user wants OAT to leave implementation, fix, and review
-model/effort controls to the executing host/provider.
+**Inherit Host Defaults** persists explicit inherit/default state. Use this only
+when the user wants OAT to leave implementation, fix, and review model/effort
+controls to the executing host/provider. OAT does not choose model or effort in
+this mode.
+
+**Leave Unresolved** records no runtime policy for implementation. Stop before
+phase work and report the unresolved state; Implementation preflight must block
+until a policy resolves.
 
 Persist in project `state.md` frontmatter using the normalized shape:
 
@@ -377,12 +390,12 @@ Codex rules:
 3. For capped managed implementer/fix work, selected effort is `min(preferred, resolved_cap)`.
 4. For managed `Uncapped` implementer/fix work, selected effort is the preferred effort with no cap.
 5. For inherit/default mode, the resolver returns no selected dispatch args. Use the base/unpinned Codex role, log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as managed uncapped behavior.
-6. For implementer/fix dispatch: call `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <preferred-effort> --escalation-level <route-level>`; read `providers.codex.selection.selectedValue`, `providers.codex.dispatchArgs.variant`, and any `providers.codex.target` for the selected role name or route target. Never pass a cap-only implementer variant when `selection.selectedValue` is lower.
-7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer`; read `providers.codex.dispatchArgs.variant`.
+6. For implementer/fix dispatch: call `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <preferred-effort> --escalation-level <route-level>`; read `providers.codex.selection.selectedValue`, `providers.codex.dispatchArgs.variant`, `providers.codex.selection.target`, and any `providers.codex.target` for the selected materialized Codex role name or route target. Never pass a cap-only implementer variant when `selection.selectedValue` is lower.
+7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer`; read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
-8. Codex payload-first assertion applies only when the resolver returns a pinned variant. If `effort_axis=selected:<value>`, the actual `spawn_agent` payload MUST use the matching pinned `agent_type`. If the resolver returns no variant, use the base role and log provider-default.
+8. Codex payload-first assertion applies only when the resolver returns a materialized model+effort variant. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST use it as `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. If the resolver returns no variant, use the base role and log provider-default. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing.
 9. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
 
 Claude rules:
@@ -410,21 +423,43 @@ Payload-first invariant:
   `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
   Derive `producer` and `provenance` from the resolver payload and actual host
   arguments. Only concrete model arguments, including same-harness route model
-  args for model-arg providers, declare producer identity. Codex pinned
-  variants declare the effort axis only; record `effort_axis=selected:<value>`
-  and keep `producer=unknown provenance=unknown` unless an observed/inferred
-  model identity is available. Base/unpinned or deferred cross-harness paths are
-  also `producer=unknown provenance=unknown` unless an observed/inferred
-  identity is available. Do not write prose-only or legacy comma-separated stamp
-  forms.
+  args for model-arg providers, declare producer identity. Codex materialized
+  model+effort variants declare `model_axis=selected:<model>` and
+  `effort_axis=selected:<effort>` from resolver output, but keep
+  `producer=unknown provenance=unknown` unless an observed/inferred model
+  identity is available. Base/unpinned or deferred cross-harness paths are also
+  `producer=unknown provenance=unknown` unless an observed/inferred identity is
+  available. Do not write prose-only or legacy comma-separated stamp forms.
+
+Human-facing dispatch display rules:
+
+- Lead with route, OAT dispatch tier, requested controls, configured defaults, and runtime confirmation. These are the fields humans use to understand what OAT asked for and what the host appears to be running.
+- Do not headline `producer=unknown` or `provenance=unknown`. Those values are
+  audit fields for the formal stamp, not the primary status. Put unknown
+  producer/provenance only in `Dispatch stamp:` or in a low-priority note after
+  the route and runtime confirmation.
+- Separate requested controls from configured defaults. For example, a Codex
+  materialized role may request `model_axis=selected:<model>` and
+  `effort_axis=selected:<effort>` while the provider default effort remains a
+  separate fallback/default fact.
+- Separate configured policy/cap from runtime confirmation. A resolver payload
+  can declare a target before the host has confirmed it; an observed mismatch
+  must be called out as `Runtime confirmation: mismatch:<detail>` and handled as
+  an orchestration deviation.
+- Keep the `Dispatch stamp: Dispatch: ...` line parseable and grammar-stable.
+  Do not move display-only prose into the formal stamp.
 
 Structured dispatch log:
 
 ```text
 OAT Dispatch: Phase {phase_id} {implementation | fix | review}
 Host: {Claude Code | Codex | Cursor | other host}
+Route: {route label or target path | none}; level={0 | 1 | ... | none}
+Requested controls: {model=<value|none>, effort=<value|none>, target=<value|unknown>}
+Configured defaults: {provider default effort/model | unknown | not-applicable}
+Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}
 Preferred effort: {low | medium | high | xhigh | provider-default | not-applicable}
-Dispatch policy: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
+OAT Dispatch Tier: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
 Resolved cap: {resolved cap value | none}
 Selected effort: {low | medium | high | xhigh | provider-default | not-applicable}
 Policy source: {repo config | project state | preflight prompt}
@@ -443,16 +478,20 @@ Codex capped example:
 ```text
 OAT Dispatch: Phase p02 implementation
 Host: Codex
+Route: codex/implementer/gpt-5.6-sol/medium; level=0
+Requested controls: model=gpt-5.6-sol, effort=medium, target=oat-phase-implementer-gpt-5-6-sol-medium
+Configured defaults: provider default effort=high
+Runtime confirmation: declared:gpt-5.6-sol/medium
 Preferred effort: high
-Dispatch policy: economy
+OAT Dispatch Tier: economy
 Resolved cap: medium
 Selected effort: medium
 Policy source: repo config
 Provider default effort: high
 Selection mode: capped
-Model axis: inherited
+Model axis: selected:gpt-5.6-sol
 Effort axis: selected:medium
-Dispatch target: oat-phase-implementer-medium
+Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
 Rationale: normal multi-file implementation; high preferred due to integration risk, capped by configured policy.
 ```
 
@@ -461,16 +500,20 @@ Codex uncapped implementer example:
 ```text
 OAT Dispatch: Phase p02 implementation
 Host: Codex
+Route: codex/implementer/gpt-5.6-terra/xhigh; level=0
+Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-phase-implementer-gpt-5-6-terra-xhigh
+Configured defaults: provider default effort=medium
+Runtime confirmation: declared:gpt-5.6-terra/xhigh
 Preferred effort: xhigh
-Dispatch policy: uncapped
+OAT Dispatch Tier: uncapped
 Resolved cap: none
 Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: uncapped
-Model axis: inherited
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:xhigh
-Dispatch target: oat-phase-implementer-xhigh
+Dispatch target: oat-phase-implementer-gpt-5-6-terra-xhigh
 Rationale: high-risk phase; managed uncapped policy allows the preferred pinned variant. Actual host support for upward effort selection must be verified by the dispatching host.
 ```
 
@@ -479,16 +522,20 @@ Codex capped reviewer example:
 ```text
 OAT Dispatch: Phase p02 review
 Host: Codex
+Route: codex/reviewer/gpt-5.6-terra/xhigh; level=0
+Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-reviewer-gpt-5-6-terra-xhigh
+Configured defaults: provider default effort=medium
+Runtime confirmation: declared:gpt-5.6-terra/xhigh
 Preferred effort: high
-Dispatch policy: high
+OAT Dispatch Tier: high
 Resolved cap: xhigh
 Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: review-target
-Model axis: inherited
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:xhigh
-Dispatch target: oat-reviewer-xhigh
+Dispatch target: oat-reviewer-gpt-5-6-terra-xhigh
 Rationale: reviewer runs at the configured policy cap for deterministic quality gate behavior.
 ```
 
@@ -497,8 +544,12 @@ Codex inherit/default fallback example:
 ```text
 OAT Dispatch: Phase p02 review
 Host: Codex
+Route: none; level=none
+Requested controls: model=none, effort=provider-default, target=oat-reviewer
+Configured defaults: provider default effort=medium
+Runtime confirmation: not-observable
 Preferred effort: provider-default
-Dispatch policy: inherit host defaults
+OAT Dispatch Tier: inherit host defaults
 Resolved cap: none
 Selected effort: provider-default
 Policy source: project state
@@ -522,8 +573,12 @@ Codex generic explorer example:
 ```text
 OAT Dispatch: p02-t10 sidecar exploration
 Host: Codex
+Route: sidecar/explorer; level=none
+Requested controls: model=none, effort=provider-default, target=explorer
+Configured defaults: provider default effort=xhigh
+Runtime confirmation: not-observable
 Preferred effort: provider-default
-Dispatch policy: high
+OAT Dispatch Tier: high
 Resolved cap: xhigh
 Selected effort: provider-default
 Policy source: project state
@@ -573,9 +628,9 @@ Dispatch policy: {policy}; selected={selected value | none}; cap={value | none} 
 **Log examples (matching resolver output):**
 
 ```text
-Dispatch policy: balanced; selected=high; cap=high (codex, enforced — variant oat-phase-implementer-high)
-Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-xhigh)
-Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-xhigh)
+Dispatch policy: balanced; selected=high; cap=high (codex, enforced — variant oat-phase-implementer-gpt-5-6-sol-high)
+Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-gpt-5-6-terra-xhigh)
+Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
 Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)
 Dispatch policy: frontier; selected=fable; cap=fable (claude, enforced — Task model arg)
@@ -932,15 +987,15 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
 2. Perform a pre-dispatch assertion against the host invocation parameters. The Phase Scope fields are audit/context fields; selected axes must also be represented in the actual host dispatch call.
    - Codex implementer/fix dispatch:
      - Before building the `spawn_agent` argument map, classify the phase complexity and choose preferred effort (`low`, `medium`, `high`, or `xhigh`), determine the current route level (Dispatch Profile floor or `0`), then call `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <preferred-effort> --escalation-level <route-level>`.
-     - Build the `spawn_agent` argument map from `providers.codex.selection.selectedValue` and `providers.codex.dispatchArgs.variant` before logging the dispatch. If `providers.codex.target.crossHarness` is true, the resolver intentionally returns no native dispatch args; log the deferred target and use provider-default/base fallback only when that is the explicit selected fallback. If `effort_axis=selected:low|medium|high|xhigh`, the argument map MUST use the matching `agent_type`: `"oat-phase-implementer-low"`, `"oat-phase-implementer-medium"`, `"oat-phase-implementer-high"`, or `"oat-phase-implementer-xhigh"`. Then derive the `OAT Dispatch:` block `Effort axis:` field from that same argument map.
-     - Example selected low payload shape: `agent_type: "oat-phase-implementer-low"` and a Phase Scope message containing `effort_axis: selected:low`.
+     - Build the `spawn_agent` argument map from `providers.codex.selection.selectedValue`, `providers.codex.dispatchArgs.variant`, and `providers.codex.selection.target` before logging the dispatch. If `providers.codex.target.crossHarness` is true, the resolver intentionally returns no native dispatch args; log the deferred target and use provider-default/base fallback only when that is the explicit selected fallback. If `effort_axis=selected:<value>`, the argument map MUST use the materialized Codex role name returned in `providers.codex.dispatchArgs.variant` as `agent_type`; do not re-derive an effort-only role name from the selected effort. Then derive the `OAT Dispatch:` block `Model axis:` and `Effort axis:` fields from resolver output and that same argument map.
+     - Example selected payload shape: `agent_type: "oat-phase-implementer-gpt-5-6-sol-low"` and a Phase Scope message containing `model_axis: selected:gpt-5.6-sol` and `effort_axis: selected:low`.
      - Immediately after spawning, compare the returned Codex status line with the selected effort before waiting on the agent. If the spawned status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.5 high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
-     - If `effort_axis=provider-default`, use base `agent_type: "oat-phase-implementer"` and omit `reasoning_effort`. The dispatch rationale MUST say this is a base/unpinned fallback and include provider default effort when known.
+     - If the resolver returns no `dispatchArgs.variant`, use base `agent_type: "oat-phase-implementer"` only for provider-default/base fallback and omit `reasoning_effort`. The dispatch rationale MUST say this is a base/unpinned fallback and include provider default effort when known. Use base `oat-phase-implementer` only when the resolver returns no `dispatchArgs.variant`.
    - Claude Code implementer/fix dispatch:
      - If `model_axis=selected:<value>`, the Task tool call MUST include `model: "<value>"`.
      - If `model_axis=inherited`, omit `model`.
 
-3. Dispatch the selected implementer role (Tier 1 via provider-native subagent mechanism) — the role asserted in the pre-dispatch step above (e.g., `oat-phase-implementer-low`, `oat-phase-implementer-medium`, `oat-phase-implementer-high`, `oat-phase-implementer-xhigh`, or base `oat-phase-implementer` only for provider-default fallback) — with the Phase Scope block as input and with the asserted host invocation parameters.
+3. Dispatch the selected implementer role (Tier 1 via provider-native subagent mechanism) — the resolver-returned materialized Codex role name in `providers.codex.dispatchArgs.variant`, or base `oat-phase-implementer` only when no variant is returned for provider-default fallback — with the Phase Scope block as input and with the asserted host invocation parameters.
 
 4. Receive the structured summary (DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED).
 
@@ -982,7 +1037,7 @@ When escalation is needed:
 3. Record a compact formal stamp in `implementation.md` when practical; surrounding prose may describe why the route advanced, but the `Dispatch:` line itself must stay parseable:
    - `Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=selected:gpt-5.5-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.5-xhigh target=cursor`
    - `Dispatch: scope=p03 action=implementation role=implementer producer=opus provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude`
-   - `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=inherited effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-high`
+   - `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
    - `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown`
 4. If the phase is already at the strongest available control, do not invent a stronger tier. Provide more context, split the phase, revise the plan, or stop for user direction.
 
@@ -997,7 +1052,7 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
 **Dispatch:**
 
 - Use the same tier that was selected at start.
-- For Codex with a capped managed policy, dispatch the reviewer variant matching the resolved cap (`oat-reviewer-low|medium|high|xhigh`) for deterministic quality gates.
+- For Codex with a capped managed policy, dispatch the materialized reviewer role returned in `providers.codex.dispatchArgs.variant` for deterministic quality gates.
 - For Codex with managed `Uncapped` or inherit/default mode, no reviewer target exists; use base `oat-reviewer`, log `effort_axis=provider-default`, and explain that the base role follows the provider default.
 - For Claude Code with a capped managed policy, pass the resolved cap as the review `model`; managed `Uncapped` or inherit/default mode omits `model` because no reviewer target exists. Always keep `effort_axis=not-applicable`.
 - Tier 1: dispatch the selected reviewer target via provider-native subagent mechanism with Review Scope:
@@ -1016,13 +1071,13 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   policy_source: {repo config | project state | preflight prompt}
   ceiling_source: {repo config | project state | preflight prompt} # compatibility alias for policy_source
   provider_default_effort: {value | unknown | not-applicable}
-  model_axis: {inherited | selected:<Claude model>}
+  model_axis: { selected:<value> | inherited | not-applicable | host-auto }
   effort_axis: {selected:<Codex value> | provider-default | not-applicable}
   dispatch_rationale: {capped reviewer target | uncapped/inherit reviewer fallback}
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
-  - For Codex Tier 1 review dispatches, use `agent_type: "oat-reviewer-low|medium|high|xhigh"` only when the resolver returns a pinned reviewer variant for a capped managed policy. Use base `oat-reviewer` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code review dispatches, do not pass a per-review effort override because the effort axis is not applicable; pass `model` only when the resolver returns a selected review model.
+  - For Codex Tier 1 review dispatches, use the materialized Codex role name from `providers.codex.dispatchArgs.variant` only when the resolver returns a reviewer variant for a capped managed policy. A Codex materialized reviewer role selected from a model+effort target must carry `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code review dispatches, do not pass a per-review effort override because the effort axis is not applicable; pass `model` only when the resolver returns a selected review model.
   - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
   - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the Tier 1 review dispatch as failed for this phase and perform the review inline instead of waiting indefinitely.
 
@@ -1043,7 +1098,7 @@ On reviewer verdict `fail`, run a bounded fix loop.
 
 1. Read `oat_orchestration_retry_limit` from `state.md` frontmatter (default: `2`, range 0–5).
 2. For each retry (up to the limit):
-   a. Select/log fix dispatch axes from the fix scope, advance the route level by one after repeated review failure when the resolver reports an ordered target route, then perform the same pre-dispatch assertion used for implementation dispatch. A Codex fix dispatch with `effort_axis=selected:low|medium|high|xhigh` MUST use matching `agent_type: "oat-phase-implementer-low|medium|high|xhigh"`; a Claude Code fix dispatch with `model_axis=selected:<value>` MUST pass `model: "<value>"` on the Task call. Every fix dispatch writes the formal `Dispatch: scope=<phase-or-task> action=fix role=fix producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>` stamp before waiting on the implementer result.
+   a. Select/log fix dispatch axes from the fix scope, advance the route level by one after repeated review failure when the resolver reports an ordered target route, then perform the same pre-dispatch assertion used for implementation dispatch. A Codex fix dispatch with `effort_axis=selected:<value>` MUST use the materialized Codex role name returned in `providers.codex.dispatchArgs.variant`; a Claude Code fix dispatch with `model_axis=selected:<value>` MUST pass `model: "<value>"` on the Task call. Every fix dispatch writes the formal `Dispatch: scope=<phase-or-task> action=fix role=fix producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>` stamp before waiting on the implementer result.
    b. Dispatch the selected phase implementer role in `fix` mode (Tier 1) OR read the agent and apply fixes inline (Tier 2), with: - `review_artifact`: the path written by the reviewer - `findings`: the Critical + Important findings list - `prior_summary`: the last implementer summary
    c. Receive the fix summary.
    d. Re-dispatch the reviewer with the updated commit range.
@@ -1271,7 +1326,7 @@ Before pausing at a checkpoint, check if auto-review is enabled:
 1. Read `oat_auto_review_at_hill_checkpoints` from plan.md frontmatter. If not present, fall back to legacy `oat_auto_review_at_checkpoints`. If neither is present, fall back to `oat config get workflow.autoReviewAtHillCheckpoints` (which itself falls back to legacy `.oat/config.json` `autoReviewAtCheckpoints` when unset).
 
 2. If enabled and this is a checkpoint phase:
-   a. **Determine review scope:** Find the highest completed implementation phase already covered by a **`passed`** code-review row in plan.md Reviews table. Count only whole-phase scopes: `pNN` or `pNN-pMM`. Ignore task scopes (`pNN-tNN`) and rows with `fixes_added` or `fixes_completed` because those reviews did not pass and must be re-covered. Scope = every implementation phase after that passed coverage through the current phase, inclusive. If no earlier passed whole-phase review exists, start from the first implementation phase. Use `pNN-pMM` when the scope spans multiple phases. If this is the final implementation phase checkpoint, use scope `final`.
+   a. **Determine review scope:** Find the highest completed implementation phase already covered by a **`passed`** code-review row in plan.md Reviews table. Count only whole-phase scopes: `pNN` or `pNN-pMM`. Ignore task scopes (`pNN-tNN`) and rows with `fixes_added` or `fixes_completed` because those reviews did not pass and must be re-covered. Scope = every implementation phase after that passed coverage through the current phase, inclusive. If no earlier passed whole-phase review exists, start from the first implementation phase. Use `pNN-pMM` when the scope spans multiple phases. If this is the final implementation phase checkpoint, run `oat-project-review-provide code final`; use scope `final` and do not run a duplicate final phase-only lifecycle review, because Tier 1 already runs the standard per-phase reviewer before the final checkpoint branch.
    - Example: prior passed row `p01`, current checkpoint `p03` → review `p02-p03`
    - Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`
    - Example: current checkpoint is the last implementation phase → review `final`

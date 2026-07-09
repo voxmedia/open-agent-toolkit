@@ -5,7 +5,11 @@ import {
 } from '@commands/__tests__/helpers';
 import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
-import type { MatrixCellAvailability } from '@providers/identity/availability';
+import type {
+  MatrixCellAvailability,
+  MatrixCellAvailabilityResult,
+  ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -55,8 +59,8 @@ interface HarnessOptions {
   validateMatrixCell?: (
     provider: string,
     value: string,
-    options: { cwd: string; env: NodeJS.ProcessEnv },
-  ) => Promise<MatrixCellAvailability>;
+    options: ValidateMatrixCellOptions,
+  ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
 }
 
 interface RunDoctorArgs {
@@ -466,16 +470,135 @@ describe('createDoctorCommand', () => {
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'gpt-5.5-high', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('validates materialized Codex targets as model and effort pairs', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.codex.high[0]=gpt-5.6-terra/xhigh (shared config)',
+    );
+    expect(validateMatrixCell).toHaveBeenCalledTimes(1);
+    expect(validateMatrixCell).toHaveBeenCalledWith(
+      'codex',
+      'gpt-5.6-terra/xhigh',
+      {
+        cwd: '/tmp/workspace',
+        env: {},
+        detailed: true,
+        target: {
+          harness: 'codex',
+          model: 'gpt-5.6-terra',
+          effort: 'xhigh',
+        },
+      },
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports Codex model catalog details for unknown route target cells', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.5',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => ({
+        availability: 'unknown-value',
+        message:
+          "Codex debug models lists 'gpt-5.5', but effort 'xhigh' is not supported. Supported Codex efforts: medium, high.",
+      }),
+    });
+
+    await runDoctor(command);
+
+    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.5/xhigh', {
+      cwd: '/tmp/workspace',
+      env: {},
+      detailed: true,
+      target: {
+        harness: 'codex',
+        model: 'gpt-5.5',
+        effort: 'xhigh',
+      },
+    });
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain('gpt-5.5/xhigh');
+    expect(capture.info[0]).toContain('Supported Codex efforts');
+    expect(capture.info[0]).toContain('medium, high');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns for legacy Codex effort-only dispatch cells', async () => {
+    const { command, capture } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: 'high',
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => 'unknown-value',
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain(
+      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.codex=high (shared config)',
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('warns on unknown or unvalidated configured dispatch matrix cells', async () => {
@@ -520,7 +643,45 @@ describe('createDoctorCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('reports unvalidated dispatch matrix cells without warning exit status', async () => {
+  it('reports Cursor subagent allowed-list details for unknown model cells', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: { high: 'gpt-5.3-codex-low' },
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => ({
+        availability: 'unknown-value',
+        allowedValues: ['gpt-5.3-codex', 'composer-2.5'],
+        message:
+          'Cursor rejected this model for subagent Task dispatch. Allowed subagent models: gpt-5.3-codex, composer-2.5.',
+      }),
+    });
+
+    await runDoctor(command);
+
+    expect(validateMatrixCell).toHaveBeenCalledWith(
+      'cursor',
+      'gpt-5.3-codex-low',
+      {
+        cwd: '/tmp/workspace',
+        env: {},
+        detailed: true,
+      },
+    );
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain('gpt-5.3-codex-low');
+    expect(capture.info[0]).toContain('Allowed subagent models');
+    expect(capture.info[0]).toContain('gpt-5.3-codex');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns on unvalidated dispatch matrix cells', async () => {
     const { command, capture } = createHarness({
       oatConfig: {
         version: 1,
@@ -544,7 +705,7 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain(
       'workflow.dispatchCeiling.providers.cursor.high=composer-2.5 (shared config)',
     );
-    expect(process.exitCode).toBe(0);
+    expect(process.exitCode).toBe(1);
   });
 
   it('validates default local dispatch matrix adoption', async () => {
@@ -570,6 +731,7 @@ describe('createDoctorCommand', () => {
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(process.exitCode).toBe(0);
   });
@@ -668,6 +830,11 @@ multi_agent = true
 [agents.reviewer]
 config_file = "agents/reviewer.toml"
 `,
+        [reviewerRolePath]: [
+          '# oat-managed: true',
+          '# oat-role: reviewer',
+          'developer_instructions = "review"',
+        ].join('\n'),
       },
     });
 
@@ -714,6 +881,11 @@ multi_agent = false
 [agents.reviewer]
 config_file = "agents/reviewer.toml"
 `,
+        [reviewerRolePath]: [
+          '# oat-managed: true',
+          '# oat-role: reviewer',
+          'developer_instructions = "review"',
+        ].join('\n'),
       },
     });
 
@@ -724,19 +896,54 @@ config_file = "agents/reviewer.toml"
     expect(process.exitCode).toBe(1);
   });
 
-  it('warns when codex role config_file points to a missing file', async () => {
+  it('recognizes codex managed roles from generated role-file headers', async () => {
     const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const rolePath =
+      '/tmp/workspace/.codex/agents/custom-gpt-5-6-sol-high.toml';
     const { command, capture } = createHarness({
       pathExists: {
         [codexConfigPath]: true,
-        '/tmp/workspace/.codex/agents/reviewer.toml': false,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]: `[features]
+multi_agent = false
+
+[agents.custom-gpt-5-6-sol-high]
+config_file = "agents/custom-gpt-5-6-sol-high.toml"
+`,
+        [rolePath]: [
+          '# oat-managed: true',
+          '# oat-role: custom-gpt-5-6-sol-high',
+          'model = "gpt-5.6-sol"',
+          'model_reasoning_effort = "high"',
+        ].join('\n'),
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('codex_multi_agent');
+    expect(capture.info[0]).toContain('is not true');
+    expect(capture.info[0]).toContain('codex_role_file_refs');
+    expect(capture.info[0]).toContain('references exist');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns when codex role config_file points to a missing file', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const roleName = 'oat-reviewer-gpt-5-6-terra-xhigh';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [codexConfigPath]: true,
+        [`/tmp/workspace/.codex/agents/${roleName}.toml`]: false,
       },
       fileContents: {
         [codexConfigPath]: `[features]
 multi_agent = true
 
-[agents.reviewer]
-config_file = "agents/reviewer.toml"
+[agents.${roleName}]
+config_file = "agents/${roleName}.toml"
 `,
       },
     });
@@ -745,8 +952,10 @@ config_file = "agents/reviewer.toml"
 
     expect(capture.info[0]).toContain('codex_role_file_refs');
     expect(capture.info[0]).toContain(
-      'Missing codex role files: agents/reviewer.toml',
+      `Missing codex role files: agents/${roleName}.toml`,
     );
+    expect(capture.info[0]).toContain('oat sync --scope project');
+    expect(capture.info[0]).toContain('oat providers codex materialize');
     expect(process.exitCode).toBe(1);
   });
 });

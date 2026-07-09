@@ -13,11 +13,17 @@ import {
   type DispatchPolicyCompileResult,
 } from '@config/dispatch-ceiling-preset';
 import {
+  getDispatchPolicyChoices,
+  managedDispatchPolicyValueList,
+  renderDispatchPolicyChoicesMarkdown,
+} from '@config/dispatch-policy-options';
+import {
   resolveActiveProject,
   VALID_CLAUDE_DISPATCH_CEILINGS,
   VALID_CODEX_DISPATCH_CEILINGS,
   VALID_DISPATCH_MATRIX_TIERS,
   VALID_MANAGED_DISPATCH_POLICIES,
+  validateDispatchRouteTarget,
   type ActiveProjectResolution,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchMatrixTier,
@@ -70,6 +76,8 @@ interface ProviderResolution {
   mode: DispatchCeilingMode;
   mechanism: EnforcementMechanism;
   dispatchArgs: CeilingDispatchArgs;
+  modelAxis: string;
+  effortAxis: string;
   verifyOnDispatch: boolean;
   cellSource: DispatchCeilingSource | null;
   target: ResolvedDispatchRouteTarget | null;
@@ -99,6 +107,11 @@ interface DispatchCeilingResolveOptions {
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
+  json?: boolean;
+}
+
+interface DispatchCeilingChoicesOptions {
+  format?: string;
   json?: boolean;
 }
 
@@ -295,7 +308,7 @@ function isValidManagedPolicy(
 }
 
 function validManagedPolicyList(): string {
-  return VALID_MANAGED_DISPATCH_POLICIES.join(', ');
+  return managedDispatchPolicyValueList(', ');
 }
 
 function validProviderValueList(provider: DispatchCeilingProvider): string {
@@ -470,6 +483,35 @@ function policyTier(
     : null;
 }
 
+function uncappedPreferredTier(
+  provider: DispatchCeilingProvider,
+  role: CeilingRole,
+  preferredValue: DispatchCeilingValue | null,
+): WorkflowDispatchMatrixTier | null {
+  if (provider !== 'codex' || role === 'reviewer' || preferredValue === null) {
+    return null;
+  }
+
+  if (
+    (VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(preferredValue)
+  ) {
+    return preferredValue as WorkflowDispatchMatrixTier;
+  }
+
+  let matchedTier: WorkflowDispatchMatrixTier | null = null;
+  for (const tier of VALID_DISPATCH_MATRIX_TIERS) {
+    const compiledValue = compiledPolicyValueForProvider(
+      provider,
+      compileDispatchPolicyPreset(tier),
+    );
+    if (compiledValue === preferredValue) {
+      matchedTier = tier;
+    }
+  }
+
+  return matchedTier;
+}
+
 function dispatchValueFromRouteTarget(
   target: ResolvedDispatchRouteTarget,
 ): string | null {
@@ -488,6 +530,7 @@ interface MatrixCellResolution {
   cellSource: DispatchCeilingSource;
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
+  warnings: string[];
 }
 
 function routeTargetFromBareValue(
@@ -546,14 +589,27 @@ function resolveRouteMatrixCell(
     typeof entry === 'string'
       ? routeTargetFromBareValue(provider, entry, routeIndex, route.length)
       : routeTargetFromObject(provider, entry, routeIndex, route.length);
-  const value =
-    typeof entry === 'string' ? entry : dispatchValueFromRouteTarget(target);
+  const targetValidation =
+    typeof entry === 'string'
+      ? { valid: true }
+      : validateDispatchRouteTarget(provider, entry);
+  const value = targetValidation.valid
+    ? typeof entry === 'string'
+      ? entry
+      : dispatchValueFromRouteTarget(target)
+    : null;
+  const warnings = targetValidation.valid
+    ? []
+    : [
+        `Ignoring incomplete Codex dispatch target at route index ${routeIndex}: ${targetValidation.reason}`,
+      ];
 
   return {
     value,
     cellSource,
     target,
     selectionBranch: routeIndex > 0 ? 'escalation-target' : 'matrix-pinned',
+    warnings,
   };
 }
 
@@ -574,6 +630,7 @@ function resolveProviderCellFromValue(
       cellSource,
       target: null,
       selectionBranch: 'prompt-persisted',
+      warnings: [],
     };
   }
 
@@ -592,6 +649,7 @@ function resolveProviderCellFromValue(
       cellSource,
       target: null,
       selectionBranch: 'matrix-pinned',
+      warnings: [],
     };
   }
 
@@ -1111,16 +1169,25 @@ function selectDispatchValue(
   }
 
   if (policy.policy === 'uncapped') {
-    const selectedValue = role === 'reviewer' ? null : preferredValue;
+    const targetValue = policy.target
+      ? dispatchValueFromRouteTarget(policy.target)
+      : null;
+    const selectedValue =
+      role === 'reviewer' ? null : (targetValue ?? preferredValue);
+    const target = role === 'reviewer' || !targetValue ? null : policy.target;
     return {
       ...baseSelection,
       preferredValue: role === 'reviewer' ? null : preferredValue,
       selectedValue,
       capped: false,
       selectionMode: role === 'reviewer' ? 'no-review-target' : 'uncapped',
-      selectionBranch: selectedValue ? 'prompt-persisted' : 'unresolved',
-      family: selectionFamily(provider, selectedValue, null),
-      target: null,
+      selectionBranch: target
+        ? policy.selectionBranch
+        : selectedValue
+          ? 'prompt-persisted'
+          : 'unresolved',
+      family: selectionFamily(provider, selectedValue, target),
+      target,
     };
   }
 
@@ -1182,6 +1249,65 @@ function selectDispatchValue(
   };
 }
 
+function hasCodexVariantDispatchArgs(
+  dispatchArgs: CeilingDispatchArgs,
+): dispatchArgs is { variant: string } {
+  return (
+    dispatchArgs !== null &&
+    'variant' in dispatchArgs &&
+    typeof dispatchArgs.variant === 'string' &&
+    dispatchArgs.variant.length > 0
+  );
+}
+
+function hasModelDispatchArgs(
+  dispatchArgs: CeilingDispatchArgs,
+): dispatchArgs is { model: string } {
+  return (
+    dispatchArgs !== null &&
+    'model' in dispatchArgs &&
+    typeof dispatchArgs.model === 'string' &&
+    dispatchArgs.model.length > 0
+  );
+}
+
+function modelAxis(
+  selection: DispatchSelection,
+  dispatchArgs: CeilingDispatchArgs,
+): string {
+  if (selection.target?.model && dispatchArgs) {
+    return `selected:${selection.target.model}`;
+  }
+
+  if (hasModelDispatchArgs(dispatchArgs)) {
+    return `selected:${dispatchArgs.model}`;
+  }
+
+  if (selection.selectionMode === 'inherit-default') {
+    return 'inherited';
+  }
+
+  return 'unresolved';
+}
+
+function codexEffortAxis(
+  selection: DispatchSelection,
+  dispatchArgs: CeilingDispatchArgs,
+): string {
+  if (hasCodexVariantDispatchArgs(dispatchArgs) && selection.target?.effort) {
+    return `selected:${selection.target.effort}`;
+  }
+
+  if (
+    selection.selectionMode === 'inherit-default' ||
+    selection.selectionMode === 'no-review-target'
+  ) {
+    return 'provider-default';
+  }
+
+  return 'unresolved';
+}
+
 /**
  * Join a resolved ceiling value with the active provider's adapter to compute
  * the enforcement mode, mechanism, dispatch args, and verify-on-upgrade flag.
@@ -1202,6 +1328,8 @@ function buildProviderResolution(
       mode: adapter.supportsCeiling ? 'advisory' : 'unsupported',
       mechanism: adapter.mechanism,
       dispatchArgs: null,
+      modelAxis: 'unresolved',
+      effortAxis: provider === 'codex' ? 'provider-default' : 'not-applicable',
       verifyOnDispatch: false,
       cellSource: null,
       target: null,
@@ -1228,6 +1356,7 @@ function buildProviderResolution(
     dispatchValue && !isCrossHarness
       ? adapter.compileToDispatchArgs(dispatchValue, role, {
           orchestratorTier,
+          target: selection.target,
         })
       : null;
 
@@ -1245,10 +1374,16 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
+    modelAxis: modelAxis(selection, dispatchArgs),
+    effortAxis:
+      provider === 'codex'
+        ? codexEffortAxis(selection, dispatchArgs)
+        : 'not-applicable',
     verifyOnDispatch:
       dispatchValue && !isCrossHarness
         ? adapter.verifyOnDispatch(dispatchValue, {
             orchestratorTier,
+            target: selection.target,
           })
         : false,
     cellSource: policy.cellSource,
@@ -1335,6 +1470,8 @@ async function resolveDispatchCeiling(
     projectPath,
     dependencies,
     escalationLevel,
+    role,
+    preferredValue,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);
@@ -1415,6 +1552,8 @@ async function resolveCeilingValue(
   projectPath: string | null,
   dependencies: DispatchCeilingDependencies,
   escalationLevel: number,
+  role: CeilingRole,
+  preferredValue: DispatchCeilingValue | null,
 ): Promise<ResolvedCeilingValue | null> {
   const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
   const projectCeiling = await resolveProjectStateCeiling(
@@ -1428,7 +1567,32 @@ async function resolveCeilingValue(
     return null;
   }
 
-  if (baseCeiling.mode === 'inherit' || baseCeiling.policy === 'uncapped') {
+  if (baseCeiling.mode === 'inherit') {
+    return baseCeiling;
+  }
+
+  if (baseCeiling.policy === 'uncapped') {
+    const preferredTier = uncappedPreferredTier(provider, role, preferredValue);
+
+    if (preferredTier) {
+      const matrixCell = resolveProviderMatrixCell(
+        provider,
+        preferredTier,
+        resolvedConfig,
+        projectCeiling?.matrix ?? null,
+        escalationLevel,
+      );
+      if (matrixCell) {
+        return {
+          ...baseCeiling,
+          cellSource: matrixCell.cellSource,
+          target: matrixCell.target,
+          selectionBranch: matrixCell.selectionBranch,
+          warnings: [...baseCeiling.warnings, ...matrixCell.warnings],
+        };
+      }
+    }
+
     return baseCeiling;
   }
 
@@ -1447,6 +1611,7 @@ async function resolveCeilingValue(
       cellSource: matrixCell.cellSource,
       target: matrixCell.target,
       selectionBranch: matrixCell.selectionBranch,
+      warnings: [...baseCeiling.warnings, ...matrixCell.warnings],
     };
   }
 
@@ -1598,6 +1763,31 @@ async function runDispatchCeilingResolve(
   }
 }
 
+async function runDispatchCeilingChoices(
+  context: CommandContext,
+  options: DispatchCeilingChoicesOptions,
+): Promise<void> {
+  const choices = getDispatchPolicyChoices();
+  const format = (options.format ?? 'markdown').trim().toLowerCase();
+
+  if (context.json || options.json) {
+    context.logger.json({ status: 'ok', choices });
+    process.exitCode = 0;
+    return;
+  }
+
+  if (format !== 'markdown') {
+    context.logger.error(
+      `Invalid choices format "${options.format}". Valid formats: markdown.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  context.logger.info(renderDispatchPolicyChoicesMarkdown(choices));
+  process.exitCode = 0;
+}
+
 export function createProjectDispatchCeilingCommand(
   overrides: Partial<DispatchCeilingDependencies> = {},
 ): Command {
@@ -1608,6 +1798,21 @@ export function createProjectDispatchCeilingCommand(
 
   const command = new Command('dispatch-ceiling').description(
     'Resolve OAT project dispatch ceiling metadata',
+  );
+
+  command.addCommand(
+    new Command('choices')
+      .description('Print canonical dispatch policy choices')
+      .option('--format <format>', 'Output format: markdown', 'markdown')
+      .option('--json', 'Output machine-readable JSON')
+      .action(async (options: DispatchCeilingChoicesOptions, cmd: Command) => {
+        const globalOptions = readGlobalOptions(cmd);
+        const context = dependencies.buildCommandContext({
+          ...globalOptions,
+          json: globalOptions.json === true || options.json === true,
+        });
+        await runDispatchCeilingChoices(context, options);
+      }),
   );
 
   command.addCommand(
