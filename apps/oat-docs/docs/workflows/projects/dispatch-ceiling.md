@@ -187,10 +187,13 @@ Codex uses materialized roles because per-call model/effort controls were
 unreliable in dogfooding. The resolver compiles an explicit model+effort target
 into a role name such as `oat-phase-implementer-gpt-5-6-terra-xhigh`, and the
 Codex spawn payload uses that role as `agent_type`. For managed `Uncapped`, OAT
-still selects the preferred materialized target; the dispatching host should
-verify whether upward effort selection is actually honored in the current
-session. The old effort-only Codex pins are not the managed dispatch contract
-for new projects.
+still selects the preferred materialized target. If the Codex preferred value is
+an effort rather than a matrix tier, OAT looks up the highest managed tier that
+compiles to that effort before resolving the matrix target; for example,
+`--preferred xhigh` resolves through the `frontier` matrix cell. The dispatching
+host should verify whether upward effort selection is actually honored in the
+current session. The old effort-only Codex pins are not the managed dispatch
+contract for new projects.
 
 Claude Code uses the per-call Task `model` argument. It has no OAT-managed
 per-dispatch effort axis, so dispatch logs use `effort_axis=not-applicable`.

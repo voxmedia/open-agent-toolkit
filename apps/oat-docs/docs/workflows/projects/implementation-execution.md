@@ -114,6 +114,13 @@ Model and effort are separate axes. Each axis logs one of these states:
 
 In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, or `xhigh`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. For capped managed policies, the resolver selects `min(preferred, resolved_cap)` and returns a materialized role name compiled from an explicit model+effort target. For managed `Uncapped`, the resolver selects the preferred materialized role with no cap. For inherit/default mode, it returns no materialized role and OAT uses the base/unpinned role. Reviewer dispatch targets the configured cap only when a capped managed policy exists; managed `Uncapped` and inherit/default use base `oat-reviewer` fallback.
 
+Because Codex preferred values are effort names while dispatch matrix cells are
+keyed by OAT tiers, managed `Uncapped` maps preferred efforts through the
+managed tier table before resolving matrix targets. For example, `xhigh` maps to
+the highest matching tier, `frontier`, so `--preferred xhigh` can resolve a
+`frontier` Codex matrix target such as
+`oat-phase-implementer-gpt-5-6-sol-xhigh`.
+
 In Claude Code, implementation and fix dispatch classify a preferred model tier (`haiku`, `sonnet`, `opus`, or `fable`) and pass it to `oat project dispatch-ceiling resolve --provider claude --role implementer --preferred <model> --orchestrator-tier <current-orchestrator-tier>`. Capped policies select `min(preferred, resolved_cap)`, managed `Uncapped` selects the preferred model, and inherit/default omits `model`. Reviewer dispatch passes a `model` only when the resolver returns one. The separate effort axis is `not-applicable`.
 
 Dispatch logs use a consistent structured block so provider behavior is comparable without flattening the model and effort axes:
