@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -22,10 +22,10 @@ oat_generated: false
 | ------- | ------- | ----- | --------- |
 | Phase 1 | passed  | 3     | 3/3       |
 | Phase 2 | passed  | 5     | 5/5       |
-| Phase 3 | pending | 5     | 0/5       |
+| Phase 3 | passed  | 5     | 5/5       |
 | Phase 4 | pending | 2     | 0/2       |
 
-**Total:** 8/15 tasks completed
+**Total:** 13/15 tasks completed
 
 ---
 
@@ -89,33 +89,37 @@ oat_generated: false
 
 ## Phase 3: Model Validation and Canonical Prompts
 
-**Status:** pending
-**Started:** -
+**Status:** passed
+**Started:** 2026-07-09
+**Completed:** 2026-07-09
+**Review:** `.oat/projects/shared/codex-family-subagents/reviews/p03-review-2026-07-09T030955Z.md`
 
 ### Task p03-t01: Validate Cursor Subagent-Eligible Models
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 963de2ad
 
 ### Task p03-t02: Generate Dispatch Policy Choice Text from Canonical Data
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c2237cc8
 
 ### Task p03-t03: Harden Workflow Skills Against Hand-Typed Option Lists
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b1f43b6c
 
 ### Task p03-t04: Validate Codex Matrix Model Availability
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 267f9e8e
 
 ### Task p03-t05: Clarify Human-Facing Dispatch Display
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 92cb2736
+
+**Review Fix:** 5c7d72a3
 
 ---
 
@@ -303,6 +307,46 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 5 — 2026-07-09 03:11
+
+**Branch:** codex-family-subagents
+**Tier:** 1
+**Policy:** merge-strategy=sequential, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed, 0 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p03   | DONE        | pass   | 1/2            | passed      |
+
+#### Parallel Groups
+
+- p03: sequential
+
+#### Dispatch Notes
+
+- Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized implementer target resolved)
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized reviewer target resolved)
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized fix target resolved)
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=unresolved effort_axis=unresolved dispatch_policy=high dispatch_ceiling=xhigh target=oat-reviewer
+- Dispatch policy: high; selected=none; cap=xhigh (codex, advisory — policy set but no materialized reviewer target resolved)
+
+#### Outstanding Items
+
+- p03 passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+  Review artifact:
+  `.oat/projects/shared/codex-family-subagents/reviews/p03-review-2026-07-09T030955Z.md`.
+
+#### Artifact / Design Deltas
+
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| None          | -               | -                    | -                 | -      | -               | -         |
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -323,6 +367,13 @@ Chronological log of implementation progress.
 - [x] p02-t03: Dispatch to Materialized Codex Role Names (`e626118d`)
 - [x] p02-t04: Update Doctor and Stray Detection for Materialized Roles (`3eb5d427`)
 - [x] p02-t05: Rewrite Bundled Codex Dispatch Contracts (`48b227d6`)
+- [x] p03-t01: Validate Cursor Subagent-Eligible Models (`963de2ad`)
+- [x] p03-t02: Generate Dispatch Policy Choice Text from Canonical Data (`c2237cc8`)
+- [x] p03-t03: Harden Workflow Skills Against Hand-Typed Option Lists (`b1f43b6c`)
+- [x] p03-t04: Validate Codex Matrix Model Availability (`267f9e8e`)
+- [x] p03-t05: Clarify Human-Facing Dispatch Display (`92cb2736`)
+- [x] p03 review fixes: sentinel validation, unvalidated doctor warnings, and
+      `OAT Dispatch Tier` primary display wording (`5c7d72a3`)
 
 **What changed (high level):**
 
@@ -340,6 +391,12 @@ Chronological log of implementation progress.
   in the review dispatch schema; re-review found that blocker fixed.
 - Applied an additional approved retry override for model-argument dispatch
   axes; p02 re-review passed with no Critical or Important findings.
+- Implemented Phase 3 Cursor/Codex matrix availability validation, canonical
+  dispatch-policy prompt rendering, final-phase HiLL review guidance, and
+  human-facing dispatch display guidance.
+- Applied p03 review fixes for Cursor Task-probe sentinel validation, doctor
+  warning status for unvalidated matrix cells, and `OAT Dispatch Tier` display
+  wording; p03 re-review passed with no findings.
 
 **Decisions:**
 
@@ -380,7 +437,7 @@ Chronological log of implementation progress.
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
 | 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                           | yes    | no     | phase    |
-| 3     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
+| 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                      | yes    | no     | phase    |
 | 4     | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)

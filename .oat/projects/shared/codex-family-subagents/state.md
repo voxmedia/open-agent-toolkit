@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 27890802
+oat_current_task: p04-t01
+oat_last_commit: 5c7d72a3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -41,7 +41,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-08T19:35:02.205Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-09T02:11:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-09T03:11:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -53,7 +53,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 2 passed; ready for p03-t01
+Implementation - Phase 3 passed; ready for p04-t01
 
 ## Artifacts
 
@@ -77,4 +77,4 @@ Implementation - Phase 2 passed; ready for p03-t01
 
 ## Next Milestone
 
-Execute p03-t01: validate Cursor subagent-eligible models.
+Execute p04-t01: document materialized Codex and Cursor dispatch behavior.
