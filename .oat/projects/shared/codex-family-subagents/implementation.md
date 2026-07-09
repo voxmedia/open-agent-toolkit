@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-09
-oat_current_task_id: p04-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,14 +18,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | passed      | 3     | 3/3       |
-| Phase 2 | passed      | 5     | 5/5       |
-| Phase 3 | passed      | 5     | 5/5       |
-| Phase 4 | in_progress | 4     | 2/4       |
+| Phase   | Status | Tasks | Completed |
+| ------- | ------ | ----- | --------- |
+| Phase 1 | passed | 3     | 3/3       |
+| Phase 2 | passed | 5     | 5/5       |
+| Phase 3 | passed | 5     | 5/5       |
+| Phase 4 | passed | 4     | 4/4       |
 
-**Total:** 15/17 tasks completed
+**Total:** 17/17 tasks completed
 
 ---
 
@@ -125,9 +125,9 @@ oat_generated: false
 
 ## Phase 4: Documentation, Versions, and Release Validation
 
-**Status:** in_progress
+**Status:** passed
 **Started:** 2026-07-09
-**Completed:** -
+**Completed:** 2026-07-09
 **Review:** `.oat/projects/shared/codex-family-subagents/reviews/p04-review-2026-07-09T033119Z.md`
 
 ### Task p04-t01: Document Materialized Codex and Cursor Dispatch Behavior
@@ -142,13 +142,13 @@ oat_generated: false
 
 ### Task p04-t03: (review) Resolve Uncapped Codex Materialized Dispatch
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** abfabe78
 
 ### Task p04-t04: (review) Clarify Codex User-Scope Materialization Docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d0363d7f
 
 ---
 
@@ -427,8 +427,8 @@ Chronological log of implementation progress.
       `OAT Dispatch Tier` primary display wording (`5c7d72a3`)
 - [x] p04-t01: Document Materialized Codex and Cursor Dispatch Behavior (`c05ae475`)
 - [x] p04-t02: Update Public Package Versions and Validate Release (`218196eb`)
-- [ ] p04-t03: Resolve Uncapped Codex Materialized Dispatch
-- [ ] p04-t04: Clarify Codex User-Scope Materialization Docs
+- [x] p04-t03: Resolve Uncapped Codex Materialized Dispatch (`abfabe78`)
+- [x] p04-t04: Clarify Codex User-Scope Materialization Docs (`d0363d7f`)
 
 **What changed (high level):**
 
@@ -482,6 +482,9 @@ Chronological log of implementation progress.
   generation versus direct `--scope user` materialization.
 - Final review Important: managed uncapped Codex implementer/fix dispatch must
   resolve the preferred matrix target into materialized dispatch args.
+- Applied final review fixes: managed uncapped Codex implementer/fix dispatch
+  now materializes preferred matrix targets, and provider-sync docs now
+  distinguish direct user-scope materialization from deferred user-scope sync.
 
 **Blockers:**
 
@@ -541,7 +544,7 @@ After the fix tasks are complete:
 | 1     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/providers/codex/codec/export-to-codex.test.ts src/providers/codex/codec/materialize.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/commands/help-snapshots.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/commands/providers/codex/materialize.test.ts src/providers/codex/codec/config-merge.test.ts`; p01 review verification: CLI scoped test suite, type-check, and direct dry-run JSON check | yes    | no     | phase    |
 | 2     | p02 task verification commands; p02 fix-loop verification commands; resolver smoke; p02-related CLI Vitest suites; CLI type-check; p02 re-review verification commands                                                                                                                                                                                                                                                                                                                                                                                                                                                           | yes    | no     | phase    |
 | 3     | `pnpm --filter @open-agent-toolkit/cli test -- src/providers/identity/availability.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`; `pnpm --filter @open-agent-toolkit/cli test -- src/config/dispatch-policy-options.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`; `git diff --check` via p03 re-review                                                                                                                      | yes    | no     | phase    |
-| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`                                                                                                                                                                                                                                                            | yes    | no     | phase    |
+| 4     | `pnpm build:docs` before docs update; stale role grep; `pnpm build:docs`; pre-bump `pnpm release:validate` expected guardrail failure; `pnpm format`; `pnpm lint`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm build:docs`; `pnpm release:validate`; p04 review verification: `git diff --check`, stale role grep, `pnpm build:docs`, `pnpm release:validate`; final review fix verification: `pnpm --filter @open-agent-toolkit/cli test -- src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/providers/codex/codec/sync-extension.test.ts`, `pnpm build:docs`                  | yes    | no     | phase    |
 
 ## Final Summary (for PR/docs)
 
@@ -563,6 +566,9 @@ After the fix tasks are complete:
   a canonical agent, model, and effort.
 - OAT-managed Codex dispatch uses materialized model+effort roles when the
   resolver returns them; base roles are explicit provider-default fallbacks.
+- Managed uncapped Codex implementer/fix dispatch resolves preferred matrix
+  targets into materialized model+effort variants when available, while
+  uncapped reviewer dispatch keeps its base-role fallback.
 - Cursor dispatch keeps generic `.cursor/agents` files and applies model
   control through Task-level arguments after subagent eligibility validation.
 - Dispatch prompts and docs distinguish capped managed, managed uncapped,
