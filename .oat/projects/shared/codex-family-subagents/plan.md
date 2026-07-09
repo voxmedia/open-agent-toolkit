@@ -1283,17 +1283,17 @@ git commit -m "fix(p04-t05): map uncapped codex effort to matrix tier"
 
 ## Reviews
 
-| Scope     | Type     | Status          | Date       | Artifact                                                      |
-| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01       | code     | passed          | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
-| p02       | code     | passed          | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
-| p03       | code     | passed          | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
-| p04       | code     | passed          | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
-| final     | code     | fixes_completed | 2026-07-09 | `reviews/final-review-2026-07-09T035627Z.md`                  |
-| discovery | artifact | passed          | 2026-07-08 | `discovery.md`                                                |
-| spec      | artifact | passed          | 2026-07-08 | N/A quick mode                                                |
-| design    | artifact | passed          | 2026-07-08 | N/A quick mode                                                |
-| plan      | artifact | passed          | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
+| Scope     | Type     | Status | Date       | Artifact                                                      |
+| --------- | -------- | ------ | ---------- | ------------------------------------------------------------- |
+| p01       | code     | passed | 2026-07-08 | `reviews/p01-review-2026-07-08T224422Z.md`                    |
+| p02       | code     | passed | 2026-07-09 | `reviews/p02-review-2026-07-09T020945Z.md`                    |
+| p03       | code     | passed | 2026-07-09 | `reviews/p03-review-2026-07-09T030955Z.md`                    |
+| p04       | code     | passed | 2026-07-09 | `reviews/p04-review-2026-07-09T033119Z.md`                    |
+| final     | code     | passed | 2026-07-09 | `reviews/final-review-2026-07-09T041259Z.md`                  |
+| discovery | artifact | passed | 2026-07-08 | `discovery.md`                                                |
+| spec      | artifact | passed | 2026-07-08 | N/A quick mode                                                |
+| design    | artifact | passed | 2026-07-08 | N/A quick mode                                                |
+| plan      | artifact | passed | 2026-07-08 | `reviews/archived/artifact-plan-review-2026-07-08T215336Z.md` |
 
 **Status values:** `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`
@@ -1314,7 +1314,7 @@ git commit -m "fix(p04-t05): map uncapped codex effort to matrix tier"
 
 **Total: 18 tasks**
 
-Ready for `oat-project-implement`.
+Ready for the final HiLL checkpoint.
 
 ---
 
