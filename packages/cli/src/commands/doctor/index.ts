@@ -49,8 +49,10 @@ import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
 import {
+  normalizeMatrixCellAvailability,
   validateMatrixCell,
   type MatrixCellAvailability,
+  type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
 import type { ConcreteScope } from '@shared/types';
@@ -80,7 +82,7 @@ interface DoctorDependencies {
     provider: string,
     value: string,
     options: ValidateMatrixCellOptions,
-  ) => Promise<MatrixCellAvailability>;
+  ) => Promise<MatrixCellAvailabilityResponse>;
   processEnv: NodeJS.ProcessEnv;
   runPjmDoctorChecks: (
     repoRoot: string,
@@ -115,6 +117,7 @@ interface DispatchMatrixCellRef {
 
 interface DispatchMatrixCellIssue extends DispatchMatrixCellRef {
   availability: Exclude<MatrixCellAvailability, 'valid'>;
+  message?: string;
 }
 
 type DispatchMatrixConfigLayer = 'user' | 'shared' | 'local';
@@ -384,7 +387,13 @@ function formatDispatchMatrixIssueList(
   issues: DispatchMatrixCellRef[],
 ): string {
   return issues
-    .map((issue) => `${issue.path}=${issue.value} (${issue.layer} config)`)
+    .map((issue) => {
+      const suffix =
+        'message' in issue && typeof issue.message === 'string'
+          ? `; ${issue.message}`
+          : '';
+      return `${issue.path}=${issue.value} (${issue.layer} config)${suffix}`;
+    })
     .join(', ');
 }
 
@@ -406,23 +415,26 @@ async function createDispatchMatrixDoctorCheck(
 
   const issues: DispatchMatrixCellIssue[] = [];
   for (const ref of refs) {
-    let availability: MatrixCellAvailability;
+    let result: ReturnType<typeof normalizeMatrixCellAvailability>;
     try {
-      availability = await dependencies.validateMatrixCell(
-        ref.provider,
-        ref.value,
-        {
+      result = normalizeMatrixCellAvailability(
+        await dependencies.validateMatrixCell(ref.provider, ref.value, {
           cwd: scopeRoot,
           env: dependencies.processEnv,
+          detailed: true,
           ...(ref.target ? { target: ref.target } : {}),
-        },
+        }),
       );
     } catch {
-      availability = 'unvalidated';
+      result = { availability: 'unvalidated' };
     }
 
-    if (availability !== 'valid') {
-      issues.push({ ...ref, availability });
+    if (result.availability !== 'valid') {
+      issues.push({
+        ...ref,
+        availability: result.availability,
+        ...(result.message ? { message: result.message } : {}),
+      });
     }
   }
 

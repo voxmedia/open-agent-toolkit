@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  validateCursorSubagentModel,
   validateMatrixCell,
   type AvailabilityOracleDependencies,
 } from './availability';
@@ -100,65 +101,95 @@ describe('validateMatrixCell', () => {
     ).resolves.toBe('unknown-value');
   });
 
-  it('matches Cursor slugs from cursor-agent models first', async () => {
+  it('validates Cursor models through a subagent probe before trusting the broad catalog', async () => {
     const runCursorAgent = vi.fn(async () => ({
       ok: true,
-      stdout: [
-        'Available models',
-        'composer-2.5 - Composer 2.5 (current)',
-        'gpt-5.5-high - GPT 5.5 High',
-      ].join('\n'),
+      stdout: 'OAT_CURSOR_SUBAGENT_MODEL_VALID',
       stderr: '',
     }));
 
     await expect(
-      validateMatrixCell('cursor', 'gpt-5.5-high', {
+      validateMatrixCell('cursor', 'gpt-5.3-codex', {
         cwd: '/repo',
         dependencies: createDependencies({
           runCursorAgent,
-          env: { CURSOR_API_KEY: 'secret-key' },
+          env: {
+            CURSOR_API_KEY: 'secret-key',
+            AGENT_CLI_CREDENTIAL_STORE: 'file',
+          },
         }),
       }),
     ).resolves.toBe('valid');
 
     expect(runCursorAgent).toHaveBeenCalledTimes(1);
     expect(runCursorAgent).toHaveBeenCalledWith(
-      ['--api-key', 'secret-key', 'models'],
-      expect.objectContaining({ cwd: '/repo' }),
+      expect.arrayContaining(['--api-key', 'secret-key', '-p']),
+      expect.objectContaining({
+        cwd: '/repo',
+        env: expect.objectContaining({
+          CURSOR_API_KEY: 'secret-key',
+          AGENT_CLI_CREDENTIAL_STORE: 'file',
+        }),
+      }),
     );
   });
 
-  it('falls back to Cursor --list-models when models fails', async () => {
+  it('does not treat cursor-agent models as proof of subagent eligibility', async () => {
     const runCursorAgent = vi
       .fn()
       .mockResolvedValueOnce({ ok: false, stdout: '', stderr: 'keychain' })
       .mockResolvedValueOnce({
         ok: true,
-        stdout: 'composer-2.5-fast - Composer 2.5 Fast\n',
+        stdout: 'gpt-5.3-codex-low - GPT 5.3 Codex Low\n',
         stderr: '',
       });
 
     await expect(
-      validateMatrixCell('cursor', 'composer-2.5-fast', {
+      validateMatrixCell('cursor', 'gpt-5.3-codex-low', {
         cwd: '/repo',
         dependencies: createDependencies({ runCursorAgent }),
       }),
-    ).resolves.toBe('valid');
+    ).resolves.toBe('unvalidated');
   });
 
-  it('reports Cursor slugs as unknown when a live catalog is available without a match', async () => {
+  it('parses Cursor invalid-subagent-model allowed slugs', async () => {
     const runCursorAgent = vi.fn(async () => ({
-      ok: true,
-      stdout: 'composer-2.5 - Composer 2.5\n',
-      stderr: '',
+      ok: false,
+      stdout: '',
+      stderr:
+        'Invalid subagent model gpt-5.3-codex-low. Allowed models: gpt-5.3-codex, composer-2.5',
     }));
 
     await expect(
-      validateMatrixCell('cursor', 'missing-model', {
+      validateCursorSubagentModel('gpt-5.3-codex-low', {
         cwd: '/repo',
         dependencies: createDependencies({ runCursorAgent }),
       }),
-    ).resolves.toBe('unknown-value');
+    ).resolves.toEqual({
+      availability: 'unknown-value',
+      allowedValues: ['gpt-5.3-codex', 'composer-2.5'],
+      message:
+        'Cursor rejected this model for subagent Task dispatch. Allowed subagent models: gpt-5.3-codex, composer-2.5.',
+    });
+  });
+
+  it('marks Cursor models as valid when the invalid-model allow-list includes them', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr:
+        'Invalid subagent model mystery. Allowed models: gpt-5.3-codex, composer-2.5',
+    }));
+
+    await expect(
+      validateCursorSubagentModel('gpt-5.3-codex', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toMatchObject({
+      availability: 'valid',
+      allowedValues: ['gpt-5.3-codex', 'composer-2.5'],
+    });
   });
 
   it('reports Cursor slugs as unvalidated when catalog probes are unavailable', async () => {

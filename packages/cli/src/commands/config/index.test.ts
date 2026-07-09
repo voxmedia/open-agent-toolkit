@@ -7,7 +7,11 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import type { MatrixCellAvailability } from '@providers/identity/availability';
+import type {
+  MatrixCellAvailability,
+  MatrixCellAvailabilityResult,
+  ValidateMatrixCellOptions,
+} from '@providers/identity/availability';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,8 +24,8 @@ interface HarnessOptions {
   validateMatrixCell?: (
     provider: string,
     value: string,
-    options: { cwd: string; env: NodeJS.ProcessEnv },
-  ) => Promise<MatrixCellAvailability>;
+    options: ValidateMatrixCellOptions,
+  ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
   assetFiles?: Record<string, string>;
   confirmResponses?: boolean[];
 }
@@ -1087,6 +1091,7 @@ describe('oat config', () => {
         {
           cwd: root,
           env: {},
+          detailed: true,
         },
       );
       expect(capture.warn).toHaveLength(0);
@@ -1130,6 +1135,7 @@ describe('oat config', () => {
         {
           cwd: root,
           env: {},
+          detailed: true,
         },
       );
       expect(capture.warn).toHaveLength(0);
@@ -1184,6 +1190,43 @@ describe('oat config', () => {
       expect(capture.warn[0]).toContain('missing-model');
       expect(capture.warn[0]).toContain('not recognized');
       expect(process.exitCode).toBe(0);
+    });
+
+    it('includes Cursor subagent allowed-list details in availability warnings', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => ({
+        availability: 'unknown-value' as const,
+        allowedValues: ['gpt-5.3-codex', 'composer-2.5'],
+        message:
+          'Cursor rejected this model for subagent Task dispatch. Allowed subagent models: gpt-5.3-codex, composer-2.5.',
+      }));
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+      });
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.cursor.high',
+        'gpt-5.3-codex-low',
+        '--shared',
+      ]);
+
+      expect(capture.warn[0]).toContain(
+        'workflow.dispatchCeiling.providers.cursor.high',
+      );
+      expect(capture.warn[0]).toContain('gpt-5.3-codex-low');
+      expect(capture.warn[0]).toContain('Allowed subagent models');
+      expect(capture.warn[0]).toContain('gpt-5.3-codex');
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'cursor',
+        'gpt-5.3-codex-low',
+        {
+          cwd: root,
+          env: {},
+          detailed: true,
+        },
+      );
     });
 
     it('warns but saves provider values when the availability oracle is unavailable', async () => {
@@ -1308,20 +1351,23 @@ describe('oat config', () => {
         {
           cwd: root,
           env: {},
+          detailed: true,
         },
       );
       expect(validateMatrixCell).toHaveBeenCalledWith(
         'cursor',
         'composer-2.5-fast',
-        { cwd: root, env: {} },
+        { cwd: root, env: {}, detailed: true },
       );
       expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
         cwd: root,
         env: {},
+        detailed: true,
       });
       expect(validateMatrixCell).toHaveBeenCalledWith('claude', 'fable', {
         cwd: root,
         env: {},
+        detailed: true,
       });
       expect(capture.info[0]).toContain('2026-07-07.1');
       expect(capture.warn).toHaveLength(0);

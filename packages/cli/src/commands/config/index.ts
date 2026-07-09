@@ -38,8 +38,9 @@ import {
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import {
+  normalizeMatrixCellAvailability,
   validateMatrixCell,
-  type MatrixCellAvailability,
+  type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
 import { Command } from 'commander';
@@ -154,7 +155,7 @@ interface ConfigCommandDependencies {
     provider: string,
     value: string,
     options: ValidateMatrixCellOptions,
-  ) => Promise<MatrixCellAvailability>;
+  ) => Promise<MatrixCellAvailabilityResponse>;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -993,7 +994,7 @@ function parseWorkflowValue(
 function dispatchProviderAvailabilityWarning(
   key: WorkflowDispatchProviderConfigKey,
   value: string,
-  availability: MatrixCellAvailability,
+  availability: MatrixCellAvailabilityResponse,
 ): string | null {
   return matrixCellAvailabilityWarning(key, value, availability);
 }
@@ -1021,17 +1022,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function matrixCellAvailabilityWarning(
   path: string,
   value: string,
-  availability: MatrixCellAvailability,
+  availability: MatrixCellAvailabilityResponse,
 ): string | null {
-  if (availability === 'valid') {
+  const result = normalizeMatrixCellAvailability(availability);
+  if (result.availability === 'valid') {
     return null;
   }
+  const details = result.message ? ` ${result.message}` : '';
 
-  if (availability === 'unknown-value') {
-    return `${path} value '${value}' was not recognized by the provider availability oracle; saving anyway.`;
+  if (result.availability === 'unknown-value') {
+    return `${path} value '${value}' was not recognized by the provider availability oracle; saving anyway.${details}`;
   }
 
-  return `${path} value '${value}' could not be validated because the provider availability oracle is unavailable; saving anyway.`;
+  return `${path} value '${value}' could not be validated because the provider availability oracle is unavailable; saving anyway.${details}`;
 }
 
 function parseDispatchMatrixRecommendation(
@@ -1362,6 +1365,7 @@ async function setConfigValue(
         {
           cwd: repoRoot,
           env: dependencies.processEnv,
+          detailed: true,
         },
       );
       const warning = dispatchProviderAvailabilityWarning(
@@ -1638,7 +1642,7 @@ async function validateRecommendationCells(
       );
     }
 
-    let availability: MatrixCellAvailability;
+    let availability: MatrixCellAvailabilityResponse;
     try {
       availability = await dependencies.validateMatrixCell(
         ref.provider,
@@ -1646,6 +1650,7 @@ async function validateRecommendationCells(
         {
           cwd: repoRoot,
           env: dependencies.processEnv,
+          detailed: true,
         },
       );
     } catch {

@@ -7,6 +7,7 @@ import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import type {
   MatrixCellAvailability,
+  MatrixCellAvailabilityResult,
   ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -59,7 +60,7 @@ interface HarnessOptions {
     provider: string,
     value: string,
     options: ValidateMatrixCellOptions,
-  ) => Promise<MatrixCellAvailability>;
+  ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
 }
 
 interface RunDoctorArgs {
@@ -469,14 +470,17 @@ describe('createDoctorCommand', () => {
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'gpt-5.5-high', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(process.exitCode).toBe(0);
   });
@@ -516,6 +520,7 @@ describe('createDoctorCommand', () => {
       {
         cwd: '/tmp/workspace',
         env: {},
+        detailed: true,
         target: {
           harness: 'codex',
           model: 'gpt-5.6-terra',
@@ -592,6 +597,44 @@ describe('createDoctorCommand', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('reports Cursor subagent allowed-list details for unknown model cells', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: { high: 'gpt-5.3-codex-low' },
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => ({
+        availability: 'unknown-value',
+        allowedValues: ['gpt-5.3-codex', 'composer-2.5'],
+        message:
+          'Cursor rejected this model for subagent Task dispatch. Allowed subagent models: gpt-5.3-codex, composer-2.5.',
+      }),
+    });
+
+    await runDoctor(command);
+
+    expect(validateMatrixCell).toHaveBeenCalledWith(
+      'cursor',
+      'gpt-5.3-codex-low',
+      {
+        cwd: '/tmp/workspace',
+        env: {},
+        detailed: true,
+      },
+    );
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain('gpt-5.3-codex-low');
+    expect(capture.info[0]).toContain('Allowed subagent models');
+    expect(capture.info[0]).toContain('gpt-5.3-codex');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('reports unvalidated dispatch matrix cells without warning exit status', async () => {
     const { command, capture } = createHarness({
       oatConfig: {
@@ -642,6 +685,7 @@ describe('createDoctorCommand', () => {
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
       env: {},
+      detailed: true,
     });
     expect(process.exitCode).toBe(0);
   });
