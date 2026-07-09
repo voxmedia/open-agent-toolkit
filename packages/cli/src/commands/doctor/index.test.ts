@@ -531,6 +531,52 @@ describe('createDoctorCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('reports Codex model catalog details for unknown route target cells', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.5',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      validateMatrixCell: async () => ({
+        availability: 'unknown-value',
+        message:
+          "Codex debug models lists 'gpt-5.5', but effort 'xhigh' is not supported. Supported Codex efforts: medium, high.",
+      }),
+    });
+
+    await runDoctor(command);
+
+    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.5/xhigh', {
+      cwd: '/tmp/workspace',
+      env: {},
+      detailed: true,
+      target: {
+        harness: 'codex',
+        model: 'gpt-5.5',
+        effort: 'xhigh',
+      },
+    });
+    expect(capture.info[0]).toContain('dispatch_matrix');
+    expect(capture.info[0]).toContain('gpt-5.5/xhigh');
+    expect(capture.info[0]).toContain('Supported Codex efforts');
+    expect(capture.info[0]).toContain('medium, high');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('warns for legacy Codex effort-only dispatch cells', async () => {
     const { command, capture } = createHarness({
       oatConfig: {

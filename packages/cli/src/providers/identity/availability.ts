@@ -1,10 +1,8 @@
 import { execFile } from 'node:child_process';
-import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { VALID_CLAUDE_DISPATCH_CEILINGS } from '@config/oat-config';
 import { fileExists } from '@fs/io';
-import { buildCodexMaterializedRoleName } from '@providers/codex/codec/materialize';
 
 const execFileAsync = promisify(execFile);
 
@@ -31,12 +29,27 @@ export interface CursorAgentRunResult {
   stderr: string;
 }
 
+export interface CodexRunOptions {
+  cwd: string;
+  env: NodeJS.ProcessEnv;
+}
+
+export interface CodexRunResult {
+  ok: boolean;
+  stdout: string;
+  stderr: string;
+}
+
 export interface AvailabilityOracleDependencies {
   pathExists: (path: string) => Promise<boolean>;
   runCursorAgent: (
     args: string[],
     options: CursorAgentRunOptions,
   ) => Promise<CursorAgentRunResult>;
+  runCodex: (
+    args: string[],
+    options: CodexRunOptions,
+  ) => Promise<CodexRunResult>;
   env?: NodeJS.ProcessEnv;
 }
 
@@ -53,6 +66,11 @@ export interface ValidateMatrixCellOptions {
 
 interface CursorCatalogEntry {
   slug: string;
+}
+
+interface CodexCatalogEntry {
+  slug: string;
+  supportedEfforts: string[] | null;
 }
 
 export function normalizeMatrixCellAvailability(
@@ -90,9 +108,39 @@ async function runCursorAgent(
   }
 }
 
+async function runCodex(
+  args: string[],
+  options: CodexRunOptions,
+): Promise<CodexRunResult> {
+  try {
+    const { stdout, stderr } = await execFileAsync('codex', args, {
+      cwd: options.cwd,
+      env: options.env,
+      maxBuffer: 16 * 1024 * 1024,
+      timeout: 10_000,
+    });
+    return {
+      ok: true,
+      stdout: String(stdout),
+      stderr: String(stderr),
+    };
+  } catch (error) {
+    const failure = error as Error & {
+      stdout?: string | Buffer;
+      stderr?: string | Buffer;
+    };
+    return {
+      ok: false,
+      stdout: String(failure.stdout ?? ''),
+      stderr: String(failure.stderr ?? failure.message),
+    };
+  }
+}
+
 const DEFAULT_DEPENDENCIES: AvailabilityOracleDependencies = {
   pathExists: fileExists,
   runCursorAgent,
+  runCodex,
   env: process.env,
 };
 
@@ -208,39 +256,168 @@ function cursorCatalogContextMessage(
   return undefined;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function stringFromUnknown(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : null;
+}
+
+function extractCodexEffort(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return stringFromUnknown(value);
+  }
+
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  return (
+    stringFromUnknown(value.effort) ??
+    stringFromUnknown(value.id) ??
+    stringFromUnknown(value.name)
+  );
+}
+
+function extractCodexEfforts(model: Record<string, unknown>): string[] {
+  const efforts: string[] = [];
+  for (const key of [
+    'supported_reasoning_levels',
+    'supported_reasoning_efforts',
+    'supported_efforts',
+  ]) {
+    const value = model[key];
+    if (!Array.isArray(value)) {
+      continue;
+    }
+    efforts.push(
+      ...value
+        .map(extractCodexEffort)
+        .filter((effort): effort is string => effort !== null),
+    );
+  }
+
+  const defaultEffort = stringFromUnknown(model.default_reasoning_level);
+  if (defaultEffort) {
+    efforts.push(defaultEffort);
+  }
+
+  return unique(efforts);
+}
+
+function parseCodexCatalog(stdout: string): CodexCatalogEntry[] | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout) as unknown;
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed) || !Array.isArray(parsed.models)) {
+    return null;
+  }
+
+  const entries: CodexCatalogEntry[] = [];
+  for (const model of parsed.models) {
+    if (!isRecord(model)) {
+      continue;
+    }
+    const slug = stringFromUnknown(model.slug);
+    if (!slug) {
+      continue;
+    }
+    const supportedEfforts = extractCodexEfforts(model);
+    entries.push({
+      slug,
+      supportedEfforts: supportedEfforts.length > 0 ? supportedEfforts : null,
+    });
+  }
+
+  return entries.length > 0 ? entries : null;
+}
+
+function codexTargetFromValue(
+  value: string,
+  target?: ValidateMatrixCellOptions['target'],
+): { model: string | null; effort: string | null } {
+  const targetModel = stringFromUnknown(target?.model);
+  const targetEffort = stringFromUnknown(target?.effort);
+  if (targetModel && targetEffort) {
+    return { model: targetModel, effort: targetEffort };
+  }
+
+  const [model, effort] = value.split('/');
+  return {
+    model: stringFromUnknown(model),
+    effort: stringFromUnknown(effort),
+  };
+}
+
+function codexUnsupportedEffortMessage(
+  model: string,
+  effort: string,
+  supportedEfforts: string[],
+): string {
+  return `Codex debug models lists '${model}', but effort '${effort}' is not supported. Supported Codex efforts: ${supportedEfforts.join(
+    ', ',
+  )}.`;
+}
+
 async function validateCodexCell(
   value: string,
   cwd: string,
   dependencies: AvailabilityOracleDependencies,
   target?: ValidateMatrixCellOptions['target'],
-): Promise<MatrixCellAvailability> {
-  const model = target?.model?.trim();
-  const effort = target?.effort?.trim();
+): Promise<MatrixCellAvailabilityResult> {
+  const { model, effort } = codexTargetFromValue(value, target);
   if (!model || !effort || value.trim().length === 0) {
-    return 'unknown-value';
+    return { availability: 'unknown-value' };
   }
 
-  try {
-    const implementerRole = buildCodexMaterializedRoleName({
-      agentName: 'oat-phase-implementer',
-      model,
-      effort,
-    });
-    const reviewerRole = buildCodexMaterializedRoleName({
-      agentName: 'oat-reviewer',
-      model,
-      effort,
-    });
-    const implementerExists = await dependencies.pathExists(
-      join(cwd, '.codex', 'agents', `${implementerRole}.toml`),
-    );
-    const reviewerExists = await dependencies.pathExists(
-      join(cwd, '.codex', 'agents', `${reviewerRole}.toml`),
-    );
-    return implementerExists && reviewerExists ? 'valid' : 'unknown-value';
-  } catch {
-    return 'unvalidated';
+  const result = await dependencies.runCodex(['debug', 'models'], {
+    cwd,
+    env: dependencies.env ?? process.env,
+  });
+  if (!result.ok) {
+    return { availability: 'unvalidated' };
   }
+
+  const catalog = parseCodexCatalog(result.stdout);
+  if (!catalog) {
+    return { availability: 'unvalidated' };
+  }
+
+  const entry = catalog.find((modelEntry) => modelEntry.slug === model);
+  if (!entry) {
+    return {
+      availability: 'unknown-value',
+      message: `Codex debug models does not list '${model}'.`,
+    };
+  }
+
+  if (!entry.supportedEfforts) {
+    return {
+      availability: 'unvalidated',
+      message: `Codex debug models lists '${model}', but supported reasoning efforts could not be parsed.`,
+    };
+  }
+
+  if (!entry.supportedEfforts.includes(effort)) {
+    return {
+      availability: 'unknown-value',
+      allowedValues: entry.supportedEfforts,
+      message: codexUnsupportedEffortMessage(
+        model,
+        effort,
+        entry.supportedEfforts,
+      ),
+    };
+  }
+
+  return { availability: 'valid' };
 }
 
 export async function validateCursorSubagentModel(
@@ -347,13 +524,13 @@ export async function validateMatrixCell(
   }
 
   if (normalizedProvider === 'codex') {
-    const availability = await validateCodexCell(
+    const result = await validateCodexCell(
       normalizedValue,
       options.cwd,
       dependencies,
       options.target,
     );
-    return options.detailed ? { availability } : availability;
+    return options.detailed ? result : result.availability;
   }
 
   if (normalizedProvider === 'cursor') {

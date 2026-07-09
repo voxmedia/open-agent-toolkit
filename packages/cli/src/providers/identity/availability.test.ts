@@ -16,9 +16,18 @@ function createDependencies(
       stdout: '',
       stderr: 'not mocked',
     })),
+    runCodex: vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr: 'not mocked',
+    })),
     env: {},
     ...overrides,
   };
+}
+
+function codexCatalog(models: unknown[]): string {
+  return JSON.stringify({ models });
 }
 
 describe('validateMatrixCell', () => {
@@ -38,67 +47,232 @@ describe('validateMatrixCell', () => {
     ).resolves.toBe('unknown-value');
   });
 
-  it('requires Codex implementer and reviewer materialized target roles to exist', async () => {
-    const pathExists = vi.fn(
-      async (path: string) =>
-        path.endsWith('oat-phase-implementer-gpt-5-6-terra-xhigh.toml') ||
-        path.endsWith('oat-reviewer-gpt-5-6-terra-xhigh.toml'),
-    );
+  it('validates Codex models and efforts through codex debug models', async () => {
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([
+        {
+          slug: 'gpt-5.5',
+          supported_reasoning_levels: [
+            { effort: 'low' },
+            { effort: 'medium' },
+            { effort: 'high' },
+            { effort: 'xhigh' },
+          ],
+        },
+      ]),
+      stderr: '',
+    }));
 
     await expect(
-      validateMatrixCell('codex', 'gpt-5.6-terra/xhigh', {
+      validateMatrixCell('codex', 'gpt-5.5/xhigh', {
         cwd: '/repo',
-        dependencies: createDependencies({ pathExists }),
+        dependencies: createDependencies({ runCodex }),
         target: {
-          model: 'gpt-5.6-terra',
+          model: 'gpt-5.5',
           effort: 'xhigh',
         },
       }),
     ).resolves.toBe('valid');
 
-    expect(pathExists).toHaveBeenCalledWith(
-      '/repo/.codex/agents/oat-phase-implementer-gpt-5-6-terra-xhigh.toml',
-    );
-    expect(pathExists).toHaveBeenCalledWith(
-      '/repo/.codex/agents/oat-reviewer-gpt-5-6-terra-xhigh.toml',
-    );
+    expect(runCodex).toHaveBeenCalledWith(['debug', 'models'], {
+      cwd: '/repo',
+      env: {},
+    });
   });
 
-  it('does not validate legacy Codex effort-only role files', async () => {
-    const pathExists = vi.fn(
-      async (path: string) =>
-        path.endsWith('oat-phase-implementer-high.toml') ||
-        path.endsWith('oat-reviewer-high.toml'),
+  it('reports unknown Codex model slugs from the debug catalog', async () => {
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([
+        {
+          slug: 'gpt-5.5',
+          supported_reasoning_levels: [{ effort: 'xhigh' }],
+        },
+      ]),
+      stderr: '',
+    }));
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.6-sol/xhigh', {
+        cwd: '/repo',
+        detailed: true,
+        dependencies: createDependencies({ runCodex }),
+        target: {
+          model: 'gpt-5.6-sol',
+          effort: 'xhigh',
+        },
+      }),
+    ).resolves.toMatchObject({
+      availability: 'unknown-value',
+      message: "Codex debug models does not list 'gpt-5.6-sol'.",
+    });
+  });
+
+  it('reports unsupported Codex efforts separately from model availability', async () => {
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([
+        {
+          slug: 'gpt-5.5',
+          supported_reasoning_levels: [
+            { effort: 'medium' },
+            { effort: 'high' },
+          ],
+        },
+      ]),
+      stderr: '',
+    }));
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.5/xhigh', {
+        cwd: '/repo',
+        detailed: true,
+        dependencies: createDependencies({ runCodex }),
+        target: {
+          model: 'gpt-5.5',
+          effort: 'xhigh',
+        },
+      }),
+    ).resolves.toMatchObject({
+      availability: 'unknown-value',
+      message:
+        "Codex debug models lists 'gpt-5.5', but effort 'xhigh' is not supported. Supported Codex efforts: medium, high.",
+    });
+  });
+
+  it('reports Codex availability as unvalidated when debug models is unavailable or unparsable', async () => {
+    const failedRunCodex = vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr: 'not authenticated',
+    }));
+    const invalidRunCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: 'not json',
+      stderr: '',
+    }));
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.5/xhigh', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCodex: failedRunCodex }),
+        target: {
+          model: 'gpt-5.5',
+          effort: 'xhigh',
+        },
+      }),
+    ).resolves.toBe('unvalidated');
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.5/xhigh', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCodex: invalidRunCodex }),
+        target: {
+          model: 'gpt-5.5',
+          effort: 'xhigh',
+        },
+      }),
+    ).resolves.toBe('unvalidated');
+  });
+
+  it('falls back to model/effort parsing from Codex matrix values', async () => {
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([
+        {
+          slug: 'gpt-5.5',
+          supported_reasoning_levels: [{ effort: 'xhigh' }],
+        },
+      ]),
+      stderr: '',
+    }));
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.5/xhigh', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCodex }),
+      }),
+    ).resolves.toBe('valid');
+  });
+
+  it('does not require Codex materialized target role files for catalog-valid models', async () => {
+    const pathExists = vi.fn(async () => false);
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([
+        {
+          slug: 'gpt-5.5',
+          supported_reasoning_levels: [{ effort: 'xhigh' }],
+        },
+      ]),
+      stderr: '',
+    }));
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.5/xhigh', {
+        cwd: '/repo',
+        dependencies: createDependencies({ pathExists, runCodex }),
+        target: {
+          model: 'gpt-5.5',
+          effort: 'xhigh',
+        },
+      }),
+    ).resolves.toBe('valid');
+
+    expect(pathExists).not.toHaveBeenCalled();
+  });
+
+  it('rejects legacy Codex effort-only values before model catalog validation', async () => {
+    const runCodex = vi.fn(
+      async () =>
+        ({
+          ok: true,
+          stdout: codexCatalog([
+            {
+              slug: 'gpt-5.5',
+              supported_reasoning_levels: [{ effort: 'high' }],
+            },
+          ]),
+          stderr: '',
+        }) as const,
     );
 
     await expect(
       validateMatrixCell('codex', 'high', {
         cwd: '/repo',
-        dependencies: createDependencies({ pathExists }),
+        dependencies: createDependencies({ runCodex }),
       }),
     ).resolves.toBe('unknown-value');
 
-    expect(pathExists).not.toHaveBeenCalled();
+    expect(runCodex).not.toHaveBeenCalled();
   });
 
-  it('reports Codex values as unknown when the target or materialized roles are missing', async () => {
+  it('reports Codex values as unknown when model or effort is missing', async () => {
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([]),
+      stderr: '',
+    }));
+
     await expect(
       validateMatrixCell('codex', 'opus', {
         cwd: '/repo',
-        dependencies: createDependencies(),
+        dependencies: createDependencies({ runCodex }),
       }),
     ).resolves.toBe('unknown-value');
 
     await expect(
-      validateMatrixCell('codex', 'gpt-5.6-terra/xhigh', {
+      validateMatrixCell('codex', 'gpt-5.5', {
         cwd: '/repo',
-        dependencies: createDependencies(),
+        dependencies: createDependencies({ runCodex }),
         target: {
-          model: 'gpt-5.6-terra',
-          effort: 'xhigh',
+          model: 'gpt-5.5',
         },
       }),
     ).resolves.toBe('unknown-value');
+
+    expect(runCodex).not.toHaveBeenCalled();
   });
 
   it('validates Cursor models through a subagent probe before trusting the broad catalog', async () => {

@@ -17,6 +17,7 @@ import {
 import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
+  isCodexMaterializedRouteTarget,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -1012,6 +1013,7 @@ interface DispatchMatrixCellRef {
   provider: string;
   value: string;
   path: string;
+  target?: WorkflowDispatchRouteTarget;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -1071,6 +1073,10 @@ function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
   return isRecord(entry);
 }
 
+function formatRouteTargetValue(entry: WorkflowDispatchRouteTarget): string {
+  return [entry.model, entry.effort].filter(Boolean).join('/');
+}
+
 function addDispatchMatrixCellRefs(
   refs: DispatchMatrixCellRef[],
   provider: string,
@@ -1093,11 +1099,32 @@ function addDispatchMatrixCellRefs(
       continue;
     }
 
+    const targetProvider = entry.harness ?? provider;
+    if (isCodexMaterializedRouteTarget(provider, entry)) {
+      if (entry.model && entry.effort) {
+        refs.push({
+          provider: targetProvider,
+          value: formatRouteTargetValue(entry),
+          path: entryPath,
+          target: entry,
+        });
+        continue;
+      }
+    }
+
     if (entry.model) {
-      refs.push({ provider, value: entry.model, path: `${entryPath}.model` });
+      refs.push({
+        provider: targetProvider,
+        value: entry.model,
+        path: `${entryPath}.model`,
+      });
     }
     if (entry.effort) {
-      refs.push({ provider, value: entry.effort, path: `${entryPath}.effort` });
+      refs.push({
+        provider: targetProvider,
+        value: entry.effort,
+        path: `${entryPath}.effort`,
+      });
     }
   }
 }
@@ -1635,7 +1662,7 @@ async function validateRecommendationCells(
 
   for (const ref of collectDispatchMatrixCellRefs(recommendation.providers)) {
     const closedValues = closedDispatchProviderValues(ref.provider);
-    if (closedValues && !closedValues.includes(ref.value)) {
+    if (!ref.target && closedValues && !closedValues.includes(ref.value)) {
       throw new Error(
         `Invalid value for ${ref.path}: expected one of ${closedValues.join(' | ')}, got '${ref.value}'`,
       );
@@ -1650,6 +1677,7 @@ async function validateRecommendationCells(
           cwd: repoRoot,
           env: dependencies.processEnv,
           detailed: true,
+          ...(ref.target ? { target: ref.target } : {}),
         },
       );
     } catch {

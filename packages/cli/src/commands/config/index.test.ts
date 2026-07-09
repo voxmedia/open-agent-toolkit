@@ -1436,6 +1436,72 @@ describe('oat config', () => {
       ).rejects.toMatchObject({ code: 'ENOENT' });
     });
 
+    it('validates codex route targets as model and effort pairs during dispatch matrix adoption', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'valid' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                codex: {
+                  high: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.5',
+                      effort: 'xhigh',
+                    },
+                  ],
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            recommendationVersion: '2026-07-07.1',
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.5',
+                    effort: 'xhigh',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+      expect(validateMatrixCell).toHaveBeenCalledTimes(1);
+      expect(validateMatrixCell).toHaveBeenCalledWith(
+        'codex',
+        'gpt-5.5/xhigh',
+        {
+          cwd: root,
+          env: {},
+          detailed: true,
+          target: {
+            harness: 'codex',
+            model: 'gpt-5.5',
+            effort: 'xhigh',
+          },
+        },
+      );
+      expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
     it('warns per cell during dispatch matrix recommendation adoption without blocking', async () => {
       const root = await createRepoRoot();
       const validateMatrixCell = vi.fn(
