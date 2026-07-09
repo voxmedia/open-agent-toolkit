@@ -431,11 +431,33 @@ Payload-first invariant:
   `producer=unknown provenance=unknown` unless an observed/inferred identity is
   available. Do not write prose-only or legacy comma-separated stamp forms.
 
+Human-facing dispatch display rules:
+
+- Lead with route, policy, requested controls, configured defaults, and runtime confirmation. These are the fields humans use to understand what OAT asked for and what the host appears to be running.
+- Do not headline `producer=unknown` or `provenance=unknown`. Those values are
+  audit fields for the formal stamp, not the primary status. Put unknown
+  producer/provenance only in `Dispatch stamp:` or in a low-priority note after
+  the route and runtime confirmation.
+- Separate requested controls from configured defaults. For example, a Codex
+  materialized role may request `model_axis=selected:<model>` and
+  `effort_axis=selected:<effort>` while the provider default effort remains a
+  separate fallback/default fact.
+- Separate configured policy/cap from runtime confirmation. A resolver payload
+  can declare a target before the host has confirmed it; an observed mismatch
+  must be called out as `Runtime confirmation: mismatch:<detail>` and handled as
+  an orchestration deviation.
+- Keep the `Dispatch stamp: Dispatch: ...` line parseable and grammar-stable.
+  Do not move display-only prose into the formal stamp.
+
 Structured dispatch log:
 
 ```text
 OAT Dispatch: Phase {phase_id} {implementation | fix | review}
 Host: {Claude Code | Codex | Cursor | other host}
+Route: {route label or target path | none}; level={0 | 1 | ... | none}
+Requested controls: {model=<value|none>, effort=<value|none>, target=<value|unknown>}
+Configured defaults: {provider default effort/model | unknown | not-applicable}
+Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}
 Preferred effort: {low | medium | high | xhigh | provider-default | not-applicable}
 Dispatch policy: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
 Resolved cap: {resolved cap value | none}
@@ -456,6 +478,10 @@ Codex capped example:
 ```text
 OAT Dispatch: Phase p02 implementation
 Host: Codex
+Route: codex/implementer/gpt-5.6-sol/medium; level=0
+Requested controls: model=gpt-5.6-sol, effort=medium, target=oat-phase-implementer-gpt-5-6-sol-medium
+Configured defaults: provider default effort=high
+Runtime confirmation: declared:gpt-5.6-sol/medium
 Preferred effort: high
 Dispatch policy: economy
 Resolved cap: medium
@@ -474,6 +500,10 @@ Codex uncapped implementer example:
 ```text
 OAT Dispatch: Phase p02 implementation
 Host: Codex
+Route: codex/implementer/gpt-5.6-terra/xhigh; level=0
+Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-phase-implementer-gpt-5-6-terra-xhigh
+Configured defaults: provider default effort=medium
+Runtime confirmation: declared:gpt-5.6-terra/xhigh
 Preferred effort: xhigh
 Dispatch policy: uncapped
 Resolved cap: none
@@ -492,6 +522,10 @@ Codex capped reviewer example:
 ```text
 OAT Dispatch: Phase p02 review
 Host: Codex
+Route: codex/reviewer/gpt-5.6-terra/xhigh; level=0
+Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-reviewer-gpt-5-6-terra-xhigh
+Configured defaults: provider default effort=medium
+Runtime confirmation: declared:gpt-5.6-terra/xhigh
 Preferred effort: high
 Dispatch policy: high
 Resolved cap: xhigh
@@ -510,6 +544,10 @@ Codex inherit/default fallback example:
 ```text
 OAT Dispatch: Phase p02 review
 Host: Codex
+Route: none; level=none
+Requested controls: model=none, effort=provider-default, target=oat-reviewer
+Configured defaults: provider default effort=medium
+Runtime confirmation: not-observable
 Preferred effort: provider-default
 Dispatch policy: inherit host defaults
 Resolved cap: none
@@ -535,6 +573,10 @@ Codex generic explorer example:
 ```text
 OAT Dispatch: p02-t10 sidecar exploration
 Host: Codex
+Route: sidecar/explorer; level=none
+Requested controls: model=none, effort=provider-default, target=explorer
+Configured defaults: provider default effort=xhigh
+Runtime confirmation: not-observable
 Preferred effort: provider-default
 Dispatch policy: high
 Resolved cap: xhigh

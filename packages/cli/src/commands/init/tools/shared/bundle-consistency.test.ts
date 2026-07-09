@@ -350,6 +350,37 @@ describe('bundle-assets.sh consistency', () => {
   );
 
   it(
+    'bundles implement skill with human-facing dispatch display guidance',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        const content = readFileSync(
+          join(assetsRoot, 'skills', 'oat-project-implement', 'SKILL.md'),
+          'utf8',
+        );
+
+        expect(content).toContain('Human-facing dispatch display rules');
+        expect(content).toMatch(
+          /Lead with route, policy, requested controls, configured defaults, and runtime\s+confirmation/,
+        );
+        expect(content).toContain('Do not headline `producer=unknown`');
+        expect(content).toContain(
+          'Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown>',
+        );
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
     'bundles the PJM migration prompt asset',
     () => {
       const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));

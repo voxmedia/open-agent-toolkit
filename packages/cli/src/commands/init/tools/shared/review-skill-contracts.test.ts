@@ -144,6 +144,25 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('keeps dispatch display human-facing while preserving parseable stamps', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toContain('Human-facing dispatch display rules');
+    expect(content).toMatch(
+      /Lead with route, policy, requested controls, configured defaults, and runtime\s+confirmation/,
+    );
+    expect(content).toContain('Do not headline `producer=unknown`');
+    expect(content).toContain(
+      'Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}',
+    );
+    expect(content).toContain(
+      'Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown>',
+    );
+    expect(content).not.toContain('Producer: {slug | unknown}');
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
