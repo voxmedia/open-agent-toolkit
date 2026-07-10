@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t15
+oat_current_task_id: p04-t16
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 19    | 14/19     |
+| p04   | in_progress | 19    | 15/19     |
 
-**Total:** 37/42 tasks completed
+**Total:** 38/42 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** supplemental final-review fixes queued (`p04-t15` through `p04-t19`)
+**Status:** supplemental final-review fixes in progress (15/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -303,10 +303,12 @@ oat_generated: false
 
 ### Task p04-t15: (final review) Evaluate one immutable gate artifact snapshot
 
-**Status:** pending
+**Status:** completed
+**Commit:** `488c0c85`
 
-- Convert correlation and verdict evaluation to one immutable artifact postimage, preserving controlled normalization and fail-closed receive eligibility.
-- Add a concurrent-mutation regression covering project identity, invocation metadata, and findings counts.
+- Candidate correlation and verdict evaluation now use the same immutable artifact content snapshot, with signature checks before and after semantic evaluation.
+- Controlled empty-section normalization verifies the source snapshot before writing and verifies the normalized postimage afterward; rejected artifacts explicitly remain non-receive-eligible with no handoff.
+- RED reproduced a false-green `ok` result after concurrent project, scope, invocation-model, and Important-count mutation. GREEN passed 142 focused gate/parser assertions and CLI type-check.
 
 ### Task p04-t16: (final review) Contain active project materialization paths
 
@@ -343,7 +345,7 @@ oat_generated: false
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The latest final review is `fixes_added`. Execute `p04-t15` through `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
+- **Review status:** The latest final review is `fixes_added`. Execute `p04-t16` through `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
@@ -953,7 +955,7 @@ ownership references now match shipped behavior. Live lifecycle gate commands
 declare the project, carry exact configured invocation metadata, and produce an
 idempotent user Codex role surface before the next provider session starts.
 
-The project is at 37 of 42 tasks and p04 is at 14 of 19. The latest final review
-is `fixes_added`; five supplemental fixes, one final review cycle, and explicit
+The project is at 38 of 42 tasks and p04 is at 15 of 19. The latest final review
+is `fixes_added`; four supplemental fixes, one final review cycle, and explicit
 p04 HiLL approval remain pending. No canonical skill received another version
 bump, and all five public packages remain at `0.1.47`.

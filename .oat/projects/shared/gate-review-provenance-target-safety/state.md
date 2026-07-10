@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t15
-oat_last_commit: a1dac3dc
+oat_current_task: p04-t16
+oat_last_commit: 488c0c85
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T12:23:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T12:31:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 37 of 42 planned tasks are complete; p04 is 14/19. The latest final review is `fixes_added`; supplemental fixes start at `p04-t15`.
+Implementation - 38 of 42 planned tasks are complete; p04 is 15/19. The latest final review is `fixes_added`; supplemental fixes resume at `p04-t16`.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 37 of 42 planned tasks are complete; p04 is 14/19. The latest f
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (37/42 tasks complete; final review is `fixes_added`)
+- **Implementation:** `implementation.md` (38/42 tasks complete; final review is `fixes_added`)
 
 ## Progress
 
@@ -167,7 +167,9 @@ Implementation - 37 of 42 planned tasks are complete; p04 is 14/19. The latest f
 - ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
 - ✓ Independent final review cycle 2 plus parallel audit found 4 Important, 1 Medium, and 2 Minor findings
 - ✓ All cycle-2 findings were converted or resolved with no deferrals
-- ⧗ Execute `p04-t15` through `p04-t19`, then run final review cycle 3
+- ✓ `p04-t15` evaluates one immutable correlated artifact snapshot and rejects concurrent project, invocation, scope, or findings mutation
+- ✓ p04-t15 RED/GREEN verification passed 142 focused gate/parser assertions and CLI type-check
+- ⧗ Execute `p04-t16` through `p04-t19`, then run final review cycle 3
 
 ## Blockers
 
@@ -175,4 +177,4 @@ None
 
 ## Next Milestone
 
-Execute supplemental final-review fixes `p04-t15` through `p04-t19`. If final review cycle 3 passes, request explicit p04 HiLL approval before lifecycle finalization.
+Execute supplemental final-review fixes `p04-t16` through `p04-t19`. If final review cycle 3 passes, request explicit p04 HiLL approval before lifecycle finalization.

@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** supplemental final-review fixes queued (`p04-t15` through `p04-t19`)
+**Implementation Status:** supplemental final-review fixes in progress (15/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1193,7 +1193,7 @@ oat gate resolve oat-project-implement --json
 
 ### Task p04-t15: (final review) Evaluate one immutable gate artifact snapshot
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
