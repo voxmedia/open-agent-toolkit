@@ -2492,7 +2492,11 @@ async function runReviewGate(
       return;
     }
 
-    if (producedArtifact.containingProject !== reviewProject.path) {
+    if (
+      producedArtifact.containingProject !== reviewProject.path ||
+      (reviewProject.source === 'declared' &&
+        initialTargetCorroboration.project !== 'matched')
+    ) {
       writeReviewGateTargetingFailure(context, {
         runId,
         target: selected.id,
@@ -2501,7 +2505,11 @@ async function runReviewGate(
         artifactPath: producedArtifact.path,
         generatedAt: producedArtifact.generatedAt,
         message:
-          'Review artifact was written outside the resolved review project.',
+          producedArtifact.containingProject !== reviewProject.path
+            ? 'Review artifact was written outside the resolved review project.'
+            : initialTargetCorroboration.project === 'missing'
+              ? 'Review artifact is missing oat_project for the explicitly declared project.'
+              : 'Review artifact project identity does not match the explicitly declared project.',
         gateInvocation,
         corroboration: initialTargetCorroboration,
       });
@@ -2533,38 +2541,7 @@ async function runReviewGate(
       process.exitCode = 1;
       return;
     }
-    const targetCorroboration = corroborateReviewTarget({
-      repoRoot,
-      reviewProject,
-      gateInvocation,
-      artifact: {
-        ...producedArtifact,
-        artifactProject: verdict.project,
-      },
-      diagnosticArtifact: producedArtifact,
-      matchingArtifactPaths: artifactResolution.matchingArtifactPaths,
-    });
-    if (
-      reviewProject.source === 'declared' &&
-      targetCorroboration.project !== 'matched'
-    ) {
-      writeReviewGateTargetingFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          targetCorroboration.project === 'missing'
-            ? 'Review artifact is missing oat_project for the explicitly declared project.'
-            : 'Review artifact project identity does not match the explicitly declared project.',
-        gateInvocation,
-        corroboration: targetCorroboration,
-      });
-      process.exitCode = 1;
-      return;
-    }
+    const targetCorroboration = initialTargetCorroboration;
     const corroboration = corroborateGateInvocation(
       gateInvocation,
       verdict.gateInvocation,

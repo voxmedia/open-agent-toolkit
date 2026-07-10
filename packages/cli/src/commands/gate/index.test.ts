@@ -3918,6 +3918,78 @@ describe('oat gate', () => {
   );
 
   it.each([
+    {
+      label: 'malformed findings',
+      counts: { critical: 0, important: 0, medium: 1, minor: 0 },
+    },
+    {
+      label: 'normalizable missing heading',
+      counts: { critical: 0, important: 0, medium: 0, minor: 0 },
+    },
+  ])(
+    'rejects a declared-project mismatch before parsing $label',
+    async ({ counts }) => {
+      const { root, home } = await setup();
+      const declaredProject = await writeProject(
+        root,
+        '.oat/projects/shared/declared',
+      );
+      const siblingProject = await writeProject(
+        root,
+        '.oat/projects/shared/sibling',
+      );
+      let artifactPath = '';
+      let originalContent = '';
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          artifactPath = await writeReviewArtifact({
+            root,
+            projectPath: declaredProject,
+            artifactProject: siblingProject,
+            finding: 'clean',
+            omitMediumSection: true,
+            counts,
+          });
+          originalContent = await readFile(join(root, artifactPath), 'utf8');
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--project',
+          declaredProject,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        artifactPath,
+        receiveEligible: false,
+        remediable: false,
+        handoff: null,
+        corroboration: {
+          run: 'matched',
+          project: 'mismatched',
+          actual: {
+            containingProject: declaredProject,
+            artifactProject: siblingProject,
+          },
+        },
+      });
+      await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+        originalContent,
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
     ['missing', true, undefined, 'missing'],
     ['wrong', false, '11111111-1111-4111-8111-111111111111', 'mismatched'],
   ] as const)(
