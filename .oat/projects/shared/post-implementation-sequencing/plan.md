@@ -435,15 +435,15 @@ treating that as a failure.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                             |
-| ------ | -------- | ------- | ---------- | ------------------------------------ |
-| p01    | code     | pending | -          | -                                    |
-| p02    | code     | pending | -          | -                                    |
-| p03    | code     | pending | -          | -                                    |
-| final  | code     | pending | -          | -                                    |
-| spec   | artifact | pending | -          | -                                    |
-| design | artifact | pending | -          | -                                    |
-| plan   | artifact | passed  | 2026-07-10 | structured auto-review (no artifact) |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | pending  | -          | -                                                  |
+| plan   | artifact | received | 2026-07-10 | reviews/artifact-plan-review-2026-07-10T120448Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` →
 `passed`
