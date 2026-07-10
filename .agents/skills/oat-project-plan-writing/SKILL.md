@@ -43,21 +43,25 @@ before each artifact review dispatch.
    unresolved. Show the complete recommended defaults, let the user choose the
    owning config layer, persist the missing cells, and re-run the resolver:
    - Codex: `economy -> gpt-5.6-luna/high`, `balanced ->
-     gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, `frontier ->
-     gpt-5.6-sol/max`
+gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, `frontier ->
+gpt-5.6-sol/max`
    - Claude: `economy/balanced -> sonnet`, `high -> opus`, `frontier -> fable`
    - Cursor (opaque strings): `gpt-5.6-luna-high`,
      `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, `gpt-5.6-sol-max`
-   `oat config adopt dispatch-matrix --user|--shared|--local` fills missing
-   cells without replacing explicit values. Non-interactive unresolved state
-   blocks readiness.
-3. For managed Codex review, use the exact registered reviewer variant returned
-   by `providers.codex.dispatchArgs.variant` when the host can select that role.
-   If the current host cannot select the exact registered variant, launch a
-   fresh Codex child with the resolver target's explicit model, reasoning
-   effort, and canonical role instructions from
+     `oat config adopt dispatch-matrix --user|--shared|--local` fills missing
+     cells without replacing explicit values. Non-interactive unresolved state
+     blocks readiness.
+3. Resolve a concrete managed Codex target before probing generic reviewer
+   availability or selecting an execution tier. That target takes precedence
+   over every availability, tier, timeout, and inline fallback. Use the exact
+   registered reviewer variant returned by
+   `providers.codex.dispatchArgs.variant` when the host can select that role.
+   If the exact role is unavailable or the current host cannot select it,
+   launch a fresh Codex child with the resolver target's explicit model,
+   reasoning effort, and canonical role instructions from
    `.agents/agents/oat-reviewer.md`. The fresh child receives the same artifact
-   review payload and checklist.
+   review payload and checklist. If neither route can preserve the target,
+   block the review; do not continue through a generic tier fallback.
 4. Workflow correctness must not require provider restart or hot reload.
    Runtime materialization may be best effort, but it is not the correctness
    boundary. Never use a managed base role because an exact target is missing
@@ -65,9 +69,14 @@ before each artifact review dispatch.
    explicit inherit/default behavior and the documented managed-uncapped
    reviewer fallback.
 
-The Auto Artifact-Review Loop below consumes this reviewer dispatch contract;
-Tier selection changes execution mechanics, not the resolved model/effort
-contract.
+Inline review of a concrete managed target is permitted only after verifying
+equivalent current-host model and effort controls. Otherwise inline or base
+execution is limited to explicit inherit/default behavior or the documented
+managed-uncapped reviewer fallback.
+
+The Auto Artifact-Review Loop below consumes this reviewer dispatch contract.
+Tier selection happens only after the target-preserving route is known and
+changes execution mechanics, not the resolved model/effort contract.
 
 ## Auto Artifact-Review Loop
 
@@ -91,10 +100,10 @@ Use this loop after an artifact has been written and before the calling skill ha
    - The bound controls rewrite/re-dispatch cycles after the initial review. A bound of `0` still permits the initial structured review, then surfaces residual findings without retrying.
 
 3. **Dispatch `oat-reviewer` in structured mode**
-   - Tier 1: use the configured `oat-reviewer` subagent when available and authorized.
-   - Tier 2: if Tier 1 is unavailable or declined, run the same reviewer prompt inline with the same payload and checklist.
+   - When the resolver returned a concrete managed Codex target, use its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions. If neither is possible, run inline only with verified equivalent current-host controls; otherwise block.
+   - For explicit inherit/default behavior or the documented managed-uncapped reviewer fallback, Tier 1 uses the configured `oat-reviewer` subagent when available and authorized; Tier 2 may run the same reviewer prompt inline.
    - Always set `oat_output_mode: structured`; the loop consumes `StructuredFindings` in-memory and the reviewer writes no artifact.
-   - Do not downgrade the checklist when falling back inline. The fallback changes only execution tier, not review requirements.
+   - Do not downgrade the resolved target or checklist when changing execution mechanics.
 
 4. **Apply or offer fixes by severity**
    - If the structured review is clean, proceed to outcome recording.
@@ -146,7 +155,7 @@ Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `o
 
 ### Dispatch Profile Overrides
 
-`## Dispatch Profile` is optional and should be omitted by default. Runtime selection chooses the lowest available tier/model/effort that can confidently complete each phase.
+`## Dispatch Profile` is optional and should be omitted by default. Runtime selection chooses the lowest suitable execution tier only after the resolver-selected model and effort contract is fixed; tier availability never rewrites a concrete managed target.
 
 Only include the section when the user has explicit constraints or preferences. Routine hand-tuning can be worse than runtime selection because the orchestrator has fresher phase context and host capability information at dispatch time.
 
@@ -164,7 +173,7 @@ Validation rules for explicit rows:
 
 - `Phase` must match a real `pNN` phase in the plan.
 - `Claude model` must be `haiku`, `sonnet`, `opus`, `fable`, `auto`, or blank.
-- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `max`, `auto`, or blank. In Codex, explicit effort values are preferred controls. `oat-project-implement` caps them when a capped managed policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
+- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `max`, `auto`, or blank. In Codex, explicit effort values are preferred controls. `oat-project-implement` caps them when a capped managed policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to exact registered implementer variants or explicitly pinned fresh children. Provider default effort is informational only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception.
 - Blank or `auto` means no explicit constraint for that provider.
 - `Rationale` is recommended and should explain why runtime selection should not decide on its own.
 

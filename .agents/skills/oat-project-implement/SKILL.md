@@ -104,6 +104,15 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 ### Step 0.5: Capability Detection and Tier Selection
 
+**Mandatory target-first order:** Complete Dispatch Policy Preflight and resolve
+the concrete managed Codex target before probing generic agent availability or
+locking Tier 1/Tier 2. A concrete target takes precedence over tier selection:
+use the exact registered role, or an explicitly pinned fresh Codex child when
+that role is unavailable. If neither route is possible, inline execution is
+allowed only with verified equivalent current-host model and effort controls;
+otherwise block before work starts. Explicit inherit/default and documented
+managed-uncapped reviewer behavior remain the only base-role exceptions.
+
 Detect whether native subagent dispatch is available. The detection logic follows the same pattern used by `oat-project-review-provide` but produces a two-tier outcome (no fresh-session tier — this skill runs autonomously and cannot block on user-initiated fresh sessions mid-run).
 
 Detection logic:
@@ -124,7 +133,10 @@ Detection logic:
     - Approved → Tier 1.
     - Declined → Tier 2.
 
-- If the host does not resolve either agent → Tier 2.
+- If the host does not resolve either generic agent, first attempt the exact
+  registered role or explicitly pinned fresh-child route for any concrete
+  managed target. Select Tier 2 only when inline execution is allowed by the
+  target-first rule above.
 
 **Approval scope rule:** this Tier selection applies to both phase implementation and checkpoint review. Do not infer a mixed mode from conversational emphasis on review checkpoints. If the user has not explicitly approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid when the user explicitly requests it.
 
@@ -147,7 +159,7 @@ Do not print `[0/N]` for this preflight step. The implementation denominator is 
 
 **Hard pre-work guard:** before any code edit, test run, or implementation commit, print the selected tier and reason. If Tier 2 is selected, the reason must be one of the three allowed Tier 2 reasons above. Do not run tests, edit files, or create implementation commits until Step 0.5 has completed and the tier report has been printed.
 
-**Tier is locked for the remainder of the run.** Subsequent phase implementation and review dispatches use the same tier. No mid-run re-evaluation or downgrade unless the user explicitly asks to change execution mode.
+**Tier is locked for the remainder of the run only after the dispatch target is resolved.** Subsequent phase implementation and review dispatches use the same tier without changing the resolver-selected model or effort. No mid-run re-evaluation or downgrade unless the user explicitly asks to change execution mode and the replacement route preserves the target contract.
 
 **Recovery if Step 0.5 was skipped:** If implementation work has already started inline before completing Step 0.5, STOP immediately. Preserve any work in progress, complete or revert to a clean task boundary, and re-run Step 0.5 before continuing. Do not silently continue in Tier 2.
 
@@ -242,7 +254,7 @@ OAT Dispatch Tier: balanced (codex, managed capped — pinned-variant)
 Resolved cap: high
 Source: project state
 Provider default effort: medium
-Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only on fallback paths.
+Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception.
 ```
 
 If no policy resolves and the session is interactive, present the dispatch
@@ -342,9 +354,10 @@ modifying project state.
 ### Runtime dispatch selection
 
 Before each phase implementation, fix, or review dispatch, choose and log the
-runtime dispatch controls. This is separate from Tier 1/Tier 2 execution mode:
-Tier 1/Tier 2 decides whether OAT uses subagents or inline fallback; runtime
-dispatch selection decides model/effort controls for the specific work.
+runtime dispatch controls. Resolve these controls before applying Tier 1/Tier 2
+execution mechanics. A generic tier cannot override a concrete managed target;
+inline execution must preserve verified equivalent current-host controls or use
+one of the documented base-role exceptions.
 
 Use these inputs:
 
@@ -408,7 +421,7 @@ fallback.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
-8. Codex payload-first assertion applies only when the resolver returns a materialized model+effort variant. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST use it as `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. If the resolver returns no variant, use the base role and log provider-default. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing.
+8. Codex payload-first assertion applies whenever the resolver returns a materialized model+effort target. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST use it as `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. If a concrete managed target has no usable variant, use the explicitly pinned fresh-child route or block. Use the base role and log provider-default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing.
 9. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
 
 Claude rules:
@@ -1004,23 +1017,26 @@ For each phase `pNN` in the plan (or each phase in the current parallel group), 
      - Build the `spawn_agent` argument map from `providers.codex.selection.selectedValue`, `providers.codex.dispatchArgs.variant`, and `providers.codex.selection.target` before logging the dispatch. If `providers.codex.target.crossHarness` is true, the resolver intentionally returns no native dispatch args; log the deferred target and use provider-default/base fallback only when that is the explicit selected fallback. If `effort_axis=selected:<value>`, the argument map MUST use the materialized Codex role name returned in `providers.codex.dispatchArgs.variant` as `agent_type`; do not re-derive an effort-only role name from the selected effort. Then derive the `OAT Dispatch:` block `Model axis:` and `Effort axis:` fields from resolver output and that same argument map.
      - Example selected payload shape: `agent_type: "oat-phase-implementer-gpt-5-6-sol-low"` and a Phase Scope message containing `model_axis: selected:gpt-5.6-sol` and `effort_axis: selected:low`.
      - Immediately after spawning, compare the returned Codex status line with the selected effort before waiting on the agent. If the spawned status reports a different effort than the selected value (for example, the log says `effort_axis=selected:medium` but the spawn result reports `gpt-5.6-sol high`), treat this as an orchestration deviation. Stop, record the deviation in `implementation.md`, and redispatch with corrected parameters before continuing. Do not use work from the mismatched dispatch.
-     - If the resolver returns no `dispatchArgs.variant`, use base `agent_type: "oat-phase-implementer"` only for provider-default/base fallback and omit `reasoning_effort`. The dispatch rationale MUST say this is a base/unpinned fallback and include provider default effort when known. Use base `oat-phase-implementer` only when the resolver returns no `dispatchArgs.variant`.
-     - If the resolver returns an exact registered variant but the current host cannot select it, do not use the base role. Launch a fresh Codex child pinned to `selection.target.model` plus `selection.target.effort` and supply the canonical `.agents/agents/oat-phase-implementer.md` instructions with the full Phase Scope packet.
+     - If the resolver returns no `dispatchArgs.variant`, use base `agent_type: "oat-phase-implementer"` only for explicit inherit/default behavior or an explicit provider-default fallback and omit `reasoning_effort`. A managed incomplete result is not a base fallback; it blocks. The dispatch rationale MUST name the allowed exception and include provider default effort when known.
+     - If the resolver returns an exact registered variant but the current host cannot select it, do not use the base role. Launch a fresh Codex child pinned to `selection.target.model` plus `selection.target.effort` and supply the canonical `.agents/agents/oat-phase-implementer.md` instructions with the full Phase Scope packet. If that pinned route is unavailable, use inline execution only after verifying equivalent current-host model and effort controls; otherwise fail closed before implementation.
    - Claude Code implementer/fix dispatch:
      - If `model_axis=selected:<value>`, the Task tool call MUST include `model: "<value>"`.
      - If `model_axis=inherited`, omit `model`.
 
-3. Dispatch the selected implementer role (Tier 1 via provider-native subagent mechanism) — the resolver-returned materialized Codex role name in `providers.codex.dispatchArgs.variant`, or base `oat-phase-implementer` only when no variant is returned for provider-default fallback — with the Phase Scope block as input and with the asserted host invocation parameters.
+3. Dispatch the selected implementer role with the Phase Scope block and asserted host invocation parameters. For concrete managed Codex targets, this is the resolver-returned materialized role or the explicitly pinned fresh-child route; a generic Tier 1 role is not equivalent. Use base `oat-phase-implementer` only for the allowed exceptions above.
 
 4. Receive the structured summary (DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED).
 
-**Tier 2 dispatch (inline fallback):**
+**Tier 2 execution (guarded inline route):**
 
-If Tier 2 is selected, do not dispatch. Instead:
+Tier 2 does not authorize an unpinned downgrade. For a concrete managed Codex
+target, first use the exact registered role or explicitly pinned fresh child.
+Run inline only after verifying equivalent current-host model and effort
+controls; otherwise block. For an allowed inline route:
 
 1. Read `.agents/agents/oat-phase-implementer.md` for the phase-execution process.
-2. Execute that process yourself against the same Phase Scope.
-3. Produce an equivalent summary in your own context.
+2. Verify and record the current-host controls or the explicit inherit/default exception.
+3. Execute that process against the same Phase Scope and produce an equivalent summary.
 
 #### Handling Implementer Status
 
@@ -1095,9 +1111,9 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
   - For Codex Tier 1 review dispatches, use the materialized Codex role name from `providers.codex.dispatchArgs.variant` only when the resolver returns a reviewer variant for a capped managed policy. A Codex materialized reviewer role selected from a model+effort target must carry `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code review dispatches, do not pass a per-review effort override because the effort axis is not applicable; pass `model` only when the resolver returns a selected review model.
   - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
-  - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the Tier 1 review dispatch as failed for this phase and perform the review inline instead of waiting indefinitely.
+  - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the target-preserving review dispatch as failed for this phase. Retry the same exact role or pinned fresh-child route within the retry bound; never downgrade a timed-out managed reviewer to unpinned inline execution.
 
-- Tier 2: inline — read `.agents/agents/oat-reviewer.md` and perform the review yourself.
+- Tier 2: read `.agents/agents/oat-reviewer.md` and review inline only with verified equivalent current-host model and effort controls, explicit inherit/default behavior, or the documented managed-uncapped reviewer behavior. Otherwise block.
 
 **Verdict outcomes:**
 
@@ -1115,7 +1131,7 @@ On reviewer verdict `fail`, run a bounded fix loop.
 1. Read `oat_orchestration_retry_limit` from `state.md` frontmatter (default: `2`, range 0–5).
 2. For each retry (up to the limit):
    a. Select/log fix dispatch axes from the fix scope, advance the route level by one after repeated review failure when the resolver reports an ordered target route, then perform the same pre-dispatch assertion used for implementation dispatch. A Codex fix dispatch with `effort_axis=selected:<value>` MUST use the materialized Codex role name returned in `providers.codex.dispatchArgs.variant`; a Claude Code fix dispatch with `model_axis=selected:<value>` MUST pass `model: "<value>"` on the Task call. Every fix dispatch writes the formal `Dispatch: scope=<phase-or-task> action=fix role=fix producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>` stamp before waiting on the implementer result.
-   b. Dispatch the selected phase implementer role in `fix` mode (Tier 1) OR read the agent and apply fixes inline (Tier 2), with: - `review_artifact`: the path written by the reviewer - `findings`: the Critical + Important findings list - `prior_summary`: the last implementer summary
+   b. Dispatch the selected phase implementer role in `fix` mode. Tier 2 may apply fixes inline only when the same verified-equivalent-controls or documented exception guard used for implementation is satisfied. Pass: - `review_artifact`: the path written by the reviewer - `findings`: the Critical + Important findings list - `prior_summary`: the last implementer summary
    c. Receive the fix summary.
    d. Re-dispatch the reviewer with the updated commit range.
    e. Parse the new verdict.
@@ -1169,16 +1185,16 @@ For a parallel group, run selected phase gates after fan-in and bookkeeping, one
 
 When the current schedule entry is a multi-phase group, execute as follows.
 
-**Tier 2 degradation:** If Tier 2 was selected at skill start, Tier 2 cannot run concurrent subagents. Degrade the entire group to sequential inline execution — run each phase in the group sequentially on the orchestration branch. Do not create worktrees. Proceed through the per-phase loop (dispatch / review / fix-loop / bookkeeping) for each phase in plan order.
+**Tier 2 degradation:** If Tier 2 was selected at skill start, Tier 2 cannot run concurrent subagents. Degrade the group to sequential target-preserving execution on the orchestration branch. Do not create worktrees. For every phase, retain the exact role or pinned fresh child; inline is permitted only by the verified-equivalent-controls or documented-exception guard. Proceed through the per-phase loop in plan order.
 
 **Tier 1 parallel execution:**
 
 1.  **Bootstrap worktrees:** for each phase in the group, invoke `oat-worktree-bootstrap-auto` with branch name `{project-name}/{pNN}` and base = orchestration branch.
 
     > ⚠️ **CRITICAL — DO NOT substitute host-native worktree primitives.** Bootstrap MUST go through `oat-worktree-bootstrap-auto` with an explicit `--base` set to the current orchestration branch HEAD (capture `EXPECTED_HEAD=$(git rev-parse HEAD)` from the orchestration cwd before dispatching). Do not use Claude Code's `Agent({ isolation: "worktree" })`, Cursor's equivalent, or any other host-native isolation primitive in lieu of this skill — those mechanisms may use the primary repo's checkout (often `main`) as the base regardless of the orchestrator's current branch, silently producing a worktree that cannot see prior phase commits and forcing the entire group to degrade to sequential.
-    - If **any** bootstrap fails, cancel any worktrees that bootstrapped successfully for this group and degrade the whole group to sequential inline execution. Log the degradation reason to `implementation.md` Outstanding Items.
+    - If **any** bootstrap fails, cancel any worktrees that bootstrapped successfully for this group and degrade the whole group to sequential target-preserving execution. Log the degradation reason to `implementation.md` Outstanding Items.
 
-2.  **Verify worktree HEAD before dispatch (base-mismatch gate):** After bootstrap, verify each worktree is at the expected orchestration HEAD. From the orchestration cwd, capture `EXPECTED_HEAD=$(git rev-parse HEAD)` _before_ invoking bootstrap. After bootstrap, for each new worktree path, run `git -C {worktree-path} rev-parse HEAD` and confirm it matches `EXPECTED_HEAD`, or run `git -C {worktree-path} merge-base --is-ancestor "$EXPECTED_HEAD" HEAD` and confirm it succeeds (exit 0). If either check fails for any phase, treat the bootstrap as failed for that phase, cancel any successful sibling worktrees in this group, and degrade the entire group to sequential inline execution — same mechanism as a primary bootstrap failure. Log the mismatch to `implementation.md` Outstanding Items, including the observed and expected SHAs (`expected={EXPECTED_HEAD}, observed={observed-head-sha}, phase={pNN}, worktree={path}`).
+2.  **Verify worktree HEAD before dispatch (base-mismatch gate):** After bootstrap, verify each worktree is at the expected orchestration HEAD. From the orchestration cwd, capture `EXPECTED_HEAD=$(git rev-parse HEAD)` _before_ invoking bootstrap. After bootstrap, for each new worktree path, run `git -C {worktree-path} rev-parse HEAD` and confirm it matches `EXPECTED_HEAD`, or run `git -C {worktree-path} merge-base --is-ancestor "$EXPECTED_HEAD" HEAD` and confirm it succeeds (exit 0). If either check fails for any phase, treat the bootstrap as failed for that phase, cancel any successful sibling worktrees in this group, and degrade the entire group to sequential target-preserving execution — same mechanism as a primary bootstrap failure. Log the mismatch to `implementation.md` Outstanding Items, including the observed and expected SHAs (`expected={EXPECTED_HEAD}, observed={observed-head-sha}, phase={pNN}, worktree={path}`).
 
 3.  **Concurrent dispatch:** for each successfully bootstrapped worktree (passing the base-mismatch gate above), dispatch `oat-phase-implementer` (with the worktree as working directory) concurrently. Each dispatch runs the per-phase loop internally (implementer → reviewer → fix-loop).
 
@@ -1225,7 +1241,7 @@ When the current schedule entry is a multi-phase group, execute as follows.
 
     d. Parse the subagent's return status: - `RESOLVED` → subagent has committed the merge; orchestrator proceeds to integration verification (Step 6) and the next phase in the group. - `UNRESOLVABLE` or `VERIFICATION_FAILED` → STOP the run. Surface to user with phase ID, conflicting files, worktree path, subagent's reasoning summary. Do not merge remaining phases.
 
-    **Tier 2 (inline) exception:** In Tier 2 runs, parallel groups already degrade to sequential, so fan-in conflicts don't arise from this code path. If a conflict ever surfaces in Tier 2 (e.g., from another operation), the orchestrator resolves inline since the whole run is already inline — consistent with Tier 2 semantics.
+    **Tier 2 conflict exception:** In Tier 2 runs, parallel groups already degrade to sequential, so fan-in conflicts do not arise from this code path. If a conflict surfaces from another operation, inline resolution is allowed only when the current-host controls satisfy the same verified-equivalence or documented-exception guard; otherwise stop for a target-preserving route.
 
 6.  **Integration verification after each merge:**
 
@@ -1583,12 +1599,21 @@ echo "$FINAL_ROW"
 
 **Workflow preference check (before prompting):**
 
+First resolve the final reviewer target with the same target-first contract as
+per-phase review. A concrete managed Codex target must use its exact registered
+reviewer or an explicitly pinned fresh child. The preference below chooses only
+among routes that preserve that target; it cannot authorize generic inline or
+base execution. Inline remains available only with verified equivalent
+current-host controls or an allowed inherit/default or managed-uncapped
+reviewer exception. If no target-preserving route exists, block the final
+review.
+
 ```bash
 REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)
 ```
 
 - **If `REVIEW_MODEL` is `subagent`:** Print `Review execution: subagent (from workflow.reviewExecutionModel).` Dispatch the review subagent directly via the Task tool. No prompt.
-- **If `REVIEW_MODEL` is `inline`:** Print `Review execution: inline (from workflow.reviewExecutionModel).` Run the review in-context per `oat-project-review-provide` skill. No prompt.
+- **If `REVIEW_MODEL` is `inline`:** Honor it only when the inline route satisfies the verified-equivalent-controls or documented-exception guard. Otherwise use the exact/pinned route or block. When allowed, print `Review execution: inline (from workflow.reviewExecutionModel).` and run the review in-context per `oat-project-review-provide`.
 - **If `REVIEW_MODEL` is `fresh-session`:** This is a **soft preference with escape hatch** because the agent cannot run the review in a fresh session on the user's behalf. Print the guidance block below, then handle the user's response per the three outcomes listed after it.
 - **If unset or invalid:** Fall through to the standard 3-tier prompt below.
 
@@ -1611,7 +1636,7 @@ Enter 1 or 2 to run the review here, or press Enter to wait.
 **Fresh-session response outcomes:**
 
 - User enters `1` → dispatch the subagent review (same behavior as `REVIEW_MODEL=subagent`).
-- User enters `2` → run the review inline (same behavior as `REVIEW_MODEL=inline`).
+- User enters `2` → apply the same guarded inline behavior as `REVIEW_MODEL=inline`; this choice does not waive managed target controls.
 - User presses Enter (or equivalent no-input confirmation) → pause the session and wait for the fresh-session review to complete before continuing.
 
 **Standard prompt (when preference is unset):**
@@ -1624,7 +1649,7 @@ Implementation complete. Final review required.
 Review options:
 1. Run review in this session via a subagent (recommended if provider supported)
 2. Run review in a fresh session and return to this session to receive review
-3. Run review inline
+3. Run review inline when current-host controls are verified equivalent
 
 To run in a separate session use: oat-project-review-provide code final
 ```
@@ -1633,7 +1658,7 @@ To run in a separate session use: oat-project-review-provide code final
 
 - If subagent (option 1): Agent spawns the review via Task tool — no command needed from user
 - If fresh session (option 2): User runs `oat-project-review-provide code final` in a separate session, then returns here
-- If inline (option 3): Agent executes the review directly per oat-project-review-provide skill
+- If inline (option 3): Agent first verifies equivalent current-host controls or an allowed exception, then executes the review per `oat-project-review-provide`; otherwise it uses the exact/pinned route or blocks
 - After review: User runs `oat-project-review-receive` to process findings
 - If Critical/Important findings: Fix tasks added, re-run the `oat-project-implement` skill
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)

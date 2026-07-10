@@ -866,6 +866,61 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('rejects unpinned managed Codex availability and timeout fallbacks', async () => {
+    const planWriting = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewProvide = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    for (const [skillName, content] of [
+      ['oat-project-plan-writing', planWriting],
+      ['oat-project-implement', implement],
+      ['oat-project-review-provide', reviewProvide],
+    ] as const) {
+      expect(content, `${skillName} target-first precedence`).toMatch(
+        /concrete managed Codex target[\s\S]{0,500}(?:before|takes precedence over)[\s\S]{0,200}(?:tier|availability)/i,
+      );
+      expect(content, `${skillName} unavailable-role route`).toMatch(
+        /(?:unavailable|cannot select)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
+      );
+      expect(content, `${skillName} inline control guard`).toMatch(
+        /inline[\s\S]{0,300}verified equivalent current-host[\s\S]{0,300}(?:model|controls)/i,
+      );
+    }
+
+    expect(planWriting).not.toMatch(
+      /Tier 1 is unavailable or declined,\s*run the same reviewer prompt inline/i,
+    );
+    expect(planWriting).not.toMatch(/lowest available tier\/model\/effort/i);
+
+    expect(implement).not.toMatch(
+      /If Tier 2 is selected,[\s\S]{0,240}Execute that process yourself/i,
+    );
+    expect(implement).not.toMatch(
+      /reviewer still does not conclude,[\s\S]{0,180}perform the review inline/i,
+    );
+    expect(implement).not.toMatch(
+      /degrade the (?:entire|whole) group to sequential inline execution/i,
+    );
+
+    expect(reviewProvide).not.toMatch(
+      /If subagent dispatch is unavailable,\s*run the review inline/i,
+    );
+    expect(reviewProvide).not.toMatch(/If explicit role pinning is desired/i);
+    expect(reviewProvide).not.toMatch(/optionally pin `agent_type`/i);
+    expect(reviewProvide).not.toMatch(
+      /REVIEW_INVOCATION=gate[\s\S]{0,220}use \*\*Tier 3\*\* inline/i,
+    );
+    expect(reviewProvide).not.toMatch(
+      /REVIEW_INVOCATION=gate[\s\S]{0,220}run Tier 3 inline instead/i,
+    );
+  });
+
   it('covers spec, quick, import, and provider-plan-via-import planning paths', async () => {
     const plan = await readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
     const quick = await readRepoFile(
