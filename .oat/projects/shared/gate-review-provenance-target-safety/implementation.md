@@ -24,7 +24,7 @@ oat_generated: false
 | p03   | completed | 2     | 2/2       |
 | p04   | pending   | 3     | 0/3       |
 
-**Total:** 22/26 tasks completed
+**Total:** 23/26 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -164,7 +164,7 @@ oat_generated: false
 
 ## Phase 3: Aggregated Producer Provenance
 
-**Status:** completed; awaiting independent re-review
+**Status:** completed; review passed
 
 ### Task p03-t01: Make final and range aggregation explicit
 
@@ -182,6 +182,7 @@ oat_generated: false
 - **Key files touched:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `apps/oat-docs/docs/cli-utilities/workflow-gates.md`, and `apps/oat-docs/docs/workflows/projects/reviews.md`.
 - **Verification:** RED reproduced the two exact compatibility failures; GREEN passed all 114 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and committed-range diff hygiene.
 - **Review fixes:** Exact legacy and modern unknown-provenance stamps now return unknown source/value/provenance/confidence/family, omit contributor fields, and retain unknown-producer routing; claimable exact and aggregate behavior are unchanged.
+- **Re-review:** The exact pinned reviewer closed I1 with no code or aggregate-provenance regressions. The sole Minor finding was this tracker's stale completed-task numerator, corrected during review receipt.
 - **Decisions/deviations:** No design or plan deviations. Aggregates intentionally use an unknown representative; `avoidFamilies`, `contributingScopes`, and `contributingStampCount` carry aggregate facts without presenting the latest stamp as aggregate truth.
 
 ## Phase 4: Opt-In Phase Review Setup
@@ -535,7 +536,27 @@ oat_generated: false
 
 **Fix outcome:** `p03-t02` completed with focused RED/GREEN evidence, full gate-index verification, docs checks, and committed-range diff hygiene. The review is ready for independent re-review.
 
-**Next:** Run an independent p03 re-review before starting p04. `p04-t01` remains only the post-review restart pointer.
+**Next:** Resume implementation at `p04-t01`.
+
+### Review Received: p03 Re-review
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p03-review-2026-07-10T092544Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** None; the re-review passed and the sole finding was a negligible bookkeeping correction.
+
+**Disposition:**
+
+- `m1` agreed, `Negligible`, `artifact_alignment_required`: corrected the progress numerator from `22/26` to `23/26` so it matches the completed phase rows.
+
+**Review outcome:** Passed. Prior I1 is closed, aggregate provenance remains correct, and p04 may begin.
 
 ## Deviations from Plan / Design
 
