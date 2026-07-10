@@ -120,7 +120,7 @@ oat_generated: false
 
 ## Phase 2: Declared Review Target Safety
 
-**Status:** completed; awaiting independent re-review
+**Status:** completed; independent re-review passed
 
 ### Task p02-t01: Expose review-project resolution provenance
 
@@ -159,6 +159,7 @@ oat_generated: false
 - **Verification:** 160 focused gate/parser/skill assertions, CLI type-check, workspace lint, root format, validation of all 53 OAT skills, 532-link docs crawl, and committed-range diff/version hygiene all passed.
 - **Review fixes:** Ambient run matches must remain inside the resolved project; declared containing/frontmatter project identity is rejected before parsing or normalization; and missing/invalid generation timestamps no longer hide duplicate run IDs.
 - **Fix verification:** 122 focused gate/parser assertions, CLI type-check, workspace lint, root format, and committed-range diff checks all passed from the completed fix range.
+- **Re-review:** The exact pinned reviewer closed C1, I1, and I2 with zero new findings after independently running 122 gate/parser assertions, CLI type-check, targeted formatting, and fix-range diff hygiene.
 - **Decisions/deviations:** The independent review found three uncovered correlation defects in ambient containment, pre-parse declared-project validation, and invalid generation metadata. `p02-t04` through `p02-t06` close those defects without design or plan deviation; only `oat-project-implement` advanced to `2.0.32`, with the other three lifecycle skill version bumps deferred to p04 as planned.
 
 ## Phase 3: Aggregated Producer Provenance
@@ -452,6 +453,22 @@ oat_generated: false
 
 **Next:** Run an independent p02 re-review before starting p03.
 
+### Review Received: p02 Re-review
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p02-re-review-2026-07-10T084114Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None; the re-review passed without findings.
+
+**Review outcome:** Passed. C1, I1, and I2 are closed, no new correctness or compatibility gaps were found, and p03 may begin.
+
 ## Deviations from Plan / Design
 
 | Task / Review           | Source Artifact           | Planned / Documented                                                              | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                                |
@@ -488,6 +505,7 @@ oat_generated: false
 | p02-t05    | RED parse/normalization precedence; 118 gate/parser assertions; CLI type-check; diff                             | 121    | 0      | Declared project validation before parse or mutation         |
 | p02-t06    | RED malformed timestamp matrix; 122 gate/parser assertions; CLI type-check; diff                                 | 127    | 0      | Run-first duplicate detection and format classification      |
 | p02 fixes  | 122 gate/parser assertions; CLI type-check; lint; format; diff                                                   | 126    | 0      | Committed-tree p02 review-fix union and self-review          |
+| p02 review | 122 gate/parser assertions; CLI type-check; targeted format; diff hygiene                                        | 126    | 0      | Independent re-review closed all prior findings              |
 
 ## Final Summary (for PR/docs)
 
