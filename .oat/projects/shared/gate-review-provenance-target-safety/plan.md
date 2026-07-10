@@ -1723,6 +1723,7 @@ pnpm release:validate
 | p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
 | p04    | code     | fixes_added | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
 | final  | code     | passed      | 2026-07-10 | reviews/archived/final-review-2026-07-10T174200Z.md         |
+| final  | code     | received    | 2026-07-10 | reviews/final-review-2026-07-10T180137Z.md                  |
 | spec   | artifact | pending     | -          | -                                                           |
 | design | artifact | pending     | -          | -                                                           |
 | plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
