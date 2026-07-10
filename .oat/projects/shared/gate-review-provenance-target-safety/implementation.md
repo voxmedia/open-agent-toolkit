@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 6     | 6/6       |
-| p01   | pending   | 4     | 0/4       |
-| p02   | pending   | 3     | 0/3       |
-| p03   | pending   | 1     | 0/1       |
-| p04   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | completed   | 6     | 6/6       |
+| p01   | in_progress | 4     | 1/4       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 3     | 0/3       |
 
-**Total:** 6/17 tasks completed
+**Total:** 7/17 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -62,12 +62,12 @@ oat_generated: false
 
 ## Phase 1: Configured Invocation Provenance
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `a33f9ab7`
 
 ### Task p01-t02: Add target mutation and inspection APIs
 
@@ -150,6 +150,15 @@ oat_generated: false
 - Execution: fresh pinned Codex child process
 - Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch: scope=p00 action=fix role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run cbefd332-e253-4d69-bc2f-eae16981148a
+
+- Started: 2026-07-10T06:55:04Z
+- Scope: p01
+- Execution: fresh pinned Codex child process
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — explicitly pinned fresh child)
+- Dispatch: scope=p01 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -245,6 +254,9 @@ oat_generated: false
 
 **Review outcome:** Passed. All blocking findings from the first review remain resolved, both new Minor findings were addressed without behavioral changes, and p00 is complete.
 
+- `p01-t01` completed in `a33f9ab7`: exec targets now carry normalized nested invocation metadata, built-ins explicitly declare provider-default model and effort, and layer resolution deep-clones and merges partial invocation overrides without parsing opaque commands.
+- Focused p01-t01 verification passed 106 config/resolver tests and CLI type-check.
+
 ## Deviations from Plan / Design
 
 | Task / Review           | Source Artifact           | Planned / Documented                                                              | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                                |
@@ -261,6 +273,7 @@ oat_generated: false
 | p00-t03   | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl                                       | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths  |
 | p00 final | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                              | 494    | 0      | Committed-tree phase verification and self-review            |
 | p00 fixes | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown |
+| p01-t01   | 106 focused config/resolver assertions; CLI type-check                                                           | 107    | 0      | Invocation normalization, defaults, cloning, layered merge   |
 
 ## Final Summary (for PR/docs)
 
