@@ -1998,7 +1998,9 @@ function writeReviewGateResult(
     context.logger.info('Review completed and found blocking issues.');
   } else if (outcome === 'review_completed_artifact_normalized_gate_passed') {
     context.logger.info(
-      'Review completed, artifact was normalized, and gate passed.',
+      payload.normalization?.persisted
+        ? 'Review completed, artifact was normalized, and gate passed.'
+        : 'Review completed, the immutable artifact snapshot was normalized in memory, and gate passed.',
     );
   } else {
     context.logger.info('Review completed and gate passed.');
@@ -2009,7 +2011,7 @@ function writeReviewGateResult(
   context.logger.info(`Review artifact: ${payload.artifactPath}`);
   if (payload.normalization) {
     context.logger.info(
-      `Artifact normalized: inserted ${payload.normalization.insertedSeverities.map((severity) => severityDisplayName(severity)).join(', ')} empty Findings section(s).`,
+      `${payload.normalization.persisted ? 'Artifact normalized' : 'Artifact snapshot normalized in memory; source file unchanged'}: inserted ${payload.normalization.insertedSeverities.map((severity) => severityDisplayName(severity)).join(', ')} empty Findings section(s).`,
     );
   }
   context.logger.info(

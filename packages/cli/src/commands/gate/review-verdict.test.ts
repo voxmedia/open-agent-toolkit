@@ -408,12 +408,60 @@ None
       blocking: false,
       normalization: {
         insertedSeverities: ['medium'],
+        persisted: true,
       },
     });
     const normalizedContent = await readFile(artifactPath, 'utf8');
     expect(normalizedContent).toMatch(
       /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
     );
+  });
+
+  it('normalizes a current supplied snapshot in memory without rewriting it', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+oat_review_critical_count: 0
+oat_review_important_count: 0
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+None
+
+### Minor
+
+None
+`);
+    const snapshotContent = await readFile(artifactPath, 'utf8');
+
+    const verdict = await parseReviewGateVerdict(artifactPath, {
+      normalizeMissingEmptySeveritySections: true,
+      artifactSnapshot: {
+        content: snapshotContent,
+        signature: createHash('sha256').update(snapshotContent).digest('hex'),
+      },
+    });
+
+    expect(verdict).toMatchObject({
+      counts: { critical: 0, important: 0, medium: 0, minor: 0 },
+      normalization: {
+        insertedSeverities: ['medium'],
+        persisted: false,
+      },
+    });
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(snapshotContent);
   });
 
   it('refuses to normalize when the supplied artifact snapshot is stale', async () => {

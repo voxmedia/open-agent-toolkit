@@ -20,6 +20,7 @@ export interface ReviewGateVerdict {
   blocking: boolean;
   normalization?: {
     insertedSeverities: Severity[];
+    persisted: boolean;
   };
 }
 
@@ -460,7 +461,12 @@ async function normalizeMissingEmptySeveritySections(
   artifactPath: string,
   content: string,
   counts: ReviewGateVerdict['counts'],
-): Promise<{ content: string; insertedSeverities: Severity[] }> {
+  persist: boolean,
+): Promise<{
+  content: string;
+  insertedSeverities: Severity[];
+  persisted: boolean;
+}> {
   if (!findFindingsSection(content)) {
     throw new Error(
       `Review artifact at ${artifactPath} does not contain a ## Findings section, so missing severity headings cannot be safely normalized.`,
@@ -486,13 +492,17 @@ async function normalizeMissingEmptySeveritySections(
     insertedSeverities.push(severity);
   }
 
-  if (insertedSeverities.length > 0) {
+  if (insertedSeverities.length > 0 && persist) {
     await assertArtifactContentCurrent(artifactPath, content);
     await writeFile(artifactPath, normalizedContent, 'utf8');
     await assertArtifactContentCurrent(artifactPath, normalizedContent);
   }
 
-  return { content: normalizedContent, insertedSeverities };
+  return {
+    content: normalizedContent,
+    insertedSeverities,
+    persisted: insertedSeverities.length > 0 && persist,
+  };
 }
 
 function resolveCounts(
@@ -545,15 +555,18 @@ export async function parseReviewGateVerdict(
     : {};
   let counts = resolveCounts(content, frontmatter);
   let insertedSeverities: Severity[] = [];
+  let normalizationPersisted = false;
 
   if (counts && options.normalizeMissingEmptySeveritySections) {
     const normalized = await normalizeMissingEmptySeveritySections(
       artifactPath,
       content,
       counts,
+      !options.artifactSnapshot,
     );
     content = normalized.content;
     insertedSeverities = normalized.insertedSeverities;
+    normalizationPersisted = normalized.persisted;
   }
 
   if (!counts) {
@@ -569,7 +582,10 @@ export async function parseReviewGateVerdict(
   const gateInvocation = readGateInvocation(frontmatter);
 
   if (options.artifactSnapshot) {
-    await assertArtifactContentCurrent(artifactPath, content);
+    await assertArtifactContentCurrent(
+      artifactPath,
+      options.artifactSnapshot.content,
+    );
   }
 
   return {
@@ -585,6 +601,7 @@ export async function parseReviewGateVerdict(
       ? {
           normalization: {
             insertedSeverities,
+            persisted: normalizationPersisted,
           },
         }
       : {}),

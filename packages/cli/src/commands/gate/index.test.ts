@@ -3792,6 +3792,7 @@ describe('oat gate', () => {
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
     let artifactPath = '';
+    let originalContent = '';
     const runner = createProcessRunner({
       onExecute: async () => {
         artifactPath = await writeReviewArtifact({
@@ -3807,6 +3808,7 @@ describe('oat gate', () => {
             minor: 0,
           },
         });
+        originalContent = await readFile(join(root, artifactPath), 'utf8');
       },
     });
 
@@ -3840,12 +3842,12 @@ describe('oat gate', () => {
       },
       normalization: {
         insertedSeverities: ['medium'],
+        persisted: false,
       },
     });
     const artifactContent = await readFile(join(root, artifactPath), 'utf8');
-    expect(artifactContent).toMatch(
-      /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
-    );
+    expect(artifactContent).toBe(originalContent);
+    expect(artifactContent).not.toMatch(/### Medium/i);
     await expect(readdir(join(root, projectPath, 'reviews'))).resolves.toEqual([
       'p01-review.md',
     ]);
