@@ -49,7 +49,8 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Generated variants carry `supported-catalogue`, `user-config`, or `project-config` ownership. Cleanup removes stale entries only for the owner being reconciled and preserves other scopes plus unrelated Codex entries.
     - A single role can be materialized directly with `oat providers codex materialize <agent-name> --model <model-id> --effort <reasoning-effort>`; `--agent-path` selects a specific canonical markdown agent, `--role-name` overrides the generated role name, and `--scope user` writes a user-config-owned role.
     - Aggregate Codex config drift metadata (`aggregateConfigHash`) is emitted in sync/status codex extension output and intentionally not stored as a separate manifest row
-    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or explicit pinned-child fallback and does not require provider restart/hot reload
+    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions, and does not require provider restart/hot reload
+    - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
 

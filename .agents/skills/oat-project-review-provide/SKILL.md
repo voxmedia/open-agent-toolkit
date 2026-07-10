@@ -510,6 +510,26 @@ Build the "Review Scope" metadata for the reviewer:
 
 ### Step 6: Execute Review (3-Tier Capability Model)
 
+**Step 6.0: Resolve the managed reviewer target**
+
+Before capability-tier selection, resolve the same reviewer contract used by
+plan artifact review and implementation phase/final review:
+
+```bash
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
+```
+
+For managed Codex, use the exact registered reviewer role or variant from
+`providers.codex.dispatchArgs.variant` when selectable. If the current host
+cannot select that exact registered role, launch a fresh Codex child with the
+resolver target's explicit model, reasoning effort, and canonical role
+instructions from `.agents/agents/oat-reviewer.md`, plus the Review Scope
+payload. Workflow correctness must not require provider restart or hot reload.
+Never use a managed base role because a target is missing or unavailable; a
+managed base role is forbidden except for explicit inherit/default behavior or
+the documented managed-uncapped reviewer fallback. Managed incomplete results
+prompt or block before review.
+
 **Step 6a: Probe Subagent Availability**
 
 Before selecting a tier, announce the probe and its result so the user can see what's happening:

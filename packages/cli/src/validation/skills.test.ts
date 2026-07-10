@@ -807,6 +807,84 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared).toMatch(/Managed Dispatch Readiness and Review Contract/);
+    expect(shared).toMatch(/active-provider[\s\S]*unresolved/i);
+    expect(shared).toMatch(/re-run the resolver/i);
+    expect(shared).toMatch(/complete recommended defaults/i);
+    expect(shared).toMatch(/exact registered.*variant/i);
+    expect(shared).toMatch(/fresh Codex child/i);
+    expect(shared).toMatch(
+      /explicit\s+model.*reasoning\s+effort.*canonical\s+role\s+instructions/is,
+    );
+    expect(shared).toMatch(/must not require.*restart.*hot reload/i);
+    expect(shared).toMatch(/never.*managed base role/i);
+
+    for (const skillName of [
+      'oat-project-plan',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content, `${skillName} shared contract`).toMatch(
+        /Managed\s+Dispatch\s+Readiness\s+and\s+Review\s+Contract/,
+      );
+      expect(content, `${skillName} reviewer resolver`).toMatch(
+        /--role reviewer.*--preflight.*--json/,
+      );
+      expect(content, `${skillName} rerun`).toMatch(/re-run the resolver/i);
+    }
+  });
+
+  it('routes every workflow review through exact roles or pinned fresh children', async () => {
+    for (const skillName of [
+      'oat-project-implement',
+      'oat-project-review-provide',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content, `${skillName} exact role`).toMatch(
+        /exact registered.*(?:role|variant)/i,
+      );
+      expect(content, `${skillName} fresh child`).toMatch(
+        /fresh Codex child/i,
+      );
+      expect(content, `${skillName} explicit controls`).toMatch(
+        /explicit\s+model.*reasoning\s+effort.*canonical\s+role\s+instructions/is,
+      );
+      expect(content, `${skillName} no managed base fallback`).toMatch(
+        /never.*managed base role|managed base role.*forbidden/i,
+      );
+      expect(content, `${skillName} no reload dependency`).toMatch(
+        /must not require[\s\S]*restart.*hot reload/i,
+      );
+    }
+  });
+
+  it('covers spec, quick, import, and provider-plan-via-import planning paths', async () => {
+    const plan = await readRepoFile(
+      '.agents/skills/oat-project-plan/SKILL.md',
+    );
+    const quick = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const imported = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+
+    expect(plan).toMatch(/spec-driven/i);
+    expect(quick).toMatch(/quick/i);
+    expect(imported).toMatch(/provider-plan-via-import/i);
+    expect(imported).toMatch(/provider plan[\s\S]*inherits.*import/i);
+  });
+
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const skillPath = join(

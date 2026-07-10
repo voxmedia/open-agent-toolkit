@@ -56,16 +56,22 @@ Resolution order:
 
 Runtime dispatch reads the resolved policy and provider-specific selection only. If no policy is configured, the interactive preflight prompt offers the policy choices; non-interactive mode blocks.
 
+An incomplete managed active-provider matrix is also unresolved. Planning and
+review paths show the complete recommended defaults, persist the selected
+configuration layer, and rerun the resolver before readiness or review. The
+same rule covers spec-driven plans, quick plans, imported plans, and provider
+plans routed through import.
+
 **Policy options (interactive prompt):**
 
-| Option                | Mode    | Codex    | Claude   |
-| --------------------- | ------- | -------- | -------- |
-| Economy               | managed | `medium` | `sonnet` |
-| Balanced              | managed | `high`   | `sonnet` |
-| High                  | managed | `xhigh`  | `opus`   |
-| Frontier              | managed | `xhigh`  | `fable`  |
-| Uncapped              | managed | none     | none     |
-| Inherit Host Defaults | inherit | none     | none     |
+| Option                | Mode    | Recommended Codex target | Claude   |
+| --------------------- | ------- | ------------------------ | -------- |
+| Economy               | managed | `gpt-5.6-luna/high`      | `sonnet` |
+| Balanced              | managed | `gpt-5.6-terra/xhigh`    | `sonnet` |
+| High                  | managed | `gpt-5.6-sol/high`       | `opus`   |
+| Frontier              | managed | `gpt-5.6-sol/max`        | `fable`  |
+| Uncapped              | managed | none                     | none     |
+| Inherit Host Defaults | inherit | none                     | none     |
 
 For Codex, provider default effort is displayed when available but is not treated as managed `Uncapped` or as a cap. Provider defaults apply only to explicit inherit/default behavior or base/unpinned fallback paths.
 
@@ -112,14 +118,12 @@ Model and effort are separate axes. Each axis logs one of these states:
 - `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
 - `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
 
-In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, or `xhigh`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. For capped managed policies, the resolver selects `min(preferred, resolved_cap)` and returns a materialized role name compiled from an explicit model+effort target. For managed `Uncapped`, the resolver selects the preferred materialized role with no cap. For inherit/default mode, it returns no materialized role and OAT uses the base/unpinned role. Reviewer dispatch targets the configured cap only when a capped managed policy exists; managed `Uncapped` and inherit/default use base `oat-reviewer` fallback.
+In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, `xhigh`, or `max`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. For capped managed policies, the resolver selects `min(preferred, resolved_cap)` and returns a materialized role name compiled from an explicit model+effort target. For managed `Uncapped`, the resolver selects the preferred materialized role with no cap. For inherit/default mode, it returns no materialized role and OAT uses the base/unpinned role. Reviewer dispatch targets the configured cap only when a capped managed policy exists; managed `Uncapped` and inherit/default use base `oat-reviewer` fallback.
 
 Because Codex preferred values are effort names while dispatch matrix cells are
-keyed by OAT tiers, managed `Uncapped` maps preferred efforts through the
-managed tier table before resolving matrix targets. For example, `xhigh` maps to
-the highest matching tier, `frontier`, so `--preferred xhigh` can resolve a
-`frontier` Codex matrix target such as
-`oat-phase-implementer-gpt-5-6-sol-xhigh`.
+keyed by OAT tiers, managed `Uncapped` resolves the matching model+effort target
+from the matrix. `max` is a first-class effort and can select the Sol/max
+catalogue role; it is not treated as `xhigh`.
 
 In Claude Code, implementation and fix dispatch classify a preferred model tier (`haiku`, `sonnet`, `opus`, or `fable`) and pass it to `oat project dispatch-ceiling resolve --provider claude --role implementer --preferred <model> --orchestrator-tier <current-orchestrator-tier>`. Capped policies select `min(preferred, resolved_cap)`, managed `Uncapped` selects the preferred model, and inherit/default omits `model`. Reviewer dispatch passes a `model` only when the resolver returns one. The separate effort axis is `not-applicable`.
 
@@ -137,27 +141,27 @@ OAT Dispatch: Phase p02 implementation
 Host: Codex
 Preferred effort: high
 Dispatch policy: economy
-Resolved cap: medium
-Selected effort: medium
+Resolved cap: high
+Selected effort: high
 Policy source: repo config
 Provider default effort: high
 Selection mode: capped
-Model axis: selected:gpt-5.6-terra
-Effort axis: selected:medium
-Dispatch target: oat-phase-implementer-gpt-5-6-terra-medium
+Model axis: selected:gpt-5.6-luna
+Effort axis: selected:high
+Dispatch target: oat-phase-implementer-gpt-5-6-luna-high
 Rationale: shared TypeScript/config substrate; high preferred due to integration risk, capped by configured policy.
 
 OAT Dispatch: Phase p03 review
 Host: Codex
 Dispatch policy: high
-Resolved cap: xhigh
-Selected effort: xhigh
+Resolved cap: high
+Selected effort: high
 Policy source: project state
 Provider default effort: medium
 Selection mode: review-target
-Model axis: selected:gpt-5.6-terra
-Effort axis: selected:xhigh
-Dispatch target: oat-reviewer-gpt-5-6-terra-xhigh
+Model axis: selected:gpt-5.6-sol
+Effort axis: selected:high
+Dispatch target: oat-reviewer-gpt-5-6-sol-high
 Rationale: reviewer runs at the configured policy cap for deterministic quality gate behavior.
 
 OAT Dispatch: Phase p03 implementation
@@ -169,9 +173,9 @@ Selected effort: xhigh
 Policy source: project state
 Provider default effort: medium
 Selection mode: uncapped
-Model axis: selected:gpt-5.6-sol
+Model axis: selected:gpt-5.6-terra
 Effort axis: selected:xhigh
-Dispatch target: oat-phase-implementer-gpt-5-6-sol-xhigh
+Dispatch target: oat-phase-implementer-gpt-5-6-terra-xhigh
 Rationale: high-risk phase; managed uncapped policy allows the preferred materialized target.
 
 OAT Dispatch: Phase p04 implementation
@@ -210,10 +214,10 @@ Add Dispatch Profile rows only when the user has an explicit constraint or prefe
 For each phase in the plan (whether sequential or inside a parallel group):
 
 1. **Select runtime dispatch control** for the phase and log the chosen control plus rationale.
-2. **Dispatch the selected implementer role** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known). In Codex, selected model+effort axes use the resolver-returned materialized role name, such as `oat-phase-implementer-gpt-5-6-terra-xhigh`. Base `oat-phase-implementer` means provider-default/unpinned fallback.
+2. **Dispatch the selected implementer role** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known). In Codex, use the exact resolver-returned registered role when selectable. If it is not selectable in the current session, launch a fresh Codex child pinned to the resolved model and reasoning effort with `.agents/agents/oat-phase-implementer.md` as its canonical instructions. Never silently use the managed base role.
 3. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
    - `BLOCKED` stops the run and surfaces the blocker to the user.
-4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use the resolver-returned materialized reviewer role only for capped managed policies, and use base `oat-reviewer` for managed `Uncapped` or inherit/default. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
+4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use the exact resolver-returned registered role when selectable, otherwise launch a fresh child pinned to the resolved model and reasoning effort with `.agents/agents/oat-reviewer.md` as canonical instructions. Base `oat-reviewer` is valid only for explicit inherit/default behavior and the documented managed-uncapped reviewer fallback. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
 5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 6. **On fail, run the bounded fix loop** (see below).
 7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.
@@ -237,7 +241,7 @@ Tier is never silently downgraded. If a Tier 1 dispatch has a transient failure,
 
 When escalation re-dispatches at a stronger control, the ladder is provider-specific:
 
-- **Codex:** `selected:low -> selected:medium -> selected:high -> selected:xhigh`, capped by the resolved managed cap when one exists. Managed `Uncapped` can select the preferred value; inherit/default mode has no OAT escalation control.
+- **Codex:** `selected:low -> selected:medium -> selected:high -> selected:xhigh -> selected:max`, capped by the resolved managed cap when one exists. Managed `Uncapped` can select the preferred value; inherit/default mode has no OAT escalation control.
 - **Claude Code:** `selected:haiku -> selected:sonnet -> selected:opus -> selected:fable`, capped by the resolved managed cap when one exists. Managed `Uncapped` can select the preferred model; inherit/default mode has no OAT escalation control.
 
 Escalation re-dispatches still count against the bounded retry budget; escalation changes the dispatch control, it does not grant extra retry attempts.

@@ -28,14 +28,14 @@ per-tier value, or an ordered route for escalation.
 
 ## Policy Choices
 
-| Policy                  | Mode    | Codex cap | Claude target | Meaning                                      |
-| ----------------------- | ------- | --------- | ------------- | -------------------------------------------- |
-| `Economy`               | managed | `medium`  | `sonnet`      | Lower-cost managed cap                       |
-| `Balanced`              | managed | `high`    | `sonnet`      | Default managed cap                          |
-| `High`                  | managed | `xhigh`   | `opus`        | High-capability managed cap                  |
-| `Frontier`              | managed | `xhigh`   | `fable`       | Top managed tier currently exposed by OAT    |
-| `Uncapped`              | managed | none      | none          | OAT selects preferred controls without a cap |
-| `Inherit Host Defaults` | inherit | none      | none          | OAT does not select model/effort controls    |
+| Policy                  | Mode    | Recommended Codex target | Claude target | Meaning                                      |
+| ----------------------- | ------- | ------------------------ | ------------- | -------------------------------------------- |
+| `Economy`               | managed | `gpt-5.6-luna/high`      | `sonnet`      | Lower-cost managed target                    |
+| `Balanced`              | managed | `gpt-5.6-terra/xhigh`    | `sonnet`      | Default managed target                       |
+| `High`                  | managed | `gpt-5.6-sol/high`       | `opus`        | High-capability managed target               |
+| `Frontier`              | managed | `gpt-5.6-sol/max`        | `fable`       | Top managed target                           |
+| `Uncapped`              | managed | none                     | none          | OAT selects preferred controls without a cap |
+| `Inherit Host Defaults` | inherit | none                     | none          | OAT does not select model/effort controls    |
 
 `Uncapped` is explicit managed state. It is not represented by omitting policy
 state. Existing projects with absent legacy ceiling state remain unresolved or
@@ -107,8 +107,8 @@ Claude values remain valid, and multi-family providers can use tier cells:
 
 ```bash
 oat config adopt dispatch-matrix --shared
-oat config set workflow.dispatchCeiling.providers.cursor.balanced composer-2.5 --shared
-oat config set workflow.dispatchCeiling.providers.cursor.high gpt-5.5-xhigh --shared
+oat config set workflow.dispatchCeiling.providers.cursor.balanced gpt-5.6-terra-xhigh --shared
+oat config set workflow.dispatchCeiling.providers.cursor.high gpt-5.6-sol-high --shared
 ```
 
 For ordered escalation, write a route in config JSON. The resolver selects the
@@ -122,12 +122,12 @@ implementation/fix loop escalates:
       "providers": {
         "cursor": {
           "high": [
-            "composer-2.5",
-            { "harness": "cursor", "model": "gpt-5.5-xhigh" }
+            "gpt-5.6-terra-xhigh",
+            { "harness": "cursor", "model": "gpt-5.6-sol-high" }
           ],
           "frontier": [
-            { "harness": "cursor", "model": "gpt-5.5-xhigh" },
-            { "harness": "cursor", "model": "fable-5" }
+            { "harness": "cursor", "model": "gpt-5.6-sol-high" },
+            { "harness": "cursor", "model": "gpt-5.6-sol-max" }
           ]
         }
       }
@@ -160,6 +160,13 @@ oat project dispatch-ceiling resolve --provider cursor --role implementer --pref
 The resolver returns the resolved policy, optional cap, source, provider default
 effort where applicable, and provider-specific `dispatchArgs`.
 
+Planning and artifact-review callers run the resolver with `--preflight`. A
+managed active-provider cell that does not compile to concrete dispatch controls
+remains unresolved: show the complete recommended defaults, persist the chosen
+config layer, and rerun before marking a plan implementation-ready. This applies
+to spec-driven planning, quick-start, imported plans, and provider plans routed
+through import.
+
 Selection modes:
 
 - `capped` - implementer/fix dispatch selects `min(preferred, cap)`.
@@ -178,7 +185,7 @@ Selection modes:
 |                   | Codex                                                 | Claude Code                             | Cursor / model-arg providers | Unsupported provider |
 | ----------------- | ----------------------------------------------------- | --------------------------------------- | ---------------------------- | -------------------- |
 | Managed mechanism | Materialized roles with explicit `model` and `effort` | Task `model` argument                   | Task/CLI `model` argument    | None                 |
-| Axis              | model plus effort (`low < medium < high < xhigh`)     | model (`haiku < sonnet < opus < fable`) | opaque model slug            | None                 |
+| Axis              | model plus effort (`low < medium < high < xhigh < max`) | model (`haiku < sonnet < opus < fable`) | opaque model slug            | None                 |
 | Capped policy     | materialized target selected up to cap                | selected Task model up to cap           | selected matrix cell         | advisory/unsupported |
 | Uncapped          | preferred materialized target, no cap                 | preferred Task model, no cap            | preferred matrix cell        | advisory/unsupported |
 | Inherit/default   | base/unpinned role follows provider default           | omit `model`                            | omit model selection         | normal behavior      |
@@ -188,12 +195,10 @@ unreliable in dogfooding. The resolver compiles an explicit model+effort target
 into a role name such as `oat-phase-implementer-gpt-5-6-terra-xhigh`, and the
 Codex spawn payload uses that role as `agent_type`. For managed `Uncapped`, OAT
 still selects the preferred materialized target. If the Codex preferred value is
-an effort rather than a matrix tier, OAT looks up the highest managed tier that
-compiles to that effort before resolving the matrix target; for example,
-`--preferred xhigh` resolves through the `frontier` matrix cell. The dispatching
-host should verify whether upward effort selection is actually honored in the
-current session. The old effort-only Codex pins are not the managed dispatch
-contract for new projects.
+an effort rather than a matrix tier, OAT resolves the matching model+effort
+target from the matrix. `max` is a first-class effort, not an alias for `xhigh`.
+The old effort-only Codex pins are not the managed dispatch contract for new
+projects.
 
 Claude Code uses the per-call Task `model` argument. It has no OAT-managed
 per-dispatch effort axis, so dispatch logs use `effort_axis=not-applicable`.
@@ -212,7 +217,7 @@ Dispatch notes use a parseable single-line stamp so later gates can identify
 the producer family:
 
 ```text
-Dispatch: scope=p06 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=selected:gpt-5.5-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=xhigh target=cursor
+Dispatch: scope=p06 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 ```
 
 `producer` is the resolved model slug when OAT knows it, otherwise `unknown`.
@@ -238,6 +243,14 @@ For reviewer dispatches:
   fallback and logs provider-default behavior.
 - Inherit/default mode also uses the base/unpinned reviewer fallback.
 
+For managed Codex dispatch, use the exact resolver-returned registered role when
+the current host can select it. Otherwise launch a fresh Codex child pinned to
+the resolved model and reasoning effort with the canonical implementer or
+reviewer instructions. Never silently substitute the managed base role.
+Correctness does not depend on provider restart or hot reload; base roles remain
+valid only for explicit inherit/default behavior and the documented
+managed-uncapped reviewer fallback.
+
 Generic sidecars such as `explorer` are outside the implementer/reviewer/fix
 contract. If their payload does not pin a reliable provider control, logs should
 say `provider-default`.
@@ -247,9 +260,10 @@ say `provider-default`.
 Examples:
 
 ```text
-Dispatch policy: balanced; selected=high; cap=high (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-high)
-Dispatch policy: high; selected=xhigh; cap=xhigh (codex, enforced — variant oat-reviewer-gpt-5-6-terra-xhigh)
-Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-gpt-5-6-sol-xhigh)
+Dispatch policy: balanced; selected=xhigh; cap=xhigh (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
+Dispatch policy: high; selected=high; cap=high (codex, enforced — variant oat-reviewer-gpt-5-6-sol-high)
+Dispatch policy: frontier; selected=max; cap=max (codex, enforced — variant oat-reviewer-gpt-5-6-sol-max)
+Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
 Dispatch policy: frontier; selected=fable; cap=fable (claude, enforced — Task model arg)
 ```

@@ -13,6 +13,10 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 
 Import a markdown plan from an external coding provider and normalize it into OAT project artifacts.
 
+Provider native plan mode uses this same path: provider-plan-via-import
+preserves the provider plan first, and provider plan dispatch readiness
+inherits the import workflow contract below.
+
 ## Prerequisites
 
 - External plan exists as a local markdown file.
@@ -192,6 +196,18 @@ Set frontmatter in `"$PROJECT_PATH/plan.md"`:
 - `oat_import_provider: {codex|cursor|claude|null}`
 
 ### Step 4.5: Run Import-Aware Plan Artifact Review Loop
+
+Before dispatching the artifact reviewer, invoke the `Managed Dispatch
+Readiness and Review Contract` from `oat-project-plan-writing`:
+
+```bash
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
+```
+
+If managed resolution is incomplete, show the complete recommended defaults,
+persist the selected cells, and re-run the resolver. Do not set
+`oat_ready_for: oat-project-implement` while the active-provider reviewer
+contract is unresolved.
 
 Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before advancing project state or handing off to implementation.
 
