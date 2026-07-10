@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | in_progress | 6     | 6/6       |
-| p01   | pending     | 4     | 0/4       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | pending   | 4     | 0/4       |
+| p02   | pending   | 3     | 0/3       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 3     | 0/3       |
 
 **Total:** 6/17 tasks completed
 
@@ -222,7 +222,28 @@ oat_generated: false
 - `I1` agreed, `Moderate`, `code_fix_required`: generic inline/fresh-session branches can bypass a concrete managed target.
 - `m1` agreed, `Minor`, `code_fix_required`: format the two files and make the standard root format check cover these Markdown surfaces.
 
-**Fix outcome:** `p00-t04` through `p00-t06` completed. C1, I1, and m1 are addressed; the p00 review row is `fixes_completed` and awaits independent re-review before p01.
+**Fix outcome:** `p00-t04` through `p00-t06` completed. C1, I1, and m1 were addressed, and the p00 review row advanced to `fixes_completed` before independent re-review.
+
+### Review Received: p00 Re-review
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p00-review-2026-07-10T063955Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** None; the re-review passed and both findings were negligible bookkeeping/documentation corrections.
+
+**Disposition:**
+
+- `m1` agreed, `Negligible`, `artifact_alignment_required`: corrected the dispatch documentation in `06a50055` to state that capped Codex selection preserves the policy target's model and changes only effort.
+- `m2` agreed, `Negligible`, `artifact_alignment_required`: advanced state and implementation tracking from the completed p00 fix loop to `p01-t01` during review-receive bookkeeping.
+
+**Review outcome:** Passed. All blocking findings from the first review remain resolved, both new Minor findings were addressed without behavioral changes, and p00 is complete.
 
 ## Deviations from Plan / Design
 

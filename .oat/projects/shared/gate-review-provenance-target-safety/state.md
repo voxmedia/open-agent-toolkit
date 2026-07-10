@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 8920d281
+oat_current_task: p01-t01
+oat_last_commit: 06a50055
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -12,7 +12,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T06:38:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T06:50:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Executing Phase `p00` review fixes
+Implementation - Ready to execute `p01-t01`
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - Executing Phase `p00` review fixes
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` review fixes complete; independent re-review pending)
+- **Implementation:** `implementation.md` (`p00` review passed; `p01-t01` next)
 
 ## Progress
 
@@ -95,7 +95,10 @@ Implementation - Executing Phase `p00` review fixes
 - ✓ `p00-t05` keeps unavailable-role, tier, timeout, and gate review fallbacks pinned
 - ✓ `p00-t06` covers canonical skill/docs Markdown in the standard root format check
 - ✓ Committed-tree p00 fix verification passed with 136 focused assertions and zero failures
-- ✓ p00 review status advanced to `fixes_completed`
+- ✓ Independent p00 re-review passed with zero blocking findings
+- ✓ Both re-review Minor findings resolved during receive bookkeeping
+- ✓ Project-scoped dispatch config and generated variants remain visible to version control; OAT does not auto-ignore them
+- ✓ p00 review status advanced to `passed`
 
 ## Blockers
 
@@ -103,4 +106,4 @@ None
 
 ## Next Milestone
 
-Independently re-review `p00`; do not start `p01-t01` first
+Execute `p01-t01`: add minimal exec-target invocation metadata
