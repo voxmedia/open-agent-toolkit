@@ -86,7 +86,67 @@ potentially changed configuration.
 
 ## Component Design
 
-_Pending collaborative review._
+### Configuration Model and Resolver
+
+**Purpose:** Provide one validated configuration contract while preserving
+legacy input.
+
+**Responsibilities:**
+
+- Define `summary | document | pr` as the structured step vocabulary.
+- Accept legacy strings or an object containing both ordered arrays.
+- Reject duplicate or unknown steps and malformed or partial objects.
+- Normalize legacy values to a canonical two-array shape.
+- Treat the object as an atomic leaf during layered resolution.
+- Let `oat config set` accept either a legacy string or JSON object.
+- Preserve objects in JSON output and serialize them as compact JSON in plain
+  output.
+
+### Final-Closeout Orchestrator
+
+**Purpose:** Own the final-review, sequence, and approval ordering.
+
+**Responsibilities:**
+
+- Preserve all non-final checkpoint behavior.
+- Defer only the final checkpoint and its auto-review branch.
+- Complete final verification and final review before sequence execution.
+- Snapshot the normalized sequence before running it.
+- Dispatch steps in configured order:
+  - `summary` → `oat-project-summary`
+  - `document` → `oat-project-document`
+  - `pr` → `oat-project-pr-final`
+- Avoid redundant summary generation when `pr-final` sees that the snapshotted
+  sequence already completed `summary`.
+- Persist progress after every successful step and before and after approval.
+
+### Sequence State Manager
+
+**Purpose:** Make the boundary restart-safe.
+
+**Responsibilities:**
+
+- Store the immutable sequence snapshot for the current closeout.
+- Track completed pre- and post-approval steps.
+- Track approval as `pending`, `approved`, or `not_required`.
+- Record the failed boundary and step without marking it completed.
+- Resume from the first uncompleted step rather than re-reading configuration.
+- Clear or finalize transient sequence state only after the whole sequence
+  succeeds.
+
+### Project Routing Integration
+
+**Purpose:** Keep closeout resumable when child skills mutate lifecycle state.
+
+**Responsibilities:**
+
+- Route an incomplete sequence back to `oat-project-implement` before normal
+  `pr_open` routing.
+- Allow a pre-approval PR to exist while final approval remains pending.
+- Return to normal revise or complete routing only after approval and configured
+  post-approval work finish.
+- Leave individual summary, document, and PR behavior unchanged except for
+  sequence-aware summary reuse and routing.
 
 ## Data Models
 
