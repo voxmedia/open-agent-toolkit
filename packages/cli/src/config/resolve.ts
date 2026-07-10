@@ -1,6 +1,7 @@
 import { isWorkflowDispatchCandidateLadder } from './dispatch-matrix';
 import {
   BUILTIN_EXEC_TARGETS,
+  isWorkflowPostImplementStructuredSequence,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -463,10 +464,7 @@ function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
     }
 
     const nextKey = prefix ? `${prefix}.${key}` : key;
-    if (
-      isRecord(nestedValue) &&
-      !isWorkflowDispatchCandidateLadder(nestedValue)
-    ) {
+    if (isRecord(nestedValue) && !isAtomicConfigLeaf(nextKey, nestedValue)) {
       Object.assign(flattened, flattenConfig(nestedValue, nextKey));
       continue;
     }
@@ -475,6 +473,14 @@ function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
   }
 
   return flattened;
+}
+
+function isAtomicConfigLeaf(key: string, value: unknown): boolean {
+  return (
+    isWorkflowDispatchCandidateLadder(value) ||
+    (key === 'workflow.postImplementSequence' &&
+      isWorkflowPostImplementStructuredSequence(value))
+  );
 }
 
 function resolveEnvOverride(

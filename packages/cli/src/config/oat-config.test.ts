@@ -26,6 +26,7 @@ import {
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
+  type WorkflowPostImplementStructuredSequence,
 } from './oat-config';
 
 describe('oat-config', () => {
@@ -669,6 +670,132 @@ describe('oat-config', () => {
   });
 
   describe('workflow preferences', () => {
+    it.each([
+      ['wait', { preApproval: [], postApproval: [] }],
+      ['summary', { preApproval: ['summary'], postApproval: [] }],
+      ['pr', { preApproval: ['summary', 'pr'], postApproval: [] }],
+      [
+        'docs-pr',
+        {
+          preApproval: ['summary', 'document', 'pr'],
+          postApproval: [],
+        },
+      ],
+    ] as const)(
+      'normalizes legacy post-implementation sequence %s canonically',
+      async (sequence, expected) => {
+        const repoRoot = await createRepoRoot();
+        await writeFile(
+          join(repoRoot, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            workflow: { postImplementSequence: sequence },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.postImplementSequence).toEqual(expected);
+      },
+    );
+
+    it.each([
+      { preApproval: [], postApproval: [] },
+      { preApproval: ['summary'], postApproval: [] },
+      { preApproval: [], postApproval: ['document'] },
+      { preApproval: ['summary'], postApproval: ['document', 'pr'] },
+    ])(
+      'accepts structured post-implementation sequence %#',
+      async (sequence) => {
+        const repoRoot = await createRepoRoot();
+        await writeFile(
+          join(repoRoot, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            workflow: { postImplementSequence: sequence },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.postImplementSequence).toEqual(sequence);
+      },
+    );
+
+    it.each([
+      null,
+      [],
+      {},
+      { preApproval: [] },
+      { postApproval: [] },
+      { preApproval: 'summary', postApproval: [] },
+      { preApproval: [], postApproval: 'pr' },
+      { preApproval: ['unknown'], postApproval: [] },
+      { preApproval: [], postApproval: ['summary'], extra: true },
+      { preApproval: ['summary', 'summary'], postApproval: [] },
+      { preApproval: ['summary'], postApproval: ['summary'] },
+    ])(
+      'rejects malformed post-implementation sequence %# atomically',
+      async (sequence) => {
+        const repoRoot = await createRepoRoot();
+        await writeFile(
+          join(repoRoot, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              archiveOnComplete: true,
+              postImplementSequence: sequence,
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow).toEqual({ archiveOnComplete: true });
+      },
+    );
+
+    it('round-trips structured sequences in shared, local, and user config', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-sequence-'));
+      tempDirs.push(userConfigDir);
+      const sharedSequence = {
+        preApproval: ['summary'],
+        postApproval: ['document'],
+      } satisfies WorkflowPostImplementStructuredSequence;
+      const localSequence = {
+        preApproval: [],
+        postApproval: ['pr'],
+      } satisfies WorkflowPostImplementStructuredSequence;
+      const userSequence = {
+        preApproval: ['document', 'pr'],
+        postApproval: [],
+      } satisfies WorkflowPostImplementStructuredSequence;
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        workflow: { postImplementSequence: sharedSequence },
+      });
+      await writeOatLocalConfig(repoRoot, {
+        version: 1,
+        workflow: { postImplementSequence: localSequence },
+      });
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        workflow: { postImplementSequence: userSequence },
+      });
+
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        workflow: { postImplementSequence: sharedSequence },
+      });
+      await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+        workflow: { postImplementSequence: localSequence },
+      });
+      await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
+        workflow: { postImplementSequence: userSequence },
+      });
+    });
+
     it('reads valid workflow config from .oat/config.json', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');
@@ -698,7 +825,10 @@ describe('oat-config', () => {
         hillCheckpointDefault: 'final',
         archiveOnComplete: true,
         createPrOnComplete: true,
-        postImplementSequence: 'pr',
+        postImplementSequence: {
+          preApproval: ['summary', 'pr'],
+          postApproval: [],
+        },
         reviewExecutionModel: 'subagent',
         autoReviewAtHillCheckpoints: true,
         autoNarrowReReviewScope: false,
@@ -813,7 +943,10 @@ describe('oat-config', () => {
       expect(localConfig.workflow).toEqual({
         hillCheckpointDefault: 'every',
         archiveOnComplete: false,
-        postImplementSequence: 'docs-pr',
+        postImplementSequence: {
+          preApproval: ['summary', 'document', 'pr'],
+          postApproval: [],
+        },
         reviewExecutionModel: 'inline',
         autoReviewAtHillCheckpoints: false,
       });
@@ -880,7 +1013,10 @@ describe('oat-config', () => {
         hillCheckpointDefault: 'final',
         archiveOnComplete: true,
         createPrOnComplete: true,
-        postImplementSequence: 'docs-pr',
+        postImplementSequence: {
+          preApproval: ['summary', 'document', 'pr'],
+          postApproval: [],
+        },
         reviewExecutionModel: 'subagent',
         autoReviewAtHillCheckpoints: true,
         autoNarrowReReviewScope: true,
