@@ -178,6 +178,8 @@ pnpm docs:check-links
 
 ### Task p00-t04: (review) Preserve the policy model for lower Codex efforts
 
+**Status:** completed (`0567d72e`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`

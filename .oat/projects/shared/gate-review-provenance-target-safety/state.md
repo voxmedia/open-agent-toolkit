@@ -1,6 +1,6 @@
 ---
-oat_current_task: p00-t04
-oat_last_commit: c0c40794
+oat_current_task: p00-t05
+oat_last_commit: 0567d72e
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T06:25:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T06:30:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -58,7 +58,7 @@ Implementation - Executing Phase `p00` review fixes
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` review fixes queued at `p00-t04`)
+- **Implementation:** `implementation.md` (`p00-t04` complete; next `p00-t05`)
 
 ## Progress
 
@@ -91,6 +91,7 @@ Implementation - Executing Phase `p00` review fixes
 - ✓ Phase-wide self-review completed with no findings
 - ✓ Independent `p00` review received with 1 Critical, 1 Important, and 1 Minor finding
 - ✓ Review findings converted autonomously to `p00-t04` through `p00-t06`
+- ✓ `p00-t04` preserves the selected Codex policy model across lower effort preferences
 
 ## Blockers
 
