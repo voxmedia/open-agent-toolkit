@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p00-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p00   | in_progress | 6     | 5/6       |
+| p00   | in_progress | 6     | 6/6       |
 | p01   | pending     | 4     | 0/4       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 5/17 tasks completed
+**Total:** 6/17 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -57,8 +57,8 @@ oat_generated: false
 
 ### Task p00-t06: (review) Cover canonical Markdown formatting
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d9dcaf7f`
 
 ## Phase 1: Configured Invocation Provenance
 

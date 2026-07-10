@@ -1,6 +1,6 @@
 ---
-oat_current_task: p00-t06
-oat_last_commit: 6120c607
+oat_current_task: null
+oat_last_commit: d9dcaf7f
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T06:35:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T06:37:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -58,7 +58,7 @@ Implementation - Executing Phase `p00` review fixes
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00-t05` complete; next `p00-t06`)
+- **Implementation:** `implementation.md` (all `p00` review-fix tasks complete; verification pending)
 
 ## Progress
 
@@ -93,6 +93,7 @@ Implementation - Executing Phase `p00` review fixes
 - ✓ Review findings converted autonomously to `p00-t04` through `p00-t06`
 - ✓ `p00-t04` preserves the selected Codex policy model across lower effort preferences
 - ✓ `p00-t05` keeps unavailable-role, tier, timeout, and gate review fallbacks pinned
+- ✓ `p00-t06` covers canonical skill/docs Markdown in the standard root format check
 
 ## Blockers
 

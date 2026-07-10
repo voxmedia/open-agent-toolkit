@@ -234,6 +234,8 @@ pnpm run oat:validate-skills
 
 ### Task p00-t06: (review) Cover canonical Markdown formatting
 
+**Status:** completed (`d9dcaf7f`)
+
 **Files:**
 
 - Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
