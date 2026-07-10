@@ -1138,7 +1138,7 @@ pnpm docs:check-links
 
 ### Task p04-t13: (final review) Align dispatch and gate reference documentation
 
-**Status:** pending
+**Status:** completed (`a8806887`)
 
 **Files:**
 

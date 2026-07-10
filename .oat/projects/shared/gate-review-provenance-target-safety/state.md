@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t13
-oat_last_commit: 9328b327
+oat_current_task: p04-t14
+oat_last_commit: a8806887
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T11:48:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T11:55:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 35 of 37 planned tasks are complete. Final-review fixes `p04-t05` through `p04-t12` are complete; `p04-t13` and `p04-t14` remain.
+Implementation - 36 of 37 planned tasks are complete. Final-review fixes `p04-t05` through `p04-t13` are complete; only `p04-t14` remains.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 35 of 37 planned tasks are complete. Final-review fixes `p04-t0
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (35/37 tasks complete; final review remains `fixes_added`)
+- **Implementation:** `implementation.md` (36/37 tasks complete; final review remains `fixes_added`)
 
 ## Progress
 
@@ -160,8 +160,9 @@ Implementation - 35 of 37 planned tasks are complete. Final-review fixes `p04-t0
 - ✓ `p04-t10` preserves complete raw phase-review settings across spec-driven plan Overwrite
 - ✓ `p04-t11` rejects typo, whitespace, and case-mismatched dispatch roles before argument resolution
 - ✓ `p04-t12` keeps every artifact review on the exact resolved role or pinned child and fails closed on unavailable controls or timeout
+- ✓ `p04-t13` aligns noninteractive readiness, Codex max, opaque Cursor enforcement, and project/user Codex output ownership across canonical and bundled docs
 - ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
-- ⧗ Execute `p04-t13` and `p04-t14`, then final re-review
+- ⧗ Execute `p04-t14`, then final re-review
 
 ## Blockers
 
@@ -169,4 +170,4 @@ None
 
 ## Next Milestone
 
-Execute final review fix tasks from `p04-t13`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.
+Execute external-state task `p04-t14`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.

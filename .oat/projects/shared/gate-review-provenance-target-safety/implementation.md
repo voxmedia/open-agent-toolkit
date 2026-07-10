@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t13
+oat_current_task_id: p04-t14
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 14    | 12/14     |
+| p04   | in_progress | 14    | 13/14     |
 
-**Total:** 35/37 tasks completed
+**Total:** 36/37 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -281,14 +281,23 @@ oat_generated: false
 - Inline review is limited to verified equivalent current-host controls or explicit inherit/default and managed-uncapped reviewer exceptions.
 - Timeout handling retries the same exact role or pinned child and otherwise fails closed. Focused contracts passed 56 assertions, all 53 skills validated, and the 532-link crawl found zero broken links.
 
+### Task p04-t13: (final review) Align dispatch and gate reference documentation
+
+**Status:** completed
+**Commit:** `a8806887`
+
+- Noninteractive unresolved planning is explicitly not implementation-ready; public Codex values include `max`; and configured Cursor values remain opaque strings compiled as enforced model arguments.
+- `.codex/config.toml` and every generated project Codex variant are repository-owned, version-controlled provider output with no automatic ignore mechanism. User-config roles materialize under `~/.codex`.
+- Canonical skill/docs and regenerated bundled assets agree. Verification passed 57 focused contracts, all 53 skills, 532 links, root format, and release validation for all five packages at `0.1.47`.
+
 ### Phase Summary
 
-- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. Spec-driven Overwrite preserves the same complete explicit phase-review value already protected by quick/import rewrites, dispatch role parsing rejects malformed values instead of silently selecting implementer, and artifact reviews retain the exact resolved target across availability and timeout paths. The first final-review fix wave also repairs user-owned Codex target expansion, custom-role collision safety, executed-model metadata, malformed-artifact correlation, and receive-eligible lifecycle routing. Tasks `p04-t13` and `p04-t14` remain.
+- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. Spec-driven Overwrite preserves the same complete explicit phase-review value already protected by quick/import rewrites, dispatch role parsing rejects malformed values, artifact reviews retain the exact resolved target, and public readiness/provider/ownership references match shipped behavior. The first final-review fix wave also repairs user-owned Codex target expansion, custom-role collision safety, executed-model metadata, malformed-artifact correlation, and receive-eligible lifecycle routing. Only `p04-t14` remains.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** The committed wave passes 313 affected assertions across 11 test files, CLI type-check, validation of all 53 OAT skills, a 532-link crawl with zero broken links, 10 formatting tasks plus 186 Markdown files, project sync idempotence, version hygiene, and diff hygiene. Each task's focused RED/GREEN checks also passed.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review remains `fixes_added`; `p04-t05` through `p04-t12` are complete, with `p04-t13` and `p04-t14` still pending.
+- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review remains `fixes_added`; `p04-t05` through `p04-t13` are complete, with only `p04-t14` pending.
 
 ## Orchestration Runs
 
@@ -831,12 +840,13 @@ oat_generated: false
 | p04-t10    | RED/GREEN spec-driven Overwrite preservation contract; 53-skill validation                                            | 57     | 0      | Raw key/value preservation before shared phase-review setup   |
 | p04-t11    | RED/GREEN invalid-role matrix; 72 dispatch-ceiling assertions; CLI type-check                                         | 76     | 0      | Exact role union and omitted-only implementer default         |
 | p04-t12    | RED/GREEN target-preserving artifact-review contracts; 53-skill validation; 532-link crawl                            | 59     | 0      | Guarded inline exceptions and fail-closed timeout routing     |
+| p04-t13    | RED/GREEN readiness/provider/ownership contracts; skills; links; format; release                                      | 62     | 0      | Canonical/bundled parity and five packages at 0.1.47          |
 | p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
 | p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing |
 
 ## Final Summary (for PR/docs)
 
-Phase 4 remains in progress. Final-review fixes `p04-t05` through `p04-t12`
+Phase 4 remains in progress. Final-review fixes `p04-t05` through `p04-t13`
 are complete: the actual user-scope scanner can safely materialize the
 finite canonical Codex roles; custom role identities cannot collide after
 normalization; gate metadata reflects the selected execution model; malformed
@@ -846,10 +856,11 @@ explicitly eligible, corroborated review handoffs. Spec-driven Overwrite also
 preserves the complete raw phase-review setting before shared setup, and the
 dispatch resolver rejects malformed role values before producing arguments.
 Artifact reviews also retain the exact resolved target across unavailable-role
-and timeout paths.
+and timeout paths. Public readiness, provider enforcement, and Codex output
+ownership references now match shipped behavior.
 
-The project is at 35 of 37 tasks and p04 is at 12 of 14. The first final review
-remains `fixes_added`; `p04-t13`, `p04-t14`, and final re-review remain
+The project is at 36 of 37 tasks and p04 is at 13 of 14. The first final review
+remains `fixes_added`; `p04-t14` and final re-review remain
 pending. User configuration was not mutated, no live user sync was run, no
 canonical skill version was bumped again, and all five public packages remain
 at `0.1.47`.
