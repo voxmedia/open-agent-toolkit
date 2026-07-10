@@ -1828,6 +1828,37 @@ function writeReviewGateExecutionFailure(
   context.logger.error(message);
 }
 
+function writeReviewGateUnexpectedFailure(
+  context: CommandContext,
+  payload: {
+    project: string;
+    target: string;
+    gateInvocation: GateInvocationMetadata;
+    error: unknown;
+  },
+): void {
+  const message =
+    payload.error instanceof Error
+      ? payload.error.message
+      : String(payload.error);
+  if (context.json) {
+    context.logger.json({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      runId: payload.gateInvocation.runId,
+      target: payload.target,
+      project: payload.project,
+      gateInvocation: payload.gateInvocation,
+      message,
+    });
+    return;
+  }
+
+  context.logger.error(
+    `Review failed after target selection for ${payload.target}: ${message}`,
+  );
+}
+
 function writeReviewGateArtifactValidationFailure(
   context: CommandContext,
   payload: {
@@ -2084,6 +2115,13 @@ async function runReviewGate(
   dependencies: GateCommandDependencies,
 ): Promise<void> {
   const runId = randomUUID();
+  let postSelectionContext:
+    | {
+        project: string;
+        target: string;
+        gateInvocation: GateInvocationMetadata;
+      }
+    | undefined;
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
@@ -2112,6 +2150,11 @@ async function runReviewGate(
       dependencies,
     );
     const gateInvocation = createGateInvocationMetadata(runId, selected);
+    postSelectionContext = {
+      project: projectPath,
+      target: selected.id,
+      gateInvocation,
+    };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
     const before = await listActiveProjectReviewCandidates({
       repoRoot,
@@ -2267,7 +2310,15 @@ async function runReviewGate(
     });
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
-    writeError(context, error);
+    if (postSelectionContext) {
+      writeReviewGateUnexpectedFailure(context, {
+        ...postSelectionContext,
+        error,
+      });
+      process.exitCode = 1;
+    } else {
+      writeError(context, error);
+    }
   }
 }
 

@@ -3255,6 +3255,86 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(7);
   });
 
+  it('retains selected gate provenance when target launch rejects', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        throw new Error('spawn codex ENOENT');
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      runId: expect.any(String),
+      target: 'codex-default',
+      project: projectPath,
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        model: 'provider-default',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      message: expect.stringContaining('spawn codex ENOENT'),
+    });
+    expect(capture.jsonPayloads[0]?.runId).toBe(
+      capture.jsonPayloads[0]?.gateInvocation.runId,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('retains selected gate provenance on post-selection review filesystem errors', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, projectPath, 'reviews'),
+      'not a review directory',
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      runId: expect.any(String),
+      target: 'codex-default',
+      project: projectPath,
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        model: 'provider-default',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      message: expect.any(String),
+    });
+    expect(capture.jsonPayloads[0]?.runId).toBe(
+      capture.jsonPayloads[0]?.gateInvocation.runId,
+    );
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('reports review target timeouts with structured failure metadata', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
