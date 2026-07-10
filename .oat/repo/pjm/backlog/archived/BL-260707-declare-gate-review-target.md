@@ -1,14 +1,14 @@
 ---
 id: BL-260707-declare-gate-review-target
 title: 'Declare gate review target project'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: low # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: S # XS | S | M | L | XL | XXL
 labels: [workflow-gates, reviews, provenance]
 assignee: null
 created: '2026-07-07T11:47:53Z'
-updated: '2026-07-07T11:47:53Z'
+updated: '2026-07-10T18:15:13Z'
 associated_issues:
   [BL-260707-record-gate-review-model, BL-260707-ask-to-enable-phase-review]
 oat_template: true

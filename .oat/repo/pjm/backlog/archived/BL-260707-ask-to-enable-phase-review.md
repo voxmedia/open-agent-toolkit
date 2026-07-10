@@ -1,14 +1,14 @@
 ---
 id: BL-260707-ask-to-enable-phase-review
 title: 'Ask to enable phase review gates when gate config exists'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: S # XS | S | M | L | XL | XXL
 labels: [oat-project-implement, reviews, phase-review-gate]
 assignee: null
 created: '2026-07-07T05:18:56Z'
-updated: '2026-07-07T05:18:56Z'
+updated: '2026-07-10T18:15:14Z'
 associated_issues: [BL-260707-record-gate-review-model]
 oat_template: true
 oat_template_name: backlog-item
