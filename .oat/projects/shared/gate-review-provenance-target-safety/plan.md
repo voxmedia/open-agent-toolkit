@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** completed; awaiting independent review
+**Implementation Status:** review fixes queued
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -851,21 +851,78 @@ git status --short
 
 ---
 
+### Task p04-t04: (review) Preserve phase-review configuration across plan rewrites
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: provider-linked skill views managed by `oat sync`
+
+**Step 1: Understand the issue**
+
+Review finding: Quick-start and import-plan can create or normalize `plan.md`
+before they inspect whether `oat_phase_review_gate` was explicitly present. A
+template rewrite can therefore discard an authoritative resumed or imported
+value before the later preservation check runs.
+
+Location: `.agents/skills/oat-project-quick-start/SKILL.md:439`
+
+**Step 2: Implement fix**
+
+Require both workflows to inspect and snapshot key presence plus the complete
+`oat_phase_review_gate` value before any template-based create/update or
+normalization. Carry that exact value into the resulting frontmatter before
+invoking the shared setup contract. Preserve enabled, disabled, selected-phase,
+null, and malformed explicit values without probing or re-prompting.
+
+**Step 3: Verify**
+
+Strengthen the skill validation contract so preservation must precede the
+rewrite boundary in both workflows and cover resumed/imported complete-value
+cases.
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm run cli:source -- sync --scope all --dry-run
+pnpm format
+```
+
+Expected: preservation is ordered before every quick/import plan rewrite, exact
+explicit values survive normalization, generated views are synchronized, and
+all focused checks pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-quick-start/SKILL.md \
+  .agents/skills/oat-project-import-plan/SKILL.md \
+  packages/cli/src/validation/skills.test.ts
+git add .claude .codex .cursor
+git commit -m "fix(plan): preserve phase review settings across rewrites"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed  | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed  | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed  | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed  | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | pending | -          | -                                                           |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | fixes_added | 2026-07-10 | reviews/archived/p04-review-2026-07-10T100604Z.md           |
+| final  | code     | pending     | -          | -                                                           |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -877,12 +934,12 @@ git status --short
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
-- Phase 4: 3 tasks - shared opt-in setup, all plan paths, and release validation
+- Phase 4: 4 tasks - shared opt-in setup, all plan paths, release validation, and one review fix
 
-**Total: 26 tasks**
+**Total: 27 tasks**
 
 Phase 0 through Phase 3 reviews have passed. Phase 4 implementation is complete
-and awaiting independent review; final review remains pending.
+with one review fix queued; final review remains pending.
 
 ## References
 

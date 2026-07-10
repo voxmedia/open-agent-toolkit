@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 6     | 6/6       |
-| p01   | completed | 9     | 9/9       |
-| p02   | completed | 6     | 6/6       |
-| p03   | completed | 2     | 2/2       |
-| p04   | completed | 3     | 3/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | completed   | 6     | 6/6       |
+| p01   | completed   | 9     | 9/9       |
+| p02   | completed   | 6     | 6/6       |
+| p03   | completed   | 2     | 2/2       |
+| p04   | in_progress | 4     | 3/4       |
 
-**Total:** 26/26 tasks completed
+**Total:** 26/27 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** completed; awaiting independent review
+**Status:** review fixes queued
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -587,6 +587,26 @@ oat_generated: false
 - TDD reproduced the missing shared/all-path contracts before implementation. The release validation loop also reproduced three stale test assumptions: live HOME leakage in the doctor fixture, a hard-coded recommendation version, and legacy implementer wording. Focused and full suites pass after isolating/comparing the actual contracts.
 - Final serial verification passed. The final sync dry-run reported `No changes to apply`; no ignore rule changed; and the committed implementation tree was clean before bookkeeping.
 - p04 is complete and awaiting independent review. The p04 review row and final review row remain `pending`; no review artifact was created or modified.
+
+### Review Received: p04
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p04-review-2026-07-10T100604Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p04-t04`
+
+**Disposition:**
+
+- `I1` agreed, `Moderate`, `code_fix_required`: quick-start and import-plan must snapshot key presence and the complete explicit `oat_phase_review_gate` value before any template rewrite or normalization, then restore it before the shared setup contract runs. Added `p04-t04` with ordering and complete-value regression coverage.
+
+**Next:** Execute `p04-t04`, advance the p04 review row to `fixes_completed`, then run an independent fix-scoped p04 re-review.
 
 ## Deviations from Plan / Design
 
