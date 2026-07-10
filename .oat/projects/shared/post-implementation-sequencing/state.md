@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: null
+oat_current_task: p01-t02
+oat_last_commit: f3580e7b
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260709-split-post-implementation' }
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:58:56.209Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T21:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T21:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Starting `p01-t01`
+Implementation - `p01-t01` complete; next `p01-t02`
 
 ## Artifacts
 
@@ -81,6 +81,7 @@ Implementation - Starting `p01-t01`
 - ✓ Implementation HiLL checkpoint set to final phase `p03`
 - ✓ Tier 1 subagent delegation authorized for this run
 - ✓ `p01-t01` target resolved: `gpt-5.6-sol` / medium
+- ✓ `p01-t01` complete: structured configuration model and atomic resolution
 
 ## Blockers
 
@@ -88,4 +89,4 @@ None
 
 ## Next Milestone
 
-Execute `p01-t01`: structured configuration model and atomic resolution
+Execute `p01-t02`: structured config CLI set, get, and describe support

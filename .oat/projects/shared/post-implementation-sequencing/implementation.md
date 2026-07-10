@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -19,7 +19,7 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 2     | 0/2       |
+| p01   | in_progress | 2     | 1/2       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 3     | 0/3       |
 
@@ -36,8 +36,15 @@ Complete after both configuration tasks pass their focused tests and review.
 
 ### Task p01-t01: Add the legacy-or-structured model and atomic resolution
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fb793869, f3580e7b
+
+**Outcome:** Added strict structured-sequence validation and normalization,
+while preserving legacy strings in resolved configuration and preserving atomic
+dispatch-candidate ladder behavior.
+
+**Verification:** Focused config Vitest suite (136 tests) and CLI type check
+passed.
 
 ### Task p01-t02: Extend config set, get, and describe for structured values
 
@@ -124,6 +131,15 @@ Populate from completed phase summaries before final review and PR generation.
 - Next task: `p01-t01`.
 
 **Blockers:** None
+
+### p01-t01 Complete
+
+**Date:** 2026-07-10
+
+- Dispatch: `gpt-5.6-sol` / medium via
+  `oat-phase-implementer-gpt-5-6-sol-medium`.
+- Focused config tests and CLI type check passed.
+- Next task: `p01-t02`.
 
 ### Artifact Review Received: plan
 
