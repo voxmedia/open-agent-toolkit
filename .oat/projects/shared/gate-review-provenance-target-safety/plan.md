@@ -1552,8 +1552,9 @@ pnpm release:validate
 Phase 0 through Phase 4 reviews have passed. The first final review added ten
 fix tasks; cycle 2 added five supplemental fix tasks; and cycle 3 added six more
 tasks. All 48 tasks are complete and the final review is `fixes_completed`.
-The standard three-cycle cap is reached, so a fourth final review requires
-explicit user override before any p04 HiLL approval.
+The user explicitly waived a fourth final re-review after the cycle-3 fixes
+completed. The review remains `fixes_completed`, not `passed`; await explicit
+p04 HiLL approval.
 
 ## References
 

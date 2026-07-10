@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation fixes complete - all 48 planned tasks are complete and p04 is 25/25. Final review cycle 3 is `fixes_completed`. The standard three-cycle cap is reached; a fourth final review requires explicit user override before any p04 HiLL approval.
+Implementation fixes complete - all 48 planned tasks are complete and p04 is 25/25. Final review cycle 3 remains `fixes_completed`; the user explicitly waived a fourth final re-review. Explicit p04 HiLL approval is the next lifecycle decision.
 
 ## Artifacts
 
@@ -191,7 +191,8 @@ Implementation fixes complete - all 48 planned tasks are complete and p04 is 25/
 - ✓ `p04-t25` aligns review guidance with shipped user/project Codex materialization ownership
 - ✓ p04-t25 verification passed 61 focused contracts, 532 docs links, format, bundled parity, and release validation at `0.1.47`
 - ✓ All 48/48 tasks complete; final review cycle 3 is `fixes_completed`
-- ⧗ Await explicit user override before a fourth final review; p04 HiLL approval remains pending
+- ✓ User waived a fourth final re-review after the cycle-3 fixes completed; final review remains `fixes_completed`
+- ⧗ Await explicit p04 HiLL approval
 
 ## Blockers
 
@@ -199,4 +200,4 @@ None
 
 ## Next Milestone
 
-Await explicit user override before a fourth final review. Do not request p04 HiLL approval until the final-review disposition is resolved.
+Await explicit p04 HiLL approval. The final-review waiver is recorded; preserve the final review as `fixes_completed`, not `passed`.
