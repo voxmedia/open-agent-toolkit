@@ -762,6 +762,10 @@ describe('oat gate', () => {
       '["sh","-c","test -n \\"$CLAUDECODE\\""]',
       '--availability-json',
       '["claude","--version"]',
+      '--invocation-model',
+      'fable',
+      '--invocation-reasoning-effort',
+      'provider-default',
       '--priority',
       '50',
     ]);
@@ -790,6 +794,10 @@ describe('oat gate', () => {
       baseCommand: ['claude', '-p', '--model', 'opus'],
       hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
       availabilityCommand: ['claude', '--version'],
+      invocation: {
+        model: 'fable',
+        reasoningEffort: 'provider-default',
+      },
       priority: 50,
     });
     expect(targets['cursor-composer']?.baseCommand).toEqual([
@@ -807,6 +815,152 @@ describe('oat gate', () => {
       'high',
     ]);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves existing invocation fields when target set omits one flag', async () => {
+    const { root, home } = await setup();
+
+    await runGateCommand(root, home, [
+      'target',
+      'set',
+      'codex-reviewer',
+      '--runtime',
+      'codex',
+      '--base-command-json',
+      '["codex","exec"]',
+      '--invocation-model',
+      'gpt-5.6-sol',
+      '--invocation-reasoning-effort',
+      'max',
+      '--layer',
+      'shared',
+    ]);
+    await runGateCommand(root, home, [
+      'target',
+      'set',
+      'codex-reviewer',
+      '--runtime',
+      'codex',
+      '--base-command-json',
+      '["codex","exec","--quiet"]',
+      '--invocation-model',
+      'gpt-5.6-terra',
+      '--layer',
+      'shared',
+    ]);
+
+    expect((await readResolvedTargets(root, home))['codex-reviewer']).toEqual({
+      runtime: 'codex',
+      baseCommand: ['codex', 'exec', '--quiet'],
+      invocation: {
+        model: 'gpt-5.6-terra',
+        reasoningEffort: 'max',
+      },
+      priority: 0,
+    });
+  });
+
+  it('lists resolved targets with origin, enablement, availability, and invocation metadata', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                invocation: {
+                  model: 'gpt-5.6-sol',
+                  reasoningEffort: 'max',
+                },
+              },
+              'claude-default': null,
+              'custom-reviewer': {
+                runtime: 'custom',
+                baseCommand: ['custom-review'],
+                priority: 10,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      availableTargets: ['codex-default'],
+    });
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    await runCommand(command, ['target', 'list']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      targets: expect.arrayContaining([
+        {
+          id: 'codex-default',
+          runtime: 'codex',
+          origin: 'shared',
+          explicitlyConfigured: true,
+          enabled: true,
+          available: true,
+          invocation: {
+            model: 'gpt-5.6-sol',
+            reasoningEffort: 'max',
+            source: 'exec-target-config',
+          },
+        },
+        {
+          id: 'claude-default',
+          runtime: 'claude',
+          origin: 'shared',
+          explicitlyConfigured: true,
+          enabled: false,
+          available: false,
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+            source: 'exec-target-config',
+          },
+        },
+        {
+          id: 'cursor-default',
+          runtime: 'cursor',
+          origin: 'builtin',
+          explicitlyConfigured: false,
+          enabled: true,
+          available: false,
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+            source: 'exec-target-config',
+          },
+        },
+        {
+          id: 'custom-reviewer',
+          runtime: 'custom',
+          origin: 'shared',
+          explicitlyConfigured: true,
+          enabled: true,
+          available: true,
+          invocation: {
+            model: 'unknown',
+            reasoningEffort: 'unknown',
+            source: 'unknown',
+          },
+        },
+      ]),
+    });
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(
+      runner.calls.filter((call) => call.purpose === 'availability'),
+    ).toHaveLength(2);
   });
 
   it('normalizes exec target models from config', async () => {

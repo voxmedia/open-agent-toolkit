@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   resolveEffectiveConfig,
+  resolveExecTargetViews,
   resolveExecTargets,
   resolveGate,
   type ResolvedConfig,
@@ -1265,6 +1266,79 @@ describe('resolveExecTargets', () => {
     expect(BUILTIN_EXEC_TARGETS['codex-default'].invocation).toEqual({
       model: 'provider-default',
       reasoningEffort: 'provider-default',
+    });
+  });
+
+  it('preserves target origin and enabled provenance across layered overrides', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                invocation: { model: 'gpt-user' },
+              },
+              'custom-target': {
+                runtime: 'custom',
+                baseCommand: ['custom-review'],
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                invocation: { reasoningEffort: 'high' },
+              },
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': { priority: 125 },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargetViews(effective)).toMatchObject({
+      'codex-default': {
+        origin: 'local',
+        explicitlyConfigured: true,
+        enabled: true,
+        target: {
+          invocation: {
+            model: 'gpt-user',
+            reasoningEffort: 'high',
+          },
+          priority: 125,
+        },
+      },
+      'claude-default': {
+        origin: 'builtin',
+        explicitlyConfigured: false,
+        enabled: true,
+      },
+      'custom-target': {
+        origin: 'shared',
+        explicitlyConfigured: true,
+        enabled: false,
+        target: {
+          runtime: 'custom',
+        },
+      },
     });
   });
 });

@@ -34,6 +34,7 @@ import {
 } from '@config/oat-config';
 import {
   resolveEffectiveConfig,
+  resolveExecTargetViews,
   resolveExecTargets,
   resolveGate,
   type ResolvedConfig,
@@ -102,6 +103,8 @@ interface TargetSetOptions {
   baseCommandJson?: string;
   hostDetectionJson?: string;
   availabilityJson?: string;
+  invocationModel?: string;
+  invocationReasoningEffort?: string;
   priority?: string;
   disable?: boolean;
   layer?: string;
@@ -498,6 +501,29 @@ function parseExecTargetConfig(
     runtime: trimRequired(options.runtime ?? '', '--runtime'),
     baseCommand: parseArgvJson(baseCommandJson, '--base-command-json'),
     priority: parseNumericFlag(options.priority, '--priority', 0),
+    ...(options.invocationModel !== undefined ||
+    options.invocationReasoningEffort !== undefined
+      ? {
+          invocation: {
+            ...(options.invocationModel !== undefined
+              ? {
+                  model: trimRequired(
+                    options.invocationModel,
+                    '--invocation-model',
+                  ),
+                }
+              : {}),
+            ...(options.invocationReasoningEffort !== undefined
+              ? {
+                  reasoningEffort: trimRequired(
+                    options.invocationReasoningEffort,
+                    '--invocation-reasoning-effort',
+                  ),
+                }
+              : {}),
+          },
+        }
+      : {}),
     ...(options.hostDetectionJson !== undefined
       ? {
           hostDetectionCommand: parseOptionalArgvJson(
@@ -563,13 +589,31 @@ function setExecTarget(
   targetId: string,
   target: ExecTargetConfig | null,
 ): GateConfigContainer {
-  return updateWorkflowGates(config, (gates) => ({
-    ...gates,
-    execTargets: {
-      ...gates.execTargets,
-      [targetId]: target,
-    },
-  }));
+  return updateWorkflowGates(config, (gates) => {
+    const existing = gates.execTargets?.[targetId];
+    const value =
+      target === null || existing === null || existing === undefined
+        ? target
+        : {
+            ...existing,
+            ...target,
+            ...(existing.invocation || target.invocation
+              ? {
+                  invocation: {
+                    ...existing.invocation,
+                    ...target.invocation,
+                  },
+                }
+              : {}),
+          };
+    return {
+      ...gates,
+      execTargets: {
+        ...gates.execTargets,
+        [targetId]: value,
+      },
+    };
+  });
 }
 
 function unsetExecTarget(
@@ -615,6 +659,7 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
     runtime: target.runtime,
     baseCommand: [...target.baseCommand],
     priority: target.priority,
+    ...(target.invocation ? { invocation: { ...target.invocation } } : {}),
     ...(target.models ? { models: [...target.models] } : {}),
     ...(target.hostDetectionCommand
       ? { hostDetectionCommand: [...target.hostDetectionCommand] }
@@ -1846,6 +1891,61 @@ async function runTargetUnset(
   }
 }
 
+async function runTargetList(
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+): Promise<void> {
+  try {
+    const views = resolveExecTargetViews(
+      await readEffectiveConfig(context, dependencies),
+    );
+    const targets = await Promise.all(
+      Object.entries(views)
+        .sort(([leftId, left], [rightId, right]) => {
+          const priority = right.target.priority - left.target.priority;
+          return priority === 0 ? leftId.localeCompare(rightId) : priority;
+        })
+        .map(async ([id, view]) => {
+          const availabilityCommand = view.target.availabilityCommand;
+          const available =
+            view.enabled &&
+            (!availabilityCommand ||
+              (
+                await dependencies.runProcess(
+                  availabilityCommand[0] ?? '',
+                  availabilityCommand.slice(1),
+                  {
+                    cwd: context.cwd,
+                    env: dependencies.processEnv,
+                    purpose: 'availability',
+                    stdio: 'ignore',
+                    timeoutMs: GATE_CHECK_TIMEOUT_MS,
+                  },
+                )
+              ).exitCode === 0);
+          const invocation = view.target.invocation;
+          return {
+            id,
+            runtime: view.target.runtime,
+            origin: view.origin,
+            explicitlyConfigured: view.explicitlyConfigured,
+            enabled: view.enabled,
+            available,
+            invocation: {
+              model: invocation?.model ?? 'unknown',
+              reasoningEffort: invocation?.reasoningEffort ?? 'unknown',
+              source: invocation ? 'exec-target-config' : 'unknown',
+            },
+          };
+        }),
+    );
+    writeSuccess(context, { targets });
+    process.exitCode = 0;
+  } catch (error) {
+    writeError(context, error);
+  }
+}
+
 async function runCrossProviderExec(
   prompt: string[],
   options: CrossProviderExecOptions,
@@ -2169,6 +2269,14 @@ export function createGateCommand(
       'JSON argv array for host detection',
     )
     .option('--availability-json <json>', 'JSON argv array for availability')
+    .option(
+      '--invocation-model <model>',
+      'Configured invocation model or provider-default',
+    )
+    .option(
+      '--invocation-reasoning-effort <effort>',
+      'Configured reasoning effort or provider-default',
+    )
     .option('--priority <number>', 'Target priority, higher wins')
     .option('--disable', 'Disable this exec target in the selected layer')
     .option('--layer <layer>', 'Config layer to write: shared, local, or user')
@@ -2180,6 +2288,16 @@ export function createGateCommand(
         await runTargetSet(targetId, options, context, dependencies);
       },
     );
+
+  target
+    .command('list')
+    .description('List resolved exec targets and configuration provenance')
+    .action(async (_options: unknown, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      await runTargetList(context, dependencies);
+    });
 
   target
     .command('unset')

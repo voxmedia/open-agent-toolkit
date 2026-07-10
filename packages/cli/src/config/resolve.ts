@@ -238,6 +238,71 @@ export function resolveExecTargets(
   return targets;
 }
 
+export type ExecTargetOrigin = 'builtin' | 'user' | 'shared' | 'local';
+
+export interface ResolvedExecTargetView {
+  target: ExecTarget;
+  origin: ExecTargetOrigin;
+  explicitlyConfigured: boolean;
+  enabled: boolean;
+}
+
+export function resolveExecTargetViews(
+  effective: ResolvedConfig,
+): Record<string, ResolvedExecTargetView> {
+  const targets = cloneExecTargetRegistry(BUILTIN_EXEC_TARGETS);
+  const views: Record<string, ResolvedExecTargetView> = Object.fromEntries(
+    Object.entries(targets).map(([id, target]) => [
+      id,
+      {
+        target: cloneExecTarget(target),
+        origin: 'builtin',
+        explicitlyConfigured: false,
+        enabled: true,
+      } satisfies ResolvedExecTargetView,
+    ]),
+  );
+
+  for (const [origin, layer] of [
+    ['user', effective.user.workflow?.gates?.execTargets],
+    ['shared', effective.shared.workflow?.gates?.execTargets],
+    ['local', effective.local.workflow?.gates?.execTargets],
+  ] as const) {
+    if (!layer) {
+      continue;
+    }
+
+    for (const [id, override] of Object.entries(layer)) {
+      if (override === null) {
+        const target = targets[id] ?? views[id]?.target;
+        delete targets[id];
+        if (target) {
+          views[id] = {
+            target: cloneExecTarget(target),
+            origin,
+            explicitlyConfigured: true,
+            enabled: false,
+          };
+        }
+        continue;
+      }
+
+      mergeExecTargetLayer(targets, { [id]: override });
+      const target = targets[id];
+      if (target) {
+        views[id] = {
+          target: cloneExecTarget(target),
+          origin,
+          explicitlyConfigured: true,
+          enabled: true,
+        };
+      }
+    }
+  }
+
+  return views;
+}
+
 type ExecTargetOverride = Partial<ExecTarget> | null;
 
 function mergeExecTargetLayer(
