@@ -157,8 +157,11 @@ For `artifact_validation_failed`, correct the artifact and rerun the gate; do
 not invoke review-receive until the gate successfully revalidates it as `ok` or
 `blocked`.
 
-`ok` and `blocked` also include `outcome`, `artifactPath`, `counts`, `scope`,
-`handoff`, `gateInvocation`, and `corroboration`. `gateInvocation` contains the
+`ok` and `blocked` also include `receiveEligible: true`, `outcome`,
+`artifactPath`, `counts`, `scope`, `handoff`, `gateInvocation`, and
+`corroboration`. Invoke review-receive only when all three conditions hold:
+the status is `ok` or `blocked`, `receiveEligible` is `true`, and `handoff` is
+non-null. `gateInvocation` contains the
 configured `runId`, `targetId`, `runtime`, `model`, `reasoningEffort`, and
 `source`. `corroboration.run` and `corroboration.invocation` are each
 `matched`, `missing`, or `mismatched`. `corroboration.project` is `matched` for

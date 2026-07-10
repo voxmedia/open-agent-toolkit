@@ -1986,7 +1986,7 @@ function writeReviewGateResult(
 ): void {
   const outcome = reviewGateOutcome(payload);
   if (context.json) {
-    context.logger.json({ outcome, ...payload });
+    context.logger.json({ outcome, ...payload, receiveEligible: true });
     return;
   }
 

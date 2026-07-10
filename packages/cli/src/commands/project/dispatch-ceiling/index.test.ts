@@ -8,6 +8,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { resolveEffectiveConfig } from '@config/resolve';
+import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -918,7 +919,13 @@ describe('oat project dispatch-ceiling resolve', () => {
         codex: {
           value: 'high',
           mode: 'enforced',
-          dispatchArgs: { variant: 'oat-phase-implementer-gpt-5-5-high' },
+          dispatchArgs: {
+            variant: buildCodexMaterializedTargetRoleName({
+              agentName: 'oat-phase-implementer',
+              model: 'gpt-5.5',
+              effort: 'high',
+            }),
+          },
           selection: {
             selectedValue: 'high',
             target: {

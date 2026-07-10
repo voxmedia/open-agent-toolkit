@@ -835,6 +835,9 @@ describe('validateOatSkills', () => {
       expect(gateSection, `${skillName} explicit eligibility`).toContain(
         '`receiveEligible: true`',
       );
+      expect(gateSection, `${skillName} conjunctive eligibility`).toMatch(
+        /all three conditions hold:.*status.*`ok`.*`blocked`.*`receiveEligible: true`.*non-null `handoff`/is,
+      );
       expect(gateSection, `${skillName} hard stop`).toContain(
         '`receiveEligible: false`',
       );
@@ -857,6 +860,17 @@ describe('validateOatSkills', () => {
         /dist\/index\.js|node\s+.*\/dist\//,
       );
     }
+
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const phaseGateSection = implement.slice(
+      implement.indexOf('### Optional External Phase Review Gate'),
+      implement.indexOf('### Parallel Group Execution'),
+    );
+    expect(phaseGateSection).toMatch(
+      /all three receive-eligibility conditions must hold:.*status.*`ok`.*`blocked`.*`receiveEligible: true`.*`handoff` is non-null/is,
+    );
   });
 
   it('documents the complete gate result union and receive-eligibility contract', async () => {
@@ -865,6 +879,9 @@ describe('validateOatSkills', () => {
     );
     const cliReference = await readRepoFile(
       'apps/oat-docs/docs/reference/cli-reference.md',
+    );
+    const projectReviews = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/reviews.md',
     );
 
     for (const [name, content] of [
@@ -881,7 +898,10 @@ describe('validateOatSkills', () => {
         expect(content, `${name} ${status}`).toContain(status);
       }
       expect(content, `${name} positive eligibility`).toMatch(
-        /receiveEligible: true|receive-eligible/is,
+        /receiveEligible(?:: true|` is `true)|receive-eligible/is,
+      );
+      expect(content, `${name} conjunctive eligibility`).toMatch(
+        /all three conditions hold:.*status.*`ok`.*`blocked`.*`receiveEligible` is `true`.*`handoff` is\s+non-null/is,
       );
       expect(content, `${name} targeting hard stop`).toMatch(
         /targeting_correlation_failed[\s\S]{0,600}(?:do not|must not).*review-receive/i,
@@ -890,6 +910,10 @@ describe('validateOatSkills', () => {
         /artifact_validation_failed[\s\S]{0,800}(?:correct|fix)[\s\S]{0,300}revalidat/i,
       );
     }
+
+    expect(projectReviews, 'phase gate conjunctive eligibility').toMatch(
+      /all three eligibility conditions:.*status.*`ok`.*`blocked`.*`receiveEligible` is `true`.*`handoff` is\s+non-null/is,
+    );
   });
 
   it('requires lifecycle review gates to declare the exported project and remain target-neutral', async () => {

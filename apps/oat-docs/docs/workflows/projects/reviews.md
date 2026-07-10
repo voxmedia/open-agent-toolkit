@@ -130,7 +130,7 @@ leaves the gate disabled.
 
 It is independent of [HiLL checkpoints](hill-checkpoints.md): a passing gate does not pause, and the gate never touches `oat_hill_completed`, `oat_plan_hill_phases`, or `oat_auto_review_at_hill_checkpoints`.
 
-Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Either way the produced artifact is consumed by `oat-project-review-receive`, autonomously and without user prompts, so findings never evaporate:
+Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Before invoking `oat-project-review-receive`, the result must satisfy all three eligibility conditions: `status` is `ok` or `blocked`, `receiveEligible` is `true`, and `handoff` is non-null. A missing or contradictory field is an operational failure even when `artifactPath` is present. Once eligibility is established, the produced artifact is consumed autonomously and without user prompts, so findings never evaporate:
 
 The gate prompt provides six additional frontmatter values: `oat_gate_run_id`,
 `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`,

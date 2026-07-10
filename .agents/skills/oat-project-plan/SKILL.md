@@ -589,7 +589,7 @@ Before reporting this skill as complete, run the configured gate as the final st
 
 4. Review-artifact handoff:
    - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
-   - Invoke receive only when `status` is `ok` or `blocked` and a non-null `handoff` confirms the artifact was corroborated, or when the envelope explicitly sets `receiveEligible: true`.
+   - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
    - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
    - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
    - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.

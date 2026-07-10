@@ -3032,6 +3032,7 @@ describe('oat gate', () => {
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
+      receiveEligible: true,
       project: projectPath,
       projectResolutionSource: 'active-project',
       artifactPath,
@@ -3765,6 +3766,7 @@ describe('oat gate', () => {
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
+      receiveEligible: true,
       project: projectPath,
       projectResolutionSource: 'active-project',
       blocking: false,
