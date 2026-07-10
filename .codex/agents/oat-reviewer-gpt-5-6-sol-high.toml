@@ -1,5 +1,6 @@
 # oat-managed: true
 # oat-role: oat-reviewer-gpt-5-6-sol-high
+# oat-owner: supported-catalogue
 model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 developer_instructions = """

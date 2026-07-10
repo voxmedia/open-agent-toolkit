@@ -134,6 +134,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   confirmAction: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
+  computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const adapters = options.adapters ?? [createAdapter()];
@@ -208,7 +209,9 @@ function createHarness(options: TestHarnessOptions = {}): {
       interactive: interactive && !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+    resolveScopeRoot: vi.fn(async (scope) =>
+      scope === 'user' ? '/tmp/home' : '/tmp/workspace',
+    ),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
     loadSyncConfig: vi.fn(async () => syncConfig),
     readUserConfig: vi.fn(async () => userConfig),
@@ -241,6 +244,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     confirmAction,
     adoptStray,
     saveManifest,
+    computeCodexProjectExtensionPlan,
   };
 }
 
@@ -650,6 +654,24 @@ describe('createStatusCommand', () => {
     expect(capture.info[0]).toContain('codex:missing');
     expect(capture.info[0]).toContain('codex:drifted:modified');
     expect(process.exitCode).toBe(1);
+  });
+
+  it('reports Codex extension drift for user scope', async () => {
+    const { command, computeCodexProjectExtensionPlan } = createHarness({
+      adapters: [createCodexAdapter()],
+      manifestEntries: [],
+      driftReports: [],
+      canonicalEntries: [],
+    });
+
+    await runStatusCommand(command, ['--scope', 'user']);
+
+    expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+      '/tmp/home',
+      [],
+      undefined,
+      { userConfigDir: '/tmp/home/.oat' },
+    );
   });
 
   it('reports codex role strays discovered from codex detector', async () => {

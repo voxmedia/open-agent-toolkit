@@ -132,7 +132,10 @@ describe('codex sync extension', () => {
     expect(rolePaths).not.toContain(
       '.codex/agents/oat-phase-implementer-high.toml',
     );
-    expect(plan.managedRoles).toEqual(['oat-phase-implementer', roleName]);
+    expect(plan.managedRoles).toEqual(
+      expect.arrayContaining(['oat-phase-implementer', roleName]),
+    );
+    expect(plan.managedRoles).toHaveLength(14);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
     expect(applyResult.failed).toBe(0);
@@ -194,10 +197,13 @@ describe('codex sync extension', () => {
       },
     ]);
 
-    expect(plan.managedRoles).toEqual([
-      'oat-reviewer',
-      'oat-reviewer-gpt-5-6-luna-high',
-    ]);
+    expect(plan.managedRoles).toEqual(
+      expect.arrayContaining([
+        'oat-reviewer',
+        'oat-reviewer-gpt-5-6-luna-high',
+      ]),
+    );
+    expect(plan.managedRoles).toHaveLength(14);
   });
 
   it('generates materialized codex roles from active project state matrix targets', async () => {
@@ -254,10 +260,13 @@ describe('codex sync extension', () => {
       },
     ]);
 
-    expect(plan.managedRoles).toEqual([
-      'oat-phase-implementer',
-      'oat-phase-implementer-gpt-5-6-sol-xhigh',
-    ]);
+    expect(plan.managedRoles).toEqual(
+      expect.arrayContaining([
+        'oat-phase-implementer',
+        'oat-phase-implementer-gpt-5-6-sol-xhigh',
+      ]),
+    );
+    expect(plan.managedRoles).toHaveLength(14);
   });
 
   it('generates materialized codex roles from matrix targets for oat-reviewer', async () => {
@@ -311,7 +320,10 @@ describe('codex sync extension', () => {
     expect(rolePaths).toContain('.codex/agents/oat-reviewer.toml');
     expect(rolePaths).toContain(`.codex/agents/${roleName}.toml`);
     expect(rolePaths).not.toContain('.codex/agents/oat-reviewer-high.toml');
-    expect(plan.managedRoles).toEqual(['oat-reviewer', roleName]);
+    expect(plan.managedRoles).toEqual(
+      expect.arrayContaining(['oat-reviewer', roleName]),
+    );
+    expect(plan.managedRoles).toHaveLength(14);
 
     const applyResult = await applyCodexProjectExtensionPlan(root, plan);
     expect(applyResult.failed).toBe(0);
@@ -451,5 +463,253 @@ describe('codex sync extension', () => {
 
     expect(partialPlan.operations).toEqual([]);
     expect(partialPlan.managedRoles).toEqual([]);
+  });
+
+  it('generates the complete supported project catalogue for both managed base roles', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+
+    const canonicalEntries: CanonicalEntry[] = [];
+    for (const name of ['oat-phase-implementer', 'oat-reviewer']) {
+      const canonicalPath = join(canonicalDir, `${name}.md`);
+      await writeFile(canonicalPath, canonicalAgentFileContent(name));
+      canonicalEntries.push({
+        name: `${name}.md`,
+        type: 'agent',
+        canonicalPath,
+        isFile: true,
+      });
+    }
+
+    const plan = await computeCodexProjectExtensionPlan(root, canonicalEntries);
+    const pinnedRoles = plan.managedRoles.filter(
+      (role) =>
+        role.startsWith('oat-phase-implementer-gpt-') ||
+        role.startsWith('oat-reviewer-gpt-'),
+    );
+
+    expect(pinnedRoles).toHaveLength(26);
+    expect(new Set(pinnedRoles)).toHaveLength(26);
+    expect(pinnedRoles).toContain('oat-phase-implementer-gpt-5-6-sol-max');
+    expect(pinnedRoles).toContain('oat-reviewer-gpt-5-6-sol-max');
+
+    const supportedRole = plan.operations.find(
+      (operation) => operation.roleName === 'oat-reviewer-gpt-5-6-sol-max',
+    );
+    expect(supportedRole?.content).toContain(
+      '# oat-owner: supported-catalogue',
+    );
+  });
+
+  it('materializes project-config custom targets only in the project view', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(root, home);
+
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.7-project-custom',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.7-user-custom',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalPath = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalPath, canonicalAgentFileContent('oat-reviewer'));
+    const plan = await computeCodexProjectExtensionPlan(
+      root,
+      [
+        {
+          name: 'oat-reviewer.md',
+          type: 'agent',
+          canonicalPath,
+          isFile: true,
+        },
+      ],
+      undefined,
+      { userConfigDir: join(home, '.oat') },
+    );
+
+    expect(plan.managedRoles).toContain(
+      'oat-reviewer-gpt-5-7-project-custom-high',
+    );
+    expect(plan.managedRoles).not.toContain(
+      'oat-reviewer-gpt-5-7-user-custom-high',
+    );
+    expect(
+      plan.operations.find(
+        (operation) =>
+          operation.roleName === 'oat-reviewer-gpt-5-7-project-custom-high',
+      )?.content,
+    ).toContain('# oat-owner: project-config');
+  });
+
+  it('materializes user-config custom targets only in the user view', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(home);
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.7-user-custom',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    const canonicalDir = join(home, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalPath = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalPath, canonicalAgentFileContent('oat-reviewer'));
+
+    const plan = await computeCodexProjectExtensionPlan(
+      home,
+      [
+        {
+          name: 'oat-reviewer.md',
+          type: 'agent',
+          canonicalPath,
+          isFile: true,
+        },
+      ],
+      undefined,
+      { userConfigDir: join(home, '.oat') },
+    );
+
+    expect(plan.managedRoles).toContain(
+      'oat-reviewer-gpt-5-7-user-custom-high',
+    );
+    expect(
+      plan.managedRoles.some((role) => role.includes('gpt-5-6-sol-max')),
+    ).toBe(false);
+    expect(
+      plan.operations.find(
+        (operation) =>
+          operation.roleName === 'oat-reviewer-gpt-5-7-user-custom-high',
+      )?.content,
+    ).toContain('# oat-owner: user-config');
+  });
+
+  it('removes only stale roles owned by the current configuration scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalPath = join(canonicalDir, 'custom-agent.md');
+    await writeFile(canonicalPath, canonicalAgentFileContent('custom-agent'));
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+
+    const roles = [
+      ['stale-project', 'project-config'],
+      ['keep-user', 'user-config'],
+      ['keep-supported', 'supported-catalogue'],
+      ['keep-unrelated', null],
+    ] as const;
+    for (const [role, owner] of roles) {
+      await writeFile(
+        join(root, '.codex', 'agents', `${role}.toml`),
+        [
+          '# oat-managed: true',
+          `# oat-role: ${role}`,
+          ...(owner ? [`# oat-owner: ${owner}`] : []),
+          'developer_instructions = "role"',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+    }
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      roles
+        .map(
+          ([role]) =>
+            `[agents.${role}]\ndescription = "${role}"\nconfig_file = "agents/${role}.toml"\n`,
+        )
+        .join('\n'),
+      'utf8',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, [
+      {
+        name: 'custom-agent.md',
+        type: 'agent',
+        canonicalPath,
+        isFile: true,
+      },
+    ]);
+    const removed = plan.operations
+      .filter((operation) => operation.action === 'remove')
+      .map((operation) => operation.roleName);
+
+    expect(removed).toEqual(['stale-project']);
+    expect(plan.operations).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ roleName: 'keep-user', action: 'remove' }),
+        expect.objectContaining({
+          roleName: 'keep-supported',
+          action: 'remove',
+        }),
+        expect.objectContaining({
+          roleName: 'keep-unrelated',
+          action: 'remove',
+        }),
+      ]),
+    );
   });
 });

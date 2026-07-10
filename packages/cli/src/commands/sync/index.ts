@@ -268,7 +268,7 @@ async function computePlans(
     const activeAdapterNames = resolved.activeAdapters.map(
       (adapter) => adapter.name,
     );
-    if (scope === 'project' && activeAdapterNames.includes('codex')) {
+    if (activeAdapterNames.includes('codex')) {
       codexExtensionPlan = await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
         canonical,

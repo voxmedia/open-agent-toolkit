@@ -250,7 +250,9 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: options.interactive ?? !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+    resolveScopeRoot: vi.fn(async (scope) =>
+      scope === 'user' ? '/tmp/home' : '/tmp/workspace',
+    ),
     loadManifest: vi.fn(async () => manifestQueue.shift() ?? createManifest()),
     loadSyncConfig: vi.fn(
       async () =>
@@ -729,6 +731,75 @@ describe('createSyncCommand', () => {
         },
       ],
     });
+  });
+
+  it.each(['user', 'project'] as const)(
+    'routes Codex extension reconciliation for %s sync scope',
+    async (scope) => {
+      const { command, computeCodexProjectExtensionPlan } = createHarness({
+        adapters: [createCodexAdapter()],
+        plans: [createEmptyPlan(scope)],
+        configAwareResults: [
+          {
+            activeAdapters: [createCodexAdapter()],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', scope],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        scope === 'user' ? '/tmp/home' : '/tmp/workspace',
+        expect.any(Array),
+        undefined,
+        { userConfigDir: '/tmp/home/.oat' },
+      );
+    },
+  );
+
+  it('routes Codex extension reconciliation for both scopes during all sync', async () => {
+    const { command, computeCodexProjectExtensionPlan } = createHarness({
+      adapters: [createCodexAdapter()],
+      plans: [createEmptyPlan('user'), createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [createCodexAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [createCodexAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(computeCodexProjectExtensionPlan).toHaveBeenCalledTimes(2);
+    expect(computeCodexProjectExtensionPlan).toHaveBeenNthCalledWith(
+      1,
+      '/tmp/workspace',
+      expect.any(Array),
+      undefined,
+      { userConfigDir: '/tmp/home/.oat' },
+    );
+    expect(computeCodexProjectExtensionPlan).toHaveBeenNthCalledWith(
+      2,
+      '/tmp/home',
+      expect.any(Array),
+      undefined,
+      { userConfigDir: '/tmp/home/.oat' },
+    );
   });
 
   it('forwards install-triggered canonical filters into codex extension planning', async () => {

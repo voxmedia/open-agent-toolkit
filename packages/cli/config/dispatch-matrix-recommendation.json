@@ -1,23 +1,31 @@
 {
-  "version": "2026-07-07.1",
+  "version": "2026-07-10.1",
   "providers": {
     "codex": {
-      "economy": "low",
-      "balanced": "medium",
-      "high": "high",
-      "frontier": "xhigh"
+      "economy": [
+        { "harness": "codex", "model": "gpt-5.6-luna", "effort": "high" }
+      ],
+      "balanced": [
+        { "harness": "codex", "model": "gpt-5.6-terra", "effort": "xhigh" }
+      ],
+      "high": [
+        { "harness": "codex", "model": "gpt-5.6-sol", "effort": "high" }
+      ],
+      "frontier": [
+        { "harness": "codex", "model": "gpt-5.6-sol", "effort": "max" }
+      ]
     },
     "claude": {
-      "economy": "haiku",
+      "economy": "sonnet",
       "balanced": "sonnet",
       "high": "opus",
       "frontier": "fable"
     },
     "cursor": {
-      "economy": "composer-2.5",
-      "balanced": "composer-2.5-fast",
-      "high": "gpt-5.5-high",
-      "frontier": "fable-5"
+      "economy": "gpt-5.6-luna-high",
+      "balanced": "gpt-5.6-terra-xhigh",
+      "high": "gpt-5.6-sol-high",
+      "frontier": "gpt-5.6-sol-max"
     }
   }
 }

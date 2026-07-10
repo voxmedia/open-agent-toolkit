@@ -81,6 +81,27 @@ describe('validateMatrixCell', () => {
     });
   });
 
+  it('accepts max as a first-class Codex reasoning effort', async () => {
+    const runCodex = vi.fn(async () => ({
+      ok: true,
+      stdout: codexCatalog([
+        {
+          slug: 'gpt-5.6-sol',
+          supported_reasoning_levels: [{ effort: 'max' }],
+        },
+      ]),
+      stderr: '',
+    }));
+
+    await expect(
+      validateMatrixCell('codex', 'gpt-5.6-sol/max', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCodex }),
+        target: { model: 'gpt-5.6-sol', effort: 'max' },
+      }),
+    ).resolves.toBe('valid');
+  });
+
   it('reports unknown Codex model slugs from the debug catalog', async () => {
     const runCodex = vi.fn(async () => ({
       ok: true,

@@ -14,6 +14,7 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { mergeCodexConfigForRole } from '@providers/codex/codec/config-merge';
 import type { CodexRoleExport } from '@providers/codex/codec/export-to-codex';
 import { materializeCodexRole } from '@providers/codex/codec/materialize';
+import { withOatManagedCodexRoleOwner } from '@providers/codex/codec/shared';
 import type { ConcreteScope } from '@shared/types';
 import { Command, Option } from 'commander';
 
@@ -98,12 +99,19 @@ async function buildCodexMaterializePlan(
   const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
   const agentPath = resolveAgentPath(agentName, options, scopeRoot);
   const agent = await dependencies.parseCanonicalAgentFile(agentPath);
-  const role = dependencies.materializeCodexRole({
+  const materializedRole = dependencies.materializeCodexRole({
     agent,
     model,
     effort,
     roleName: options.roleName,
   });
+  const role = {
+    ...materializedRole,
+    content: withOatManagedCodexRoleOwner(
+      materializedRole.content,
+      scope === 'user' ? 'user-config' : 'project-config',
+    ),
+  };
   const rolePath = join(scopeRoot, '.codex', role.configFile);
   const configPath = join(scopeRoot, '.codex', 'config.toml');
 

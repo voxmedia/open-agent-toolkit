@@ -425,10 +425,7 @@ async function collectScopeReports(
     }
   }
 
-  if (
-    scope === 'project' &&
-    activeAdapters.some((adapter) => adapter.name === 'codex')
-  ) {
+  if (activeAdapters.some((adapter) => adapter.name === 'codex')) {
     const codexExtensionPlan =
       await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,

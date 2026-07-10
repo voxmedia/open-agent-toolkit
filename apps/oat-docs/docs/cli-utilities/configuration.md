@@ -214,6 +214,15 @@ oat config set workflow.dispatchCeiling.providers.codex high --shared
 oat config set workflow.dispatchCeiling.providers.claude opus --shared
 ```
 
+`oat config adopt dispatch-matrix` fills missing provider and tier cells; it
+does not replace explicit existing values. The bundled concrete recommendation
+is Codex `economy -> gpt-5.6-luna/high`, `balanced ->
+gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier ->
+gpt-5.6-sol/max`; Claude `economy/balanced -> sonnet`, `high -> opus`, and
+`frontier -> fable`. Cursor model strings are opaque and the bundled ladder is
+`gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
+`gpt-5.6-sol-max`.
+
 For ordered routes, edit the config JSON so a tier cell is an array. Route
 entries are either bare slugs or objects with `harness`, `model`, and optional
 `effort`:
@@ -266,9 +275,10 @@ target into a materialized OAT role name, for example
 `oat-phase-implementer-gpt-5-6-terra-xhigh`. OAT-managed Codex roles are not
 the old hard-coded effort-only pins; they come from resolver targets, dispatch
 matrix cells, or an explicit materialization command. Base roles such as
-`oat-phase-implementer` and `oat-reviewer` are fallback paths that follow the
-provider default effort when inherit/default behavior is selected or no
-materialized target resolves.
+`oat-phase-implementer` and `oat-reviewer` follow the provider default effort
+only for explicit inherit/default behavior and the documented managed-uncapped
+reviewer fallback. A missing managed target is unresolved at implementation
+preflight; it does not silently select a base role.
 
 Claude uses Task `model` (`haiku < sonnet < opus < fable`) and keeps
 `effort_axis=not-applicable`. Cursor and other model-arg providers use opaque
@@ -294,11 +304,24 @@ upserts `.codex/config.toml` unless `--dry-run` is present. `--agent-path` can
 point at a specific canonical agent markdown file, and `--role-name` can
 override the generated role name.
 
-Normal project sync also materializes Codex roles for configured matrix targets:
+Project sync always regenerates the supported catalogue for both
+`oat-phase-implementer` and `oat-reviewer`: Luna and Terra at `low`, `medium`,
+`high`, and `xhigh`, plus Sol at those efforts and `max` (26 pinned variants).
+It also materializes custom targets from shared config, repo-local config, and
+active-project state into the project's tracked `.codex` view. User-config
+custom targets materialize only under `~/.codex`.
 
 ```bash
 oat sync --scope project
+oat sync --scope user
+oat sync --scope all
 ```
+
+Generated role files carry an ownership marker (`supported-catalogue`,
+`project-config`, or `user-config`). Stale cleanup is limited to the owner being
+reconciled and preserves supported roles, roles owned by another config scope,
+and unrelated Codex entries. Materialization is best effort at sync/config
+boundaries; workflow correctness does not depend on provider hot reload.
 
 **Verify-on-upgrade:** when the requested tier exceeds the current orchestrator
 tier (an upgrade request), the resolver sets `verifyOnDispatch: true`. The skill

@@ -18,10 +18,19 @@ import { ensureDir, fileExists } from '@fs/io';
 import TOML from '@iarna/toml';
 import YAML from 'yaml';
 
+import {
+  SUPPORTED_CODEX_BASE_ROLES,
+  SUPPORTED_CODEX_ROLE_TARGETS,
+} from './catalog';
 import { type CodexManagedRoleConfig, mergeCodexConfig } from './config-merge';
 import { exportCanonicalAgentToCodexRole } from './export-to-codex';
 import { materializeCodexRole } from './materialize';
-import { isOatManagedCodexRoleFile } from './shared';
+import {
+  isOatManagedCodexRoleFile,
+  readOatManagedCodexRoleOwner,
+  withOatManagedCodexRoleOwner,
+  type CodexRoleOwner,
+} from './shared';
 
 export type CodexExtensionAction = 'create' | 'update' | 'remove' | 'skip';
 export type CodexExtensionTarget = 'role' | 'config';
@@ -61,6 +70,7 @@ interface DesiredCodexRole {
 interface CodexMaterializationTarget {
   model: string;
   effort: string;
+  owner: CodexRoleOwner;
 }
 
 interface CodexMaterializationTargetOptions {
@@ -69,10 +79,9 @@ interface CodexMaterializationTargetOptions {
   env?: NodeJS.ProcessEnv;
 }
 
-const CODEX_MATERIALIZED_BASE_ROLES = new Set([
-  'oat-phase-implementer',
-  'oat-reviewer',
-]);
+const CODEX_MATERIALIZED_BASE_ROLES = new Set<string>(
+  SUPPORTED_CODEX_BASE_ROLES,
+);
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex');
@@ -160,7 +169,10 @@ async function desiredRolesFromCanonical(
           description: materialized.description,
           configFile: materialized.configFile,
           rolePath: join(scopeRoot, '.codex', materialized.configFile),
-          content: materialized.content,
+          content: withOatManagedCodexRoleOwner(
+            materialized.content,
+            target.owner,
+          ),
         });
       }
     }
@@ -174,6 +186,7 @@ async function desiredRolesFromCanonical(
 function collectCodexTargetFromEntry(
   entry: WorkflowDispatchRouteEntry,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (typeof entry === 'string') {
     return;
@@ -188,28 +201,34 @@ function collectCodexTargetFromEntry(
     return;
   }
 
-  targets.set(`${entry.model}\0${entry.effort}`, {
-    model: entry.model,
-    effort: entry.effort,
-  });
+  const key = `${entry.model}\0${entry.effort}`;
+  if (!targets.has(key)) {
+    targets.set(key, {
+      model: entry.model,
+      effort: entry.effort,
+      owner,
+    });
+  }
 }
 
 function collectCodexTargetsFromCell(
   cell: WorkflowDispatchMatrixCell,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (typeof cell === 'string') {
     return;
   }
 
   for (const entry of cell) {
-    collectCodexTargetFromEntry(entry, targets);
+    collectCodexTargetFromEntry(entry, targets, owner);
   }
 }
 
 function collectCodexMaterializationTargetsFromProvider(
   providerValue: WorkflowDispatchProviderValue | undefined,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (providerValue === undefined || typeof providerValue === 'string') {
     return;
@@ -217,7 +236,7 @@ function collectCodexMaterializationTargetsFromProvider(
 
   for (const cell of Object.values(providerValue)) {
     if (cell !== undefined) {
-      collectCodexTargetsFromCell(cell, targets);
+      collectCodexTargetsFromCell(cell, targets, owner);
     }
   }
 }
@@ -255,6 +274,7 @@ function routeTargetFromUnknown(
 function collectCodexTargetsFromUnknownCell(
   value: unknown,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (typeof value === 'string' || !Array.isArray(value)) {
     return;
@@ -267,7 +287,7 @@ function collectCodexTargetsFromUnknownCell(
 
     const target = routeTargetFromUnknown(entry);
     if (target) {
-      collectCodexTargetFromEntry(target, targets);
+      collectCodexTargetFromEntry(target, targets, owner);
     }
   }
 }
@@ -275,13 +295,14 @@ function collectCodexTargetsFromUnknownCell(
 function collectCodexTargetsFromUnknownProvider(
   value: unknown,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return;
   }
 
   for (const cell of Object.values(value)) {
-    collectCodexTargetsFromUnknownCell(cell, targets);
+    collectCodexTargetsFromUnknownCell(cell, targets, owner);
   }
 }
 
@@ -337,7 +358,18 @@ async function collectProjectStateCodexTargets(
   collectCodexTargetsFromUnknownProvider(
     (matrix as Record<string, unknown>)['codex'],
     targets,
+    'project-config',
   );
+}
+
+function isUserCodexScope(
+  scopeRoot: string,
+  options: CodexMaterializationTargetOptions,
+): boolean {
+  if (!options.userConfigDir) {
+    return false;
+  }
+  return resolve(scopeRoot) === resolve(options.userConfigDir, '..');
 }
 
 async function readCodexMaterializationTargets(
@@ -351,12 +383,31 @@ async function readCodexMaterializationTargets(
     options.env,
   );
 
+  if (isUserCodexScope(scopeRoot, options)) {
+    collectCodexMaterializationTargetsFromProvider(
+      effectiveConfig.user.workflow?.dispatchCeiling?.providers?.codex,
+      targets,
+      'user-config',
+    );
+    return sortCodexMaterializationTargets(targets);
+  }
+
+  for (const target of SUPPORTED_CODEX_ROLE_TARGETS) {
+    targets.set(`${target.model}\0${target.effort}`, {
+      ...target,
+      owner: 'supported-catalogue',
+    });
+  }
+
   for (const providerValue of [
-    effectiveConfig.user.workflow?.dispatchCeiling?.providers?.codex,
     effectiveConfig.shared.workflow?.dispatchCeiling?.providers?.codex,
     effectiveConfig.local.workflow?.dispatchCeiling?.providers?.codex,
   ]) {
-    collectCodexMaterializationTargetsFromProvider(providerValue, targets);
+    collectCodexMaterializationTargetsFromProvider(
+      providerValue,
+      targets,
+      'project-config',
+    );
   }
 
   await collectProjectStateCodexTargets(scopeRoot, options, targets);
@@ -401,6 +452,8 @@ async function collectStaleManagedRoles(
   scopeRoot: string,
   existingConfigContent: string | null,
   desiredRoleNames: Set<string>,
+  cleanupOwner: CodexRoleOwner,
+  removeLegacyProjectRoles: boolean,
 ): Promise<string[]> {
   const agents = parseConfigAgentTable(existingConfigContent);
   const stale = new Set<string>();
@@ -418,6 +471,17 @@ async function collectStaleManagedRoles(
     const rolePath = join(scopeRoot, '.codex', configFile);
     const roleContent = await readOptionalFile(rolePath);
     if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
+      continue;
+    }
+
+    const owner = readOatManagedCodexRoleOwner(roleContent);
+    const legacyProjectRole =
+      removeLegacyProjectRoles &&
+      owner === null &&
+      SUPPORTED_CODEX_BASE_ROLES.some((baseRole) =>
+        roleName.startsWith(`${baseRole}-`),
+      );
+    if (owner !== cleanupOwner && !legacyProjectRole) {
       continue;
     }
 
@@ -445,6 +509,17 @@ async function collectStaleManagedRoles(
     const rolePath = join(agentsDir, roleFile);
     const roleContent = await readOptionalFile(rolePath);
     if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
+      continue;
+    }
+
+    const owner = readOatManagedCodexRoleOwner(roleContent);
+    const legacyProjectRole =
+      removeLegacyProjectRoles &&
+      owner === null &&
+      SUPPORTED_CODEX_BASE_ROLES.some((baseRole) =>
+        roleName.startsWith(`${baseRole}-`),
+      );
+    if (owner !== cleanupOwner && !legacyProjectRole) {
       continue;
     }
 
@@ -482,6 +557,8 @@ export async function computeCodexProjectExtensionPlan(
         scopeRoot,
         existingConfigContent,
         desiredRoleNames,
+        isUserCodexScope(scopeRoot, options) ? 'user-config' : 'project-config',
+        !isUserCodexScope(scopeRoot, options),
       );
 
   if (isPartialSync && desiredRoles.length === 0) {

@@ -1272,7 +1272,7 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain(
         'workflow.dispatchCeiling.providers.codex',
       );
-      expect(capture.error[0]).toContain('low | medium | high | xhigh');
+      expect(capture.error[0]).toContain('low | medium | high | xhigh | max');
     });
 
     it('rejects invalid closed-provider tier values before validation or save', async () => {
@@ -1372,6 +1372,63 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('2026-07-07.1');
       expect(capture.warn).toHaveLength(0);
       expect(process.exitCode).toBe(0);
+    });
+
+    it('ships the confirmed Codex, Claude, and Cursor recommendation ladder', async () => {
+      const recommendation = JSON.parse(
+        await readFile(
+          join(process.cwd(), 'config', 'dispatch-matrix-recommendation.json'),
+          'utf8',
+        ),
+      ) as Record<string, unknown>;
+
+      expect(recommendation).toEqual({
+        version: '2026-07-10.1',
+        providers: {
+          codex: {
+            economy: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-luna',
+                effort: 'high',
+              },
+            ],
+            balanced: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-terra',
+                effort: 'xhigh',
+              },
+            ],
+            high: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: 'high',
+              },
+            ],
+            frontier: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: 'max',
+              },
+            ],
+          },
+          claude: {
+            economy: 'sonnet',
+            balanced: 'sonnet',
+            high: 'opus',
+            frontier: 'fable',
+          },
+          cursor: {
+            economy: 'gpt-5.6-luna-high',
+            balanced: 'gpt-5.6-terra-xhigh',
+            high: 'gpt-5.6-sol-high',
+            frontier: 'gpt-5.6-sol-max',
+          },
+        },
+      });
     });
 
     it('rejects invalid closed-provider values during dispatch matrix recommendation adoption', async () => {
@@ -1539,7 +1596,7 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('does not overwrite an existing dispatch matrix without explicit confirmation', async () => {
+    it('fills missing dispatch matrix cells while preserving explicit values', async () => {
       const root = await createRepoRoot();
       await writeFile(
         join(root, '.oat', 'config.json'),
@@ -1557,11 +1614,18 @@ describe('oat config', () => {
       const { command, capture } = createHarness({
         cwd: root,
         confirmResponses: [false],
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
         assetFiles: {
           '/tmp/assets/config/dispatch-matrix-recommendation.json':
             JSON.stringify({
               version: 'new',
-              providers: { cursor: { high: 'replacement-model' } },
+              providers: {
+                cursor: {
+                  economy: 'recommended-economy',
+                  high: 'replacement-model',
+                },
+                claude: { high: 'opus' },
+              },
             }),
         },
       });
@@ -1572,16 +1636,22 @@ describe('oat config', () => {
       expect(JSON.parse(raw)).toMatchObject({
         workflow: {
           dispatchCeiling: {
-            recommendationVersion: 'old',
-            providers: { cursor: { high: 'existing-model' } },
+            recommendationVersion: 'new',
+            providers: {
+              cursor: {
+                economy: 'recommended-economy',
+                high: 'existing-model',
+              },
+              claude: { high: 'opus' },
+            },
           },
         },
       });
-      expect(capture.error[0]).toContain('Dispatch matrix adoption cancelled');
-      expect(process.exitCode).toBe(1);
+      expect(capture.error).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
     });
 
-    it('overwrites an existing dispatch matrix when adoption is explicitly confirmed', async () => {
+    it('preserves explicit values even when --yes is supplied', async () => {
       const root = await createRepoRoot();
       await writeFile(
         join(root, '.oat', 'config.json'),
@@ -1609,14 +1679,19 @@ describe('oat config', () => {
         },
       });
 
-      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      await runCommand(command, [
+        'adopt',
+        'dispatch-matrix',
+        '--shared',
+        '--yes',
+      ]);
 
       const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
       expect(JSON.parse(raw)).toMatchObject({
         workflow: {
           dispatchCeiling: {
             recommendationVersion: 'new',
-            providers: { cursor: { high: 'replacement-model' } },
+            providers: { cursor: { high: 'existing-model' } },
           },
         },
       });
@@ -2009,7 +2084,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain(
         'Key: workflow.dispatchCeiling.providers.codex',
       );
-      expect(capture.info[0]).toContain('low | medium | high | xhigh');
+      expect(capture.info[0]).toContain('low | medium | high | xhigh | max');
       expect(capture.info[0]).toContain('Default: unset');
       expect(process.exitCode).toBe(0);
     });

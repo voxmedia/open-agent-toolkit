@@ -1,5 +1,6 @@
 # oat-managed: true
 # oat-role: oat-phase-implementer-gpt-5-6-sol-max
+# oat-owner: supported-catalogue
 model = "gpt-5.6-sol"
 model_reasoning_effort = "max"
 developer_instructions = """

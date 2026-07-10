@@ -272,6 +272,7 @@ describe('oat providers codex materialize', () => {
 
     expect(roleContent).toContain('model = "gpt-5.6-sol"');
     expect(roleContent).toContain('model_reasoning_effort = "xhigh"');
+    expect(roleContent).toContain('# oat-owner: project-config');
     expect(parsedConfig.title).toBe('Custom');
     expect(features.custom).toBe(true);
     expect(features.multi_agent).toBe(true);
@@ -291,5 +292,37 @@ describe('oat providers codex materialize', () => {
     expect(process.exitCode).toBe(0);
     expect(await readFile(rolePath, 'utf8')).toBe(roleContent);
     expect(await readFile(configPath, 'utf8')).toBe(configContent);
+  });
+
+  it('marks manually materialized user roles as user-config owned', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-home-'));
+    tempDirs.push(root, home);
+    await writeAgent(home, 'oat-reviewer');
+    const { command } = createHarness({ cwd: root, home });
+
+    await runCommand(command, {
+      globalArgs: ['--cwd', root, '--json'],
+      commandArgs: [
+        'oat-reviewer',
+        '--scope',
+        'user',
+        '--model',
+        'gpt-5.7-user-custom',
+        '--effort',
+        'high',
+      ],
+    });
+
+    const roleContent = await readFile(
+      join(
+        home,
+        '.codex',
+        'agents',
+        'oat-reviewer-gpt-5-7-user-custom-high.toml',
+      ),
+      'utf8',
+    );
+    expect(roleContent).toContain('# oat-owner: user-config');
   });
 });
