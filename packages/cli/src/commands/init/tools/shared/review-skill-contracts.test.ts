@@ -201,8 +201,8 @@ describe('review skill contracts', () => {
     expect(combined).toContain(
       'Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`',
     );
-    expect(combined).toContain(
-      'Use base `oat-phase-implementer` only when the resolver returns no `dispatchArgs.variant`',
+    expect(implementerContent).toMatch(
+      /Use base `oat-phase-implementer` only (?:for the allowed exceptions above|when the resolver returns no `dispatchArgs\.variant`)/,
     );
     expect(combined).toContain(
       'derive `model_axis` and `effort_axis` from resolver output',

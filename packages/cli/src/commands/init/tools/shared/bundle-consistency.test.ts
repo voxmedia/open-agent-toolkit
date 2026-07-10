@@ -82,6 +82,13 @@ function getMigrationPromptSourcePath(): string {
   );
 }
 
+function getDispatchMatrixRecommendationSourcePath(): string {
+  return join(
+    import.meta.dirname,
+    '../../../../../config/dispatch-matrix-recommendation.json',
+  );
+}
+
 /**
  * Extract the canonical decision-index header row from the live CLI render
  * logic, so the regression assertion below pins the migration prompt asset to
@@ -434,8 +441,14 @@ describe('bundle-assets.sh consistency', () => {
           version?: unknown;
           providers?: Record<string, unknown>;
         };
+        const sourceRecommendation = JSON.parse(
+          readFileSync(getDispatchMatrixRecommendationSourcePath(), 'utf8'),
+        ) as {
+          version?: unknown;
+          providers?: Record<string, unknown>;
+        };
 
-        expect(recommendation.version).toBe('2026-07-07.1');
+        expect(recommendation).toEqual(sourceRecommendation);
         expect(recommendation.providers?.codex).toBeDefined();
         expect(recommendation.providers?.claude).toBeDefined();
         expect(recommendation.providers?.cursor).toBeDefined();

@@ -54,6 +54,7 @@ You will be given a "Review Scope" block including:
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
 - **oat_review_invocation**: Optional provenance selector for artifact-mode reviews. Use `manual`, `auto`, or `gate`; default to `manual` when absent.
+- **Gate invocation fields**: For `oat_review_invocation: gate`, the prompt supplies exact `oat_gate_run_id`, `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`, `oat_invocation_reasoning_effort`, and `oat_invocation_source` values. Copy them verbatim into artifact frontmatter. They describe OAT's configured invocation, not model self-identification.
 - **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
 - **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `provider-default`, `inherited`, `not-applicable`, or `host-auto`)
 - **dispatch_policy**: Optional resolved policy label (`economy`, `balanced`, `high`, `frontier`, `uncapped`, `inherit host defaults`, or `legacy capped`)
@@ -307,6 +308,13 @@ oat_review_scope: { scope }
 oat_review_type: { code|artifact|analysis }
 oat_review_invocation: { manual|auto|gate }
 oat_project: { project-path }
+# Gate-only: copy the exact prompt-provided fields below.
+oat_gate_run_id: { gate run id }
+oat_gate_target: { configured target id }
+oat_gate_runtime: { configured runtime }
+oat_invocation_model: { configured model|provider-default|unknown }
+oat_invocation_reasoning_effort: { configured effort|provider-default|unknown }
+oat_invocation_source: { exec-target-config|unknown }
 ---
 
 # {Code|Artifact|Analysis} Review: {scope}
@@ -389,6 +397,8 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 ```
 
 Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings: {N} critical, {N} important, {N} medium, {N} minor` count line or the standard `## Findings` sections shown above with every severity subsection present.
+
+For gate-originated artifacts, all six gate-only fields are required when the prompt supplies gate context. Copy the values exactly. Do not parse the provider command, infer values from the target id, or replace configured values with observed/self-reported identity. Any optional self-report belongs in review prose and is non-authoritative; the gate validates the copied frontmatter against its immutable configured invocation record before applying severity thresholds.
 
 
 ### Step 9: Return Confirmation
