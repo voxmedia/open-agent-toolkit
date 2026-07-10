@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t26
+oat_current_task_id: p04-t29
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 30    | 25/30     |
+| p04   | in_progress | 30    | 28/30     |
 
-**Total:** 48/53 tasks completed
+**Total:** 51/53 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -435,7 +435,17 @@ oat_generated: false
 - Resolution fails closed for above-ceiling, absent, malformed, ambiguous, reviewer, and direct-role-name requests; fallback-route escalation remains distinct from candidate ordering.
 - RED/GREEN verification passed 121 focused dispatch/registry assertions and CLI type-check, including High-to-Luna/Terra, Frontier-only rejection, and Balanced Terra/medium versus absent Terra/xhigh coverage.
 
-### Tasks p04-t28 through p04-t30: Adaptive dispatch ceilings
+### Task p04-t28: Materialize every configured Codex ladder candidate
+
+**Status:** completed
+**Commit:** `57dea10a`
+
+- Project and user sync now materialize every unique direct Codex ladder candidate and every native Codex entry in explicit candidate fallback routes for both managed base roles.
+- Existing map ordering preserves first-owner precedence, supported-catalogue ownership, deterministic collision handling, and scope-specific stale cleanup; cross-harness entries remain excluded.
+- Project coverage proves 32 managed roles for two base roles plus 26 supported and four custom variants. Active-project-state coverage proves three custom candidates, and the real user scanner proves four user-owned custom variants.
+- RED/GREEN verification passed 46 focused sync/codec assertions, CLI type-check, and a zero-operation project sync dry-run; the second generated view is byte-identical.
+
+### Tasks p04-t29 through p04-t30: Adaptive dispatch ceilings
 
 **Status:** pending
 
@@ -1085,6 +1095,7 @@ oat_generated: false
 | p04-t23    | RED/GREEN incompatible-pair matrix; 141 focused identity/gate assertions; CLI type-check                              | 141    | 0      | Canonical dispatch pairs before producer aggregation          |
 | p04-t24    | RED/GREEN mode-specific tier-3 routing; 60 focused contracts; 53 skills; format; release                              | 60     | 0      | Interrupted quick review resumes through quick-start          |
 | p04-t25    | RED/GREEN user Codex ownership docs; 61 focused contracts; 532 links; format; release                                 | 61     | 0      | Shipped materialization guidance and bundled-doc parity       |
+| p04-t28    | RED/GREEN project/user ladder materialization; 46 focused assertions; type-check; project sync                        | 46     | 0      | All candidates, scoped ownership, byte-identical second sync  |
 
 ## Final Summary (for PR/docs)
 

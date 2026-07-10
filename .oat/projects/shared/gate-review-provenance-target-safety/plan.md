@@ -1580,7 +1580,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t28: Materialize every configured Codex ladder candidate
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
