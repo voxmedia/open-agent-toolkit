@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** all tasks complete; awaiting final review cycle 3 and explicit p04 HiLL approval (19/19)
+**Implementation Status:** cycle-3 final-review fixes queued (19/25)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1342,21 +1342,198 @@ Expected: the `rg` command has no matches and all focused tests pass.
 
 ---
 
+### Task p04-t20: (final review) Enforce realpath-aware project containment
+
+**Status:** pending
+**Finding:** `I1` (Important; Large; `code_fix_required`)
+
+**Files:**
+
+- Modify: `packages/cli/src/fs/paths.ts`
+- Test: `packages/cli/src/fs/paths.test.ts`
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Test: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Test: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Test: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Steps:**
+
+1. Add RED regressions for repo-relative symlinks whose real targets escape the repository through explicit gate `--project`, local `activeProject`, and explicit project-sync paths. Cover an in-repo real target so valid containment still works.
+2. Introduce one shared realpath-aware containment helper that validates both lexical and resolved-real paths before any project `state.md` or `reviews/` read.
+3. Apply the helper consistently to declared gate projects, active-project normalization, and Codex project materialization. Fail closed when the path is missing, unreadable, or resolves outside the repository.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/fs/paths.test.ts src/config/oat-config.test.ts src/commands/gate/index.test.ts src/providers/codex/codec/sync-extension.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(config): enforce realpath project containment`
+
+---
+
+### Task p04-t21: (final review) Compose managed Codex inputs in user status
+
+**Status:** pending
+**Finding:** `I2` (Important; Moderate; `code_fix_required`)
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Test: `packages/cli/src/commands/status/index.test.ts`
+
+**Steps:**
+
+1. Add RED user-status regressions with a real custom Codex target and drift in each managed base role.
+2. Give status the same narrowly scoped `scanBundledManagedCodexAgents()` dependency used by sync and compose those entries only for the user-scope Codex extension plan.
+3. Preserve generic user scanning as skills-only and verify project scope and non-Codex providers do not receive bundled agent entries.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/status/index.test.ts src/commands/sync/index.test.ts src/engine/scanner.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(status): compose user Codex materialization inputs`
+
+---
+
+### Task p04-t22: (final review) Parse managed Codex ownership from headers only
+
+**Status:** pending
+**Finding:** `M1` (Medium; Moderate; `code_fix_required`)
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/shared.ts`
+- Add/Test: `packages/cli/src/providers/codex/codec/shared.test.ts`
+- Test: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Steps:**
+
+1. Add RED cases for marker-like text inside TOML multiline bodies, duplicate/conflicting header markers, and owner rewrites when body text contains `# oat-owner:` examples.
+2. Parse only the contiguous leading OAT comment header, require one well-formed managed marker and role marker, and accept at most one valid owner marker.
+3. Make ownership reads and rewrites operate only on that header. Treat malformed/conflicting headers as unowned so stale cleanup cannot delete them.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/shared.test.ts src/providers/codex/codec/sync-extension.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(codex): parse managed role headers safely`
+
+---
+
+### Task p04-t23: (final review) Enforce canonical dispatch action-role pairs
+
+**Status:** pending
+**Finding:** `M2` (Medium; Moderate; `code_fix_required`)
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/identity/stamp.ts`
+- Test: `packages/cli/src/providers/identity/stamp.test.ts`
+- Test: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `.oat/projects/shared/gate-review-provenance-target-safety/implementation.md`
+
+**Steps:**
+
+1. Add RED parser and exact/final/range aggregation cases for both directions of incompatible action/role pairs.
+2. Accept only `implementation/implementer`, `fix/fix`, and `review/reviewer`; warn and reject every incompatible modern stamp before producer aggregation.
+3. Correct the remaining historical `scope=p00 action=fix role=implementer` record to `role=fix` without changing its producer, provenance, model axes, policy, ceiling, or target.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/stamp.test.ts src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(identity): reject incompatible dispatch stamps`
+
+---
+
+### Task p04-t24: (final review) Resume interrupted quick-plan review
+
+**Status:** pending
+**Finding:** `M3` (Medium; Moderate; `code_fix_required`)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-next/SKILL.md`
+- Test: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: bundled skill assets
+
+**Steps:**
+
+1. Add a RED routing-table contract for a quick plan that is `in_progress`, not ready, and template-owned before review disposition.
+2. Route quick-mode plan tier 3 back to `oat-project-quick-start`; preserve import tier 3 to `oat-project-import-plan` and spec-driven tier 3 to `oat-project-plan`.
+3. Bump `oat-project-next` once from `1.0.5` to `1.0.6`, regenerate bundled assets, and keep the existing PR-scoped public-package version at `0.1.47`.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `fix(workflow): resume interrupted quick plan review`
+
+---
+
+### Task p04-t25: (final review) Correct user Codex materialization guidance
+
+**Status:** pending
+**Finding:** `M4` (Medium; Minor; `artifact_alignment_required`)
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Test: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: bundled docs assets
+
+**Steps:**
+
+1. Replace the stale claim that user-scope Codex role generation is deferred with the shipped ownership contract: user-config roles materialize under `~/.codex`, while project-config and supported-catalogue roles remain project-scoped and version controlled.
+2. Add a semantic contract that requires the current user-scope behavior and rejects the deferred-generation wording in the review guide.
+3. Regenerate bundled docs and verify byte parity without another public-package version bump.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm docs:check-links
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `docs(sync): correct user Codex materialization guidance`
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed   | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed   | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed   | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | received | 2026-07-10 | reviews/final-review-2026-07-10T134214Z.md                  |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed      | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T134214Z.md         |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -1368,14 +1545,14 @@ Expected: the `rg` command has no matches and all focused tests pass.
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
-- Phase 4: 19 tasks - shared opt-in setup, safety/release work, one phase review fix, and fifteen final review fixes
+- Phase 4: 25 tasks - shared opt-in setup, safety/release work, one phase review fix, and twenty-one final review fixes
 
-**Total: 42 tasks**
+**Total: 48 tasks**
 
 Phase 0 through Phase 4 reviews have passed. The first final review added ten
-fix tasks; the latest final re-review added five supplemental fix tasks. All
-fixes are complete; final review cycle 3 and explicit p04 HiLL approval remain
-pending.
+fix tasks; cycle 2 added five supplemental fix tasks; and cycle 3 added six more
+tasks. Execute `p04-t20` through `p04-t25` before any further final review or
+explicit p04 HiLL approval.
 
 ## References
 

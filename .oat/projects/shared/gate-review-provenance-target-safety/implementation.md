@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p04-t20
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 19    | 19/19     |
+| p04   | in_progress | 25    | 19/25     |
 
-**Total:** 42/42 tasks completed
+**Total:** 42/48 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** supplemental final-review fixes completed; awaiting final review cycle 3 and explicit p04 HiLL approval (19/19)
+**Status:** cycle-3 final-review fixes queued (19/25)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -345,16 +345,64 @@ oat_generated: false
 
 - Three p04 review-fix run records now use canonical `action=fix role=fix` grammar while retaining their exact scope, unknown producer provenance, Sol/high model axes, dispatch policy, ceiling, and target identity.
 - Identity parsing now recognizes 12 final-scope contributor stamps, including all four p04 implementation/fix stamps.
-- All 42 planned tasks and all 19 p04 tasks are complete. Final review cycle 3 and explicit p04 HiLL approval remain pending.
+- The pre-cycle-3 plan reached 42/42 tasks and p04 19/19 before the next final review introduced the tasks below.
+
+### Task p04-t20: (final review) Enforce realpath-aware project containment
+
+**Status:** pending
+**Finding:** `I1` (Important; Large; `code_fix_required`)
+
+- Reject symlink escapes for declared gate projects, local active projects, and explicit project-sync paths through one shared realpath-aware containment contract.
+- Add gate, config, filesystem-path, and Codex materialization regressions before changing the readers.
+
+### Task p04-t21: (final review) Compose managed Codex inputs in user status
+
+**Status:** pending
+**Finding:** `I2` (Important; Moderate; `code_fix_required`)
+
+- Make user-scope status compose the same bundled managed Codex base agents used by user sync.
+- Cover a custom user target plus drift in both base roles without leaking agent inputs into generic user scanning.
+
+### Task p04-t22: (final review) Parse managed Codex ownership from headers only
+
+**Status:** pending
+**Finding:** `M1` (Medium; Moderate; `code_fix_required`)
+
+- Restrict managed-role and owner markers to one well-formed contiguous leading OAT header block.
+- Ignore body examples, reject duplicate/conflicting markers, and prevent unsafe stale cleanup or body mutation.
+
+### Task p04-t23: (final review) Enforce canonical dispatch action-role pairs
+
+**Status:** pending
+**Finding:** `M2` (Medium; Moderate; `code_fix_required`)
+
+- Reject action/role mismatches before exact or aggregate producer resolution.
+- Correct the remaining historical `scope=p00 action=fix role=implementer` record without changing its identity metadata.
+
+### Task p04-t24: (final review) Resume interrupted quick-plan review
+
+**Status:** pending
+**Finding:** `M3` (Medium; Moderate; `code_fix_required`)
+
+- Route quick-mode pre-review tier-3 plans back to `oat-project-quick-start` so review disposition can resume.
+- Preserve spec-driven and import routing, bump `oat-project-next` once, and regenerate bundled skills.
+
+### Task p04-t25: (final review) Correct user Codex materialization guidance
+
+**Status:** pending
+**Finding:** `M4` (Medium; Minor; `artifact_alignment_required`)
+
+- Replace deferred user-scope role-generation guidance with shipped `~/.codex` user-config materialization behavior.
+- Add a semantic docs contract and regenerate bundled docs.
 
 ### Phase Summary
 
-- **Outcome:** The original 14 p04 tasks are complete. The latest final re-review added five supplemental fixes for immutable artifact evaluation, active-project containment, provider model binding, plan-readiness ordering, and dispatch-stamp tracking.
+- **Outcome:** The first 19 p04 tasks are complete. Final review cycle 3 added six sequential fixes for realpath containment, user-status input composition, managed-role header parsing, dispatch-pair validation, quick-plan resumption, and user-scope docs parity.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The latest final review is `fixes_completed`. Run final review cycle 3 before explicit p04 HiLL approval.
+- **Review status:** Final review cycle 3 is `fixes_added`. Execute `p04-t20` through `p04-t25` before any further review or explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
@@ -887,7 +935,39 @@ oat_generated: false
 
 **Deferred Findings Ledger:** None. Automatic disposition converted or resolved every finding.
 
-**Next:** Supplemental fixes `p04-t15` through `p04-t19` are complete and the final review is `fixes_completed`. Run final review cycle 3 before explicit p04 HiLL approval.
+**Next:** Supplemental fixes `p04-t15` through `p04-t19` completed; the cycle-3 final review received below supersedes this handoff.
+
+### Review Received: final (cycle 3)
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/final-review-2026-07-10T134214Z.md`
+**Review cycle:** 3 of 3
+**Invocation:** `auto`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 4
+- Minor: 1
+
+**New tasks added:** `p04-t20` through `p04-t25`
+
+**Disposition:**
+
+- `I1` agreed, `Large`, `code_fix_required` -> `p04-t20`: enforce realpath-aware containment for declared gate projects, active projects, and project-scoped Codex materialization.
+- `I2` agreed, `Moderate`, `code_fix_required` -> `p04-t21`: compose bundled managed Codex base agents into user-scope status exactly as user sync does.
+- `M1` agreed, `Moderate`, `code_fix_required` -> `p04-t22`: parse and rewrite ownership only in a well-formed leading OAT header block.
+- `M2` agreed, `Moderate`, `code_fix_required` -> `p04-t23`: enforce canonical action/role pairs before exact or aggregate producer resolution.
+- `M3` agreed, `Moderate`, `code_fix_required` -> `p04-t24`: route interrupted quick pre-review plans back to quick-start for review resumption.
+- `M4` agreed, `Minor`, `artifact_alignment_required` -> `p04-t25`: replace stale user-scope materialization guidance and regenerate bundled docs.
+- `m1` agreed, `Negligible`, `artifact_alignment_required`: resolved during receive bookkeeping by adding `p04-t15` through `p04-t19` to the verification ledger and final PR/docs summary.
+
+**Deferred Findings Ledger:** None. Auto-disposition converted all Important and Medium findings; the sole Minor was resolved in tracking.
+
+**Review-cycle limit:** This is standard review cycle 3 of 3. After the new fixes complete, any additional automated final review requires explicit user override before p04 HiLL approval.
+
+**Next:** Execute `p04-t20` through `p04-t25` with `oat-project-implement`. Then mark final review `fixes_completed`; do not request p04 HiLL approval until the final-review disposition is resolved.
 
 ## Deviations from Plan / Design
 
@@ -946,6 +1026,11 @@ oat_generated: false
 | p04 final  | 129 focused assertions; 2,561 workspace assertions; skills; links; sync; format; lint; types; builds; release         | 2701   | 0      | Committed-tree final verification                             |
 | p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
 | p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing |
+| p04-t15    | 143 focused gate/parser assertions; CLI type-check                                                                    | 143    | 0      | Immutable correlated snapshot and in-memory normalization     |
+| p04-t16    | 86 focused config/sync assertions; CLI type-check; zero-op project sync                                               | 86     | 0      | Lexical active-project containment before materialization     |
+| p04-t17    | 58 focused skill contracts; 53-skill validation; docs links; format; release                                          | 58     | 0      | Concrete reviewer model payloads across providers             |
+| p04-t18    | 59 focused skill contracts; 53-skill validation; format; bundled parity; release                                      | 59     | 0      | Durable quick/import readiness after review disposition       |
+| p04-t19    | 130 focused identity/gate assertions; format                                                                          | 130    | 0      | Canonical p04 fix stamps and aggregate contributor recovery   |
 
 ## Final Summary (for PR/docs)
 
@@ -964,7 +1049,16 @@ ownership references now match shipped behavior. Live lifecycle gate commands
 declare the project, carry exact configured invocation metadata, and produce an
 idempotent user Codex role surface before the next provider session starts.
 
-All 42 planned tasks are complete and p04 is at 19 of 19. The latest final
-review is `fixes_completed`; final review cycle 3 and explicit p04 HiLL approval
-remain pending. No canonical skill received another version bump, and all five
-public packages remain at `0.1.47`.
+Cycle-2 supplemental fixes `p04-t15` through `p04-t19` made correlated gate
+evaluation snapshot-stable, added lexical active-project containment, bound
+Claude and Cursor reviewer models to actual invocations, delayed quick/import
+readiness until review disposition was durable, and normalized p04 fix stamps
+for aggregate producer accounting. Their focused verification is now recorded
+in the ledger above.
+
+Final review cycle 3 found the remaining realpath, user-status, header-marker,
+dispatch-pair, quick-resumption, and docs-parity gaps. Those findings are queued
+as `p04-t20` through `p04-t25`: 42 of 48 tasks are complete and p04 is 19 of 25.
+The final review is `fixes_added`; explicit p04 HiLL approval remains blocked
+until the tasks and review disposition are complete. No additional public
+package version bump has been made; all five packages remain at `0.1.47`.
