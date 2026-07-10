@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T10:22:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T10:33:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 27 of 27 planned tasks are complete. The p04 review fix is complete and awaits independent re-review; final review remains pending.
+Implementation - 27 of 27 planned tasks are complete and every phase review has passed. Final review remains pending.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 27 of 27 planned tasks are complete. The p04 review fix is comp
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (27/27 tasks complete; p04 re-review and final review pending)
+- **Implementation:** `implementation.md` (27/27 tasks complete; phase reviews passed; final review pending)
 
 ## Progress
 
@@ -147,7 +147,9 @@ Implementation - 27 of 27 planned tasks are complete. The p04 review fix is comp
 - ✓ Final focused, workspace, docs, release, sync-idempotence, and diff verification passed
 - ✓ `p04-t04` preserves complete explicit phase-review values across quick/import plan rewrites
 - ✓ Focused, 53-skill, all-scope sync/idempotence, format, lint, type-check, and five-package release validation passed
-- ⧗ p04 review fixes complete; awaiting independent p04 re-review, then final review
+- ✓ Independent p04 re-review closed I1 with no findings
+- ✓ p04 review status advanced to `passed`
+- ⧗ Full-project final review pending before explicit p04 HiLL approval
 
 ## Blockers
 
@@ -155,4 +157,4 @@ None
 
 ## Next Milestone
 
-Run the independent p04 re-review. After p04 passes, run the final code review; do not mark the project complete before both are closed.
+Run the full-project final code review. After final review passes, request explicit p04 HiLL approval before lifecycle finalization.

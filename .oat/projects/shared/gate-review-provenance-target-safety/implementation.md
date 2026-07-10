@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** review fixes completed; awaiting independent re-review
+**Status:** completed; independent re-review passed
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -216,7 +216,7 @@ oat_generated: false
 - **Verification:** 54 focused skill-contract assertions; validation of all 53 OAT skills; all-scope sync followed by a zero-operation dry-run across 318 provider entries; 49 affected integration/bundle-contract assertions; the full workspace suite with 10 successful Turbo tasks and 2,451 CLI assertions; lint, format, type-check, build, docs build, 532-link crawl, and five-package release validation.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The p04 review fix is complete and self-verified. Independent p04 re-review and final review remain pending and were not performed in this run.
+- **Review status:** The independent p04 re-review closed I1 with no findings. Final review remains pending.
 
 ## Orchestration Runs
 
@@ -635,6 +635,24 @@ oat_generated: false
 - Focused validation passed 54 assertions; all 53 OAT skills validated; format, lint, and type-check passed; release validation packed and verified all five public packages at `0.1.47`.
 
 **Next:** Run an independent p04 re-review. Do not run final review until p04 passes.
+
+### Review Received: p04 Re-review
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p04-re-review-2026-07-10T102633Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None; the fix-scoped re-review passed without findings.
+
+**Review outcome:** Passed. I1 is closed, the complete explicit phase-review value survives both quick and import rewrite boundaries, and p04 may advance to the configured final review at its HiLL checkpoint.
+
+**Next:** Run the full-project final review before requesting explicit p04 HiLL approval.
 
 ## Deviations from Plan / Design
 

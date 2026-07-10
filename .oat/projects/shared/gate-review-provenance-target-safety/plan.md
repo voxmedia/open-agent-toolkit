@@ -516,7 +516,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ## Phase 2: Declared Review Target Safety
 
-**Implementation Status:** review fixes completed; awaiting independent re-review
+**Implementation Status:** completed; independent re-review passed
 
 > **Phase review note:** p02 intentionally defers the single PR-scoped version bumps for `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until their final edits in p04-t02. Do not flag those interim versions as missing bumps.
 
@@ -910,19 +910,19 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed   | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed   | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | received | 2026-07-10 | reviews/p04-re-review-2026-07-10T102633Z.md                 |
-| final  | code     | pending  | -          | -                                                           |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed  | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed  | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed  | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed  | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed  | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -938,8 +938,7 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 
 **Total: 27 tasks**
 
-Phase 0 through Phase 3 reviews have passed. The Phase 4 review fix is complete
-and awaits independent p04 re-review; final review remains pending.
+Phase 0 through Phase 4 reviews have passed. The final review remains pending.
 
 ## References
 
