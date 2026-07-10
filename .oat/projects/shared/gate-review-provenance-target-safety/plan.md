@@ -47,6 +47,8 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
+**Status:** completed (`0129dd3d`)
+
 **Files:**
 
 - Modify: `packages/cli/src/config/oat-config.ts`

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p00-t01
+oat_current_task_id: p00-t02
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p00   | in_progress | 3     | 0/3       |
+| p00   | in_progress | 3     | 1/3       |
 | p01   | pending     | 4     | 0/4       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 0/14 tasks completed
+**Total:** 1/14 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -32,12 +32,12 @@ oat_generated: false
 
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `0129dd3d`
 
 ### Task p00-t02: Generate the supported catalogue and scoped custom roles
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
@@ -163,6 +163,9 @@ oat_generated: false
   - `m2` resolved in `plan.md` by adding executable live Codex and Cursor implementer/reviewer preflight commands after restoring Frontier Sol/max.
   - `m3` resolved in `plan.md` by keeping exact Cursor compilation coverage in p00-t01 and limiting p00-t03 to workflow dispatch contracts.
 - The passing plan gate did not require re-review after these wording-only fixes. Implementation resumed at `p00-t01` with the preserved failing tests.
+- `p00-t01` completed in `0129dd3d`: managed preflight now fails closed when the active provider cannot compile concrete controls, Codex `max` is ordered and materializable, lower preferred efforts retain their corresponding model-plus-effort target, and all four configured Cursor model strings round-trip unchanged for implementer and reviewer resolution.
+- Focused verification passed 156 tests across resolver, config, and adapter coverage; CLI type-check passed. Live Codex and Cursor implementer/reviewer preflight all resolved enforced controls under the user's managed `high` policy.
+- Updated the user-scoped Codex Frontier matrix cell in `~/.oat/config.json` from `gpt-5.6-sol/xhigh` to `gpt-5.6-sol/max`; all other user matrix choices were preserved.
 
 ## Deviations from Plan / Design
 
@@ -172,9 +175,9 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| -     | -         | -      | -      | -        |
+| Phase   | Tests Run                                                                         | Passed | Failed | Coverage                                             |
+| ------- | --------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------- |
+| p00-t01 | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight |
 
 ## Final Summary (for PR/docs)
 
