@@ -212,11 +212,12 @@ oat_generated: false
 ### Task p04-t05: (final review) Materialize user-owned Codex targets safely
 
 **Status:** completed
-**Commit:** `37b6defc`
+**Commits:** `37b6defc`, `a1eb5e93`
 
 - The real user-scope scanner exposes only the finite canonical implementer and reviewer definitions required to expand configured user targets.
 - Full user sync fails closed before stale cleanup when either required canonical definition is unavailable, while preserving artifacts owned by other projects or users.
 - The command-path integration regression proves both user-owned roles are created, a second run is byte-identical, and unrelated ownership remains intact.
+- Bundled Codex base roles enter only the Codex user extension; generic user sync inputs for Claude and Cursor remain skills-only.
 
 ### Task p04-t06: (final review) Reject colliding custom Codex role names
 
@@ -230,9 +231,9 @@ oat_generated: false
 ### Task p04-t07: (final review) Stamp the selected gate execution model
 
 **Status:** completed
-**Commit:** `af22da66`
+**Commits:** `af22da66`, `bc605764`
 
-- Gate metadata now records the structured model selected for the child command, including a non-first multi-model winner.
+- Gate metadata now records the structured model selected for the child command, including a non-first multi-model winner and a model pinned in the target's base command.
 - Contradictory static invocation metadata is rejected before execution.
 
 ### Task p04-t08: (final review) Classify malformed correlated artifacts safely
@@ -246,9 +247,10 @@ oat_generated: false
 ### Task p04-t09: (final review) Route lifecycle handoff by receive eligibility
 
 **Status:** completed
-**Commit:** `a0ea5aa4`
+**Commits:** `a0ea5aa4`, `dc71840f`
 
-- Lifecycle skills invoke review-receive only for corroborated `ok` or `blocked` handoffs, or an explicit positive `receiveEligible` result.
+- Positive gate envelopes explicitly emit `receiveEligible: true` only after corroboration.
+- Lifecycle skills invoke review-receive only when all three conditions hold: `status` is `ok` or `blocked`, `receiveEligible` is true, and `handoff` is non-null.
 - Targeting failures and unvalidated artifacts cannot enter review-receive; artifact validation must be corrected and successfully revalidated first.
 - Canonical skills, bundled views, contract tests, and public result-union documentation agree without another PR-scoped skill version bump.
 
@@ -800,6 +802,7 @@ oat_generated: false
 | p04-t08    | RED/GREEN malformed-correlation and timestamp regressions; gate/verdict suites; CLI type-check                        | 138    | 0      | Validation classification without spoof or duplicate drift    |
 | p04-t09    | RED/GREEN receive-eligibility contracts; 53-skill validation; 532-link crawl                                          | 55     | 0      | Status-aware lifecycle handoff and documented result union    |
 | p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
+| p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing |
 
 ## Final Summary (for PR/docs)
 
@@ -809,7 +812,7 @@ finite canonical Codex roles; custom role identities cannot collide after
 normalization; gate metadata reflects the selected execution model; malformed
 run-correlated YAML is classified as artifact validation without weakening
 spoof or duplicate defenses; and lifecycle skills consume only positive,
-corroborated review handoffs.
+explicitly eligible, corroborated review handoffs.
 
 The project is at 32 of 37 tasks and p04 is at 9 of 14. The first final review
 remains `fixes_added`; `p04-t10` through `p04-t14` and final re-review remain

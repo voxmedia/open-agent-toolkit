@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t10
-oat_last_commit: a0ea5aa4
+oat_last_commit: dc71840f
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T11:18:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T11:35:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -152,11 +152,11 @@ Implementation - 32 of 37 planned tasks are complete. Final-review fix wave 1 co
 - ✓ First full-project final review completed with 3 Important, 1 Medium, and 3 Minor primary findings
 - ✓ Parallel audits added four Important, one Medium, and two Minor verified gaps
 - ✓ All findings converted or resolved; none deferred
-- ✓ `p04-t05` safely materializes the finite canonical user Codex roles through the real scanner and command path
+- ✓ `p04-t05` safely materializes finite canonical user Codex roles without leaking bundled agents into generic provider sync
 - ✓ `p04-t06` gives normalized custom Codex targets deterministic collision-safe identities across sync and dispatch
-- ✓ `p04-t07` stamps and validates the structured model actually selected for gate execution
+- ✓ `p04-t07` stamps and validates the structured model actually selected or base-command-pinned for gate execution
 - ✓ `p04-t08` safely correlates malformed expected-run YAML and accepts valid quoted timestamps
-- ✓ `p04-t09` routes lifecycle review-receive only for positive eligible or corroborated handoffs
+- ✓ `p04-t09` routes lifecycle review-receive only when positive status, explicit eligibility, and corroborated handoff all agree
 - ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
 - ⧗ Execute `p04-t10` through `p04-t14`, then final re-review
 
