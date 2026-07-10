@@ -1756,6 +1756,72 @@ describe('oat gate', () => {
     },
   );
 
+  it.each([
+    { name: 'exact', reviewScope: 'p02', aggregate: false },
+    { name: 'final', reviewScope: 'final', aggregate: true },
+    { name: 'range', reviewScope: 'p02-p03', aggregate: true },
+  ])(
+    'rejects incompatible modern stamps before $name producer resolution',
+    async ({ reviewScope, aggregate }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeImplementation(
+        root,
+        projectPath,
+        [
+          'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+          'Dispatch: scope=p02 action=review role=implementer producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+          'Dispatch: scope=p02 action=implementation role=reviewer producer=gemini-2.5-pro provenance=declared model_axis=selected:gemini effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gemini target=gemini',
+        ].join('\n'),
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            reviewScope,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--review-scope',
+          reviewScope,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        diversity: {
+          producer: aggregate
+            ? {
+                value: 'unknown',
+                source: 'aggregated-stamps',
+                avoidFamilies: ['openai'],
+                contributingScopes: ['p02'],
+                contributingStampCount: 1,
+              }
+            : {
+                value: 'gpt-5.5-xhigh',
+                family: 'openai',
+                source: 'stamp',
+                avoidFamilies: ['openai'],
+              },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('aggregates producer families from implementation stamps for final review scope', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);

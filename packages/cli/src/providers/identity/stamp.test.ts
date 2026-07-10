@@ -146,6 +146,33 @@ describe('dispatch identity stamps', () => {
     expect(warnings.join('\n')).toContain('line 1');
   });
 
+  it.each([
+    ['implementation', 'fix'],
+    ['implementation', 'reviewer'],
+    ['fix', 'implementer'],
+    ['fix', 'reviewer'],
+    ['review', 'implementer'],
+    ['review', 'fix'],
+  ] as const)(
+    'warns and rejects incompatible modern action/role pair %s/%s',
+    (action, role) => {
+      const warnings: string[] = [];
+      const line = `Dispatch: scope=p02 action=${action} role=${role} producer=gpt-5.5 provenance=declared model_axis=selected:gpt-5.5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-5-high`;
+
+      expect(
+        parseDispatchStamps(line, {
+          onWarning: (warning) => warnings.push(warning),
+        }),
+      ).toEqual([]);
+      expect(warnings).toEqual([
+        expect.stringContaining(
+          `incompatible action/role pair ${action}/${role}`,
+        ),
+      ]);
+      expect(getProducerIdentitiesByScope(line)).toEqual({});
+    },
+  );
+
   it('normalizes invalid provenance fields to unknown without dropping the producer', () => {
     expect(
       parseDispatchStamps(

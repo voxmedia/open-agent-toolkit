@@ -431,7 +431,7 @@ oat_generated: false
 - Scope: p00 review fixes (`p00-t04`, `p00-t05`, `p00-t06`)
 - Execution: fresh pinned Codex child process
 - Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
-- Dispatch: scope=p00 action=fix role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- Dispatch: scope=p00 action=fix role=fix producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run cbefd332-e253-4d69-bc2f-eae16981148a
 
