@@ -996,6 +996,82 @@ describe('oat gate', () => {
     ).toHaveLength(2);
   });
 
+  it('isolates rejected availability probes while listing other targets', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'missing-reviewer': {
+                runtime: 'missing',
+                baseCommand: ['missing-reviewer'],
+                availabilityCommand: ['missing-reviewer', '--version'],
+                priority: 20,
+              },
+              'available-reviewer': {
+                runtime: 'available',
+                baseCommand: ['available-reviewer'],
+                availabilityCommand: ['available-reviewer', '--version'],
+                priority: 10,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const calls: ProcessCall[] = [];
+    const runProcess: ProcessRunner = async (command, args, options) => {
+      calls.push({
+        command,
+        args: [...args],
+        purpose: options.purpose,
+        stdio: options.stdio,
+        timeoutMs: options.timeoutMs,
+      });
+      if (options.purpose === 'execute') {
+        throw new Error('target list must not execute a reviewer');
+      }
+      if (
+        options.purpose === 'availability' &&
+        command === 'missing-reviewer'
+      ) {
+        throw new Error('spawn missing-reviewer ENOENT');
+      }
+      return {
+        exitCode:
+          options.purpose === 'availability' && command === 'available-reviewer'
+            ? 0
+            : 1,
+      };
+    };
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      runProcess,
+    });
+
+    await runCommand(command, ['target', 'list']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(capture.jsonPayloads[0]?.targets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'missing-reviewer',
+          available: false,
+        }),
+        expect.objectContaining({
+          id: 'available-reviewer',
+          available: true,
+        }),
+      ]),
+    );
+    expect(calls.filter((call) => call.purpose === 'execute')).toEqual([]);
+  });
+
   it('normalizes exec target models from config', async () => {
     const { root, home } = await setup();
     await writeFile(

@@ -2022,19 +2022,12 @@ async function runTargetList(
           const available =
             view.enabled &&
             (!availabilityCommand ||
-              (
-                await dependencies.runProcess(
-                  availabilityCommand[0] ?? '',
-                  availabilityCommand.slice(1),
-                  {
-                    cwd: context.cwd,
-                    env: dependencies.processEnv,
-                    purpose: 'availability',
-                    stdio: 'ignore',
-                    timeoutMs: GATE_CHECK_TIMEOUT_MS,
-                  },
-                )
-              ).exitCode === 0);
+              (await checkArgv(
+                availabilityCommand,
+                'availability',
+                context,
+                dependencies,
+              )));
           const invocation = normalizedTargetInvocation(view.target);
           return {
             id,
