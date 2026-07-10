@@ -109,6 +109,7 @@ Requested outcomes:
 11. **Environment provisioning:** Shared base image installs the OAT CLI, installs `cursor-agent` with `CURSOR_API_KEY` from secrets (gates degrade gracefully via existing `availabilityCommand` probes), and seeds user-level `~/.oat/config.json` with the dispatch ladder and gate configuration (user's existing user-level config is the reference shape). In Cursor Cloud environments, dispatch uses Cursor models only; the config's availability probes make the full ladder safe to seed.
 12. **Learnings capture:** Autonomous cloud runs keep an append-only `oat-execution-learnings.md` per project (gotchas, efficiencies, missing setup, test-classification corrections, skill-improvement candidates), following the Bruno precedent.
 13. **Skill placement/naming:** `oat-cursor-cloud-projects`, canonical in `.agents/skills/`, bundled, synced normally to all provider views (content self-gates via its Cursor-specific description); never a `.cursor`-only stray.
+14. **Adjacent-repo context via VoxDocs MCP (scope addition, 2026-07-10):** Autonomous cloud agents must be able to research adjacent repositories they don't have checked out, using the VoxDocs MCP (hosted `docs-mcp-server`: documentation lookup + semantic/embeddings search across indexed codebases). Two parts: (a) provisioning — the MCP server must be configured for cloud agents (verified absent today: this session's MCP catalog contains only `cursor-cloud`, and no `mcp.json` exists at user level or in any workspace repo; egress is unrestricted so reachability is a config problem, auth via Cloud Agents secrets); (b) an `internal-docs-mcp` skill teaching agents when and how to use it, wired into the autonomous skill's evidence-gathering step and the orientation skill's awareness list. The skill lives in `cloud-agent-env-node` for now (the env repo is itself a workspace repo in environments built from it), accepting that single-repo environments won't see it and it sits outside OAT's bundle/versioning until later abstracted to a shared home.
 
 ## Constraints
 
@@ -130,6 +131,7 @@ Requested outcomes:
 - Interactive OAT sessions in cloud environments work with correct orientation (multi-repo project-home resolution, skill precedence, CLI availability).
 - A project run autonomously can be taken back over locally with zero cleanup (no persisted autonomy state).
 - Single-repo cloud environments are validated as a supported configuration.
+- Cloud agents can query the VoxDocs MCP (docs + semantic code search over indexed codebases) during evidence gathering, and the `internal-docs-mcp` skill teaches its use.
 
 ## Out of Scope
 
@@ -155,6 +157,8 @@ Requested outcomes:
 - **Single-repo environment setup:** What the setup instructions look like for single-repo cloud environments (project-level config standing in for some user-level assumptions) — carry an explicit validation prompt through implementation.
 - **HiLL footgun semantics:** Correct behavior for empty/null `oat_plan_hill_phases` after the fix (and migration for existing projects).
 - **`cursor-agent` provisioning details:** Auth flow with `CURSOR_API_KEY` in image build vs. startup; failure behavior when the secret is absent.
+- **VoxDocs MCP provisioning:** How cloud agents get the MCP server configured — checked-in `.cursor/mcp.json` per repo vs. hoisted from the env repo (verify multi-root MCP hoisting behaves like skill hoisting) vs. another mechanism; auth secret shape; behavior when the server is unreachable.
+- **`internal-docs-mcp` skill contract:** Trigger rules (when to reach for VoxDocs vs. local checkout), inputs (which indexes exist), and how the autonomous skill's evidence-gathering step references it without hard-depending on it (environments without the MCP must still run).
 
 ## Assumptions
 
