@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.6
+version: 1.2.7
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -77,6 +77,116 @@ managed-uncapped reviewer fallback.
 The Auto Artifact-Review Loop below consumes this reviewer dispatch contract.
 Tier selection happens only after the target-preserving route is known and
 changes execution mechanics, not the resolved model/effort contract.
+
+## Shared Phase-Review Setup Contract
+
+Every plan-producing workflow invokes this procedure after the complete plan
+has stable phase IDs and before the plan artifact review begins. The calling
+skill owns the prompt and the write to `plan.md`; this section owns the shared
+eligibility, preservation, validation, and non-interactive behavior.
+
+### 1. Preserve explicit plan state
+
+Inspect `plan.md` frontmatter before probing configuration. If an explicit
+existing `oat_phase_review_gate` key is present, preserve the complete value
+unchanged. Do not probe targets, prompt, or mutate the setting. This applies to
+enabled, disabled, resumed, and imported explicit values. Report:
+
+```text
+Phase review: preserved existing oat_phase_review_gate setting.
+```
+
+Implementation preflight remains responsible for rejecting a malformed
+explicit value. Planning must not silently repair, replace, or disable it.
+
+### 2. Probe qualifying targets
+
+When no explicit setting exists, run the canonical read-only probe:
+
+```bash
+oat gate target list --json
+```
+
+If `oat` is not available directly, use the repository source CLI with the
+same arguments. Do not select or execute a reviewer during this probe. A target
+qualifies only when all three JSON fields are literal booleans with these
+values:
+
+```text
+target.explicitlyConfigured === true
+target.enabled === true
+target.available === true
+```
+
+Built-in-only, disabled, unavailable, missing, or malformed entries do not
+qualify. Never infer qualification from target origin, runtime, invocation
+metadata, command text, or a merely non-empty target list.
+
+If the probe fails, emit exactly this concise warning and continue planning
+without adding the setting:
+
+```text
+Warning: phase review target probe failed; phase review remains disabled.
+```
+
+If no qualifying target exists, emit:
+
+```text
+Phase review: disabled (no qualifying target); phase review remains disabled.
+```
+
+Do not invent enablement in either branch.
+
+### 3. Offer the canonical choice
+
+When at least one target qualifies and an interactive user-response channel is
+available, offer exactly these outcomes:
+
+1. **All phases** - enable review for every implementation phase.
+2. **Selected phases** - enable review only for chosen stable phase IDs.
+3. **Disabled** - leave phase review disabled.
+
+For all phases, write the existing plan frontmatter shape:
+
+```yaml
+oat_phase_review_gate:
+  enabled: true
+  phases: []
+  review_type: code
+  exit_nonzero_on: important
+```
+
+For selected phases, use the same shape with `phases` populated. Validate the
+selected phase IDs against the actual stable phase IDs in the finished plan.
+Reject unknown IDs and re-prompt instead of persisting them; de-duplicate valid
+IDs and serialize them in plan order, regardless of selection order. Require at
+least one valid phase for this choice.
+
+If the user declines or chooses Disabled, do not add
+`oat_phase_review_gate`; emit:
+
+```text
+Phase review: disabled (user declined); phase review remains disabled.
+```
+
+### 4. Handle non-interactive planning
+
+Non-interactive mode includes `OAT_NON_INTERACTIVE=1` and any environment with
+no user-response channel. Never prompt in this mode. Even when the probe finds
+a qualifying target, do not guess all phases or selected phases and do not
+invent enablement. Leave the setting absent and emit:
+
+```text
+Phase review: disabled (non-interactive; no selection recorded); phase review remains disabled.
+```
+
+### 5. Keep review gates independent from HiLL
+
+This setup is independent from HiLL checkpoints. It must not read or change
+`oat_plan_hill_phases`, `oat_auto_review_at_hill_checkpoints`, or
+`oat_hill_completed`. The qualifying target only controls whether the setup
+choice is offered; normal lifecycle gate commands remain provider-neutral.
+They must not add a provider/model `--target` argument.
 
 ## Auto Artifact-Review Loop
 

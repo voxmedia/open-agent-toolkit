@@ -955,6 +955,73 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('defines the canonical shared phase-review setup after stable phase IDs', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared).toMatch(/Shared Phase-Review Setup Contract/);
+    expect(shared).toMatch(
+      /after[\s\S]{0,160}stable phase IDs[\s\S]{0,240}before[\s\S]{0,160}plan artifact review/i,
+    );
+    expect(shared).toMatch(/explicit[\s\S]{0,80}`oat_phase_review_gate`/i);
+    expect(shared).toMatch(
+      /preserve the complete value[\s\S]{0,100}unchanged/i,
+    );
+    expect(shared).toMatch(
+      /do not probe targets, prompt, or mutate the setting/i,
+    );
+    expect(shared).toContain('oat gate target list --json');
+    expect(shared).toMatch(
+      /explicitlyConfigured[\s\S]{0,160}enabled[\s\S]{0,160}available/,
+    );
+    expect(shared).toMatch(
+      /explicitlyConfigured\s*===?\s*true[\s\S]{0,200}enabled\s*===?\s*true[\s\S]{0,200}available\s*===?\s*true/,
+    );
+  });
+
+  it('defines canonical phase-review choices and stable phase serialization', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared).toMatch(/all phases/i);
+    expect(shared).toMatch(/selected phases/i);
+    expect(shared).toMatch(/disabled/i);
+    expect(shared).toMatch(
+      /oat_phase_review_gate:[\s\S]{0,180}enabled:\s*true[\s\S]{0,180}phases:\s*\[\][\s\S]{0,180}review_type:\s*code[\s\S]{0,180}exit_nonzero_on:\s*important/,
+    );
+    expect(shared).toMatch(
+      /selected phase IDs[\s\S]{0,220}(?:actual|known|stable) phase IDs[\s\S]{0,220}plan order/i,
+    );
+    expect(shared).toMatch(/independent[\s\S]{0,180}HiLL checkpoints/i);
+    expect(shared).toMatch(
+      /never[\s\S]{0,160}(?:provider|model)[\s\S]{0,160}--target|must not[\s\S]{0,160}--target/i,
+    );
+  });
+
+  it('keeps phase review disabled when setup cannot make an interactive choice', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared).toMatch(
+      /probe fail[\s\S]{0,260}phase review remains disabled/i,
+    );
+    expect(shared).toMatch(
+      /no qualifying target[\s\S]{0,260}phase review remains disabled/i,
+    );
+    expect(shared).toMatch(
+      /non-interactive[\s\S]{0,320}phase review remains disabled/i,
+    );
+    expect(shared).toMatch(
+      /(?:declines|chooses disabled)[\s\S]{0,260}phase review remains disabled/i,
+    );
+    expect(shared).toMatch(/Warning: phase review target probe failed/);
+    expect(shared).toMatch(/Phase review: disabled/);
+    expect(shared).toMatch(/do not invent enablement/i);
+  });
+
   it('routes every workflow review through exact roles or pinned fresh children', async () => {
     for (const skillName of [
       'oat-project-implement',
