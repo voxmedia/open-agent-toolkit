@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t01
+oat_current_task_id: p00-t04
 oat_generated: false
 ---
 
@@ -16,19 +16,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 3     | 3/3       |
-| p01   | pending   | 4     | 0/4       |
-| p02   | pending   | 3     | 0/3       |
-| p03   | pending   | 1     | 0/1       |
-| p04   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | in_progress | 6     | 3/6       |
+| p01   | pending     | 4     | 0/4       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 3     | 0/3       |
 
-**Total:** 3/14 tasks completed
+**Total:** 3/17 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
-**Status:** completed
+**Status:** in_progress
 
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
@@ -44,6 +44,21 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `50a88a61`
+
+### Task p00-t04: (review) Preserve the policy model for lower Codex efforts
+
+**Status:** pending
+**Commit:** -
+
+### Task p00-t05: (review) Enforce pinned managed fallbacks
+
+**Status:** pending
+**Commit:** -
+
+### Task p00-t06: (review) Cover canonical Markdown formatting
+
+**Status:** pending
+**Commit:** -
 
 ## Phase 1: Configured Invocation Provenance
 
@@ -178,6 +193,28 @@ oat_generated: false
 - Final p00 verification passed all three planned suites (156, 262, and 76 assertions), CLI type-check, four live enforced resolver probes, 53-skill validation, project sync dry-run with zero planned operations, root lint, root format, and the 532-link docs crawl.
 - The generated project Codex catalogue is idempotent and complete: 26 supported-catalogue role files, 26 config registrations, and exactly two Sol/max roles (implementer and reviewer).
 - Phase-wide self-review found no correctness, scope, or ownership issues. The p00 code-review row remains pending for the orchestrator's independent review; no p01 work was started.
+
+### Review Received: p00
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p00-review-2026-07-10T061452Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** `p00-t04`, `p00-t05`, `p00-t06`
+
+**Disposition:**
+
+- `C1` agreed, `Moderate`, `code_fix_required`: shipped High policy blocks low/medium preferred Codex work and duplicate efforts can select the wrong model.
+- `I1` agreed, `Moderate`, `code_fix_required`: generic inline/fresh-session branches can bypass a concrete managed target.
+- `m1` agreed, `Minor`, `code_fix_required`: format the two files and make the standard root format check cover these Markdown surfaces.
+
+**Next:** Execute the three p00 review-fix tasks, set the review row to `fixes_completed`, and re-review p00 before p01.
 
 ## Deviations from Plan / Design
 

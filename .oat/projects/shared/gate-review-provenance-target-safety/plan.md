@@ -176,6 +176,82 @@ pnpm docs:check-links
 
 ---
 
+### Task p00-t04: (review) Preserve the policy model for lower Codex efforts
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Steps:**
+
+1. When a capped Codex implementer selects an effort below the configured cell's effort, retain the selected policy target's harness and model while lowering only the effort.
+2. Do not scan unrelated matrix tiers by effort; duplicate effort values must not select another model family.
+3. Cover the shipped recommendation under managed High for `low`, `medium`, `high`, `xhigh`, and `max` preferences, plus duplicate-effort disambiguation and non-interactive preflight.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts src/providers/ceiling/registry.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm run cli:source -- project dispatch-ceiling resolve --provider codex --role implementer --preferred low --preflight --non-interactive --json
+pnpm run cli:source -- project dispatch-ceiling resolve --provider codex --role implementer --preferred medium --preflight --non-interactive --json
+```
+
+**Commit:** `fix(dispatch): retain Codex model across effort caps`
+
+---
+
+### Task p00-t05: (review) Enforce pinned managed fallbacks
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Steps:**
+
+1. Route every concrete managed Codex target through the exact registered role or a fresh child pinned to the resolved model, effort, and canonical instructions before generic capability-tier fallbacks.
+2. Permit inline or base execution only when equivalent controls are explicitly verified, for inherit/default behavior, or for the documented managed-uncapped reviewer exception.
+3. Add negative contract coverage for unavailable custom roles, unavailable Tier 1 dispatch, timeout fallback, and gate-originated inline review.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+```
+
+**Commit:** `fix(workflow): keep managed fallbacks pinned`
+
+---
+
+### Task p00-t06: (review) Cover canonical Markdown formatting
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
+- Modify: `package.json`
+
+**Steps:**
+
+1. Apply repository formatting to the two changed Markdown files reported by review.
+2. Extend the standard root format check to cover canonical skill and docs Markdown surfaces so equivalent drift is detected by `pnpm format`.
+
+**Verify:**
+
+```bash
+pnpm format
+pnpm exec oxfmt --check .agents/skills/oat-project-plan-writing/SKILL.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+```
+
+**Commit:** `chore(format): cover canonical Markdown surfaces`
+
+---
+
 ## Phase 1: Configured Invocation Provenance
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
@@ -504,19 +580,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | received | 2026-07-10 | reviews/p00-review-2026-07-10T061452Z.md                    |
-| p01    | code     | pending  | -          | -                                                           |
-| p02    | code     | pending  | -          | -                                                           |
-| p03    | code     | pending  | -          | -                                                           |
-| p04    | code     | pending  | -          | -                                                           |
-| final  | code     | pending  | -          | -                                                           |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | fixes_added | 2026-07-10 | reviews/archived/p00-review-2026-07-10T061452Z.md           |
+| p01    | code     | pending     | -          | -                                                           |
+| p02    | code     | pending     | -          | -                                                           |
+| p03    | code     | pending     | -          | -                                                           |
+| p04    | code     | pending     | -          | -                                                           |
+| final  | code     | pending     | -          | -                                                           |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -524,16 +600,16 @@ git status --short
 
 **Summary:**
 
-- Phase 0: 3 tasks - fail-closed dispatch readiness, committed/scoped pinned roles, and deterministic workflow dispatch
+- Phase 0: 6 tasks - dispatch readiness, pinned-role sync, deterministic workflows, and three review fixes
 - Phase 1: 4 tasks - configured invocation metadata, inspection, prompt/JSON provenance, and artifact validation
 - Phase 2: 3 tasks - project resolution provenance, fail-closed target corroboration, and lifecycle guidance
 - Phase 3: 1 task - explicit final/range producer aggregation provenance
 - Phase 4: 3 tasks - shared opt-in setup, all plan paths, and release validation
 
-**Total: 14 tasks**
+**Total: 17 tasks**
 
-Phase 0 implementation is complete. Its independent code review remains pending
-before Phase 1 implementation begins.
+Phase 0 review fixes are queued. Phase 1 must not begin until the fixes complete
+and an independent re-review passes.
 
 ## References
 
