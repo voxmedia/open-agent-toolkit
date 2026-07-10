@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t27
-oat_last_commit: 8e72e02d
+oat_current_task: p04-t28
+oat_last_commit: 7569ed2a
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T16:04:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T16:26:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 49 of 53 planned tasks are complete and p04 is 26/30. Unified provider candidate ladders are defined; execution continues at `p04-t27`.
+Implementation - 50 of 53 planned tasks are complete and p04 is 27/30. Exact task targets now resolve beneath named ceilings; execution continues at `p04-t28`.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 49 of 53 planned tasks are complete and p04 is 26/30. Unified p
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (49/53 tasks complete; adaptive dispatch extension in progress)
+- **Implementation:** `implementation.md` (50/53 tasks complete; adaptive dispatch extension in progress)
 
 ## Progress
 
@@ -194,7 +194,9 @@ Implementation - 49 of 53 planned tasks are complete and p04 is 26/30. Unified p
 - ✓ User waived a fourth final re-review for the completed 48-task scope
 - ✓ `p04-t26` defines ordered provider candidate ladders with explicit fallback routes and final-candidate ceilings
 - ✓ p04-t26 verification passed 115 required config/resolve assertions, 227 compatibility assertions, and CLI type-check
-- ⧗ Implement `p04-t27` through `p04-t30`, then obtain a final review disposition before p04 HiLL approval
+- ✓ `p04-t27` resolves exact provider candidates cumulatively beneath named ceilings and rejects unsafe requests
+- ✓ p04-t27 verification passed 121 focused dispatch/registry assertions and CLI type-check
+- ⧗ Implement `p04-t28` through `p04-t30`, then obtain a final review disposition before p04 HiLL approval
 
 ## Blockers
 
@@ -202,4 +204,4 @@ None
 
 ## Next Milestone
 
-Resolve exact per-task targets beneath named ceilings in `p04-t27`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
+Materialize every configured Codex ladder candidate in `p04-t28`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.

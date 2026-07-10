@@ -424,7 +424,18 @@ oat_generated: false
 - During the staged rollout, existing dispatch and sync behavior consumes only each tier's final ceiling candidate; `p04-t27` owns lower-candidate selection and `p04-t28` owns all-candidate materialization.
 - RED/GREEN verification passed the required 115 config/resolve assertions, 227 compatibility assertions across config, doctor, dispatch, and Codex sync, and CLI type-check (342 focused assertions total).
 
-### Tasks p04-t27 through p04-t30: Adaptive dispatch ceilings
+### Task p04-t27: Resolve exact task targets beneath named ceilings
+
+**Status:** completed
+**Commit:** `7569ed2a`
+
+- `oat project dispatch-ceiling resolve` now accepts exact ephemeral `--candidate-model` requests plus Codex-only `--candidate-effort`, while keeping legacy `--preferred` non-combinable and unchanged during migration.
+- Candidate membership resolves cumulatively from `economy` through the named ceiling tier; JSON output separates the requested payload, its configured tier, the named ceiling tier and exact ceiling target, and the selected dispatch target.
+- Codex returns the exact materialized model/effort role, Claude returns the exact configured model argument, and Cursor preserves the configured opaque string without model-name inference.
+- Resolution fails closed for above-ceiling, absent, malformed, ambiguous, reviewer, and direct-role-name requests; fallback-route escalation remains distinct from candidate ordering.
+- RED/GREEN verification passed 121 focused dispatch/registry assertions and CLI type-check, including High-to-Luna/Terra, Frontier-only rejection, and Balanced Terra/medium versus absent Terra/xhigh coverage.
+
+### Tasks p04-t28 through p04-t30: Adaptive dispatch ceilings
 
 **Status:** pending
 

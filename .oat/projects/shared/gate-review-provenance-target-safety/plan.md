@@ -1551,7 +1551,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t27: Resolve exact task targets beneath named ceilings
 
-**Status:** pending
+**Status:** completed (`7569ed2a`)
 
 **Files:**
 
