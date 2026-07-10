@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 14    | 4/14      |
+| p04   | in_progress | 14    | 9/14      |
 
-**Total:** 27/37 tasks completed
+**Total:** 32/37 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** final review fixes queued
+**Status:** final review fixes in progress
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -209,14 +209,57 @@ oat_generated: false
 **Status:** completed
 **Commit:** `53187b90`
 
+### Task p04-t05: (final review) Materialize user-owned Codex targets safely
+
+**Status:** completed
+**Commit:** `37b6defc`
+
+- The real user-scope scanner exposes only the finite canonical implementer and reviewer definitions required to expand configured user targets.
+- Full user sync fails closed before stale cleanup when either required canonical definition is unavailable, while preserving artifacts owned by other projects or users.
+- The command-path integration regression proves both user-owned roles are created, a second run is byte-identical, and unrelated ownership remains intact.
+
+### Task p04-t06: (final review) Reject colliding custom Codex role names
+
+**Status:** completed
+**Commit:** `bfefac9f`
+
+- Custom Codex targets use a deterministic raw-model/effort digest suffix, so punctuation- and case-normalized collisions cannot overwrite or dispatch another target.
+- Sync and resolver compilation share the same role-name builder, and sync rejects any residual same-name/different-content plan before writing.
+- The finite 26-role supported catalogue remains unchanged.
+
+### Task p04-t07: (final review) Stamp the selected gate execution model
+
+**Status:** completed
+**Commit:** `af22da66`
+
+- Gate metadata now records the structured model selected for the child command, including a non-first multi-model winner.
+- Contradictory static invocation metadata is rejected before execution.
+
+### Task p04-t08: (final review) Classify malformed correlated artifacts safely
+
+**Status:** completed
+**Commit:** `55ac0b9f`
+
+- A duplicate- and spoof-resistant scalar extraction path safely correlates malformed YAML carrying the expected run ID and classifies it as artifact validation.
+- Valid quoted timestamps are accepted from parsed YAML scalars, while nested, aliased, tagged, duplicated, comment, and body spoofs remain rejected.
+
+### Task p04-t09: (final review) Route lifecycle handoff by receive eligibility
+
+**Status:** completed
+**Commit:** `a0ea5aa4`
+
+- Lifecycle skills invoke review-receive only for corroborated `ok` or `blocked` handoffs, or an explicit positive `receiveEligible` result.
+- Targeting failures and unvalidated artifacts cannot enter review-receive; artifact validation must be corrected and successfully revalidated first.
+- Canonical skills, bundled views, contract tests, and public result-union documentation agree without another PR-scoped skill version bump.
+
 ### Phase Summary
 
-- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. Quick-start and import-plan snapshot explicit key presence plus the complete raw value before any template rewrite, restore it into the first resulting plan write, and suppress probing or re-prompting for enabled, disabled, selected-phase, null, and malformed explicit values. New enablement remains limited to explicitly configured, enabled, available targets, independent from HiLL checkpoints and lifecycle `--target` selection.
+- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. The first final-review fix wave also repairs user-owned Codex target expansion, custom-role collision safety, executed-model metadata, malformed-artifact correlation, and receive-eligible lifecycle routing. Tasks `p04-t10` through `p04-t14` remain.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
-- **Verification:** 54 focused skill-contract assertions; validation of all 53 OAT skills; all-scope sync followed by a zero-operation dry-run across 318 provider entries; 49 affected integration/bundle-contract assertions; the full workspace suite with 10 successful Turbo tasks and 2,451 CLI assertions; lint, format, type-check, build, docs build, 532-link crawl, and five-package release validation.
+- **Verification:** The committed wave passes 313 affected assertions across 11 test files, CLI type-check, validation of all 53 OAT skills, a 532-link crawl with zero broken links, 10 formatting tasks plus 186 Markdown files, project sync idempotence, version hygiene, and diff hygiene. Each task's focused RED/GREEN checks also passed.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review is received and its fixes are queued.
+- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review remains `fixes_added`; wave 1 completed `p04-t05` through `p04-t09`, with `p04-t10` through `p04-t14` still pending.
 
 ## Orchestration Runs
 
@@ -327,6 +370,20 @@ oat_generated: false
 - Provider default effort: `max`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Dispatch: scope=p04 action=review-fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run c0e3652a-ac5d-4b7d-b37d-83fa725afb27
+
+- Started: 2026-07-10T11:18:54Z
+- Scope: p04 final-review fix wave 1 (`p04-t05` through `p04-t09`)
+- Execution: exact registered Codex implementer role
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model axis: `selected:gpt-5.6-sol`
+- Effort axis: `selected:high`
+- Policy source: user config
+- Provider default effort: `max`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Commits: `37b6defc`, `bfefac9f`, `af22da66`, `55ac0b9f`, `a0ea5aa4`
+- Dispatch: scope=p04 action=final-review-fix-wave-1 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -737,21 +794,25 @@ oat_generated: false
 | p04-t02    | RED/GREEN all-path ordering/preservation contracts; skill validation; 532-link crawl                                  | 56     | 0      | Spec, quick, import, and provider-plan inheritance            |
 | p04-t04    | RED/GREEN rewrite-boundary preservation contract; 53-skill validation; sync idempotence; format; lint; types; release | 61     | 0      | Complete explicit values survive quick/import rewrites        |
 | p04 final  | 49 affected integration/consistency assertions; full workspace tests; lint; format; type-check; builds; release       | 59     | 0      | Packaging, generated ownership, idempotence, release surface  |
+| p04-t05    | RED/GREEN scanner, command, and codec regressions; focused affected tests; CLI type-check                             | 51     | 0      | Real user expansion, fail-closed cleanup, owner preservation  |
+| p04-t06    | RED/GREEN normalized-collision regressions; focused affected tests; CLI type-check; project sync dry-run              | 78     | 0      | Stable custom identity shared by sync and dispatch            |
+| p04-t07    | RED/GREEN selected-model metadata regressions; gate suite; CLI type-check                                             | 116    | 0      | Non-first winner execution and metadata agreement             |
+| p04-t08    | RED/GREEN malformed-correlation and timestamp regressions; gate/verdict suites; CLI type-check                        | 138    | 0      | Validation classification without spoof or duplicate drift    |
+| p04-t09    | RED/GREEN receive-eligibility contracts; 53-skill validation; 532-link crawl                                          | 55     | 0      | Status-aware lifecycle handoff and documented result union    |
+| p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
 
 ## Final Summary (for PR/docs)
 
-Phase 4 completes the implementation plan by adding one target-qualified,
-opt-in phase-review setup contract to every plan-producing workflow. Quick and
-import workflows preserve explicit phase-review key presence plus the complete
-value before template rewrites and restore it before shared setup, so explicit
-enabled, disabled, selected-phase, null, and malformed settings cannot be lost
-or re-prompted. Non-interactive execution never invents enablement, selected
-phases use validated stable IDs in plan order, and phase review remains separate
-from HiLL and provider/model lifecycle targeting.
+Phase 4 remains in progress. Final-review fix wave 1 completed `p04-t05`
+through `p04-t09`: the actual user-scope scanner can safely materialize the
+finite canonical Codex roles; custom role identities cannot collide after
+normalization; gate metadata reflects the selected execution model; malformed
+run-correlated YAML is classified as artifact validation without weakening
+spoof or duplicate defenses; and lifecycle skills consume only positive,
+corroborated review handoffs.
 
-The shipped surface now includes the planned canonical skill versions, updated
-workflow documentation, tracked project-owned reviewer variants, and all five
-public packages at `0.1.47`. User-scoped configuration remains user-owned, with
-Codex Frontier resolving to Sol/max and Cursor opaque model strings preserved
-exactly. Implementation is not project-complete: the first final review is
-received, its fix tasks are queued, and final re-review remains pending.
+The project is at 32 of 37 tasks and p04 is at 9 of 14. The first final review
+remains `fixes_added`; `p04-t10` through `p04-t14` and final re-review remain
+pending. User configuration was not mutated, no live user sync was run, no
+canonical skill version was bumped again, and all five public packages remain
+at `0.1.47`.

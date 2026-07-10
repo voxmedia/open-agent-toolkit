@@ -910,7 +910,7 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 
 ### Task p04-t05: (final review) Materialize user-owned Codex targets safely
 
-**Status:** pending
+**Status:** completed (`37b6defc`)
 
 **Files:**
 
@@ -941,7 +941,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t06: (final review) Reject colliding custom Codex role names
 
-**Status:** pending
+**Status:** completed (`bfefac9f`)
 
 **Files:**
 
@@ -970,7 +970,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t07: (final review) Stamp the selected gate execution model
 
-**Status:** pending
+**Status:** completed (`af22da66`)
 
 **Files:**
 
@@ -996,7 +996,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t08: (final review) Classify malformed correlated artifacts safely
 
-**Status:** pending
+**Status:** completed (`55ac0b9f`)
 
 **Files:**
 
@@ -1024,7 +1024,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t09: (final review) Route lifecycle handoff by receive eligibility
 
-**Status:** pending
+**Status:** completed (`a0ea5aa4`)
 
 **Files:**
 

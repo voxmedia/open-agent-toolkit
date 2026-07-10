@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t05
-oat_last_commit: 53187b90
+oat_current_task: p04-t10
+oat_last_commit: a0ea5aa4
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T10:49:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T11:18:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 27 of 37 planned tasks are complete. The first final review queued `p04-t05` through `p04-t14`.
+Implementation - 32 of 37 planned tasks are complete. Final-review fix wave 1 completed `p04-t05` through `p04-t09`; `p04-t10` through `p04-t14` remain.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 27 of 37 planned tasks are complete. The first final review que
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (27/37 tasks complete; final review fixes queued)
+- **Implementation:** `implementation.md` (32/37 tasks complete; final review remains `fixes_added`)
 
 ## Progress
 
@@ -152,7 +152,13 @@ Implementation - 27 of 37 planned tasks are complete. The first final review que
 - ✓ First full-project final review completed with 3 Important, 1 Medium, and 3 Minor primary findings
 - ✓ Parallel audits added four Important, one Medium, and two Minor verified gaps
 - ✓ All findings converted or resolved; none deferred
-- ⧗ Execute `p04-t05` through `p04-t14`, then final re-review
+- ✓ `p04-t05` safely materializes the finite canonical user Codex roles through the real scanner and command path
+- ✓ `p04-t06` gives normalized custom Codex targets deterministic collision-safe identities across sync and dispatch
+- ✓ `p04-t07` stamps and validates the structured model actually selected for gate execution
+- ✓ `p04-t08` safely correlates malformed expected-run YAML and accepts valid quoted timestamps
+- ✓ `p04-t09` routes lifecycle review-receive only for positive eligible or corroborated handoffs
+- ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
+- ⧗ Execute `p04-t10` through `p04-t14`, then final re-review
 
 ## Blockers
 
@@ -160,4 +166,4 @@ None
 
 ## Next Milestone
 
-Execute final review fix tasks from `p04-t05`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.
+Execute final review fix tasks from `p04-t10`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.
