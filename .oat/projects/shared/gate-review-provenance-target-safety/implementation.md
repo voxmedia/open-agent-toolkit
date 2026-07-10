@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 6     | 6/6       |
-| p01   | completed | 9     | 9/9       |
-| p02   | completed | 6     | 6/6       |
-| p03   | completed | 1     | 1/1       |
-| p04   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | completed   | 6     | 6/6       |
+| p01   | completed   | 9     | 9/9       |
+| p02   | completed   | 6     | 6/6       |
+| p03   | in_progress | 2     | 1/2       |
+| p04   | pending     | 3     | 0/3       |
 
-**Total:** 22/25 tasks completed
+**Total:** 22/26 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -164,12 +164,17 @@ oat_generated: false
 
 ## Phase 3: Aggregated Producer Provenance
 
-**Status:** completed; awaiting independent review
+**Status:** review fix queued
 
 ### Task p03-t01: Make final and range aggregation explicit
 
 **Status:** completed
 **Commit:** `29391b36`
+
+### Task p03-t02: (review) Preserve exact non-claimable stamp compatibility
+
+**Status:** pending
+**Commit:** -
 
 ### Phase Summary
 
@@ -492,6 +497,26 @@ oat_generated: false
 **New tasks added:** None; the re-review passed without findings.
 
 **Review outcome:** Passed. C1, I1, and I2 are closed, no new correctness or compatibility gaps were found, and p03 may begin.
+
+### Review Received: p03
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p03-review-2026-07-10T090935Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p03-t02`
+
+**Disposition:**
+
+- `I1` agreed, `Minor`, `code_fix_required`: restore baseline unknown output for exact legacy and non-claimable stamps while keeping them as aggregate contributors.
+
+**Next:** Complete `p03-t02`, then run an independent p03 re-review before starting p04.
 
 ## Deviations from Plan / Design
 

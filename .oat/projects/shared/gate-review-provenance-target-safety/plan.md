@@ -716,6 +716,33 @@ pnpm docs:check-links
 
 ---
 
+### Task p03-t02: (review) Preserve exact non-claimable stamp compatibility
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+
+**Steps:**
+
+1. Resolve exact phase/task stamps through the pre-p03 claimability guard so legacy or non-claimable identities remain a fully unknown producer record.
+2. Add exact legacy and modern unknown-provenance regressions that assert unknown source/value/family, absent contributor fields, and unchanged unknown-producer routing.
+3. Narrow the documentation so only claimable exact stamps report source `stamp`; aggregate contributor behavior remains unchanged.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm docs:check-links
+```
+
+**Commit:** `fix(gate): preserve exact stamp compatibility`
+
+---
+
 ## Phase 4: Opt-In Phase Review Setup
 
 ### Task p04-t01: Define the shared phase-review setup contract
@@ -814,19 +841,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed   | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | received | 2026-07-10 | reviews/p03-review-2026-07-10T090935Z.md                    |
-| p04    | code     | pending  | -          | -                                                           |
-| final  | code     | pending  | -          | -                                                           |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | fixes_added | 2026-07-10 | reviews/archived/p03-review-2026-07-10T090935Z.md           |
+| p04    | code     | pending     | -          | -                                                           |
+| final  | code     | pending     | -          | -                                                           |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -837,13 +864,13 @@ git status --short
 - Phase 0: 6 tasks - dispatch readiness, pinned-role sync, deterministic workflows, and three review fixes
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
-- Phase 3: 1 task - explicit final/range producer aggregation provenance
+- Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
 - Phase 4: 3 tasks - shared opt-in setup, all plan paths, and release validation
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
-Phase 0 and Phase 1 review fixes are complete. Phase 2 review fixes must complete
-and pass independent re-review before Phase 3 begins.
+Phase 0 through Phase 2 reviews have passed. Phase 3 review fixes must complete
+and pass independent re-review before Phase 4 begins.
 
 ## References
 
