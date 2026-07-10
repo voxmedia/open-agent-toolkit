@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** supplemental final-review fixes in progress (15/19)
+**Implementation Status:** supplemental final-review fixes in progress (16/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1221,7 +1221,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t16: (final review) Contain active project materialization paths
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 

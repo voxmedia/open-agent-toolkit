@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t16
-oat_last_commit: 9e3cd6b2
+oat_current_task: p04-t17
+oat_last_commit: 623d59f6
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T12:58:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T13:04:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 38 of 42 planned tasks are complete; p04 is 15/19. The latest final review is `fixes_added`; supplemental fixes resume at `p04-t16`.
+Implementation - 39 of 42 planned tasks are complete; p04 is 16/19. The latest final review is `fixes_added`; supplemental fixes resume at `p04-t17`.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 38 of 42 planned tasks are complete; p04 is 15/19. The latest f
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (38/42 tasks complete; final review is `fixes_added`)
+- **Implementation:** `implementation.md` (39/42 tasks complete; final review is `fixes_added`)
 
 ## Progress
 
@@ -169,7 +169,9 @@ Implementation - 38 of 42 planned tasks are complete; p04 is 15/19. The latest f
 - ✓ All cycle-2 findings were converted or resolved with no deferrals
 - ✓ `p04-t15` evaluates one immutable correlated artifact snapshot, rejects concurrent project/invocation/scope/findings mutation, and normalizes gate snapshots only in memory
 - ✓ p04-t15 RED/GREEN verification passed 143 focused gate/parser assertions and CLI type-check
-- ⧗ Execute `p04-t16` through `p04-t19`, then run final review cycle 3
+- ✓ `p04-t16` contains local and explicit active-project paths before project-owned Codex materialization
+- ✓ p04-t16 RED/GREEN verification passed 86 focused config/sync assertions, CLI type-check, and zero-operation source project-sync dry-run
+- ⧗ Execute `p04-t17` through `p04-t19`, then run final review cycle 3
 
 ## Blockers
 
@@ -177,4 +179,4 @@ None
 
 ## Next Milestone
 
-Execute supplemental final-review fixes `p04-t16` through `p04-t19`. If final review cycle 3 passes, request explicit p04 HiLL approval before lifecycle finalization.
+Execute supplemental final-review fixes `p04-t17` through `p04-t19`. If final review cycle 3 passes, request explicit p04 HiLL approval before lifecycle finalization.
