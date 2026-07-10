@@ -516,7 +516,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ## Phase 2: Declared Review Target Safety
 
-**Implementation Status:** completed; awaiting independent review
+**Implementation Status:** review fixes queued
 
 > **Phase review note:** p02 intentionally defers the single PR-scoped version bumps for `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until their final edits in p04-t02. Do not flag those interim versions as missing bumps.
 
@@ -605,6 +605,78 @@ pnpm docs:check-links
 ```
 
 **Commit:** `docs(gate): declare lifecycle review subjects`
+
+---
+
+### Task p02-t04: (review) Constrain ambient artifact correlation to the resolved project
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Keep the cross-project direct-artifact scan needed for duplicate run-ID detection, but require the unique matching artifact's containing project to equal the resolved review project for every resolution source.
+2. Preserve `corroboration.project: ambient` for active-project and single-candidate resolution while returning a non-remediable, non-receive-eligible targeting failure for sibling-project matches.
+3. Add active-project and single-candidate regression cases where only a sibling project writes the matching run ID and prove neither path can pass.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): constrain ambient artifact correlation`
+
+---
+
+### Task p02-t05: (review) Validate declared projects before verdict parsing
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Corroborate the unique candidate's containing project and parsed `oat_project` immediately after run-ID selection and before verdict parsing or normalization.
+2. Return `targeting_correlation_failed` with no receive handoff for declared-project mismatches even when the artifact's findings are malformed or normalizable.
+3. Add malformed-findings and missing-zero-heading regressions that assert targeting precedence and byte-for-byte artifact immutability.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): validate declared projects before verdict parsing`
+
+---
+
+### Task p02-t06: (review) Retain run identity when generation metadata is invalid
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Retain direct review candidates that carry a run ID even when `oat_generated_at` is missing or invalid, using generation metadata only for deterministic diagnostics and ordering.
+2. Perform unique run-ID correlation before validating generation metadata so duplicates cannot disappear and a single correlated malformed artifact receives an artifact-format outcome.
+3. Cover valid-plus-invalid same-run duplicates and single same-run artifacts with missing or invalid generation timestamps.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): retain malformed run-correlated artifacts`
 
 ---
 
@@ -734,19 +806,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | received | 2026-07-10 | reviews/p02-review-2026-07-10T081931Z.md                    |
-| p03    | code     | pending  | -          | -                                                           |
-| p04    | code     | pending  | -          | -                                                           |
-| final  | code     | pending  | -          | -                                                           |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | fixes_added | 2026-07-10 | reviews/archived/p02-review-2026-07-10T081931Z.md           |
+| p03    | code     | pending     | -          | -                                                           |
+| p04    | code     | pending     | -          | -                                                           |
+| final  | code     | pending     | -          | -                                                           |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -756,14 +828,14 @@ git status --short
 
 - Phase 0: 6 tasks - dispatch readiness, pinned-role sync, deterministic workflows, and three review fixes
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
-- Phase 2: 3 tasks - project resolution provenance, fail-closed target corroboration, and lifecycle guidance
+- Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 1 task - explicit final/range producer aggregation provenance
 - Phase 4: 3 tasks - shared opt-in setup, all plan paths, and release validation
 
-**Total: 22 tasks**
+**Total: 25 tasks**
 
-Phase 0 review fixes are complete. Phase 1 review fixes must complete and pass
-independent re-review before Phase 2 begins.
+Phase 0 and Phase 1 review fixes are complete. Phase 2 review fixes must complete
+and pass independent re-review before Phase 3 begins.
 
 ## References
 

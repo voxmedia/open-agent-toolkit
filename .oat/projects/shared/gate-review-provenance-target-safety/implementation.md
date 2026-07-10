@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t04
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 6     | 6/6       |
-| p01   | completed | 9     | 9/9       |
-| p02   | completed | 3     | 3/3       |
-| p03   | pending   | 1     | 0/1       |
-| p04   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | completed   | 6     | 6/6       |
+| p01   | completed   | 9     | 9/9       |
+| p02   | in_progress | 6     | 3/6       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 3     | 0/3       |
 
-**Total:** 18/22 tasks completed
+**Total:** 18/25 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -120,7 +120,7 @@ oat_generated: false
 
 ## Phase 2: Declared Review Target Safety
 
-**Status:** completed; awaiting independent review
+**Status:** review fixes queued
 
 ### Task p02-t01: Expose review-project resolution provenance
 
@@ -137,12 +137,27 @@ oat_generated: false
 **Status:** completed
 **Commit:** `9012d6c4`
 
+### Task p02-t04: (review) Constrain ambient artifact correlation to the resolved project
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t05: (review) Validate declared projects before verdict parsing
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t06: (review) Retain run identity when generation metadata is invalid
+
+**Status:** pending
+**Commit:** -
+
 ### Phase Summary
 
 - **Outcome:** Gate review project resolution now reports its declaration or ambient source; direct active review artifacts are selected by unique run ID across project directories; explicitly declared projects fail closed on containing-project, `oat_project`, or run-correlation mismatches; and lifecycle review commands declare the exported project while remaining provider/model target-neutral.
 - **Key files touched:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/review-verdict.ts`, the four gate-aware lifecycle skills, `packages/cli/src/validation/skills.test.ts`, and workflow-gate/contributing-skill docs.
 - **Verification:** 160 focused gate/parser/skill assertions, CLI type-check, workspace lint, root format, validation of all 53 OAT skills, 532-link docs crawl, and committed-range diff/version hygiene all passed.
-- **Decisions/deviations:** No design or plan deviations. Ambient active-project/single-candidate behavior remains compatible and reports `ambient`; only `oat-project-implement` advanced to `2.0.32`, with the other three lifecycle skill version bumps deferred to p04 as planned.
+- **Decisions/deviations:** The independent review found three uncovered correlation defects in ambient containment, pre-parse declared-project validation, and invalid generation metadata. These are queued as `p02-t04` through `p02-t06`; only `oat-project-implement` advanced to `2.0.32`, with the other three lifecycle skill version bumps deferred to p04 as planned.
 
 ## Phase 3: Aggregated Producer Provenance
 
@@ -390,6 +405,28 @@ oat_generated: false
 - `m1` agreed, `Negligible`, `artifact_alignment_required`: aligned `state.md` so its implementation summary no longer calls the completed p01 review fixes queued.
 
 **Review outcome:** Passed. All five prior findings are closed, the Minor artifact drift was corrected during review-receive bookkeeping, and p02 may begin.
+
+### Review Received: p02
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p02-review-2026-07-10T081931Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `p02-t04`, `p02-t05`, `p02-t06`
+
+**Disposition:**
+
+- `C1` agreed, `Moderate`, `code_fix_required`: require ambient unique matches to remain within the resolved project while retaining ambient provenance.
+- `I1` agreed, `Moderate`, `code_fix_required`: reject declared-project mismatch before verdict parsing or normalization can remediate or mutate the artifact.
+- `I2` agreed, `Moderate`, `code_fix_required`: retain run-correlated candidates with invalid generation metadata so duplicate detection and format classification remain accurate.
+
+**Next:** Execute `p02-t04` through `p02-t06`, then run an independent p02 re-review before starting p03.
 
 ## Deviations from Plan / Design
 
