@@ -449,12 +449,14 @@ oat gate review \
 
 Gate JSON output includes `diversity` metadata with the requested avoid mode,
 producer identity/provenance/confidence, reviewer target/model/family, and the
-achieved level. Exact phase/task matches report producer source `stamp` without
-contributor fields, while an explicit flag reports `flag` and remains
-authoritative. Final and contiguous range scopes report `aggregated-stamps`
-whenever at least one relevant stamp exists, even for a single stamp or when no
-stamp has a claimable family. Their producer record uses an unknown
-representative instead of presenting the latest stamp as aggregate truth:
+achieved level. Claimable exact phase/task matches with a known family report
+producer source `stamp` without contributor fields; legacy or otherwise
+non-claimable exact matches remain fully `unknown`. An explicit flag reports
+`flag` and remains authoritative. Final and contiguous range scopes report
+`aggregated-stamps` whenever at least one relevant stamp exists, even for a
+single stamp or when no stamp has a claimable family. Their producer record uses
+an unknown representative instead of presenting the latest stamp as aggregate
+truth:
 
 - `avoidFamilies` is the stable deduplicated union of claimable known families.
 - `contributingScopes` is the stable document-order list of distinct scopes from

@@ -104,10 +104,11 @@ When `workflow.autoReviewAtHillCheckpoints` is enabled (for example, `oat config
 Producer-aware gate routing treats those range and final scopes as aggregate
 subjects. It considers every valid in-scope implementer/fix dispatch stamp,
 avoids the stable union of claimable model families, and reports contributor
-scope/count metadata in `diversity.producer`. Exact phase/task reviews still use
-one exact `stamp`, and an explicit `--producer-identity` flag takes precedence.
-An aggregate never presents its latest stamp as the producer for the whole
-scope.
+scope/count metadata in `diversity.producer`. Claimable exact phase/task stamps
+with a known family remain exact `stamp` identities; legacy or otherwise
+non-claimable exact stamps resolve to an unknown producer. An explicit
+`--producer-identity` flag takes precedence. An aggregate never presents its
+latest stamp as the producer for the whole scope.
 
 This is separate from Tier 1 phase gate reviews. Tier 1 implementation always runs `oat-reviewer` after each phase; `workflow.autoReviewAtHillCheckpoints` only controls the additional lifecycle review when a HiLL checkpoint is reached. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 

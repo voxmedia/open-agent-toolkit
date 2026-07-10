@@ -1688,6 +1688,66 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    {
+      name: 'legacy',
+      stamp:
+        'Dispatch: p04 implementation used model_axis=inherited, effort_axis=selected:high, dispatch_policy=balanced, dispatch_ceiling=high, target=oat-phase-implementer-high',
+    },
+    {
+      name: 'modern unknown-provenance',
+      stamp:
+        'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.5 provenance=unknown model_axis=selected:gpt-5.5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-5-high',
+    },
+  ])(
+    'preserves unknown producer compatibility for an exact $name stamp',
+    async ({ stamp }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeImplementation(root, projectPath, stamp);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            reviewScope: 'p04',
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--review-scope', 'p04', '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        diversity: {
+          achieved: 'unknown-producer',
+          producer: {
+            value: 'unknown',
+            provenance: 'unknown',
+            confidence: 'unknown',
+            family: 'unknown',
+            source: 'unknown',
+            avoidFamilies: [],
+          },
+        },
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty(
+        'diversity.producer.contributingScopes',
+      );
+      expect(capture.jsonPayloads[0]).not.toHaveProperty(
+        'diversity.producer.contributingStampCount',
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('aggregates producer families from implementation stamps for final review scope', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);

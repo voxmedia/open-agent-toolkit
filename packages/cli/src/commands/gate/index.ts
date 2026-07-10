@@ -876,6 +876,15 @@ function identityFromStamp(
   );
 }
 
+function exactIdentityFromStamp(
+  stamp: ReturnType<typeof parseDispatchStamps>[number],
+): GateProducerIdentity {
+  const identity = identityFromStamp(stamp);
+  return identity.diversityClaimable && identity.family !== 'unknown'
+    ? identity
+    : unknownProducerIdentity();
+}
+
 function aggregateIdentityFromStamps(
   stamps: ReturnType<typeof parseDispatchStamps>,
 ): GateProducerIdentity {
@@ -970,7 +979,7 @@ async function readStampedProducerIdentity(options: {
       .reverse()
       .find((candidate) => candidate.scope === scope);
     return exactStamp
-      ? identityFromStamp(exactStamp)
+      ? exactIdentityFromStamp(exactStamp)
       : unknownProducerIdentity();
   }
 
