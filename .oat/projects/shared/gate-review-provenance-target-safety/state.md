@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t31
-oat_last_commit: 3a59458b
+oat_current_task: null
+oat_last_commit: e2fa1797
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -35,7 +35,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T17:19:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T17:34:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -47,7 +47,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 53 of 54 planned tasks are complete and p04 is 30/31. Phase coordinators now dispatch one resolver-validated exact worker per task under the recorded named maximum; execution continues at `p04-t31` for documentation.
+Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptive-dispatch extension is implemented and verified; a final review disposition is required before p04 HiLL approval.
 
 ## Artifacts
 
@@ -55,7 +55,7 @@ Implementation - 53 of 54 planned tasks are complete and p04 is 30/31. Phase coo
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (53/54 tasks complete; adaptive dispatch extension in progress)
+- **Implementation:** `implementation.md` (54/54 tasks complete; final review disposition pending)
 
 ## Progress
 
@@ -199,7 +199,10 @@ Implementation - 53 of 54 planned tasks are complete and p04 is 30/31. Phase coo
 - ✓ p04-t29 verification passed 100 affected assertions, all 53 skills, format, bundle parity, and five-package release validation
 - ✓ `p04-t30` adds the invocation-only named ceiling override and serial exact task-worker coordinator boundary
 - ✓ p04-t30 verification passed 293 required and supplemental assertions, type-check, all 53 skills, zero-op sync, format, bundle parity, and five-package release validation
-- ⧗ Implement `p04-t31`, then obtain a final review disposition before p04 HiLL approval
+- ✓ `p04-t31` documents named maxima, explicit adoption ownership, materialized Codex roles, exact provider payloads, and coordinator/task-worker execution
+- ✓ p04-t31 verification passed 67 skill contracts, 22 bundle assertions, 532 links, format, and five-package release validation
+- ✓ All 54/54 tasks complete; p04 is 31/31
+- ⧗ Obtain a final review disposition for `p04-t26` through `p04-t31`, then request explicit p04 HiLL approval
 
 ## Blockers
 
@@ -207,4 +210,4 @@ None
 
 ## Next Milestone
 
-Document adaptive dispatch ceilings and the coordinator/task-worker execution model in `p04-t31`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
+Run the final code review for adaptive dispatch tasks `p04-t26` through `p04-t31`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending until review disposition.

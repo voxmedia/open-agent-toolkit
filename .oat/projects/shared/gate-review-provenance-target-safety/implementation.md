@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t31
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | completed   | 6     | 6/6       |
-| p01   | completed   | 9     | 9/9       |
-| p02   | completed   | 6     | 6/6       |
-| p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 31    | 30/31     |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | completed | 9     | 9/9       |
+| p02   | completed | 6     | 6/6       |
+| p03   | completed | 2     | 2/2       |
+| p04   | completed | 31    | 31/31     |
 
-**Total:** 53/54 tasks completed
+**Total:** 54/54 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** adaptive dispatch-ceiling extension in progress (30/31)
+**Status:** completed; awaiting final review disposition (31/31)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -470,19 +470,31 @@ oat_generated: false
 
 ### Task p04-t31: Document adaptive dispatch ceilings
 
-**Status:** pending
+**Status:** completed
+**Commit:** `e2fa1797`
 
-- Document ordered candidates, named maximum ceilings, ownership, and materialization.
-- Document phase coordinator versus exact task-worker execution, provider-specific payloads, and migration behavior.
+- The configuration and dispatch references now describe one reusable ordered
+  provider candidate ladder, named maximum ceilings, complete recommendation
+  adoption in explicit shared/local/user ownership, and project-versus-user
+  Codex materialization boundaries.
+- Provider and execution references now bind exact Codex variants and
+  Claude/Cursor model arguments, preserve opaque Cursor strings byte-for-byte,
+  and separate phase coordination from one serial exact task worker per task.
+- Legacy exact-family policy wording was removed while target-preserving inline,
+  timeout, managed-uncapped, and explicit-inherit compatibility remained
+  documented.
+- Verification passed all 67 skill contracts, 22 bundled-asset consistency
+  assertions, the 532-link crawl, workspace formatting, and release validation
+  for all five public packages at `0.1.47`.
 
 ### Phase Summary
 
-- **Outcome:** The original 25 p04 tasks are complete. The user approved an integrated adaptive-dispatch extension before p04 HiLL, adding six tasks that separate reusable provider ladders from project or phase ceilings and execute work through task-scoped workers.
+- **Outcome:** All 31 p04 tasks are complete. The integrated adaptive-dispatch extension separates reusable provider ladders from project or phase ceilings, resolves exact targets beneath those maxima, materializes configured candidates in their owning scope, and executes work through task-scoped workers.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The user waived a fourth final review for the prior 48-task scope. That waiver does not cover the adaptive-dispatch extension; p04 requires a final review disposition after `p04-t26` through `p04-t31` before HiLL approval.
+- **Review status:** The user waived a fourth final review for the prior 48-task scope. That waiver does not cover the now-complete adaptive-dispatch extension; p04 requires a final review disposition for `p04-t26` through `p04-t31` before HiLL approval.
 
 ## Orchestration Runs
 
@@ -1120,6 +1132,7 @@ oat_generated: false
 | p04-t28    | RED/GREEN project/user ladder materialization; 46 focused assertions; type-check; project sync                        | 46     | 0      | All candidates, scoped ownership, byte-identical second sync   |
 | p04-t29    | RED/GREEN adaptive planning contracts; 100 affected assertions; 53 skills; format; release                            | 100    | 0      | Owned ladders, named maxima, reviewer ceilings, exact payloads |
 | p04-t30    | RED/GREEN resolver/help/worker contracts; sync/bundle supplements; type-check; skills; format; release                | 293    | 0      | Ephemeral tier override and serial exact task-worker dispatch  |
+| p04-t31    | RED/GREEN adaptive docs contract; 67 skills; 22 bundle assertions; 532 links; format; release                         | 89     | 0      | Named maxima, ownership, exact payloads, coordinator/workers   |
 
 ## Final Summary (for PR/docs)
 
@@ -1151,3 +1164,10 @@ p04 is 25 of 25, and the final review remains `fixes_completed`. The user
 explicitly waived a fourth final re-review; await explicit p04 HiLL approval.
 No additional public-package version bump was made; all five packages remain at
 `0.1.47`.
+
+The adaptive-dispatch extension `p04-t26` through `p04-t31` is also complete.
+It adds ordered provider candidates, exact cumulative selection under named
+maxima, owning-scope Codex materialization, plan-time adoption, invocation-only
+task ceilings, serial exact task workers, and matching public documentation.
+All 54 tasks are complete and p04 is 31/31. A final review disposition for this
+new six-task scope remains required before explicit p04 HiLL approval.

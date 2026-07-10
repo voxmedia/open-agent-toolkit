@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** cycle-3 final-review fixes queued (19/25)
+**Implementation Status:** completed; awaiting final review disposition (31/31)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1683,7 +1683,7 @@ pnpm release:validate
 
 ### Task p04-t31: Document adaptive dispatch ceilings
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1743,10 +1743,10 @@ pnpm release:validate
 
 **Total: 54 tasks**
 
-Phase 0 through Phase 3 reviews have passed. The completed p04 review work is
-extended with adaptive dispatch tasks `p04-t26` through `p04-t31`; the previous
-final-review waiver applies only to the prior 48-task scope. Implement the new
-tasks, then obtain a final review disposition before explicit p04 HiLL approval.
+Phase 0 through Phase 3 reviews have passed, and all 54 implementation tasks are
+complete. The previous final-review waiver applies only to the prior 48-task
+scope. Obtain a final review disposition for adaptive dispatch tasks `p04-t26`
+through `p04-t31` before explicit p04 HiLL approval.
 
 ## References
 
