@@ -10,6 +10,8 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260710-configured-gate-provenance-is  | 2026-07-10 | accepted | Configured gate provenance is separate from reviewer identity           | -      |
+| DR-260710-declared-gate-projects-require | 2026-07-10 | accepted | Declared gate projects require artifact corroboration                   | -      |
 | DR-260709-codex-targets-are-materialized | 2026-07-09 | accepted | Codex targets are materialized from canonical agents                    | -      |
 | DR-260709-cursor-uses-generic-agents     | 2026-07-09 | accepted | Cursor uses generic agents with Task-level model arguments              | -      |
 | DR-260709-dispatch-matrix-remains-source | 2026-07-09 | accepted | Dispatch matrix remains source of provider targets                      | -      |
