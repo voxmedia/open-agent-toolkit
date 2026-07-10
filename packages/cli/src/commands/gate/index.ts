@@ -212,19 +212,41 @@ interface ResolvedReviewProject {
 }
 
 type CorroborationStatus = 'matched' | 'missing' | 'mismatched';
+type ProjectCorroborationStatus = CorroborationStatus | 'ambient';
+
+interface GateTargetCorroboration {
+  run: CorroborationStatus;
+  project: ProjectCorroborationStatus;
+  expectedProject: string;
+  actual: {
+    containingProject: string | null;
+    artifactProject: string | null;
+    normalizedArtifactProject: string | null;
+    matchingArtifactPaths: string[];
+  };
+}
 
 interface GateInvocationCorroboration {
   run: CorroborationStatus;
+  project: ProjectCorroborationStatus;
   invocation: CorroborationStatus;
   expected: {
+    project: string;
     invocation: GateInvocationMetadata;
   };
   actual: {
+    containingProject: string | null;
+    artifactProject: string | null;
+    normalizedArtifactProject: string | null;
+    matchingArtifactPaths: string[];
     invocation: ReviewArtifactGateInvocation | null;
   };
 }
 
 interface ReviewGateArtifactCandidate extends LatestReview {
+  containingProject: string;
+  gateRunId: string | null;
+  artifactProject: string | null;
   generatedTime: number;
   lifecycleRank: number;
   signature: string;
@@ -329,12 +351,8 @@ function gateInvocationPromptContext(
 function corroborateGateInvocation(
   expected: GateInvocationMetadata,
   actual: ReviewArtifactGateInvocation | undefined,
+  targetCorroboration: GateTargetCorroboration,
 ): GateInvocationCorroboration {
-  const run: CorroborationStatus = !actual?.runId
-    ? 'missing'
-    : actual.runId === expected.runId
-      ? 'matched'
-      : 'mismatched';
   const invocationFields = [
     ['targetId', expected.targetId, actual?.targetId],
     ['runtime', expected.runtime, actual?.runtime],
@@ -353,10 +371,17 @@ function corroborateGateInvocation(
       : 'mismatched';
 
   return {
-    run,
+    run: targetCorroboration.run,
+    project: targetCorroboration.project,
     invocation,
-    expected: { invocation: expected },
-    actual: { invocation: actual ?? null },
+    expected: {
+      project: targetCorroboration.expectedProject,
+      invocation: expected,
+    },
+    actual: {
+      ...targetCorroboration.actual,
+      invocation: actual ?? null,
+    },
   };
 }
 
@@ -1500,16 +1525,20 @@ async function resolveExplicitReviewProject(
   return assertProjectPath(repoRoot, `${projectsRoot}/${trimmed}`, '--project');
 }
 
+function resolvedProjectsRoot(effective: ResolvedConfig): string {
+  return String(
+    effective.resolved['projects.root']?.value ??
+      effective.shared.projects?.root ??
+      '.oat/projects/shared',
+  );
+}
+
 async function resolveReviewProject(options: {
   repoRoot: string;
   effective: ResolvedConfig;
   project?: string;
 }): Promise<ResolvedReviewProject> {
-  const projectsRoot = String(
-    options.effective.resolved['projects.root']?.value ??
-      options.effective.shared.projects?.root ??
-      '.oat/projects/shared',
-  );
+  const projectsRoot = resolvedProjectsRoot(options.effective);
 
   if (options.project !== undefined) {
     return {
@@ -1575,6 +1604,7 @@ function reviewGateLifecycleRank(scope: string): number {
 
 async function readReviewGateArtifactCandidate(
   repoRoot: string,
+  containingProject: string,
   relativePath: string,
 ): Promise<ReviewGateArtifactCandidate | null> {
   const content = await readFile(join(repoRoot, relativePath), 'utf8');
@@ -1594,6 +1624,24 @@ async function readReviewGateArtifactCandidate(
   }
 
   const scope = getFrontmatterField(frontmatter, 'oat_review_scope') ?? '';
+  let parsedFrontmatter: Record<string, unknown> = {};
+  try {
+    const parsed: unknown = YAML.parse(frontmatter);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
+      parsedFrontmatter = parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Verdict parsing owns malformed-frontmatter diagnostics. The correlation
+    // scan keeps the artifact as a compatibility candidate without identity.
+  }
+  const frontmatterString = (key: string): string | null => {
+    const value = parsedFrontmatter[key];
+    return typeof value === 'string' && value.trim() ? value.trim() : null;
+  };
 
   return {
     path: relativePath,
@@ -1602,6 +1650,9 @@ async function readReviewGateArtifactCandidate(
     kind: 'project',
     archived: false,
     actionable: true,
+    containingProject,
+    gateRunId: frontmatterString('oat_gate_run_id'),
+    artifactProject: frontmatterString('oat_project'),
     generatedTime,
     lifecycleRank: reviewGateLifecycleRank(scope),
     signature: createHash('sha256').update(content).digest('hex'),
@@ -1655,6 +1706,7 @@ async function listActiveProjectReviewCandidates(options: {
         .map((entry) =>
           readReviewGateArtifactCandidate(
             options.repoRoot,
+            projectPath,
             normalizeToPosixPath(join(reviewsDir, entry.name)),
           ),
         ),
@@ -1665,6 +1717,30 @@ async function listActiveProjectReviewCandidates(options: {
         candidate !== null,
     )
     .sort(sortReviewGateArtifacts);
+}
+
+async function listReviewGateArtifactCandidates(options: {
+  repoRoot: string;
+  effective: ResolvedConfig;
+  reviewProject: ResolvedReviewProject;
+}): Promise<ReviewGateArtifactCandidate[]> {
+  const configuredProjects = await listProjectCandidates(
+    options.repoRoot,
+    resolvedProjectsRoot(options.effective),
+  );
+  const projectPaths = [
+    ...new Set([...configuredProjects, options.reviewProject.path]),
+  ];
+  const candidates = await Promise.all(
+    projectPaths.map((projectPath) =>
+      listActiveProjectReviewCandidates({
+        repoRoot: options.repoRoot,
+        projectPath,
+      }),
+    ),
+  );
+
+  return candidates.flat().sort(sortReviewGateArtifacts);
 }
 
 function findProducedReviewArtifact(
@@ -1681,6 +1757,91 @@ function findProducedReviewArtifact(
         beforeSignatures.get(candidate.path) !== candidate.signature,
     ) ?? null
   );
+}
+
+function resolveRunCorrelatedReviewArtifact(options: {
+  runId: string;
+  before: readonly ReviewGateArtifactCandidate[];
+  after: readonly ReviewGateArtifactCandidate[];
+}): {
+  artifact: ReviewGateArtifactCandidate | null;
+  diagnosticArtifact: ReviewGateArtifactCandidate | null;
+  matchingArtifactPaths: string[];
+} {
+  const matches = options.after.filter(
+    (candidate) => candidate.gateRunId === options.runId,
+  );
+  const artifact = matches.length === 1 ? matches[0]! : null;
+
+  return {
+    artifact,
+    diagnosticArtifact:
+      artifact ?? findProducedReviewArtifact(options.before, options.after),
+    matchingArtifactPaths: matches.map((candidate) => candidate.path).sort(),
+  };
+}
+
+function normalizeArtifactProject(
+  repoRoot: string,
+  artifactProject: string | null,
+): string | null {
+  if (!artifactProject) {
+    return null;
+  }
+
+  try {
+    const normalized = normalizeRepoRelativeProjectPath(
+      repoRoot,
+      artifactProject,
+    );
+    return normalized || null;
+  } catch {
+    return null;
+  }
+}
+
+function corroborateReviewTarget(options: {
+  repoRoot: string;
+  reviewProject: ResolvedReviewProject;
+  gateInvocation: GateInvocationMetadata;
+  artifact: ReviewGateArtifactCandidate | null;
+  diagnosticArtifact: ReviewGateArtifactCandidate | null;
+  matchingArtifactPaths: string[];
+}): GateTargetCorroboration {
+  const actualArtifact = options.artifact ?? options.diagnosticArtifact;
+  const normalizedArtifactProject = normalizeArtifactProject(
+    options.repoRoot,
+    actualArtifact?.artifactProject ?? null,
+  );
+  const run: CorroborationStatus =
+    options.matchingArtifactPaths.length > 1
+      ? 'mismatched'
+      : actualArtifact?.gateRunId === options.gateInvocation.runId
+        ? 'matched'
+        : actualArtifact?.gateRunId
+          ? 'mismatched'
+          : 'missing';
+  let project: ProjectCorroborationStatus = 'ambient';
+  if (options.reviewProject.source === 'declared') {
+    project = !actualArtifact?.artifactProject
+      ? 'missing'
+      : actualArtifact.containingProject === options.reviewProject.path &&
+          normalizedArtifactProject === options.reviewProject.path
+        ? 'matched'
+        : 'mismatched';
+  }
+
+  return {
+    run,
+    project,
+    expectedProject: options.reviewProject.path,
+    actual: {
+      containingProject: actualArtifact?.containingProject ?? null,
+      artifactProject: actualArtifact?.artifactProject ?? null,
+      normalizedArtifactProject,
+      matchingArtifactPaths: options.matchingArtifactPaths,
+    },
+  };
 }
 
 function reviewBlocksAtThreshold(
@@ -1928,6 +2089,64 @@ function writeReviewGateArtifactValidationFailure(
     `Review completed but artifact validation failed: ${payload.message}`,
   );
   context.logger.error(payload.recovery);
+}
+
+function writeReviewGateTargetingFailure(
+  context: CommandContext,
+  payload: {
+    runId: string;
+    target: string;
+    project: string;
+    projectResolutionSource: ReviewProjectResolutionSource;
+    artifactPath: string | null;
+    generatedAt: string | null;
+    message: string;
+    gateInvocation: GateInvocationMetadata;
+    corroboration: GateTargetCorroboration;
+  },
+): void {
+  const corroboration: GateInvocationCorroboration = {
+    run: payload.corroboration.run,
+    project: payload.corroboration.project,
+    invocation: 'missing',
+    expected: {
+      project: payload.corroboration.expectedProject,
+      invocation: payload.gateInvocation,
+    },
+    actual: {
+      ...payload.corroboration.actual,
+      invocation: null,
+    },
+  };
+  if (context.json) {
+    context.logger.json({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      runId: payload.runId,
+      target: payload.target,
+      project: payload.project,
+      projectResolutionSource: payload.projectResolutionSource,
+      artifactPath: payload.artifactPath,
+      generatedAt: payload.generatedAt,
+      gateInvocation: payload.gateInvocation,
+      corroboration,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message: payload.message,
+    });
+    return;
+  }
+
+  context.logger.error(
+    `Review completed but target correlation failed: ${payload.message}`,
+  );
+  context.logger.error(
+    `Expected project=${payload.corroboration.expectedProject} run=${payload.gateInvocation.runId}; actual containing_project=${payload.corroboration.actual.containingProject ?? 'missing'} artifact_project=${payload.corroboration.actual.artifactProject ?? 'missing'} run_matches=${payload.corroboration.actual.matchingArtifactPaths.join(',') || 'none'}.`,
+  );
+  context.logger.error(
+    'This targeting failure is not receive-eligible and must be corrected before severity or invocation remediation.',
+  );
 }
 
 async function updateConfigLayer(
@@ -2191,9 +2410,10 @@ async function runReviewGate(
       gateInvocation,
     };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
-    const before = await listActiveProjectReviewCandidates({
+    const before = await listReviewGateArtifactCandidates({
       repoRoot,
-      projectPath,
+      effective,
+      reviewProject,
     });
     const reviewPrompt = assembleReviewGatePrompt([
       REVIEW_GATE_CONTEXT_NOTE,
@@ -2230,23 +2450,43 @@ async function runReviewGate(
       return;
     }
 
-    const after = await listActiveProjectReviewCandidates({
+    const after = await listReviewGateArtifactCandidates({
       repoRoot,
-      projectPath,
+      effective,
+      reviewProject,
     });
-    const producedArtifact = findProducedReviewArtifact(before, after);
+    const artifactResolution = resolveRunCorrelatedReviewArtifact({
+      runId,
+      before,
+      after,
+    });
+    const initialTargetCorroboration = corroborateReviewTarget({
+      repoRoot,
+      reviewProject,
+      gateInvocation,
+      artifact: artifactResolution.artifact,
+      diagnosticArtifact: artifactResolution.diagnosticArtifact,
+      matchingArtifactPaths: artifactResolution.matchingArtifactPaths,
+    });
+    const producedArtifact = artifactResolution.artifact;
     if (!producedArtifact) {
-      writeReviewGateArtifactValidationFailure(context, {
+      const diagnosticArtifact = artifactResolution.diagnosticArtifact;
+      const message =
+        artifactResolution.matchingArtifactPaths.length > 1
+          ? `Multiple direct review artifacts carried gate run ID ${runId}.`
+          : initialTargetCorroboration.run === 'mismatched'
+            ? `The changed review artifact did not carry the expected gate run ID ${runId}.`
+            : `No direct active project review artifact carried gate run ID ${runId}.`;
+      writeReviewGateTargetingFailure(context, {
         runId,
         target: selected.id,
         project: projectPath,
         projectResolutionSource: reviewProject.source,
-        artifactPath: null,
-        generatedAt: null,
-        message: `No new review artifact was detected for project ${projectPath}.`,
-        recovery:
-          'Ensure the review provider wrote a project review artifact. If it did, fix or attach that artifact and run oat-project-review-receive before treating the review as consumed.',
+        artifactPath: diagnosticArtifact?.path ?? null,
+        generatedAt: diagnosticArtifact?.generatedAt ?? null,
+        message,
         gateInvocation,
+        corroboration: initialTargetCorroboration,
       });
       process.exitCode = 1;
       return;
@@ -2276,9 +2516,42 @@ async function runReviewGate(
       process.exitCode = 1;
       return;
     }
+    const targetCorroboration = corroborateReviewTarget({
+      repoRoot,
+      reviewProject,
+      gateInvocation,
+      artifact: {
+        ...producedArtifact,
+        artifactProject: verdict.project,
+      },
+      diagnosticArtifact: producedArtifact,
+      matchingArtifactPaths: artifactResolution.matchingArtifactPaths,
+    });
+    if (
+      reviewProject.source === 'declared' &&
+      targetCorroboration.project !== 'matched'
+    ) {
+      writeReviewGateTargetingFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        projectResolutionSource: reviewProject.source,
+        artifactPath: producedArtifact.path,
+        generatedAt: producedArtifact.generatedAt,
+        message:
+          targetCorroboration.project === 'missing'
+            ? 'Review artifact is missing oat_project for the explicitly declared project.'
+            : 'Review artifact project identity does not match the explicitly declared project.',
+        gateInvocation,
+        corroboration: targetCorroboration,
+      });
+      process.exitCode = 1;
+      return;
+    }
     const corroboration = corroborateGateInvocation(
       gateInvocation,
       verdict.gateInvocation,
+      targetCorroboration,
     );
     if (
       corroboration.run !== 'matched' ||

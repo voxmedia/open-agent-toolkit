@@ -351,7 +351,9 @@ describe('oat gate', () => {
       minor: number;
     };
     reviewInvocation?: 'gate' | 'manual' | 'auto' | null;
+    artifactProject?: string | null;
     omitGateInvocation?: boolean;
+    omitGateRunId?: boolean;
     gateInvocationOverrides?: Partial<{
       oat_gate_run_id: string;
       oat_gate_target: string;
@@ -399,15 +401,21 @@ describe('oat gate', () => {
       ?.split('\n');
     const gateInvocationLines = options.omitGateInvocation
       ? []
-      : !options.gateInvocationOverrides && promptGateInvocationLines
+      : !options.gateInvocationOverrides &&
+          !options.omitGateRunId &&
+          promptGateInvocationLines
         ? promptGateInvocationLines
-        : gateInvocationKeys.map((key) => {
-            const override = options.gateInvocationOverrides?.[key];
-            const promptValue = lastExecutePrompt.match(
-              new RegExp(`^${key}: (.+)$`, 'm'),
-            )?.[1];
-            return `${key}: ${override ?? promptValue ?? 'unknown'}`;
-          });
+        : gateInvocationKeys
+            .filter(
+              (key) => !(options.omitGateRunId && key === 'oat_gate_run_id'),
+            )
+            .map((key) => {
+              const override = options.gateInvocationOverrides?.[key];
+              const promptValue = lastExecutePrompt.match(
+                new RegExp(`^${key}: (.+)$`, 'm'),
+              )?.[1];
+              return `${key}: ${override ?? promptValue ?? 'unknown'}`;
+            });
     await writeFile(
       join(options.root, relativePath),
       [
@@ -419,7 +427,9 @@ describe('oat gate', () => {
         ...(options.reviewInvocation === null
           ? []
           : [`oat_review_invocation: ${options.reviewInvocation ?? 'gate'}`]),
-        `oat_project: ${options.projectPath}`,
+        ...(options.artifactProject === null
+          ? []
+          : [`oat_project: ${options.artifactProject ?? options.projectPath}`]),
         ...gateInvocationLines,
         ...countLines,
         '---',
@@ -2615,13 +2625,14 @@ describe('oat gate', () => {
       handoff: expect.stringContaining('oat-project-review-receive'),
       corroboration: {
         run: 'matched',
+        project: 'ambient',
         invocation: 'matched',
       },
     });
     expect(process.exitCode).toBe(1);
   });
 
-  it('rejects gate artifacts missing configured invocation metadata', async () => {
+  it('treats gate artifacts missing all configured invocation metadata as uncorrelated runs', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
@@ -2643,11 +2654,54 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'artifact_validation_failed',
+      status: 'targeting_correlation_failed',
       projectResolutionSource: 'active-project',
-      message: expect.stringContaining('invocation metadata'),
+      receiveEligible: false,
       corroboration: {
         run: 'missing',
+        project: 'ambient',
+        invocation: 'missing',
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps missing invocation fields remediable when the gate run id correlates', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_gate_target: '',
+            oat_gate_runtime: '',
+            oat_invocation_model: '',
+            oat_invocation_reasoning_effort: '',
+            oat_invocation_source: '',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      outcome: 'review_completed_artifact_validation_failed',
+      recovery: expect.stringContaining(
+        'Copy the exact gate invocation fields',
+      ),
+      corroboration: {
+        run: 'matched',
+        project: 'ambient',
         invocation: 'missing',
       },
     });
@@ -2723,6 +2777,7 @@ describe('oat gate', () => {
       message: expect.stringContaining('does not match'),
       corroboration: {
         run: 'matched',
+        project: 'ambient',
         invocation: 'mismatched',
         actual: {
           invocation: {
@@ -2799,6 +2854,9 @@ describe('oat gate', () => {
         status: 'ok',
         project: projectPath,
         projectResolutionSource: 'active-project',
+        corroboration: {
+          project: 'ambient',
+        },
         blocking: false,
       });
       expect(process.exitCode).toBe(0);
@@ -3533,6 +3591,15 @@ describe('oat gate', () => {
       status: 'ok',
       project: projectPath,
       projectResolutionSource: 'declared',
+      corroboration: {
+        project: 'matched',
+        expected: { project: projectPath },
+        actual: {
+          containingProject: projectPath,
+          artifactProject: projectPath,
+          normalizedArtifactProject: projectPath,
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -3578,6 +3645,9 @@ describe('oat gate', () => {
       status: 'ok',
       project: explicitProjectPath,
       projectResolutionSource: 'declared',
+      corroboration: {
+        project: 'matched',
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -3607,6 +3677,296 @@ describe('oat gate', () => {
       status: 'ok',
       project: projectPath,
       projectResolutionSource: 'single-candidate',
+      corroboration: {
+        project: 'ambient',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('finds a run-correlated artifact for an explicit project outside the configured shared root', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(
+      root,
+      '.oat/projects/team/outside-shared-root',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: projectPath,
+      projectResolutionSource: 'declared',
+      corroboration: {
+        run: 'matched',
+        project: 'matched',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects a run-correlated sibling-project write before invocation remediation or severity', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          artifactProject: declaredProject,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_invocation_model: 'also-wrong-but-targeting-wins',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      artifactPath,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      corroboration: {
+        run: 'matched',
+        project: 'mismatched',
+        expected: { project: declaredProject },
+        actual: {
+          containingProject: siblingProject,
+          artifactProject: declaredProject,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    ['missing', null, 'missing'],
+    ['wrong', '.oat/projects/shared/sibling', 'mismatched'],
+    ['outside-repo', '../../outside', 'mismatched'],
+  ] as const)(
+    'rejects %s oat_project for an explicitly declared review project',
+    async (_label, artifactProject, expectedStatus) => {
+      const { root, home } = await setup();
+      const declaredProject = await writeProject(
+        root,
+        '.oat/projects/shared/declared',
+      );
+      await writeProject(root, '.oat/projects/shared/sibling');
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath: declaredProject,
+            artifactProject,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--project',
+          declaredProject,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        receiveEligible: false,
+        handoff: null,
+        corroboration: {
+          run: 'matched',
+          project: expectedStatus,
+          actual: {
+            containingProject: declaredProject,
+            artifactProject,
+          },
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    ['missing', true, undefined, 'missing'],
+    ['wrong', false, '11111111-1111-4111-8111-111111111111', 'mismatched'],
+  ] as const)(
+    'rejects a %s gate run id as non-remediable targeting failure',
+    async (_label, omitGateRunId, wrongRunId, expectedStatus) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            omitGateRunId,
+            ...(wrongRunId
+              ? {
+                  gateInvocationOverrides: {
+                    oat_gate_run_id: wrongRunId,
+                  },
+                }
+              : {}),
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        receiveEligible: false,
+        remediable: false,
+        handoff: null,
+        corroboration: {
+          run: expectedStatus,
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('rejects duplicate direct artifacts carrying the same gate run id', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: declaredProject,
+          fileName: 'declared-review.md',
+          finding: 'clean',
+        });
+        await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          fileName: 'sibling-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      receiveEligible: false,
+      corroboration: {
+        run: 'mismatched',
+        actual: {
+          matchingArtifactPaths: expect.arrayContaining([
+            `${declaredProject}/reviews/declared-review.md`,
+            `${siblingProject}/reviews/sibling-review.md`,
+          ]),
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('uses the unique run-id match instead of a changed wrong-run diagnostic artifact', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    let matchedArtifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'wrong-run-review.md',
+          finding: 'important',
+          gateInvocationOverrides: {
+            oat_gate_run_id: '11111111-1111-4111-8111-111111111111',
+          },
+        });
+        matchedArtifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'matched-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      artifactPath: matchedArtifactPath,
+      corroboration: {
+        run: 'matched',
+        project: 'matched',
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -3631,9 +3991,9 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'artifact_validation_failed',
-      outcome: 'review_completed_artifact_validation_failed',
-      message: expect.stringContaining('No new review artifact was detected'),
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
   });
@@ -3660,9 +4020,9 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'artifact_validation_failed',
-      outcome: 'review_completed_artifact_validation_failed',
-      message: expect.stringContaining('No new review artifact was detected'),
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
   });

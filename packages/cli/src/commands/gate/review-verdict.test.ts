@@ -29,6 +29,7 @@ describe('parseReviewGateVerdict', () => {
 oat_review_type: artifact
 oat_review_scope: plan
 oat_review_invocation: gate
+oat_project: .oat/projects/shared/demo
 oat_gate_run_id: 11111111-1111-4111-8111-111111111111
 oat_gate_target: codex-sol-max
 oat_gate_runtime: codex
@@ -55,6 +56,7 @@ None.
       reviewType: 'artifact',
       scope: 'plan',
       invocation: 'gate',
+      project: '.oat/projects/shared/demo',
       gateInvocation: {
         runId: '11111111-1111-4111-8111-111111111111',
         targetId: 'codex-sol-max',
@@ -88,6 +90,7 @@ Findings: 0 critical, 0 important, 0 medium, 0 minor
     const verdict = await parseReviewGateVerdict(artifactPath);
 
     expect(verdict.invocation).toBe('manual');
+    expect(verdict.project).toBeNull();
     expect(verdict).not.toHaveProperty('gateInvocation');
   });
 

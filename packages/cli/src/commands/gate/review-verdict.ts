@@ -8,6 +8,7 @@ export interface ReviewGateVerdict {
   reviewType: 'code' | 'artifact' | 'unknown';
   scope: string | null;
   invocation: string | null;
+  project: string | null;
   gateInvocation?: ReviewArtifactGateInvocation;
   counts: {
     critical: number;
@@ -522,6 +523,7 @@ export async function parseReviewGateVerdict(
     reviewType: normalizeReviewType(frontmatter['oat_review_type']),
     scope: stringOrNull(frontmatter['oat_review_scope']),
     invocation: stringOrNull(frontmatter['oat_review_invocation']),
+    project: stringOrNull(frontmatter['oat_project']),
     ...(gateInvocation ? { gateInvocation } : {}),
     counts,
     blocking: hasBlockingFindings(counts),
