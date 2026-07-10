@@ -137,8 +137,9 @@ without preserving the known duplication.
   read from config or sent to a provider is not observed producer identity.
 - Keep Cursor credentials and tokens out of evidence; record only sanitized
   environment context.
-- Before implementation, refresh this worktree onto a base that contains the
-  completed candidate-ladder contract.
+- This branch is rebased onto merged PR #132 (`c5190684`), which contains the
+  completed candidate-ladder contract. Re-verify the base only if `main`
+  advances again before implementation.
 - If shipped CLI functionality changes, bump the lockstep public package set and
   pass `pnpm release:validate`.
 
@@ -195,8 +196,8 @@ without preserving the known duplication.
 
 ## Assumptions
 
-- The implementation base will include the completed
-  `gate-review-provenance-target-safety` branch/merge before code work begins.
+- The implementation base includes merged PR #132 and its completed
+  `gate-review-provenance-target-safety` contract.
 - The versioned recommendation asset is the source for the live-probe candidate
   set; implementation re-reads it rather than copying a stale list.
 - No persisted live Task-success evidence currently exists for the 13 GPT-5.6
@@ -223,12 +224,12 @@ without preserving the known duplication.
   - **Impact:** Medium
   - **Mitigation Ideas:** Record sanitized context and dated rechecks without
     guessing or silently editing recommendations.
-- **Branch dependency drift:** This planning branch currently predates the
-  completed candidate-ladder work.
-  - **Likelihood:** High until refreshed
+- **Upstream contract drift:** Further changes to `main` could move the
+  candidate-ladder interfaces again before implementation begins.
+  - **Likelihood:** Low
   - **Impact:** High
-  - **Mitigation Ideas:** Verify the dependency commit/merge is present before
-    implementation and regenerate task file references after refresh.
+  - **Mitigation Ideas:** Refresh from `main` at implementation preflight and
+    regenerate task file references if the interfaces changed.
 
 ## Next Steps
 

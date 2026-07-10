@@ -48,8 +48,9 @@ artifact corroboration. This project sits below and above those behaviors:
 - above selection, it turns existing resolver and gate provenance into one
   general report without changing their authority.
 
-The implementation branch must first contain the completed dependency contract.
-No task in this project should backport or reimplement candidate selection.
+This branch is rebased onto merged PR #132 and contains the completed dependency
+contract. No task in this project should backport or reimplement candidate
+selection.
 
 **Key Components:**
 
