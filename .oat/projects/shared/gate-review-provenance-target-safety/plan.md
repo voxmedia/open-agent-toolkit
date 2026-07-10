@@ -1519,21 +1519,175 @@ pnpm release:validate
 
 ---
 
+### Task p04-t26: Define unified provider candidate ladders
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/config/dispatch-matrix-recommendation.json`
+- Test: `packages/cli/src/config/oat-config.test.ts`
+- Test: `packages/cli/src/config/resolve.test.ts`
+
+**Steps:**
+
+1. Define one provider candidate-ladder configuration: each named tier owns an ordered candidate list, and its final candidate is that tier's ceiling.
+2. Preserve backwards compatibility by accepting the current single target or route form as a one-candidate ladder; retain fallback-route behavior separately from candidate ordering.
+3. Preserve provider payloads: Codex model/effort objects, Claude model values, and opaque Cursor model strings. Do not infer Cursor capability from model-string text.
+4. Update the bundled recommendation to declare complete canonical ladders, including lower Codex and Cursor candidates.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `feat(dispatch): define provider candidate ladders`
+
+---
+
+### Task p04-t27: Resolve exact task targets beneath named ceilings
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/providers/ceiling/registry.ts`
+- Test: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- Test: `packages/cli/src/providers/ceiling/registry.test.ts`
+
+**Steps:**
+
+1. Separate a project or phase named ceiling from an orchestrator's ephemeral requested candidate; validate the candidate belongs to the selected tier or a lower tier.
+2. Resolve Codex to the exact configured model/effort variant, Claude to the exact model argument, and Cursor to the exact opaque configured string.
+3. Reject candidates above the named ceiling, absent candidates, malformed ordering, and direct role-name bypasses. Preserve explicit legacy policy behavior during migration.
+4. Prove that a High ceiling permits configured Luna and Terra candidates but rejects configured Frontier-only candidates; prove that a Balanced ceiling permits Terra/medium but rejects Terra/xhigh when the latter is not configured.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts src/providers/ceiling/registry.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `feat(dispatch): select targets below configured ceilings`
+
+---
+
+### Task p04-t28: Materialize every configured Codex ladder candidate
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Test: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- Test: `packages/cli/src/commands/sync/index.test.ts`
+
+**Steps:**
+
+1. Collect every unique Codex candidate from the configured ladder, not only the named ceiling target, and materialize matching roles in the owning scope.
+2. Preserve the tracked supported catalogue, scoped custom-target ownership, collision protection, and idempotent stale cleanup.
+3. Prove that lower custom candidates are materialized before dispatch and a subsequent sync is byte-identical.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm run cli:source -- sync --scope project --dry-run
+```
+
+**Commit:** `fix(sync): materialize configured dispatch candidates`
+
+---
+
+### Task p04-t29: Adopt complete ladders and dispatch per task
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Test: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: bundled skill assets
+
+**Steps:**
+
+1. When setup finds no complete ladder, show the complete bundled recommendation and ask the user to adopt it in an explicit owning scope; do not persist a project-specific active policy into user configuration.
+2. Persist a project or phase named ceiling as a constraint. Require each implementation task to request a resolver-validated candidate at or below that ceiling; record the resulting exact target in the dispatch stamp.
+3. Keep reviewer and lifecycle gate rules explicit: reviewers use their configured review ceiling unless a separate reviewed contract permits a lower candidate; lifecycle gate commands remain target-neutral.
+4. Add contracts for all planning paths, lower-tier selection under a High ceiling, exact Claude/Cursor payload preservation, and fail-closed missing-candidate behavior.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `feat(workflow): dispatch tasks beneath project ceilings`
+
+---
+
+### Task p04-t30: Document adaptive dispatch ceilings
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Test: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: bundled documentation assets
+
+**Steps:**
+
+1. Explain ordered candidates and named ceilings, while project or phase state constrains the maximum named tier.
+2. Document ownership, full recommendation adoption, Codex materialization, exact Claude/Cursor invocation, opaque Cursor strings, and no direct role-name bypass.
+3. Remove wording that treats a managed policy as an enduring exact model-family selection and document migration behavior.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm docs:check-links
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `docs(dispatch): explain adaptive ceiling selection`
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed          | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed          | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed          | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | fixes_completed | 2026-07-10 | reviews/archived/final-review-2026-07-10T134214Z.md         |
-| spec   | artifact | pending         | -          | -                                                           |
-| design | artifact | pending         | -          | -                                                           |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | fixes_added | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T134214Z.md         |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -1545,16 +1699,14 @@ pnpm release:validate
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
-- Phase 4: 25 tasks - shared opt-in setup, safety/release work, one phase review fix, and twenty-one final review fixes
+- Phase 4: 30 tasks - shared opt-in setup, safety/release work, final-review fixes, and adaptive provider dispatch ceilings
 
-**Total: 48 tasks**
+**Total: 53 tasks**
 
-Phase 0 through Phase 4 reviews have passed. The first final review added ten
-fix tasks; cycle 2 added five supplemental fix tasks; and cycle 3 added six more
-tasks. All 48 tasks are complete and the final review is `fixes_completed`.
-The user explicitly waived a fourth final re-review after the cycle-3 fixes
-completed. The review remains `fixes_completed`, not `passed`; await explicit
-p04 HiLL approval.
+Phase 0 through Phase 3 reviews have passed. The completed p04 review work is
+extended with adaptive dispatch tasks `p04-t26` through `p04-t30`; the previous
+final-review waiver applies only to the prior 48-task scope. Implement the new
+tasks, then obtain a final review disposition before explicit p04 HiLL approval.
 
 ## References
 

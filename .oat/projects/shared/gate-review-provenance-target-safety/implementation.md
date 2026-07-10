@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p04-t26
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 25    | 25/25     |
+| p04   | in_progress | 30    | 25/30     |
 
-**Total:** 48/48 tasks completed
+**Total:** 48/53 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** cycle-3 final-review fixes completed (25/25); final re-review waived by user; awaiting explicit p04 HiLL approval
+**Status:** adaptive dispatch-ceiling extension in progress (25/30)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -413,14 +413,22 @@ oat_generated: false
 - Bundled docs are byte-identical to the authored guide; no skill or public-package version changed.
 - Verification passed 61 focused contracts, the 532-link docs crawl, workspace format, and five-package release validation at `0.1.47`.
 
+### Tasks p04-t26 through p04-t30: Adaptive dispatch ceilings
+
+**Status:** pending
+
+- Replace exact-policy model pinning with unified ordered provider candidate ladders whose final values define named ceilings.
+- Select exact resolver-validated per-task targets at or below a project or phase ceiling; preserve provider-specific Codex roles and Claude/Cursor invocation controls.
+- Materialize every configured Codex candidate, adopt complete recommendations explicitly by ownership scope, and document the migration.
+
 ### Phase Summary
 
-- **Outcome:** All 25 p04 tasks and all 48 project tasks are complete. Final review cycle 3's six realpath, user-status, header, dispatch-pair, quick-resumption, and docs-parity fixes are complete.
+- **Outcome:** The original 25 p04 tasks are complete. The user approved an integrated adaptive-dispatch extension before p04 HiLL, adding five tasks that separate reusable provider ladders from project or phase ceilings.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** Final review cycle 3 is `fixes_completed`. The user explicitly waived a fourth final re-review after the cycle-3 fixes completed. This is a waiver, not a `passed` review result; await explicit p04 HiLL approval before lifecycle finalization.
+- **Review status:** The user waived a fourth final review for the prior 48-task scope. That waiver does not cover the adaptive-dispatch extension; p04 requires a final review disposition after `p04-t26` through `p04-t30` before HiLL approval.
 
 ## Orchestration Runs
 

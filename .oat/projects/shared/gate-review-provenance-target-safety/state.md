@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t26
 oat_last_commit: 70514a1e
 oat_blockers: []
 associated_issues:
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T14:36:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T15:46:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation fixes complete - all 48 planned tasks are complete and p04 is 25/25. Final review cycle 3 remains `fixes_completed`; the user explicitly waived a fourth final re-review. Explicit p04 HiLL approval is the next lifecycle decision.
+Implementation - 48 of 53 planned tasks are complete and p04 is 25/30. The user approved an adaptive dispatch-ceiling extension before p04 HiLL; execution resumes at `p04-t26`.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation fixes complete - all 48 planned tasks are complete and p04 is 25/
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (48/48 tasks complete; final review is `fixes_completed`)
+- **Implementation:** `implementation.md` (48/53 tasks complete; adaptive dispatch extension in progress)
 
 ## Progress
 
@@ -191,8 +191,8 @@ Implementation fixes complete - all 48 planned tasks are complete and p04 is 25/
 - ✓ `p04-t25` aligns review guidance with shipped user/project Codex materialization ownership
 - ✓ p04-t25 verification passed 61 focused contracts, 532 docs links, format, bundled parity, and release validation at `0.1.47`
 - ✓ All 48/48 tasks complete; final review cycle 3 is `fixes_completed`
-- ✓ User waived a fourth final re-review after the cycle-3 fixes completed; final review remains `fixes_completed`
-- ⧗ Await explicit p04 HiLL approval
+- ✓ User waived a fourth final re-review for the completed 48-task scope
+- ⧗ Implement `p04-t26` through `p04-t30`, then obtain a final review disposition before p04 HiLL approval
 
 ## Blockers
 
@@ -200,4 +200,4 @@ None
 
 ## Next Milestone
 
-Await explicit p04 HiLL approval. The final-review waiver is recorded; preserve the final review as `fixes_completed`, not `passed`.
+Implement the adaptive dispatch-ceiling extension beginning with `p04-t26`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
