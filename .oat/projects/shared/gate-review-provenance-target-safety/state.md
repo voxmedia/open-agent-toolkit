@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t14
+oat_current_task: null
 oat_last_commit: a8806887
 oat_blockers: []
 associated_issues:
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T11:55:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T12:00:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 36 of 37 planned tasks are complete. Final-review fixes `p04-t05` through `p04-t13` are complete; only `p04-t14` remains.
+Implementation - all 37 of 37 planned tasks are complete; p04 is 14/14. Final review fixes are `fixes_completed`, pending independent final re-review and explicit p04 HiLL approval.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 36 of 37 planned tasks are complete. Final-review fixes `p04-t0
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (36/37 tasks complete; final review remains `fixes_added`)
+- **Implementation:** `implementation.md` (37/37 tasks complete; final review is `fixes_completed`, awaiting re-review)
 
 ## Progress
 
@@ -161,8 +161,10 @@ Implementation - 36 of 37 planned tasks are complete. Final-review fixes `p04-t0
 - ✓ `p04-t11` rejects typo, whitespace, and case-mismatched dispatch roles before argument resolution
 - ✓ `p04-t12` keeps every artifact review on the exact resolved role or pinned child and fails closed on unavailable controls or timeout
 - ✓ `p04-t13` aligns noninteractive readiness, Codex max, opaque Cursor enforcement, and project/user Codex output ownership across canonical and bundled docs
+- ✓ `p04-t14` migrated live lifecycle commands and invocation metadata, materialized user Codex roles, and proved immediate zero-operation dry-run
+- ✓ All 37/37 tasks complete; p04 is 14/14
 - ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
-- ⧗ Execute `p04-t14`, then final re-review
+- ⧗ Run independent final re-review, then request explicit p04 HiLL approval
 
 ## Blockers
 
@@ -170,4 +172,4 @@ None
 
 ## Next Milestone
 
-Execute external-state task `p04-t14`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.
+Run an independent final re-review over the completed fixes. If it passes, request explicit p04 HiLL approval before lifecycle finalization.

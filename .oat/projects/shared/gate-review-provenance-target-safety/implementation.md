@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t14
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 14    | 13/14     |
+| p04   | in_progress | 14    | 14/14     |
 
-**Total:** 36/37 tasks completed
+**Total:** 37/37 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -290,14 +290,25 @@ oat_generated: false
 - `.codex/config.toml` and every generated project Codex variant are repository-owned, version-controlled provider output with no automatic ignore mechanism. User-config roles materialize under `~/.codex`.
 - Canonical skill/docs and regenerated bundled assets agree. Verification passed 57 focused contracts, all 53 skills, 532 links, root format, and release validation for all five packages at `0.1.47`.
 
+### Task p04-t14: (final review) Migrate active user gate configuration
+
+**Status:** completed
+**Commit:** No code commit; external state recorded by this task's bookkeeping commit.
+
+- `~/.oat/config.json` changed from SHA-256 `64d52c683d6f4d94cc103a02624c490964bd4dd8bfe0e78fcbd0b047845334c3` to `a8496936bb94282df78fbed34fce535a790152b82cbfa98c47412f6c320f2a84`.
+- All four lifecycle gate commands now contain literal `--project "$PROJECT_PATH"` and remain free of provider/model `--target` arguments.
+- Exact invocation metadata is present for Codex Sol/max, Claude fable/provider-default, Cursor Sol-max/provider-default, and Cursor Fable-xhigh/provider-default.
+- Source-tree user sync applied 11 operations with zero failures: ten role files plus `~/.codex/config.toml`. Eight configured variants carry `# oat-owner: user-config`; the two base roles carry canonical `oat-managed`/`oat-role` markers.
+- The immediate user dry-run reported zero planned/applied/failed operations. Live resolver probes returned Codex Frontier `gpt-5.6-sol/max` with pinned variant `oat-phase-implementer-gpt-5-6-sol-max`, plus all four exact Cursor opaque strings as enforced model args.
+
 ### Phase Summary
 
-- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. Spec-driven Overwrite preserves the same complete explicit phase-review value already protected by quick/import rewrites, dispatch role parsing rejects malformed values, artifact reviews retain the exact resolved target, and public readiness/provider/ownership references match shipped behavior. The first final-review fix wave also repairs user-owned Codex target expansion, custom-role collision safety, executed-model metadata, malformed-artifact correlation, and receive-eligible lifecycle routing. Only `p04-t14` remains.
+- **Outcome:** All p04 tasks are complete. Every plan-producing workflow uses one canonical phase-review setup; explicit phase-review state survives every rewrite; malformed dispatch roles fail at the boundary; artifact reviews retain their resolved target; public readiness/provider/ownership references match shipped behavior; and live user gate configuration now declares the project and exact invocation metadata with idempotent user role materialization.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** The committed wave passes 313 affected assertions across 11 test files, CLI type-check, validation of all 53 OAT skills, a 532-link crawl with zero broken links, 10 formatting tasks plus 186 Markdown files, project sync idempotence, version hygiene, and diff hygiene. Each task's focused RED/GREEN checks also passed.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review remains `fixes_added`; `p04-t05` through `p04-t13` are complete, with only `p04-t14` pending.
+- **Review status:** The first final review is `fixes_completed`. All ten final-review tasks `p04-t05` through `p04-t14` are complete; independent final re-review and explicit p04 HiLL approval remain pending.
 
 ## Orchestration Runs
 
@@ -422,6 +433,21 @@ oat_generated: false
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Commits: `37b6defc`, `bfefac9f`, `af22da66`, `55ac0b9f`, `a0ea5aa4`
 - Dispatch: scope=p04 action=final-review-fix-wave-1 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run a9a520ad-02bb-4bce-949f-74c7688b3631
+
+- Started: 2026-07-10T11:35:45Z
+- Scope: p04 final-review fix wave 2 (`p04-t10` through `p04-t14`)
+- Execution: exact registered Codex implementer role
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model axis: `selected:gpt-5.6-sol`
+- Effort axis: `selected:high`
+- Policy source: user config
+- Provider default effort: `max`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Implementation commits: `380244f2`, `b9568c53`, `9328b327`, `a8806887`; p04-t14 is external-state-only.
+- Prior root follow-up commits retained in task records: `a1eb5e93`, `bc605764`, `dc71840f`.
+- Dispatch: scope=p04 action=final-review-fix-wave-2 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -841,13 +867,14 @@ oat_generated: false
 | p04-t11    | RED/GREEN invalid-role matrix; 72 dispatch-ceiling assertions; CLI type-check                                         | 76     | 0      | Exact role union and omitted-only implementer default         |
 | p04-t12    | RED/GREEN target-preserving artifact-review contracts; 53-skill validation; 532-link crawl                            | 59     | 0      | Guarded inline exceptions and fail-closed timeout routing     |
 | p04-t13    | RED/GREEN readiness/provider/ownership contracts; skills; links; format; release                                      | 62     | 0      | Canonical/bundled parity and five packages at 0.1.47          |
+| p04-t14    | Live config contract; user sync; role/owner registration; zero-op dry-run; 5 resolver cells                           | 22     | 0      | Declared project, invocation metadata, user materialization   |
 | p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
 | p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing |
 
 ## Final Summary (for PR/docs)
 
-Phase 4 remains in progress. Final-review fixes `p04-t05` through `p04-t13`
-are complete: the actual user-scope scanner can safely materialize the
+Phase 4 task execution is complete. Final-review fixes `p04-t05` through
+`p04-t14` are complete: the actual user-scope scanner safely materializes the
 finite canonical Codex roles; custom role identities cannot collide after
 normalization; gate metadata reflects the selected execution model; malformed
 run-correlated YAML is classified as artifact validation without weakening
@@ -857,10 +884,11 @@ preserves the complete raw phase-review setting before shared setup, and the
 dispatch resolver rejects malformed role values before producing arguments.
 Artifact reviews also retain the exact resolved target across unavailable-role
 and timeout paths. Public readiness, provider enforcement, and Codex output
-ownership references now match shipped behavior.
+ownership references now match shipped behavior. Live lifecycle gate commands
+declare the project, carry exact configured invocation metadata, and produce an
+idempotent user Codex role surface before the next provider session starts.
 
-The project is at 36 of 37 tasks and p04 is at 13 of 14. The first final review
-remains `fixes_added`; `p04-t14` and final re-review remain
-pending. User configuration was not mutated, no live user sync was run, no
-canonical skill version was bumped again, and all five public packages remain
-at `0.1.47`.
+The project is at 37 of 37 tasks and p04 is at 14 of 14. The first final review
+is `fixes_completed`; independent final re-review and explicit p04 HiLL approval
+remain pending. No canonical skill received another version bump, and all five
+public packages remain at `0.1.47`.
