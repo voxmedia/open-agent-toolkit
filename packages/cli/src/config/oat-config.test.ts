@@ -882,6 +882,10 @@ describe('oat-config', () => {
                 'codex-custom': {
                   runtime: 'codex',
                   baseCommand: ['codex', 'exec'],
+                  invocation: {
+                    model: '  gpt-5.6-sol  ',
+                    reasoningEffort: '  max  ',
+                  },
                   hostDetectionCommand: [
                     'sh',
                     '-c',
@@ -892,6 +896,9 @@ describe('oat-config', () => {
                 },
                 'codex-default': {
                   priority: 80,
+                  invocation: {
+                    model: 'provider-default',
+                  },
                 },
                 'partial-command': {
                   baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
@@ -909,6 +916,10 @@ describe('oat-config', () => {
                   hostDetectionCommand: ['sh', 1],
                   availabilityCommand: 'custom-agent --version',
                   priority: 10,
+                  invocation: {
+                    model: '   ',
+                    reasoningEffort: 42,
+                  },
                 },
                 disabled: null,
                 invalidOnly: {
@@ -928,12 +939,19 @@ describe('oat-config', () => {
         'codex-custom': {
           runtime: 'codex',
           baseCommand: ['codex', 'exec'],
+          invocation: {
+            model: 'gpt-5.6-sol',
+            reasoningEffort: 'max',
+          },
           hostDetectionCommand: ['sh', '-c', 'test -n "$CODEX_THREAD_ID"'],
           availabilityCommand: ['codex', '--version'],
           priority: 80,
         },
         'codex-default': {
           priority: 80,
+          invocation: {
+            model: 'provider-default',
+          },
         },
         'partial-command': {
           baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
@@ -959,6 +977,10 @@ describe('oat-config', () => {
         'codex-default': {
           runtime: 'codex',
           baseCommand: ['codex', 'exec'],
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+          },
           hostDetectionCommand: [
             'sh',
             '-c',
@@ -970,6 +992,10 @@ describe('oat-config', () => {
         'claude-default': {
           runtime: 'claude',
           baseCommand: ['claude', '-p'],
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+          },
           hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
           availabilityCommand: ['claude', '--version'],
           priority: 100,
@@ -977,6 +1003,10 @@ describe('oat-config', () => {
         'cursor-default': {
           runtime: 'cursor',
           baseCommand: ['cursor-agent', '-p'],
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+          },
           hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
           availabilityCommand: [
             'sh',

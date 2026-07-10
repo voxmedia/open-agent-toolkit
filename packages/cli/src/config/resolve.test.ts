@@ -1103,6 +1103,9 @@ describe('resolveExecTargets', () => {
     const customTarget: ExecTarget = {
       runtime: 'custom',
       baseCommand: ['custom-agent', '-p'],
+      invocation: {
+        model: 'custom-v1',
+      },
       hostDetectionCommand: ['sh', '-c', 'test -n "$CUSTOM_AGENT"'],
       availabilityCommand: ['custom-agent', '--version'],
       priority: 10,
@@ -1115,9 +1118,15 @@ describe('resolveExecTargets', () => {
             execTargets: {
               'codex-default': {
                 availabilityCommand: ['codex', 'doctor'],
+                invocation: {
+                  reasoningEffort: 'max',
+                },
                 priority: 120,
               },
               'custom-target': {
+                invocation: {
+                  reasoningEffort: 'provider-default',
+                },
                 priority: 50,
               },
             },
@@ -1131,6 +1140,9 @@ describe('resolveExecTargets', () => {
             execTargets: {
               'codex-default': {
                 baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
+                invocation: {
+                  model: 'gpt-5.5',
+                },
               },
             },
           },
@@ -1153,10 +1165,18 @@ describe('resolveExecTargets', () => {
       ...BUILTIN_EXEC_TARGETS['codex-default'],
       baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
       availabilityCommand: ['codex', 'doctor'],
+      invocation: {
+        model: 'gpt-5.5',
+        reasoningEffort: 'max',
+      },
       priority: 120,
     });
     expect(resolveExecTargets(effective)['custom-target']).toEqual({
       ...customTarget,
+      invocation: {
+        model: 'custom-v1',
+        reasoningEffort: 'provider-default',
+      },
       priority: 50,
     });
   });
@@ -1205,6 +1225,10 @@ describe('resolveExecTargets', () => {
               'team-reviewer': {
                 runtime: 'team',
                 baseCommand: ['team-agent', 'review'],
+                invocation: {
+                  model: 'team-large',
+                  reasoningEffort: 'provider-default',
+                },
                 priority: 90,
               },
               'default-priority-reviewer': {
@@ -1220,12 +1244,27 @@ describe('resolveExecTargets', () => {
     expect(resolveExecTargets(effective)['team-reviewer']).toEqual({
       runtime: 'team',
       baseCommand: ['team-agent', 'review'],
+      invocation: {
+        model: 'team-large',
+        reasoningEffort: 'provider-default',
+      },
       priority: 90,
     });
     expect(resolveExecTargets(effective)['default-priority-reviewer']).toEqual({
       runtime: 'team',
       baseCommand: ['team-agent'],
       priority: 0,
+    });
+  });
+
+  it('deep-clones invocation metadata instead of sharing built-in state', () => {
+    const targets = resolveExecTargets(createResolvedConfig());
+
+    targets['codex-default'].invocation!.model = 'mutated';
+
+    expect(BUILTIN_EXEC_TARGETS['codex-default'].invocation).toEqual({
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
     });
   });
 });

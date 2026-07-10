@@ -259,6 +259,10 @@ function mergeExecTargetLayer(
       targets[id] = cloneExecTarget({
         runtime: override.runtime ?? existing.runtime,
         baseCommand: override.baseCommand ?? existing.baseCommand,
+        invocation: mergeExecTargetInvocation(
+          existing.invocation,
+          override.invocation,
+        ),
         models: override.models ?? existing.models,
         hostDetectionCommand:
           override.hostDetectionCommand ?? existing.hostDetectionCommand,
@@ -297,6 +301,9 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
   if (target.hostDetectionCommand) {
     next.hostDetectionCommand = [...target.hostDetectionCommand];
   }
+  if (target.invocation) {
+    next.invocation = { ...target.invocation };
+  }
   if (target.availabilityCommand) {
     next.availabilityCommand = [...target.availabilityCommand];
   }
@@ -323,6 +330,10 @@ function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
         : 0,
   };
 
+  if (target.invocation) {
+    completeTarget.invocation = { ...target.invocation };
+  }
+
   if (isValidArgv(target.hostDetectionCommand)) {
     completeTarget.hostDetectionCommand = [...target.hostDetectionCommand];
   }
@@ -334,6 +345,20 @@ function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
   }
 
   return completeTarget;
+}
+
+function mergeExecTargetInvocation(
+  existing: ExecTarget['invocation'],
+  override: ExecTarget['invocation'],
+): ExecTarget['invocation'] {
+  if (!existing && !override) {
+    return undefined;
+  }
+
+  return {
+    ...existing,
+    ...override,
+  };
 }
 
 function isValidStringList(value: unknown): value is string[] {

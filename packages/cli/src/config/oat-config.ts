@@ -106,9 +106,15 @@ export interface GateConfig {
   maxAttempts?: number;
 }
 
+export interface ExecTargetInvocation {
+  model?: string | 'provider-default';
+  reasoningEffort?: string | 'provider-default';
+}
+
 export interface ExecTarget {
   runtime: string;
   baseCommand: string[];
+  invocation?: ExecTargetInvocation;
   models?: string[];
   hostDetectionCommand?: string[];
   availabilityCommand?: string[];
@@ -173,6 +179,10 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   'codex-default': {
     runtime: 'codex',
     baseCommand: ['codex', 'exec'],
+    invocation: {
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    },
     hostDetectionCommand: [
       'sh',
       '-c',
@@ -184,6 +194,10 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   'claude-default': {
     runtime: 'claude',
     baseCommand: ['claude', '-p'],
+    invocation: {
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    },
     hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
     availabilityCommand: ['claude', '--version'],
     priority: 100,
@@ -191,6 +205,10 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   'cursor-default': {
     runtime: 'cursor',
     baseCommand: ['cursor-agent', '-p'],
+    invocation: {
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    },
     hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
     availabilityCommand: [
       'sh',
@@ -428,6 +446,19 @@ function normalizeExecTarget(
   const baseCommand = normalizeArgv(value.baseCommand);
   if (baseCommand !== undefined) {
     target.baseCommand = baseCommand;
+  }
+
+  if (isRecord(value.invocation)) {
+    const model = trimNonEmptyString(value.invocation.model);
+    const reasoningEffort = trimNonEmptyString(
+      value.invocation.reasoningEffort,
+    );
+    if (model !== undefined || reasoningEffort !== undefined) {
+      target.invocation = {
+        ...(model !== undefined ? { model } : {}),
+        ...(reasoningEffort !== undefined ? { reasoningEffort } : {}),
+      };
+    }
   }
 
   const models = normalizeStringList(value.models);
