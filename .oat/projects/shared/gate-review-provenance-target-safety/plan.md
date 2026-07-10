@@ -610,6 +610,8 @@ pnpm docs:check-links
 
 ### Task p02-t04: (review) Constrain ambient artifact correlation to the resolved project
 
+**Status:** completed (`63f04c42`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/gate/index.ts`

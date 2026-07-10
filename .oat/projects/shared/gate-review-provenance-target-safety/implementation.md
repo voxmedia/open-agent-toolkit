@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p02-t04
+oat_current_task_id: p02-t05
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ oat_generated: false
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
 | p01   | completed   | 9     | 9/9       |
-| p02   | in_progress | 6     | 3/6       |
+| p02   | in_progress | 6     | 4/6       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 18/25 tasks completed
+**Total:** 19/25 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -139,8 +139,8 @@ oat_generated: false
 
 ### Task p02-t04: (review) Constrain ambient artifact correlation to the resolved project
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `63f04c42`
 
 ### Task p02-t05: (review) Validate declared projects before verdict parsing
 
@@ -359,6 +359,8 @@ oat_generated: false
 - Focused p02-t03 verification reproduced three contract failures, then passed all 46 skill assertions, validation of 53 OAT skills, and the 532-link docs crawl.
 - Final p02 verification passed 160 focused assertions, CLI type-check, workspace lint, root format, 53-skill validation, the 532-link crawl, and committed-range diff/version checks. Self-review found no scope, correlation-order, compatibility, versioning, or handoff defects.
 - p02 implementation is complete and awaiting independent review. No p03 work has started; `p03-t01` is the restart pointer after review.
+- `p02-t04` completed in `63f04c42`: a uniquely run-correlated artifact must now remain inside the resolved review project for declared and ambient resolution alike, while ambient results continue reporting `corroboration.project: ambient`.
+- Focused p02-t04 verification reproduced both false-green sibling writes, then passed both regressions, all 100 gate command assertions, CLI type-check, and diff checks after the fix.
 
 ### Review Received: p01
 
@@ -460,6 +462,7 @@ oat_generated: false
 | p02-t02    | RED parser/correlation matrix; 114 gate/parser assertions; CLI type-check; lint; format; diff                    | 118    | 0      | Run/project corroboration and fail-closed targeting          |
 | p02-t03    | RED lifecycle contracts; 46 skill assertions; 53-skill validation; 532-link crawl                                | 49     | 0      | Declared target-neutral lifecycle review commands            |
 | p02 final  | 160 focused assertions; CLI type-check; lint; format; skills; docs links; diff/version hygiene                   | 166    | 0      | Committed-tree phase verification and self-review            |
+| p02-t04    | RED ambient sibling regressions; 100 gate assertions; CLI type-check; diff                                       | 103    | 0      | Ambient containment with ambient provenance preserved        |
 
 ## Final Summary (for PR/docs)
 

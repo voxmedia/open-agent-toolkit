@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t04
-oat_last_commit: bfa9f6f3
+oat_current_task: p02-t05
+oat_last_commit: 63f04c42
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T08:26:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T08:31:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - independent p02 review received; `p02-t04` through `p02-t06` are queued. p03 remains unstarted.
+Implementation - `p02-t04` completed; ready to execute `p02-t05`. p03 remains unstarted.
 
 ## Artifacts
 
@@ -124,6 +124,7 @@ Implementation - independent p02 review received; `p02-t04` through `p02-t06` ar
 - ✓ Final p02 union verification and self-review passed
 - ✓ Independent p02 review received with 1 Critical and 2 Important findings
 - ✓ Review findings converted to `p02-t04` through `p02-t06`
+- ✓ `p02-t04` constrains ambient run-correlated artifacts to the resolved project
 
 ## Blockers
 
@@ -131,4 +132,4 @@ None
 
 ## Next Milestone
 
-Execute `p02-t04` through `p02-t06`, then run an independent p02 re-review. p03 remains unstarted.
+Execute `p02-t05` and `p02-t06`, then run an independent p02 re-review. p03 remains unstarted.
