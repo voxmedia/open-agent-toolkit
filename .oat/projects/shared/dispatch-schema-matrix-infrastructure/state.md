@@ -1,7 +1,10 @@
 ---
 oat_current_task: p01-t01
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t01
+    reason: 'Exact pinned Codex task workers cannot initialize from the coordinator workspace-write sandbox; danger-full-access approval is required for nested app-server access.'
+    since: 2026-07-10
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
   - { type: backlog, ref: BL-260707-consolidate-dispatch-matrix }
@@ -42,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T23:19:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T23:24:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -54,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Starting p01 shared matrix core
+Implementation - Blocked before p01-t01 worker launch
 
 ## Artifacts
 
@@ -82,12 +85,12 @@ Implementation - Starting p01 shared matrix core
 - ✓ Cross-runtime plan exit gate passed; three Minor clarifications applied
 - ✓ Tier 1 subagent execution authorized
 - ✓ Final-phase HiLL checkpoint and auto-review configured
-- ⧗ Executing `p01-t01`
+- ⚠ `p01-t01` exact worker launch blocked by coordinator sandbox permissions
 
 ## Blockers
 
-None.
+- `p01-t01`: nested pinned Codex workers require app-server access unavailable inside the coordinator's `workspace-write` sandbox.
 
 ## Next Milestone
 
-Complete and review p01, then advance to the p02/p03 parallel group
+Authorize the required coordinator sandbox access, then retry p01 from `p01-t01`

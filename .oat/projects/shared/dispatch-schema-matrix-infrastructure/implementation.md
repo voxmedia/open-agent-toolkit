@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t01
+    reason: 'Exact pinned Codex task workers cannot initialize from the coordinator workspace-write sandbox; danger-full-access approval is required for nested app-server access.'
+    since: 2026-07-10
 oat_last_updated: 2026-07-10
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -62,7 +65,8 @@ oat_generated: false
 
 ### Task p01-t01: Add the shared matrix algebra, normalizer, and walker
 
-**Status:** in_progress
+**Status:** blocked
+**Blocker:** Exact `gpt-5.6-sol`/`high` worker launch failed before sampling because nested Codex app-server initialization was denied by the coordinator sandbox.
 **Commit:** -
 
 **Outcome (required when completed):**
@@ -122,6 +126,36 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 — 2026-07-10 23:24
+
+**Branch:** dispatch-schema-matrix-infrastructure
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 attempted, 0 passed, 0 failed, 1 stopped
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review  | Fix Iterations | Disposition |
+| ----- | ----------- | ------- | -------------- | ----------- |
+| p01   | blocked     | not-run | 0/2            | stopped     |
+
+#### Parallel Groups
+
+- p01: sequential
+
+#### Dispatch Notes
+
+- Coordinator: `gpt-5.6-sol`/`high`, target `oat-phase-implementer-gpt-5-6-sol-high`.
+- p01-t01 resolved exact candidate `gpt-5.6-sol`/`high` with invocation source, but both pinned worker launches failed before sampling with `failed to initialize in-process app-server client: Operation not permitted`.
+
+#### Outstanding Items
+
+- p01-t01: rerun the exact-target coordinator only after approval for the sandbox access required by nested Codex workers.
+
+#### Artifact / Design Deltas
+
+None.
 
 <!-- orchestration-runs-end -->
 
