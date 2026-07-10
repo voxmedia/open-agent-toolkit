@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t02
-oat_last_commit: 29391b36
+oat_current_task: p04-t01
+oat_last_commit: d6c47baf
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T09:16:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T09:22:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - p03 review found one exact-scope compatibility defect. Restart pointer: `p03-t02`.
+Implementation - p03 review fix complete; awaiting independent re-review. Restart pointer: `p04-t01` (not started).
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - p03 review found one exact-scope compatibility defect. Restart 
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00`, `p01`, and `p02` reviews passed; p03 review fix queued)
+- **Implementation:** `implementation.md` (`p00`, `p01`, and `p02` reviews passed; p03 review fix completed)
 
 ## Progress
 
@@ -133,7 +133,9 @@ Implementation - p03 review found one exact-scope compatibility defect. Restart 
 - ✓ `p03-t01` reports explicit aggregate producer provenance for final and contiguous range scopes
 - ✓ Final p03 verification and committed-range self-review passed
 - ✓ Independent p03 review found one Important exact-scope compatibility regression
-- ⧗ `p03-t02` queued; p04 remains blocked until p03 re-review passes
+- ✓ `p03-t02` preserves fully unknown output and routing for exact legacy and non-claimable stamps
+- ✓ p03 review fixes completed with full gate-index, type-check, docs-link, format, and diff verification
+- ⧗ Awaiting independent p03 re-review; p04 remains blocked until it passes
 
 ## Blockers
 
@@ -141,4 +143,4 @@ None
 
 ## Next Milestone
 
-Complete `p03-t02`, then run an independent p03 re-review; do not start p04 before that review passes.
+Run an independent p03 re-review. If it passes, resume from `p04-t01`; do not start p04 before that review.

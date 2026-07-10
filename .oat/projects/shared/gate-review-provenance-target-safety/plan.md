@@ -688,6 +688,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ## Phase 3: Aggregated Producer Provenance
 
+**Implementation Status:** review fixes completed; awaiting independent re-review
+
 ### Task p03-t01: Make final and range aggregation explicit
 
 **Status:** completed (`29391b36`)
@@ -717,6 +719,8 @@ pnpm docs:check-links
 ---
 
 ### Task p03-t02: (review) Preserve exact non-claimable stamp compatibility
+
+**Status:** completed (`d6c47baf`)
 
 **Files:**
 
@@ -841,19 +845,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | fixes_added | 2026-07-10 | reviews/archived/p03-review-2026-07-10T090935Z.md           |
-| p04    | code     | pending     | -          | -                                                           |
-| final  | code     | pending     | -          | -                                                           |
-| spec   | artifact | pending     | -          | -                                                           |
-| design | artifact | pending     | -          | -                                                           |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed          | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | fixes_completed | 2026-07-10 | reviews/archived/p03-review-2026-07-10T090935Z.md           |
+| p04    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -869,8 +873,9 @@ git status --short
 
 **Total: 26 tasks**
 
-Phase 0 through Phase 2 reviews have passed. Phase 3 review fixes must complete
-and pass independent re-review before Phase 4 begins.
+Phase 0 through Phase 2 reviews have passed. Phase 3 review fixes are complete
+and awaiting independent re-review; Phase 4 must not begin before that review
+passes.
 
 ## References
 

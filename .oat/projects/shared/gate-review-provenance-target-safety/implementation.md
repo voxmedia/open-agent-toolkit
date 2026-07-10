@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p03-t02
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | completed   | 6     | 6/6       |
-| p01   | completed   | 9     | 9/9       |
-| p02   | completed   | 6     | 6/6       |
-| p03   | in_progress | 2     | 1/2       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | completed | 9     | 9/9       |
+| p02   | completed | 6     | 6/6       |
+| p03   | completed | 2     | 2/2       |
+| p04   | pending   | 3     | 0/3       |
 
 **Total:** 22/26 tasks completed
 
@@ -164,7 +164,7 @@ oat_generated: false
 
 ## Phase 3: Aggregated Producer Provenance
 
-**Status:** review fix queued
+**Status:** completed; awaiting independent re-review
 
 ### Task p03-t01: Make final and range aggregation explicit
 
@@ -173,14 +173,15 @@ oat_generated: false
 
 ### Task p03-t02: (review) Preserve exact non-claimable stamp compatibility
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d6c47baf`
 
 ### Phase Summary
 
-- **Outcome:** Exact phase/task producer resolution remains a single `stamp`, while final and contiguous range scopes now report `aggregated-stamps`, count every valid in-scope implementer/fix stamp, preserve document-order scope deduplication, and route against only the stable union of claimable known families.
+- **Outcome:** Claimable exact phase/task producer resolution remains a single `stamp`; legacy and other non-claimable exact stamps retain the pre-p03 fully unknown record. Final and contiguous range scopes report `aggregated-stamps`, count every valid in-scope implementer/fix stamp, preserve document-order scope deduplication, and route against only the stable union of claimable known families.
 - **Key files touched:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `apps/oat-docs/docs/cli-utilities/workflow-gates.md`, and `apps/oat-docs/docs/workflows/projects/reviews.md`.
-- **Verification:** RED reproduced five provenance/fallback failures; GREEN passed all 112 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and committed-range diff hygiene.
+- **Verification:** RED reproduced the two exact compatibility failures; GREEN passed all 114 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and committed-range diff hygiene.
+- **Review fixes:** Exact legacy and modern unknown-provenance stamps now return unknown source/value/provenance/confidence/family, omit contributor fields, and retain unknown-producer routing; claimable exact and aggregate behavior are unchanged.
 - **Decisions/deviations:** No design or plan deviations. Aggregates intentionally use an unknown representative; `avoidFamilies`, `contributingScopes`, and `contributingStampCount` carry aggregate facts without presenting the latest stamp as aggregate truth.
 
 ## Phase 4: Opt-In Phase Review Setup
@@ -273,6 +274,19 @@ oat_generated: false
 - Provider default effort: `max`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 681f6151-c938-4f7f-9a65-e0b27c6679d9
+
+- Started: 2026-07-10T09:22:05Z
+- Scope: p03 review fix (`p03-t02`)
+- Execution: exact pinned Codex implementer session
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model axis: `selected:gpt-5.6-sol`
+- Effort axis: `selected:high`
+- Policy source: user config
+- Provider default effort: `max`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Dispatch: scope=p03-t02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -411,6 +425,9 @@ oat_generated: false
 - Aggregate provenance now uses an explicit unknown representative, counts every valid implementer/fix stamp, deduplicates contributing scopes and claimable known families in document order, mirrors contributor fields into `diversity.producer`, and preserves explicit-flag precedence plus same-family fallback behavior.
 - RED reproduced five existing aggregate provenance/fallback gaps. GREEN and final committed-tree verification passed all 112 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and `git diff --check e6f2aa3c..29391b36`.
 - Committed-range self-review found no correctness, scope, routing, fallback, or documentation issues. p03 is complete and awaiting independent review; `p04-t01` is the restart pointer after that review, and no p04 work has started.
+- `p03-t02` completed in `d6c47baf`: exact stamps now pass through the pre-p03 claimability guard, so legacy and modern unknown-provenance identities return a fully unknown producer while claimable exact stamps remain source `stamp` without contributor fields.
+- RED reproduced both exact compatibility regressions. GREEN passed all 114 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and `git diff --check 8ea2884f..d6c47baf`.
+- Committed-range self-review confirmed aggregate final/range contribution and family-union code is unchanged. The p03 review row is `fixes_completed`; `p04-t01` is only the post-review restart pointer, and no p04 work has started.
 
 ### Review Received: p01
 
@@ -516,7 +533,9 @@ oat_generated: false
 
 - `I1` agreed, `Minor`, `code_fix_required`: restore baseline unknown output for exact legacy and non-claimable stamps while keeping them as aggregate contributors.
 
-**Next:** Complete `p03-t02`, then run an independent p03 re-review before starting p04.
+**Fix outcome:** `p03-t02` completed with focused RED/GREEN evidence, full gate-index verification, docs checks, and committed-range diff hygiene. The review is ready for independent re-review.
+
+**Next:** Run an independent p03 re-review before starting p04. `p04-t01` remains only the post-review restart pointer.
 
 ## Deviations from Plan / Design
 
@@ -556,6 +575,7 @@ oat_generated: false
 | p02 fixes  | 122 gate/parser assertions; CLI type-check; lint; format; diff                                                   | 126    | 0      | Committed-tree p02 review-fix union and self-review          |
 | p02 review | 122 gate/parser assertions; CLI type-check; targeted format; diff hygiene                                        | 126    | 0      | Independent re-review closed all prior findings              |
 | p03-t01    | RED/GREEN aggregate provenance matrix; 112 gate assertions; type-check; docs links; format; diff                 | 116    | 0      | Exact/flag precedence, final/range contributors, fallback    |
+| p03-t02    | RED exact compatibility regressions; 114 gate assertions; type-check; docs links; format; diff                   | 118    | 0      | Legacy/non-claimable exact stamps remain fully unknown       |
 
 ## Final Summary (for PR/docs)
 
