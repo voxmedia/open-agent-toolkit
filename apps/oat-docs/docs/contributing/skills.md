@@ -88,18 +88,24 @@ The Gate Execution step should:
 
 1. Run `oat gate resolve <this-skill> --json`.
 2. Treat `null` as "no gate configured."
-3. Run the resolved `command` as the skill's last step when a gate is present.
-4. Use the command exit code as the pass/fail signal.
-5. Follow the gate's `onFailure` policy:
+3. Export the resolved path with `export PROJECT_PATH` before launching the
+   command shell.
+4. For `oat gate review`, require the configured command to include
+   `--project "$PROJECT_PATH"`; do not append it at runtime, because the resolved
+   command must execute exactly as configured.
+5. Run the resolved `command` as the skill's last step and use its exit code as
+   the pass/fail signal.
+6. Follow the gate's `onFailure` policy:
    - `block` - remediate and rerun up to `maxAttempts`, then escalate.
    - `prompt` - surface the failure and ask the user.
    - `warn` - record the failure and continue.
 
-For OAT review gates, prefer putting `oat gate review "<prompt>"` in the
-configured gate command rather than hard-coding a provider CLI directly in the
-skill. Use `oat gate cross-provider-exec "<prompt>"` for generic cross-runtime
-commands that should report only the child process status, not review findings.
-Reusable lifecycle gate commands should normally omit `--target <id>` so the
+For OAT review gates, prefer putting
+`oat gate review --project "$PROJECT_PATH" "<prompt>"` in the configured gate
+command rather than hard-coding a provider CLI directly in the skill. Use
+`oat gate cross-provider-exec "<prompt>"` for generic cross-runtime commands
+that should report only the child process status, not review findings.
+Reusable lifecycle gate commands must omit `--target <id>` so the
 dispatcher can avoid the current runtime; reserve explicit targets for
 manual/debug commands or deliberate local/user-specific overrides. See
 [Workflow Gates](../cli-utilities/workflow-gates.md) for the config and command

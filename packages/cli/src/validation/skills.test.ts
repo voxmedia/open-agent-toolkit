@@ -835,6 +835,91 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('requires lifecycle review gates to declare the exported project and remain target-neutral', async () => {
+    for (const skillName of [
+      'oat-project-plan',
+      'oat-project-implement',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const gateSection = content.slice(
+        content.lastIndexOf('### Gate Execution'),
+      );
+
+      expect(gateSection, `${skillName} exports PROJECT_PATH`).toContain(
+        'export PROJECT_PATH',
+      );
+      expect(gateSection, `${skillName} declares the review project`).toContain(
+        '--project "$PROJECT_PATH"',
+      );
+      expect(
+        gateSection,
+        `${skillName} validates stored review commands`,
+      ).toMatch(
+        /configured review command[\s\S]{0,300}must (?:already )?(?:contain|include)[\s\S]{0,120}--project/i,
+      );
+      expect(
+        gateSection,
+        `${skillName} executes the stored command unchanged`,
+      ).toMatch(/execute[\s\S]{0,160}exactly as configured/i);
+      expect(gateSection, `${skillName} forbids reusable target pins`).toMatch(
+        /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
+      );
+    }
+  });
+
+  it('documents lifecycle review-project migration without provider target pins', async () => {
+    const workflowGates = await readRepoFile(
+      'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
+    );
+    const contributingSkills = await readRepoFile(
+      'apps/oat-docs/docs/contributing/skills.md',
+    );
+
+    for (const [path, content] of [
+      ['workflow-gates.md', workflowGates],
+      ['contributing/skills.md', contributingSkills],
+    ] as const) {
+      expect(content, `${path} project declaration`).toContain(
+        '--project "$PROJECT_PATH"',
+      );
+      expect(content, `${path} exported project path`).toContain(
+        'export PROJECT_PATH',
+      );
+      expect(content, `${path} target neutrality`).toMatch(
+        /(?:omit|must not (?:contain|include|add))[\s\S]{0,120}--target/i,
+      );
+    }
+
+    expect(workflowGates).toMatch(
+      /migrat[\s\S]{0,500}current project[\s\S]{0,500}--project "\$PROJECT_PATH"/i,
+    );
+    const reusableReviewCommands = [
+      ...workflowGates.matchAll(/--command '([^']*oat gate review[^']*)'/g),
+    ].map((match) => match[1] ?? '');
+    expect(reusableReviewCommands.length).toBeGreaterThan(0);
+    for (const command of reusableReviewCommands) {
+      expect(command).toContain('--project "$PROJECT_PATH"');
+      expect(command).not.toContain('--target');
+    }
+    expect(workflowGates).toContain('projectResolutionSource: declared');
+    expect(workflowGates).toContain('active-project');
+    expect(workflowGates).toContain('single-candidate');
+    expect(workflowGates).toMatch(/targeting_correlation_failed/);
+    expect(workflowGates).toMatch(/receiveEligible:\s*false/);
+  });
+
+  it('tracks the p02 oat-project-implement contract version', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.32');
+  });
+
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',

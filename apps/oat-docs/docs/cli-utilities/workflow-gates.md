@@ -33,7 +33,7 @@ Gate config lives under `workflow.gates.skills` and is keyed by skill name.
     "gates": {
       "skills": {
         "oat-project-implement": {
-          "command": "oat gate review \"Use oat-project-review-provide code final to review the current project\"",
+          "command": "oat gate review --project \"$PROJECT_PATH\" --review-type code --review-scope final \"Use oat-project-review-provide code final for the declared project\"",
           "description": "Run a fresh-runtime final review before implementation is considered done.",
           "onFailure": "block",
           "maxAttempts": 2
@@ -78,6 +78,7 @@ CLI places in the review prompt:
 
 ```yaml
 oat_review_invocation: gate
+oat_project: .oat/projects/shared/example
 oat_gate_run_id: 00000000-0000-0000-0000-000000000000
 oat_gate_target: codex-sol-max
 oat_gate_runtime: codex
@@ -90,6 +91,24 @@ These fields describe configured invocation controls. They do not confirm the
 model that ran, and the reviewer must not replace them with self-identification.
 The CLI compares the copied values with its gate-owned record before it applies
 the severity threshold.
+
+### Review project resolution and corroboration
+
+`--project <path-or-name>` is a declaration. OAT normalizes the declared path
+and reports `projectResolutionSource: declared`. When the option is omitted,
+the compatibility resolver may use the configured active project
+(`active-project`) or the only project candidate (`single-candidate`); those
+ambient paths report `corroboration.project: ambient` rather than pretending a
+declaration was made.
+
+After dispatch, OAT searches direct, non-archived review files across project
+review directories for the unique `oat_gate_run_id`. An explicitly resolved
+project is included even when it is outside the configured shared projects
+root. For a declaration to corroborate, both the artifact's containing project
+and its parsed, normalized `oat_project` must equal the declaration. Sibling
+project writes, missing or wrong `oat_project`, missing or wrong run IDs,
+outside-repository artifact project values, and duplicate run-ID matches all
+fail closed before invocation-field remediation or severity evaluation.
 
 `oat gate review` parses the produced artifact and returns a blocking exit
 status when the configured threshold is met. `cross-provider-exec` does not do
@@ -119,28 +138,41 @@ once an artifact exists, its `generatedAt` (the artifact's seconds-precision
 `oat_generated_at`), so a caller can correlate the result to the exact artifact
 and disambiguate re-gate rounds:
 
-| `status`                     | Exit | Meaning                                                   |
-| ---------------------------- | ---- | --------------------------------------------------------- |
-| `ok`                         | 0    | Review completed; gate passed at the threshold.           |
-| `blocked`                    | 1    | Review completed; findings at/above the threshold.        |
-| `review_failed`              | ≠0   | The provider target exited non-zero; no verdict.          |
-| `artifact_validation_failed` | 1    | Provider ran but the review artifact could not be parsed. |
+| `status`                       | Exit | Meaning                                                      |
+| ------------------------------ | ---- | ------------------------------------------------------------ |
+| `ok`                           | 0    | Review completed; gate passed at the threshold.              |
+| `blocked`                      | 1    | Review completed; findings at/above the threshold.           |
+| `review_failed`                | ≠0   | The provider target exited non-zero; no verdict.             |
+| `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid. |
+| `targeting_correlation_failed` | 1    | Run or declared-project identity did not correlate.          |
 
 `ok` and `blocked` also include `outcome`, `artifactPath`, `counts`, `scope`,
 `handoff`, `gateInvocation`, and `corroboration`. `gateInvocation` contains the
 configured `runId`, `targetId`, `runtime`, `model`, `reasoningEffort`, and
 `source`. `corroboration.run` and `corroboration.invocation` are each
-`matched`, `missing`, or `mismatched`, with `expected.invocation` and
-`actual.invocation` diagnostics. Treat any status other than `ok`/`blocked` as
-an operational failure, not a passing gate.
+`matched`, `missing`, or `mismatched`. `corroboration.project` is `matched` for
+an explicitly declared, corroborated project and `ambient` when the command
+relied on active-project or single-candidate compatibility. Expected and actual
+diagnostics include the declared project, containing project, artifact
+`oat_project`, normalized artifact project, matching run-ID paths, and configured
+invocation. Treat any status other than `ok`/`blocked` as an operational failure,
+not a passing gate.
+
+`targeting_correlation_failed` is non-remediable by review-fix retries. Its JSON
+sets `receiveEligible: false`, `remediable: false`, and `handoff: null`; do not
+run review-receive for that artifact. Correct the stored project declaration or
+reviewer output routing and run a new gate instead. Invocation-only mismatch
+continues to use `artifact_validation_failed` and can be remediated by copying
+the exact configured invocation fields.
 
 **Drive gates through `oat gate review`, not raw provider invocation.** An
 orchestrator that hand-rolls the review (for example, calling
 `codex exec … oat-project-review-provide <scope>` directly) and then watches
 `reviews/` for a file is reimplementing — less reliably — what the CLI already
-does: `oat gate review` snapshots the reviews directory, dispatches the
-provider, and attributes the produced artifact by content hash, so it is immune
-to a stale file lingering from a prior round. It works standalone, not only
+does: `oat gate review` dispatches the provider, locates direct active project
+review artifacts by the unique gate run ID, and uses before/after signatures
+only for compatibility diagnostics. Archived and ad-hoc reviews remain
+ineligible. It works standalone, not only
 inside the `oat-project-implement` auto-loop — a one-off final review is just:
 
 ```bash
@@ -149,7 +181,7 @@ oat --json gate review \
   --review-type code \
   --review-scope final \
   --exit-nonzero-on important \
-  'Use oat-project-review-provide code final to review the current project'
+  'Use oat-project-review-provide code final for the declared project'
 ```
 
 Read the resulting envelope and exit code; that is the whole completion
@@ -284,7 +316,7 @@ Set or clear a skill gate:
 
 ```bash
 oat gate set oat-project-implement \
-  --command 'oat gate review --review-type code --review-scope final "Use oat-project-review-provide code final to review the current project"' \
+  --command 'oat gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
   --description "Run final review in another runtime" \
   --on-failure block \
   --max-attempts 2 \
@@ -293,10 +325,35 @@ oat gate set oat-project-implement \
 oat gate unset oat-project-implement --layer user
 ```
 
-Lifecycle gate commands should normally omit `--target <id>`. Leaving the
-target unset lets the dispatcher avoid the current runtime and choose the
+Lifecycle review gate commands must declare `--project "$PROJECT_PATH"` and
+omit `--target <id>`. The lifecycle skill exports `PROJECT_PATH` into the gate
+command shell, validates the resolved review command, and then executes it
+exactly as configured. It does not inject missing arguments. Leaving the target
+unset lets the dispatcher avoid the current runtime and choose the
 highest-priority available non-host target. Pin a target only for manual
 dispatch, debugging, or a deliberate local/user-specific override.
+
+### Migrate ambient lifecycle commands
+
+Older user-level lifecycle commands often asked a reviewer to inspect the
+"current project" but omitted a machine-readable declaration. Migrate each
+stored `oat gate review` command by inserting `--project "$PROJECT_PATH"` and
+retaining provider-neutral target selection. For example:
+
+```bash
+export PROJECT_PATH
+oat gate set oat-project-implement \
+  --command 'oat gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
+  --description "Run final review in another runtime" \
+  --on-failure block \
+  --max-attempts 2 \
+  --layer user
+```
+
+Apply the same command shape to `oat-project-plan`,
+`oat-project-quick-start`, and `oat-project-import-plan` when those lifecycle
+skills have configured review gates. Do not add `--target`; explicit targets
+remain manual/debug or deliberate local/user-specific overrides.
 
 Set or clear an exec target:
 
@@ -325,9 +382,10 @@ Dispatch a review through the target registry:
 
 ```bash
 oat gate review \
+  --project "$PROJECT_PATH" \
   --review-type code \
   --review-scope final \
-  "Use oat-project-review-provide code final to review the current project"
+  "Use oat-project-review-provide code final for the declared project"
 ```
 
 Leaving `--target` unset lets target priority choose the highest-priority
@@ -337,10 +395,10 @@ For manual or debug dispatch, use `--target <id>` to pin one target and skip
 detection/avoidance:
 
 ```bash
-oat gate review --target codex-5.5-xhigh \
+oat gate review --project "$PROJECT_PATH" --target codex-5.5-xhigh \
   --review-type code \
   --review-scope final \
-  "Use oat-project-review-provide code final to review the current project"
+  "Use oat-project-review-provide code final for the declared project"
 ```
 
 Dispatch a generic prompt through the target registry:
@@ -380,10 +438,11 @@ producer when no project dispatch stamp exists:
 
 ```bash
 oat gate review \
+  --project "$PROJECT_PATH" \
   --producer-identity gpt-5.5-xhigh:declared \
   --review-type code \
   --review-scope final \
-  "Use oat-project-review-provide code final to review the current project"
+  "Use oat-project-review-provide code final for the declared project"
 ```
 
 Gate JSON output includes `diversity` metadata with the requested avoid mode,
