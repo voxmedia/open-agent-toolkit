@@ -14,6 +14,7 @@ import {
 } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
 import type { CanonicalEntry } from '@engine/index';
+import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import TOML from '@iarna/toml';
 import YAML from 'yaml';
@@ -541,6 +542,25 @@ export async function computeCodexProjectExtensionPlan(
     scopeRoot,
     options,
   );
+  if (
+    !isPartialSync &&
+    isUserCodexScope(scopeRoot, options) &&
+    materializationTargets.length > 0
+  ) {
+    const canonicalBaseRoles = new Set(
+      canonicalEntries
+        .filter((entry) => entry.type === 'agent' && entry.isFile)
+        .map((entry) => entry.name.replace(/\.md$/i, '')),
+    );
+    const missingBaseRoles = SUPPORTED_CODEX_BASE_ROLES.filter(
+      (role) => !canonicalBaseRoles.has(role),
+    );
+    if (missingBaseRoles.length > 0) {
+      throw new CliError(
+        `Bundled managed Codex role definitions are unavailable for user sync: ${missingBaseRoles.join(', ')}. Refusing stale user-role cleanup.`,
+      );
+    }
+  }
   const desiredRoles = await desiredRolesFromCanonical(
     canonicalEntries.filter((entry) =>
       canonicalPathAllowed(scopeRoot, entry, allowedCanonicalPaths),

@@ -50,7 +50,7 @@ describe('scanCanonical', () => {
     ).toBe(true);
   });
 
-  it('skips agents for user scope (skills only)', async () => {
+  it('adds only the two bundled managed roles for user scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
     tempDirs.push(root);
     await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
@@ -63,7 +63,12 @@ describe('scanCanonical', () => {
     const entries = await scanCanonical(root, 'user');
 
     expect(entries.some((entry) => entry.type === 'skill')).toBe(true);
-    expect(entries.some((entry) => entry.type === 'agent')).toBe(false);
+    expect(
+      entries
+        .filter((entry) => entry.type === 'agent')
+        .map((entry) => entry.name),
+    ).toEqual(['oat-phase-implementer.md', 'oat-reviewer.md']);
+    expect(entries.some((entry) => entry.name === 'agent-one')).toBe(false);
   });
 
   it('returns empty array when .agents/ does not exist', async () => {

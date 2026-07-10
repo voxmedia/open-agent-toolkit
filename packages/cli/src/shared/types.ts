@@ -21,3 +21,8 @@ export const SCOPE_CONTENT_TYPES: Record<Scope, ContentType[]> = {
   user: USER_SCOPE_CONTENT_TYPES,
   all: ALL_SCOPE_CONTENT_TYPES,
 };
+
+export const USER_SCOPE_MANAGED_AGENT_FILES = [
+  'oat-phase-implementer.md',
+  'oat-reviewer.md',
+] as const;

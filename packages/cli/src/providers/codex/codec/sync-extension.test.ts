@@ -615,19 +615,22 @@ describe('codex sync extension', () => {
     );
     const canonicalDir = join(home, '.agents', 'agents');
     await mkdir(canonicalDir, { recursive: true });
-    const canonicalPath = join(canonicalDir, 'oat-reviewer.md');
-    await writeFile(canonicalPath, canonicalAgentFileContent('oat-reviewer'));
+    const canonicalEntries = await Promise.all(
+      ['oat-phase-implementer', 'oat-reviewer'].map(async (role) => {
+        const canonicalPath = join(canonicalDir, `${role}.md`);
+        await writeFile(canonicalPath, canonicalAgentFileContent(role));
+        return {
+          name: `${role}.md`,
+          type: 'agent' as const,
+          canonicalPath,
+          isFile: true,
+        };
+      }),
+    );
 
     const plan = await computeCodexProjectExtensionPlan(
       home,
-      [
-        {
-          name: 'oat-reviewer.md',
-          type: 'agent',
-          canonicalPath,
-          isFile: true,
-        },
-      ],
+      canonicalEntries,
       undefined,
       { userConfigDir: join(home, '.oat') },
     );
@@ -644,6 +647,61 @@ describe('codex sync extension', () => {
           operation.roleName === 'oat-reviewer-gpt-5-7-user-custom-high',
       )?.content,
     ).toContain('# oat-owner: user-config');
+  });
+
+  it('fails closed before stale user-role cleanup when managed base definitions are unavailable', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(home);
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await mkdir(join(home, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.7-user-custom',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    const roleName = 'oat-reviewer-gpt-5-7-user-custom-high';
+    await writeFile(
+      join(home, '.codex', 'agents', `${roleName}.toml`),
+      [
+        '# oat-managed: true',
+        `# oat-role: ${roleName}`,
+        '# oat-owner: user-config',
+        'developer_instructions = "review"',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      `[agents.${roleName}]\ndescription = "review"\nconfig_file = "agents/${roleName}.toml"\n`,
+      'utf8',
+    );
+
+    await expect(
+      computeCodexProjectExtensionPlan(home, [], undefined, {
+        userConfigDir: join(home, '.oat'),
+      }),
+    ).rejects.toThrow(/managed Codex role definitions.*unavailable/i);
+    await expect(
+      readFile(join(home, '.codex', 'agents', `${roleName}.toml`), 'utf8'),
+    ).resolves.toContain('# oat-owner: user-config');
   });
 
   it('removes only stale roles owned by the current configuration scope', async () => {
