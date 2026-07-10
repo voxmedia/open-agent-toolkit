@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 1: Configured Invocation Provenance
 
-**Status:** completed; awaiting independent re-review
+**Status:** completed; independent re-review passed
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -319,7 +319,7 @@ oat_generated: false
 - `p01-t09` completed in `11cd61aa`: gate prompt metadata now uses YAML-library serialization so target, runtime, model, and effort strings round-trip exactly across numeric-, boolean-, null-, colon-, hash-, quote-, and newline-like values.
 - Focused p01-t09 verification reproduced seven scalar-family failures, then passed all seven cases, 103 combined gate/parser tests, and CLI type-check after the fix.
 - Final p01 fix verification passed 255 focused assertions, CLI type-check, the live seven-target listing, validation of all 53 OAT skills, the 532-link docs crawl, root formatting, and baseline range diff checks.
-- The p01 review row is `fixes_completed`; p01 implementation is complete and awaits independent re-review. Restart-safe state points to `p02-t01`, but p02 has not started.
+- The p01 review row advanced from `fixes_completed` to `passed` after an independent re-review closed all four prior Important findings and the prior Medium finding.
 
 ### Review Received: p01
 
@@ -347,6 +347,26 @@ oat_generated: false
 
 **Next:** Run an independent p01 re-review before starting p02.
 
+### Review Received: p01 Re-review
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p01-review-2026-07-10T074616Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** None; the re-review passed and the sole finding was a negligible bookkeeping correction.
+
+**Disposition:**
+
+- `m1` agreed, `Negligible`, `artifact_alignment_required`: aligned `state.md` so its implementation summary no longer calls the completed p01 review fixes queued.
+
+**Review outcome:** Passed. All five prior findings are closed, the Minor artifact drift was corrected during review-receive bookkeeping, and p02 may begin.
+
 ## Deviations from Plan / Design
 
 | Task / Review           | Source Artifact           | Planned / Documented                                                              | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                                |
@@ -356,24 +376,25 @@ oat_generated: false
 
 ## Test Results
 
-| Phase     | Tests Run                                                                                                        | Passed | Failed | Coverage                                                     |
-| --------- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------ |
-| p00-t01   | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes                                | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight         |
-| p00-t02   | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync                          | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption   |
-| p00-t03   | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl                                       | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths  |
-| p00 final | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                              | 494    | 0      | Committed-tree phase verification and self-review            |
-| p00 fixes | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown |
-| p01-t01   | 106 focused config/resolver assertions; CLI type-check                                                           | 107    | 0      | Invocation normalization, defaults, cloning, layered merge   |
-| p01-t02   | 107 focused gate/resolver assertions; CLI type-check; live target list                                           | 109    | 0      | Mutation flags, provenance view, availability-only listing   |
-| p01-t03   | 72 focused gate assertions; CLI type-check                                                                       | 73     | 0      | Immutable prompt/JSON invocation provenance                  |
-| p01-t04   | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs         |
-| p01 final | 240 focused assertions; type-check; live target list; skill validation; docs links                               | 244    | 0      | Committed-tree phase verification and self-review            |
-| p01-t05   | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                | 76     | 0      | Partial target mutation preserves nonzero priority           |
-| p01-t06   | RED/GREEN rejected probe; 75 gate assertions; live target list                                                   | 77     | 0      | Per-target availability isolation; listing remains read-only |
-| p01-t07   | RED/GREEN marker cases; 94 gate/parser assertions; CLI type-check                                                | 98     | 0      | Gate-only marker enforcement; parser compatibility retained  |
-| p01-t08   | RED/GREEN launch and filesystem failures; 80 gate assertions; CLI type-check                                     | 83     | 0      | Exact post-selection structured provenance retained          |
-| p01-t09   | RED/GREEN YAML scalar matrix; 103 gate/parser assertions; CLI type-check                                         | 111    | 0      | Arbitrary configured strings round-trip exactly              |
-| p01 fixes | 255 focused assertions; type-check; live list; skills; docs; format; diff                                        | 261    | 0      | Committed-tree review-fix union verification                 |
+| Phase      | Tests Run                                                                                                        | Passed | Failed | Coverage                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------ |
+| p00-t01    | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes                                | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight         |
+| p00-t02    | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync                          | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption   |
+| p00-t03    | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl                                       | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths  |
+| p00 final  | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                              | 494    | 0      | Committed-tree phase verification and self-review            |
+| p00 fixes  | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown |
+| p01-t01    | 106 focused config/resolver assertions; CLI type-check                                                           | 107    | 0      | Invocation normalization, defaults, cloning, layered merge   |
+| p01-t02    | 107 focused gate/resolver assertions; CLI type-check; live target list                                           | 109    | 0      | Mutation flags, provenance view, availability-only listing   |
+| p01-t03    | 72 focused gate assertions; CLI type-check                                                                       | 73     | 0      | Immutable prompt/JSON invocation provenance                  |
+| p01-t04    | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs         |
+| p01 final  | 240 focused assertions; type-check; live target list; skill validation; docs links                               | 244    | 0      | Committed-tree phase verification and self-review            |
+| p01-t05    | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                | 76     | 0      | Partial target mutation preserves nonzero priority           |
+| p01-t06    | RED/GREEN rejected probe; 75 gate assertions; live target list                                                   | 77     | 0      | Per-target availability isolation; listing remains read-only |
+| p01-t07    | RED/GREEN marker cases; 94 gate/parser assertions; CLI type-check                                                | 98     | 0      | Gate-only marker enforcement; parser compatibility retained  |
+| p01-t08    | RED/GREEN launch and filesystem failures; 80 gate assertions; CLI type-check                                     | 83     | 0      | Exact post-selection structured provenance retained          |
+| p01-t09    | RED/GREEN YAML scalar matrix; 103 gate/parser assertions; CLI type-check                                         | 111    | 0      | Arbitrary configured strings round-trip exactly              |
+| p01 fixes  | 255 focused assertions; type-check; live list; skills; docs; format; diff                                        | 261    | 0      | Committed-tree review-fix union verification                 |
+| p01 review | 103 gate/parser assertions; CLI type-check; format; live list; diff hygiene                                      | 107    | 0      | Independent re-review closed all prior findings              |
 
 ## Final Summary (for PR/docs)
 

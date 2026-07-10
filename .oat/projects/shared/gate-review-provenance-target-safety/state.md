@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 11cd61aa
+oat_last_commit: d8512843
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T07:42:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T07:54:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - `p01` fixes complete; awaiting independent re-review. Restart pointer: `p02-t01` (not started).
+Implementation - `p01` re-review passed; ready to execute `p02-t01`.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - `p01` fixes complete; awaiting independent re-review. Restart p
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` review passed; `p01-t05` through `p01-t09` queued from independent review)
+- **Implementation:** `implementation.md` (`p00` and `p01` reviews passed; ready for `p02-t01`)
 
 ## Progress
 
@@ -114,7 +114,9 @@ Implementation - `p01` fixes complete; awaiting independent re-review. Restart p
 - ✓ `p01-t08` retains immutable provenance across unexpected post-selection failures
 - ✓ `p01-t09` serializes arbitrary configured invocation strings as YAML-safe scalars
 - ✓ All p01 review fixes completed and union verification passed
-- ⧗ Awaiting independent p01 re-review
+- ✓ Independent p01 re-review closed all four prior Important findings and the prior Medium finding
+- ✓ Sole p01 re-review Minor finding resolved during receive bookkeeping
+- ✓ p01 review status advanced to `passed`
 
 ## Blockers
 
@@ -122,4 +124,4 @@ None
 
 ## Next Milestone
 
-Run an independent p01 re-review. If it passes, resume from `p02-t01`; do not start p02 before that review.
+Execute `p02-t01`, then continue through the declared review-target safety phase.
