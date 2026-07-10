@@ -21,142 +21,216 @@ The goal is to consolidate dispatch-matrix helpers, add a reusable dispatch
 report schema and formatter, cache Cursor catalog validation per pass, and
 close out Cursor GPT-5.6 slug verification with reproducible evidence.
 
+## Shipped-Contract Refresh
+
+The completed `gate-review-provenance-target-safety` project changed the
+dispatch contract after this project's first discovery/design pass. It shipped:
+
+- configuration-owned `{ candidates: [...] }` ladders and legacy-shape
+  normalization;
+- named project/phase ceilings that bound candidates rather than select an exact
+  model preference;
+- exact requested-candidate resolution with candidate tier, ceiling tier, cell
+  source, and selected target;
+- Codex materialization ownership and exact task-worker dispatch; and
+- immutable gate invocation provenance separated from observed/self-reported
+  producer identity.
+
+It intentionally left all four backlog outcomes in this project open. The
+original scalar/route-only design is therefore stale and must extend the
+shipped contract rather than recreate it.
+
 ## Clarifying Questions
 
-No additional clarification was required. The named backlog records provide
-specific acceptance criteria, compatibility expectations, and fallback
-behavior.
+No additional user clarification is required. The refresh prompt explicitly
+defines the compatibility algebra, provenance boundaries, cache lifetime, and
+live-evidence standard.
 
 ## Solution Space
 
-The request is well-understood. Use one cohesive infrastructure project so the
-shared matrix helpers become the basis for validation improvements while the
-dispatch report contract and live Cursor slug verification remain separately
-testable workstreams.
+Use one canonical candidate-ladder matrix core beneath the existing resolver.
+Normalize all supported legacy and modern input shapes into the shipped ladder
+representation, then expose one provenance-rich walker to config adoption,
+doctor, and project-state consumers. Build reporting and validation around the
+resolver's existing exact-selection result instead of introducing another
+selection model.
 
 ## Options Considered
 
-### Option A: Consolidate and extend in one project
+### Option A: Patch each existing traversal for candidate ladders
 
-**Description:** Extract the shared matrix boundaries first, then build the
-reporting, catalog-cache, and verification outcomes against those stable
-boundaries.
+**Description:** Add ladder handling independently to config, doctor, and
+project-state parsing while keeping their private helpers.
 
-**Pros:**
+**Tradeoffs:** This minimizes immediate movement but preserves the drift risk
+that motivated the consolidation backlog and would add a third reporting
+interpretation of matrix state.
 
-- Removes known duplication before the next matrix shape evolves.
-- Keeps compatibility, validation, evidence, and documentation checks in one
-  release-ready plan.
+**Chosen:** No
 
-**Cons:**
+### Option B: Canonical ladder core with thin adapters
 
-- Requires careful phase boundaries because reporting and validation touch
-  adjacent dispatch infrastructure.
+**Description:** Extract normalization and traversal into one shared module,
+retain caller-specific warning/output policy in adapters, and derive report and
+validation inputs from the canonical result.
 
-**Chosen:** A
+**Tradeoffs:** Requires characterization tests and careful compatibility
+exports, but produces one extensible contract for future candidate shapes.
 
-**Summary:** This matches the user's explicit grouping and reduces the risk of
-shipping another matrix-shape change through duplicated traversal logic.
+**Chosen:** Yes
+
+**Summary:** Option B is the only approach that handles the shipped ladder model
+without preserving the known duplication.
 
 ## Key Decisions
 
-1. **Source of truth:** Keep policy rungs abstract and keep concrete provider
-   targets in dispatch-matrix cells; do not hard-code GPT-5.6 family models into
-   policy mappings.
-2. **Matrix helpers:** Establish one shared normalizer for config and sparse
-   project-state inputs and one shared cell-reference walker for adopt and
-   doctor traversal.
-3. **Dispatch report contract:** Represent route/invocation target, OAT policy,
-   requested controls, configured defaults, and runtime confirmation as
-   separate data, while retaining the parseable `Dispatch:` stamp as a
-   compatibility surface.
-4. **Cursor cache lifetime:** Cache the parsed Cursor model catalog only for a
-   single validation pass, preserving valid, invalid, and unvalidated outcomes
-   plus existing CLI/fallback behavior.
-5. **Slug evidence:** Accept only live Cursor Task/subagent probe results for
-   Sol, Terra, and Luna. If models are unavailable, record exact observed
-   output and a concrete recheck date instead of guessing slugs.
-6. **Workflow:** Use quick mode with implementation-ready tasks and no formal
-   spec artifact.
+1. **Policy and matrix roles:** Keep abstract policy names provider-neutral.
+   Named tiers are maximum ceilings; concrete provider candidates remain in
+   configuration-owned matrix ladders.
+2. **Canonical input algebra:** Normalize legacy provider scalars, direct route
+   targets, legacy ordered fallback routes, modern `{ candidates: [...] }`
+   ladders, and sparse project-state overrides through one shared core.
+3. **Traversal provenance:** One shared walker emits provider, value/target,
+   candidate tier, candidate index, fallback-route index, path, and
+   configuration source. Config and doctor consume it rather than maintaining
+   private traversal.
+4. **Provider opacity:** Keep Codex model-plus-effort pairs atomic and treat
+   Cursor candidate strings as opaque. Never infer capabilities or translate
+   values between provider vocabularies.
+5. **Report semantics:** Keep policy, maximum ceiling, requested candidate,
+   candidate tier, exact selected target, requested controls, configured
+   defaults, gate invocation metadata, and runtime-observed identity as
+   separate fields.
+6. **Compatibility stamp:** Derive the existing parseable `Dispatch:` stamp
+   from the report. It remains a compatibility surface, not the report schema.
+7. **Immutable gate provenance:** Gate target/runtime/model/effort/source values
+   are copied from configured invocation metadata and cannot be overwritten by
+   observed or self-reported producer identity.
+8. **Cursor validation pass:** Share one explicit pass context between config
+   adoption and doctor. Resolve the broad Cursor catalog at most once per pass,
+   while running one real Task/subagent probe for each distinct opaque Cursor
+   candidate.
+9. **Live evidence:** Probe every GPT-5.6 Cursor slug present in the current
+   versioned recommendation asset. A sentinel-confirmed launch is definitive;
+   an explicit subagent allow-list retains the existing availability semantics,
+   while broad catalog context alone never proves eligibility.
+10. **Workflow:** Remain in quick mode, revise lightweight design, and require
+    explicit design approval before plan generation.
 
 ## Constraints
 
-- Preserve bare provider values, tier maps, ordered route cells, malformed-cell
-  handling, sparse project overrides, and inherit/default behavior.
-- Preserve Codex materialized-role and base-role fallback semantics plus
-  Claude/Cursor model-argument dispatch behavior.
-- Keep requested/configured controls distinct from observed or inferred runtime
-  identity; do not lead human output with `producer=unknown` when identity was
-  simply not reported.
-- Make live Cursor verification reproducible with exact command/output evidence.
+- Preserve valid behavior and malformed-input handling for legacy scalars,
+  direct targets, ordered fallback routes, candidate ladders, and sparse
+  overrides.
+- Preserve candidate ladders as atomic values during layered-config flattening;
+  never resolve individual `candidates[N]` entries from different layers.
+- Preserve candidate tier/index, fallback-route index, exact target, and config
+  source through normalization, traversal, validation, and reporting.
+- Keep policy/invocation source, selected-cell source, and configured gate
+  invocation source distinct.
+- Preserve exact-candidate fail-closed behavior for missing, ambiguous,
+  non-compilable, or above-ceiling managed targets.
+- Do not reimplement candidate selection, task-worker coordination,
+  materialization ownership, or gate provenance already delivered by the
+  completed dependency project.
+- Keep configured/requested values separate from runtime confirmation. A value
+  read from config or sent to a provider is not observed producer identity.
+- Keep Cursor credentials and tokens out of evidence; record only sanitized
+  environment context.
+- Before implementation, refresh this worktree onto a base that contains the
+  completed candidate-ladder contract.
 - If shipped CLI functionality changes, bump the lockstep public package set and
-  pass `pnpm release:validate` before implementation is considered done.
+  pass `pnpm release:validate`.
 
 ## Success Criteria
 
-- Shared dispatch-matrix normalization and traversal helpers replace the known
-  duplicated paths without behavior drift.
-- A reusable dispatch report schema produces stable machine output and clear
-  human-facing output while supporting the existing parseable stamp.
-- One adopt/doctor validation pass fetches the Cursor catalog at most once and
-  retains explicit fallback/result semantics.
-- Cursor GPT-5.6 Sol, Terra, and Luna subagent slugs are either verified by live
-  probes and used consistently, or their unavailable state and next recheck are
-  recorded with reproducible evidence.
-- Focused tests cover helpers, consumers, cache call counts, formatter variants,
-  fallback routes, and runtime-identity-unverified cases.
-- Relevant CLI/workflow documentation distinguishes requested controls,
-  configured defaults, and runtime confirmation.
-- Repository lint, formatting, type checks, tests, and release validation pass
-  as required by the final diff.
+- One shared normalizer handles every supported legacy/modern matrix shape and
+  replaces the duplicated config/project-state normalization paths.
+- One shared provenance-rich walker replaces config and doctor traversal while
+  preserving all structured indices, paths, tiers, and source layers.
+- A versioned reusable dispatch report produces deterministic machine JSON and
+  human output from the resolver's shipped exact-selection fields.
+- The report distinguishes abstract policy, maximum ceiling, requested
+  candidate, exact selected target, configured defaults, immutable gate
+  invocation, and runtime-observed identity.
+- `Dispatch:` parsing remains compatible and the stamp is derived from the
+  report without weakening gate provenance.
+- A validation pass invokes Cursor `models` at most once and
+  `--list-models` at most once as fallback, while probing every distinct
+  Cursor candidate exactly once in that pass.
+- Valid, unknown-value, and unvalidated outcomes remain explicit in config and
+  doctor output.
+- Live evidence covers every currently recommended Cursor GPT-5.6 slug with
+  exact command/prompt, sanitized environment, stdout/stderr, exit status,
+  sentinel result, date, and a recheck date for unavailable candidates.
+- Recommendation/config/docs changes are made only from live evidence; any
+  unverified candidate is called out explicitly rather than silently retained
+  or removed.
+- Focused tests, repository checks, and `pnpm release:validate` pass.
 
 ## Out of Scope
 
-- Changing abstract dispatch-policy definitions or introducing a default
-  GPT-5.6 policy mapping.
-- Guessing Cursor slugs from a general model listing without a subagent probe.
-- Redesigning unrelated provider dispatch, gate, or orchestration behavior.
-- Producing spec-driven `spec.md` or full `design.md` artifacts unless the user
-  explicitly promotes the project.
+- Changing the names or provider-neutral meaning of Economy, Balanced, High,
+  Frontier, Uncapped, or Inherit Host Defaults.
+- Rebuilding exact task-worker dispatch, candidate ladder resolution, Codex
+  role materialization, or gate artifact corroboration.
+- Hard-coding GPT-5.6 families into abstract policy compilation.
+- Long-lived, cross-command, or global Cursor catalog caching.
+- Treating broad catalog presence as proof of Task/subagent eligibility.
+- Producing a formal `spec.md` or full spec-driven design.
 
 ## Deferred Ideas
 
-- Broader dispatch telemetry or long-lived/cross-command provider catalog
-  caching; this project limits cache lifetime to one validation pass.
-- Additional model families beyond the GPT-5.6 Sol, Terra, and Luna verification
-  requested here.
+- General dispatch telemetry or persistence beyond the reusable report contract.
+- Provider capability inference from opaque candidate naming.
+- Catalog caching beyond a single validation pass.
 
 ## Open Questions
 
-- **Design depth:** Whether to go straight to the plan or capture a lightweight
-  design for the shared schema/helper boundaries first.
-- **Live availability:** Whether the current Cursor installation exposes all
-  three GPT-5.6 family models to Task/subagent execution.
+- **Design approval:** Whether the revised full lightweight design accurately
+  captures the shipped dependency contract before planning.
+- **Live availability:** Which of the current recommendation's GPT-5.6 Cursor
+  candidates will return the exact Task sentinel in the implementation
+  environment.
 
 ## Assumptions
 
-- The existing dispatch resolver/config/doctor tests are the behavioral
-  baseline for matrix consolidation.
-- Cursor verification may legitimately conclude that one or more models are not
-  yet exposed, provided the evidence and recheck date are recorded.
+- The implementation base will include the completed
+  `gate-review-provenance-target-safety` branch/merge before code work begins.
+- The versioned recommendation asset is the source for the live-probe candidate
+  set; implementation re-reads it rather than copying a stale list.
+- No persisted live Task-success evidence currently exists for the 13 GPT-5.6
+  Cursor candidates in recommendation version `2026-07-10.2`; prior broad
+  catalog discussion does not satisfy the acceptance criterion.
 
 ## Risks
 
-- **Compatibility drift:** Consolidating duplicated code could subtly change
-  malformed or sparse-cell behavior.
+- **Compatibility drift:** Canonicalizing legacy shapes could change malformed
+  or sparse behavior.
   - **Likelihood:** Medium
   - **Impact:** High
-  - **Mitigation Ideas:** Characterization tests around every existing input
-    shape before switching consumers.
-- **Environment-dependent evidence:** Cursor catalog or subagent access may vary
-  by account, rollout, or installed client state.
+  - **Mitigation Ideas:** Lock current behavior with raw-shape and
+    consumer-path characterization tests before switching adapters.
+- **Provenance collapse:** A broad report could accidentally conflate configured
+  invocation, requested candidate, and runtime identity.
   - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Use distinct typed sections and fail gate
+    corroboration on missing/mismatched immutable fields.
+- **Environment-dependent evidence:** Cursor availability can vary by account,
+  rollout, credentials, or client version.
+  - **Likelihood:** High
   - **Impact:** Medium
-  - **Mitigation Ideas:** Record client context, exact commands, raw outcomes,
-    and a dated recheck when verification cannot complete.
+  - **Mitigation Ideas:** Record sanitized context and dated rechecks without
+    guessing or silently editing recommendations.
+- **Branch dependency drift:** This planning branch currently predates the
+  completed candidate-ladder work.
+  - **Likelihood:** High until refreshed
+  - **Impact:** High
+  - **Mitigation Ideas:** Verify the dependency commit/merge is present before
+    implementation and regenerate task file references after refresh.
 
 ## Next Steps
 
-Choose whether the shared data-model and component-boundary decisions warrant a
-lightweight quick-mode `design.md`; otherwise confirm these requirements and
-generate `plan.md` directly.
+Review and approve the refreshed lightweight design. Do not generate
+`plan.md` until that approval is explicit.

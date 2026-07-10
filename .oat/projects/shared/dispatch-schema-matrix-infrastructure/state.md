@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T01:52:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T18:47:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -66,12 +66,15 @@ Design - Validating a lightweight architecture before planning
 - ✓ Execution artifacts scaffolded
 - ✓ Scope and success criteria captured
 - ✓ Lightweight design selected
-- ⧗ Collaborative design review in progress
+- ✓ Candidate-ladder dependency contract incorporated
+- ✓ Full revised lightweight design drafted
+- ⧗ Awaiting explicit design approval
 
 ## Blockers
 
-None
+None for design. Implementation must start from a base containing the completed
+candidate-ladder dependency contract.
 
 ## Next Milestone
 
-Complete lightweight design, then generate a quick implementation plan
+Approve the refreshed lightweight design before generating the quick plan
