@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t21
+oat_current_task_id: p04-t22
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 25    | 20/25     |
+| p04   | in_progress | 25    | 21/25     |
 
-**Total:** 43/48 tasks completed
+**Total:** 44/48 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -360,11 +360,14 @@ oat_generated: false
 
 ### Task p04-t21: (final review) Compose managed Codex inputs in user status
 
-**Status:** pending
+**Status:** completed
+**Commit:** `a215db87`
 **Finding:** `I2` (Important; Moderate; `code_fix_required`)
 
-- Make user-scope status compose the same bundled managed Codex base agents used by user sync.
-- Cover a custom user target plus drift in both base roles without leaking agent inputs into generic user scanning.
+- User-scope Codex status now composes the two bundled managed base agents into extension planning exactly as user sync does.
+- A real custom user target reports drift in both generated base-role variants and the Codex config.
+- Generic user scanning remains skills-only; project Codex and non-Codex status do not invoke the bundled-agent scanner.
+- RED/GREEN verification passed 69 focused status/sync/scanner assertions and CLI type-check.
 
 ### Task p04-t22: (final review) Parse managed Codex ownership from headers only
 
@@ -400,12 +403,12 @@ oat_generated: false
 
 ### Phase Summary
 
-- **Outcome:** The first 20 p04 tasks are complete. Final review cycle 3 added six sequential fixes for realpath containment, user-status input composition, managed-role header parsing, dispatch-pair validation, quick-plan resumption, and user-scope docs parity; realpath containment is now complete.
+- **Outcome:** The first 21 p04 tasks are complete. Final review cycle 3 added six sequential fixes for realpath containment, user-status input composition, managed-role header parsing, dispatch-pair validation, quick-plan resumption, and user-scope docs parity; realpath containment and user-status composition are now complete.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** Final review cycle 3 is `fixes_added`. Execute `p04-t21` through `p04-t25` before any further review or explicit p04 HiLL approval.
+- **Review status:** Final review cycle 3 is `fixes_added`. Execute `p04-t22` through `p04-t25` before any further review or explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
@@ -1035,6 +1038,7 @@ oat_generated: false
 | p04-t18    | 59 focused skill contracts; 53-skill validation; format; bundled parity; release                                      | 59     | 0      | Durable quick/import readiness after review disposition       |
 | p04-t19    | 130 focused identity/gate assertions; format                                                                          | 130    | 0      | Canonical p04 fix stamps and aggregate contributor recovery   |
 | p04-t20    | RED/GREEN realpath containment matrix; 226 focused assertions; CLI type-check                                         | 226    | 0      | Canonical in-repo identity and fail-closed symlink handling   |
+| p04-t21    | RED/GREEN real custom-target status; 69 focused status/sync/scanner assertions; CLI type-check                        | 69     | 0      | User Codex drift parity with narrowly composed agent inputs   |
 
 ## Final Summary (for PR/docs)
 
@@ -1061,9 +1065,9 @@ for aggregate producer accounting. Their focused verification is now recorded
 in the ledger above.
 
 Final review cycle 3 found the remaining realpath, user-status, header-marker,
-dispatch-pair, quick-resumption, and docs-parity gaps. Realpath containment is
-complete; `p04-t21` through `p04-t25` remain: 43 of 48 tasks are complete and
-p04 is 20 of 25.
+dispatch-pair, quick-resumption, and docs-parity gaps. Realpath containment and
+user-status composition are complete; `p04-t22` through `p04-t25` remain: 44 of
+48 tasks are complete and p04 is 21 of 25.
 The final review is `fixes_added`; explicit p04 HiLL approval remains blocked
 until the tasks and review disposition are complete. No additional public
 package version bump has been made; all five packages remain at `0.1.47`.

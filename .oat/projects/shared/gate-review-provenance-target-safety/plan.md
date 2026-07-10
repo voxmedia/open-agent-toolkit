@@ -1377,7 +1377,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t21: (final review) Compose managed Codex inputs in user status
 
-**Status:** pending
+**Status:** completed (`a215db87`)
 **Finding:** `I2` (Important; Moderate; `code_fix_required`)
 
 **Files:**

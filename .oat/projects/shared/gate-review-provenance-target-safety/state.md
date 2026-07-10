@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t21
-oat_last_commit: ba316ca3
+oat_current_task: p04-t22
+oat_last_commit: a215db87
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T14:09:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T14:16:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 43 of 48 planned tasks are complete; p04 is 20/25. Final review cycle 3 is `fixes_added`; execution resumes at `p04-t21` before any p04 HiLL approval.
+Implementation - 44 of 48 planned tasks are complete; p04 is 21/25. Final review cycle 3 is `fixes_added`; execution resumes at `p04-t22` before any p04 HiLL approval.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 43 of 48 planned tasks are complete; p04 is 20/25. Final review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (43/48 tasks complete; final review is `fixes_added`)
+- **Implementation:** `implementation.md` (44/48 tasks complete; final review is `fixes_added`)
 
 ## Progress
 
@@ -180,7 +180,9 @@ Implementation - 43 of 48 planned tasks are complete; p04 is 20/25. Final review
 - ✓ Auto-disposition converted all six code/docs findings to `p04-t20` through `p04-t25`; the Minor tracking omission was resolved during receive bookkeeping
 - ✓ `p04-t20` enforces lexical and realpath project containment across declared gates, active-project resolution, and project-scoped Codex materialization
 - ✓ p04-t20 verification passed 226 focused gate/config/path/materialization assertions and CLI type-check
-- ⧗ Execute `p04-t21` through `p04-t25`; final review disposition and explicit p04 HiLL approval remain pending
+- ✓ `p04-t21` gives user-scope status the same narrowly composed bundled Codex agent inputs as user sync
+- ✓ p04-t21 verification passed 69 focused status/sync/scanner assertions and CLI type-check
+- ⧗ Execute `p04-t22` through `p04-t25`; final review disposition and explicit p04 HiLL approval remain pending
 
 ## Blockers
 
@@ -188,4 +190,4 @@ None
 
 ## Next Milestone
 
-Execute `p04-t21` through `p04-t25`. After fixes, resolve the final-review cycle limit before requesting explicit p04 HiLL approval.
+Execute `p04-t22` through `p04-t25`. After fixes, resolve the final-review cycle limit before requesting explicit p04 HiLL approval.
