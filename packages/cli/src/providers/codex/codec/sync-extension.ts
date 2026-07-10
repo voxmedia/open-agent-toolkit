@@ -237,17 +237,15 @@ function collectCodexTargetsFromCell(
   }
 
   if (isWorkflowDispatchCandidateLadder(cell)) {
-    const ceiling = cell.candidates.at(-1);
-    if (ceiling === undefined) {
-      return;
-    }
-    if (isWorkflowDispatchFallbackRoute(ceiling)) {
-      for (const entry of ceiling.route) {
-        collectCodexTargetFromEntry(entry, targets, owner);
+    for (const candidate of cell.candidates) {
+      if (isWorkflowDispatchFallbackRoute(candidate)) {
+        for (const entry of candidate.route) {
+          collectCodexTargetFromEntry(entry, targets, owner);
+        }
+        continue;
       }
-      return;
+      collectCodexTargetFromEntry(candidate, targets, owner);
     }
-    collectCodexTargetFromEntry(ceiling, targets, owner);
     return;
   }
 
@@ -307,19 +305,53 @@ function collectCodexTargetsFromUnknownCell(
   targets: Map<string, CodexMaterializationTarget>,
   owner: CodexRoleOwner,
 ): void {
-  if (typeof value === 'string' || !Array.isArray(value)) {
-    return;
-  }
-
-  for (const entry of value) {
-    if (typeof entry === 'string') {
-      continue;
+  const collectCandidate = (candidate: unknown): void => {
+    if (
+      !candidate ||
+      typeof candidate !== 'object' ||
+      Array.isArray(candidate)
+    ) {
+      return;
     }
 
-    const target = routeTargetFromUnknown(entry);
+    const route = (candidate as Record<string, unknown>)['route'];
+    if (Array.isArray(route)) {
+      for (const entry of route) {
+        const target = routeTargetFromUnknown(entry);
+        if (target) {
+          collectCodexTargetFromEntry(target, targets, owner);
+        }
+      }
+      return;
+    }
+
+    const target = routeTargetFromUnknown(candidate);
     if (target) {
       collectCodexTargetFromEntry(target, targets, owner);
     }
+  };
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      collectCandidate(entry);
+    }
+    return;
+  }
+
+  if (!value || typeof value !== 'object') {
+    return;
+  }
+
+  const candidates = (value as Record<string, unknown>)['candidates'];
+  if (!Array.isArray(candidates)) {
+    return;
+  }
+
+  for (const entry of candidates) {
+    if (typeof entry === 'string') {
+      continue;
+    }
+    collectCandidate(entry);
   }
 }
 

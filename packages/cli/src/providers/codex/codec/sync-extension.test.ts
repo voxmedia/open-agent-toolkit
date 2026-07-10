@@ -163,7 +163,7 @@ describe('codex sync extension', () => {
     expect(configFile).toContain(`[agents.${roleName}]`);
   });
 
-  it('materializes only the final modern ladder candidate before all-candidate materialization', async () => {
+  it('materializes every project ladder candidate for both roles idempotently', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);
 
@@ -200,36 +200,67 @@ describe('codex sync extension', () => {
 
     const canonicalDir = join(root, '.agents', 'agents');
     await mkdir(canonicalDir, { recursive: true });
-    const canonicalFile = join(canonicalDir, 'oat-phase-implementer.md');
-    await writeFile(
-      canonicalFile,
-      canonicalAgentFileContent('oat-phase-implementer'),
+    const canonicalEntries = await Promise.all(
+      ['oat-phase-implementer', 'oat-reviewer'].map(async (role) => {
+        const canonicalPath = join(canonicalDir, `${role}.md`);
+        await writeFile(canonicalPath, canonicalAgentFileContent(role));
+        return {
+          name: `${role}.md`,
+          type: 'agent' as const,
+          canonicalPath,
+          isFile: true,
+        };
+      }),
     );
 
-    const plan = await computeCodexProjectExtensionPlan(root, [
-      {
-        name: 'oat-phase-implementer.md',
-        type: 'agent',
-        canonicalPath: canonicalFile,
-        isFile: true,
-      },
-    ]);
-    const rolePaths = plan.operations
+    const first = await computeCodexProjectExtensionPlan(
+      root,
+      canonicalEntries,
+    );
+    const rolePaths = first.operations
       .filter((op) => op.target === 'role')
       .map((op) => op.path);
-    const lowerRole = buildCodexMaterializedRoleName({
-      agentName: 'oat-phase-implementer',
-      model: 'custom-lower-model',
-      effort: 'medium',
-    });
-    const ceilingRole = buildCodexMaterializedRoleName({
-      agentName: 'oat-phase-implementer',
-      model: 'custom-ceiling-model',
-      effort: 'high',
-    });
+    const customRoles = ['oat-phase-implementer', 'oat-reviewer'].flatMap(
+      (agentName) =>
+        [
+          ['custom-lower-model', 'medium'],
+          ['custom-ceiling-model', 'high'],
+        ].map(([model, effort]) =>
+          buildCodexMaterializedRoleName({ agentName, model, effort }),
+        ),
+    );
 
-    expect(rolePaths).toContain(`.codex/agents/${ceilingRole}.toml`);
-    expect(rolePaths).not.toContain(`.codex/agents/${lowerRole}.toml`);
+    for (const role of customRoles) {
+      expect(rolePaths).toContain(`.codex/agents/${role}.toml`);
+      expect(
+        first.operations.find((operation) => operation.roleName === role)
+          ?.content,
+      ).toContain('# oat-owner: project-config');
+    }
+    expect(first.managedRoles).toHaveLength(32);
+
+    const applied = await applyCodexProjectExtensionPlan(root, first);
+    expect(applied.failed).toBe(0);
+    const trackedFiles = [
+      join(root, '.codex', 'config.toml'),
+      ...customRoles.map((role) =>
+        join(root, '.codex', 'agents', `${role}.toml`),
+      ),
+    ];
+    const firstBytes = await Promise.all(
+      trackedFiles.map((path) => readFile(path, 'utf8')),
+    );
+    const second = await computeCodexProjectExtensionPlan(
+      root,
+      canonicalEntries,
+    );
+    expect(
+      second.operations.every((operation) => operation.action === 'skip'),
+    ).toBe(true);
+    const secondBytes = await Promise.all(
+      trackedFiles.map((path) => readFile(path, 'utf8')),
+    );
+    expect(secondBytes).toEqual(firstBytes);
   });
 
   it('generates materialized codex roles from local config matrix targets', async () => {
@@ -309,9 +340,19 @@ describe('codex sync extension', () => {
         '  matrix:',
         '    codex:',
         '      high:',
-        '        - harness: codex',
-        '          model: gpt-5.6-sol',
-        '          effort: xhigh',
+        '        candidates:',
+        '          - harness: codex',
+        '            model: state-lower-model',
+        '            effort: medium',
+        '          - route:',
+        '              - harness: claude',
+        '                model: claude-sonnet',
+        '              - harness: codex',
+        '                model: state-route-model',
+        '                effort: high',
+        '          - harness: codex',
+        '            model: state-ceiling-model',
+        '            effort: xhigh',
         '---',
         '',
         '# State',
@@ -337,13 +378,26 @@ describe('codex sync extension', () => {
       },
     ]);
 
-    expect(plan.managedRoles).toEqual(
-      expect.arrayContaining([
-        'oat-phase-implementer',
-        'oat-phase-implementer-gpt-5-6-sol-xhigh',
-      ]),
+    const stateRoles = [
+      ['state-lower-model', 'medium'],
+      ['state-route-model', 'high'],
+      ['state-ceiling-model', 'xhigh'],
+    ].map(([model, effort]) =>
+      buildCodexMaterializedRoleName({
+        agentName: 'oat-phase-implementer',
+        model,
+        effort,
+      }),
     );
-    expect(plan.managedRoles).toHaveLength(14);
+    expect(plan.managedRoles).toEqual(
+      expect.arrayContaining(['oat-phase-implementer', ...stateRoles]),
+    );
+    expect(plan.managedRoles).toHaveLength(17);
+    expect(
+      plan.operations.some((operation) =>
+        operation.roleName?.includes('claude-sonnet'),
+      ),
+    ).toBe(false);
   });
 
   it('does not materialize targets from an external active project', async () => {

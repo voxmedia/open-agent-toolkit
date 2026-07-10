@@ -935,13 +935,20 @@ describe('createSyncCommand', () => {
             dispatchCeiling: {
               providers: {
                 codex: {
-                  high: [
-                    {
-                      harness: 'codex',
-                      model: 'gpt-5.7-user-custom',
-                      effort: 'high',
-                    },
-                  ],
+                  high: {
+                    candidates: [
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.7-user-lower-custom',
+                        effort: 'medium',
+                      },
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.7-user-custom',
+                        effort: 'high',
+                      },
+                    ],
+                  },
                 },
               },
             },
@@ -1029,14 +1036,20 @@ describe('createSyncCommand', () => {
         }),
       );
 
-      const generatedRoles = [
-        buildCodexMaterializedTargetRoleName({
-          agentName: 'oat-phase-implementer',
-          model: 'gpt-5.7-user-custom',
-          effort: 'high',
-        }),
-        existingUserRole,
-      ];
+      const generatedRoles = ['oat-phase-implementer', 'oat-reviewer'].flatMap(
+        (agentName) =>
+          [
+            ['gpt-5.7-user-lower-custom', 'medium'],
+            ['gpt-5.7-user-custom', 'high'],
+          ].map(([model, effort]) =>
+            buildCodexMaterializedTargetRoleName({
+              agentName,
+              model,
+              effort,
+            }),
+          ),
+      );
+      expect(generatedRoles).toContain(existingUserRole);
       for (const role of generatedRoles) {
         await expect(
           readFile(join(home, '.codex', 'agents', `${role}.toml`), 'utf8'),
