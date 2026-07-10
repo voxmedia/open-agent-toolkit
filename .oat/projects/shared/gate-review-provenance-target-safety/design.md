@@ -181,7 +181,81 @@ interface GateCorroboration {
 
 ## Data Models
 
-_Pending collaborative validation._
+### Exec-Target Configuration
+
+```typescript
+interface ExecTargetInvocation {
+  model?: string | 'provider-default';
+  reasoningEffort?: string | 'provider-default';
+}
+```
+
+Validation and merge rules:
+
+- A non-empty string declares the configured value.
+- `provider-default` explicitly declares that OAT did not request a concrete value.
+- Omission resolves to `unknown`; it does not inherit a guess from `baseCommand` parsing.
+- Layered partial overrides merge the two invocation fields consistently with other exec-target config. A target tombstone still removes the whole target.
+
+### Gate Review Artifact Frontmatter
+
+Gate-originated review artifacts add these required fields to the existing review template:
+
+```yaml
+oat_review_invocation: gate
+oat_project: .oat/projects/shared/example
+oat_gate_run_id: 00000000-0000-0000-0000-000000000000
+oat_gate_target: codex-5.5-xhigh
+oat_gate_runtime: codex
+oat_invocation_model: gpt-5.5 # or provider-default | unknown
+oat_invocation_reasoning_effort: xhigh # or provider-default | unknown
+oat_invocation_source: exec-target-config # or unknown
+```
+
+Rules:
+
+- These fields describe OAT's configured invocation, not model self-identification or runtime-confirmed execution.
+- The reviewer copies exact prompt-provided values. It never replaces them with a self-report.
+- Manual and auto review artifacts remain compatible; gate fields are required only when `oat_review_invocation: gate` and gate context supplied them.
+- `oat_project` remains the canonical review subject. Project resolution source is gate-owned output metadata rather than a reviewer-authored claim.
+
+### Gate JSON Envelope
+
+Preserve existing top-level compatibility fields (`target`, string `project`, and `invocation` where the latter means the review invocation marker) and add unambiguous gate-owned structures:
+
+```typescript
+interface ReviewGateIdentityOutput {
+  projectResolutionSource: 'declared' | 'active-project' | 'single-candidate';
+  gateInvocation: GateInvocationMetadata;
+  corroboration: GateCorroboration;
+  diversity?: {
+    producer: {
+      source: 'flag' | 'stamp' | 'aggregated-stamps' | 'unknown';
+      avoidFamilies: string[];
+      contributingScopes?: string[];
+      contributingStampCount?: number;
+    };
+  };
+}
+```
+
+The same `gateInvocation` and project-resolution metadata appear in success, provider execution failure, missing/invalid artifact, and corroboration-failure outputs whenever target selection completed.
+
+### Phase Review Plan Frontmatter
+
+Reuse the existing implementation contract:
+
+```yaml
+oat_phase_review_gate:
+  enabled: true
+  phases: [] # empty = all implementation phases
+  review_type: code
+  exit_nonzero_on: important
+```
+
+- All phases writes `phases: []`.
+- Selected phases writes validated `pNN` IDs in plan order.
+- Disabled is represented by an absent setting or preserved explicit `enabled: false`; resumed/imported explicit settings are not overwritten.
 
 ## API Design
 
