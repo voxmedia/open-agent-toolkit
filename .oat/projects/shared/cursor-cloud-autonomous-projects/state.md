@@ -8,11 +8,11 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -27,7 +27,7 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
-oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
+oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
@@ -40,17 +40,17 @@ oat_generated: false
 
 # Project State: cursor-cloud-autonomous-projects
 
-**Status:** Discovery
+**Status:** Discovery complete — ready for design
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Discovery - Gathering requirements and understanding the problem space
+Discovery - Complete (seeded from `/oat-brainstorm` session, 2026-07-10). Ready for `oat-project-design`.
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
 - **Design:** `design.md` (scaffolded template — not started)
 - **Plan:** `plan.md` (scaffolded template — not started)
@@ -60,7 +60,7 @@ Discovery - Gathering requirements and understanding the problem space
 
 - ✓ Discovery started
 - ✓ Downstream lifecycle files scaffolded
-- ⧗ Awaiting user input
+- ✓ Discovery completed (seeded from brainstorm synthesis)
 
 ## Blockers
 
@@ -68,4 +68,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and move to design phase
+Run `oat-project-design` to confirm requirements and produce `spec.md` + `design.md`
