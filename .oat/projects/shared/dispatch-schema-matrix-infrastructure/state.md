@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -15,8 +15,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Quick mode defers implementation phase checkpoints to oat-project-implement
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -42,19 +42,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T22:59:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T23:19:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: dispatch-schema-matrix-infrastructure
 
-**Status:** Plan
+**Status:** Implement
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Planning - Complete and ready for implementation
+Implementation - Starting p01 shared matrix core
 
 ## Artifacts
 
@@ -80,7 +80,9 @@ Planning - Complete and ready for implementation
 - ✓ Phase review disabled by user; phase-boundary self-review retained
 - ✓ Managed plan artifact review passed with no findings
 - ✓ Cross-runtime plan exit gate passed; three Minor clarifications applied
-- ⧗ Awaiting implementation start
+- ✓ Tier 1 subagent execution authorized
+- ✓ Final-phase HiLL checkpoint and auto-review configured
+- ⧗ Executing `p01-t01`
 
 ## Blockers
 
@@ -88,4 +90,4 @@ None.
 
 ## Next Milestone
 
-Run `oat-project-implement` and confirm implementation HiLL checkpoints
+Complete and review p01, then advance to the p02/p03 parallel group

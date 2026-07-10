@@ -6,6 +6,8 @@ oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
 oat_phase_status: complete
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p02', 'p03']]
 oat_import_reference: null
 oat_import_source_path: null
