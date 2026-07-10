@@ -853,9 +853,7 @@ describe('validateOatSkills', () => {
       expect(content, `${skillName} exact role`).toMatch(
         /exact registered.*(?:role|variant)/i,
       );
-      expect(content, `${skillName} fresh child`).toMatch(
-        /fresh Codex child/i,
-      );
+      expect(content, `${skillName} fresh child`).toMatch(/fresh Codex child/i);
       expect(content, `${skillName} explicit controls`).toMatch(
         /explicit\s+model.*reasoning\s+effort.*canonical\s+role\s+instructions/is,
       );
@@ -869,9 +867,7 @@ describe('validateOatSkills', () => {
   });
 
   it('covers spec, quick, import, and provider-plan-via-import planning paths', async () => {
-    const plan = await readRepoFile(
-      '.agents/skills/oat-project-plan/SKILL.md',
-    );
+    const plan = await readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
     const quick = await readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
     );
