@@ -1648,22 +1648,28 @@ pnpm release:validate
 
 - Modify: `.agents/agents/oat-phase-implementer.md`
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
 - Test: `packages/cli/src/validation/skills.test.ts`
+- Test: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- Test: `packages/cli/src/commands/help-snapshots.test.ts`
 - Regenerate: `packages/cli/assets/agents/oat-phase-implementer.md`, bundled skill assets, and project `.codex` phase-implementer role views
 
 **Steps:**
 
 1. Redefine the phase implementer as a phase coordinator and increment its canonical agent version. It reads phase artifacts once, retains dependency order, selects the exact target for each task, verifies each worker result and commit, performs phase-wide integration/self-review, and returns the phase summary. It must not implement ordinary plan tasks itself.
-2. Before each task, have the coordinator classify the bounded task and call the candidate resolver with the project or phase named ceiling. Dispatch one task worker with the resolver-returned exact Codex role, Claude model argument, or Cursor opaque model string, plus a Task Scope that names only that task, its file boundary, verification, and commit convention.
-3. Run task workers serially within a phase and worktree by default. Permit parallel work only through the existing plan-declared phase/worktree mechanism; do not fan out same-worktree tasks. The coordinator records each worker's exact target, result, and commit in the phase dispatch summary.
-4. Fail closed when a task candidate is absent, exceeds the ceiling, or cannot be invoked with its exact controls. Do not downgrade to the coordinator target, the base role, or an inferred provider default. Preserve the existing fresh pinned-child route where a native Codex role cannot be selected.
-5. Add semantic contracts proving that a High-ceiling phase can dispatch different valid lower candidates for separate tasks, that the coordinator does not execute all tasks in its own context, that each worker receives one task scope, and that exact Claude/Cursor payloads are preserved.
-6. Regenerate the bundled canonical-agent asset and tracked project Codex phase-implementer views from the changed canonical role. Verify the immediately following project sync is a zero-operation dry run.
+2. Add an explicit, ephemeral resolver ceiling-tier option for task dispatch. It must validate against the complete configured ladder, override the layered active-policy ceiling only for that invocation, preserve the configured candidate definitions, report its explicit project/phase source in JSON, and never write back to user, shared, local, or project configuration.
+3. Before each task, have the coordinator classify the bounded task and call the candidate resolver with the recorded project or phase named ceiling through that explicit option. Dispatch one task worker with the resolver-returned exact Codex role, Claude model argument, or Cursor opaque model string, plus a Task Scope that names only that task, its file boundary, verification, and commit convention.
+4. Run task workers serially within a phase and worktree by default. Permit parallel work only through the existing plan-declared phase/worktree mechanism; do not fan out same-worktree tasks. The coordinator records each worker's exact target, result, and commit in the phase dispatch summary.
+5. Fail closed when a task candidate is absent, exceeds the ceiling, or cannot be invoked with its exact controls. Do not downgrade to the coordinator target, the base role, or an inferred provider default. Preserve the existing fresh pinned-child route where a native Codex role cannot be selected.
+6. Add semantic contracts proving that an explicit Balanced project ceiling overrides an inherited High config only for that task invocation, that a High-ceiling phase can dispatch different valid lower candidates for separate tasks, that the coordinator does not execute all tasks in its own context, that each worker receives one task scope, and that exact Claude/Cursor payloads are preserved.
+7. Regenerate the bundled canonical-agent asset and tracked project Codex phase-implementer views from the changed canonical role. Verify the immediately following project sync is a zero-operation dry run.
 
 **Verify:**
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts src/commands/help-snapshots.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
 pnpm run oat:validate-skills
 pnpm run cli -- sync --scope project
 pnpm run cli:source -- sync --scope project --dry-run
