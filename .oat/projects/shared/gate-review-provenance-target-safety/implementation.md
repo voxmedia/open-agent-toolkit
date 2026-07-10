@@ -141,11 +141,12 @@ _No implementation runs yet._
 - Session-observer evidence confirmed Cursor targets were persisted, Claude intentionally relies on the valid built-in ladder, and Codex gate exec configuration was mistaken for subagent dispatch configuration.
 - Revised five-phase, fourteen-task plan passed the configured target-neutral artifact gate with 0 Critical, 0 Important, 0 Medium, and 4 Minor findings.
 - Review received from `reviews/archived/artifact-plan-review-2026-07-10T024822Z.md`:
-  - `m1` resolved in `plan.md` by naming the exact catalog-validated Codex tier-to-model/effort ladder and retaining the `xhigh` Frontier boundary until `max` is supported.
+  - `m1` resolved in `plan.md` by naming the exact catalog-validated Codex tier-to-model/effort ladder. A later user correction aligned it to the previously locked values, including explicit Codex Frontier `sol/max` rather than the agent-inferred `sol/xhigh` boundary.
   - `m2` resolved in `plan.md` with an explicit Cursor/model-argument preservation case for provider-generic resolver tightening.
   - `m3` resolved in `plan.md` by making the final PR-scoped version bumps explicitly cover p00-t03 edits.
   - `m4` rejected: quick-mode plans retain the canonical `spec` review row, `n/a` is not a valid review status, and implementation readiness does not depend on a spec review.
 - Next task is `p00-t01`.
+- The first implementation bootstrap incorrectly inferred Codex defaults from the legacy policy effort ladder. Those user-config edits and generated roles were removed before any phase worker launched. Session-observer evidence then recovered the exact locked Codex, Claude, and Cursor matrices, which were persisted by the sibling configuration session and are the source of truth for p00.
 
 ## Deviations from Plan / Design
 

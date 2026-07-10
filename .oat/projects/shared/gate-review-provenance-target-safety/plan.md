@@ -57,7 +57,7 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 1. Distinguish abstract policy resolution from runnable active-provider resolution. During preflight, a managed provider that cannot compile native dispatch controls is unresolved and blocks non-interactive execution.
 2. Preserve valid built-in compilation such as Claude `high -> opus` and `frontier -> fable`, explicit inherit/default behavior, managed uncapped reviewer behavior, and deliberate cross-harness advisory routes.
 3. After applying a Codex effort cap, resolve the matrix target corresponding to the selected effort instead of dropping the target whenever preferred effort is below the policy cap.
-4. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, reviewer, uncapped, and Cursor/model-argument selections so existing user matrix behavior remains stable.
+4. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, explicit `max` materialized targets, reviewer, uncapped, and Cursor/model-argument selections so existing user matrix behavior remains stable.
 
 **Verify:**
 
@@ -82,7 +82,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 **Steps:**
 
-1. Verify each model against the live provider catalog, then replace effort-only recommended Codex cells with this explicit initial ladder: `economy -> gpt-5.6-luna/medium`, `balanced -> gpt-5.6-terra/high`, `high -> gpt-5.6-sol/xhigh`, and `frontier -> gpt-5.6-sol/xhigh`. Keep Frontier at `xhigh` until Codex `max` is supported by the dispatch contract; retain valid Claude native targets including `frontier: fable`.
+1. Verify each model against the live provider catalog, then replace effort-only recommended Codex cells with the confirmed ladder: `economy -> gpt-5.6-luna/high`, `balanced -> gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier -> gpt-5.6-sol/max`. Preserve `max` as an explicit materialized-target effort rather than coercing it through the legacy closed effort list; retain the confirmed Claude ladder `economy/balanced -> sonnet`, `high -> opus`, and `frontier -> fable`.
 2. Change default adoption to recursively fill missing provider/tier cells while preserving existing explicit values such as the user's Cursor matrix and any custom Claude/Codex cells.
 3. Keep destructive replacement, if retained, behind a separately explicit operation rather than the normal missing-config remediation path.
 4. Validate every recommended cell and cover fresh adoption, partial-provider adoption, partial-tier adoption, idempotence, and custom-value preservation.
