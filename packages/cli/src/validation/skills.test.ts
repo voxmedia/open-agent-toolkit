@@ -1174,6 +1174,87 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('preserves complete explicit phase-review settings across quick and import rewrites', async () => {
+    const paths = [
+      {
+        name: 'quick-start',
+        content: await readRepoFile(
+          '.agents/skills/oat-project-quick-start/SKILL.md',
+        ),
+        snapshotMarker:
+          '### Step 2.9: Snapshot Explicit Phase-Review Setting Before Plan Rewrite',
+        rewriteMarker:
+          'Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.',
+        setupMarker: '### Step 3.55: Configure Optional Phase Review',
+      },
+      {
+        name: 'import-plan',
+        content: await readRepoFile(
+          '.agents/skills/oat-project-import-plan/SKILL.md',
+        ),
+        snapshotMarker:
+          '### Step 2.5: Snapshot Explicit Phase-Review Setting Before Plan Normalization',
+        rewriteMarker:
+          'Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md`',
+        setupMarker: '### Step 4.25: Configure Optional Phase Review',
+      },
+    ];
+
+    for (const {
+      name,
+      content,
+      snapshotMarker,
+      rewriteMarker,
+      setupMarker,
+    } of paths) {
+      const snapshotIndex = content.indexOf(snapshotMarker);
+      const rewriteIndex = content.indexOf(rewriteMarker);
+      const setupIndex = content.indexOf(setupMarker);
+      const restoreIndex = content.indexOf(
+        'Restore the exact snapshot into the resulting `plan.md` frontmatter',
+      );
+
+      expect(
+        snapshotIndex,
+        `${name} snapshot instruction`,
+      ).toBeGreaterThanOrEqual(0);
+      expect(rewriteIndex, `${name} rewrite boundary`).toBeGreaterThan(
+        snapshotIndex,
+      );
+      expect(restoreIndex, `${name} restore after rewrite`).toBeGreaterThan(
+        rewriteIndex,
+      );
+      expect(setupIndex, `${name} restore before setup`).toBeGreaterThan(
+        restoreIndex,
+      );
+
+      const preservationContract = content.slice(snapshotIndex, setupIndex);
+      expect(preservationContract, `${name} key-presence snapshot`).toMatch(
+        /key presence/i,
+      );
+      expect(preservationContract, `${name} complete-value snapshot`).toMatch(
+        /complete explicit value/i,
+      );
+      expect(
+        preservationContract,
+        `${name} presence is not truthiness`,
+      ).toMatch(
+        /presence[\s\S]{0,120}(?:not truthiness|regardless of validity)/i,
+      );
+      expect(preservationContract, `${name} complete value cases`).toMatch(
+        /enabled[\s\S]{0,80}disabled[\s\S]{0,80}selected-phase[\s\S]{0,80}`null`[\s\S]{0,80}malformed/i,
+      );
+      expect(preservationContract, `${name} no explicit re-probe`).toMatch(
+        /explicit presence[\s\S]{0,180}(?:must not|do not)[\s\S]{0,100}(?:probe|re-prompt)/i,
+      );
+    }
+
+    expect(paths[0].content).toMatch(/resumed explicit value/i);
+    expect(paths[1].content).toMatch(
+      /resumed[\s\S]{0,120}imported[\s\S]{0,180}complete explicit value/i,
+    );
+  });
+
   it('makes provider native plan mode inherit phase-review setup from import', async () => {
     const imported = await readRepoFile(
       '.agents/skills/oat-project-import-plan/SKILL.md',

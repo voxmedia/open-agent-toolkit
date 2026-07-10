@@ -159,9 +159,40 @@ If already present, write timestamped copy:
 
 - `references/imported-plan-YYYY-MM-DD-HHMM.md`
 
+### Step 2.5: Snapshot Explicit Phase-Review Setting Before Plan Normalization
+
+Before any template-based create, update, replacement, or normalization of
+`"$PROJECT_PATH/plan.md"`, inspect these sources in precedence order:
+
+1. Existing destination `plan.md`, when it contains a resumed explicit value.
+2. The preserved imported source, when it contains an imported explicit value
+   and the destination did not contain the key.
+
+Snapshot the key presence of `oat_phase_review_gate` as a separate boolean;
+presence is not truthiness and is authoritative regardless of validity. When
+present, snapshot the complete explicit value as the exact YAML frontmatter
+entry, including its full nested mapping or scalar form. Preserve enabled,
+disabled, selected-phase, `null`, and malformed-for-contract values verbatim;
+do not normalize, validate, or reconstruct the value while taking the snapshot.
+
+If both sources contain the key, the resumed destination value wins so an
+import cannot silently replace a project-level choice. Resumed and imported
+settings therefore preserve their complete explicit value across
+normalization. Explicit presence must not trigger a target probe or re-prompt,
+even when the preserved value is `null` or malformed for the phase-review
+contract.
+
 ### Step 3: Normalize Into Canonical OAT plan.md
 
 Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping:
+
+Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
+the first normalized plan write, before any later frontmatter rewrite and
+before Step 4.25 invokes the shared setup contract. Carry the snapshot
+losslessly through every subsequent plan update. When the key was explicitly
+present, its complete value must still be present exactly as captured; do not
+probe, re-prompt, validate, or replace it here. When the key was absent, do not
+invent one before the shared setup contract runs.
 
 - `## Phase N`
 - `### Task pNN-tNN` (stable task IDs)

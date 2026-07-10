@@ -434,9 +434,35 @@ git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md"
 git diff --cached --quiet || git commit -m "chore(oat): complete quick-start discovery for {project-name}"
 ```
 
+### Step 2.9: Snapshot Explicit Phase-Review Setting Before Plan Rewrite
+
+Before any template-based create, update, replacement, or normalization of
+`"$PROJECT_PATH/plan.md"`, inspect the existing plan frontmatter and snapshot:
+
+1. The key presence of `oat_phase_review_gate` as a separate boolean. Presence
+   is not truthiness: an explicit key is authoritative regardless of validity or
+   value.
+2. When the key is present, the complete explicit value as the exact YAML
+   frontmatter entry, including its full nested mapping or scalar form. Preserve
+   enabled, disabled, selected-phase, `null`, and malformed-for-contract values
+   verbatim; do not normalize, validate, or reconstruct the value while taking
+   the snapshot.
+
+This snapshot protects a resumed explicit value from the template rewrite. Its
+explicit presence must not trigger a target probe or re-prompt, even when the
+preserved value is `null` or malformed for the phase-review contract.
+
 ### Step 3: Generate Plan Directly
 
 Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.
+
+Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
+the first resulting plan write, before any later frontmatter rewrite and before
+Step 3.55 invokes the shared setup contract. Carry the snapshot losslessly
+through every subsequent plan update. When the key was explicitly present, its
+complete value must still be present exactly as captured; do not probe,
+re-prompt, validate, or replace it here. When the key was absent, do not invent
+one before the shared setup contract runs.
 
 Required frontmatter updates:
 
