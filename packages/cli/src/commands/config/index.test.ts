@@ -443,7 +443,7 @@ describe('oat config', () => {
       values: expect.arrayContaining([
         {
           key: 'workflow.dispatchCeiling.providers.cursor.high',
-          value: 'composer-2.5',
+          value: '{"candidates":["composer-2.5"]}',
           source: 'shared',
         },
       ]),
@@ -1119,7 +1119,9 @@ describe('oat config', () => {
         version: 1,
         workflow: {
           dispatchCeiling: {
-            providers: { cursor: { high: 'composer-2.5' } },
+            providers: {
+              cursor: { high: { candidates: ['composer-2.5'] } },
+            },
           },
         },
       });
@@ -1336,11 +1338,11 @@ describe('oat config', () => {
             recommendationVersion: '2026-07-07.1',
             providers: {
               cursor: {
-                economy: 'composer-2.5',
-                balanced: 'composer-2.5-fast',
+                economy: { candidates: ['composer-2.5'] },
+                balanced: { candidates: ['composer-2.5-fast'] },
               },
-              codex: { high: 'high' },
-              claude: { frontier: 'fable' },
+              codex: { high: { candidates: ['high'] } },
+              claude: { frontier: { candidates: ['fable'] } },
             },
           },
         },
@@ -1382,50 +1384,71 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation).toEqual({
-        version: '2026-07-10.1',
-        providers: {
-          codex: {
-            economy: [
-              {
-                harness: 'codex',
-                model: 'gpt-5.6-luna',
-                effort: 'high',
-              },
-            ],
-            balanced: [
-              {
-                harness: 'codex',
-                model: 'gpt-5.6-terra',
-                effort: 'xhigh',
-              },
-            ],
-            high: [
-              {
-                harness: 'codex',
-                model: 'gpt-5.6-sol',
-                effort: 'high',
-              },
-            ],
-            frontier: [
-              {
-                harness: 'codex',
-                model: 'gpt-5.6-sol',
-                effort: 'max',
-              },
+      expect(recommendation.version).toBe('2026-07-10.2');
+      expect(recommendation.providers).toMatchObject({
+        codex: {
+          economy: {
+            candidates: [
+              { model: 'gpt-5.6-luna', effort: 'low' },
+              { model: 'gpt-5.6-luna', effort: 'medium' },
+              { model: 'gpt-5.6-luna', effort: 'high' },
             ],
           },
-          claude: {
-            economy: 'sonnet',
-            balanced: 'sonnet',
-            high: 'opus',
-            frontier: 'fable',
+          balanced: {
+            candidates: [
+              { model: 'gpt-5.6-luna', effort: 'xhigh' },
+              { model: 'gpt-5.6-terra', effort: 'low' },
+              { model: 'gpt-5.6-terra', effort: 'medium' },
+              { model: 'gpt-5.6-terra', effort: 'high' },
+              { model: 'gpt-5.6-terra', effort: 'xhigh' },
+            ],
           },
-          cursor: {
-            economy: 'gpt-5.6-luna-high',
-            balanced: 'gpt-5.6-terra-xhigh',
-            high: 'gpt-5.6-sol-high',
-            frontier: 'gpt-5.6-sol-max',
+          high: {
+            candidates: [
+              { model: 'gpt-5.6-sol', effort: 'low' },
+              { model: 'gpt-5.6-sol', effort: 'medium' },
+              { model: 'gpt-5.6-sol', effort: 'high' },
+            ],
+          },
+          frontier: {
+            candidates: [
+              { model: 'gpt-5.6-sol', effort: 'xhigh' },
+              { model: 'gpt-5.6-sol', effort: 'max' },
+            ],
+          },
+        },
+        claude: {
+          economy: { candidates: ['haiku', 'sonnet'] },
+          balanced: { candidates: ['sonnet'] },
+          high: { candidates: ['opus'] },
+          frontier: { candidates: ['fable'] },
+        },
+        cursor: {
+          economy: {
+            candidates: [
+              'gpt-5.6-luna-low',
+              'gpt-5.6-luna-medium',
+              'gpt-5.6-luna-high',
+            ],
+          },
+          balanced: {
+            candidates: [
+              'gpt-5.6-luna-xhigh',
+              'gpt-5.6-terra-low',
+              'gpt-5.6-terra-medium',
+              'gpt-5.6-terra-high',
+              'gpt-5.6-terra-xhigh',
+            ],
+          },
+          high: {
+            candidates: [
+              'gpt-5.6-sol-low',
+              'gpt-5.6-sol-medium',
+              'gpt-5.6-sol-high',
+            ],
+          },
+          frontier: {
+            candidates: ['gpt-5.6-sol-xhigh', 'gpt-5.6-sol-max'],
           },
         },
       });
@@ -1461,7 +1484,7 @@ describe('oat config', () => {
       ).rejects.toMatchObject({ code: 'ENOENT' });
     });
 
-    it('rejects codex route targets missing model or effort during dispatch matrix adoption', async () => {
+    it('rejects codex candidate targets missing model or effort during dispatch matrix adoption', async () => {
       const root = await createRepoRoot();
       const validateMatrixCell = vi.fn(async () => 'valid' as const);
       const { command, capture } = createHarness({
@@ -1473,7 +1496,9 @@ describe('oat config', () => {
               version: '2026-07-07.1',
               providers: {
                 codex: {
-                  high: [{ harness: 'codex', effort: 'xhigh' }],
+                  high: {
+                    candidates: [{ harness: 'codex', effort: 'xhigh' }],
+                  },
                 },
               },
             }),
@@ -1484,7 +1509,7 @@ describe('oat config', () => {
 
       expect(process.exitCode).toBe(1);
       expect(capture.error[0]).toContain(
-        'workflow.dispatchCeiling.providers.codex.high[0]',
+        'workflow.dispatchCeiling.providers.codex.high.candidates[0]',
       );
       expect(capture.error[0]).toContain('model and effort');
       expect(validateMatrixCell).not.toHaveBeenCalled();
@@ -1528,13 +1553,19 @@ describe('oat config', () => {
             recommendationVersion: '2026-07-07.1',
             providers: {
               codex: {
-                high: [
-                  {
-                    harness: 'codex',
-                    model: 'gpt-5.5',
-                    effort: 'xhigh',
-                  },
-                ],
+                high: {
+                  candidates: [
+                    {
+                      route: [
+                        {
+                          harness: 'codex',
+                          model: 'gpt-5.5',
+                          effort: 'xhigh',
+                        },
+                      ],
+                    },
+                  ],
+                },
               },
             },
           },
@@ -1639,10 +1670,10 @@ describe('oat config', () => {
             recommendationVersion: 'new',
             providers: {
               cursor: {
-                economy: 'recommended-economy',
-                high: 'existing-model',
+                economy: { candidates: ['recommended-economy'] },
+                high: { candidates: ['existing-model'] },
               },
-              claude: { high: 'opus' },
+              claude: { high: { candidates: ['opus'] } },
             },
           },
         },
@@ -1691,7 +1722,9 @@ describe('oat config', () => {
         workflow: {
           dispatchCeiling: {
             recommendationVersion: 'new',
-            providers: { cursor: { high: 'existing-model' } },
+            providers: {
+              cursor: { high: { candidates: ['existing-model'] } },
+            },
           },
         },
       });

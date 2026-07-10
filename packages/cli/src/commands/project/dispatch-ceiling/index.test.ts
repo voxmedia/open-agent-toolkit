@@ -1187,6 +1187,65 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
   );
 
+  it('uses only the final modern ladder candidate as the ceiling before adaptive selection', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-luna',
+                    effort: 'medium',
+                  },
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preferred',
+      'medium',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providers: {
+        codex: {
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-sol-medium',
+          },
+          selection: {
+            selectedValue: 'medium',
+            target: {
+              model: 'gpt-5.6-sol',
+              effort: 'medium',
+            },
+          },
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('does not select another Codex model from duplicate effort cells', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {

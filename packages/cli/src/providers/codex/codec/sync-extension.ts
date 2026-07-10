@@ -5,6 +5,8 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { parseCanonicalAgentFile } from '@agents/canonical';
 import {
   isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
   normalizeProjectPath,
   resolveActiveProject,
   validateDispatchRouteTarget,
@@ -231,6 +233,21 @@ function collectCodexTargetsFromCell(
   owner: CodexRoleOwner,
 ): void {
   if (typeof cell === 'string') {
+    return;
+  }
+
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    const ceiling = cell.candidates.at(-1);
+    if (ceiling === undefined) {
+      return;
+    }
+    if (isWorkflowDispatchFallbackRoute(ceiling)) {
+      for (const entry of ceiling.route) {
+        collectCodexTargetFromEntry(entry, targets, owner);
+      }
+      return;
+    }
+    collectCodexTargetFromEntry(ceiling, targets, owner);
     return;
   }
 

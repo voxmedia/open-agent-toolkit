@@ -76,7 +76,19 @@ export interface DispatchRouteTargetValidation {
 }
 export type WorkflowDispatchRouteEntry = string | WorkflowDispatchRouteTarget;
 export type WorkflowDispatchRoute = WorkflowDispatchRouteEntry[];
-export type WorkflowDispatchMatrixCell = string | WorkflowDispatchRoute;
+export interface WorkflowDispatchFallbackRoute {
+  route: WorkflowDispatchRoute;
+}
+export type WorkflowDispatchCandidate =
+  | WorkflowDispatchRouteEntry
+  | WorkflowDispatchFallbackRoute;
+export interface WorkflowDispatchCandidateLadder {
+  candidates: WorkflowDispatchCandidate[];
+}
+export type WorkflowDispatchLegacyMatrixCell = string | WorkflowDispatchRoute;
+export type WorkflowDispatchMatrixCell =
+  | WorkflowDispatchCandidateLadder
+  | WorkflowDispatchLegacyMatrixCell;
 export type WorkflowDispatchProviderValue =
   | string
   | Partial<Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>>;
@@ -245,6 +257,30 @@ export function validateDispatchRouteTarget(
   return { valid: true };
 }
 
+export function isWorkflowDispatchFallbackRoute(
+  value: unknown,
+): value is WorkflowDispatchFallbackRoute {
+  return isRecord(value) && Array.isArray(value.route);
+}
+
+export function isWorkflowDispatchCandidateLadder(
+  value: unknown,
+): value is WorkflowDispatchCandidateLadder {
+  return isRecord(value) && Array.isArray(value.candidates);
+}
+
+export function toWorkflowDispatchCandidateLadder(
+  cell: WorkflowDispatchMatrixCell,
+): WorkflowDispatchCandidateLadder {
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    return cell;
+  }
+
+  return {
+    candidates: [Array.isArray(cell) ? { route: cell } : cell],
+  };
+}
+
 function normalizeMaxAttempts(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return 2;
@@ -366,15 +402,10 @@ function normalizeDispatchRouteTarget(
   return Object.keys(target).length > 0 ? target : undefined;
 }
 
-function normalizeDispatchMatrixCell(
+function normalizeDispatchRoute(
   providerKey: string,
   value: unknown,
-): WorkflowDispatchMatrixCell | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
+): WorkflowDispatchRoute | undefined {
   if (!Array.isArray(value) || value.length === 0) {
     return undefined;
   }
@@ -396,6 +427,54 @@ function normalizeDispatchMatrixCell(
   return route.length > 0 ? route : undefined;
 }
 
+function normalizeDispatchCandidate(
+  providerKey: string,
+  value: unknown,
+): WorkflowDispatchCandidate | undefined {
+  const bareValue = normalizeProviderBareValue(providerKey, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (isRecord(value) && Object.hasOwn(value, 'route')) {
+    const route = normalizeDispatchRoute(providerKey, value.route);
+    return route ? { route } : undefined;
+  }
+
+  return normalizeDispatchRouteTarget(value);
+}
+
+function normalizeDispatchMatrixCell(
+  providerKey: string,
+  value: unknown,
+): WorkflowDispatchCandidateLadder | undefined {
+  const bareValue = normalizeProviderBareValue(providerKey, value);
+  if (bareValue !== undefined) {
+    return { candidates: [bareValue] };
+  }
+
+  if (isWorkflowDispatchCandidateLadder(value)) {
+    const candidates: WorkflowDispatchCandidate[] = [];
+    for (const candidate of value.candidates) {
+      const normalized = normalizeDispatchCandidate(providerKey, candidate);
+      if (normalized !== undefined) {
+        candidates.push(normalized);
+      }
+    }
+
+    return candidates.length > 0 ? { candidates } : undefined;
+  }
+
+  const directTarget = normalizeDispatchRouteTarget(value);
+  if (directTarget !== undefined) {
+    return { candidates: [directTarget] };
+  }
+
+  const route = normalizeDispatchRoute(providerKey, value);
+
+  return route ? { candidates: [{ route }] } : undefined;
+}
+
 function normalizeDispatchProviderValue(
   providerKey: string,
   value: unknown,
@@ -410,7 +489,7 @@ function normalizeDispatchProviderValue(
   }
 
   const tierMap: Partial<
-    Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
+    Record<WorkflowDispatchMatrixTier, WorkflowDispatchCandidateLadder>
   > = {};
   for (const [tier, rawCell] of Object.entries(value)) {
     if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {

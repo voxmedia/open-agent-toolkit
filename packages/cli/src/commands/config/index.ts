@@ -18,6 +18,8 @@ import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
   isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -26,6 +28,7 @@ import {
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchMatrixTier,
   type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRouteEntry,
   type WorkflowDispatchRouteTarget,
   type WorkflowDispatchCeilingPreset,
   type WorkflowDispatchPolicyMode,
@@ -1089,15 +1092,14 @@ function addDispatchMatrixCellRefs(
     return;
   }
 
-  for (const [index, entry] of cell.entries()) {
-    const entryPath = `${path}[${index}]`;
+  const addEntry = (entry: WorkflowDispatchRouteEntry, entryPath: string) => {
     if (typeof entry === 'string') {
       refs.push({ provider, value: entry, path: entryPath });
-      continue;
+      return;
     }
 
     if (!isRouteTarget(entry)) {
-      continue;
+      return;
     }
 
     const targetProvider = entry.harness ?? provider;
@@ -1109,7 +1111,7 @@ function addDispatchMatrixCellRefs(
           path: entryPath,
           target: entry,
         });
-        continue;
+        return;
       }
     }
 
@@ -1127,6 +1129,24 @@ function addDispatchMatrixCellRefs(
         path: `${entryPath}.effort`,
       });
     }
+  };
+
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    for (const [candidateIndex, candidate] of cell.candidates.entries()) {
+      const candidatePath = `${path}.candidates[${candidateIndex}]`;
+      if (isWorkflowDispatchFallbackRoute(candidate)) {
+        for (const [routeIndex, entry] of candidate.route.entries()) {
+          addEntry(entry, `${candidatePath}.route[${routeIndex}]`);
+        }
+        continue;
+      }
+      addEntry(candidate, candidatePath);
+    }
+    return;
+  }
+
+  for (const [index, entry] of cell.entries()) {
+    addEntry(entry, `${path}[${index}]`);
   }
 }
 
@@ -1170,21 +1190,40 @@ function collectDispatchMatrixTargetValidationErrors(
 
     const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
     for (const [tier, cell] of Object.entries(providerValue)) {
-      if (!Array.isArray(cell)) {
+      if (cell === undefined || typeof cell === 'string') {
         continue;
       }
 
-      for (const [index, entry] of cell.entries()) {
+      const validateEntry = (
+        entry: WorkflowDispatchRouteEntry,
+        entryPath: string,
+      ) => {
         if (!isRouteTarget(entry)) {
-          continue;
+          return;
         }
 
         const validation = validateDispatchRouteTarget(provider, entry);
         if (!validation.valid) {
-          errors.push(
-            `${providerPath}.${tier}[${index}]: ${validation.reason}`,
-          );
+          errors.push(`${entryPath}: ${validation.reason}`);
         }
+      };
+
+      if (isWorkflowDispatchCandidateLadder(cell)) {
+        for (const [candidateIndex, candidate] of cell.candidates.entries()) {
+          const candidatePath = `${providerPath}.${tier}.candidates[${candidateIndex}]`;
+          if (isWorkflowDispatchFallbackRoute(candidate)) {
+            for (const [routeIndex, entry] of candidate.route.entries()) {
+              validateEntry(entry, `${candidatePath}.route[${routeIndex}]`);
+            }
+            continue;
+          }
+          validateEntry(candidate, candidatePath);
+        }
+        continue;
+      }
+
+      for (const [index, entry] of cell.entries()) {
+        validateEntry(entry, `${providerPath}.${tier}[${index}]`);
       }
     }
   }
@@ -1320,6 +1359,9 @@ function formatResolvedValue(value: unknown): string | null {
   }
   if (Array.isArray(value)) {
     return value.join(',');
+  }
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
   }
   return String(value);
 }

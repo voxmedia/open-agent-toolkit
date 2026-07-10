@@ -882,6 +882,114 @@ describe('resolveEffectiveConfig', () => {
         source: 'shared',
       });
     });
+
+    it('resolves candidate ladders atomically with per-tier precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    codex: {
+                      high: {
+                        candidates: [
+                          {
+                            harness: 'codex',
+                            model: 'gpt-5.6-terra',
+                            effort: 'high',
+                          },
+                          {
+                            harness: 'codex',
+                            model: 'gpt-5.6-sol',
+                            effort: 'high',
+                          },
+                        ],
+                      },
+                    },
+                    cursor: {
+                      high: {
+                        candidates: ['shared-opaque-low', 'shared-opaque-high'],
+                      },
+                    },
+                  },
+                },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    cursor: {
+                      high: {
+                        candidates: ['local opaque one', 'local opaque two'],
+                      },
+                    },
+                  },
+                },
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    codex: {
+                      high: {
+                        candidates: [
+                          {
+                            harness: 'codex',
+                            model: 'gpt-5.6-luna',
+                            effort: 'medium',
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.codex.high'],
+      ).toEqual({
+        value: {
+          candidates: [
+            {
+              harness: 'codex',
+              model: 'gpt-5.6-terra',
+              effort: 'high',
+            },
+            {
+              harness: 'codex',
+              model: 'gpt-5.6-sol',
+              effort: 'high',
+            },
+          ],
+        },
+        source: 'shared',
+      });
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.cursor.high'],
+      ).toEqual({
+        value: { candidates: ['local opaque one', 'local opaque two'] },
+        source: 'local',
+      });
+      expect(
+        result.resolved[
+          'workflow.dispatchCeiling.providers.cursor.high.candidates'
+        ],
+      ).toBeUndefined();
+    });
   });
 
   it('surfaces archive.wrapUpExportPath with source default when unset', async () => {

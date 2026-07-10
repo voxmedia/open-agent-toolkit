@@ -33,9 +33,12 @@ import {
   readOatLocalConfig,
   readUserConfig,
   isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
   type UserConfig,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRouteEntry,
   type WorkflowDispatchRouteTarget,
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -297,15 +300,14 @@ function addDispatchMatrixCellRefs(
     return;
   }
 
-  for (const [index, entry] of cell.entries()) {
-    const entryPath = `${path}[${index}]`;
+  const addEntry = (entry: WorkflowDispatchRouteEntry, entryPath: string) => {
     if (typeof entry === 'string') {
       refs.push({ layer, provider, value: entry, path: entryPath });
-      continue;
+      return;
     }
 
     if (!isRouteTarget(entry)) {
-      continue;
+      return;
     }
 
     const targetProvider = entry.harness ?? provider;
@@ -318,7 +320,7 @@ function addDispatchMatrixCellRefs(
           path: entryPath,
           target: entry,
         });
-        continue;
+        return;
       }
     }
 
@@ -338,6 +340,24 @@ function addDispatchMatrixCellRefs(
         path: `${entryPath}.effort`,
       });
     }
+  };
+
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    for (const [candidateIndex, candidate] of cell.candidates.entries()) {
+      const candidatePath = `${path}.candidates[${candidateIndex}]`;
+      if (isWorkflowDispatchFallbackRoute(candidate)) {
+        for (const [routeIndex, entry] of candidate.route.entries()) {
+          addEntry(entry, `${candidatePath}.route[${routeIndex}]`);
+        }
+        continue;
+      }
+      addEntry(candidate, candidatePath);
+    }
+    return;
+  }
+
+  for (const [index, entry] of cell.entries()) {
+    addEntry(entry, `${path}[${index}]`);
   }
 }
 

@@ -163,6 +163,75 @@ describe('codex sync extension', () => {
     expect(configFile).toContain(`[agents.${roleName}]`);
   });
 
+  it('materializes only the final modern ladder candidate before all-candidate materialization', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: {
+                  candidates: [
+                    {
+                      harness: 'codex',
+                      model: 'custom-lower-model',
+                      effort: 'medium',
+                    },
+                    {
+                      harness: 'codex',
+                      model: 'custom-ceiling-model',
+                      effort: 'high',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 'oat-phase-implementer.md');
+    await writeFile(
+      canonicalFile,
+      canonicalAgentFileContent('oat-phase-implementer'),
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, [
+      {
+        name: 'oat-phase-implementer.md',
+        type: 'agent',
+        canonicalPath: canonicalFile,
+        isFile: true,
+      },
+    ]);
+    const rolePaths = plan.operations
+      .filter((op) => op.target === 'role')
+      .map((op) => op.path);
+    const lowerRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-phase-implementer',
+      model: 'custom-lower-model',
+      effort: 'medium',
+    });
+    const ceilingRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-phase-implementer',
+      model: 'custom-ceiling-model',
+      effort: 'high',
+    });
+
+    expect(rolePaths).toContain(`.codex/agents/${ceilingRole}.toml`);
+    expect(rolePaths).not.toContain(`.codex/agents/${lowerRole}.toml`);
+  });
+
   it('generates materialized codex roles from local config matrix targets', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);

@@ -23,6 +23,8 @@ import {
   VALID_CODEX_DISPATCH_CEILINGS,
   VALID_DISPATCH_MATRIX_TIERS,
   VALID_MANAGED_DISPATCH_POLICIES,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
   validateDispatchRouteTarget,
   type ActiveProjectResolution,
   type WorkflowDispatchMatrixCell,
@@ -651,6 +653,26 @@ function resolveProviderCellFromValue(
       selectionBranch: 'matrix-pinned',
       warnings: [],
     };
+  }
+
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    const ceiling = cell.candidates.at(-1);
+    if (ceiling === undefined) {
+      return null;
+    }
+    if (typeof ceiling === 'string') {
+      return {
+        value: ceiling,
+        cellSource,
+        target: null,
+        selectionBranch: 'matrix-pinned',
+        warnings: [],
+      };
+    }
+    const route = isWorkflowDispatchFallbackRoute(ceiling)
+      ? ceiling.route
+      : ([ceiling] satisfies WorkflowDispatchRoute);
+    return resolveRouteMatrixCell(provider, route, escalationLevel, cellSource);
   }
 
   return resolveRouteMatrixCell(provider, cell, escalationLevel, cellSource);

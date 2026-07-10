@@ -1,5 +1,6 @@
 import {
   BUILTIN_EXEC_TARGETS,
+  isWorkflowDispatchCandidateLadder,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -462,7 +463,10 @@ function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
     }
 
     const nextKey = prefix ? `${prefix}.${key}` : key;
-    if (isRecord(nestedValue)) {
+    if (
+      isRecord(nestedValue) &&
+      !isWorkflowDispatchCandidateLadder(nestedValue)
+    ) {
       Object.assign(flattened, flattenConfig(nestedValue, nextKey));
       continue;
     }

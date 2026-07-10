@@ -1310,7 +1310,9 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling).toEqual({
           recommendationVersion: '2026-07-07.1',
-          providers: { cursor: { high: 'composer-2.5' } },
+          providers: {
+            cursor: { high: { candidates: ['composer-2.5'] } },
+          },
         });
 
         await writeOatConfig(repoRoot, config);
@@ -1358,20 +1360,32 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           cursor: {
-            economy: 'composer-2.5',
-            balanced: [
-              'composer-2.5-fast',
-              {
-                harness: 'cursor',
-                model: 'gpt-5.3-codex-high',
-                effort: 'high',
-              },
-            ],
-            high: [
-              { harness: 'cursor', model: 'glm-5.2-max' },
-              'claude-opus-4-8',
-            ],
-            frontier: 'fable-5',
+            economy: { candidates: ['composer-2.5'] },
+            balanced: {
+              candidates: [
+                {
+                  route: [
+                    'composer-2.5-fast',
+                    {
+                      harness: 'cursor',
+                      model: 'gpt-5.3-codex-high',
+                      effort: 'high',
+                    },
+                  ],
+                },
+              ],
+            },
+            high: {
+              candidates: [
+                {
+                  route: [
+                    { harness: 'cursor', model: 'glm-5.2-max' },
+                    'claude-opus-4-8',
+                  ],
+                },
+              ],
+            },
+            frontier: { candidates: ['fable-5'] },
           },
         });
       });
@@ -1431,16 +1445,16 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           codex: {
-            economy: 'low',
-            balanced: 'medium',
-            high: 'high',
-            frontier: 'max',
+            economy: { candidates: ['low'] },
+            balanced: { candidates: ['medium'] },
+            high: { candidates: ['high'] },
+            frontier: { candidates: ['max'] },
           },
           claude: {
-            economy: 'haiku',
-            balanced: 'sonnet',
-            high: 'opus',
-            frontier: 'fable',
+            economy: { candidates: ['haiku'] },
+            balanced: { candidates: ['sonnet'] },
+            high: { candidates: ['opus'] },
+            frontier: { candidates: ['fable'] },
           },
         });
       });
@@ -1474,13 +1488,162 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           codex: {
-            high: [
-              {
-                harness: 'codex',
-                model: 'gpt-5.6-terra',
-                effort: 'xhigh',
+            high: {
+              candidates: [
+                {
+                  route: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.6-terra',
+                      effort: 'xhigh',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('normalizes ordered provider candidates without conflating fallback routes', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  codex: {
+                    high: {
+                      candidates: [
+                        {
+                          harness: 'codex',
+                          model: 'gpt-5.6-luna',
+                          effort: 'medium',
+                          ignored: true,
+                        },
+                        {
+                          route: [
+                            {
+                              harness: 'codex',
+                              model: 'gpt-5.6-terra',
+                              effort: 'high',
+                            },
+                            {
+                              harness: 'claude',
+                              model: 'opus',
+                            },
+                          ],
+                          ignored: true,
+                        },
+                        {
+                          harness: 'codex',
+                          model: 'gpt-5.6-sol',
+                          effort: 'high',
+                        },
+                      ],
+                    },
+                  },
+                  claude: {
+                    high: { candidates: ['haiku', 'sonnet', 'opus'] },
+                  },
+                  cursor: {
+                    high: {
+                      candidates: [
+                        'opaque:model/a',
+                        'opaque model value with no capability name',
+                      ],
+                    },
+                  },
+                },
               },
-            ],
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          codex: {
+            high: {
+              candidates: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-luna',
+                  effort: 'medium',
+                },
+                {
+                  route: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.6-terra',
+                      effort: 'high',
+                    },
+                    { harness: 'claude', model: 'opus' },
+                  ],
+                },
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+          claude: {
+            high: { candidates: ['haiku', 'sonnet', 'opus'] },
+          },
+          cursor: {
+            high: {
+              candidates: [
+                'opaque:model/a',
+                'opaque model value with no capability name',
+              ],
+            },
+          },
+        });
+      });
+
+      it('normalizes legacy single values and routes as one-candidate ladders', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  claude: { high: 'opus' },
+                  cursor: {
+                    high: [
+                      'opaque-primary',
+                      { harness: 'claude', model: 'opaque-fallback' },
+                    ],
+                  },
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          claude: { high: { candidates: ['opus'] } },
+          cursor: {
+            high: {
+              candidates: [
+                {
+                  route: [
+                    'opaque-primary',
+                    { harness: 'claude', model: 'opaque-fallback' },
+                  ],
+                },
+              ],
+            },
           },
         });
       });

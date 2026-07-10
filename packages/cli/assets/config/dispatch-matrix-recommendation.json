@@ -1,31 +1,130 @@
 {
-  "version": "2026-07-10.1",
+  "version": "2026-07-10.2",
   "providers": {
     "codex": {
-      "economy": [
-        { "harness": "codex", "model": "gpt-5.6-luna", "effort": "high" }
-      ],
-      "balanced": [
-        { "harness": "codex", "model": "gpt-5.6-terra", "effort": "xhigh" }
-      ],
-      "high": [
-        { "harness": "codex", "model": "gpt-5.6-sol", "effort": "high" }
-      ],
-      "frontier": [
-        { "harness": "codex", "model": "gpt-5.6-sol", "effort": "max" }
-      ]
+      "economy": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-luna",
+            "effort": "low"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-luna",
+            "effort": "medium"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-luna",
+            "effort": "high"
+          }
+        ]
+      },
+      "balanced": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-luna",
+            "effort": "xhigh"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-terra",
+            "effort": "low"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-terra",
+            "effort": "medium"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-terra",
+            "effort": "high"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-terra",
+            "effort": "xhigh"
+          }
+        ]
+      },
+      "high": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-sol",
+            "effort": "low"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-sol",
+            "effort": "medium"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-sol",
+            "effort": "high"
+          }
+        ]
+      },
+      "frontier": {
+        "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-sol",
+            "effort": "xhigh"
+          },
+          {
+            "harness": "codex",
+            "model": "gpt-5.6-sol",
+            "effort": "max"
+          }
+        ]
+      }
     },
     "claude": {
-      "economy": "sonnet",
-      "balanced": "sonnet",
-      "high": "opus",
-      "frontier": "fable"
+      "economy": {
+        "candidates": ["haiku", "sonnet"]
+      },
+      "balanced": {
+        "candidates": ["sonnet"]
+      },
+      "high": {
+        "candidates": ["opus"]
+      },
+      "frontier": {
+        "candidates": ["fable"]
+      }
     },
     "cursor": {
-      "economy": "gpt-5.6-luna-high",
-      "balanced": "gpt-5.6-terra-xhigh",
-      "high": "gpt-5.6-sol-high",
-      "frontier": "gpt-5.6-sol-max"
+      "economy": {
+        "candidates": [
+          "gpt-5.6-luna-low",
+          "gpt-5.6-luna-medium",
+          "gpt-5.6-luna-high"
+        ]
+      },
+      "balanced": {
+        "candidates": [
+          "gpt-5.6-luna-xhigh",
+          "gpt-5.6-terra-low",
+          "gpt-5.6-terra-medium",
+          "gpt-5.6-terra-high",
+          "gpt-5.6-terra-xhigh"
+        ]
+      },
+      "high": {
+        "candidates": [
+          "gpt-5.6-sol-low",
+          "gpt-5.6-sol-medium",
+          "gpt-5.6-sol-high"
+        ]
+      },
+      "frontier": {
+        "candidates": ["gpt-5.6-sol-xhigh", "gpt-5.6-sol-max"]
+      }
     }
   }
 }
