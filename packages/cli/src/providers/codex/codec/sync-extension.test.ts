@@ -1059,4 +1059,56 @@ describe('codex sync extension', () => {
       ]),
     );
   });
+
+  it('preserves stale files whose ownership appears only in body text or malformed headers', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+
+    const roles = ['body-spoof', 'duplicate-owner'] as const;
+    await writeFile(
+      join(root, '.codex', 'agents', 'body-spoof.toml'),
+      [
+        'developer_instructions = """',
+        '# oat-managed: true',
+        '# oat-role: body-spoof',
+        '# oat-owner: project-config',
+        '"""',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'agents', 'duplicate-owner.toml'),
+      [
+        '# oat-managed: true',
+        '# oat-role: duplicate-owner',
+        '# oat-owner: project-config',
+        '# oat-owner: project-config',
+        'developer_instructions = "role"',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      roles
+        .map(
+          (role) =>
+            `[agents.${role}]\ndescription = "${role}"\nconfig_file = "agents/${role}.toml"\n`,
+        )
+        .join('\n'),
+      'utf8',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, []);
+
+    expect(plan.operations).not.toEqual(
+      expect.arrayContaining(
+        roles.map((roleName) =>
+          expect.objectContaining({ action: 'remove', roleName }),
+        ),
+      ),
+    );
+  });
 });

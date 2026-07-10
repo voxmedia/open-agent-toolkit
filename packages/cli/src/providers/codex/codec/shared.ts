@@ -11,6 +11,17 @@ export type CodexRoleOwner =
   | 'user-config'
   | 'project-config';
 
+interface CodexManagedRoleHeader {
+  roleName: string;
+  roleLineIndex: number;
+  owner: CodexRoleOwner | null;
+  ownerLineIndex: number | null;
+}
+
+const CODEX_ROLE_MARKER_PATTERN = /^# oat-role: ([a-zA-Z0-9_-]+)$/;
+const CODEX_OWNER_MARKER_PATTERN =
+  /^# oat-owner: (supported-catalogue|user-config|project-config)$/;
+
 const STANDARD_SUPPORTED_CODEX_EFFORTS = [
   'low',
   'medium',
@@ -75,19 +86,62 @@ export function buildCodexMaterializedTargetRoleName(options: {
   );
 }
 
+function parseOatManagedCodexRoleHeader(
+  content: string,
+): CodexManagedRoleHeader | null {
+  const lines = content
+    .split('\n')
+    .map((line) => (line.endsWith('\r') ? line.slice(0, -1) : line));
+  const headerLines: string[] = [];
+  for (const line of lines) {
+    if (!line.startsWith('# oat-')) {
+      break;
+    }
+    headerLines.push(line);
+  }
+
+  if (
+    headerLines.length < 2 ||
+    headerLines.length > 3 ||
+    headerLines[0] !== OAT_MANAGED_ROLE_HEADER
+  ) {
+    return null;
+  }
+
+  const roleMatch = CODEX_ROLE_MARKER_PATTERN.exec(headerLines[1]!);
+  if (!roleMatch) {
+    return null;
+  }
+
+  let owner: CodexRoleOwner | null = null;
+  let ownerLineIndex: number | null = null;
+  if (headerLines.length === 3) {
+    const ownerMatch = CODEX_OWNER_MARKER_PATTERN.exec(headerLines[2]!);
+    if (!ownerMatch) {
+      return null;
+    }
+    owner = ownerMatch[1] as CodexRoleOwner;
+    ownerLineIndex = 2;
+  }
+
+  return {
+    roleName: roleMatch[1]!,
+    roleLineIndex: 1,
+    owner,
+    ownerLineIndex,
+  };
+}
+
 export function isOatManagedCodexRoleFile(
   content: string,
   roleName?: string,
 ): boolean {
-  if (!content.includes(OAT_MANAGED_ROLE_HEADER)) {
+  const header = parseOatManagedCodexRoleHeader(content);
+  if (!header) {
     return false;
   }
 
-  if (!roleName) {
-    return true;
-  }
-
-  return content.includes(`${OAT_MANAGED_ROLE_NAME_PREFIX}${roleName}`);
+  return roleName === undefined || header.roleName === roleName;
 }
 
 export function withOatManagedCodexHeader(
@@ -100,36 +154,29 @@ export function withOatManagedCodexHeader(
 export function readOatManagedCodexRoleOwner(
   content: string,
 ): CodexRoleOwner | null {
-  for (const owner of [
-    'supported-catalogue',
-    'user-config',
-    'project-config',
-  ] as const) {
-    if (content.includes(`${OAT_MANAGED_ROLE_OWNER_PREFIX}${owner}`)) {
-      return owner;
-    }
-  }
-  return null;
+  return parseOatManagedCodexRoleHeader(content)?.owner ?? null;
 }
 
 export function withOatManagedCodexRoleOwner(
   content: string,
   owner: CodexRoleOwner,
 ): string {
+  const header = parseOatManagedCodexRoleHeader(content);
+  if (!header) {
+    return content;
+  }
+
   const lines = content.split('\n');
   const ownerLine = `${OAT_MANAGED_ROLE_OWNER_PREFIX}${owner}`;
-  const existingOwnerIndex = lines.findIndex((line) =>
-    line.startsWith(OAT_MANAGED_ROLE_OWNER_PREFIX),
-  );
-  if (existingOwnerIndex >= 0) {
-    lines[existingOwnerIndex] = ownerLine;
+  const usesCarriageReturn =
+    lines[header.roleLineIndex]?.endsWith('\r') ?? false;
+  const encodedOwnerLine = `${ownerLine}${usesCarriageReturn ? '\r' : ''}`;
+  if (header.ownerLineIndex !== null) {
+    lines[header.ownerLineIndex] = encodedOwnerLine;
     return lines.join('\n');
   }
 
-  const roleIndex = lines.findIndex((line) =>
-    line.startsWith(OAT_MANAGED_ROLE_NAME_PREFIX),
-  );
-  lines.splice(roleIndex >= 0 ? roleIndex + 1 : 0, 0, ownerLine);
+  lines.splice(header.roleLineIndex + 1, 0, encodedOwnerLine);
   return lines.join('\n');
 }
 
