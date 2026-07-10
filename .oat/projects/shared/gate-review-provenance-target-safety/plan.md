@@ -1649,7 +1649,7 @@ pnpm release:validate
 - Modify: `.agents/agents/oat-phase-implementer.md`
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Test: `packages/cli/src/validation/skills.test.ts`
-- Regenerate: bundled agent and skill assets
+- Regenerate: `packages/cli/assets/agents/oat-phase-implementer.md`, bundled skill assets, and project `.codex` phase-implementer role views
 
 **Steps:**
 
@@ -1658,12 +1658,15 @@ pnpm release:validate
 3. Run task workers serially within a phase and worktree by default. Permit parallel work only through the existing plan-declared phase/worktree mechanism; do not fan out same-worktree tasks. The coordinator records each worker's exact target, result, and commit in the phase dispatch summary.
 4. Fail closed when a task candidate is absent, exceeds the ceiling, or cannot be invoked with its exact controls. Do not downgrade to the coordinator target, the base role, or an inferred provider default. Preserve the existing fresh pinned-child route where a native Codex role cannot be selected.
 5. Add semantic contracts proving that a High-ceiling phase can dispatch different valid lower candidates for separate tasks, that the coordinator does not execute all tasks in its own context, that each worker receives one task scope, and that exact Claude/Cursor payloads are preserved.
+6. Regenerate the bundled canonical-agent asset and tracked project Codex phase-implementer views from the changed canonical role. Verify the immediately following project sync is a zero-operation dry run.
 
 **Verify:**
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 pnpm run oat:validate-skills
+pnpm run cli -- sync --scope project
+pnpm run cli:source -- sync --scope project --dry-run
 pnpm format
 pnpm release:validate
 ```
