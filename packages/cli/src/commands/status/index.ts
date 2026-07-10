@@ -42,6 +42,7 @@ import {
   type CanonicalEntry,
   HOOK_DRIFT_WARNING,
   HOOK_STRAY_INFO,
+  scanBundledManagedCodexAgents,
   scanCanonical,
 } from '@engine/index';
 import {
@@ -107,6 +108,7 @@ interface StatusDependencies {
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
+  scanBundledManagedCodexAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getActiveAdapters: (
     adapters: ProviderAdapter[],
@@ -191,6 +193,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   readUserConfig,
   saveManifest,
   scanCanonical,
+  scanBundledManagedCodexAgents,
   getAdapters() {
     return [
       claudeAdapter,
@@ -426,10 +429,17 @@ async function collectScopeReports(
   }
 
   if (activeAdapters.some((adapter) => adapter.name === 'codex')) {
+    const codexCanonicalEntries =
+      scope === 'user'
+        ? [
+            ...canonicalEntries,
+            ...(await dependencies.scanBundledManagedCodexAgents()),
+          ]
+        : canonicalEntries;
     const codexExtensionPlan =
       await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
-        canonicalEntries,
+        codexCanonicalEntries,
         undefined,
         { userConfigDir: join(context.home, '.oat') },
       );

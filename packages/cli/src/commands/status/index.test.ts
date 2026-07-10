@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
@@ -7,10 +11,17 @@ import type { CodexRoleStray } from '@commands/shared/codex-strays';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { UserConfig } from '@config/oat-config';
 import type { DriftReport } from '@drift/index';
-import type { CanonicalEntry } from '@engine/index';
+import {
+  scanBundledManagedCodexAgents as scanBundledManagedCodexAgentsFromDisk,
+  type CanonicalEntry,
+} from '@engine/index';
 import { CliError } from '@errors/index';
 import type { Manifest, ManifestEntry } from '@manifest/index';
-import type { CodexExtensionPlan } from '@providers/codex/codec/sync-extension';
+import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import {
+  computeCodexProjectExtensionPlan as computeCodexExtensionPlanFromDisk,
+  type CodexExtensionPlan,
+} from '@providers/codex/codec/sync-extension';
 import type { ProviderAdapter } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
@@ -29,6 +40,11 @@ interface TestHarnessOptions {
   userKnownStrays?: string[];
   codexExtensionPlan?: CodexExtensionPlan;
   canonicalEntries?: CanonicalEntry[];
+  bundledCodexEntries?: CanonicalEntry[];
+  cwd?: string;
+  home?: string;
+  useDiskCodexExtension?: boolean;
+  useDiskBundledCodexAgents?: boolean;
   interactive?: boolean;
   selectManyResponses?: Array<string[] | null>;
 }
@@ -57,6 +73,15 @@ function createCanonicalEntry(name = 'skill-one'): CanonicalEntry {
     canonicalPath: `/tmp/workspace/.agents/skills/${name}`,
     isFile: false,
   };
+}
+
+function createBundledCodexEntries(): CanonicalEntry[] {
+  return ['oat-phase-implementer.md', 'oat-reviewer.md'].map((name) => ({
+    name,
+    type: 'agent',
+    canonicalPath: `/tmp/bundled/agents/${name}`,
+    isFile: true,
+  }));
 }
 
 function createAdapter(): ProviderAdapter {
@@ -134,6 +159,8 @@ function createHarness(options: TestHarnessOptions = {}): {
   confirmAction: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
+  scanCanonical: ReturnType<typeof vi.fn>;
+  scanBundledManagedCodexAgents: ReturnType<typeof vi.fn>;
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
@@ -182,15 +209,23 @@ function createHarness(options: TestHarnessOptions = {}): {
   const detectCodexRoleStrays = vi.fn(
     async () => options.codexRoleStrays ?? [],
   );
-  const computeCodexProjectExtensionPlan = vi.fn(async () => {
-    return (
-      options.codexExtensionPlan ?? {
-        operations: [],
-        managedRoles: [],
-        aggregateConfigHash: 'hash',
-      }
-    );
-  });
+  const computeCodexProjectExtensionPlan = options.useDiskCodexExtension
+    ? vi.fn(computeCodexExtensionPlanFromDisk)
+    : vi.fn(async () => {
+        return (
+          options.codexExtensionPlan ?? {
+            operations: [],
+            managedRoles: [],
+            aggregateConfigHash: 'hash',
+          }
+        );
+      });
+  const scanCanonical = vi.fn(async () => canonicalEntries);
+  const scanBundledManagedCodexAgents = options.useDiskBundledCodexAgents
+    ? vi.fn(scanBundledManagedCodexAgentsFromDisk)
+    : vi.fn(
+        async () => options.bundledCodexEntries ?? createBundledCodexEntries(),
+      );
   const applyCodexProjectExtensionPlan = vi.fn(async () => ({
     applied: 0,
     failed: 0,
@@ -204,19 +239,22 @@ function createHarness(options: TestHarnessOptions = {}): {
       dryRun: false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
-      cwd: globalOptions.cwd ?? '/tmp/workspace',
-      home: '/tmp/home',
+      cwd: globalOptions.cwd ?? options.cwd ?? '/tmp/workspace',
+      home: options.home ?? '/tmp/home',
       interactive: interactive && !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
     resolveScopeRoot: vi.fn(async (scope) =>
-      scope === 'user' ? '/tmp/home' : '/tmp/workspace',
+      scope === 'user'
+        ? (options.home ?? '/tmp/home')
+        : (options.cwd ?? '/tmp/workspace'),
     ),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
     loadSyncConfig: vi.fn(async () => syncConfig),
     readUserConfig: vi.fn(async () => userConfig),
     saveManifest,
-    scanCanonical: vi.fn(async () => canonicalEntries),
+    scanCanonical,
+    scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
     getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
     getSyncMappings: vi.fn(
@@ -244,6 +282,8 @@ function createHarness(options: TestHarnessOptions = {}): {
     confirmAction,
     adoptStray,
     saveManifest,
+    scanCanonical,
+    scanBundledManagedCodexAgents,
     computeCodexProjectExtensionPlan,
   };
 }
@@ -657,7 +697,12 @@ describe('createStatusCommand', () => {
   });
 
   it('reports Codex extension drift for user scope', async () => {
-    const { command, computeCodexProjectExtensionPlan } = createHarness({
+    const {
+      command,
+      scanCanonical,
+      scanBundledManagedCodexAgents,
+      computeCodexProjectExtensionPlan,
+    } = createHarness({
       adapters: [createCodexAdapter()],
       manifestEntries: [],
       driftReports: [],
@@ -666,13 +711,162 @@ describe('createStatusCommand', () => {
 
     await runStatusCommand(command, ['--scope', 'user']);
 
+    expect(scanCanonical).toHaveBeenCalledWith('/tmp/home', 'user');
+    expect(scanBundledManagedCodexAgents).toHaveBeenCalledTimes(1);
     expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
       '/tmp/home',
-      [],
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'oat-phase-implementer.md',
+          type: 'agent',
+        }),
+        expect.objectContaining({ name: 'oat-reviewer.md', type: 'agent' }),
+      ]),
       undefined,
       { userConfigDir: '/tmp/home/.oat' },
     );
   });
+
+  it('reports real custom user Codex drift in both managed base roles', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-status-user-home-'));
+    const project = await mkdtemp(join(tmpdir(), 'oat-status-project-'));
+
+    try {
+      await mkdir(join(home, '.oat'), { recursive: true });
+      await mkdir(join(home, '.codex', 'agents'), { recursive: true });
+      await writeFile(
+        join(home, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                codex: {
+                  high: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.7-user-status',
+                      effort: 'high',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const roleNames = ['oat-phase-implementer', 'oat-reviewer'].map(
+        (agentName) =>
+          buildCodexMaterializedTargetRoleName({
+            agentName,
+            model: 'gpt-5.7-user-status',
+            effort: 'high',
+          }),
+      );
+      for (const roleName of roleNames) {
+        await writeFile(
+          join(home, '.codex', 'agents', `${roleName}.toml`),
+          [
+            '# oat-managed: true',
+            `# oat-role: ${roleName}`,
+            '# oat-owner: user-config',
+            'developer_instructions = "drifted role"',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+      }
+
+      const { capture, command, computeCodexProjectExtensionPlan } =
+        createHarness({
+          adapters: [createCodexAdapter()],
+          manifestEntries: [],
+          driftReports: [],
+          canonicalEntries: [],
+          cwd: project,
+          home,
+          useDiskCodexExtension: true,
+          useDiskBundledCodexAgents: true,
+          interactive: false,
+        });
+
+      await runStatusCommand(command, ['--scope', 'user', '--json']);
+
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        home,
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'oat-phase-implementer.md',
+            type: 'agent',
+          }),
+          expect.objectContaining({ name: 'oat-reviewer.md', type: 'agent' }),
+        ]),
+        undefined,
+        { userConfigDir: join(home, '.oat') },
+      );
+      const payload = capture.jsonPayloads[0] as {
+        scope: Scope;
+        reports: DriftReport[];
+        summary: { drifted: number };
+      };
+      expect(payload).toMatchObject({
+        scope: 'user',
+        summary: { drifted: 3 },
+      });
+      expect(payload.reports).toEqual(
+        expect.arrayContaining(
+          roleNames.map((roleName) =>
+            expect.objectContaining({
+              provider: 'codex',
+              providerPath: `.codex/agents/${roleName}.toml`,
+              state: { status: 'drifted', reason: 'modified' },
+            }),
+          ),
+        ),
+      );
+      expect(process.exitCode).toBe(1);
+    } finally {
+      await Promise.all([
+        rm(home, { recursive: true, force: true }),
+        rm(project, { recursive: true, force: true }),
+      ]);
+    }
+  });
+
+  it.each([
+    ['project', createCodexAdapter()],
+    ['user', createAdapter()],
+  ] as const)(
+    'does not compose bundled Codex inputs for %s status without user Codex planning',
+    async (scope, adapter) => {
+      const {
+        command,
+        scanBundledManagedCodexAgents,
+        computeCodexProjectExtensionPlan,
+      } = createHarness({
+        adapters: [adapter],
+        manifestEntries: [],
+        driftReports: [],
+        canonicalEntries: [],
+      });
+
+      await runStatusCommand(command, ['--scope', scope]);
+
+      expect(scanBundledManagedCodexAgents).not.toHaveBeenCalled();
+      if (scope === 'project') {
+        expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+          '/tmp/workspace',
+          [],
+          undefined,
+          { userConfigDir: '/tmp/home/.oat' },
+        );
+      } else {
+        expect(computeCodexProjectExtensionPlan).not.toHaveBeenCalled();
+      }
+    },
+  );
 
   it('reports codex role strays discovered from codex detector', async () => {
     const { capture, command } = createHarness({
