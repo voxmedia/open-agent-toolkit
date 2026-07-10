@@ -2492,6 +2492,23 @@ async function runReviewGate(
       return;
     }
 
+    if (producedArtifact.containingProject !== reviewProject.path) {
+      writeReviewGateTargetingFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        projectResolutionSource: reviewProject.source,
+        artifactPath: producedArtifact.path,
+        generatedAt: producedArtifact.generatedAt,
+        message:
+          'Review artifact was written outside the resolved review project.',
+        gateInvocation,
+        corroboration: initialTargetCorroboration,
+      });
+      process.exitCode = 1;
+      return;
+    }
+
     let verdict: ReviewGateVerdict;
     try {
       verdict = await parseReviewGateVerdict(

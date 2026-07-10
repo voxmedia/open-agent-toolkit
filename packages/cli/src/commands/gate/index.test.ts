@@ -3684,6 +3684,96 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('rejects an active-project review artifact written only under a sibling project', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root, '.oat/projects/shared/active');
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          artifactProject: projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      project: projectPath,
+      projectResolutionSource: 'active-project',
+      artifactPath,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      corroboration: {
+        project: 'ambient',
+        actual: {
+          containingProject: siblingProject,
+          artifactProject: projectPath,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects a single-candidate review artifact written only under a sibling project', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(
+      root,
+      '.oat/projects/shared/only-project',
+    );
+    const siblingProject = '.oat/projects/shared/late-sibling';
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeProject(root, siblingProject);
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          artifactProject: projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      project: projectPath,
+      projectResolutionSource: 'single-candidate',
+      artifactPath,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      corroboration: {
+        project: 'ambient',
+        actual: {
+          containingProject: siblingProject,
+          artifactProject: projectPath,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('finds a run-correlated artifact for an explicit project outside the configured shared root', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(
