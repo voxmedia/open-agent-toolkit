@@ -636,6 +636,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p02-t05: (review) Validate declared projects before verdict parsing
 
+**Status:** completed (`78bb3bfb`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/gate/index.ts`

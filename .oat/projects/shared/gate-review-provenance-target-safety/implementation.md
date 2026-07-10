@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p02-t05
+oat_current_task_id: p02-t06
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ oat_generated: false
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
 | p01   | completed   | 9     | 9/9       |
-| p02   | in_progress | 6     | 4/6       |
+| p02   | in_progress | 6     | 5/6       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 19/25 tasks completed
+**Total:** 20/25 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -144,8 +144,8 @@ oat_generated: false
 
 ### Task p02-t05: (review) Validate declared projects before verdict parsing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `78bb3bfb`
 
 ### Task p02-t06: (review) Retain run identity when generation metadata is invalid
 
@@ -361,6 +361,8 @@ oat_generated: false
 - p02 implementation is complete and awaiting independent review. No p03 work has started; `p03-t01` is the restart pointer after review.
 - `p02-t04` completed in `63f04c42`: a uniquely run-correlated artifact must now remain inside the resolved review project for declared and ambient resolution alike, while ambient results continue reporting `corroboration.project: ambient`.
 - Focused p02-t04 verification reproduced both false-green sibling writes, then passed both regressions, all 100 gate command assertions, CLI type-check, and diff checks after the fix.
+- `p02-t05` completed in `78bb3bfb`: declared containing-project and parsed `oat_project` identity are now corroborated from the unique run candidate before verdict parsing, normalization, mutation, invocation remediation, or severity evaluation.
+- Focused p02-t05 verification reproduced malformed-findings misclassification and missing-heading mutation, then passed both immutable precedence regressions, all 118 gate/parser assertions, CLI type-check, and diff checks after the fix.
 
 ### Review Received: p01
 
@@ -463,6 +465,7 @@ oat_generated: false
 | p02-t03    | RED lifecycle contracts; 46 skill assertions; 53-skill validation; 532-link crawl                                | 49     | 0      | Declared target-neutral lifecycle review commands            |
 | p02 final  | 160 focused assertions; CLI type-check; lint; format; skills; docs links; diff/version hygiene                   | 166    | 0      | Committed-tree phase verification and self-review            |
 | p02-t04    | RED ambient sibling regressions; 100 gate assertions; CLI type-check; diff                                       | 103    | 0      | Ambient containment with ambient provenance preserved        |
+| p02-t05    | RED parse/normalization precedence; 118 gate/parser assertions; CLI type-check; diff                             | 121    | 0      | Declared project validation before parse or mutation         |
 
 ## Final Summary (for PR/docs)
 
