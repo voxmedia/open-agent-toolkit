@@ -57,6 +57,7 @@ import { Command } from 'commander';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
+  type ReviewArtifactGateInvocation,
   type ReviewGateVerdict,
 } from './review-verdict';
 
@@ -200,6 +201,19 @@ interface GateInvocationMetadata {
   readonly source: 'exec-target-config' | 'unknown';
 }
 
+type CorroborationStatus = 'matched' | 'missing' | 'mismatched';
+
+interface GateInvocationCorroboration {
+  run: CorroborationStatus;
+  invocation: CorroborationStatus;
+  expected: {
+    invocation: GateInvocationMetadata;
+  };
+  actual: {
+    invocation: ReviewArtifactGateInvocation | null;
+  };
+}
+
 interface ReviewGateArtifactCandidate extends LatestReview {
   generatedTime: number;
   lifecycleRank: number;
@@ -294,6 +308,40 @@ function gateInvocationPromptContext(
     `oat_invocation_reasoning_effort: ${invocation.reasoningEffort}`,
     `oat_invocation_source: ${invocation.source}`,
   ].join('\n');
+}
+
+function corroborateGateInvocation(
+  expected: GateInvocationMetadata,
+  actual: ReviewArtifactGateInvocation | undefined,
+): GateInvocationCorroboration {
+  const run: CorroborationStatus = !actual?.runId
+    ? 'missing'
+    : actual.runId === expected.runId
+      ? 'matched'
+      : 'mismatched';
+  const invocationFields = [
+    ['targetId', expected.targetId, actual?.targetId],
+    ['runtime', expected.runtime, actual?.runtime],
+    ['model', expected.model, actual?.model],
+    ['reasoningEffort', expected.reasoningEffort, actual?.reasoningEffort],
+    ['source', expected.source, actual?.source],
+  ] as const;
+  const invocation: CorroborationStatus = invocationFields.some(
+    ([, , actualValue]) => !actualValue,
+  )
+    ? 'missing'
+    : invocationFields.every(
+          ([, expectedValue, actualValue]) => expectedValue === actualValue,
+        )
+      ? 'matched'
+      : 'mismatched';
+
+  return {
+    run,
+    invocation,
+    expected: { invocation: expected },
+    actual: { invocation: actual ?? null },
+  };
 }
 
 async function runChildProcess(
@@ -1695,6 +1743,7 @@ function writeReviewGateResult(
     handoff: string;
     diversity?: GateDiversityMetadata;
     gateInvocation: GateInvocationMetadata;
+    corroboration: GateInvocationCorroboration;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -1745,6 +1794,7 @@ function writeReviewGateExecutionFailure(
     timedOut?: boolean;
     timeoutMs?: number;
     gateInvocation: GateInvocationMetadata;
+    corroboration?: GateInvocationCorroboration;
   },
 ): void {
   const message = payload.timedOut
@@ -1758,6 +1808,9 @@ function writeReviewGateExecutionFailure(
       target: payload.target,
       project: payload.project,
       gateInvocation: payload.gateInvocation,
+      ...(payload.corroboration
+        ? { corroboration: payload.corroboration }
+        : {}),
       exitCode: payload.exitCode,
       timedOut: payload.timedOut ?? false,
       ...(payload.timeoutMs !== undefined
@@ -1782,6 +1835,7 @@ function writeReviewGateArtifactValidationFailure(
     message: string;
     recovery: string;
     gateInvocation: GateInvocationMetadata;
+    corroboration?: GateInvocationCorroboration;
   },
 ): void {
   if (context.json) {
@@ -1794,6 +1848,9 @@ function writeReviewGateArtifactValidationFailure(
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
       gateInvocation: payload.gateInvocation,
+      ...(payload.corroboration
+        ? { corroboration: payload.corroboration }
+        : {}),
       message: payload.message,
       recovery: payload.recovery,
     });
@@ -2141,6 +2198,33 @@ async function runReviewGate(
       process.exitCode = 1;
       return;
     }
+    const corroboration = corroborateGateInvocation(
+      gateInvocation,
+      verdict.gateInvocation,
+    );
+    if (
+      corroboration.run !== 'matched' ||
+      corroboration.invocation !== 'matched'
+    ) {
+      const missing =
+        corroboration.run === 'missing' ||
+        corroboration.invocation === 'missing';
+      writeReviewGateArtifactValidationFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        artifactPath: producedArtifact.path,
+        generatedAt: producedArtifact.generatedAt,
+        message: missing
+          ? 'Review artifact invocation metadata is missing required gate-owned values.'
+          : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
+        recovery: `Copy the exact gate invocation fields from the review prompt into ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
+        gateInvocation,
+        corroboration,
+      });
+      process.exitCode = 1;
+      return;
+    }
     const blocking = reviewBlocksAtThreshold(verdict, threshold);
     const handoff = buildReviewGateHandoff({
       artifactPath: producedArtifact.path,
@@ -2166,6 +2250,7 @@ async function runReviewGate(
       handoff,
       diversity: selected.diversity,
       gateInvocation,
+      corroboration,
     });
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {

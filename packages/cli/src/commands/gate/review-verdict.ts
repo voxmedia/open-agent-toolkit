@@ -8,6 +8,7 @@ export interface ReviewGateVerdict {
   reviewType: 'code' | 'artifact' | 'unknown';
   scope: string | null;
   invocation: string | null;
+  gateInvocation?: ReviewArtifactGateInvocation;
   counts: {
     critical: number;
     important: number;
@@ -18,6 +19,15 @@ export interface ReviewGateVerdict {
   normalization?: {
     insertedSeverities: Severity[];
   };
+}
+
+export interface ReviewArtifactGateInvocation {
+  runId: string | null;
+  targetId: string | null;
+  runtime: string | null;
+  model: string | null;
+  reasoningEffort: string | null;
+  source: string | null;
 }
 
 export type Severity = keyof ReviewGateVerdict['counts'];
@@ -63,6 +73,33 @@ function normalizeReviewType(value: unknown): ReviewGateVerdict['reviewType'] {
 
 function stringOrNull(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function readGateInvocation(
+  frontmatter: Record<string, unknown>,
+): ReviewArtifactGateInvocation | undefined {
+  const keys = [
+    'oat_gate_run_id',
+    'oat_gate_target',
+    'oat_gate_runtime',
+    'oat_invocation_model',
+    'oat_invocation_reasoning_effort',
+    'oat_invocation_source',
+  ] as const;
+  if (!keys.some((key) => key in frontmatter)) {
+    return undefined;
+  }
+
+  return {
+    runId: stringOrNull(frontmatter['oat_gate_run_id']),
+    targetId: stringOrNull(frontmatter['oat_gate_target']),
+    runtime: stringOrNull(frontmatter['oat_gate_runtime']),
+    model: stringOrNull(frontmatter['oat_invocation_model']),
+    reasoningEffort: stringOrNull(
+      frontmatter['oat_invocation_reasoning_effort'],
+    ),
+    source: stringOrNull(frontmatter['oat_invocation_source']),
+  };
 }
 
 function parseCountValue(value: unknown): number | null {
@@ -478,11 +515,14 @@ export async function parseReviewGateVerdict(
     );
   }
 
+  const gateInvocation = readGateInvocation(frontmatter);
+
   return {
     artifactPath,
     reviewType: normalizeReviewType(frontmatter['oat_review_type']),
     scope: stringOrNull(frontmatter['oat_review_scope']),
     invocation: stringOrNull(frontmatter['oat_review_invocation']),
+    ...(gateInvocation ? { gateInvocation } : {}),
     counts,
     blocking: hasBlockingFindings(counts),
     ...(insertedSeverities.length > 0

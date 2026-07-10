@@ -115,6 +115,14 @@ It is independent of [HiLL checkpoints](hill-checkpoints.md): a passing gate doe
 
 Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Either way the produced artifact is consumed by `oat-project-review-receive`, autonomously and without user prompts, so findings never evaporate:
 
+The gate prompt provides six additional frontmatter values: `oat_gate_run_id`,
+`oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`,
+`oat_invocation_reasoning_effort`, and `oat_invocation_source`. The reviewer
+copies them exactly. They represent OAT's configured invocation and remain
+separate from optional observed or self-reported producer identity. Missing or
+mismatched values produce `artifact_validation_failed` before finding severity
+is evaluated.
+
 - **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Minor — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/Important concern it escalates to the blocking path.
 - **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
 

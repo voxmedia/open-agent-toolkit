@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.10
+version: 1.3.11
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -679,6 +679,13 @@ oat_review_scope: { scope }
 oat_review_type: { code|artifact }
 oat_review_invocation: { manual|auto|gate }
 oat_project: { PROJECT_PATH }
+# Gate-only: copy the exact prompt-provided fields below.
+oat_gate_run_id: { gate run id }
+oat_gate_target: { configured target id }
+oat_gate_runtime: { configured runtime }
+oat_invocation_model: { configured model|provider-default|unknown }
+oat_invocation_reasoning_effort: { configured effort|provider-default|unknown }
+oat_invocation_source: { exec-target-config|unknown }
 ---
 
 # {Code|Artifact} Review: {scope}
@@ -698,6 +705,8 @@ oat_project: { PROJECT_PATH }
 When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter.
 
 When `oat gate review` invokes this skill, it includes gate-originated context instructing the reviewer to write `oat_review_invocation: gate`. Honor that instruction in the artifact frontmatter.
+
+The gate prompt also supplies exact values for `oat_gate_run_id`, `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`, `oat_invocation_reasoning_effort`, and `oat_invocation_source`. Copy all six values verbatim for gate-originated artifacts. These fields record OAT's configured invocation; do not derive them from `baseCommand`, the target id, model self-identification, or surrounding dispatch prose. Optional observed/self-reported identity is separate and non-authoritative.
 
 For all other invocations (user-triggered, fresh session), use `manual`.
 

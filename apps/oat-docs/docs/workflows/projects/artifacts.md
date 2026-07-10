@@ -31,6 +31,28 @@ Mode-sensitive notes:
 - `references/imported-plan.md`: preserved source plan for import mode
 - `references/split-plan.json`: persisted split plan for a coordination parent, used as the durable resume source when `oat-project-split` is interrupted
 
+### Gate review frontmatter
+
+Review artifacts produced by `oat gate review` use the normal review fields plus
+an exact copy of the gate-owned configured invocation:
+
+```yaml
+oat_review_invocation: gate
+oat_project: .oat/projects/shared/example
+oat_gate_run_id: 00000000-0000-0000-0000-000000000000
+oat_gate_target: codex-sol-max
+oat_gate_runtime: codex
+oat_invocation_model: gpt-5.6-sol
+oat_invocation_reasoning_effort: max
+oat_invocation_source: exec-target-config
+```
+
+`oat_invocation_model` and `oat_invocation_reasoning_effort` may be
+`provider-default` when OAT deliberately leaves a control to the provider, or
+`unknown` when the target does not declare it. These fields are configured
+invocation metadata, not runtime-confirmed or self-reported model identity.
+Manual and auto review artifacts do not require the gate-only fields.
+
 ## Contract
 
 Artifacts are the project system of record; automation and routing should derive from these files, not memory.

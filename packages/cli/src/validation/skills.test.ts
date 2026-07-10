@@ -752,6 +752,34 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/`oat gate review`/);
   });
 
+  it('requires gate review guidance to copy configured invocation metadata without inference', async () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    ]) {
+      const content = await readRepoFile(path);
+      for (const field of [
+        'oat_gate_run_id',
+        'oat_gate_target',
+        'oat_gate_runtime',
+        'oat_invocation_model',
+        'oat_invocation_reasoning_effort',
+        'oat_invocation_source',
+      ]) {
+        expect(content, `${path} gate field ${field}`).toContain(field);
+      }
+      expect(content, `${path} exact-copy contract`).toMatch(
+        /copy.*(?:exact|verbatim)/i,
+      );
+      expect(content, `${path} no command inference`).toMatch(
+        /do not (?:parse|derive)[\s\S]{0,180}(?:command|baseCommand)/i,
+      );
+      expect(content, `${path} self-report separation`).toMatch(
+        /self-report(?:ed)?[\s\S]{0,120}non-authoritative/i,
+      );
+    }
+  });
+
   it('marks quick-start and import-plan as gateable lifecycle skills', async () => {
     for (const skillName of [
       'oat-project-quick-start',

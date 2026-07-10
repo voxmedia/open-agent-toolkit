@@ -73,6 +73,24 @@ frontmatter. After a gate review reports a produced artifact, the host must run
 or hand off to `oat-project-review-receive` before treating the review as
 dispositioned. Until receive runs, the artifact is only produced, not consumed.
 
+Gate-originated artifacts also copy the configured invocation record that the
+CLI places in the review prompt:
+
+```yaml
+oat_review_invocation: gate
+oat_gate_run_id: 00000000-0000-0000-0000-000000000000
+oat_gate_target: codex-sol-max
+oat_gate_runtime: codex
+oat_invocation_model: gpt-5.6-sol # or provider-default | unknown
+oat_invocation_reasoning_effort: max # or provider-default | unknown
+oat_invocation_source: exec-target-config # or unknown
+```
+
+These fields describe configured invocation controls. They do not confirm the
+model that ran, and the reviewer must not replace them with self-identification.
+The CLI compares the copied values with its gate-owned record before it applies
+the severity threshold.
+
 `oat gate review` parses the produced artifact and returns a blocking exit
 status when the configured threshold is met. `cross-provider-exec` does not do
 that interpretation; for generic prompts it still returns only the child process
@@ -109,8 +127,12 @@ and disambiguate re-gate rounds:
 | `artifact_validation_failed` | 1    | Provider ran but the review artifact could not be parsed. |
 
 `ok` and `blocked` also include `outcome`, `artifactPath`, `counts`, `scope`,
-and `handoff`. Treat any status other than `ok`/`blocked` as an operational
-failure, not a passing gate.
+`handoff`, `gateInvocation`, and `corroboration`. `gateInvocation` contains the
+configured `runId`, `targetId`, `runtime`, `model`, `reasoningEffort`, and
+`source`. `corroboration.run` and `corroboration.invocation` are each
+`matched`, `missing`, or `mismatched`, with `expected.invocation` and
+`actual.invocation` diagnostics. Treat any status other than `ok`/`blocked` as
+an operational failure, not a passing gate.
 
 **Drive gates through `oat gate review`, not raw provider invocation.** An
 orchestrator that hand-rolls the review (for example, calling
@@ -183,6 +205,10 @@ that candidate's model and is not double-pinned.
         "cursor-family-gate": {
           "runtime": "cursor",
           "baseCommand": ["cursor-agent", "-p", "--force"],
+          "invocation": {
+            "model": "composer-2.5",
+            "reasoningEffort": "provider-default"
+          },
           "models": ["composer-2.5", "gpt-5.5-xhigh", "claude-opus-4-8"],
           "availabilityCommand": [
             "sh",
@@ -221,6 +247,8 @@ for the same behavior.
 oat gate target set codex-5.5-xhigh \
   --runtime codex \
   --base-command-json '["codex","exec","--model","gpt-5.5","-c","model_reasoning_effort=\"xhigh\"","--dangerously-bypass-approvals-and-sandbox"]' \
+  --invocation-model gpt-5.5 \
+  --invocation-reasoning-effort xhigh \
   --availability-json '["codex","--version"]' \
   --priority 120 \
   --layer user
@@ -228,6 +256,8 @@ oat gate target set codex-5.5-xhigh \
 oat gate target set claude-opus-skip-permissions \
   --runtime claude \
   --base-command-json '["claude","-p","--model","opus","--dangerously-skip-permissions"]' \
+  --invocation-model opus \
+  --invocation-reasoning-effort provider-default \
   --availability-json '["claude","--version"]' \
   --priority 115 \
   --layer user
@@ -235,6 +265,8 @@ oat gate target set claude-opus-skip-permissions \
 oat gate target set cursor-force \
   --runtime cursor \
   --base-command-json '["cursor-agent","-p","--force"]' \
+  --invocation-model provider-default \
+  --invocation-reasoning-effort provider-default \
   --availability-json '["cursor-agent","--version"]' \
   --priority 90 \
   --layer user
@@ -272,12 +304,22 @@ Set or clear an exec target:
 oat gate target set codex-high \
   --runtime codex \
   --base-command-json '["codex","exec","--model","gpt-5.5"]' \
+  --invocation-model gpt-5.5 \
+  --invocation-reasoning-effort provider-default \
   --availability-json '["codex","--version"]' \
   --priority 90 \
   --layer user
 
 oat gate target unset codex-high --layer user
+
+oat --json gate target list
 ```
+
+`gate target list` is read-only. It reports each resolved target's origin,
+explicit configuration, enabled state, current availability, and normalized
+invocation values without selecting or executing a reviewer. Omitted invocation
+values are reported as `unknown`; `provider-default` is an explicit configured
+value, not an inference from the provider command.
 
 Dispatch a review through the target registry:
 

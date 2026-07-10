@@ -52,6 +52,8 @@ type ProcessCallInput = ProcessCall & {
   cwd: string;
 };
 
+let lastExecutePrompt = '';
+
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
@@ -195,6 +197,7 @@ function createProcessRunner(
     }
 
     if (runOptions.purpose === 'execute') {
+      lastExecutePrompt = args.at(-1) ?? '';
       await options.onExecute?.({
         command,
         args: [...args],
@@ -276,6 +279,7 @@ describe('oat gate', () => {
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
+    lastExecutePrompt = '';
   });
 
   afterEach(async () => {
@@ -346,6 +350,15 @@ describe('oat gate', () => {
       medium: number;
       minor: number;
     };
+    omitGateInvocation?: boolean;
+    gateInvocationOverrides?: Partial<{
+      oat_gate_run_id: string;
+      oat_gate_target: string;
+      oat_gate_runtime: string;
+      oat_invocation_model: string;
+      oat_invocation_reasoning_effort: string;
+      oat_invocation_source: string;
+    }>;
   }): Promise<string> {
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
     await mkdir(join(options.root, dirname(relativePath)), {
@@ -370,6 +383,23 @@ describe('oat gate', () => {
     const mediumSection = options.omitMediumSection
       ? []
       : ['### Medium', '', 'None', ''];
+    const gateInvocationKeys = [
+      'oat_gate_run_id',
+      'oat_gate_target',
+      'oat_gate_runtime',
+      'oat_invocation_model',
+      'oat_invocation_reasoning_effort',
+      'oat_invocation_source',
+    ] as const;
+    const gateInvocationLines = options.omitGateInvocation
+      ? []
+      : gateInvocationKeys.map((key) => {
+          const override = options.gateInvocationOverrides?.[key];
+          const promptValue = lastExecutePrompt.match(
+            new RegExp(`^${key}: (.+)$`, 'm'),
+          )?.[1];
+          return `${key}: ${override ?? promptValue ?? 'unknown'}`;
+        });
     await writeFile(
       join(options.root, relativePath),
       [
@@ -380,6 +410,7 @@ describe('oat gate', () => {
         `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
         'oat_review_invocation: gate',
         `oat_project: ${options.projectPath}`,
+        ...gateInvocationLines,
         ...countLines,
         '---',
         '',
@@ -2492,6 +2523,81 @@ describe('oat gate', () => {
       threshold: 'important',
       counts: { critical: 0, important: 1 },
       handoff: expect.stringContaining('oat-project-review-receive'),
+      corroboration: {
+        run: 'matched',
+        invocation: 'matched',
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects gate artifacts missing configured invocation metadata', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          omitGateInvocation: true,
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      message: expect.stringContaining('invocation metadata'),
+      corroboration: {
+        run: 'missing',
+        invocation: 'missing',
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects mismatched configured invocation metadata before severity evaluation', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_invocation_model: 'self-reported-different-model',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      message: expect.stringContaining('does not match'),
+      corroboration: {
+        run: 'matched',
+        invocation: 'mismatched',
+        actual: {
+          invocation: {
+            model: 'self-reported-different-model',
+          },
+        },
+      },
     });
     expect(process.exitCode).toBe(1);
   });

@@ -29,6 +29,12 @@ describe('parseReviewGateVerdict', () => {
 oat_review_type: artifact
 oat_review_scope: plan
 oat_review_invocation: gate
+oat_gate_run_id: 11111111-1111-4111-8111-111111111111
+oat_gate_target: codex-sol-max
+oat_gate_runtime: codex
+oat_invocation_model: gpt-5.6-sol
+oat_invocation_reasoning_effort: max
+oat_invocation_source: exec-target-config
 oat_review_critical_count: 2
 oat_review_important_count: 1
 oat_review_medium_count: 3
@@ -49,6 +55,14 @@ None.
       reviewType: 'artifact',
       scope: 'plan',
       invocation: 'gate',
+      gateInvocation: {
+        runId: '11111111-1111-4111-8111-111111111111',
+        targetId: 'codex-sol-max',
+        runtime: 'codex',
+        model: 'gpt-5.6-sol',
+        reasoningEffort: 'max',
+        source: 'exec-target-config',
+      },
       counts: {
         critical: 2,
         important: 1,
@@ -57,6 +71,24 @@ None.
       },
       blocking: true,
     });
+  });
+
+  it('keeps manual artifacts compatible when gate-only fields are absent', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings: 0 critical, 0 important, 0 medium, 0 minor
+`);
+
+    const verdict = await parseReviewGateVerdict(artifactPath);
+
+    expect(verdict.invocation).toBe('manual');
+    expect(verdict).not.toHaveProperty('gateInvocation');
   });
 
   it('falls back to standard Findings severity sections', async () => {
