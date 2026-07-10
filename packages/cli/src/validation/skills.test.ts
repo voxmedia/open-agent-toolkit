@@ -1730,6 +1730,22 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('documents shipped user Codex materialization ownership in the review guide', async () => {
+    const reviews = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/reviews.md',
+    );
+
+    expect(reviews).toMatch(
+      /user-config[^\n]{0,100}(?:roles? )?materialize[^\n]{0,100}`~\/\.codex`/i,
+    );
+    expect(reviews).toMatch(
+      /project-config[^\n]{0,100}supported-catalogue[^\n]{0,180}project-scoped[^\n]{0,100}version-controlled/i,
+    );
+    expect(reviews).not.toMatch(
+      /user-scope Codex role generation[^\n]{0,120}(?:deferred|not (?:implemented|available))/i,
+    );
+  });
+
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.7'],
