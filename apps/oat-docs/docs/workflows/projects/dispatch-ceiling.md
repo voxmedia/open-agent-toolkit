@@ -182,13 +182,13 @@ Selection modes:
 
 ## Provider Behavior
 
-|                   | Codex                                                 | Claude Code                             | Cursor / model-arg providers | Unsupported provider |
-| ----------------- | ----------------------------------------------------- | --------------------------------------- | ---------------------------- | -------------------- |
-| Managed mechanism | Materialized roles with explicit `model` and `effort` | Task `model` argument                   | Task/CLI `model` argument    | None                 |
+|                   | Codex                                                   | Claude Code                             | Cursor / model-arg providers | Unsupported provider |
+| ----------------- | ------------------------------------------------------- | --------------------------------------- | ---------------------------- | -------------------- |
+| Managed mechanism | Materialized roles with explicit `model` and `effort`   | Task `model` argument                   | Task/CLI `model` argument    | None                 |
 | Axis              | model plus effort (`low < medium < high < xhigh < max`) | model (`haiku < sonnet < opus < fable`) | opaque model slug            | None                 |
-| Capped policy     | materialized target selected up to cap                | selected Task model up to cap           | selected matrix cell         | advisory/unsupported |
-| Uncapped          | preferred materialized target, no cap                 | preferred Task model, no cap            | preferred matrix cell        | advisory/unsupported |
-| Inherit/default   | base/unpinned role follows provider default           | omit `model`                            | omit model selection         | normal behavior      |
+| Capped policy     | materialized target selected up to cap                  | selected Task model up to cap           | selected matrix cell         | advisory/unsupported |
+| Uncapped          | preferred materialized target, no cap                   | preferred Task model, no cap            | preferred matrix cell        | advisory/unsupported |
+| Inherit/default   | base/unpinned role follows provider default             | omit `model`                            | omit model selection         | normal behavior      |
 
 Codex uses materialized roles because per-call model/effort controls were
 unreliable in dogfooding. The resolver compiles an explicit model+effort target
