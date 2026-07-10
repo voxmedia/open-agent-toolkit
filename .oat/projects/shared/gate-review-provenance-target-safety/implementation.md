@@ -271,6 +271,7 @@ oat_generated: false
 - Focused p01-t04 verification passed 133 parser/gate/skill-contract tests, CLI type-check, validation of all 53 OAT skills, and the 532-link docs crawl.
 - Final p01 verification passed 240 focused assertions, CLI type-check, live target inspection, validation of all 53 OAT skills, and the 532-link docs crawl from implementation commit `9f8379b7`.
 - Final p01 self-review found no correctness or scope issues. The p01 code-review row remains pending for the orchestrator's independent reviewer; no p02 work was started.
+- Post-self-review hardening in `a579f4c9` added two resolver assertions that lock complete re-enablement and partial non-resurrection after an intervening exec-target tombstone.
 
 ## Deviations from Plan / Design
 
