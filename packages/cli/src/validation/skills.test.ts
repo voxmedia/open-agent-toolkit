@@ -2015,6 +2015,9 @@ describe('validateOatSkills', () => {
     const directory = await readRepoFile(
       'apps/oat-docs/docs/reference/oat-directory-structure.md',
     );
+    const dispatchPolicy = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+    );
     const execution = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
     );
@@ -2034,8 +2037,8 @@ describe('validateOatSkills', () => {
     expect(lifecycle).not.toMatch(
       /non-interactive planning leaves it unresolved[\s\S]{0,160}implementation preflight/i,
     );
-    expect(directory).toMatch(
-      /providers\.codex[\s\S]{0,360}`low`[\s\S]{0,80}`medium`[\s\S]{0,80}`high`[\s\S]{0,80}`xhigh`[\s\S]{0,80}`max`/i,
+    expect(dispatchPolicy).toMatch(
+      /Codex[\s\S]{0,240}Luna[\s\S]{0,80}`low`[\s\S]{0,80}`medium`[\s\S]{0,80}`high`[\s\S]{0,80}`xhigh`[\s\S]{0,240}Sol[\s\S]{0,140}`max`/i,
     );
 
     for (const [name, content] of [
