@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 6     | 6/6       |
-| p01   | completed | 9     | 9/9       |
-| p02   | completed | 6     | 6/6       |
-| p03   | completed | 2     | 2/2       |
-| p04   | completed | 4     | 4/4       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | completed   | 6     | 6/6       |
+| p01   | completed   | 9     | 9/9       |
+| p02   | completed   | 6     | 6/6       |
+| p03   | completed   | 2     | 2/2       |
+| p04   | in_progress | 14    | 4/14      |
 
-**Total:** 27/27 tasks completed
+**Total:** 27/37 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** completed; independent re-review passed
+**Status:** final review fixes queued
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -216,7 +216,7 @@ oat_generated: false
 - **Verification:** 54 focused skill-contract assertions; validation of all 53 OAT skills; all-scope sync followed by a zero-operation dry-run across 318 provider entries; 49 affected integration/bundle-contract assertions; the full workspace suite with 10 successful Turbo tasks and 2,451 CLI assertions; lint, format, type-check, build, docs build, 532-link crawl, and five-package release validation.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The independent p04 re-review closed I1 with no findings. Final review remains pending.
+- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review is received and its fixes are queued.
 
 ## Orchestration Runs
 
@@ -654,6 +654,45 @@ oat_generated: false
 
 **Next:** Run the full-project final review before requesting explicit p04 HiLL approval.
 
+### Review Received: final
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/final-review-2026-07-10T103451Z.md`
+
+**Primary findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 1
+- Minor: 3
+
+**Supplemental parallel audit findings accepted:**
+
+- Important: 4
+- Medium: 1
+- Minor: 2
+
+**New tasks added:** `p04-t05` through `p04-t14`
+
+**Disposition:**
+
+- `I1` agreed, `Large`, `code_fix_required` -> `p04-t05`: repair real user-scope canonical-role expansion and owner-safe cleanup.
+- `I2` agreed, `Moderate`, `code_fix_required` -> `p04-t09`: make lifecycle review handoff depend on positive receive eligibility.
+- `I3` agreed, `Moderate`, `code_fix_required` -> `p04-t10`: preserve the complete explicit phase-review value before spec-driven Overwrite.
+- `M1` agreed, `Minor`, `code_fix_required` -> `p04-t11`: reject malformed dispatch role values instead of defaulting to implementer.
+- `m1` and `m2` agreed, `Minor`, `artifact_alignment_required` -> `p04-t09` and `p04-t13`: align lifecycle readiness and the public result union with shipped behavior.
+- `m3` agreed, `Negligible`, `artifact_alignment_required`: corrected the stale p04 phase/final-summary prose during this receive bookkeeping update.
+- Supplemental role-collision finding agreed, `Moderate`, `code_fix_required` -> `p04-t06`.
+- Supplemental selected-model-stamping finding agreed, `Moderate`, `code_fix_required` -> `p04-t07`.
+- Supplemental malformed-YAML/quoted-timestamp findings agreed, `Moderate`, `code_fix_required` -> `p04-t08`.
+- Supplemental target-fallback contradiction agreed, `Moderate`, `code_fix_required` -> `p04-t12`.
+- Supplemental public `max` and Cursor example drift agreed, `Minor`, `artifact_alignment_required` -> `p04-t13`.
+- Active user configuration migration is required for end-to-end declared-project and configured-invocation behavior -> `p04-t14`.
+
+**Deferred Findings Ledger:** None. Every final-review and supplemental finding is converted or resolved now.
+
+**Next:** Execute `p04-t05` through `p04-t14`, mark the final review `fixes_completed`, then run an independent final re-review before explicit p04 HiLL approval.
+
 ## Deviations from Plan / Design
 
 | Task / Review            | Source Artifact           | Planned / Documented                                                              | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                                |
@@ -714,5 +753,5 @@ The shipped surface now includes the planned canonical skill versions, updated
 workflow documentation, tracked project-owned reviewer variants, and all five
 public packages at `0.1.47`. User-scoped configuration remains user-owned, with
 Codex Frontier resolving to Sol/max and Cursor opaque model strings preserved
-exactly. Implementation is fully verified but is not project-complete: the
-independent p04 re-review and final review are still pending.
+exactly. Implementation is not project-complete: the first final review is
+received, its fix tasks are queued, and final re-review remains pending.

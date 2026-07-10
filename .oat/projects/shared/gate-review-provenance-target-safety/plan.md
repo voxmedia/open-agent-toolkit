@@ -688,7 +688,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ## Phase 3: Aggregated Producer Provenance
 
-**Implementation Status:** review fixes completed; awaiting independent re-review
+**Implementation Status:** completed; independent re-review passed
 
 ### Task p03-t01: Make final and range aggregation explicit
 
@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** review fixes completed; awaiting independent re-review
+**Implementation Status:** final review fixes queued
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -908,21 +908,304 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 
 ---
 
+### Task p04-t05: (final review) Materialize user-owned Codex targets safely
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/shared/types.ts`
+- Modify: `packages/cli/src/engine/scanner.ts`
+- Modify: `packages/cli/src/commands/sync/index.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
+
+**Steps:**
+
+1. Give user/all sync stable access to the canonical implementer and reviewer definitions needed to expand configured user targets without enabling unrelated user-agent mirroring.
+2. Fail closed on user-owned stale cleanup when the required expansion inputs are unavailable; never delete a still-configured user role because the user scanner returned skills only.
+3. Add an end-to-end command test through the real user-scope scanner that creates user-owned implementer/reviewer roles, proves a byte-identical second run, and preserves other owners.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/providers/codex/codec/sync-extension.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(sync): materialize user Codex targets safely`
+
+---
+
+### Task p04-t06: (final review) Reject colliding custom Codex role names
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/shared.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- Modify: `packages/cli/src/providers/ceiling/registry.ts`
+- Modify: `packages/cli/src/providers/ceiling/registry.test.ts`
+
+**Steps:**
+
+1. Detect distinct raw model/effort targets that normalize to the same role name or path before planning any writes.
+2. Fail closed, or use a stable collision-safe identity scheme, so sync and resolver compilation cannot select a role containing another target's model.
+3. Cover punctuation-equivalent targets across configuration layers, deterministic repeat sync, and exact resolver output.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/codex/codec/sync-extension.test.ts src/providers/ceiling/registry.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(sync): reject colliding Codex role names`
+
+---
+
+### Task p04-t07: (final review) Stamp the selected gate execution model
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Derive gate-owned invocation model metadata from the selected structured candidate when execution appends that model to the child command.
+2. Reject inconsistent static invocation metadata rather than stamping a different model from the one actually selected.
+3. Add a non-first multi-model winner regression proving child argv, prompt, artifact corroboration, and JSON all use one exact model.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): stamp selected execution model`
+
+---
+
+### Task p04-t08: (final review) Classify malformed correlated artifacts safely
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/shared/frontmatter.ts`
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/commands/gate/review-verdict.test.ts`
+
+**Steps:**
+
+1. Preserve safe correlation with the expected gate UUID when frontmatter YAML is malformed, then report the artifact as remediable validation failure rather than non-remediable targeting failure.
+2. Use the parsed YAML scalar for `oat_generated_at` so valid quoted timestamps remain valid and deterministic.
+3. Cover malformed YAML with the exact run ID, duplicate/spoof-resistant correlation, quoted timestamps, and artifact immutability.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): classify malformed correlated artifacts safely`
+
+---
+
+### Task p04-t09: (final review) Route lifecycle handoff by receive eligibility
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Steps:**
+
+1. Invoke review-receive only for a positive, corroborated receive handoff or `receiveEligible: true`; do not consume targeting-correlation failures.
+2. Keep artifact-validation failures outside receive until correction and successful revalidation.
+3. Replace the unconditional cross-skill sentence and add status-aware contract tests and CLI result-union documentation.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm docs:check-links
+```
+
+**Commit:** `fix(workflow): route review handoff by eligibility`
+
+---
+
+### Task p04-t10: (final review) Preserve phase review on spec-plan overwrite
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Steps:**
+
+1. Snapshot explicit key presence and the complete raw `oat_phase_review_gate` entry before the spec-driven Overwrite branch replaces `plan.md`.
+2. Restore the exact value in the first rewritten frontmatter before shared setup, including enabled, disabled, selected-phase, `null`, and malformed values.
+3. Extend the preservation ordering/value-shape matrix to spec-driven Overwrite.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+```
+
+**Commit:** `fix(plan): preserve phase review settings on overwrite`
+
+---
+
+### Task p04-t11: (final review) Reject invalid dispatch roles
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Steps:**
+
+1. Constrain `--role` to `implementer | reviewer` at the command boundary and retain defensive exhaustive validation internally.
+2. Reject misspelled, whitespace, and case-mismatched values with nonzero exit and no dispatch arguments.
+3. Preserve the default implementer role only when `--role` is omitted.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(dispatch): reject invalid dispatch roles`
+
+---
+
+### Task p04-t12: (final review) Keep artifact reviews on the resolved target
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+
+**Steps:**
+
+1. Remove unconditional Tier 2 inline fallback language from every plan-producing artifact-review caller.
+2. Allow inline only with verified equivalent model/effort controls or explicit inherit/managed-uncapped exceptions; retry exact role or pinned child after timeout and otherwise fail closed.
+3. Add negative contract coverage for all callers and the execution documentation.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm docs:check-links
+```
+
+**Commit:** `fix(workflow): keep artifact reviews target pinned`
+
+---
+
+### Task p04-t13: (final review) Align dispatch and gate reference documentation
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Regenerate: bundled docs and skill assets
+
+**Steps:**
+
+1. State that unresolved non-interactive planning remains not implementation-ready rather than deferring failure to implementation preflight.
+2. Add `max` to the public Codex ceiling enum and replace the obsolete Cursor `unsupported` example with enforced opaque model-argument resolution.
+3. Regenerate shipped mirrors and verify canonical/bundled parity.
+
+**Verify:**
+
+```bash
+pnpm docs:check-links
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `docs(workflow): align dispatch and gate references`
+
+---
+
+### Task p04-t14: (final review) Migrate active user gate configuration
+
+**Status:** pending
+
+**Files:**
+
+- Update: `~/.oat/config.json` (user scope; not version-controlled by this repository)
+
+**Steps:**
+
+1. Add literal `--project "$PROJECT_PATH"` to all configured lifecycle review commands while keeping them free of provider/model `--target` pins.
+2. Declare exact invocation model and reasoning-effort metadata for each configured exec target, using `provider-default` only when OAT does not set a separate effort control.
+3. Run repaired user-scope sync, verify user-owned roles are materialized before session start, and require an immediate zero-operation dry-run.
+
+**Verify:**
+
+```bash
+oat gate target list --json
+oat sync --scope user --dry-run --json
+oat gate resolve oat-project-implement --json
+```
+
+**Commit:** No repository code commit; record verified user-scope state in implementation bookkeeping.
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed   | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed   | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed   | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | received | 2026-07-10 | reviews/final-review-2026-07-10T103451Z.md                  |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed      | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T103451Z.md         |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -934,11 +1217,12 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
-- Phase 4: 4 tasks - shared opt-in setup, all plan paths, release validation, and one review fix
+- Phase 4: 14 tasks - shared opt-in setup, safety/release work, one phase review fix, and ten final review fixes
 
-**Total: 27 tasks**
+**Total: 37 tasks**
 
-Phase 0 through Phase 4 reviews have passed. The final review remains pending.
+Phase 0 through Phase 4 reviews have passed. The first final review added ten
+fix tasks; final re-review remains pending.
 
 ## References
 
