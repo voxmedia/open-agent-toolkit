@@ -1193,19 +1193,19 @@ oat gate resolve oat-project-implement --json
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed          | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed          | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed          | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | fixes_completed | 2026-07-10 | reviews/archived/final-review-2026-07-10T103451Z.md         |
-| spec   | artifact | pending         | -          | -                                                           |
-| design | artifact | pending         | -          | -                                                           |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status   | Date       | Artifact                                                    |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed   | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed   | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed   | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | received | 2026-07-10 | reviews/final-review-2026-07-10T121358Z.md                  |
+| spec   | artifact | pending  | -          | -                                                           |
+| design | artifact | pending  | -          | -                                                           |
+| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
