@@ -21,9 +21,9 @@ oat_generated: false
 | ----- | ----------- | ----- | --------- |
 | p01   | in_progress | 2     | 0/2       |
 | p02   | pending     | 2     | 0/2       |
-| p03   | pending     | 2     | 0/2       |
+| p03   | pending     | 3     | 0/3       |
 
-**Total:** 0/6 tasks completed
+**Total:** 0/7 tasks completed
 
 ## Phase 1: Structured Configuration Contract
 
@@ -71,8 +71,8 @@ resume routing satisfy their lifecycle contracts.
 
 ### Phase Summary
 
-Complete after docs, bundled assets, lockstep versions, and release validation
-match the shipped behavior.
+Complete after docs, bundled assets, lockstep versions, release validation, and
+the shipped backlog item closeout match the delivered behavior.
 
 ### Task p03-t01: Document structured sequencing and final approval timing
 
@@ -80,6 +80,11 @@ match the shipped behavior.
 **Commit:** -
 
 ### Task p03-t02: Bump lockstep packages, regenerate assets, and validate release
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Archive the shipped backlog item and verify PJM state
 
 **Status:** pending
 **Commit:** -
@@ -114,3 +119,30 @@ Populate from completed phase summaries before final review and PR generation.
 - Next task: `p01-t01`.
 
 **Blockers:** None
+
+### Artifact Review Received: plan
+
+**Date:** 2026-07-10
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-07-10T120448Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 2
+
+**Dispositions:**
+
+- I1 → `resolve_in_artifact`: added `p03-t03` for canonical backlog archive and
+  PJM doctor verification.
+- M1 → `resolve_in_artifact`: expanded `p02-t01` to preserve and verify the
+  snapshot across every child step.
+- m1 → `resolve_in_artifact`: marked the canonical spec review row satisfied as
+  not applicable in quick mode.
+- m2 → `resolve_in_artifact`: replaced the non-durable structured-review note
+  with the archived gate review path.
+
+**Next:** Begin implementation at `p01-t01`. The user explicitly waived the
+configured gate rerun after these artifact corrections.

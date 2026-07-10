@@ -199,6 +199,9 @@ Assert that the canonical skill:
 - uses `not_required` only when no final checkpoint exists;
 - fails fast with boundary, step, and exact resume guidance;
 - resumes from the first incomplete step without re-resolving configuration;
+- supplies the authoritative snapshot to every `summary`, `document`, and `pr`
+  child dispatch and requires child state writes to preserve it;
+- verifies the snapshot after every child returns before recording step success;
 - retains the existing unset-preference prompt after any final approval.
 
 Run:
@@ -218,6 +221,10 @@ Expected: The new contract suite fails against the current ordering.
 - Normalize the effective preference, persist the immutable snapshot after final
   review passes, and dispatch `summary`, `document`, and `pr` in order.
 - Persist success/failure/approval transitions before crossing each boundary.
+- Instruct every child step to merge state updates without replacing
+  `oat_post_implement_sequence`, then re-read state after the child returns.
+- If a child removed or altered the snapshot, restore the authoritative snapshot,
+  record that step as failed, and stop with resume guidance.
 - On resume, treat the snapshot as authoritative and retry only the first
   incomplete step.
 - Preserve the unset-preference flow, but place its existing next-step prompt
@@ -433,17 +440,65 @@ treating that as a failure.
 
 ---
 
+### Task p03-t03: Archive the shipped backlog item and verify PJM state
+
+**Files:**
+
+- Move: `.oat/repo/pjm/backlog/items/BL-260709-split-post-implementation.md`
+  to `.oat/repo/pjm/backlog/archived/BL-260709-split-post-implementation.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Modify: `.oat/repo/pjm/backlog/index.md`
+
+**Step 1: Close the backlog item through the canonical command**
+
+Run this only after the feature, docs, and release verification tasks have
+completed:
+
+```bash
+oat backlog archive BL-260709-split-post-implementation \
+  --summary "Added structured pre- and post-approval sequencing with legacy compatibility and restart-safe final HiLL handling."
+```
+
+Expected: The item is closed and moved to `backlog/archived/`, a newest-first
+entry is added to `backlog/completed.md`, and the managed index is regenerated.
+
+**Step 2: Verify complete PJM closeout**
+
+```bash
+test ! -e .oat/repo/pjm/backlog/items/BL-260709-split-post-implementation.md
+test -e .oat/repo/pjm/backlog/archived/BL-260709-split-post-implementation.md
+rg -n "BL-260709-split-post-implementation" \
+  .oat/repo/pjm/backlog/archived/BL-260709-split-post-implementation.md \
+  .oat/repo/pjm/backlog/completed.md
+oat pjm doctor
+```
+
+Expected: No active item remains, completion history is durable, and PJM doctor
+reports no lifecycle drift.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/repo/pjm/backlog/items/BL-260709-split-post-implementation.md \
+  .oat/repo/pjm/backlog/archived/BL-260709-split-post-implementation.md \
+  .oat/repo/pjm/backlog/completed.md \
+  .oat/repo/pjm/backlog/index.md
+git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-10 | reviews/artifact-plan-review-2026-07-10T120448Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | passed  | 2026-07-10 | N/A (quick mode; no spec required)                          |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T120448Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` →
 `passed`
@@ -454,12 +509,15 @@ treating that as a failure.
 
 - Phase 1: 2 tasks — structured config model, resolution, and CLI
 - Phase 2: 2 tasks — final-closeout orchestration, routing, and resume safety
-- Phase 3: 2 tasks — documentation, bundled assets, versions, and release checks
+- Phase 3: 3 tasks — documentation, release checks, and PJM backlog closeout
 
-**Total: 3 phases, 6 tasks**
+**Total: 3 phases, 7 tasks**
 
 Ready for implementation after the plan artifact review passes and implementation
 preflight confirms HiLL checkpoints.
+
+Plan review findings were resolved directly in this artifact. The user explicitly
+waived the configured gate rerun on 2026-07-10.
 
 ## References
 

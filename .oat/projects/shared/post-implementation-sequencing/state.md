@@ -35,7 +35,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:58:56.209Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T12:02:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T18:39:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -76,6 +76,8 @@ Plan - Reviewed and ready for implementation
 - ✓ Implementation plan generated
 - ✓ Plan artifact review passed
 - ✓ Implementation tracker initialized
+- ✓ Gate review findings resolved in plan and tracker
+- ✓ Gate rerun waived by explicit user direction
 
 ## Blockers
 
