@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
-| p01   | in_progress | 4     | 1/4       |
+| p01   | in_progress | 4     | 2/4       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 7/17 tasks completed
+**Total:** 8/17 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -71,8 +71,8 @@ oat_generated: false
 
 ### Task p01-t02: Add target mutation and inspection APIs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8db8d78c`
 
 ### Task p01-t03: Assemble and emit gate invocation provenance
 
@@ -256,6 +256,8 @@ oat_generated: false
 
 - `p01-t01` completed in `a33f9ab7`: exec targets now carry normalized nested invocation metadata, built-ins explicitly declare provider-default model and effort, and layer resolution deep-clones and merges partial invocation overrides without parsing opaque commands.
 - Focused p01-t01 verification passed 106 config/resolver tests and CLI type-check.
+- `p01-t02` completed in `8db8d78c`: gate targets accept invocation flags with nested partial-update preservation, and the read-only JSON listing exposes origin, explicit configuration, enabled/available state, and normalized invocation metadata without selecting or executing a reviewer.
+- Focused p01-t02 verification passed 107 gate/resolver tests, CLI type-check, and a live `gate target list` inspection.
 
 ## Deviations from Plan / Design
 
@@ -274,6 +276,7 @@ oat_generated: false
 | p00 final | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                              | 494    | 0      | Committed-tree phase verification and self-review            |
 | p00 fixes | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown |
 | p01-t01   | 106 focused config/resolver assertions; CLI type-check                                                           | 107    | 0      | Invocation normalization, defaults, cloning, layered merge   |
+| p01-t02   | 107 focused gate/resolver assertions; CLI type-check; live target list                                           | 109    | 0      | Mutation flags, provenance view, availability-only listing   |
 
 ## Final Summary (for PR/docs)
 

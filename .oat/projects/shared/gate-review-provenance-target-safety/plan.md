@@ -260,7 +260,7 @@ pnpm exec oxfmt --check .agents/skills/oat-project-plan-writing/SKILL.md apps/oa
 
 ## Phase 1: Configured Invocation Provenance
 
-**Implementation Status:** in progress (1/4 tasks completed)
+**Implementation Status:** in progress (2/4 tasks completed)
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -292,6 +292,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 ---
 
 ### Task p01-t02: Add target mutation and inspection APIs
+
+**Status:** completed (`8db8d78c`)
 
 **Files:**
 
