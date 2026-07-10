@@ -594,7 +594,9 @@ function parseExecTargetConfig(
   return {
     runtime: trimRequired(options.runtime ?? '', '--runtime'),
     baseCommand: parseArgvJson(baseCommandJson, '--base-command-json'),
-    priority: parseNumericFlag(options.priority, '--priority', 0),
+    ...(options.priority !== undefined
+      ? { priority: parseNumericFlag(options.priority, '--priority', 0) }
+      : {}),
     ...(options.invocationModel !== undefined ||
     options.invocationReasoningEffort !== undefined
       ? {
@@ -686,20 +688,22 @@ function setExecTarget(
   return updateWorkflowGates(config, (gates) => {
     const existing = gates.execTargets?.[targetId];
     const value =
-      target === null || existing === null || existing === undefined
+      target === null
         ? target
-        : {
-            ...existing,
-            ...target,
-            ...(existing.invocation || target.invocation
-              ? {
-                  invocation: {
-                    ...existing.invocation,
-                    ...target.invocation,
-                  },
-                }
-              : {}),
-          };
+        : existing === null || existing === undefined
+          ? { priority: 0, ...target }
+          : {
+              ...existing,
+              ...target,
+              ...(existing.invocation || target.invocation
+                ? {
+                    invocation: {
+                      ...existing.invocation,
+                      ...target.invocation,
+                    },
+                  }
+                : {}),
+            };
     return {
       ...gates,
       execTargets: {

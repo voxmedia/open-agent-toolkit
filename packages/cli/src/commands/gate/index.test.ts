@@ -848,7 +848,7 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('preserves existing invocation fields when target set omits one flag', async () => {
+  it('preserves existing priority and invocation fields when target set omits flags', async () => {
     const { root, home } = await setup();
 
     await runGateCommand(root, home, [
@@ -863,6 +863,8 @@ describe('oat gate', () => {
       'gpt-5.6-sol',
       '--invocation-reasoning-effort',
       'max',
+      '--priority',
+      '75',
       '--layer',
       'shared',
     ]);
@@ -887,7 +889,7 @@ describe('oat gate', () => {
         model: 'gpt-5.6-terra',
         reasoningEffort: 'max',
       },
-      priority: 0,
+      priority: 75,
     });
   });
 
