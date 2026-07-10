@@ -259,7 +259,74 @@ oat_phase_review_gate:
 
 ## API Design
 
-_Pending collaborative validation._
+### Exec-Target Mutation
+
+Extend the existing command without changing current flags:
+
+```bash
+oat gate target set <id> \
+  --runtime <runtime> \
+  --base-command-json '<json-array>' \
+  --invocation-model <model|provider-default> \
+  --invocation-reasoning-effort <effort|provider-default> \
+  --layer <user|shared|local>
+```
+
+- Both invocation flags are optional.
+- Omitted flags preserve existing partial-update semantics at the selected layer.
+- JSON config remains the full-fidelity path for explicitly clearing nested fields if the existing mutation command cannot distinguish omitted from clear without a breaking flag change.
+
+### Exec-Target Inspection
+
+Add a read-only inspection surface:
+
+```bash
+oat gate target list --json
+```
+
+Each entry reports:
+
+```typescript
+interface GateTargetListEntry {
+  id: string;
+  runtime: string;
+  enabled: boolean;
+  origin: 'builtin' | 'user' | 'shared' | 'local';
+  explicitlyConfigured: boolean;
+  available: boolean;
+  invocation: {
+    model: string | 'provider-default' | 'unknown';
+    reasoningEffort: string | 'provider-default' | 'unknown';
+    source: 'exec-target-config' | 'unknown';
+  };
+}
+```
+
+The command is informational and does not select or execute a reviewer. Planning workflows consume its JSON result and prompt only when an entry is explicitly configured, enabled, and available.
+
+### Gate Review
+
+The command surface stays compatible:
+
+```bash
+oat gate review --project <path-or-name> --review-type <type> --review-scope <scope> <prompt...>
+```
+
+- `--project` declares the review subject.
+- `--target` remains available for manual/debug routing but is omitted by reusable lifecycle commands.
+- Existing stdout and JSON compatibility fields remain; structured identity and corroboration fields are additive.
+- Project declarations and configured invocation records are injected after target selection, not accepted from free-form prompt text.
+
+### Planning Workflow Integration
+
+The shared plan-writing procedure runs after a plan has stable phase IDs and before final artifact review:
+
+1. Preserve an existing explicit `oat_phase_review_gate` value.
+2. Run `oat gate target list --json`.
+3. If no qualifying target exists, leave phase review disabled without prompting.
+4. Otherwise offer all phases, selected phases, or disabled and write the canonical frontmatter.
+
+This procedure is called by spec-driven planning, quick-start planning, and imported-plan normalization. Provider-native plan mode reaches the same path through import-plan.
 
 ## Error Handling
 
