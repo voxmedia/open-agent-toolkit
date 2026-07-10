@@ -1653,7 +1653,7 @@ pnpm release:validate
 
 **Steps:**
 
-1. Redefine the phase implementer as a phase coordinator. It reads phase artifacts once, retains dependency order, selects the exact target for each task, verifies each worker result and commit, performs phase-wide integration/self-review, and returns the phase summary. It must not implement ordinary plan tasks itself.
+1. Redefine the phase implementer as a phase coordinator and increment its canonical agent version. It reads phase artifacts once, retains dependency order, selects the exact target for each task, verifies each worker result and commit, performs phase-wide integration/self-review, and returns the phase summary. It must not implement ordinary plan tasks itself.
 2. Before each task, have the coordinator classify the bounded task and call the candidate resolver with the project or phase named ceiling. Dispatch one task worker with the resolver-returned exact Codex role, Claude model argument, or Cursor opaque model string, plus a Task Scope that names only that task, its file boundary, verification, and commit convention.
 3. Run task workers serially within a phase and worktree by default. Permit parallel work only through the existing plan-declared phase/worktree mechanism; do not fan out same-worktree tasks. The coordinator records each worker's exact target, result, and commit in the phase dispatch summary.
 4. Fail closed when a task candidate is absent, exceeds the ceiling, or cannot be invoked with its exact controls. Do not downgrade to the coordinator target, the base role, or an inferred provider default. Preserve the existing fresh pinned-child route where a native Codex role cannot be selected.
