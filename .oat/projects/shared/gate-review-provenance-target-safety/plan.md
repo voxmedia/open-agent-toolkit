@@ -662,6 +662,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p02-t06: (review) Retain run identity when generation metadata is invalid
 
+**Status:** completed (`ad82a1fb`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/gate/index.ts`
