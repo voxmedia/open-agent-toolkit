@@ -110,6 +110,13 @@ _No implementation runs yet._
 
 - Quick-start discovery and lightweight design completed.
 - Four-phase, eleven-task sequential plan passed structured artifact review.
+- Configured cross-runtime plan gate passed with 0 Critical, 0 Important, 1 Medium, and 2 Minor findings.
+- Review received from `reviews/archived/artifact-plan-review-2026-07-10T014435Z.md`:
+  - `M1` resolved in `plan.md` by assigning invocation frontmatter and gate JSON documentation to p01-t04.
+  - `m1` rejected: the canonical Reviews table preserves the quick-mode `spec` row, and `n/a` is not a valid review status; quick implementation readiness does not require a spec review pass.
+  - `m2` resolved in `plan.md` with an explicit p02 phase-review note for the intentional PR-scoped version-bump deferral.
+- Live `~/.oat/config.json` inspection supplied concrete Codex, Claude, and Cursor invocation fixtures and confirmed all four lifecycle gates still use ambient project wording that p02-t03 must migrate.
+- The Codex session in `codex-family-subagents` confirmed this project should precede implementation of workflows that expand configured gate usage, while planning those projects remains safe.
 - Next task: `p01-t01`.
 
 ## Deviations from Plan / Design

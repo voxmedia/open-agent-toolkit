@@ -106,7 +106,7 @@ pnpm run cli -- --json gate target list
 1. Generate the run ID before prompt assembly and derive an immutable configured invocation record after target selection.
 2. Inject exact run ID, target ID, runtime, model, effort, and source values into the review prompt without parsing opaque base commands.
 3. Add `gateInvocation` to success and post-selection failure JSON while preserving existing `target`, `project`, and review `invocation` fields.
-4. Cover explicit Codex model/effort, explicit Claude model with provider-default effort, and unknown/default Cursor-style targets.
+4. Cover the live user-config shapes without parsing their commands: Codex `gpt-5.6-sol` with `max` effort, Claude `fable`, Cursor `gpt-5.6-sol-max`, Cursor `claude-fable-5-xhigh`, and unknown/default targets.
 
 **Verify:**
 
@@ -130,19 +130,24 @@ pnpm --filter @open-agent-toolkit/cli type-check
 - Modify: `.agents/agents/oat-reviewer.md`
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
 
 **Steps:**
 
 1. Add gate-only artifact fields for run ID, target, runtime, invocation model/effort, and source to reviewer guidance and templates.
 2. Extend the YAML-aware verdict parser without breaking existing manual/auto artifacts.
 3. Validate artifact invocation fields against the gate-owned record before applying severity thresholds; keep optional self-report identity separate and non-authoritative.
-4. Bump changed canonical agent/skill versions once and add contract coverage.
+4. Document the gate-only frontmatter fields plus additive `gateInvocation` and `corroboration` JSON structures in workflow-gate, review, and artifact references.
+5. Bump changed canonical agent/skill versions once and add contract coverage.
 
 **Verify:**
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts src/commands/gate/index.test.ts src/validation/skills.test.ts
 pnpm run oat:validate-skills
+pnpm docs:check-links
 ```
 
 **Commit:** `feat(review): corroborate gate invocation metadata`
@@ -150,6 +155,8 @@ pnpm run oat:validate-skills
 ---
 
 ## Phase 2: Declared Review Target Safety
+
+> **Phase review note:** p02 intentionally defers the single PR-scoped version bumps for `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until their final edits in p04-t02. Do not flag those interim versions as missing bumps.
 
 ### Task p02-t01: Expose review-project resolution provenance
 
@@ -218,7 +225,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 1. Update lifecycle gate configuration/examples to include `--project "$PROJECT_PATH"` after each skill resolves `PROJECT_PATH`, while preserving exact configured-command execution.
 2. Keep provider/model `--target` absent from reusable lifecycle commands and examples.
 3. Explain declared versus ambient project resolution, mismatch failures, invalid-artifact handoff behavior, and manual/debug exceptions.
-4. Bump `oat-project-implement` once in this task. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
+4. Add migration guidance for existing user-level lifecycle commands that currently say "current project": insert `--project "$PROJECT_PATH"` while retaining target-neutral provider selection.
+5. Bump `oat-project-implement` once in this task. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
 
 **Verify:**
 
@@ -358,16 +366,16 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-09 | reviews/artifact-plan-review-2026-07-10T014435Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| p04    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
