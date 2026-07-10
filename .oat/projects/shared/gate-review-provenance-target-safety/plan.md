@@ -504,19 +504,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | pending | -          | -                                                           |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
-| p03    | code     | pending | -          | -                                                           |
-| p04    | code     | pending | -          | -                                                           |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status   | Date       | Artifact                                                    |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | received | 2026-07-10 | reviews/p00-review-2026-07-10T061452Z.md                    |
+| p01    | code     | pending  | -          | -                                                           |
+| p02    | code     | pending  | -          | -                                                           |
+| p03    | code     | pending  | -          | -                                                           |
+| p04    | code     | pending  | -          | -                                                           |
+| final  | code     | pending  | -          | -                                                           |
+| spec   | artifact | pending  | -          | -                                                           |
+| design | artifact | pending  | -          | -                                                           |
+| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
