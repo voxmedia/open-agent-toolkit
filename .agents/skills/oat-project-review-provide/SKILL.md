@@ -519,21 +519,37 @@ plan artifact review and implementation phase/final review:
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
 ```
 
-Resolve a concrete managed Codex target before probing generic subagent
+Resolve every concrete managed reviewer target before probing generic subagent
 availability or selecting Tier 1/Tier 2/Tier 3. The concrete target takes
 precedence over all availability, preference, timeout, fresh-session, and gate
-fallbacks. For managed Codex, use the exact registered reviewer role or variant from
-`providers.codex.dispatchArgs.variant` when selectable. If the current host
-cannot select that exact registered role or it is unavailable, launch a fresh Codex child with the
-resolver target's explicit model, reasoning effort, and canonical role
-instructions from `.agents/agents/oat-reviewer.md`, plus the Review Scope
-payload. Workflow correctness must not require provider restart or hot reload.
+fallbacks.
+A concrete managed Codex target takes precedence over tier availability.
+Build the actual provider invocation before reporting the target as enforced:
+
+- Codex uses the exact registered reviewer role or variant from
+  `providers.codex.dispatchArgs.variant` when selectable. If the current host
+  cannot select it, launch a fresh Codex child with the resolver target's
+  explicit model, reasoning effort, canonical role instructions from
+  `.agents/agents/oat-reviewer.md`, and the same Review Scope payload.
+  If that fresh child is unavailable, use only a verified-equivalent inline
+  route or block the review.
+- Claude requires a non-empty `providers.claude.dispatchArgs.model`; the actual
+  provider invocation must include that exact value as its `model` argument.
+- Cursor requires a non-empty `providers.cursor.dispatchArgs.model`; the actual
+  provider invocation must include that exact opaque string as its `model`
+  argument without normalization.
+
+Managed incomplete resolver results prompt or block before review.
+
+On timeout or retry, reuse the same exact role or complete invocation payload,
+including the Claude or Cursor model argument. If the host cannot apply a
+required role or model argument, fail closed or block unless inline execution
+has verified equivalent current-host controls.
+Workflow correctness must not require provider restart or hot reload.
 Never use a managed base role because a target is missing or unavailable; a
-managed base role is forbidden except for explicit inherit/default behavior or
-the documented managed-uncapped reviewer fallback. Managed incomplete results
-prompt or block before review. If the pinned child route is also unavailable,
-run inline only after verifying equivalent current-host model and effort
-controls; otherwise block.
+managed base role is forbidden except for
+explicit inherit/default behavior or the documented managed-uncapped reviewer
+fallback.
 
 **Step 6a: Probe Subagent Availability**
 
@@ -573,8 +589,8 @@ First, pre-compute the review artifact path using Step 7 naming conventions so i
 Then spawn the reviewer:
 
 - Use provider-appropriate dispatch:
-  - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`).
-  - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path.
+  - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`). For a concrete managed target, the payload must also contain `model: providers.claude.dispatchArgs.model` with the resolver-returned value.
+  - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path. For a concrete managed target, the invocation must also contain `model: providers.cursor.dispatchArgs.model` with the exact opaque resolver-returned string.
   - Codex style: for a concrete managed target, spawn the exact resolver-returned `agent_type`; if it cannot be selected, use the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
 - Pass the Review Scope metadata block from Step 5 as the prompt
 - Include the pre-computed artifact path for the subagent to write to

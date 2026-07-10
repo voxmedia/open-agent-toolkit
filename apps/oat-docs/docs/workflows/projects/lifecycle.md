@@ -102,7 +102,15 @@ through the import-plan lane.
 `oat-project-implement` v2.0 dispatches one subagent per phase (not per task). Capability detection at skill start selects a tier, locked for the run:
 
 - **Tier 1 (subagents):** native subagent dispatch via Claude Code, Cursor, or Codex with spawn authorization.
-- **Tier 2 (inline):** orchestrator reads the agent files and executes the process itself when subagents are unavailable or authorization is declined.
+- **Tier 2 (guarded sequential execution):** orchestrator reads the agent files and uses a target-preserving route when native subagents are unavailable or authorization is declined.
+
+A concrete managed reviewer remains bound across both tiers. Codex uses the
+exact registered role or a child pinned to the resolved model and effort;
+Claude and Cursor pass the exact resolver-returned `dispatchArgs.model` in the
+actual provider invocation, including retries. Tier 2 does not authorize a
+target downgrade. Inline review is allowed only with verified equivalent host
+controls, or for explicit inherit/default behavior or the documented
+managed-uncapped reviewer base-role exception; otherwise the review blocks.
 
 Within either tier, parallelism is expressed as plan metadata:
 

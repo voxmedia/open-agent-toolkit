@@ -223,6 +223,21 @@ gpt-5.6-sol/max`; Claude `economy/balanced -> sonnet`, `high -> opus`, and
 `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
 `gpt-5.6-sol-max`.
 
+### Reviewer target enforcement
+
+Reviewer resolution is complete only when the actual provider invocation binds
+the returned controls. Codex uses the exact resolver-returned reviewer variant
+or a fresh child pinned to its model and effort. Claude passes
+`providers.claude.dispatchArgs.model` as the invocation `model`; Cursor passes
+`providers.cursor.dispatchArgs.model` byte-for-byte as an opaque `model`
+argument. Timeout retries preserve the same complete payload.
+
+Tier 2 remains target-preserving when native subagents are unavailable; it does
+not silently substitute host defaults. Inline review is allowed only with
+verified equivalent current-host controls, or for explicit inherit/default
+behavior or the documented managed-uncapped reviewer base-role exception. If
+the host cannot apply a concrete managed reviewer model, the review blocks.
+
 For ordered routes, edit the config JSON so a tier cell is an array. Route
 entries are either bare slugs or objects with `harness`, `model`, and optional
 `effort`:

@@ -51,17 +51,32 @@ gpt-5.6-sol/max`
      `oat config adopt dispatch-matrix --user|--shared|--local` fills missing
      cells without replacing explicit values. Non-interactive unresolved state
      blocks readiness.
-3. Resolve a concrete managed Codex target before probing generic reviewer
-   availability or selecting an execution tier. That target takes precedence
-   over every availability, tier, timeout, and inline fallback. Use the exact
-   registered reviewer variant returned by
-   `providers.codex.dispatchArgs.variant` when the host can select that role.
-   If the exact role is unavailable or the current host cannot select it,
-   launch a fresh Codex child with the resolver target's explicit model,
-   reasoning effort, and canonical role instructions from
-   `.agents/agents/oat-reviewer.md`. The fresh child receives the same artifact
-   review payload and checklist. If neither route can preserve the target,
-   block the review; do not continue through a generic tier fallback.
+3. Bind every concrete managed reviewer target to the actual provider
+   invocation before probing generic reviewer availability or selecting an
+   execution tier. That target takes precedence over every availability, tier,
+   timeout, and inline fallback.
+   A concrete managed Codex target takes precedence over tier availability.
+   - Codex: use the exact registered reviewer variant returned by
+     `providers.codex.dispatchArgs.variant` when the host can select that role.
+     If the exact role is unavailable or the current host cannot select it,
+     launch a fresh Codex child with the resolver target's explicit model,
+     reasoning effort, and canonical role instructions from
+     `.agents/agents/oat-reviewer.md`. If the fresh child cannot preserve the
+     target, use only a verified-equivalent inline route or block the review.
+   - Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
+     that exact value in the actual provider invocation as its `model`
+     argument.
+   - Cursor: treat `providers.cursor.dispatchArgs.model` as opaque and put that
+     exact, unnormalized string in the actual provider invocation as its
+     `model` argument.
+
+   Build the actual host invocation payload before declaring the target
+   enforced. On timeout, retry, or artifact rewrite/re-dispatch, reuse the same
+   exact role or complete provider payload, including the exact model argument.
+   If the host cannot apply the required role or model argument, fail closed or
+   block unless the guarded inline-equivalence rule below applies. Never
+   continue through a generic tier fallback.
+
 4. Workflow correctness must not require provider restart or hot reload.
    Runtime materialization may be best effort, but it is not the correctness
    boundary. Never use a managed base role because an exact target is missing
@@ -211,6 +226,7 @@ Use this loop after an artifact has been written and before the calling skill ha
 
 3. **Dispatch `oat-reviewer` in structured mode**
    - When the resolver returned a concrete managed Codex target, use its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions. If neither is possible, run inline only with verified equivalent current-host controls; otherwise block.
+   - When the resolver returned a concrete managed Claude or Cursor target, require `providers.claude.dispatchArgs.model` or `providers.cursor.dispatchArgs.model` respectively and pass that exact value in the actual provider invocation's `model` argument. Cursor values are opaque and must not be normalized. If the host cannot apply the model argument, fail closed unless inline execution has verified equivalent controls.
    - For explicit inherit/default behavior or the documented managed-uncapped reviewer fallback, Tier 1 uses the configured `oat-reviewer` subagent when available and authorized; Tier 2 may run the same reviewer prompt inline.
    - Always set `oat_output_mode: structured`; the loop consumes `StructuredFindings` in-memory and the reviewer writes no artifact.
    - Do not downgrade the resolved target or checklist when changing execution mechanics.
@@ -222,7 +238,7 @@ Use this loop after an artifact has been written and before the calling skill ha
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
 
 5. **Rewrite and re-dispatch within the bound**
-   - After applying fixes, rewrite the artifact and re-dispatch `oat-reviewer` with the same target payload.
+   - After applying fixes, rewrite the artifact and re-dispatch `oat-reviewer` with the same complete target payload, including the exact Claude or Cursor `dispatchArgs.model` argument.
    - Each rewrite/re-dispatch cycle consumes one retry.
    - Stop when the reviewer returns no findings or when the retry bound is exhausted.
 

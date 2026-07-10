@@ -1086,7 +1086,9 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
 - For Codex with a capped managed policy, dispatch the materialized reviewer role returned in `providers.codex.dispatchArgs.variant` for deterministic quality gates.
 - If that exact registered reviewer role is not selectable in the current host session, launch a fresh Codex child with explicit model, reasoning effort, and canonical role instructions from `.agents/agents/oat-reviewer.md`; never substitute the managed base role and never require restart/hot reload.
 - For Codex with managed `Uncapped` or inherit/default mode, no reviewer target exists; use base `oat-reviewer`, log `effort_axis=provider-default`, and explain that the base role follows the provider default.
-- For Claude Code with a capped managed policy, pass the resolved cap as the review `model`; managed `Uncapped` or inherit/default mode omits `model` because no reviewer target exists. Always keep `effort_axis=not-applicable`.
+- For Claude Code with a capped managed policy, require `providers.claude.dispatchArgs.model` and pass that exact value as the review `model`; managed `Uncapped` or inherit/default mode omits `model` because no reviewer target exists. Always keep `effort_axis=not-applicable`.
+- For Cursor with a concrete managed reviewer target, require `providers.cursor.dispatchArgs.model` and pass that exact opaque, unnormalized string as the actual review invocation's `model` argument.
+- Build the actual provider invocation before logging the reviewer target. If the host cannot apply the required Claude or Cursor model argument, fail closed or block unless inline execution has verified equivalent current-host controls.
 - Tier 1: dispatch the selected reviewer target via provider-native subagent mechanism with Review Scope:
 
   ```
@@ -1109,9 +1111,9 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   ```
 
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
-  - For Codex Tier 1 review dispatches, use the materialized Codex role name from `providers.codex.dispatchArgs.variant` only when the resolver returns a reviewer variant for a capped managed policy. A Codex materialized reviewer role selected from a model+effort target must carry `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code review dispatches, do not pass a per-review effort override because the effort axis is not applicable; pass `model` only when the resolver returns a selected review model.
+  - For Codex Tier 1 review dispatches, use the materialized Codex role name from `providers.codex.dispatchArgs.variant` only when the resolver returns a reviewer variant for a capped managed policy. A Codex materialized reviewer role selected from a model+effort target must carry `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code, pass `model: providers.claude.dispatchArgs.model` for a concrete managed reviewer and never pass a per-review effort override. For Cursor, pass `model: providers.cursor.dispatchArgs.model` byte-for-byte for a concrete managed reviewer.
   - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
-  - If a Codex reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the target-preserving review dispatch as failed for this phase. Retry the same exact role or pinned fresh-child route within the retry bound; never downgrade a timed-out managed reviewer to unpinned inline execution.
+  - If a reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the target-preserving review dispatch as failed for this phase. Retry the same exact role, pinned fresh-child route, or complete Claude/Cursor invocation payload within the retry bound, preserving the exact model argument; never downgrade a timed-out managed reviewer to unpinned inline execution.
 
 - Tier 2: read `.agents/agents/oat-reviewer.md` and review inline only with verified equivalent current-host model and effort controls, explicit inherit/default behavior, or the documented managed-uncapped reviewer behavior. Otherwise block.
 
@@ -1601,12 +1603,18 @@ echo "$FINAL_ROW"
 
 First resolve the final reviewer target with the same target-first contract as
 per-phase review. A concrete managed Codex target must use its exact registered
-reviewer or an explicitly pinned fresh child. The preference below chooses only
-among routes that preserve that target; it cannot authorize generic inline or
-base execution. Inline remains available only with verified equivalent
-current-host controls or an allowed inherit/default or managed-uncapped
-reviewer exception. If no target-preserving route exists, block the final
-review.
+reviewer or an explicitly pinned fresh child. A concrete managed Claude or
+Cursor target must put `providers.claude.dispatchArgs.model` or
+`providers.cursor.dispatchArgs.model` respectively into the actual provider
+invocation as the exact `model` argument; Cursor strings remain opaque. On
+timeout or retry, preserve the same exact role or complete invocation payload,
+including the model argument. If the host cannot apply the required role or
+model argument, fail closed or block unless verified equivalent current-host
+controls permit inline execution. The preference below chooses only among
+routes that preserve that target; it cannot authorize generic inline or base
+execution. Inline remains available only with verified equivalent current-host
+controls or an allowed explicit inherit/default or managed-uncapped reviewer
+base-role exception.
 
 ```bash
 REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)

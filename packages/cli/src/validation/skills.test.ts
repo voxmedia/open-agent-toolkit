@@ -1226,6 +1226,95 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('binds concrete managed reviewer models across provider invocations', async () => {
+    const planWriting = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const reviewProvide = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const artifactReview = planWriting.slice(
+      planWriting.indexOf('## Managed Dispatch Readiness and Review Contract'),
+      planWriting.indexOf('## Shared Phase-Review Setup Contract'),
+    );
+    const projectReview = reviewProvide.slice(
+      reviewProvide.indexOf(
+        '**Step 6.0: Resolve the managed reviewer target**',
+      ),
+      reviewProvide.indexOf('### Step 7: Determine Review Artifact Path'),
+    );
+    const phaseReview = implement.slice(
+      implement.indexOf('### Per-Phase Review'),
+      implement.indexOf('**Verdict outcomes:**'),
+    );
+    const finalReview = implement.slice(
+      implement.indexOf('**Workflow preference check (before prompting):**'),
+      implement.indexOf('**Fresh-session guidance block'),
+    );
+
+    for (const [name, content] of [
+      ['artifact review', artifactReview],
+      ['project review', projectReview],
+      ['phase review', phaseReview],
+      ['final review', finalReview],
+    ] as const) {
+      expect(content, `${name} Claude payload`).toContain(
+        'providers.claude.dispatchArgs.model',
+      );
+      expect(content, `${name} Cursor payload`).toContain(
+        'providers.cursor.dispatchArgs.model',
+      );
+      expect(content, `${name} actual model argument`).toMatch(
+        /actual\s+(?:(?:provider|host)\s+)?invocation[\s\S]{0,280}(?:model|dispatchArgs\.model)/i,
+      );
+      expect(content, `${name} target-preserving retry`).toMatch(
+        /(?:timeout|retry|re-dispatch)[\s\S]{0,500}(?:same|exact)[\s\S]{0,300}(?:model|payload|dispatch argument)/i,
+      );
+      expect(content, `${name} unsupported model binding`).toMatch(
+        /(?:cannot|unable to) (?:apply|pass|bind)[\s\S]{0,280}(?:fail closed|block)/i,
+      );
+    }
+
+    const configuration = await readRepoFile(
+      'apps/oat-docs/docs/cli-utilities/configuration.md',
+    );
+    for (const model of [
+      'gpt-5.6-luna-high',
+      'gpt-5.6-terra-xhigh',
+      'gpt-5.6-sol-high',
+      'gpt-5.6-sol-max',
+    ]) {
+      expect(planWriting, `artifact contract preserves ${model}`).toContain(
+        model,
+      );
+      expect(configuration, `configuration preserves ${model}`).toContain(
+        model,
+      );
+    }
+
+    const lifecycle = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/lifecycle.md',
+    );
+    const artifacts = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+    );
+    for (const [name, content] of [
+      ['lifecycle', lifecycle],
+      ['artifacts', artifacts],
+      ['configuration', configuration],
+    ] as const) {
+      expect(content, `${name} target-preserving Tier 2`).toMatch(
+        /Tier 2[\s\S]{0,600}target-preserving/i,
+      );
+      expect(content, `${name} guarded inline`).toMatch(
+        /inline[\s\S]{0,360}verified equivalent[\s\S]{0,260}(?:inherit|managed-uncapped|base-role)/i,
+      );
+    }
+  });
+
   it('covers spec, quick, import, and provider-plan-via-import planning paths', async () => {
     const plan = await readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
     const quick = await readRepoFile(
