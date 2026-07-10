@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t17
+oat_current_task_id: p04-t18
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 19    | 16/19     |
+| p04   | in_progress | 19    | 17/19     |
 
-**Total:** 39/42 tasks completed
+**Total:** 40/42 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** supplemental final-review fixes in progress (16/19)
+**Status:** supplemental final-review fixes in progress (17/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -321,10 +321,13 @@ oat_generated: false
 
 ### Task p04-t17: (final review) Bind reviewer models across providers
 
-**Status:** pending
+**Status:** completed
+**Commit:** `59fa1f70`
 
-- Bind resolver-selected Claude and Cursor model arguments to actual artifact, phase, and final reviewer invocations and target-preserving retries.
-- Align Tier 2 docs, contract tests, and bundled assets without another PR-scoped skill version bump.
+- Artifact, per-phase, and final review contracts now bind resolver-selected Claude and Cursor models to the actual provider invocation while preserving exact Codex role and pinned-child behavior.
+- Timeout and retry paths preserve the complete provider payload. Hosts that cannot apply a concrete managed target fail closed unless verified-equivalent inline controls or a documented base-role exception applies.
+- Tier 2 documentation now requires target-preserving sequential execution, including exact opaque Cursor model strings. No additional PR-scoped skill version bump was added.
+- Verification passed all 58 focused skill contracts, validation of all 53 OAT skills, the 532-link docs crawl, root formatting, and release validation for all five public packages at `0.1.47`.
 
 ### Task p04-t18: (final review) Defer plan readiness until review completes
 
@@ -347,7 +350,7 @@ oat_generated: false
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The latest final review is `fixes_added`. Execute `p04-t17` through `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
+- **Review status:** The latest final review is `fixes_added`. Execute `p04-t18` through `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
 
 ## Orchestration Runs
 

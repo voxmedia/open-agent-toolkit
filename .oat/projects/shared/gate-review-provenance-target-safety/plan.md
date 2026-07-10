@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** supplemental final-review fixes in progress (16/19)
+**Implementation Status:** supplemental final-review fixes in progress (17/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1249,7 +1249,7 @@ pnpm run cli:source -- --json sync --scope project --dry-run
 
 ### Task p04-t17: (final review) Bind reviewer models across providers
 
-**Status:** pending
+**Status:** completed (`59fa1f70`)
 
 **Files:**
 
