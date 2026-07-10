@@ -782,7 +782,7 @@ function normalizeKnownStrays(value: unknown): string[] | undefined {
   return normalized.length > 0 ? [...new Set(normalized)].sort() : undefined;
 }
 
-function normalizeProjectPath(
+export function normalizeProjectPath(
   repoRoot: string,
   pathValue: string | null | undefined,
 ): string | null {
@@ -795,27 +795,19 @@ function normalizeProjectPath(
     return null;
   }
 
-  if (!isAbsolute(trimmed)) {
-    const normalizedRelative = trimPathValue(normalizeToPosixPath(trimmed));
-    return normalizedRelative && normalizedRelative !== '.'
-      ? normalizedRelative
-      : null;
-  }
-
   const repoRootResolved = resolve(repoRoot);
-  const absoluteResolved = resolve(trimmed);
+  const absoluteResolved = resolve(repoRootResolved, trimmed);
+  const relativePath = relative(repoRootResolved, absoluteResolved);
   const isInsideRepo =
-    absoluteResolved === repoRootResolved ||
-    absoluteResolved.startsWith(`${repoRootResolved}${sep}`);
+    !isAbsolute(relativePath) &&
+    relativePath !== '..' &&
+    !relativePath.startsWith(`..${sep}`);
 
   if (!isInsideRepo) {
     return null;
   }
 
-  const relativePath = normalizeToPosixPath(
-    relative(repoRootResolved, absoluteResolved),
-  );
-  const normalizedRelative = trimPathValue(relativePath);
+  const normalizedRelative = trimPathValue(normalizeToPosixPath(relativePath));
   return normalizedRelative && normalizedRelative !== '.'
     ? normalizedRelative
     : null;

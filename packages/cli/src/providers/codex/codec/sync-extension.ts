@@ -5,6 +5,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { parseCanonicalAgentFile } from '@agents/canonical';
 import {
   isCodexMaterializedRouteTarget,
+  normalizeProjectPath,
   resolveActiveProject,
   validateDispatchRouteTarget,
   type WorkflowDispatchMatrixCell,
@@ -333,15 +334,25 @@ async function collectProjectStateCodexTargets(
   options: CodexMaterializationTargetOptions,
   targets: Map<string, CodexMaterializationTarget>,
 ): Promise<void> {
-  const projectPath =
+  const projectPathCandidate =
     options.projectPath === undefined
       ? (await resolveActiveProject(scopeRoot)).path
       : options.projectPath;
-  if (!projectPath) {
+  if (!projectPathCandidate) {
     return;
   }
 
-  const statePath = join(resolve(scopeRoot, projectPath), 'state.md');
+  const projectPath = normalizeProjectPath(scopeRoot, projectPathCandidate);
+  if (!projectPath) {
+    if (options.projectPath !== undefined) {
+      throw new CliError(
+        `Project-scoped Codex materialization path must be repo-relative or inside repo root: ${projectPathCandidate}`,
+      );
+    }
+    return;
+  }
+
+  const statePath = join(scopeRoot, projectPath, 'state.md');
   const stateContent = await readOptionalFile(statePath);
   if (!stateContent) {
     return;

@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import type { CanonicalEntry } from '@engine/index';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -269,6 +269,98 @@ describe('codex sync extension', () => {
     );
     expect(plan.managedRoles).toHaveLength(14);
   });
+
+  it('does not materialize targets from an external active project', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(root, externalProject);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    const externalRelativePath = relative(root, externalProject);
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        activeProject: externalRelativePath,
+      }),
+      'utf8',
+    );
+    await writeFile(
+      join(externalProject, 'state.md'),
+      [
+        '---',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    codex:',
+        '      high:',
+        '        - harness: codex',
+        '          model: gpt-5.9-external-state',
+        '          effort: high',
+        '---',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalPath = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalPath, canonicalAgentFileContent('oat-reviewer'));
+    const externalRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-reviewer',
+      model: 'gpt-5.9-external-state',
+      effort: 'high',
+    });
+
+    const plan = await computeCodexProjectExtensionPlan(root, [
+      {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath,
+        isFile: true,
+      },
+    ]);
+
+    expect(plan.managedRoles).not.toContain(externalRole);
+    expect(
+      plan.operations.some((operation) =>
+        operation.content?.includes('gpt-5.9-external-state'),
+      ),
+    ).toBe(false);
+    await expect(
+      applyCodexProjectExtensionPlan(root, plan),
+    ).resolves.toMatchObject({ failed: 0 });
+    await expect(
+      readFile(join(root, '.codex', 'config.toml'), 'utf8'),
+    ).resolves.not.toContain(externalRole);
+  });
+
+  it.each([
+    ['relative', (root: string, external: string) => relative(root, external)],
+    ['absolute', (_root: string, external: string) => external],
+  ])(
+    'rejects an explicit %s project path outside the sync root',
+    async (_label, projectPath) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+      const externalProject = await mkdtemp(
+        join(tmpdir(), 'oat-external-project-'),
+      );
+      tempDirs.push(root, externalProject);
+      await writeFile(
+        join(externalProject, 'state.md'),
+        '---\noat_dispatch_policy: {}\n---\n',
+        'utf8',
+      );
+
+      await expect(
+        computeCodexProjectExtensionPlan(root, [], undefined, {
+          projectPath: projectPath(root, externalProject),
+        }),
+      ).rejects.toThrow(/inside repo root/i);
+    },
+  );
 
   it('generates materialized codex roles from matrix targets for oat-reviewer', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));

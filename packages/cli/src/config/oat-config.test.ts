@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -358,6 +358,42 @@ describe('oat-config', () => {
 
     const localConfig = await readOatLocalConfig(repoRoot);
     expect(localConfig.activeProject).toBe('.oat/projects/shared/demo');
+  });
+
+  it('resolves relative activeProject paths and rejects repo traversal', async () => {
+    const repoRoot = await createRepoRoot();
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(externalProject);
+    await writeFile(join(externalProject, 'state.md'), '---\n---\n', 'utf8');
+    const externalRelativePath = relative(repoRoot, externalProject);
+
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: externalRelativePath })}\n`,
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: null,
+    });
+    await expect(resolveActiveProject(repoRoot)).resolves.toEqual({
+      name: null,
+      path: null,
+      status: 'unset',
+    });
+    await expect(
+      setActiveProject(repoRoot, externalRelativePath),
+    ).rejects.toThrow(/inside repo root/i);
+
+    await writeOatLocalConfig(repoRoot, {
+      version: 1,
+      activeProject: '.oat/projects/shared/../demo',
+    });
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: '.oat/projects/demo',
+    });
   });
 
   it('resolveActiveProject reports active for valid config-local project paths', async () => {
