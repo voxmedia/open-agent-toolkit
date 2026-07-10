@@ -32,7 +32,57 @@ has already changed the project's PR status.
 
 ## Architecture
 
-_Pending collaborative review._
+### System Context
+
+The change spans three connected surfaces:
+
+- **Configuration contract:** Accept and validate either a legacy string or
+  structured sequence. The layered resolver treats the entire structured value
+  as one atomic preference, so local/shared/user arrays are never merged
+  accidentally. Plain CLI output preserves strings and emits compact JSON for
+  objects; JSON output preserves the actual object.
+- **Final-closeout orchestrator:** `oat-project-implement` keeps every non-final
+  checkpoint unchanged but defers the final checkpoint branch. Final
+  verification and review run first, including automatic final review when
+  checkpoint auto-review is enabled.
+- **Durable progress and routing:** A sequence snapshot in project state records
+  the resolved arrays, completed steps, and approval status. While that snapshot
+  is incomplete, project routing returns to implementation even if PR creation
+  has already set `oat_pr_status: open`.
+
+### Component Diagram and Data Flow
+
+```text
+configured string/object
+        │
+        ▼
+validate → atomic layered resolution
+        │
+        ▼
+final phase completes ── non-final checkpoints remain unchanged
+        │
+        ▼
+final verification → final review passes
+        │
+        ▼
+snapshot canonical sequence in state
+        │
+        ▼
+run remaining preApproval steps, recording each success
+        │
+        ├─ final HiLL configured → pause → record explicit approval
+        └─ no final HiLL         → record approval as not_required
+        │
+        ▼
+run remaining postApproval steps, recording each success
+        │
+        ▼
+normal PR/completion routing
+```
+
+A failed step remains incomplete, records the failed boundary and next action,
+and stops. Resumption uses the persisted snapshot rather than re-resolving
+potentially changed configuration.
 
 ## Component Design
 
