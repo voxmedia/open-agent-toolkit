@@ -39,7 +39,12 @@ export type WorkflowReviewExecutionModel =
   | 'inline'
   | 'fresh-session';
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
-export type WorkflowCodexDispatchCeiling = 'low' | 'medium' | 'high' | 'xhigh';
+export type WorkflowCodexDispatchCeiling =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh'
+  | 'max';
 export type WorkflowClaudeDispatchCeiling =
   | 'haiku'
   | 'sonnet'
@@ -147,7 +152,7 @@ const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'draft',
 ];
 export const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] =
-  ['low', 'medium', 'high', 'xhigh'];
+  ['low', 'medium', 'high', 'xhigh', 'max'];
 export const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
   ['haiku', 'sonnet', 'opus', 'fable'];
 export const VALID_DISPATCH_CEILING_PRESETS: readonly WorkflowDispatchCeilingPreset[] =

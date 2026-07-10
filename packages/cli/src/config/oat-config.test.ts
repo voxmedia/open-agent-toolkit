@@ -1283,7 +1283,7 @@ describe('oat-config', () => {
                     economy: 'low',
                     balanced: 'medium',
                     high: 'high',
-                    frontier: 'xhigh',
+                    frontier: 'max',
                     stray: 'ignored',
                   },
                   claude: {
@@ -1305,7 +1305,7 @@ describe('oat-config', () => {
             economy: 'low',
             balanced: 'medium',
             high: 'high',
-            frontier: 'xhigh',
+            frontier: 'max',
           },
           claude: {
             economy: 'haiku',

@@ -699,6 +699,28 @@ function resolveProviderMatrixCell(
   return selected;
 }
 
+function resolveCodexMatrixCellForValue(
+  value: DispatchCeilingValue,
+  resolvedConfig: ResolvedConfig,
+  projectMatrix: ProjectDispatchMatrix | null,
+  escalationLevel: number,
+): MatrixCellResolution | null {
+  for (const tier of VALID_DISPATCH_MATRIX_TIERS) {
+    const candidate = resolveProviderMatrixCell(
+      'codex',
+      tier,
+      resolvedConfig,
+      projectMatrix,
+      escalationLevel,
+    );
+    if (candidate?.value === value) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 function readProjectDispatchPolicy(
   provider: DispatchCeilingProvider,
   content: string,
@@ -1233,6 +1255,10 @@ function selectDispatchValue(
 
   const selectedIndex = Math.min(preferredIndex, ceilingIndex);
   const selectedValue = order[selectedIndex]!;
+  const targetValue = policy.target
+    ? dispatchValueFromRouteTarget(policy.target)
+    : null;
+  const selectedTarget = targetValue === selectedValue ? policy.target : null;
   return {
     ...baseSelection,
     preferredValue,
@@ -1240,12 +1266,8 @@ function selectDispatchValue(
     capped: preferredIndex > ceilingIndex,
     selectionMode: 'capped',
     selectionBranch: policy.selectionBranch,
-    family: selectionFamily(
-      provider,
-      selectedValue,
-      selectedValue === policy.value ? policy.target : null,
-    ),
-    target: selectedValue === policy.value ? policy.target : null,
+    family: selectionFamily(provider, selectedValue, selectedTarget),
+    target: selectedTarget,
   };
 }
 
@@ -1489,6 +1511,36 @@ async function resolveDispatchCeiling(
   };
 
   if (resolvedValue) {
+    const incompleteManagedPreflight =
+      options.preflight === true &&
+      resolvedValue.mode === 'managed' &&
+      providerResolution.mode === 'advisory' &&
+      providerResolution.selection.target?.crossHarness !== true &&
+      providerResolution.selection.selectionMode !== 'no-review-target';
+
+    if (incompleteManagedPreflight) {
+      const shouldBlock =
+        options.nonInteractive === true ||
+        isNonInteractiveEnv(dependencies.processEnv) ||
+        (!context.interactive && !context.json);
+      const message = shouldBlock ? blockMessage(provider) : undefined;
+      return {
+        status: shouldBlock ? 'blocked' : 'unresolved',
+        provider,
+        value: resolvedValue.value,
+        policyMode: resolvedValue.mode,
+        policy: resolvedValue.policy,
+        source: resolvedValue.source,
+        preset: resolvedValue.preset,
+        unresolved: true,
+        projectPath,
+        providerDefaultEffort,
+        matrix: resolvedValue.matrix,
+        providers,
+        message,
+      };
+    }
+
     return {
       status: 'resolved',
       provider,
@@ -1605,6 +1657,41 @@ async function resolveCeilingValue(
     escalationLevel,
   );
   if (matrixCell) {
+    if (
+      provider === 'codex' &&
+      role === 'implementer' &&
+      preferredValue !== null &&
+      matrixCell.value !== null
+    ) {
+      const order = providerValueOrder(provider);
+      const preferredIndex = order?.indexOf(preferredValue) ?? -1;
+      const ceilingIndex = order?.indexOf(matrixCell.value) ?? -1;
+      if (order && preferredIndex >= 0 && ceilingIndex >= 0) {
+        const selectedValue = order[Math.min(preferredIndex, ceilingIndex)]!;
+        if (selectedValue !== matrixCell.value) {
+          const selectedCell = resolveCodexMatrixCellForValue(
+            selectedValue,
+            resolvedConfig,
+            projectCeiling?.matrix ?? null,
+            escalationLevel,
+          );
+          return {
+            ...baseCeiling,
+            value: matrixCell.value,
+            cellSource: selectedCell?.cellSource ?? matrixCell.cellSource,
+            target: selectedCell?.target ?? null,
+            selectionBranch:
+              selectedCell?.selectionBranch ?? matrixCell.selectionBranch,
+            warnings: [
+              ...baseCeiling.warnings,
+              ...matrixCell.warnings,
+              ...(selectedCell?.warnings ?? []),
+            ],
+          };
+        }
+      }
+    }
+
     return {
       ...baseCeiling,
       value: matrixCell.value,

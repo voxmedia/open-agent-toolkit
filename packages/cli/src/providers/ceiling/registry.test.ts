@@ -14,7 +14,13 @@ describe('provider ceiling adapters', () => {
       expect(codex.provider).toBe('codex');
       expect(codex.supportsCeiling).toBe(true);
       expect(codex.mechanism).toBe('pinned-variant');
-      expect(codex.validValues).toEqual(['low', 'medium', 'high', 'xhigh']);
+      expect(codex.validValues).toEqual([
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ]);
     });
 
     it('compiles a codex model-effort target to the implementer materialized role name', () => {
@@ -34,6 +40,16 @@ describe('provider ceiling adapters', () => {
         }),
       ).toEqual({
         variant: 'oat-reviewer-gpt-5-6-sol-xhigh',
+      });
+    });
+
+    it('preserves explicit max effort in a codex materialized target', () => {
+      expect(
+        codex.compileToDispatchArgs('max', 'implementer', {
+          target: { model: 'gpt-5.6-sol', effort: 'max' },
+        }),
+      ).toEqual({
+        variant: 'oat-phase-implementer-gpt-5-6-sol-max',
       });
     });
 
