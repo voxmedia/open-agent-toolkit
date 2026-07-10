@@ -547,6 +547,33 @@ None
     );
   });
 
+  it('does not mutate malformed YAML when normalization is requested', async () => {
+    const content = `---
+oat_review_type: code
+oat_review_scope: p02
+oat_review_invocation: gate
+oat_gate_run_id: 11111111-1111-4111-8111-111111111111
+broken: [
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+`;
+    const artifactPath = await writeArtifact(content);
+
+    await expect(
+      parseReviewGateVerdict(artifactPath, {
+        normalizeMissingEmptySeveritySections: true,
+      }),
+    ).rejects.toThrow(/YAML|flow sequence/i);
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(content);
+  });
+
   it('returns an actionable read error for missing artifacts', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-review-verdict-missing-'));
     tempDirs.push(root);

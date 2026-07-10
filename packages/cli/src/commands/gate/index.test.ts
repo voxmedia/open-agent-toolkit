@@ -4615,6 +4615,177 @@ describe('oat gate', () => {
   });
 
   it.each([
+    ['single-quoted', "'2026-06-01T00:00:00Z'"],
+    ['double-quoted', '"2026-06-01T00:00:00Z"'],
+  ] as const)(
+    'accepts a valid %s oat_generated_at scalar',
+    async (_label, generatedAt) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            generatedAt,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        generatedAt: '2026-06-01T00:00:00Z',
+        corroboration: { run: 'matched' },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('classifies uniquely correlated malformed YAML as artifact validation without mutating it', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    let artifactPath = '';
+    let malformedContent = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+        malformedContent = (
+          await readFile(join(root, artifactPath), 'utf8')
+        ).replace(
+          'oat_invocation_source: exec-target-config',
+          'oat_invocation_source: [',
+        );
+        await writeFile(join(root, artifactPath), malformedContent, 'utf8');
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      artifactPath,
+      generatedAt: '2026-06-01T00:00:00Z',
+      corroboration: { run: 'matched', project: 'matched' },
+      message: expect.stringMatching(/YAML|flow sequence/i),
+    });
+    await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+      malformedContent,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('retains a malformed same-run artifact when detecting duplicate correlation', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    const validPath = `${projectPath}/reviews/valid-review.md`;
+    const malformedPath = `${projectPath}/reviews/malformed-review.md`;
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'valid-review.md',
+          finding: 'clean',
+        });
+        const path = await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'malformed-review.md',
+          finding: 'clean',
+        });
+        const content = await readFile(join(root, path), 'utf8');
+        await writeFile(
+          join(root, path),
+          content.replace(
+            'oat_invocation_source: exec-target-config',
+            'oat_invocation_source: [',
+          ),
+          'utf8',
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      receiveEligible: false,
+      corroboration: {
+        actual: {
+          matchingArtifactPaths: [malformedPath, validPath].sort(),
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not correlate malformed nested, comment, body, alias, or duplicate-key run-id spoofs', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        const runId = lastExecutePrompt.match(/^oat_gate_run_id: (.+)$/m)?.[1];
+        expect(runId).toBeTruthy();
+        const reviewsDir = join(root, projectPath, 'reviews');
+        await mkdir(reviewsDir, { recursive: true });
+        const cases = [
+          `nested:\n  oat_gate_run_id: ${runId}\nbroken: [`,
+          `# oat_gate_run_id: ${runId}\nbroken: [`,
+          `anchor: &run ${runId}\noat_gate_run_id: *run\nbroken: [`,
+          `oat_gate_run_id: ${runId}\noat_gate_run_id: ${runId}\nbroken: [`,
+        ];
+        await Promise.all(
+          cases.map((frontmatter, index) =>
+            writeFile(
+              join(reviewsDir, `spoof-${index}.md`),
+              `---\noat_generated: true\noat_generated_at: 2026-06-01T00:00:00Z\noat_review_scope: p01\n${frontmatter}\n---\n\n# Review\n\noat_gate_run_id: ${runId}\n`,
+              'utf8',
+            ),
+          ),
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      corroboration: {
+        run: 'missing',
+        actual: { matchingArtifactPaths: [] },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
     ['missing', null],
     ['invalid', 'not-a-timestamp'],
   ] as const)(

@@ -11,7 +11,7 @@ import {
 import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
-  getFrontmatterField,
+  parseFrontmatterScalarFields,
   parseGeneratedTime,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
@@ -1675,8 +1675,15 @@ async function readReviewGateArtifactCandidate(
     return null;
   }
 
-  const generatedAt =
-    getFrontmatterField(frontmatter, 'oat_generated_at') ?? null;
+  const scalarFields = parseFrontmatterScalarFields(frontmatter, [
+    'oat_generated_at',
+    'oat_review_scope',
+    'oat_gate_run_id',
+    'oat_project',
+  ]);
+  const frontmatterString = (key: string): string | null =>
+    scalarFields.values[key] ?? null;
+  const generatedAt = frontmatterString('oat_generated_at');
   const parsedGeneratedTime = generatedAt
     ? parseGeneratedTime(generatedAt)
     : Number.NaN;
@@ -1684,25 +1691,7 @@ async function readReviewGateArtifactCandidate(
     ? Number.NEGATIVE_INFINITY
     : parsedGeneratedTime;
 
-  const scope = getFrontmatterField(frontmatter, 'oat_review_scope') ?? '';
-  let parsedFrontmatter: Record<string, unknown> = {};
-  try {
-    const parsed: unknown = YAML.parse(frontmatter);
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      !Array.isArray(parsed)
-    ) {
-      parsedFrontmatter = parsed as Record<string, unknown>;
-    }
-  } catch {
-    // Verdict parsing owns malformed-frontmatter diagnostics. The correlation
-    // scan keeps the artifact as a compatibility candidate without identity.
-  }
-  const frontmatterString = (key: string): string | null => {
-    const value = parsedFrontmatter[key];
-    return typeof value === 'string' && value.trim() ? value.trim() : null;
-  };
+  const scope = frontmatterString('oat_review_scope') ?? '';
 
   return {
     path: relativePath,
@@ -2591,8 +2580,13 @@ async function runReviewGate(
         generatedAt: producedArtifact.generatedAt,
         message:
           'Review artifact oat_generated_at is missing or is not a valid timestamp.',
-        recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
+        recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
         gateInvocation,
+        corroboration: corroborateGateInvocation(
+          gateInvocation,
+          undefined,
+          initialTargetCorroboration,
+        ),
       });
       process.exitCode = 1;
       return;
@@ -2616,8 +2610,13 @@ async function runReviewGate(
         artifactPath: producedArtifact.path,
         generatedAt: producedArtifact.generatedAt,
         message: detail,
-        recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then run oat-project-review-receive for ${producedArtifact.path}; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
+        recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
         gateInvocation,
+        corroboration: corroborateGateInvocation(
+          gateInvocation,
+          undefined,
+          initialTargetCorroboration,
+        ),
       });
       process.exitCode = 1;
       return;
