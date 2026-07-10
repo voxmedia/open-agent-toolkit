@@ -52,7 +52,7 @@ import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import YAML from 'yaml';
 
 // Provider-neutral: accept arbitrary provider names. Codex/Claude get concrete
@@ -1073,7 +1073,15 @@ function readResolvedConfigCeiling(
 }
 
 function normalizeRole(value: string | undefined): CeilingRole {
-  return value === 'reviewer' ? 'reviewer' : 'implementer';
+  if (value === undefined) {
+    return 'implementer';
+  }
+  if (value === 'implementer' || value === 'reviewer') {
+    return value;
+  }
+  throw new Error(
+    `Invalid dispatch role ${JSON.stringify(value)}. Expected implementer or reviewer.`,
+  );
 }
 
 function providerValueOrder(
@@ -1880,9 +1888,11 @@ export function createProjectDispatchCeilingCommand(
         '--provider <provider>',
         'Provider name: codex, claude, or cursor are enforced; unregistered providers resolve as unsupported advisory',
       )
-      .option(
-        '--role <role>',
-        'Dispatch role for variant compilation: implementer (default) or reviewer',
+      .addOption(
+        new Option(
+          '--role <role>',
+          'Dispatch role for variant compilation: implementer (default) or reviewer',
+        ).choices(['implementer', 'reviewer']),
       )
       .option(
         '--orchestrator-tier <tier>',

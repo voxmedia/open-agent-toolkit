@@ -177,6 +177,20 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each(['reviewr', ' reviewer', 'Reviewer'])(
+    'rejects invalid dispatch role %j before resolution',
+    async (role) => {
+      const { root, home } = await setup();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await expect(
+        runCommand(command, ['--provider', 'codex', '--role', role, '--json']),
+      ).rejects.toThrow('process.exit unexpectedly called with "1"');
+
+      expect(capture.jsonPayloads).toHaveLength(0);
+    },
+  );
+
   it('resolves repo config before project state', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
@@ -567,6 +581,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         codex: {
           cellSource: 'repo-config',
           selection: {
+            role: 'implementer',
             selectedValue: 'xhigh',
             family: 'openai',
             selectionBranch: 'matrix-pinned',
