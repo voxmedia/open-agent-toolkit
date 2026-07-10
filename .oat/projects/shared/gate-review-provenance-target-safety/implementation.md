@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
-**Status:** in_progress
+**Status:** completed
 
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
@@ -143,6 +143,14 @@ oat_generated: false
 - Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch: scope=p00 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+### Run 33b5d129-7356-471e-b76d-c581cd03048a
+
+- Started: 2026-07-10T06:28:00Z
+- Scope: p00 review fixes (`p00-t04`, `p00-t05`, `p00-t06`)
+- Execution: fresh pinned Codex child process
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Dispatch: scope=p00 action=fix role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -214,7 +222,7 @@ oat_generated: false
 - `I1` agreed, `Moderate`, `code_fix_required`: generic inline/fresh-session branches can bypass a concrete managed target.
 - `m1` agreed, `Minor`, `code_fix_required`: format the two files and make the standard root format check cover these Markdown surfaces.
 
-**Next:** Execute the three p00 review-fix tasks, set the review row to `fixes_completed`, and re-review p00 before p01.
+**Fix outcome:** `p00-t04` through `p00-t06` completed. C1, I1, and m1 are addressed; the p00 review row is `fixes_completed` and awaits independent re-review before p01.
 
 ## Deviations from Plan / Design
 
@@ -225,12 +233,13 @@ oat_generated: false
 
 ## Test Results
 
-| Phase     | Tests Run                                                                               | Passed | Failed | Coverage                                                    |
-| --------- | --------------------------------------------------------------------------------------- | ------ | ------ | ----------------------------------------------------------- |
-| p00-t01   | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes       | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight        |
-| p00-t02   | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption  |
-| p00-t03   | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl              | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths |
-| p00 final | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs     | 494    | 0      | Committed-tree phase verification and self-review           |
+| Phase     | Tests Run                                                                                                        | Passed | Failed | Coverage                                                     |
+| --------- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------ |
+| p00-t01   | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes                                | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight         |
+| p00-t02   | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync                          | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption   |
+| p00-t03   | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl                                       | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths  |
+| p00 final | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                              | 494    | 0      | Committed-tree phase verification and self-review            |
+| p00 fixes | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown |
 
 ## Final Summary (for PR/docs)
 
