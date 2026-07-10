@@ -203,6 +203,9 @@ Assert that the canonical skill:
 - defers only the final checkpoint and preserves final checkpoint auto-review;
 - completes final verification and final review before pre-approval dispatch;
 - snapshots configured legacy/structured values using the approved state model;
+- dispatches each snapshotted `preApproval` and `postApproval` array in its
+  configured order, including valid noncanonical orders and resume after a
+  partially completed noncanonical sequence;
 - commits each completed step and `awaiting_approval` state;
 - records explicit approval before post-approval work;
 - uses `not_required` only when no final checkpoint exists;
@@ -237,6 +240,8 @@ Expected: The new contract suite fails against the current ordering.
   non-final gates or review scopes.
 - Normalize the effective preference, persist the immutable snapshot after final
   review passes, and dispatch `summary`, `document`, and `pr` in order.
+- Iterate the immutable snapshot arrays in their stored order; never sort them
+  or hardcode vocabulary order during initial execution or resume.
 - Persist success/failure/approval transitions before crossing each boundary.
 - Make the final-approval state machine explicit: decline/defer remains
   `awaiting_approval`; a pre-approval failure remains pending approval; and a
@@ -584,15 +589,15 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                          |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------------- |
-| p01    | code     | pending     | -          | -                                                                 |
-| p02    | code     | pending     | -          | -                                                                 |
-| p03    | code     | pending     | -          | -                                                                 |
-| final  | code     | pending     | -          | -                                                                 |
-| spec   | artifact | passed      | 2026-07-10 | N/A (quick mode; no spec required)                                |
-| design | artifact | pending     | -          | -                                                                 |
-| plan   | artifact | fixes_added | 2026-07-10 | High structured review; C1/C2 plan fixes added; re-review pending |
+| Scope  | Type     | Status      | Date       | Artifact                                                                                                   |
+| ------ | -------- | ----------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                                                                          |
+| p02    | code     | pending     | -          | -                                                                                                          |
+| p03    | code     | pending     | -          | -                                                                                                          |
+| final  | code     | pending     | -          | -                                                                                                          |
+| spec   | artifact | passed      | 2026-07-10 | N/A (quick mode; no spec required)                                                                         |
+| design | artifact | pending     | -          | -                                                                                                          |
+| plan   | artifact | fixes_added | 2026-07-10 | `reviews/artifact-plan-review-2026-07-10T213532Z.md`; three Important findings resolved; re-review pending |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` →
 `passed`
