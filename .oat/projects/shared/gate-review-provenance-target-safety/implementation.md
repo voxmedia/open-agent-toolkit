@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p00-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p00   | in_progress | 3     | 2/3       |
+| p00   | in_progress | 3     | 3/3       |
 | p01   | pending     | 4     | 0/4       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 2/14 tasks completed
+**Total:** 3/14 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -42,8 +42,8 @@ oat_generated: false
 
 ### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `50a88a61`
 
 ## Phase 1: Configured Invocation Provenance
 
@@ -170,19 +170,25 @@ oat_generated: false
 - Dispatch-matrix adoption now recursively fills missing provider/tier cells while preserving explicit values. The bundled recommendation pins all Codex and Claude tiers plus the four opaque Cursor strings.
 - Focused t02 verification passed 262 tests and CLI type-check. Project sync was applied, reviewed, and rerun idempotently with 26 pinned roles and zero pending Codex operations.
 - `pnpm docs:check-links` could not launch because the local Playwright Chromium binary is missing; no link failure was reported. Retry during final p00 verification after resolving the local browser prerequisite.
+- `p00-t03` completed in `50a88a61`: every plan-writing path now fails closed on incomplete active-provider dispatch, implementation and artifact/code review use the same exact-role or fresh pinned-child contract, and Codex `max` is first-class in workflow guidance.
+- Focused t03 verification passed 76 tests and validated all 53 bundled OAT skills. After installing the missing Playwright Chromium verifier runtime, docs link checking crawled 52 pages and checked 532 links with zero broken links.
+- `oat:validate-skills` regenerated the tracked packaged recommendation mirror at `packages/cli/assets/config/dispatch-matrix-recommendation.json`; it was committed with t03 so the bundled asset matches the t02 source recommendation.
+- The t03 commit hook reported a malformed empty-target `oxfmt --write` invocation but did not block the commit. Direct `git diff --check` and the exact task verification remain clean; final p00 verification will rerun the required checks from the committed tree.
 
 ## Deviations from Plan / Design
 
-| Task / Review     | Source Artifact        | Planned / Documented                                                     | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                              |
-| ----------------- | ---------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------- | -------------------------------------- |
-| p00 plan revision | `design.md`, `plan.md` | Materialize only the selected Codex role during implementation preflight | Commit the supported catalogue, scope custom roles by config provenance, and use an exact pinned fresh-child fallback | Artifact review occurs before implementation preflight and provider hot reload is not guaranteed | Revised project artifacts | Re-gate plan before resuming `p00-t01` |
+| Task / Review           | Source Artifact           | Planned / Documented                                                              | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                                |
+| ----------------------- | ------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------- | ---------------------------------------- |
+| p00 plan revision       | `design.md`, `plan.md`    | Materialize only the selected Codex role during implementation preflight          | Commit the supported catalogue, scope custom roles by config provenance, and use an exact pinned fresh-child fallback | Artifact review occurs before implementation preflight and provider hot reload is not guaranteed | Revised project artifacts | Re-gate plan before resuming `p00-t01`   |
+| p00-t03 generated asset | `plan.md` p00-t02/p00-t03 | Recommendation source changed in t02; t03 listed workflow skills, tests, and docs | t03 skill validation regenerated and committed the tracked packaged recommendation mirror                             | Publishable bundled assets must match their source recommendation                                | Generated bundle output   | Revalidate during final p00 verification |
 
 ## Test Results
 
-| Phase   | Tests Run                                                                               | Passed | Failed | Coverage                                                   |
-| ------- | --------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------- |
-| p00-t01 | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes       | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight       |
-| p00-t02 | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption |
+| Phase   | Tests Run                                                                               | Passed | Failed | Coverage                                                    |
+| ------- | --------------------------------------------------------------------------------------- | ------ | ------ | ----------------------------------------------------------- |
+| p00-t01 | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes       | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight        |
+| p00-t02 | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption  |
+| p00-t03 | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl              | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths |
 
 ## Final Summary (for PR/docs)
 

@@ -134,6 +134,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
 
+**Status:** completed (`50a88a61`)
+
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
