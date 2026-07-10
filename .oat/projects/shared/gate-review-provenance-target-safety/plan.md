@@ -1344,7 +1344,7 @@ Expected: the `rg` command has no matches and all focused tests pass.
 
 ### Task p04-t20: (final review) Enforce realpath-aware project containment
 
-**Status:** pending
+**Status:** completed (`ba316ca3`)
 **Finding:** `I1` (Important; Large; `code_fix_required`)
 
 **Files:**
