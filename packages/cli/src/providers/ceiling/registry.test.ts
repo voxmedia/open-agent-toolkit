@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CLAUDE_TIER_ORDER,
   getCeilingAdapter,
+  isDirectDispatchRoleName,
   type ProviderCeilingAdapter,
 } from './registry';
 
@@ -87,6 +88,17 @@ describe('provider ceiling adapters', () => {
       expect(codex.compileToDispatchArgs('high', 'implementer', {})).toBeNull();
     });
 
+    it('rejects direct managed role names as candidate models', () => {
+      expect(
+        codex.compileToDispatchArgs('high', 'implementer', {
+          target: {
+            model: 'oat-phase-implementer-gpt-5-6-sol-high',
+            effort: 'high',
+          },
+        }),
+      ).toBeNull();
+    });
+
     it('returns null for an invalid value', () => {
       expect(
         codex.compileToDispatchArgs('turbo', 'implementer', {}),
@@ -132,6 +144,16 @@ describe('provider ceiling adapters', () => {
 
     it('returns null for an invalid value', () => {
       expect(claude.compileToDispatchArgs('gpt', 'implementer', {})).toBeNull();
+    });
+
+    it('rejects direct managed role names as model args', () => {
+      expect(
+        claude.compileToDispatchArgs(
+          'oat-reviewer-gpt-5-6-sol-high',
+          'reviewer',
+          {},
+        ),
+      ).toBeNull();
     });
 
     it('flags verifyOnDispatch when the requested tier is above the orchestrator', () => {
@@ -195,6 +217,23 @@ describe('provider ceiling adapters', () => {
       expect(cursor.compileToDispatchArgs('   ', 'reviewer', {})).toBeNull();
     });
 
+    it('rejects direct managed role names while preserving opaque models', () => {
+      expect(
+        cursor.compileToDispatchArgs(
+          'oat-phase-implementer-gpt-5-6-sol-high',
+          'implementer',
+          {},
+        ),
+      ).toBeNull();
+      expect(
+        cursor.compileToDispatchArgs(
+          'opaque:model/lower [v1]',
+          'implementer',
+          {},
+        ),
+      ).toEqual({ model: 'opaque:model/lower [v1]' });
+    });
+
     it('never flags verifyOnDispatch because Cursor has no total order', () => {
       expect(
         cursor.verifyOnDispatch('gpt-5.3-codex-high', {
@@ -226,5 +265,17 @@ describe('provider ceiling adapters', () => {
         unknown.verifyOnDispatch('opus', { orchestratorTier: 'sonnet' }),
       ).toBe(false);
     });
+  });
+
+  it.each([
+    'oat-phase-implementer',
+    'oat-phase-implementer-gpt-5-6-sol-high',
+    'oat-reviewer-gpt-5-6-sol-high',
+  ])('recognizes direct managed role selector %s', (value) => {
+    expect(isDirectDispatchRoleName(value)).toBe(true);
+  });
+
+  it('does not infer role selectors from ordinary opaque model strings', () => {
+    expect(isDirectDispatchRoleName('opaque:oat-reviewer-ish')).toBe(false);
   });
 });

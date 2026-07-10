@@ -37,6 +37,13 @@ export type CeilingDispatchArgs =
   | { model: string }
   | null;
 
+const DIRECT_DISPATCH_ROLE_PATTERN =
+  /^oat-(?:phase-implementer|reviewer)(?:-|$)/;
+
+export function isDirectDispatchRoleName(value: string): boolean {
+  return DIRECT_DISPATCH_ROLE_PATTERN.test(value.trim());
+}
+
 export interface ProviderCeilingAdapter {
   provider: string;
   supportsCeiling: boolean;
@@ -81,7 +88,11 @@ const codexAdapter: ProviderCeilingAdapter = {
       return null;
     }
     const target = ctx.target;
-    if (!target?.model || !target.effort) {
+    if (
+      !target?.model ||
+      !target.effort ||
+      isDirectDispatchRoleName(target.model)
+    ) {
       return null;
     }
     const baseRole =
@@ -122,7 +133,10 @@ const claudeAdapter: ProviderCeilingAdapter = {
   validValues: [...VALID_CLAUDE_DISPATCH_CEILINGS],
   mechanism: 'model-arg',
   compileToDispatchArgs(value) {
-    if (!VALID_CLAUDE_DISPATCH_CEILINGS.includes(value as never)) {
+    if (
+      isDirectDispatchRoleName(value) ||
+      !VALID_CLAUDE_DISPATCH_CEILINGS.includes(value as never)
+    ) {
       return null;
     }
     return { model: value };
@@ -140,7 +154,7 @@ const cursorAdapter: ProviderCeilingAdapter = {
   mechanism: 'model-arg',
   compileToDispatchArgs(value) {
     const model = value.trim();
-    return model ? { model } : null;
+    return model && !isDirectDispatchRoleName(model) ? { model } : null;
   },
   // Cursor model slugs do not share a total order, so upgrade verification is
   // not meaningful here; availability is checked by the identity oracle layer.
