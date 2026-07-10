@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.11
+version: 1.3.12
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -337,93 +337,72 @@ If `## Planning Checklist` is missing (older plans), add it before finalizing wi
 
 ### Step 11.5: Resolve Dispatch Policy Before Implementation Readiness
 
-Before marking the plan ready for implementation, resolve the dispatch policy.
+Before marking the plan ready for implementation, invoke the
+`Complete Dispatch Ladder Adoption Contract` from
+`oat-project-plan-writing` and then resolve the project named ceiling.
+
+#### A. Ensure a complete owned ladder
+
+Inspect the effective candidate ladders and compare them with the complete
+bundled recommendation. If the ladder is missing or incomplete, show that full
+recommendation and ask the user to choose the owning scope before running
+exactly one of:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config adopt dispatch-matrix --local
+oat config adopt dispatch-matrix --user
+```
+
+Adoption fills missing cells but preserves explicit values. Re-run the resolver
+and the completeness check. An incomplete or missing ladder after adoption
+blocks readiness; do not overwrite explicit cells, infer a fallback, or mark
+the plan ready. Non-interactive setup also blocks on a missing or incomplete
+ladder.
+
+The owning scope stores only the reusable ladders. A project-specific active
+policy or ceiling must not be written to user `~/.oat/config.json`.
+
+#### B. Record the project named ceiling
 
 Resolution order:
 
-1. Config keys `workflow.dispatchPolicy.mode` / `workflow.dispatchPolicy.policy` via the resolver CLI
-2. Layered dispatch matrix / compatibility config under `workflow.dispatchCeiling.providers.<provider>` and `workflow.dispatchCeiling.providers.<provider>.<tier>`
-3. Project `state.md` frontmatter key `oat_dispatch_policy`
-4. Legacy project `state.md` frontmatter key `oat_dispatch_ceiling`
-5. Interactive planning prompt (below)
-6. Unresolved non-interactive state blocks implementation readiness
+1. Project `state.md` frontmatter key `oat_dispatch_policy`
+2. Legacy project `state.md` frontmatter key `oat_dispatch_ceiling`
+3. Config defaults `workflow.dispatchPolicy.mode` /
+   `workflow.dispatchPolicy.policy` as a proposed starting value
+4. Interactive planning prompt
+5. Unresolved non-interactive state blocks implementation readiness
 
-If no policy resolves and the session is interactive, generate the complete
-choice text from canonical CLI metadata before final plan review:
+Generate the canonical choice text with:
 
 ```bash
 oat project dispatch-ceiling choices --format markdown
 ```
 
-Do not hand-type or abbreviate this menu. If the CLI is unavailable, derive the
-same labels and descriptions from
-`packages/cli/src/config/dispatch-policy-options.ts`. Include every managed
-policy plus `Uncapped`, `Inherit Host Defaults`, and `Leave Unresolved`.
-`Leave Unresolved` is a planning deferral, not an implementation-ready state.
-
-**Managed capped policy selection (options 1-4)** persists `mode: managed`,
-`policy`, and the compiled provider targets. On selection, print the exact
-compiled result (e.g., "Dispatch policy set: balanced → Codex: high · Claude:
-sonnet") before proceeding.
-
-If the resolver reports that the selected policy has a missing matrix cell for
-the active provider/tier, run prompt-and-persist once before final review:
-
-1. Show the complete recommended defaults, then ask for the exact provider
-   value for the missing cell using its native vocabulary. Cursor model strings
-   are opaque and must round-trip unchanged. Accept an ordered route when
-   escalation needs multiple targets.
-2. Persist the answer to the selected config layer with
-   `workflow.dispatchCeiling.providers.<provider>.<tier>`. Use project
-   `state.md` only for sparse project-specific matrix overrides.
-3. Re-run the resolver. Do not silently treat a missing cell as uncapped,
-   inherited, or provider-default behavior.
-
-**Uncapped (option 5)** persists explicit managed uncapped state. It does not
-write provider caps, and it must not be represented by leaving dispatch policy
-state absent.
-
-**Inherit Host Defaults (option 6)** persists explicit inherit/default state.
-Use this only when the user wants OAT to leave implementation, fix, and review
-model/effort controls to the executing host/provider.
-
-Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter using the
-normalized shape:
+Do not abbreviate the menu. Include every managed named tier plus `Uncapped`,
+`Inherit Host Defaults`, and `Leave Unresolved`. A managed named tier
+is a maximum candidate tier, not an enduring exact model-family or effort
+preference. For example, a named `High` ceiling leaves configured candidates
+from `Economy`, `Balanced`, and `High` available at or below the
+maximum. An optional phase `## Dispatch Profile` row may narrow that maximum.
 
 ```yaml
 oat_dispatch_policy:
   mode: managed
-  policy: balanced
-  providers:
-    codex: high
-    claude: sonnet
+  policy: high
   source: project-state
 ```
 
-For `Uncapped`:
+Persist this normalized shape only in `"$PROJECT_PATH/state.md"`. Never copy
+compiled provider targets into project state, and do not persist the active
+project ceiling to user config.
 
-```yaml
-oat_dispatch_policy:
-  mode: managed
-  policy: uncapped
-  source: project-state
-```
-
-For `Inherit Host Defaults`:
-
-```yaml
-oat_dispatch_policy:
-  mode: inherit
-  source: project-state
-```
-
-Do not prompt when `OAT_NON_INTERACTIVE=1` or when no user-response channel
-exists. In that case, keep the value unresolved and do not mark the plan
-implementation-ready. The resolver must be rerun successfully before readiness.
-
-Do not treat provider default effort as the OAT dispatch policy. Provider
-defaults apply only for explicit inherit/default behavior or base/unpinned
-fallback paths.
+`Uncapped` persists explicit managed uncapped state. `Inherit Host
+Defaults` persists explicit inherit/default state. `Leave Unresolved` is
+a planning deferral and is not implementation-ready. Do not prompt when
+`OAT_NON_INTERACTIVE=1` or no response channel exists; leave the ceiling
+unresolved and block readiness.
 
 ### Step 12: Review Plan with User
 
@@ -464,9 +443,9 @@ Readiness and Review Contract` from `oat-project-plan-writing`:
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
 ```
 
-If managed resolution is incomplete, show the complete recommended defaults,
-persist the selected cells, and re-run the resolver. Do not mark the
-spec-driven plan ready while the active-provider reviewer contract is
+If managed resolution or the complete ladder is unresolved, return to Step
+11.5, adopt the recommendation in the selected ownership scope, and re-run the
+resolver. Do not mark the spec-driven plan ready while either contract is
 unresolved.
 
 Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before setting `plan.md` to implementation-ready.
@@ -484,6 +463,10 @@ Apply the shared loop exactly:
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
 - For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
+- For Claude or Cursor, pass the exact resolver-returned
+  `providers.<provider>.dispatchArgs.model` value as the actual invocation's
+  model argument. Preserve that same complete payload on timeout and retry;
+  Cursor strings remain opaque.
 - Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
 - If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
 - Apply Critical and Important artifact-local fixes when unambiguous; offer Medium and Minor fixes instead of silently applying them.

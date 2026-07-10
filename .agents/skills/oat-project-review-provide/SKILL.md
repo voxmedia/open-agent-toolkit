@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.11
+version: 1.3.12
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -428,23 +428,30 @@ Proceed with review?
 
 If `REVIEW_INVOCATION=gate`, print the same scope summary but do not ask `Proceed with review?`; continue directly.
 
-### Step 4.1: Dispatch Profile Override Advisory (Artifact Plan Only)
+### Step 4.1: Dispatch Profile Ceiling Advisory (Artifact Plan Only)
 
-When reviewing `artifact plan`, apply this Dispatch Profile override advisory:
+When reviewing `artifact plan`, apply this Dispatch Profile named-ceiling
+advisory:
 
 - A missing `## Dispatch Profile` section is normal and must not be flagged.
 - Important findings:
   - invalid phase ID that does not match a real plan phase
-  - unknown active-provider tier value
-  - low-tier override for multi-file integration, architecture, or review-heavy work
-  - low-tier override with missing or generic rationale
+  - unknown named ceiling or a phase ceiling above the project ceiling
+  - wording that pins an exact provider model, family, effort, or role instead
+    of a named maximum
+  - low named ceiling for multi-file integration, architecture, or review-heavy
+    work
+  - low named ceiling with missing or generic rationale
 - Medium findings:
   - malformed but recoverable Dispatch Profile table structure
-  - mid-tier override for architecture-heavy work without convincing rationale
+  - mid-tier ceiling for architecture-heavy work without convincing rationale
 - Minor findings:
   - rationale is present but weakly tied to phase scope
 
-Include this advisory in the Review Scope metadata for artifact plan reviews so the reviewer evaluates explicit override rows without treating omitted rows as a gap.
+Include this advisory in the Review Scope metadata for artifact plan reviews so
+the reviewer evaluates explicit ceiling rows without treating omitted rows as a
+gap. A named ceiling is a maximum; lower configured candidates remain eligible
+for later task selection.
 
 ### Step 4.5: Gather Deferred Findings Ledger (Final Scope Only)
 
@@ -519,6 +526,12 @@ plan artifact review and implementation phase/final review:
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
 ```
 
+The reviewer resolver selects the final candidate of the configured review
+ceiling. Do not supply ephemeral implementer candidate requests for artifact,
+phase, project, or final review. A lower candidate is allowed only when a
+separate reviewed contract explicitly authorizes reviewer lowering and defines
+its bounds; a Dispatch Profile row does not authorize it.
+
 Resolve every concrete managed reviewer target before probing generic subagent
 availability or selecting Tier 1/Tier 2/Tier 3. The concrete target takes
 precedence over all availability, preference, timeout, fresh-session, and gate
@@ -539,7 +552,10 @@ Build the actual provider invocation before reporting the target as enforced:
   provider invocation must include that exact opaque string as its `model`
   argument without normalization.
 
-Managed incomplete resolver results prompt or block before review.
+Managed incomplete resolver results, including a missing or incomplete
+candidate ladder, fail closed before review. Route interactive repair through
+the planning workflow's `Complete Dispatch Ladder Adoption Contract`; do not
+invent a reviewer target.
 
 On timeout or retry, reuse the same exact role or complete invocation payload,
 including the Claude or Cursor model argument. If the host cannot apply a

@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.7
+version: 1.2.8
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -37,52 +37,93 @@ before each artifact review dispatch.
    oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
    ```
 
-2. A managed active-provider result is runnable only when the resolver returns
-   concrete native dispatch controls or an explicit deferred cross-harness
-   target. If the active-provider cell is missing or cannot compile, treat it as
-   unresolved. Show the complete recommended defaults, let the user choose the
-   owning config layer, persist the missing cells, and re-run the resolver:
-   - Codex: `economy -> gpt-5.6-luna/high`, `balanced ->
-gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, `frontier ->
-gpt-5.6-sol/max`
-   - Claude: `economy/balanced -> sonnet`, `high -> opus`, `frontier -> fable`
-   - Cursor (opaque strings): `gpt-5.6-luna-high`,
-     `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, `gpt-5.6-sol-max`
-     `oat config adopt dispatch-matrix --user|--shared|--local` fills missing
-     cells without replacing explicit values. Non-interactive unresolved state
-     blocks readiness.
-3. Bind every concrete managed reviewer target to the actual provider
-   invocation before probing generic reviewer availability or selecting an
-   execution tier. That target takes precedence over every availability, tier,
-   timeout, and inline fallback.
-   A concrete managed Codex target takes precedence over tier availability.
-   - Codex: use the exact registered reviewer variant returned by
-     `providers.codex.dispatchArgs.variant` when the host can select that role.
-     If the exact role is unavailable or the current host cannot select it,
-     launch a fresh Codex child with the resolver target's explicit model,
-     reasoning effort, and canonical role instructions from
-     `.agents/agents/oat-reviewer.md`. If the fresh child cannot preserve the
-     target, use only a verified-equivalent inline route or block the review.
-   - Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
-     that exact value in the actual provider invocation as its `model`
-     argument.
-   - Cursor: treat `providers.cursor.dispatchArgs.model` as opaque and put that
-     exact, unnormalized string in the actual provider invocation as its
-     `model` argument.
+### Complete Dispatch Ladder Adoption Contract
 
-   Build the actual host invocation payload before declaring the target
-   enforced. On timeout, retry, or artifact rewrite/re-dispatch, reuse the same
-   exact role or complete provider payload, including the exact model argument.
-   If the host cannot apply the required role or model argument, fail closed or
-   block unless the guarded inline-equivalence rule below applies. Never
-   continue through a generic tier fallback.
+Before any plan becomes implementation-ready, inspect the effective
+`workflow.dispatchCeiling.providers` value and compare its ordered candidate
+ladders with the bundled
+`packages/cli/config/dispatch-matrix-recommendation.json` source (or the
+installed bundle's `config/dispatch-matrix-recommendation.json` asset). A
+complete custom ladder is allowed, but every supported provider must have valid
+ordered `candidates` cells through the named project ceiling. A legacy scalar,
+single fallback route, missing tier, empty candidates array, or malformed
+ordering is not a complete ladder.
 
-4. Workflow correctness must not require provider restart or hot reload.
-   Runtime materialization may be best effort, but it is not the correctness
-   boundary. Never use a managed base role because an exact target is missing
-   or unavailable in the current session. Base Codex roles are allowed only for
-   explicit inherit/default behavior and the documented managed-uncapped
-   reviewer fallback.
+When the effective ladder is missing or incomplete, show the complete bundled
+recommendation before asking to write anything:
+
+| Provider        | Economy                                                        | Balanced                                                                                                       | High                                                        | Frontier                               |
+| --------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |
+| Codex           | Luna/low, Luna/medium, Luna/high                               | Luna/xhigh, Terra/low, Terra/medium, Terra/high, Terra/xhigh                                                   | Sol/low, Sol/medium, Sol/high                               | Sol/xhigh, Sol/max                     |
+| Claude          | haiku, sonnet                                                  | sonnet                                                                                                         | opus                                                        | fable                                  |
+| Cursor (opaque) | `gpt-5.6-luna-low`, `gpt-5.6-luna-medium`, `gpt-5.6-luna-high` | `gpt-5.6-luna-xhigh`, `gpt-5.6-terra-low`, `gpt-5.6-terra-medium`, `gpt-5.6-terra-high`, `gpt-5.6-terra-xhigh` | `gpt-5.6-sol-low`, `gpt-5.6-sol-medium`, `gpt-5.6-sol-high` | `gpt-5.6-sol-xhigh`, `gpt-5.6-sol-max` |
+
+Ask the user to select the owning scope explicitly before any adoption write:
+
+1. **Shared repository** - team-owned `.oat/config.json`; run
+   `oat config adopt dispatch-matrix --shared`.
+2. **Repo-local checkout** - personal `.oat/config.local.json`; run
+   `oat config adopt dispatch-matrix --local`.
+3. **User** - cross-repository `~/.oat/config.json`; run
+   `oat config adopt dispatch-matrix --user`.
+4. **Do not adopt** - leave setup unresolved and block implementation
+   readiness.
+
+The selected ownership scope owns only the reusable ladder. The active
+project's named ceiling is a separate project-state constraint. A
+project-specific active policy or ceiling must not be written to user
+`~/.oat/config.json`.
+
+Adoption preserves explicit cells. Re-run the resolver and re-check the full
+ladder after adoption. If preserved legacy or partial cells still leave the
+ladder incomplete or missing, identify those cells and block; do not overwrite,
+infer, or mark the plan implementation-ready. In non-interactive mode, an
+incomplete or missing ladder blocks readiness without choosing an ownership
+scope.
+
+### Reviewer Ceiling Contract
+
+A managed active-provider result is runnable only when the resolver returns
+concrete native dispatch controls or an explicit deferred cross-harness target.
+Otherwise treat the active-provider reviewer contract as unresolved.
+Reviewer resolution uses the final candidate of the configured review ceiling:
+call `--role reviewer` without an ephemeral implementer candidate request.
+Do not select a lower candidate for artifact, phase, project, or final review
+unless a separate reviewed contract explicitly authorizes reviewer lowering and
+defines its bounds. A `## Dispatch Profile` row alone is not such a contract.
+
+Bind every concrete managed reviewer target to the actual provider
+invocation before probing generic reviewer availability or selecting an
+execution tier. That target takes precedence over every availability, tier,
+timeout, and inline fallback.
+A concrete managed Codex target takes precedence over tier availability.
+
+- Codex: use the exact registered reviewer variant returned by
+  `providers.codex.dispatchArgs.variant` when the host can select that role.
+  If the exact role is unavailable or the current host cannot select it,
+  launch a fresh Codex child with the resolver target's explicit model,
+  reasoning effort, and canonical role instructions from
+  `.agents/agents/oat-reviewer.md`. If the fresh child cannot preserve the
+  target, use only a verified-equivalent inline route or block the review.
+- Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
+  that exact value in the actual provider invocation as its `model` argument.
+- Cursor: treat `providers.cursor.dispatchArgs.model` as opaque and put that
+  exact, unnormalized string in the actual provider invocation as its `model`
+  argument.
+
+Build the actual host invocation payload before declaring the target enforced.
+On timeout, retry, or artifact rewrite/re-dispatch, reuse the same exact role or
+complete provider payload, including the exact model argument. If the host
+cannot apply the required role or model argument, fail closed or block unless
+the guarded inline-equivalence rule below applies. Never continue through a
+generic tier fallback.
+
+Workflow correctness must not require provider restart or hot reload.
+Runtime materialization may be best effort, but it is not the correctness
+boundary. Never use a managed base role because an exact target is missing or
+unavailable in the current session. Base Codex roles are allowed only for
+explicit inherit/default behavior and the documented managed-uncapped reviewer
+fallback.
 
 Inline review of a concrete managed target is permitted only after verifying
 equivalent current-host model and effort controls. Otherwise inline or base
@@ -272,16 +313,22 @@ Runtime routing note:
 
 - Keep `oat_ready_for` canonical as `oat-project-implement`.
 - Declare parallelism via `oat_plan_parallel_groups` in plan.md frontmatter (empty = sequential; nested arrays of phase IDs = parallel groups). `oat-project-implement` reads this field to choose sequential vs worktree-isolated parallel execution.
-- Dispatch policies are not stored in `plan.md`. Plan-producing skills resolve
-  them from `workflow.dispatchPolicy.*`, compatibility
-  `workflow.dispatchCeiling.*` keys, or project `state.md` frontmatter, then
-  persist interactive answers back to `state.md` as `oat_dispatch_policy`.
+- Reusable candidate ladders are config-owned and are never copied into
+  `plan.md` or project state. Plan-producing skills resolve them from
+  `workflow.dispatchCeiling.*`.
+- Project dispatch policy is a named maximum constraint. Persist interactive
+  project answers to `state.md` as `oat_dispatch_policy`; never copy
+  compiled provider/model targets into that project policy.
 
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
 
 ### Dispatch Profile Overrides
 
-`## Dispatch Profile` is optional and should be omitted by default. Runtime selection chooses the lowest suitable execution tier only after the resolver-selected model and effort contract is fixed; tier availability never rewrites a concrete managed target.
+`## Dispatch Profile` is optional and should be omitted by default. A profile
+may narrow a phase to a named ceiling at or below the project ceiling. The
+named ceiling is a maximum candidate tier, not an exact model-family or effort
+preference; the later coordinator chooses exact task targets from the complete
+configured ladder.
 
 Only include the section when the user has explicit constraints or preferences. Routine hand-tuning can be worse than runtime selection because the orchestrator has fresher phase context and host capability information at dispatch time.
 
@@ -290,16 +337,19 @@ If a user-authored override is needed, use this table shape:
 ```markdown
 ## Dispatch Profile
 
-| Phase | Claude model                     | Codex effort                        | Rationale                     |
-| ----- | -------------------------------- | ----------------------------------- | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|max\|auto | why this constraint is needed |
+| Phase | Named ceiling                           | Rationale                     |
+| ----- | --------------------------------------- | ----------------------------- |
+| pNN   | economy\|balanced\|high\|frontier\|auto | why this constraint is needed |
 ```
 
 Validation rules for explicit rows:
 
 - `Phase` must match a real `pNN` phase in the plan.
-- `Claude model` must be `haiku`, `sonnet`, `opus`, `fable`, `auto`, or blank.
-- `Codex effort` must be `low`, `medium`, `high`, `xhigh`, `max`, `auto`, or blank. In Codex, explicit effort values are preferred controls. `oat-project-implement` caps them when a capped managed policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to exact registered implementer variants or explicitly pinned fresh children. Provider default effort is informational only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception.
+- `Named ceiling` must be `economy`, `balanced`, `high`, `frontier`,
+  `auto`, or blank, and it must not exceed the project named ceiling.
+- Under a `High` ceiling, configured candidates from `Economy`, `Balanced`, and
+  `High` remain eligible and available; the row does not pin Sol, a Claude
+  family, a Cursor string, or an effort value.
 - Blank or `auto` means no explicit constraint for that provider.
 - `Rationale` is recommended and should explain why runtime selection should not decide on its own.
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.3
+version: 1.4.4
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -15,9 +15,10 @@ Import a markdown plan from an external coding provider and normalize it into OA
 
 Provider native plan mode uses this same path: provider-plan-via-import
 preserves the provider plan first, and provider plan dispatch readiness
-inherits the import workflow contract below, including the `Shared Phase-Review
-Setup Contract` and the rule that readiness and completion follow only after a
-durable review disposition. It does not add a separate provider-plan prompt.
+inherits the same import workflow contract below, including complete ladder
+adoption, the project named ceiling, the `Shared Phase-Review Setup Contract`,
+and the rule that readiness and completion follow only after a durable review
+disposition. It does not add a separate provider-plan prompt.
 
 ## Prerequisites
 
@@ -210,9 +211,11 @@ Normalization rules:
 
 Dispatch Profile import handling:
 
-- Preserve recognizable OAT-format `## Dispatch Profile` rows as user-authored constraints or preferences.
-- Treat foreign model or effort hints as dispatch constraints only when the source clearly presents them as explicit requirements or preferences.
-- Otherwise preserve model or effort hints as rationale/context in the relevant task or phase text and let runtime selection decide.
+- Preserve recognizable OAT-format `## Dispatch Profile` rows only when
+  they use phase named ceilings at or below the project ceiling.
+- Preserve foreign model or effort hints as rationale/context in the relevant
+  task or phase text. Do not turn them into enduring exact model-family or
+  effort preferences.
 - Do not generate Dispatch Profile recommendation rows during import.
 
 ### Step 4: Update Plan Metadata
@@ -235,6 +238,44 @@ workflow until its review disposition is durable. If the skill pauses, is
 interrupted, or cannot resolve dispatch before Step 4.6, persist and commit this
 state. `oat-project-next` must route it back to the same planning workflow and
 cannot advance it to implementation.
+
+### Step 4.1: Adopt Complete Ladders and Record the Named Ceiling
+
+Invoke the `Complete Dispatch Ladder Adoption Contract` from
+`oat-project-plan-writing`. If the effective ladder is missing or incomplete,
+show the complete bundled recommendation and ask for its owning scope before
+running exactly one of:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config adopt dispatch-matrix --local
+oat config adopt dispatch-matrix --user
+```
+
+Adoption preserves explicit cells. Re-run the resolver and completeness check.
+An incomplete or missing ladder after adoption blocks readiness; do not
+overwrite explicit cells or infer provider defaults. Non-interactive import
+also blocks on a missing or incomplete ladder.
+
+The selected scope owns only reusable ladders. A project-specific active policy
+or ceiling must not be written to user `~/.oat/config.json`. Resolve or ask
+for the project named ceiling, then persist only the maximum constraint in
+`"$PROJECT_PATH/state.md"`:
+
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
+```
+
+The named `High` tier is a maximum, not an exact family preference:
+configured `Economy`, `Balanced`, and `High` candidates remain
+available at or below it. An optional phase Dispatch Profile may narrow the
+maximum. Use the canonical
+`oat project dispatch-ceiling choices --format markdown` prompt when no
+project ceiling resolves. `Uncapped` and `Inherit Host Defaults` remain
+explicit modes; `Leave Unresolved` is not implementation-ready.
 
 ### Step 4.25: Configure Optional Phase Review
 
@@ -264,9 +305,9 @@ Readiness and Review Contract` from `oat-project-plan-writing`:
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
 ```
 
-If managed resolution is incomplete, show the complete recommended defaults,
-persist the selected cells, and re-run the resolver. Do not set
-`oat_ready_for: oat-project-implement` while the active-provider reviewer
+If managed resolution or the complete ladder is unresolved, return to Step
+4.1, adopt the recommendation in the selected ownership scope, and re-run the
+resolver. Do not set `oat_ready_for: oat-project-implement` while either
 contract is unresolved.
 
 Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before advancing project state or handing off to implementation.
@@ -286,6 +327,10 @@ Apply the shared loop exactly:
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
 - For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
+- For Claude or Cursor, pass the exact resolver-returned
+  `providers.<provider>.dispatchArgs.model` as the actual invocation's model
+  argument. Preserve the same complete payload on timeout and retry; Cursor
+  strings remain opaque.
 - Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
 - If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
 - Apply Critical and Important artifact-local fixes when unambiguous and limited to canonical conformance/completeness; offer Medium and Minor fixes instead of silently applying them.

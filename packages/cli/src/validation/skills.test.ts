@@ -1009,7 +1009,9 @@ describe('validateOatSkills', () => {
     expect(shared).toMatch(/Managed Dispatch Readiness and Review Contract/);
     expect(shared).toMatch(/active-provider[\s\S]*unresolved/i);
     expect(shared).toMatch(/re-run the resolver/i);
-    expect(shared).toMatch(/complete recommended defaults/i);
+    expect(shared).toMatch(
+      /complete\s+(?:recommended\s+defaults|bundled\s+recommendation)/i,
+    );
     expect(shared).toMatch(/exact registered.*variant/i);
     expect(shared).toMatch(/fresh Codex child/i);
     expect(shared).toMatch(
@@ -1033,6 +1035,177 @@ describe('validateOatSkills', () => {
         /--role reviewer.*--preflight.*--json/,
       );
       expect(content, `${skillName} rerun`).toMatch(/re-run the resolver/i);
+    }
+  });
+
+  it('requires complete dispatch-ladder adoption in an explicit ownership scope', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared).toMatch(/Complete Dispatch Ladder Adoption Contract/);
+    expect(shared).toContain('dispatch-matrix-recommendation.json');
+    expect(shared).toMatch(
+      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Terra\/xhigh[\s\S]{0,500}Sol\/max/i,
+    );
+    expect(shared).toMatch(
+      /Claude[\s\S]{0,300}haiku[\s\S]{0,120}sonnet[\s\S]{0,120}opus[\s\S]{0,120}fable/i,
+    );
+    for (const cursorTarget of [
+      'gpt-5.6-luna-low',
+      'gpt-5.6-terra-medium',
+      'gpt-5.6-sol-high',
+      'gpt-5.6-sol-max',
+    ]) {
+      expect(
+        shared,
+        `complete Cursor recommendation ${cursorTarget}`,
+      ).toContain(cursorTarget);
+    }
+    for (const scopeFlag of ['--shared', '--local', '--user']) {
+      expect(shared, `explicit ownership scope ${scopeFlag}`).toContain(
+        `oat config adopt dispatch-matrix ${scopeFlag}`,
+      );
+    }
+    expect(shared).toMatch(
+      /ask[\s\S]{0,240}(?:owning|ownership) scope[\s\S]{0,320}before[\s\S]{0,120}(?:write|adopt)/i,
+    );
+    expect(shared).toMatch(
+      /adoption preserves explicit[\s\S]{0,260}re-run[\s\S]{0,260}(?:incomplete|missing)[\s\S]{0,180}(?:block|not implementation-ready)/i,
+    );
+    expect(shared).toMatch(
+      /non-interactive[\s\S]{0,300}(?:incomplete|missing) ladder[\s\S]{0,220}(?:block|not implementation-ready)/i,
+    );
+    expect(shared).toMatch(
+      /project-specific[\s\S]{0,120}(?:active )?(?:policy|ceiling)[\s\S]{0,220}(?:must not|do not|never)[\s\S]{0,120}(?:user|~\/\.oat)/i,
+    );
+  });
+
+  it('adopts ladders and records named maximum ceilings in every planning path', async () => {
+    const paths = [
+      [
+        'spec-driven',
+        await readRepoFile('.agents/skills/oat-project-plan/SKILL.md'),
+      ],
+      [
+        'quick-start',
+        await readRepoFile('.agents/skills/oat-project-quick-start/SKILL.md'),
+      ],
+      [
+        'import-plan',
+        await readRepoFile('.agents/skills/oat-project-import-plan/SKILL.md'),
+      ],
+    ] as const;
+
+    for (const [name, content] of paths) {
+      expect(content, `${name} shared adoption contract`).toMatch(
+        /Complete Dispatch Ladder Adoption Contract/,
+      );
+      expect(content, `${name} explicit scope adoption`).toMatch(
+        /oat config adopt dispatch-matrix[\s\S]{0,160}(?:--shared|--local|--user)/,
+      );
+      expect(content, `${name} named maximum`).toMatch(
+        /named (?:tier|ceiling)[\s\S]{0,220}(?:maximum|max)[\s\S]{0,220}(?:lower|beneath|at or below)/i,
+      );
+      expect(content, `${name} project-state persistence`).toMatch(
+        /oat_dispatch_policy:[\s\S]{0,140}mode:\s*managed[\s\S]{0,140}policy:\s*(?:economy|balanced|high|frontier)/i,
+      );
+      expect(
+        content,
+        `${name} no exact provider pin in project policy`,
+      ).not.toMatch(/oat_dispatch_policy:[\s\S]{0,220}providers:/i);
+      expect(content, `${name} no user policy leakage`).toMatch(
+        /(?:project-specific|active project)[\s\S]{0,160}(?:policy|ceiling)[\s\S]{0,220}(?:must not|do not|never)[\s\S]{0,120}(?:user|~\/\.oat)/i,
+      );
+      expect(content, `${name} incomplete ladder blocks readiness`).toMatch(
+        /(?:incomplete|missing) ladder[\s\S]{0,260}(?:block|not .*ready|do not .*ready)/i,
+      );
+    }
+
+    expect(paths[2][1]).toMatch(
+      /provider-plan-via-import[\s\S]{0,600}(?:same|inherits)[\s\S]{0,220}(?:adoption|ceiling)/i,
+    );
+  });
+
+  it('treats project and phase tiers as candidate maxima rather than exact family preferences', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const dispatchProfile = shared.slice(
+      shared.indexOf('### Dispatch Profile Overrides'),
+      shared.indexOf('### Stable Task IDs'),
+    );
+
+    expect(dispatchProfile).toContain('| Phase | Named ceiling');
+    expect(dispatchProfile).toContain(
+      'economy\\|balanced\\|high\\|frontier\\|auto',
+    );
+    expect(dispatchProfile).toMatch(
+      /maximum[\s\S]{0,220}(?:not|never)[\s\S]{0,180}(?:exact model|model-family|effort)/i,
+    );
+    expect(dispatchProfile).toMatch(
+      /High[\s\S]{0,240}(?:Economy|economy)[\s\S]{0,120}(?:Balanced|balanced)[\s\S]{0,120}(?:High|high)[\s\S]{0,160}(?:available|eligible)/,
+    );
+    expect(dispatchProfile).not.toContain('Claude model');
+    expect(dispatchProfile).not.toContain('Codex effort');
+  });
+
+  it('keeps reviewers at their configured ceiling and lifecycle gates target-neutral', async () => {
+    const planWriting = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const reviewProvide = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const artifactReview = planWriting.slice(
+      planWriting.indexOf('## Managed Dispatch Readiness and Review Contract'),
+      planWriting.indexOf('## Shared Phase-Review Setup Contract'),
+    );
+    const projectReview = reviewProvide.slice(
+      reviewProvide.indexOf(
+        '**Step 6.0: Resolve the managed reviewer target**',
+      ),
+      reviewProvide.indexOf('**Step 6a: Probe Subagent Availability**'),
+    );
+
+    for (const [name, content] of [
+      ['artifact review', artifactReview],
+      ['project review', projectReview],
+    ] as const) {
+      expect(content, `${name} reviewer ceiling`).toMatch(
+        /reviewer[\s\S]{0,260}(?:final candidate|configured review ceiling|ceiling candidate)/i,
+      );
+      expect(content, `${name} reviewed lowering exception`).toMatch(
+        /lower candidate[\s\S]{0,260}(?:separate|separately)[\s\S]{0,180}reviewed contract/i,
+      );
+      expect(content, `${name} no ephemeral candidate flags`).not.toMatch(
+        /--candidate-(?:model|effort)/,
+      );
+      expect(content, `${name} Claude payload`).toContain(
+        'providers.claude.dispatchArgs.model',
+      );
+      expect(content, `${name} Cursor payload`).toContain(
+        'providers.cursor.dispatchArgs.model',
+      );
+      expect(content, `${name} exact payload retry`).toMatch(
+        /(?:timeout|retry|re-dispatch)[\s\S]{0,420}(?:same|exact)[\s\S]{0,260}(?:payload|model argument)/i,
+      );
+    }
+
+    for (const skillName of [
+      'oat-project-plan',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const gateSection = content.slice(
+        content.lastIndexOf('### Gate Execution'),
+      );
+      expect(gateSection, `${skillName} lifecycle target neutrality`).toMatch(
+        /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
+      );
     }
   });
 
@@ -1748,10 +1921,11 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.7'],
-      ['oat-project-plan', '1.3.11'],
-      ['oat-project-quick-start', '2.1.12'],
-      ['oat-project-import-plan', '1.4.3'],
+      ['oat-project-plan-writing', '1.2.8'],
+      ['oat-project-plan', '1.3.12'],
+      ['oat-project-quick-start', '2.1.13'],
+      ['oat-project-import-plan', '1.4.4'],
+      ['oat-project-review-provide', '1.3.12'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -1797,7 +1971,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.12');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.13');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
