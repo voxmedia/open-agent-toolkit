@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-implement
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
@@ -53,7 +53,8 @@ The plan is sequential. Phases 1-3 all modify `packages/cli/src/commands/gate/in
 
 1. Add `ExecTargetInvocation` with model/reasoning-effort values and the reserved `provider-default` sentinel.
 2. Normalize, clone, and layer-merge nested invocation fields while preserving target tombstones and unrelated partial overrides.
-3. Cover explicit values, provider defaults, omission/unknown semantics, malformed values, and cross-layer overrides.
+3. Declare honest provider-default invocation values on built-in targets where OAT intentionally leaves controls to the provider; do not infer values from command parsing.
+4. Cover explicit values, provider defaults, omission/unknown semantics, malformed values, and cross-layer overrides.
 
 **Verify:**
 
@@ -72,18 +73,20 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 - Modify: `packages/cli/src/commands/gate/index.ts`
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
 - Modify: `apps/oat-docs/docs/reference/cli-reference.md`
 
 **Steps:**
 
 1. Extend `oat gate target set` with optional invocation model and reasoning-effort flags.
-2. Add `oat gate target list --json` over effective target config, reporting origin, explicit configuration, enabled/available state, and normalized invocation metadata.
+2. Add a provenance-preserving resolved-target view, then expose it through `oat gate target list --json` with origin, explicit configuration, enabled/available state, and normalized invocation metadata.
 3. Ensure built-in-only definitions are distinguishable and availability checks do not select or execute a reviewer.
 
 **Verify:**
 
 ```bash
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/config/resolve.test.ts
 pnpm run cli -- --json gate target list
 ```
 
@@ -212,10 +215,10 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 **Steps:**
 
-1. Update lifecycle gate configuration/examples to declare the active project path while preserving exact configured-command execution.
+1. Update lifecycle gate configuration/examples to include `--project "$PROJECT_PATH"` after each skill resolves `PROJECT_PATH`, while preserving exact configured-command execution.
 2. Keep provider/model `--target` absent from reusable lifecycle commands and examples.
 3. Explain declared versus ambient project resolution, mismatch failures, invalid-artifact handoff behavior, and manual/debug exceptions.
-4. Bump each changed canonical skill version once and add cross-skill contract tests.
+4. Bump `oat-project-implement` once in this task. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
 
 **Verify:**
 
@@ -300,7 +303,7 @@ pnpm run oat:validate-skills
 
 1. Invoke the shared setup after stable phase IDs and before plan artifact review in spec-driven, quick, and import workflows; document provider-plan mode as inheriting import behavior.
 2. Preserve resumed/imported explicit values without re-prompting and leave disabled behavior unchanged when no target qualifies or the user declines.
-3. Bump each changed canonical skill version once per final PR diff and add all-path/no-prompt/preservation contract tests.
+3. Apply the single PR-scoped version bumps for plan, quick-start, and import-plan, covering both their p02 guidance edits and final p04 setup edits; add all-path/no-prompt/preservation contract tests.
 
 **Verify:**
 
