@@ -206,6 +206,8 @@ pnpm run cli:source -- project dispatch-ceiling resolve --provider codex --role 
 
 ### Task p00-t05: (review) Enforce pinned managed fallbacks
 
+**Status:** completed (`6120c607`)
+
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
