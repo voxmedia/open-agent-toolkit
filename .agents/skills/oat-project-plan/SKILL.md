@@ -155,6 +155,20 @@ Read for implementation context:
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
 
+### Step 4.9: Snapshot Explicit Phase-Review Setting Before Plan Overwrite
+
+Before Step 5 can replace an existing `plan.md`, inspect the source text and
+snapshot both the key presence and the complete explicit value of
+`oat_phase_review_gate`. Presence is authoritative regardless of validity; it
+is not a truthiness check and must distinguish a missing key from an explicit
+`null` value.
+
+Preserve the complete raw YAML entry exactly as written, including its nested
+block when present. The snapshot must survive enabled, disabled,
+selected-phase, `null`, and malformed values without normalizing, repairing, or
+discarding them. Explicit presence remains authoritative and must not trigger a
+target probe or re-prompt later in this workflow.
+
 ### Step 5: Initialize Plan Document
 
 Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
@@ -165,7 +179,7 @@ Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 - Ask the user:
   - **Resume** (default): continue editing the existing plan in place
   - **View**: show the existing plan and stop
-  - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits)
+  - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits). Restore the exact snapshot into the resulting `plan.md` frontmatter immediately after the template replacement and before any other plan write. Preserve the raw `oat_phase_review_gate` entry byte-for-byte; do not parse or normalize it.
 - If resuming: ensure the document contains the required sections from the template (at minimum: `## Reviews`, `## Implementation Complete`, `## References`). If any are missing, add them using the template headings (do not delete existing content).
 
 **If `"$PROJECT_PATH/plan.md"` does not exist:**
@@ -186,6 +200,13 @@ oat_generated: false
 oat_template: false
 ---
 ```
+
+When Overwrite restored an explicit phase-review snapshot, keep that exact
+entry in this first rewritten frontmatter. Do not let the generic frontmatter
+update remove or replace it. The shared phase-review setup in Step 12.25 must
+observe the restored key and preserve it without probing, prompting, or
+mutation. When the key was absent from the overwritten plan, do not invent it
+before the shared setup contract runs.
 
 ### Step 6: Define Phases
 

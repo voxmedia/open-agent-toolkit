@@ -1255,8 +1255,17 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('preserves complete explicit phase-review settings across quick and import rewrites', async () => {
+  it('preserves complete explicit phase-review settings across every plan rewrite', async () => {
     const paths = [
+      {
+        name: 'spec-driven overwrite',
+        content: await readRepoFile('.agents/skills/oat-project-plan/SKILL.md'),
+        snapshotMarker:
+          '### Step 4.9: Snapshot Explicit Phase-Review Setting Before Plan Overwrite',
+        rewriteMarker:
+          '**Overwrite**: replace with a fresh copy of the template',
+        setupMarker: '### Step 12.25: Configure Optional Phase Review',
+      },
       {
         name: 'quick-start',
         content: await readRepoFile(
@@ -1328,10 +1337,14 @@ describe('validateOatSkills', () => {
       expect(preservationContract, `${name} no explicit re-probe`).toMatch(
         /explicit presence[\s\S]{0,180}(?:must not|do not)[\s\S]{0,100}(?:probe|re-prompt)/i,
       );
+      expect(preservationContract, `${name} absent key stays absent`).toMatch(
+        /key was absent[\s\S]{0,300}do not\s+invent/i,
+      );
     }
 
-    expect(paths[0].content).toMatch(/resumed explicit value/i);
-    expect(paths[1].content).toMatch(
+    expect(paths[0].content).toMatch(/overwrite[\s\S]{0,220}exact snapshot/i);
+    expect(paths[1].content).toMatch(/resumed explicit value/i);
+    expect(paths[2].content).toMatch(
       /resumed[\s\S]{0,120}imported[\s\S]{0,180}complete explicit value/i,
     );
   });
