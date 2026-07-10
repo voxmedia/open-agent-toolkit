@@ -1656,7 +1656,7 @@ describe('oat gate', () => {
       },
     });
 
-    await runReviewGate({
+    const capture = await runReviewGate({
       root,
       home,
       runProcess: runner.runProcess,
@@ -1668,6 +1668,23 @@ describe('oat gate', () => {
       args: expect.arrayContaining(['--model', 'composer-2.5']),
       purpose: 'execute',
     });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'gpt-5.5-xhigh',
+          family: 'openai',
+          source: 'stamp',
+          avoidFamilies: ['openai'],
+        },
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingScopes',
+    );
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingStampCount',
+    );
     expect(process.exitCode).toBe(0);
   });
 
@@ -1679,6 +1696,7 @@ describe('oat gate', () => {
       root,
       projectPath,
       [
+        'Dispatch: scope=p00 action=implementation role=implementer producer=gemini-2.5-pro provenance=declared model_axis=selected:gemini effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gemini target=gemini',
         'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
         'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
       ].join('\n'),
@@ -1744,15 +1762,344 @@ describe('oat gate', () => {
       diversity: {
         achieved: 'different-family',
         producer: {
-          value: 'claude-opus-4-8',
-          family: 'claude',
-          source: 'stamp',
-          avoidFamilies: expect.arrayContaining(['openai', 'claude']),
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai', 'claude'],
+          contributingScopes: ['p00', 'p02', 'p03'],
+          contributingStampCount: 3,
         },
         reviewer: {
           target: 'composer-reviewer',
           model: 'composer-2.5',
           family: 'composer',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('aggregates every producer stamp in a contiguous review range in document order', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p01 action=implementation role=implementer producer=gemini-2.5-pro provenance=declared model_axis=selected:gemini effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gemini target=gemini',
+        'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+        'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03 action=implementation role=implementer producer=claude-sonnet-4-5 provenance=observed model_axis=selected:sonnet effort_axis=not-applicable dispatch_policy=balanced dispatch_ceiling=sonnet target=claude',
+        'Dispatch: scope=p04 action=implementation role=implementer producer=composer-2.5 provenance=declared model_axis=selected:composer effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=composer target=cursor',
+      ].join('\n'),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p02-p03',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p02-p03',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          provenance: 'unknown',
+          confidence: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['claude', 'openai'],
+          contributingScopes: ['p03', 'p02'],
+          contributingStampCount: 3,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps an explicit producer flag authoritative over aggregate review stamps', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+      ].join('\n'),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'final',
+        '--producer-identity',
+        'composer-2.5:declared',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'composer-2.5',
+          family: 'composer',
+          source: 'flag',
+          avoidFamilies: ['composer'],
+        },
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingScopes',
+    );
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingStampCount',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports one unknown aggregate stamp without claiming a producer family', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'unknown-producer',
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: [],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports unknown producer identity when an aggregate scope has no relevant stamps', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p02-p03',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p02-p03',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          source: 'unknown',
+          avoidFamilies: [],
+        },
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingScopes',
+    );
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingStampCount',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('counts non-claimable aggregate contributors while avoiding only known families', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown',
+        'Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03-t02 action=fix role=fix producer=mystery-model provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown',
+      ].join('\n'),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p02-p03',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p02-p03',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai'],
+          contributingScopes: ['p02', 'p03', 'p03-t02'],
+          contributingStampCount: 3,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves same-family fallback semantics for a one-stamp aggregate', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.3-codex'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'same-family - no diverse target available',
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
         },
       },
     });

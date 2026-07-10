@@ -173,8 +173,10 @@ interface GateProducerIdentity {
   confidence: IdentityConfidence;
   family: ModelFamily;
   avoidFamilies: ModelFamily[];
+  contributingScopes?: string[];
+  contributingStampCount?: number;
   diversityClaimable: boolean;
-  source: 'flag' | 'stamp' | 'unknown';
+  source: 'flag' | 'stamp' | 'aggregated-stamps' | 'unknown';
 }
 
 interface GateDiversityMetadata {
@@ -187,6 +189,8 @@ interface GateDiversityMetadata {
     family: ModelFamily;
     source: GateProducerIdentity['source'];
     avoidFamilies: ModelFamily[];
+    contributingScopes?: string[];
+    contributingStampCount?: number;
   };
   reviewer: {
     target: string;
@@ -863,28 +867,40 @@ function parseProducerIdentityOption(
   );
 }
 
-function identityFromStamps(
+function identityFromStamp(
+  stamp: ReturnType<typeof parseDispatchStamps>[number],
+): GateProducerIdentity {
+  return identityFromRecords(
+    [{ value: stamp.producer, provenance: stamp.provenance }],
+    'stamp',
+  );
+}
+
+function aggregateIdentityFromStamps(
   stamps: ReturnType<typeof parseDispatchStamps>,
 ): GateProducerIdentity {
-  const identities = stamps
-    .map((stamp) =>
-      identityFromRecords(
-        [{ value: stamp.producer, provenance: stamp.provenance }],
-        'stamp',
-      ),
-    )
-    .filter(
-      (identity) =>
-        identity.diversityClaimable && identity.family !== 'unknown',
-    );
-  const latest = identities.at(-1);
-  if (!latest) {
+  if (stamps.length === 0) {
     return unknownProducerIdentity();
   }
 
+  const identities = stamps.map(identityFromStamp);
+  const avoidFamilies = [
+    ...new Set(
+      identities.flatMap((identity) =>
+        identity.diversityClaimable && identity.family !== 'unknown'
+          ? [identity.family]
+          : [],
+      ),
+    ),
+  ];
+
   return {
-    ...latest,
-    avoidFamilies: [...new Set(identities.map((identity) => identity.family))],
+    ...unknownProducerIdentity(),
+    avoidFamilies,
+    contributingScopes: [...new Set(stamps.map((stamp) => stamp.scope))],
+    contributingStampCount: stamps.length,
+    diversityClaimable: avoidFamilies.length > 0,
+    source: 'aggregated-stamps',
   };
 }
 
@@ -898,7 +914,7 @@ function reviewScopeRange(
   scope: string,
 ): { start: number; end: number } | null {
   if (scope === 'final') {
-    return { start: 1, end: Number.MAX_SAFE_INTEGER };
+    return { start: 0, end: Number.MAX_SAFE_INTEGER };
   }
 
   const range = scope.match(/^p(\d+)-p(\d+)$/);
@@ -949,14 +965,16 @@ async function readStampedProducerIdentity(options: {
   const stamps = parseDispatchStamps(markdown).filter(
     (candidate) => candidate.role === 'implementer' || candidate.role === 'fix',
   );
-  const exactStamp = [...stamps]
-    .reverse()
-    .find((candidate) => candidate.scope === scope);
-  if (exactStamp) {
-    return identityFromStamps([exactStamp]);
+  if (!reviewScopeRange(scope)) {
+    const exactStamp = [...stamps]
+      .reverse()
+      .find((candidate) => candidate.scope === scope);
+    return exactStamp
+      ? identityFromStamp(exactStamp)
+      : unknownProducerIdentity();
   }
 
-  return identityFromStamps(
+  return aggregateIdentityFromStamps(
     stamps.filter((candidate) => stampInReviewScope(candidate.scope, scope)),
   );
 }
@@ -1038,7 +1056,7 @@ function expandExecTargetCandidates(
 }
 
 function producerHasKnownFamily(identity: GateProducerIdentity): boolean {
-  return identity.diversityClaimable && identity.avoidFamilies.length > 0;
+  return identity.avoidFamilies.length > 0;
 }
 
 function shouldAttemptNoDiverseFallback(avoid: CrossProviderAvoid): boolean {
@@ -1060,7 +1078,11 @@ function achievedDiversity(
     return 'different-family';
   }
 
-  if (selected.model && selected.model !== producerIdentity.value) {
+  if (
+    producerIdentity.source !== 'aggregated-stamps' &&
+    selected.model &&
+    selected.model !== producerIdentity.value
+  ) {
     return 'degraded-to-different-slug';
   }
 
@@ -1103,6 +1125,14 @@ function attachDiversityMetadata(
         family: producerIdentity.family,
         source: producerIdentity.source,
         avoidFamilies: producerIdentity.avoidFamilies,
+        ...(producerIdentity.contributingScopes
+          ? { contributingScopes: producerIdentity.contributingScopes }
+          : {}),
+        ...(producerIdentity.contributingStampCount === undefined
+          ? {}
+          : {
+              contributingStampCount: producerIdentity.contributingStampCount,
+            }),
       },
       reviewer: {
         target: selected.id,

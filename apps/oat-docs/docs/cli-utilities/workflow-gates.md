@@ -413,7 +413,9 @@ By default the dispatcher:
 2. Expands target `models` into candidate `(target, model)` pairs.
 3. Detects the current runtime with host detection commands.
 4. Resolves producer identity from `--producer-identity` or dispatch stamps when
-   available.
+   available. Exact phase/task scopes use the matching stamp. `final` and
+   contiguous ranges such as `p02-p03` aggregate every in-range implementer/fix
+   stamp.
 5. Applies `--avoid same-family`.
 6. Checks candidate availability in descending priority order, with target id as
    the tie-breaker.
@@ -447,7 +449,21 @@ oat gate review \
 
 Gate JSON output includes `diversity` metadata with the requested avoid mode,
 producer identity/provenance/confidence, reviewer target/model/family, and the
-achieved level:
+achieved level. Exact phase/task matches report producer source `stamp` without
+contributor fields, while an explicit flag reports `flag` and remains
+authoritative. Final and contiguous range scopes report `aggregated-stamps`
+whenever at least one relevant stamp exists, even for a single stamp or when no
+stamp has a claimable family. Their producer record uses an unknown
+representative instead of presenting the latest stamp as aggregate truth:
+
+- `avoidFamilies` is the stable deduplicated union of claimable known families.
+- `contributingScopes` is the stable document-order list of distinct scopes from
+  every relevant stamp.
+- `contributingStampCount` counts every relevant stamp, including unknown or
+  otherwise non-claimable identities.
+
+When no relevant aggregate stamp exists, producer source is `unknown` and the
+contributor fields are absent. The achieved level is one of:
 
 - `different-family`
 - `degraded-to-different-slug`
