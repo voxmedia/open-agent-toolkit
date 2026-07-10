@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | completed   | 6     | 6/6       |
-| p01   | in_progress | 4     | 3/4       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | completed | 4     | 4/4       |
+| p02   | pending   | 3     | 0/3       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 3     | 0/3       |
 
-**Total:** 9/17 tasks completed
+**Total:** 10/17 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 1: Configured Invocation Provenance
 
-**Status:** in_progress
+**Status:** completed
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -81,8 +81,15 @@ oat_generated: false
 
 ### Task p01-t04: Stamp, parse, and validate invocation metadata
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9f8379b7`
+
+### Phase Summary
+
+- **Outcome:** Gate targets now carry explicit configured model/effort metadata; operators can mutate and inspect it with provenance and availability; gate reviews emit one immutable prompt/JSON invocation record; and artifacts must copy matching run/target/runtime/model/effort/source fields before severity evaluation.
+- **Key files touched:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/config/resolve.ts`, `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/review-verdict.ts`, `.agents/agents/oat-reviewer.md`, `.agents/skills/oat-project-review-provide/SKILL.md`, and the workflow gate/review/artifact docs.
+- **Verification:** 106 config/resolver assertions; 107 gate/resolver assertions plus live target listing; 72 gate invocation assertions; 133 parser/gate/skill-contract assertions; CLI type-check; 53-skill validation; and 532-link docs crawl with zero broken links.
+- **Decisions/deviations:** No design or plan deviations. Configured invocation remains distinct from observed/self-reported producer identity; omitted values remain `unknown`, while `provider-default` is explicit.
 
 ## Phase 2: Declared Review Target Safety
 
@@ -260,6 +267,10 @@ oat_generated: false
 - Focused p01-t02 verification passed 107 gate/resolver tests, CLI type-check, and a live `gate target list` inspection.
 - `p01-t03` completed in `dcae1e0b`: gate review now creates one immutable configured invocation record after target selection, injects its exact run/target/runtime/model/effort/source values into the prompt, and emits that record on success and post-selection failure JSON without parsing commands.
 - Focused p01-t03 verification passed 72 gate tests and CLI type-check.
+- `p01-t04` completed in `9f8379b7`: gate-only frontmatter is YAML-aware and backward-compatible, run and configured invocation metadata are corroborated before thresholds, reviewer guidance copies rather than infers values, and workflow documentation describes the additive JSON/frontmatter contracts.
+- Focused p01-t04 verification passed 133 parser/gate/skill-contract tests, CLI type-check, validation of all 53 OAT skills, and the 532-link docs crawl.
+- Final p01 verification passed 240 focused assertions, CLI type-check, live target inspection, validation of all 53 OAT skills, and the 532-link docs crawl from implementation commit `9f8379b7`.
+- Final p01 self-review found no correctness or scope issues. The p01 code-review row remains pending for the orchestrator's independent reviewer; no p02 work was started.
 
 ## Deviations from Plan / Design
 
@@ -280,6 +291,8 @@ oat_generated: false
 | p01-t01   | 106 focused config/resolver assertions; CLI type-check                                                           | 107    | 0      | Invocation normalization, defaults, cloning, layered merge   |
 | p01-t02   | 107 focused gate/resolver assertions; CLI type-check; live target list                                           | 109    | 0      | Mutation flags, provenance view, availability-only listing   |
 | p01-t03   | 72 focused gate assertions; CLI type-check                                                                       | 73     | 0      | Immutable prompt/JSON invocation provenance                  |
+| p01-t04   | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs         |
+| p01 final | 240 focused assertions; type-check; live target list; skill validation; docs links                               | 244    | 0      | Committed-tree phase verification and self-review            |
 
 ## Final Summary (for PR/docs)
 

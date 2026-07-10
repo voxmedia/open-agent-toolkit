@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t04
-oat_last_commit: dcae1e0b
+oat_current_task: p02-t01
+oat_last_commit: 9f8379b7
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T07:03:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T07:10:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Executing `p01-t04`
+Implementation - `p01` complete; awaiting independent review
 
 ## Artifacts
 
@@ -102,6 +102,10 @@ Implementation - Executing `p01-t04`
 - ✓ `p01-t01` explicit exec-target invocation metadata completed
 - ✓ `p01-t02` target mutation and provenance inspection APIs completed
 - ✓ `p01-t03` immutable gate invocation prompt and JSON provenance completed
+- ✓ `p01-t04` gate artifact parsing, corroboration, guidance, and docs completed
+- ✓ All p01 implementation commits and per-task bookkeeping commits completed
+- ✓ p01 phase-wide verification and self-review completed
+- ⧗ Independent p01 review pending
 
 ## Blockers
 
@@ -109,4 +113,4 @@ None
 
 ## Next Milestone
 
-Execute `p01-t04`: stamp, parse, and validate invocation metadata
+Run the independent `p01` code review; do not start `p02-t01` until that review is received and passed
