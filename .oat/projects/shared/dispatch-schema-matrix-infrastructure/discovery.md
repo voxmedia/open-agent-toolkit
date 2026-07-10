@@ -8,135 +8,155 @@ oat_generated: false
 
 # Discovery: dispatch-schema-matrix-infrastructure
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Create one quick-mode implementation project for four related backlog items:
+
+- `BL-260709-add-dispatch-machine-schema`
+- `BL-260707-consolidate-dispatch-matrix`
+- `BL-260707-cache-cursor-model-catalog`
+- `BL-260708-verify-cursor-gpt-5-6-subagent`
+
+The goal is to consolidate dispatch-matrix helpers, add a reusable dispatch
+report schema and formatter, cache Cursor catalog validation per pass, and
+close out Cursor GPT-5.6 slug verification with reproducible evidence.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+No additional clarification was required. The named backlog records provide
+specific acceptance criteria, compatibility expectations, and fallback
+behavior.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+The request is well-understood. Use one cohesive infrastructure project so the
+shared matrix helpers become the basis for validation improvements while the
+dispatch report contract and live Cursor slug verification remain separately
+testable workstreams.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Consolidate and extend in one project
 
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
+**Description:** Extract the shared matrix boundaries first, then build the
+reporting, catalog-cache, and verification outcomes against those stable
+boundaries.
 
 **Pros:**
 
-- {Benefit 1}
-- {Benefit 2}
+- Removes known duplication before the next matrix shape evolves.
+- Keeps compatibility, validation, evidence, and documentation checks in one
+  release-ready plan.
 
 **Cons:**
 
-- {Drawback 1}
-- {Drawback 2}
+- Requires careful phase boundaries because reporting and validation touch
+  adjacent dispatch infrastructure.
 
-**Chosen:** {A/B/Neither}
+**Chosen:** A
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Summary:** This matches the user's explicit grouping and reduces the risk of
+shipping another matrix-shape change through duplicated traversal logic.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Source of truth:** Keep policy rungs abstract and keep concrete provider
+   targets in dispatch-matrix cells; do not hard-code GPT-5.6 family models into
+   policy mappings.
+2. **Matrix helpers:** Establish one shared normalizer for config and sparse
+   project-state inputs and one shared cell-reference walker for adopt and
+   doctor traversal.
+3. **Dispatch report contract:** Represent route/invocation target, OAT policy,
+   requested controls, configured defaults, and runtime confirmation as
+   separate data, while retaining the parseable `Dispatch:` stamp as a
+   compatibility surface.
+4. **Cursor cache lifetime:** Cache the parsed Cursor model catalog only for a
+   single validation pass, preserving valid, invalid, and unvalidated outcomes
+   plus existing CLI/fallback behavior.
+5. **Slug evidence:** Accept only live Cursor Task/subagent probe results for
+   Sol, Terra, and Luna. If models are unavailable, record exact observed
+   output and a concrete recheck date instead of guessing slugs.
+6. **Workflow:** Use quick mode with implementation-ready tasks and no formal
+   spec artifact.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve bare provider values, tier maps, ordered route cells, malformed-cell
+  handling, sparse project overrides, and inherit/default behavior.
+- Preserve Codex materialized-role and base-role fallback semantics plus
+  Claude/Cursor model-argument dispatch behavior.
+- Keep requested/configured controls distinct from observed or inferred runtime
+  identity; do not lead human output with `producer=unknown` when identity was
+  simply not reported.
+- Make live Cursor verification reproducible with exact command/output evidence.
+- If shipped CLI functionality changes, bump the lockstep public package set and
+  pass `pnpm release:validate` before implementation is considered done.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Shared dispatch-matrix normalization and traversal helpers replace the known
+  duplicated paths without behavior drift.
+- A reusable dispatch report schema produces stable machine output and clear
+  human-facing output while supporting the existing parseable stamp.
+- One adopt/doctor validation pass fetches the Cursor catalog at most once and
+  retains explicit fallback/result semantics.
+- Cursor GPT-5.6 Sol, Terra, and Luna subagent slugs are either verified by live
+  probes and used consistently, or their unavailable state and next recheck are
+  recorded with reproducible evidence.
+- Focused tests cover helpers, consumers, cache call counts, formatter variants,
+  fallback routes, and runtime-identity-unverified cases.
+- Relevant CLI/workflow documentation distinguishes requested controls,
+  configured defaults, and runtime confirmation.
+- Repository lint, formatting, type checks, tests, and release validation pass
+  as required by the final diff.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Changing abstract dispatch-policy definitions or introducing a default
+  GPT-5.6 policy mapping.
+- Guessing Cursor slugs from a general model listing without a subagent probe.
+- Redesigning unrelated provider dispatch, gate, or orchestration behavior.
+- Producing spec-driven `spec.md` or full `design.md` artifacts unless the user
+  explicitly promotes the project.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Broader dispatch telemetry or long-lived/cross-command provider catalog
+  caching; this project limits cache lifetime to one validation pass.
+- Additional model families beyond the GPT-5.6 Sol, Terra, and Luna verification
+  requested here.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Design depth:** Whether to go straight to the plan or capture a lightweight
+  design for the shared schema/helper boundaries first.
+- **Live availability:** Whether the current Cursor installation exposes all
+  three GPT-5.6 family models to Task/subagent execution.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The existing dispatch resolver/config/doctor tests are the behavioral
+  baseline for matrix consolidation.
+- Cursor verification may legitimately conclude that one or more models are not
+  yet exposed, provided the evidence and recheck date are recorded.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Compatibility drift:** Consolidating duplicated code could subtly change
+  malformed or sparse-cell behavior.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Characterization tests around every existing input
+    shape before switching consumers.
+- **Environment-dependent evidence:** Cursor catalog or subagent access may vary
+  by account, rollout, or installed client state.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Record client context, exact commands, raw outcomes,
+    and a dated recheck when verification cannot complete.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Choose whether the shared data-model and component-boundary decisions warrant a
+lightweight quick-mode `design.md`; otherwise confirm these requirements and
+generate `plan.md` directly.
