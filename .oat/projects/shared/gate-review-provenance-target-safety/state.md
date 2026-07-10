@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: d8512843
+oat_current_task: p02-t02
+oat_last_commit: c1c98ce2
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T07:54:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T08:01:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - `p01` re-review passed; ready to execute `p02-t01`.
+Implementation - `p02-t01` completed; ready to execute `p02-t02`.
 
 ## Artifacts
 
@@ -117,6 +117,7 @@ Implementation - `p01` re-review passed; ready to execute `p02-t01`.
 - ✓ Independent p01 re-review closed all four prior Important findings and the prior Medium finding
 - ✓ Sole p01 re-review Minor finding resolved during receive bookkeeping
 - ✓ p01 review status advanced to `passed`
+- ✓ `p02-t01` exposes declared and ambient review-project resolution provenance
 
 ## Blockers
 
@@ -124,4 +125,4 @@ None
 
 ## Next Milestone
 
-Execute `p02-t01`, then continue through the declared review-target safety phase.
+Execute `p02-t02`, then continue through the declared review-target safety phase.

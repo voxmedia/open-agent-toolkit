@@ -520,6 +520,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p02-t01: Expose review-project resolution provenance
 
+**Status:** completed (`c1c98ce2`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/gate/index.ts`
