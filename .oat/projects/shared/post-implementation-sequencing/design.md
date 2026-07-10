@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
@@ -298,7 +298,66 @@ oat config set workflow.postImplementSequence docs-pr --shared
 
 ## Testing Strategy
 
-_Pending collaborative review._
+### Configuration Tests
+
+- Parser and normalizer tests for all four legacy mappings.
+- Valid structured cases: empty, pre-only, post-only, and both boundaries.
+- Invalid cases: malformed JSON, missing arrays, extra keys, unknown steps, and
+  duplicates.
+- Atomic precedence tests across local, shared, and user layers, including mixed
+  string and object layers and proof that arrays never merge.
+- CLI tests for JSON `set`, plain and JSON `get`, invalid-write rollback, and
+  complete `describe` output.
+
+### Lifecycle Contract Tests
+
+Add a focused post-implementation sequencing contract suite covering:
+
+- Non-final checkpoint instructions remain unchanged.
+- Final verification and review precede pre-approval work.
+- Final approval follows successful pre-approval work.
+- Post-approval work requires `approved` or `not_required`.
+- Final checkpoint auto-review still runs automatically without duplicate final
+  review.
+- Every successful step is persisted before the next dispatch.
+- Pre-failure leaves approval pending; post-failure preserves explicit approval.
+- Resume uses the snapshot and retries only the first incomplete step.
+- Pre-approval PR state routes back to implementation while the sequence is
+  incomplete.
+- Completed sequence state restores normal PR and completion routing.
+- `pr-final` reuses an already completed summary step.
+
+### Focused Verification
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/config/oat-config.test.ts \
+  src/config/resolve.test.ts \
+  src/commands/config/index.test.ts
+```
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts \
+  src/commands/init/tools/shared/bundle-consistency.test.ts
+```
+
+### Repository and Release Verification
+
+Run asset generation and dependent checks sequentially, followed by:
+
+```bash
+pnpm oat:validate-skills
+pnpm format
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
+pnpm build:docs
+pnpm docs:check-links
+pnpm release:validate
+git diff --check
+```
 
 ## References
 
