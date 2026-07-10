@@ -260,7 +260,7 @@ pnpm exec oxfmt --check .agents/skills/oat-project-plan-writing/SKILL.md apps/oa
 
 ## Phase 1: Configured Invocation Provenance
 
-**Implementation Status:** completed (4/4 tasks); awaiting independent review
+**Implementation Status:** review fixes queued (4/9 tasks completed)
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -381,6 +381,136 @@ pnpm docs:check-links
 ```
 
 **Commit:** `feat(review): corroborate gate invocation metadata`
+
+---
+
+### Task p01-t05: (review) Preserve target priority on invocation updates
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Keep an omitted `--priority` absent from the same-layer mutation instead of materializing `0` over an existing target.
+2. Preserve the existing target priority and the other invocation field while still defaulting genuinely new targets to priority `0` during resolution.
+3. Cover invocation-only updates against a nonzero target priority.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): preserve target priority on invocation updates`
+
+---
+
+### Task p01-t06: (review) Isolate target availability probe failures
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Treat each rejected or missing availability executable as `available: false` for that target.
+2. Continue listing the remaining resolved targets without selecting or executing a reviewer.
+3. Cover one rejected probe beside a successful configured target and assert no execute calls occur.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm run cli:source -- --json gate target list
+```
+
+**Commit:** `fix(gate): isolate target availability failures`
+
+---
+
+### Task p01-t07: (review) Require the gate artifact invocation marker
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Require `oat_review_invocation: gate` in gate-produced artifacts before severity evaluation.
+2. Preserve standalone parser compatibility for manual and auto review artifacts.
+3. Reject missing, manual, and auto markers even when all six gate-owned fields match.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): require gate artifact provenance`
+
+---
+
+### Task p01-t08: (review) Preserve provenance on unexpected gate failures
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Keep the selected target, project, run ID, and immutable invocation record available to the outer failure handler.
+2. Emit structured post-selection failure JSON for launch rejections and unexpected review-directory or artifact I/O failures.
+3. Assert those failures reuse the exact selected invocation record rather than falling back to generic error JSON.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): retain invocation on unexpected failures`
+
+---
+
+### Task p01-t09: (review) Emit YAML-safe gate invocation fields
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Steps:**
+
+1. Render the prompt-provided gate frontmatter values through YAML-safe scalar serialization while retaining exact configured strings.
+2. Keep parser corroboration string-exact after YAML decoding.
+3. Cover numeric-, boolean-, null-, colon-, hash-, and quote-like values for target/runtime/model/effort metadata.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): serialize invocation metadata safely`
 
 ---
 
@@ -596,19 +726,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed  | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
-| p03    | code     | pending | -          | -                                                           |
-| p04    | code     | pending | -          | -                                                           |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | fixes_added | 2026-07-10 | reviews/archived/p01-review-2026-07-10T072135Z.md           |
+| p02    | code     | pending     | -          | -                                                           |
+| p03    | code     | pending     | -          | -                                                           |
+| p04    | code     | pending     | -          | -                                                           |
+| final  | code     | pending     | -          | -                                                           |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -617,15 +747,15 @@ git status --short
 **Summary:**
 
 - Phase 0: 6 tasks - dispatch readiness, pinned-role sync, deterministic workflows, and three review fixes
-- Phase 1: 4 tasks - configured invocation metadata, inspection, prompt/JSON provenance, and artifact validation
+- Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 3 tasks - project resolution provenance, fail-closed target corroboration, and lifecycle guidance
 - Phase 3: 1 task - explicit final/range producer aggregation provenance
 - Phase 4: 3 tasks - shared opt-in setup, all plan paths, and release validation
 
-**Total: 17 tasks**
+**Total: 22 tasks**
 
-Phase 0 review fixes are complete. Phase 1 must not begin until an independent
-re-review passes.
+Phase 0 review fixes are complete. Phase 1 review fixes must complete and pass
+independent re-review before Phase 2 begins.
 
 ## References
 

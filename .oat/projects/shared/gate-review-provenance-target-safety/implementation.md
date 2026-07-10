@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p00   | completed | 6     | 6/6       |
-| p01   | completed | 4     | 4/4       |
-| p02   | pending   | 3     | 0/3       |
-| p03   | pending   | 1     | 0/1       |
-| p04   | pending   | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | completed   | 6     | 6/6       |
+| p01   | in_progress | 9     | 4/9       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 3     | 0/3       |
 
-**Total:** 10/17 tasks completed
+**Total:** 10/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 1: Configured Invocation Provenance
 
-**Status:** completed
+**Status:** in_progress
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -83,6 +83,31 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `9f8379b7`
+
+### Task p01-t05: (review) Preserve target priority on invocation updates
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: (review) Isolate target availability probe failures
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t07: (review) Require the gate artifact invocation marker
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t08: (review) Preserve provenance on unexpected gate failures
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t09: (review) Emit YAML-safe gate invocation fields
+
+**Status:** pending
+**Commit:** -
 
 ### Phase Summary
 
@@ -272,6 +297,30 @@ oat_generated: false
 - Final p01 verification passed 240 focused assertions, CLI type-check, live target inspection, validation of all 53 OAT skills, and the 532-link docs crawl from implementation commit `9f8379b7`.
 - Final p01 self-review found no correctness or scope issues. The p01 code-review row remains pending for the orchestrator's independent reviewer; no p02 work was started.
 - Post-self-review hardening in `a579f4c9` added two resolver assertions that lock complete re-enablement and partial non-resurrection after an intervening exec-target tombstone.
+
+### Review Received: p01
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/p01-review-2026-07-10T072135Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 4
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p01-t05`, `p01-t06`, `p01-t07`, `p01-t08`, `p01-t09`
+
+**Disposition:**
+
+- `I1` agreed, `Minor`, `code_fix_required`: preserve nonzero priority when an invocation update omits `--priority`.
+- `I2` agreed, `Minor`, `code_fix_required`: isolate rejected availability probes so one missing executable cannot abort the target list.
+- `I3` agreed, `Minor`, `code_fix_required`: require the gate invocation marker before severity evaluation.
+- `I4` agreed, `Moderate`, `code_fix_required`: keep the immutable selected invocation record on unexpected post-selection failures.
+- `M1` agreed, `Minor`, `code_fix_required`: serialize prompt-provided invocation values as YAML-safe scalars.
+
+**Next:** Execute `p01-t05` through `p01-t09`, mark the review `fixes_completed`, and run an independent p01 re-review before starting p02.
 
 ## Deviations from Plan / Design
 

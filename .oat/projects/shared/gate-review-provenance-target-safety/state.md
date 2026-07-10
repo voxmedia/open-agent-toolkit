@@ -1,5 +1,5 @@
 ---
-oat_current_task: p02-t01
+oat_current_task: p01-t05
 oat_last_commit: a579f4c9
 oat_blockers: []
 associated_issues:
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T07:15:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T07:24:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - `p01` complete; awaiting independent review
+Implementation - `p01` review fixes queued; ready to execute `p01-t05`
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - `p01` complete; awaiting independent review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` review passed; `p01` implementation complete and awaiting independent review)
+- **Implementation:** `implementation.md` (`p00` review passed; `p01-t05` through `p01-t09` queued from independent review)
 
 ## Progress
 
@@ -106,7 +106,9 @@ Implementation - `p01` complete; awaiting independent review
 - ✓ All p01 implementation commits and per-task bookkeeping commits completed
 - ✓ p01 phase-wide verification and self-review completed
 - ✓ Exec-target tombstone re-enable semantics locked with focused complete/partial override tests
-- ⧗ Independent p01 review pending
+- ✓ Independent p01 review received with 4 Important and 1 Medium finding
+- ✓ Review findings converted autonomously to `p01-t05` through `p01-t09`
+- ⧗ p01 review fixes pending
 
 ## Blockers
 
@@ -114,4 +116,4 @@ None
 
 ## Next Milestone
 
-Run the independent `p01` code review; do not start `p02-t01` until that review is received and passed
+Execute `p01-t05` through `p01-t09`, then run an independent p01 re-review before starting `p02-t01`
