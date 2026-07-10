@@ -340,7 +340,7 @@ describe('oat gate', () => {
     root: string;
     projectPath: string;
     fileName?: string;
-    generatedAt?: string;
+    generatedAt?: string | null;
     reviewScope?: string;
     finding?: 'important' | 'minor' | 'clean';
     omitMediumSection?: boolean;
@@ -421,7 +421,11 @@ describe('oat gate', () => {
       [
         '---',
         'oat_generated: true',
-        `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+        ...(options.generatedAt === null
+          ? []
+          : [
+              `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+            ]),
         'oat_review_type: code',
         `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
         ...(options.reviewInvocation === null
@@ -4090,6 +4094,106 @@ describe('oat gate', () => {
     });
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([
+    ['missing', null],
+    ['invalid', 'not-a-timestamp'],
+  ] as const)(
+    'retains a same-run duplicate with %s generation metadata',
+    async (_label, generatedAt) => {
+      const { root, home } = await setup();
+      const declaredProject = await writeProject(
+        root,
+        '.oat/projects/shared/declared',
+      );
+      const siblingProject = await writeProject(
+        root,
+        '.oat/projects/shared/sibling',
+      );
+      const validPath = `${declaredProject}/reviews/valid-review.md`;
+      const malformedPath = `${siblingProject}/reviews/malformed-review.md`;
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath: declaredProject,
+            fileName: 'valid-review.md',
+            finding: 'clean',
+          });
+          await writeReviewArtifact({
+            root,
+            projectPath: siblingProject,
+            fileName: 'malformed-review.md',
+            generatedAt,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--project',
+          declaredProject,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        receiveEligible: false,
+        corroboration: {
+          run: 'mismatched',
+          actual: {
+            matchingArtifactPaths: [validPath, malformedPath].sort(),
+          },
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    ['missing', null],
+    ['invalid', 'not-a-timestamp'],
+  ] as const)(
+    'classifies a single run-correlated artifact with %s generation metadata as invalid format',
+    async (_label, generatedAt) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      let artifactPath = '';
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          artifactPath = await writeReviewArtifact({
+            root,
+            projectPath,
+            generatedAt,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'artifact_validation_failed',
+        outcome: 'review_completed_artifact_validation_failed',
+        artifactPath,
+        generatedAt,
+        message: expect.stringContaining('oat_generated_at'),
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('uses the unique run-id match instead of a changed wrong-run diagnostic artifact', async () => {
     const { root, home } = await setup();

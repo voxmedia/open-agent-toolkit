@@ -243,7 +243,11 @@ interface GateInvocationCorroboration {
   };
 }
 
-interface ReviewGateArtifactCandidate extends LatestReview {
+interface ReviewGateArtifactCandidate extends Omit<
+  LatestReview,
+  'generatedAt'
+> {
+  generatedAt: string | null;
   containingProject: string;
   gateRunId: string | null;
   artifactProject: string | null;
@@ -1613,15 +1617,14 @@ async function readReviewGateArtifactCandidate(
     return null;
   }
 
-  const generatedAt = getFrontmatterField(frontmatter, 'oat_generated_at');
-  if (!generatedAt) {
-    return null;
-  }
-
-  const generatedTime = parseGeneratedTime(generatedAt);
-  if (Number.isNaN(generatedTime)) {
-    return null;
-  }
+  const generatedAt =
+    getFrontmatterField(frontmatter, 'oat_generated_at') ?? null;
+  const parsedGeneratedTime = generatedAt
+    ? parseGeneratedTime(generatedAt)
+    : Number.NaN;
+  const generatedTime = Number.isNaN(parsedGeneratedTime)
+    ? Number.NEGATIVE_INFINITY
+    : parsedGeneratedTime;
 
   const scope = getFrontmatterField(frontmatter, 'oat_review_scope') ?? '';
   let parsedFrontmatter: Record<string, unknown> = {};
@@ -2512,6 +2515,26 @@ async function runReviewGate(
               : 'Review artifact project identity does not match the explicitly declared project.',
         gateInvocation,
         corroboration: initialTargetCorroboration,
+      });
+      process.exitCode = 1;
+      return;
+    }
+
+    if (
+      !producedArtifact.generatedAt ||
+      !Number.isFinite(producedArtifact.generatedTime)
+    ) {
+      writeReviewGateArtifactValidationFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        projectResolutionSource: reviewProject.source,
+        artifactPath: producedArtifact.path,
+        generatedAt: producedArtifact.generatedAt,
+        message:
+          'Review artifact oat_generated_at is missing or is not a valid timestamp.',
+        recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
+        gateInvocation,
       });
       process.exitCode = 1;
       return;
