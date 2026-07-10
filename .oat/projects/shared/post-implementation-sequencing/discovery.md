@@ -17,126 +17,160 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Create the quick-mode `post-implementation-sequencing` project scoped to
+`BL-260709-split-post-implementation`. Extend
+`workflow.postImplementSequence` with an ordered structured form containing
+`preApproval` and `postApproval` arrays while preserving all existing string
+values. Pre-approval work must run after the final implementation review passes
+and before final HiLL approval; post-approval work must run only after that
+approval.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+No additional product clarification was required: the backlog item provides the
+target shape, legacy mappings, sequencing boundaries, and acceptance criteria.
+Repository reconnaissance did surface restart-safety and configuration-surface
+decisions that should be resolved in lightweight design before task planning.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+The chosen direction is the structured two-boundary sequence from the backlog.
+Keeping one legacy-only sequence or adding separate preference keys would not
+meet the requested ordered pre/post approval model and would complicate
+compatibility.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Treat the setting as a compatibility union: legacy string values
+normalize to the new ordered structure, and structured values pass through
+strict validation.
+
+**Rationale:** This provides one canonical runtime shape without breaking
+existing repositories or changing the meaning of the four shipped strings.
+
+**User validated:** Yes — the requested scope and linked backlog explicitly
+select this shape.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- **Legacy strings only:** Rejected because it cannot express steps on both
+  sides of approval.
+- **Separate pre/post workflow keys:** Rejected because it fragments one
+  lifecycle preference and weakens compatibility with the existing key.
+- **Structured union with normalization:** Chosen because it preserves the
+  public key and gives execution one canonical ordered representation.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Project boundary:** Scope all work to
+   `BL-260709-split-post-implementation` and its acceptance criteria.
+2. **Configuration shape:** Accept the four existing strings and a structured
+   object with `preApproval` and `postApproval` arrays.
+3. **Canonical step vocabulary:** Structured arrays are ordered sequences of
+   `summary`, `document`, and `pr`; unknown or malformed values must fail
+   validation clearly rather than disappear silently.
+4. **Legacy normalization:** Map `wait` to no steps, `summary` to pre-approval
+   summary, `pr` to pre-approval summary then PR, and `docs-pr` to pre-approval
+   summary then document then PR. Legacy strings have no post-approval steps.
+5. **Lifecycle boundary:** Run pre-approval steps only after the final review
+   passes and before a configured final-phase HiLL prompt. Run post-approval
+   steps only after explicit final approval is durably recorded.
+6. **Failure behavior:** Stop on the first failed sequence step, preserve a
+   clear resumable next action, and never infer or record human approval from a
+   step result.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Non-final HiLL checkpoint behavior must remain unchanged.
+- Existing three-layer workflow preference resolution and all four public string
+  values must remain compatible.
+- Configuration retrieval must preserve the structured value as one setting;
+  nested arrays cannot be lost through generic object flattening or string
+  coercion.
+- A changed canonical skill requires one frontmatter version bump in the PR.
+- CLI, bundled skill, or docs changes are shipped functionality, so all five
+  public packages must receive the lockstep version bump and release validation.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Both legacy strings and valid structured sequences load, resolve, describe,
+  and round-trip without ambiguity; invalid steps and malformed arrays are
+  rejected or ignored according to one documented validation contract.
+- Runtime consumers receive a canonical two-array sequence with the required
+  legacy mappings.
+- Final review always completes before any pre-approval step or final approval
+  prompt.
+- Pre-approval steps finish before final HiLL approval is requested; post-
+  approval steps cannot run until that approval has been recorded.
+- A failure at either boundary stops the chain with a precise recovery action
+  and restart-safe state.
+- Non-final checkpoints behave exactly as before.
+- Configuration reference, lifecycle/HiLL documentation, CLI description, and
+  focused tests cover both forms and the ordering/failure boundaries.
+- Repository verification and `pnpm release:validate` pass.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- New arbitrary-command sequence steps or a plugin system for post-
+  implementation actions.
+- Changes to non-final checkpoint prompts, review scopes, or approval semantics.
+- Redesign of unrelated workflow preferences such as PR-on-complete or archive
+  behavior.
+- Changing repository documentation requirements or the behavior of the
+  individual summary, document, and PR skills beyond what sequencing needs.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+None identified within this backlog item.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Approval record:** Choose a durable marker for final plan-phase approval and
+  sequence progress so a resumed run cannot execute post-approval work early or
+  repeat completed steps unnecessarily.
+- **No final checkpoint:** Define whether `postApproval` runs immediately after
+  pre-approval work when the user configured no final-phase HiLL gate, or is
+  treated as inapplicable.
+- **Configuration authoring:** Decide whether structured values are supported by
+  JSON configuration files only or also by `oat config set` with a JSON value;
+  `oat config get` must expose an unambiguous machine-readable representation in
+  either case.
+- **Sequence validation:** Define duplicate-step handling and the exact recovery
+  contract for a partially completed ordered sequence.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Sequence arrays preserve configured order.
+- The existing repository-level `docs-pr` preference intentionally normalizes
+  to pre-approval summary, documentation, and PR preparation.
+- Final approval is meaningful only when the final plan phase is a configured
+  HiLL checkpoint; design will make the no-gate fallback explicit.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Restart ambiguity:** Today plan-phase checkpoint approval has no dedicated
+  persisted completion field. Without one, a resumed run could misclassify the
+  approval boundary.
+  - **Likelihood:** High
+  - **Impact:** High
+  - **Mitigation Ideas:** Persist explicit final approval and sequence progress
+    before dispatching post-approval work.
+- **Resolver data loss:** Generic config flattening currently treats nested
+  objects as separate leaves, and scalar display can coerce objects to an
+  unusable string.
+  - **Likelihood:** High
+  - **Impact:** High
+  - **Mitigation Ideas:** Define the sequence as an atomic resolved value and
+    test structured get/resolve behavior end to end.
+- **Duplicate side effects:** Retrying a partially completed sequence could
+  regenerate summaries/docs or attempt PR work twice.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Record step progress or make resume checks explicit
+    for each lifecycle action.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Produce a focused quick-mode design to settle the configuration normalization,
+durable approval/progress marker, no-final-gate behavior, and failure/resume
+contract before generating the implementation plan.
