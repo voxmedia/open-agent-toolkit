@@ -175,4 +175,5 @@ configured gate rerun after these artifact corrections.
   reviewer resolver now selects `gpt-5.6-sol` at `high` from that ladder.
 - Added `p02-t03` to clarify “Phase gate review” terminology and its boundary
   from HiLL approval and final artifact review.
-- The optional Phase gate review selection remains pending.
+- The optional Phase gate review is disabled by user choice; the plan leaves
+  `oat_phase_review_gate` absent, as required by the shared contract.

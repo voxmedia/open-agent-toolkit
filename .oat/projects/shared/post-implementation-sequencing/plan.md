@@ -40,7 +40,7 @@ Vitest, Fumadocs, pnpm workspaces, and Turborepo.
 - [x] Release and generated-asset requirements included
 - [x] Phase dependencies and write sets evaluated
 - [x] Complete user-owned dispatch ladder confirmed and project named ceiling recorded
-- [ ] Optional phase-review choice recorded
+- [x] Optional Phase gate review disabled by user choice
 - [ ] Post-rebase managed reviewer contract resolved and plan re-reviewed
 - [ ] Implementation HiLL checkpoints confirmed at implementation preflight
 
