@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** final review fixes queued
+**Implementation Status:** supplemental final-review fixes queued (`p04-t15` through `p04-t19`)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1191,21 +1191,172 @@ oat gate resolve oat-project-implement --json
 
 ---
 
+### Task p04-t15: (final review) Evaluate one immutable gate artifact snapshot
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/review-verdict.ts`
+- Test: `packages/cli/src/commands/gate/index.test.ts`
+- Test: `packages/cli/src/commands/gate/review-verdict.test.ts`
+
+**Steps:**
+
+1. Add a RED regression that mutates a run-correlated artifact between candidate discovery and verdict evaluation and proves the gate cannot combine first-read project identity with second-read findings.
+2. Parse run, project, configured invocation, scope, and severity counts from one immutable content snapshot, or reject any signature change before outcome evaluation.
+3. Preserve controlled empty-section normalization without accepting an unrelated concurrent mutation; keep every rejected result non-receive-eligible.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/review-verdict.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Commit:** `fix(gate): evaluate review artifacts atomically`
+
+---
+
+### Task p04-t16: (final review) Contain active project materialization paths
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Test: `packages/cli/src/config/oat-config.test.ts`
+- Test: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Steps:**
+
+1. Resolve relative active-project candidates against the repository root and reject any path outside that root, matching the existing absolute-path containment rule.
+2. Apply the same invariant when resolving local config and when project sync receives an explicit project path.
+3. Add traversal regressions proving an external `state.md` cannot contribute `project-config` Codex targets or mutate the current repository's provider view.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/providers/codex/codec/sync-extension.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm run cli:source -- --json sync --scope project --dry-run
+```
+
+**Commit:** `fix(config): contain active project paths`
+
+---
+
+### Task p04-t17: (final review) Bind reviewer models across providers
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Regenerate: bundled skill/docs assets
+
+**Steps:**
+
+1. Make the shared reviewer contract consume concrete model dispatch arguments for Claude and Cursor as well as exact Codex variants.
+2. Require the actual provider invocation to carry `providers.<provider>.dispatchArgs.model`, preserve it through retries, and fail closed when the host cannot apply it.
+3. Add payload-level contracts for Claude and every configured opaque Cursor string across artifact, phase, and final review paths.
+4. Align Tier 2 docs with the target-preserving and verified-equivalent inline guard. Do not add another PR-scoped skill version bump; the existing branch bumps remain authoritative.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm docs:check-links
+pnpm release:validate
+```
+
+**Commit:** `fix(workflow): bind reviewer model targets`
+
+---
+
+### Task p04-t18: (final review) Defer plan readiness until review completes
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Test: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: bundled skill assets
+
+**Steps:**
+
+1. Keep newly written quick and imported plans `in_progress` with `oat_ready_for: null` through dispatch readiness, phase-review setup, and artifact review.
+2. Mark the plan complete and ready for implementation only after the review outcome is durably recorded; provider-plan-via-import inherits the same ordering.
+3. Add interruption-state contracts proving `oat-project-next` cannot advance a partially reviewed quick/import plan, including unresolved non-interactive dispatch.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `fix(plan): defer readiness until review`
+
+---
+
+### Task p04-t19: (final review) Repair final-review dispatch stamps
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.oat/projects/shared/gate-review-provenance-target-safety/implementation.md`
+- Modify: `.oat/projects/shared/gate-review-provenance-target-safety/plan.md`
+- Modify: `.oat/projects/shared/gate-review-provenance-target-safety/state.md`
+
+**Steps:**
+
+1. Rewrite the three p04 review-fix dispatch records to the supported `action=fix role=fix` grammar without changing their scopes or provenance values.
+2. Confirm final/range parsing includes those contributors and reports the expected count.
+3. Atomically align p04/final-review tracking after all supplemental fixes complete, leaving the phase awaiting re-review and explicit HiLL approval.
+
+**Verify:**
+
+```bash
+rg -n "Dispatch:.*action=(review-fix|final-review-fix)" .oat/projects/shared/gate-review-provenance-target-safety/implementation.md
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/stamp.test.ts src/commands/gate/index.test.ts
+pnpm format
+```
+
+Expected: the `rg` command has no matches and all focused tests pass.
+
+**Commit:** `chore(oat): align final review tracking`
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed   | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed   | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed   | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed   | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed   | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | received | 2026-07-10 | reviews/final-review-2026-07-10T121358Z.md                  |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed      | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T121358Z.md         |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -1217,12 +1368,13 @@ oat gate resolve oat-project-implement --json
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
-- Phase 4: 14 tasks - shared opt-in setup, safety/release work, one phase review fix, and ten final review fixes
+- Phase 4: 19 tasks - shared opt-in setup, safety/release work, one phase review fix, and fifteen final review fixes
 
-**Total: 37 tasks**
+**Total: 42 tasks**
 
 Phase 0 through Phase 4 reviews have passed. The first final review added ten
-fix tasks; final re-review remains pending.
+fix tasks; the latest final re-review added five supplemental fix tasks. Re-review
+and explicit p04 HiLL approval remain pending.
 
 ## References
 

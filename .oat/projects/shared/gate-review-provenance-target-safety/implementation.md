@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p04-t15
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 14    | 14/14     |
+| p04   | in_progress | 19    | 14/19     |
 
-**Total:** 37/37 tasks completed
+**Total:** 37/42 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** final review fixes in progress
+**Status:** supplemental final-review fixes queued (`p04-t15` through `p04-t19`)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -301,14 +301,49 @@ oat_generated: false
 - Source-tree user sync applied 11 operations with zero failures: ten role files plus `~/.codex/config.toml`. Eight configured variants carry `# oat-owner: user-config`; the two base roles carry canonical `oat-managed`/`oat-role` markers.
 - The immediate user dry-run reported zero planned/applied/failed operations. Live resolver probes returned Codex Frontier `gpt-5.6-sol/max` with pinned variant `oat-phase-implementer-gpt-5-6-sol-max`, plus all four exact Cursor opaque strings as enforced model args.
 
+### Task p04-t15: (final review) Evaluate one immutable gate artifact snapshot
+
+**Status:** pending
+
+- Convert correlation and verdict evaluation to one immutable artifact postimage, preserving controlled normalization and fail-closed receive eligibility.
+- Add a concurrent-mutation regression covering project identity, invocation metadata, and findings counts.
+
+### Task p04-t16: (final review) Contain active project materialization paths
+
+**Status:** pending
+
+- Reject relative and absolute active-project paths outside the repository before resolving state or materializing project-owned Codex targets.
+- Add config and sync traversal regressions.
+
+### Task p04-t17: (final review) Bind reviewer models across providers
+
+**Status:** pending
+
+- Bind resolver-selected Claude and Cursor model arguments to actual artifact, phase, and final reviewer invocations and target-preserving retries.
+- Align Tier 2 docs, contract tests, and bundled assets without another PR-scoped skill version bump.
+
+### Task p04-t18: (final review) Defer plan readiness until review completes
+
+**Status:** pending
+
+- Keep quick/import/provider-plan-via-import plans non-complete and not ready until dispatch readiness and artifact review complete.
+- Add interruption-state contracts against premature `oat-project-next` routing.
+
+### Task p04-t19: (final review) Repair final-review dispatch stamps
+
+**Status:** pending
+
+- Normalize three p04 review-fix run records to `action=fix role=fix` so final/range aggregation counts them.
+- Align final tracking after all supplemental fixes, then hand off to re-review and explicit p04 HiLL approval.
+
 ### Phase Summary
 
-- **Outcome:** All p04 tasks are complete. Every plan-producing workflow uses one canonical phase-review setup; explicit phase-review state survives every rewrite; malformed dispatch roles fail at the boundary; artifact reviews retain their resolved target; public readiness/provider/ownership references match shipped behavior; and live user gate configuration now declares the project and exact invocation metadata with idempotent user role materialization.
+- **Outcome:** The original 14 p04 tasks are complete. The latest final re-review added five supplemental fixes for immutable artifact evaluation, active-project containment, provider model binding, plan-readiness ordering, and dispatch-stamp tracking.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The first final review is `fixes_completed`. All ten final-review tasks `p04-t05` through `p04-t14` are complete; independent final re-review and explicit p04 HiLL approval remain pending.
+- **Review status:** The latest final review is `fixes_added`. Execute `p04-t15` through `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
@@ -812,7 +847,36 @@ oat_generated: false
 
 **Deferred Findings Ledger:** None. Every final-review and supplemental finding is converted or resolved now.
 
-**Next:** Execute `p04-t05` through `p04-t14`, mark the final review `fixes_completed`, then run an independent final re-review before explicit p04 HiLL approval.
+**Next:** Completed by `p04-t05` through `p04-t14`; superseded by the supplemental final review received below.
+
+### Review Received: final (supplemental final audit)
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/final-review-2026-07-10T121358Z.md`
+**Review cycle:** 2 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 4
+- Medium: 1
+- Minor: 2
+
+**New tasks added:** `p04-t15` through `p04-t19`
+
+**Disposition:**
+
+- `I1` agreed, `Large`, `code_fix_required` -> `p04-t15`: use one immutable artifact snapshot for correlation and verdict evaluation.
+- `I2` agreed, `Moderate`, `code_fix_required` -> `p04-t16`: contain every active-project path before project-scoped materialization.
+- `I3` agreed, `Large`, `code_fix_required` -> `p04-t17`: bind resolver-selected Claude/Cursor reviewer models to actual provider invocations.
+- `I4` agreed, `Moderate`, `code_fix_required` -> `p04-t18`: delay quick/import completion and readiness until review succeeds.
+- `M1` agreed, `Minor`, `artifact_alignment_required` -> `p04-t17`: align Tier 2 docs with target-preserving execution.
+- `m1` agreed, `Negligible`, `artifact_alignment_required`: corrected the stale p04 status and historical next-step prose during this receive bookkeeping update.
+- `m2` agreed, `Negligible`, `artifact_alignment_required` -> `p04-t19`: normalize the three malformed review-fix dispatch stamps and final tracking.
+
+**Deferred Findings Ledger:** None. Automatic disposition converted or resolved every finding.
+
+**Next:** Execute `p04-t15` through `p04-t19`, mark the final review `fixes_completed`, and run the final review cycle before explicit p04 HiLL approval.
 
 ## Deviations from Plan / Design
 
@@ -874,7 +938,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-Phase 4 task execution is complete. Final-review fixes `p04-t05` through
+The original Phase 4 task execution and final-review fixes `p04-t05` through
 `p04-t14` are complete: the actual user-scope scanner safely materializes the
 finite canonical Codex roles; custom role identities cannot collide after
 normalization; gate metadata reflects the selected execution model; malformed
@@ -889,7 +953,7 @@ ownership references now match shipped behavior. Live lifecycle gate commands
 declare the project, carry exact configured invocation metadata, and produce an
 idempotent user Codex role surface before the next provider session starts.
 
-The project is at 37 of 37 tasks and p04 is at 14 of 14. The first final review
-is `fixes_completed`; independent final re-review and explicit p04 HiLL approval
-remain pending. No canonical skill received another version bump, and all five
-public packages remain at `0.1.47`.
+The project is at 37 of 42 tasks and p04 is at 14 of 19. The latest final review
+is `fixes_added`; five supplemental fixes, one final review cycle, and explicit
+p04 HiLL approval remain pending. No canonical skill received another version
+bump, and all five public packages remain at `0.1.47`.
