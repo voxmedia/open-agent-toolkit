@@ -1116,6 +1116,131 @@ describe('validateOatSkills', () => {
     expect(imported).toMatch(/provider plan[\s\S]*inherits.*import/i);
   });
 
+  it('invokes shared phase-review setup before artifact review in every plan path', async () => {
+    const paths = [
+      {
+        name: 'spec-driven',
+        content: await readRepoFile('.agents/skills/oat-project-plan/SKILL.md'),
+        stableMarker: '### Step 10.1: Keep Reviews Table Rows',
+        reviewMarker: '### Step 12.5: Run Plan Artifact Review Loop',
+      },
+      {
+        name: 'quick-start',
+        content: await readRepoFile(
+          '.agents/skills/oat-project-quick-start/SKILL.md',
+        ),
+        stableMarker: '### Step 3: Generate Plan Directly',
+        reviewMarker: '### Step 3.6: Run Plan Artifact Review Loop',
+      },
+      {
+        name: 'import-plan',
+        content: await readRepoFile(
+          '.agents/skills/oat-project-import-plan/SKILL.md',
+        ),
+        stableMarker: '### Step 3: Normalize Into Canonical OAT plan.md',
+        reviewMarker:
+          '### Step 4.5: Run Import-Aware Plan Artifact Review Loop',
+      },
+    ];
+
+    for (const { name, content, stableMarker, reviewMarker } of paths) {
+      const stableIndex = content.indexOf(stableMarker);
+      const setupOffset = content
+        .slice(stableIndex)
+        .search(/Shared Phase-Review\s+Setup\s+Contract/);
+      const setupIndex =
+        setupOffset < 0 || stableIndex < 0 ? -1 : stableIndex + setupOffset;
+      const reviewIndex = content.indexOf(reviewMarker);
+
+      expect(stableIndex, `${name} stable phase IDs`).toBeGreaterThanOrEqual(0);
+      expect(setupIndex, `${name} setup invocation`).toBeGreaterThan(
+        stableIndex,
+      );
+      expect(reviewIndex, `${name} artifact review`).toBeGreaterThan(
+        setupIndex,
+      );
+      expect(content, `${name} explicit preservation`).toMatch(
+        /explicit `oat_phase_review_gate`[\s\S]{0,260}(?:without|do not)[\s\S]{0,160}(?:probe|prompt|mutat)/i,
+      );
+      expect(content, `${name} disabled fallback`).toMatch(
+        /(?:probe fails|no target qualifies|user declines)[\s\S]{0,320}(?:disabled|do not add)/i,
+      );
+      expect(content, `${name} HiLL independence`).toMatch(
+        /phase-review setup[\s\S]{0,320}independent[\s\S]{0,160}HiLL/i,
+      );
+      expect(content, `${name} target neutrality`).toMatch(
+        /phase-review setup[\s\S]{0,480}(?:must not|do not)[\s\S]{0,100}--target/i,
+      );
+    }
+  });
+
+  it('makes provider native plan mode inherit phase-review setup from import', async () => {
+    const imported = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+
+    expect(imported).toMatch(
+      /provider-plan-via-import[\s\S]{0,500}Shared Phase-Review\s+Setup\s+Contract/i,
+    );
+    expect(imported).toMatch(
+      /provider native plan mode[\s\S]{0,300}(?:inherits|uses)[\s\S]{0,220}(?:same|import)/i,
+    );
+    expect(imported).toMatch(
+      /resumed\s+or\s+imported\s+explicit[\s\S]{0,220}(?:without|do not)[\s\S]{0,120}(?:re-prompt|prompt)/i,
+    );
+  });
+
+  it('documents phase-review setup across project workflow references', async () => {
+    const artifacts = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+    );
+    const reviews = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/reviews.md',
+    );
+    const lifecycle = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/lifecycle.md',
+    );
+
+    for (const [name, content] of [
+      ['artifacts', artifacts],
+      ['reviews', reviews],
+      ['lifecycle', lifecycle],
+    ] as const) {
+      expect(content, `${name} setup timing`).toMatch(
+        /stable\s+phase\s+IDs[\s\S]{0,300}before[\s\S]{0,180}plan\s+artifact\s+review/i,
+      );
+      expect(content, `${name} target eligibility`).toMatch(
+        /explicitly\s+configured[\s\S]{0,160}enabled[\s\S]{0,160}available/i,
+      );
+      expect(content, `${name} choices`).toMatch(
+        /all\s+phases[\s\S]{0,200}selected\s+phases[\s\S]{0,200}disabled/i,
+      );
+      expect(content, `${name} preservation`).toMatch(
+        /explicit[\s\S]{0,120}`oat_phase_review_gate`[\s\S]{0,240}(?:preserv|unchanged)[\s\S]{0,180}(?:without|no)[\s\S]{0,100}(?:prompt|re-prompt)/i,
+      );
+    }
+
+    expect(lifecycle).toMatch(/provider native plan mode[\s\S]*import/i);
+  });
+
+  it('tracks the p04 planning skill contract versions', async () => {
+    const expectedVersions = [
+      ['oat-project-plan-writing', '1.2.7'],
+      ['oat-project-plan', '1.3.11'],
+      ['oat-project-quick-start', '2.1.12'],
+      ['oat-project-import-plan', '1.4.3'],
+    ] as const;
+
+    for (const [skillName, expectedVersion] of expectedVersions) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
+        expectedVersion,
+      );
+    }
+  });
+
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const skillPath = join(
@@ -1149,7 +1274,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.11');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.12');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

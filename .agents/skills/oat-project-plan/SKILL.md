@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.10
+version: 1.3.11
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -416,6 +416,23 @@ Also note that `oat-project-implement` will confirm the actual HiLL checkpoint s
 Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
+
+### Step 12.25: Configure Optional Phase Review
+
+After the confirmed plan has stable phase IDs and before Step 12.5 starts the
+plan artifact review, invoke the `Shared Phase-Review Setup Contract` from
+`oat-project-plan-writing`.
+
+If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
+through the shared contract without probing, prompting, or mutation. Otherwise
+let the contract probe qualifying targets and offer all phases, selected
+phases, or disabled. If the probe fails, no target qualifies, or the user
+declines, leave phase review disabled and continue with the contract's concise
+status output.
+
+This phase-review setup is independent from HiLL checkpoints. Do not read or
+change HiLL fields here, and do not add a provider/model `--target` to any
+lifecycle command.
 
 ### Step 12.5: Run Plan Artifact Review Loop
 

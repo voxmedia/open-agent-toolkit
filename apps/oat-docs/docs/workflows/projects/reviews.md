@@ -120,6 +120,14 @@ This feature is opt-in and disabled by default. When disabled, the manual `oat-p
 
 The phase review gate is an optional, **non-pausing** external review gate that runs after a phase's standard per-phase reviewer passes and the phase bookkeeping is committed. Where the Tier 1 reviewer is an in-session self-review, the gate calls `oat gate review` against the configured cross-provider target, adding an independent perspective before implementation moves to the next phase. It is enabled per-project through `plan.md` frontmatter (`oat_phase_review_gate`; see [Project Artifacts](artifacts.md#oat_phase_review_gate) for the field shape and validation).
 
+Plan-producing workflows run the shared setup after stable phase IDs exist and
+before the plan artifact review. A read-only probe requires an explicitly
+configured, enabled, and available target before it offers all phases, selected
+phases, or disabled. Existing explicit `oat_phase_review_gate` values are
+preserved unchanged without re-prompting, including resumed and imported plans.
+Probe failure, no qualifying target, non-interactive execution, or user decline
+leaves the gate disabled.
+
 It is independent of [HiLL checkpoints](hill-checkpoints.md): a passing gate does not pause, and the gate never touches `oat_hill_completed`, `oat_plan_hill_phases`, or `oat_auto_review_at_hill_checkpoints`.
 
 Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Either way the produced artifact is consumed by `oat-project-review-receive`, autonomously and without user prompts, so findings never evaporate:

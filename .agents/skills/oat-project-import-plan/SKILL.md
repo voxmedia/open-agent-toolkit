@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.2
+version: 1.4.3
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -15,7 +15,8 @@ Import a markdown plan from an external coding provider and normalize it into OA
 
 Provider native plan mode uses this same path: provider-plan-via-import
 preserves the provider plan first, and provider plan dispatch readiness
-inherits the import workflow contract below.
+inherits the import workflow contract below, including the `Shared Phase-Review
+Setup Contract`. It does not add a separate provider-plan prompt.
 
 ## Prerequisites
 
@@ -194,6 +195,25 @@ Set frontmatter in `"$PROJECT_PATH/plan.md"`:
 - `oat_import_reference: references/imported-plan.md`
 - `oat_import_source_path: {source-path}`
 - `oat_import_provider: {codex|cursor|claude|null}`
+
+### Step 4.25: Configure Optional Phase Review
+
+After normalization has produced stable phase IDs and before Step 4.5 starts
+the import-aware plan artifact review, invoke the `Shared Phase-Review Setup
+Contract` from `oat-project-plan-writing`. Provider native plan mode uses this
+same import step and inherits its result.
+
+If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
+through the shared contract without probing, prompting, or mutation. Resumed or
+imported explicit values remain authoritative without re-prompting. Otherwise
+let the contract probe qualifying targets and offer all phases, selected
+phases, or disabled. If the probe fails, no target qualifies, or the user
+declines, leave phase review disabled and continue with the contract's concise
+status output.
+
+This phase-review setup is independent from HiLL checkpoints. Do not read or
+change HiLL fields here, and do not add a provider/model `--target` to any
+lifecycle command.
 
 ### Step 4.5: Run Import-Aware Plan Artifact Review Loop
 

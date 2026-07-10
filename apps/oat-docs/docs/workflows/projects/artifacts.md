@@ -112,6 +112,14 @@ Before dispatching, `oat-project-implement` invokes `oat project validate-plan -
 
 Enable an optional, non-pausing external review gate that runs after each selected phase's standard reviewer passes and its bookkeeping is committed:
 
+Planning offers this setting after stable phase IDs exist and before the plan
+artifact review. The read-only target probe qualifies only an explicitly
+configured, enabled, and available target, then offers all phases, selected
+phases, or disabled. An explicit `oat_phase_review_gate` value from a resumed or
+imported plan is preserved unchanged without re-prompting. If the probe fails,
+no target qualifies, the run is non-interactive, or the user declines, planning
+leaves phase review disabled.
+
 ```yaml
 oat_phase_review_gate:
   enabled: true
