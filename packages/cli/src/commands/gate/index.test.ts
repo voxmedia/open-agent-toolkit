@@ -350,6 +350,7 @@ describe('oat gate', () => {
       medium: number;
       minor: number;
     };
+    reviewInvocation?: 'gate' | 'manual' | 'auto' | null;
     omitGateInvocation?: boolean;
     gateInvocationOverrides?: Partial<{
       oat_gate_run_id: string;
@@ -408,7 +409,9 @@ describe('oat gate', () => {
         `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
         'oat_review_type: code',
         `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
-        'oat_review_invocation: gate',
+        ...(options.reviewInvocation === null
+          ? []
+          : [`oat_review_invocation: ${options.reviewInvocation ?? 'gate'}`]),
         `oat_project: ${options.projectPath}`,
         ...gateInvocationLines,
         ...countLines,
@@ -2640,6 +2643,45 @@ describe('oat gate', () => {
     });
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([
+    ['missing', null],
+    ['manual', 'manual'],
+    ['auto', 'auto'],
+  ] as const)(
+    'rejects %s gate artifact invocation markers before severity evaluation',
+    async (_label, reviewInvocation) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            reviewInvocation,
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'artifact_validation_failed',
+        message: expect.stringContaining('gate invocation marker'),
+        corroboration: {
+          run: 'matched',
+          invocation: 'matched',
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('rejects mismatched configured invocation metadata before severity evaluation', async () => {
     const { root, home } = await setup();

@@ -2222,6 +2222,22 @@ async function runReviewGate(
       process.exitCode = 1;
       return;
     }
+    if (verdict.invocation !== 'gate') {
+      writeReviewGateArtifactValidationFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        artifactPath: producedArtifact.path,
+        generatedAt: producedArtifact.generatedAt,
+        message:
+          'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
+        recovery: `Set oat_review_invocation: gate in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
+        gateInvocation,
+        corroboration,
+      });
+      process.exitCode = 1;
+      return;
+    }
     const blocking = reviewBlocksAtThreshold(verdict, threshold);
     const handoff = buildReviewGateHandoff({
       artifactPath: producedArtifact.path,
