@@ -1,6 +1,6 @@
 ---
 oat_current_task: p00-t01
-oat_last_commit: 22f82bed
+oat_last_commit: 23c0110f
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -15,7 +15,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -44,21 +44,21 @@ oat_generated: false
 
 # Project State: gate-review-provenance-target-safety
 
-**Status:** Implementation
+**Status:** Plan Revision
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Implementation - Starting `p00-t01`
+Plan revision - re-gating the supported-catalogue and scoped-materialization architecture
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete; revised artifact review passed)
-- **Implementation:** `implementation.md` (initialized; next task `p00-t01`)
+- **Plan:** `plan.md` (in progress; architecture revision awaiting artifact review)
+- **Implementation:** `implementation.md` (paused at `p00-t01`; failing TDD tests preserved)
 
 ## Progress
 
@@ -76,6 +76,10 @@ Implementation - Starting `p00-t01`
 - ✓ Managed Codex dispatch regression reproduced during implementation preflight
 - ✓ Prerequisite phase authorized by the user
 - ✓ Revised plan artifact review passed and findings dispositioned
+- ✓ User confirmed a finite committed supported Codex catalogue instead of runtime-only selected-role generation
+- ✓ User confirmed user-config roles belong in user scope and project-config roles belong in tracked project scope
+- ✓ User confirmed workflow correctness must not require provider restart or hot reload
+- ◌ Revised static-catalogue plan artifact review pending
 
 ## Blockers
 
@@ -83,4 +87,4 @@ None
 
 ## Next Milestone
 
-Execute Phase 0: Managed Dispatch Readiness Prerequisite
+Validate and gate the revised plan, then resume Phase 0 at `p00-t01`

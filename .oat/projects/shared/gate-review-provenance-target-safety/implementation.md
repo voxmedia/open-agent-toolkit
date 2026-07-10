@@ -35,12 +35,12 @@ oat_generated: false
 **Status:** in_progress
 **Commit:** -
 
-### Task p00-t02: Provide complete non-destructive dispatch defaults
+### Task p00-t02: Generate the supported catalogue and scoped custom roles
 
 **Status:** pending
 **Commit:** -
 
-### Task p00-t03: Materialize selected roles during implementation preflight
+### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
 
 **Status:** pending
 **Commit:** -
@@ -154,12 +154,16 @@ oat_generated: false
 - Next task is `p00-t01`.
 - The first implementation bootstrap incorrectly inferred Codex defaults from the legacy policy effort ladder. Those user-config edits and generated roles were removed before any phase worker launched. Session-observer evidence then recovered the exact locked Codex, Claude, and Cursor matrices, which were persisted by the sibling configuration session and are the source of truth for p00.
 - The first p00 worker was interrupted after writing only failing resolver tests when the live configuration session temporarily reduced Codex Frontier to `xhigh`. The user clarified that p00 must implement `max`; the plan now explicitly extends the Codex dispatch enum/order while preserving the worker's TDD changes for continuation.
+- Before source implementation resumed, the user replaced runtime-only selected-role materialization with a finite committed catalogue: Luna and Terra at four efforts and Sol at those efforts plus `max`, expanded for both implementer and reviewer roles.
+- Custom role ownership now follows configuration provenance. User-config targets materialize under `~/.codex`; project-config targets materialize under the project `.codex` view and are ordinary version-controlled project assets. OAT will not infer that a project setting is personal or attempt to hide its generated output from Git.
+- `oat sync` is the earliest best-effort materialization boundary, but workflow correctness cannot require provider restart or hot reload. Managed dispatch must use the exact registered role or a fresh child pinned to the resolved model and effort, including artifact reviews before implementation.
+- Implementation is paused at `p00-t01` while this architecture revision receives a new plan artifact gate. The three existing failing TDD test-file edits remain preserved and are intentionally excluded from the plan-revision bookkeeping commit.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review     | Source Artifact        | Planned / Documented                                                     | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                              |
+| ----------------- | ---------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------- | -------------------------------------- |
+| p00 plan revision | `design.md`, `plan.md` | Materialize only the selected Codex role during implementation preflight | Commit the supported catalogue, scope custom roles by config provenance, and use an exact pinned fresh-child fallback | Artifact review occurs before implementation preflight and provider hot reload is not guaranteed | Revised project artifacts | Re-gate plan before resuming `p00-t01` |
 
 ## Test Results
 

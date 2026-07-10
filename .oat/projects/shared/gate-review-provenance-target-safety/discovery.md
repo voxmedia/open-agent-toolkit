@@ -23,7 +23,7 @@ Make workflow gate reviews target-explicit and provenance-explicit before expand
 
 Lifecycle gate commands must remain provider-target-neutral. Do not implement the full dispatch machine schema except for minimal local structure needed by gate invocation metadata.
 
-During implementation preflight, the managed Codex policy resolved as ready even though no model-plus-effort target or materialized role existed. The user confirmed this is a release regression and authorized a prerequisite phase before the gate-provenance work. That phase must restore fail-closed dispatch readiness, usable defaults, non-destructive adoption, and selected-role materialization without broadening into the deferred dispatch-machine schema.
+During implementation preflight, the managed Codex policy resolved as ready even though no model-plus-effort target or selectable pinned role existed. The user confirmed this is a release regression and authorized a prerequisite phase before the gate-provenance work. That phase must restore fail-closed dispatch readiness, usable defaults, non-destructive adoption, a committed supported-role catalogue, and provenance-scoped custom-role materialization without broadening into the deferred dispatch-machine schema.
 
 ## Clarifying Questions
 
@@ -51,6 +51,22 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 
 **Summary:** This exceeds the requested boundary and would add unrelated design and migration risk.
 
+### Runtime-Only Role Materialization
+
+**Description:** Generate only the currently selected Codex role during planning or implementation preflight.
+
+**Chosen:** No.
+
+**Summary:** Artifact reviews can occur before implementation preflight, and provider sessions are not guaranteed to reload newly registered roles. Runtime-only generation therefore cannot be the correctness boundary.
+
+### Committed Supported Role Catalogue
+
+**Description:** Deterministically generate and commit the finite Luna, Terra, and Sol implementer/reviewer catalogue, while materializing additional configured targets into the scope that owns their configuration.
+
+**Chosen:** Yes.
+
+**Summary:** Supported roles are discoverable before the provider session starts. Custom user targets remain user-scoped, while custom project targets are ordinary version-controlled project provider assets.
+
 ## Current Baseline
 
 - `oat gate review --project <path-or-name>` already resolves an explicit project before ambient `activeProject`, injects the project into the reviewer prompt, and is used by the implementation phase gate without pinning `--target`.
@@ -58,8 +74,9 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 - Missing target-safety behavior is post-run corroboration of artifact `oat_project` against the declared project and explicit reporting of declared versus ambient project resolution.
 - Missing invocation-provenance behavior includes exec-target invocation metadata, prompt instructions, artifact fields, parser compatibility, and gate JSON parity.
 - Planning skills do not yet detect review-gate configuration or ask whether `oat_phase_review_gate` should be enabled.
-- User-level config selects managed `high`, carries a complete Cursor matrix, and relies on the valid built-in Claude ladder (`high -> opus`, `frontier -> fable`), but contains no Codex model-plus-effort matrix targets. Codex and Claude entries under `workflow.gates.execTargets` are gate commands, not subagent dispatch targets.
+- The locked dispatch matrix uses Codex `economy -> gpt-5.6-luna/high`, `balanced -> gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier -> gpt-5.6-sol/max`; Claude `economy/balanced -> sonnet`, `high -> opus`, and `frontier -> fable`; and exact opaque Cursor model strings for the corresponding Luna, Terra, and Sol targets. Codex and Claude entries under `workflow.gates.execTargets` are gate commands, not subagent dispatch targets.
 - Dispatch preflight currently reports that incomplete Codex state as resolved with `dispatchArgs: null` and unresolved axes. The bundled recommendation still contains effort-only Codex cells, adoption replaces existing provider columns, and lower-than-cap Codex selection drops its matrix target.
+- The current project Codex view contains only the four selected matrix variants for each OAT role. It does not provide the complete supported catalogue before discovery, planning, and artifact review.
 
 ## Key Decisions
 
@@ -72,6 +89,9 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 7. **Existing behavior first:** Plan against the current `main` baseline and close missing acceptance gaps rather than reimplementing already-shipped routing and aggregation.
 8. **Dispatch readiness is concrete:** A managed provider is runnable only when its native adapter can compile the selected target. Valid built-in compilation such as Claude remains accepted; incomplete Codex policy intent must prompt or block rather than fall back to an unpinned role.
 9. **Defaults preserve intent:** Recommended matrix adoption fills missing provider/tier cells without overwriting explicit user choices such as the existing Cursor column.
+10. **Supported roles are pre-registered:** Commit implementer and reviewer variants for Luna and Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and `max`.
+11. **Configuration provenance owns custom roles:** Custom targets from user config materialize under `~/.codex`; custom targets from project config materialize under the project's `.codex` view and are expected to be version controlled.
+12. **No reload dependency:** Workflow correctness cannot require provider hot reload or restart. Dispatch uses an already registered exact role when possible and an explicitly pinned fresh child otherwise.
 
 ## Constraints
 
@@ -82,7 +102,8 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 - Phase review gates remain opt-in and disabled when no qualifying configuration exists or the user declines.
 - Any changed canonical skill must receive one frontmatter version bump in the final PR diff.
 - Shipped CLI, skills, templates, or docs changes require lockstep version bumps for the five public packages and `pnpm release:validate` before completion.
-- The prerequisite is limited to dispatch readiness, defaults/adoption, selected-target resolution, and materialization required to run this project. General dispatch reporting and schema consolidation remain deferred.
+- The prerequisite is limited to dispatch readiness, defaults/adoption, selected-target resolution, the finite supported catalogue, scoped custom materialization, and deterministic role dispatch required to run this project. General dispatch reporting and schema consolidation remain deferred.
+- OAT does not classify project configuration as personal. Project-scoped generated provider assets are version-controlled changes; users must remove them or explain them to collaborators as they would any other project configuration.
 
 ## Success Criteria
 
@@ -95,7 +116,9 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 - Tests cover configured Codex and Claude invocation metadata, default/unknown targets, parser compatibility, declared-project mismatch, ambient fallback, exact and aggregated producer stamps, and phase-review prompt outcomes.
 - Workflow-gate, review, artifact, and planning documentation describes the resulting contracts.
 - Managed Codex preflight flags a missing or non-compilable model-plus-effort target, offers valid defaults, and blocks non-interactive execution until resolved; Claude's valid built-in policy compilation remains runnable.
-- Default adoption preserves existing explicit provider/tier values, complete Codex targets materialize deterministic roles, and lower-than-cap preferred efforts resolve the matching configured target rather than silently losing the variant.
+- Default adoption preserves existing explicit provider/tier values, `max` is a first-class Codex effort, lower-than-cap preferred efforts retain the matching configured target, and the committed catalogue contains exactly 26 supported implementer/reviewer variants.
+- `oat sync` materializes custom user targets to user scope and custom project targets to tracked project scope; ownership-aware cleanup never deletes another scope's roles or unrelated provider entries.
+- Spec-driven planning, quick-start, imported plans, provider-plan import, implementation phases, and artifact reviews use the same target resolver and never silently substitute an unpinned base reviewer for a managed target.
 
 ## Out of Scope
 
@@ -106,6 +129,7 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 - Auto-enabling phase review gates without a qualifying gate configuration or after user decline.
 - Removing legacy ambient project resolution for manual gate review invocations.
 - General dispatch-machine schemas, renderers, or unrelated provider-routing redesign beyond the bounded prerequisite repair.
+- Provider restart or hot-reload requirements as a condition of workflow correctness.
 
 ## Deferred Ideas
 
@@ -131,6 +155,8 @@ Use one narrow safety sequence rather than introducing a general dispatch schema
 - **Distributed skill drift:** Planning behavior spans several canonical skills and bundled views. Mitigate with shared plan-writing guidance, version bumps, sync validation, and release validation.
 - **False-ready dispatch:** Policy intent can appear resolved while the active provider has no executable controls. Mitigate by deriving readiness from adapter compilation and testing interactive and non-interactive preflight outcomes.
 - **Destructive remediation:** Adopting defaults can erase custom provider columns. Mitigate with fill-missing merge semantics and preservation tests.
+- **Cross-scope deletion:** A project sync can otherwise remove a user-derived role, or vice versa. Mitigate with explicit ownership markers and scope-constrained cleanup.
+- **Session discovery timing:** A role created after provider startup may not be selectable by agent type. Mitigate with the committed supported catalogue and an exact fresh-child fallback for custom or unavailable roles.
 
 ## Next Steps
 

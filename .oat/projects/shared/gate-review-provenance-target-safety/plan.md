@@ -1,10 +1,10 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p04']
 oat_auto_review_at_hill_checkpoints: true
@@ -21,7 +21,7 @@ oat_generated: false
 
 **Goal:** Restore deterministic managed subagent dispatch as a prerequisite, then make workflow gate reviews explicit and corroborated about the configured invocation and review subject before expanding opt-in phase review gates.
 
-**Architecture:** Fail closed when managed provider intent cannot compile concrete dispatch controls, offer non-destructive complete defaults, materialize the selected Codex role, then extend the existing gate path with minimal exec-target invocation metadata, immutable gate-owned project/invocation records, run-correlated artifact corroboration, explicit aggregated producer provenance, and one shared phase-review setup contract used by every plan-producing workflow.
+**Architecture:** Fail closed when managed provider intent cannot compile concrete dispatch controls; make Codex `max` first-class; commit a complete supported reviewer/implementer catalogue; materialize custom targets into the scope that owns their configuration; and dispatch the exact registered role or an explicitly pinned fresh child without requiring provider restart. Then extend the existing gate path with minimal exec-target invocation metadata, immutable gate-owned project/invocation records, run-correlated artifact corroboration, explicit aggregated producer provenance, and one shared phase-review setup contract used by every plan-producing workflow.
 
 **Tech Stack:** TypeScript ESM, Commander, Vitest, YAML frontmatter, Markdown-based OAT skills, Fumadocs, pnpm/Turborepo.
 
@@ -34,7 +34,8 @@ oat_generated: false
 - [x] Set `oat_plan_parallel_groups: []`
 - [x] Dispatch policy resolved from user config: managed `high`
 - [x] Implementation regression identified and prerequisite scope authorized
-- [x] Revised plan artifact review passed
+- [x] Initial prerequisite plan artifact review passed
+- [ ] Static-catalogue and scoped-materialization revision artifact review passed
 
 ## Parallelism
 
@@ -61,7 +62,8 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 2. Preserve valid built-in compilation such as Claude `high -> opus` and `frontier -> fable`, explicit inherit/default behavior, managed uncapped reviewer behavior, and deliberate cross-harness advisory routes.
 3. Extend `WorkflowCodexDispatchCeiling`, `VALID_CODEX_DISPATCH_CEILINGS`, and the resolver/provider ordered value path from `low | medium | high | xhigh` to `low | medium | high | xhigh | max`, allowing the existing materializer to compile explicit `max` targets without coercion.
 4. After applying a Codex effort cap, resolve the matrix target corresponding to the selected effort instead of dropping the target whenever preferred effort is below the policy cap.
-5. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, explicit `max` materialized targets, reviewer, uncapped, and Cursor/model-argument selections so existing user matrix behavior remains stable.
+5. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, explicit `max` targets, reviewer, and uncapped paths. Prove the configured Cursor values remain opaque and compile unchanged: `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and `gpt-5.6-sol-max`.
+6. After `max` resolves successfully, restore the user Codex Frontier target in `~/.oat/config.json` to `gpt-5.6-sol/max` and verify implementer/reviewer resolution plus all four Cursor tiers from the live layered configuration.
 
 **Verify:**
 
@@ -74,7 +76,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ---
 
-### Task p00-t02: Provide complete non-destructive dispatch defaults
+### Task p00-t02: Generate the supported catalogue and scoped custom roles
 
 **Files:**
 
@@ -83,26 +85,46 @@ pnpm --filter @open-agent-toolkit/cli type-check
 - Modify: `packages/cli/src/commands/config/index.test.ts`
 - Modify: `packages/cli/src/config/oat-config.test.ts`
 - Modify: `packages/cli/src/providers/identity/availability.test.ts`
+- Add: `packages/cli/src/providers/codex/codec/catalog.ts`
+- Add: `packages/cli/src/providers/codex/codec/catalog.test.ts`
+- Modify: `packages/cli/src/providers/codex/codec/shared.ts`
+- Modify: `packages/cli/src/providers/codex/codec/config-merge.ts`
+- Modify: `packages/cli/src/providers/codex/codec/config-merge.test.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- Modify: `packages/cli/src/commands/providers/codex/materialize.ts`
+- Modify: `packages/cli/src/commands/providers/codex/materialize.test.ts`
+- Modify: `packages/cli/src/commands/sync/index.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+- Modify: `packages/cli/src/commands/status/index.ts`
+- Modify: `packages/cli/src/commands/status/index.test.ts`
+- Regenerate: `.codex/config.toml`
+- Regenerate: `.codex/agents/oat-phase-implementer-*.toml`
+- Regenerate: `.codex/agents/oat-reviewer-*.toml`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
 
 **Steps:**
 
-1. Verify each model against the live provider catalog, then replace effort-only recommended Codex cells with the confirmed ladder: `economy -> gpt-5.6-luna/high`, `balanced -> gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier -> gpt-5.6-sol/max`. Preserve `max` as an explicit materialized-target effort rather than coercing it through the legacy closed effort list; retain the confirmed Claude ladder `economy/balanced -> sonnet`, `high -> opus`, and `frontier -> fable`.
-2. Change default adoption to recursively fill missing provider/tier cells while preserving existing explicit values such as the user's Cursor matrix and any custom Claude/Codex cells.
-3. Keep destructive replacement, if retained, behind a separately explicit operation rather than the normal missing-config remediation path.
-4. Validate every recommended cell and cover fresh adoption, partial-provider adoption, partial-tier adoption, idempotence, and custom-value preservation.
+1. Add an immutable supported Codex target catalogue: Luna and Terra at `low`, `medium`, `high`, and `xhigh`; Sol at those efforts plus `max`. Deterministically expand all 13 targets for both implementer and reviewer roles, yielding exactly 26 committed project variants and stable `.codex/config.toml` registrations.
+2. Distinguish generated ownership as `supported-catalogue`, `user-config`, or `project-config`. Reconcile user-config custom targets only under `~/.codex`; reconcile project-config custom targets only under the project's `.codex` view and treat that output as version-controlled project state.
+3. Make `oat sync --scope user|project|all` apply the corresponding reconciliation passes. Scope cleanup to matching ownership markers so a sync cannot remove supported roles, roles from another config scope, or unrelated provider entries. Use the same scoped reconciler best-effort from config mutation where practical without making hot reload a correctness requirement.
+4. Replace effort-only recommended Codex cells with the confirmed ladder: `economy -> gpt-5.6-luna/high`, `balanced -> gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier -> gpt-5.6-sol/max`; retain Claude `economy/balanced -> sonnet`, `high -> opus`, and `frontier -> fable`.
+5. Change default adoption to recursively fill missing provider/tier cells while preserving existing explicit values, including the exact configured Cursor strings and custom Claude/Codex cells. Keep destructive replacement, if retained, behind a separately explicit operation.
+6. Cover exact catalogue membership, stable/idempotent generation, user/project/all scope routing, ownership-safe cleanup, fresh and partial adoption, and custom-value preservation.
 
 **Verify:**
 
 ```bash
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts src/providers/identity/availability.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/config/index.test.ts src/config/oat-config.test.ts src/providers/identity/availability.test.ts src/providers/codex/codec/catalog.test.ts src/providers/codex/codec/config-merge.test.ts src/providers/codex/codec/sync-extension.test.ts src/commands/providers/codex/materialize.test.ts src/commands/sync/index.test.ts src/commands/status/index.test.ts
 pnpm --filter @open-agent-toolkit/cli type-check
 ```
 
-**Commit:** `fix(config): adopt complete dispatch defaults safely`
+**Commit:** `fix(codex): sync pinned roles by configuration scope`
 
 ---
 
-### Task p00-t03: Materialize selected roles during implementation preflight
+### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
 
 **Files:**
 
@@ -110,19 +132,23 @@ pnpm --filter @open-agent-toolkit/cli type-check
 - Modify: `.agents/skills/oat-project-plan/SKILL.md`
 - Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
 - Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 - Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
 - Modify: `packages/cli/src/commands/sync/index.test.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
 
 **Steps:**
 
 1. Require every plan-producing path to treat a missing active-provider cell as unresolved, show complete recommended defaults, persist the selected setup, and re-run the resolver before implementation readiness.
-2. In implementation preflight, permit a base Codex role only for explicit inherit/default and documented managed-uncapped reviewer behavior; a missing managed target must prompt or block.
-3. When the resolver returns a materialized Codex variant that is absent locally, invoke project materialization/sync, re-resolve, verify the exact role exists, and only then spawn it.
-4. Add workflow and sync contract tests proving effective user/shared/local/project targets generate and select the exact implementer and reviewer roles while preserving unrelated provider views.
-5. Defer the single PR-scoped version bumps for `oat-project-implement`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until their final edits in p02-t03 and p04-t02.
+2. Route spec-driven, quick-start, import-plan, provider-plan import, implementation phases, artifact reviews, and phase/final reviews through the same resolver-selected role contract.
+3. For managed Codex dispatch, use the exact registered implementer/reviewer variant when the host supports role selection. When the current host cannot select it, launch a fresh Codex child with explicit model, reasoning effort, and canonical role instructions; do not require provider restart or workflow-time materialization.
+4. Permit a base Codex role only for explicit inherit/default and documented managed-uncapped reviewer behavior. Missing managed targets must prompt or block, and unavailable role selection must never silently downgrade to the base reviewer.
+5. Add workflow contract tests for all plan-writing paths, implementation and review dispatch, registered-role selection, pinned-child fallback, exact Cursor model strings, and the absence of generic managed fallback.
+6. Defer the single PR-scoped version bumps for `oat-project-implement`, `oat-project-review-provide`, `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until each skill's final edit later in the PR.
 
 **Verify:**
 
@@ -132,7 +158,7 @@ pnpm run oat:validate-skills
 pnpm docs:check-links
 ```
 
-**Commit:** `fix(workflow): materialize managed Codex roles on demand`
+**Commit:** `fix(workflow): pin managed review dispatch targets`
 
 ---
 
@@ -324,7 +350,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 2. Keep provider/model `--target` absent from reusable lifecycle commands and examples.
 3. Explain declared versus ambient project resolution, mismatch failures, invalid-artifact handoff behavior, and manual/debug exceptions.
 4. Add migration guidance for existing user-level lifecycle commands that currently say "current project": insert `--project "$PROJECT_PATH"` while retaining target-neutral provider selection.
-5. Bump `oat-project-implement` once in this task, covering both its p00-t03 preflight/materialization edits and this task's lifecycle-gate guidance. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
+5. Bump `oat-project-implement` once in this task, covering both its p00-t03 deterministic-dispatch edits and this task's lifecycle-gate guidance. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
 
 **Verify:**
 
@@ -476,6 +502,7 @@ git status --short
 | design | artifact | pending | -          | -                                                           |
 | plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
 | plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | pending | -          | -                                                           |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -483,7 +510,7 @@ git status --short
 
 **Summary:**
 
-- Phase 0: 3 tasks - fail-closed dispatch readiness, complete non-destructive defaults, and selected-role materialization
+- Phase 0: 3 tasks - fail-closed dispatch readiness, committed/scoped pinned roles, and deterministic workflow dispatch
 - Phase 1: 4 tasks - configured invocation metadata, inspection, prompt/JSON provenance, and artifact validation
 - Phase 2: 3 tasks - project resolution provenance, fail-closed target corroboration, and lifecycle guidance
 - Phase 3: 1 task - explicit final/range producer aggregation provenance
@@ -501,4 +528,4 @@ Ready for implementation after the revised plan artifact review passes.
 - Backlog: `BL-260707-declare-gate-review-target`
 - Backlog: `BL-260707-support-producer-identity`
 - Backlog: `BL-260707-ask-to-enable-phase-review`
-- Prerequisite regression: managed Codex dispatch readiness and on-demand materialization discovered during implementation preflight
+- Prerequisite regression: managed Codex dispatch readiness and pre-session pinned-role availability discovered during implementation preflight
