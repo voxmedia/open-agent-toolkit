@@ -259,7 +259,42 @@ oat config set workflow.postImplementSequence docs-pr --shared
 
 ## Error Handling
 
-_Pending collaborative review._
+### Configuration Errors
+
+- `oat config set` first accepts a known legacy string; otherwise it parses the
+  value as JSON.
+- Invalid JSON, missing arrays, extra fields, duplicates, or unknown steps
+  produce a specific error and leave the selected config file unchanged.
+- Existing config-file normalization behavior remains compatible: malformed
+  values are excluded rather than partially normalized or merged.
+- Structured output is serialized explicitly; `[object Object]` is never
+  considered a valid result.
+
+### Sequence-Step Failures
+
+- Persist each successful step before dispatching the next.
+- On failure, set snapshot status to `failed`, record boundary, step, and concise
+  context, and stop immediately.
+- Output the failed step and the exact recovery action: rerun
+  `oat-project-implement`.
+- Do not roll back completed summary, docs, or PR effects.
+- Resume checks actual persisted state, clears the failure only when retry
+  begins, and retries the first incomplete step.
+- If PR creation partially succeeded, existing PR state is reconciled before
+  deciding whether the step needs another invocation.
+
+### Approval Handling
+
+- After pre-approval succeeds, commit `status: awaiting_approval` before
+  prompting.
+- Explicit approval is committed as `approval: approved` before post-approval
+  dispatch.
+- Declining or deferring approval pauses without recording failure or approval.
+- Without a final checkpoint, `approval: not_required` is recorded; this is not
+  represented as human approval.
+- A pre-approval failure leaves approval `pending`; a post-approval failure
+  preserves the previously explicit `approved` state.
+- Child skills must preserve the snapshot when updating project state.
 
 ## Testing Strategy
 
