@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p04']
 oat_auto_review_at_hill_checkpoints: true
@@ -34,7 +34,7 @@ oat_generated: false
 - [x] Set `oat_plan_parallel_groups: []`
 - [x] Dispatch policy resolved from user config: managed `high`
 - [x] Implementation regression identified and prerequisite scope authorized
-- [ ] Revised plan artifact review passed
+- [x] Revised plan artifact review passed
 
 ## Parallelism
 
@@ -57,7 +57,7 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 1. Distinguish abstract policy resolution from runnable active-provider resolution. During preflight, a managed provider that cannot compile native dispatch controls is unresolved and blocks non-interactive execution.
 2. Preserve valid built-in compilation such as Claude `high -> opus` and `frontier -> fable`, explicit inherit/default behavior, managed uncapped reviewer behavior, and deliberate cross-harness advisory routes.
 3. After applying a Codex effort cap, resolve the matrix target corresponding to the selected effort instead of dropping the target whenever preferred effort is below the policy cap.
-4. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, reviewer, and uncapped selections.
+4. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, reviewer, uncapped, and Cursor/model-argument selections so existing user matrix behavior remains stable.
 
 **Verify:**
 
@@ -82,7 +82,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 **Steps:**
 
-1. Replace effort-only recommended Codex cells with versioned, complete same-harness model-plus-effort targets using the provider-visible GPT-5.6 Luna/Terra/Sol ladder; retain valid Claude native targets including `frontier: fable`.
+1. Verify each model against the live provider catalog, then replace effort-only recommended Codex cells with this explicit initial ladder: `economy -> gpt-5.6-luna/medium`, `balanced -> gpt-5.6-terra/high`, `high -> gpt-5.6-sol/xhigh`, and `frontier -> gpt-5.6-sol/xhigh`. Keep Frontier at `xhigh` until Codex `max` is supported by the dispatch contract; retain valid Claude native targets including `frontier: fable`.
 2. Change default adoption to recursively fill missing provider/tier cells while preserving existing explicit values such as the user's Cursor matrix and any custom Claude/Codex cells.
 3. Keep destructive replacement, if retained, behind a separately explicit operation rather than the normal missing-config remediation path.
 4. Validate every recommended cell and cover fresh adoption, partial-provider adoption, partial-tier adoption, idempotence, and custom-value preservation.
@@ -320,7 +320,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 2. Keep provider/model `--target` absent from reusable lifecycle commands and examples.
 3. Explain declared versus ambient project resolution, mismatch failures, invalid-artifact handoff behavior, and manual/debug exceptions.
 4. Add migration guidance for existing user-level lifecycle commands that currently say "current project": insert `--project "$PROJECT_PATH"` while retaining target-neutral provider selection.
-5. Bump `oat-project-implement` once in this task. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
+5. Bump `oat-project-implement` once in this task, covering both its p00-t03 preflight/materialization edits and this task's lifecycle-gate guidance. Defer the single PR-scoped bumps for plan, quick-start, and import-plan until their final edits in p04-t02; add cross-skill contract tests here without interim bumps.
 
 **Verify:**
 
@@ -405,7 +405,7 @@ pnpm run oat:validate-skills
 
 1. Invoke the shared setup after stable phase IDs and before plan artifact review in spec-driven, quick, and import workflows; document provider-plan mode as inheriting import behavior.
 2. Preserve resumed/imported explicit values without re-prompting and leave disabled behavior unchanged when no target qualifies or the user declines.
-3. Apply the single PR-scoped version bumps for plan, quick-start, and import-plan, covering both their p02 guidance edits and final p04 setup edits; add all-path/no-prompt/preservation contract tests.
+3. Apply the single PR-scoped version bumps for plan, quick-start, and import-plan, covering their p00-t03 dispatch-readiness edits, p02 guidance edits, and final p04 setup edits; add all-path/no-prompt/preservation contract tests.
 
 **Verify:**
 
@@ -460,18 +460,18 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p00    | code     | pending  | -          | -                                                  |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-10 | reviews/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | pending  | -          | -                                                  |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | pending | -          | -                                                           |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| p04    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: p00-t01
-oat_last_commit: a827a260
+oat_last_commit: f66ae3db
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -15,7 +15,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -38,27 +38,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T02:33:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T04:45:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-review-provenance-target-safety
 
-**Status:** Plan Revision
+**Status:** Implementation
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Plan - Adding prerequisite dispatch-readiness phase
+Implementation - Starting `p00-t01`
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (revision in progress; prior artifact review retained as history)
-- **Implementation:** `implementation.md` (initialized; next task `p00-t01` after revised plan review)
+- **Plan:** `plan.md` (complete; revised artifact review passed)
+- **Implementation:** `implementation.md` (initialized; next task `p00-t01`)
 
 ## Progress
 
@@ -75,12 +75,12 @@ Plan - Adding prerequisite dispatch-readiness phase
 - ✓ Final-phase HiLL checkpoint and auto-review confirmed from config
 - ✓ Managed Codex dispatch regression reproduced during implementation preflight
 - ✓ Prerequisite phase authorized by the user
-- ○ Revised plan artifact review pending
+- ✓ Revised plan artifact review passed and findings dispositioned
 
 ## Blockers
 
-Implementation is blocked until the revised plan passes artifact review.
+None
 
 ## Next Milestone
 
-Pass revised plan artifact review, then execute Phase 0: Managed Dispatch Readiness Prerequisite
+Execute Phase 0: Managed Dispatch Readiness Prerequisite

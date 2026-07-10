@@ -129,7 +129,7 @@ _No implementation runs yet._
 ### 2026-07-10
 
 - Quick-start discovery and lightweight design completed.
-- Four-phase, eleven-task sequential plan passed structured artifact review.
+- The original four-phase, eleven-task sequential plan passed structured artifact review before the prerequisite was discovered.
 - Configured cross-runtime plan gate passed with 0 Critical, 0 Important, 1 Medium, and 2 Minor findings.
 - Review received from `reviews/archived/artifact-plan-review-2026-07-10T014435Z.md`:
   - `M1` resolved in `plan.md` by assigning invocation frontmatter and gate JSON documentation to p01-t04.
@@ -139,7 +139,13 @@ _No implementation runs yet._
 - The Codex session in `codex-family-subagents` confirmed this project should precede implementation of workflows that expand configured gate usage, while planning those projects remains safe.
 - Implementation preflight exposed an incomplete managed Codex configuration: policy `high` resolved without a model-plus-effort target, concrete variant, or materialized role. The user authorized a prerequisite `p00` repair before gate-provenance implementation.
 - Session-observer evidence confirmed Cursor targets were persisted, Claude intentionally relies on the valid built-in ladder, and Codex gate exec configuration was mistaken for subagent dispatch configuration.
-- Plan revision and a new artifact gate are required before implementation resumes. Next task is now `p00-t01`.
+- Revised five-phase, fourteen-task plan passed the configured target-neutral artifact gate with 0 Critical, 0 Important, 0 Medium, and 4 Minor findings.
+- Review received from `reviews/archived/artifact-plan-review-2026-07-10T024822Z.md`:
+  - `m1` resolved in `plan.md` by naming the exact catalog-validated Codex tier-to-model/effort ladder and retaining the `xhigh` Frontier boundary until `max` is supported.
+  - `m2` resolved in `plan.md` with an explicit Cursor/model-argument preservation case for provider-generic resolver tightening.
+  - `m3` resolved in `plan.md` by making the final PR-scoped version bumps explicitly cover p00-t03 edits.
+  - `m4` rejected: quick-mode plans retain the canonical `spec` review row, `n/a` is not a valid review status, and implementation readiness does not depend on a spec review.
+- Next task is `p00-t01`.
 
 ## Deviations from Plan / Design
 
