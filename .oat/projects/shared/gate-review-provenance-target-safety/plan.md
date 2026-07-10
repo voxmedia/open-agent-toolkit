@@ -516,7 +516,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ## Phase 2: Declared Review Target Safety
 
-**Implementation Status:** review fixes queued
+**Implementation Status:** review fixes completed; awaiting independent re-review
 
 > **Phase review note:** p02 intentionally defers the single PR-scoped version bumps for `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until their final edits in p04-t02. Do not flag those interim versions as missing bumps.
 
@@ -812,19 +812,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | fixes_added | 2026-07-10 | reviews/archived/p02-review-2026-07-10T081931Z.md           |
-| p03    | code     | pending     | -          | -                                                           |
-| p04    | code     | pending     | -          | -                                                           |
-| final  | code     | pending     | -          | -                                                           |
-| spec   | artifact | pending     | -          | -                                                           |
-| design | artifact | pending     | -          | -                                                           |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | fixes_completed | 2026-07-10 | reviews/archived/p02-review-2026-07-10T081931Z.md           |
+| p03    | code     | pending         | -          | -                                                           |
+| p04    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p03-t01
 oat_last_commit: ad82a1fb
 oat_blockers: []
 associated_issues:
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T08:36:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T08:39:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - all p02 review-fix tasks are implemented; union verification and fix-completion bookkeeping remain. p03 remains unstarted.
+Implementation - p02 review fixes complete; awaiting independent re-review. Restart pointer: `p03-t01` (not started).
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - all p02 review-fix tasks are implemented; union verification an
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` and `p01` reviews passed; p02 review fixes queued)
+- **Implementation:** `implementation.md` (`p00` and `p01` reviews passed; p02 review fixes completed)
 
 ## Progress
 
@@ -127,6 +127,9 @@ Implementation - all p02 review-fix tasks are implemented; union verification an
 - ✓ `p02-t04` constrains ambient run-correlated artifacts to the resolved project
 - ✓ `p02-t05` validates declared project identity before verdict parsing or mutation
 - ✓ `p02-t06` retains malformed run-correlated artifacts for duplicate detection and format validation
+- ✓ All p02 review fixes completed and committed-tree union verification passed
+- ✓ p02 fix-range self-review completed with no additional findings
+- ⧗ Awaiting independent p02 re-review
 
 ## Blockers
 
@@ -134,4 +137,4 @@ None
 
 ## Next Milestone
 
-Run the complete p02 fix union and committed-range self-review, then mark fixes complete for independent re-review. p03 remains unstarted.
+Run an independent p02 re-review. If it passes, resume from `p03-t01`; do not start p03 before that review.

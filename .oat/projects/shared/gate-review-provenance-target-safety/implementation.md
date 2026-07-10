@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | completed   | 6     | 6/6       |
-| p01   | completed   | 9     | 9/9       |
-| p02   | in_progress | 6     | 6/6       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | completed | 9     | 9/9       |
+| p02   | completed | 6     | 6/6       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 3     | 0/3       |
 
 **Total:** 21/25 tasks completed
 
@@ -120,7 +120,7 @@ oat_generated: false
 
 ## Phase 2: Declared Review Target Safety
 
-**Status:** review fixes queued
+**Status:** completed; awaiting independent re-review
 
 ### Task p02-t01: Expose review-project resolution provenance
 
@@ -157,7 +157,9 @@ oat_generated: false
 - **Outcome:** Gate review project resolution now reports its declaration or ambient source; direct active review artifacts are selected by unique run ID across project directories; explicitly declared projects fail closed on containing-project, `oat_project`, or run-correlation mismatches; and lifecycle review commands declare the exported project while remaining provider/model target-neutral.
 - **Key files touched:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/review-verdict.ts`, the four gate-aware lifecycle skills, `packages/cli/src/validation/skills.test.ts`, and workflow-gate/contributing-skill docs.
 - **Verification:** 160 focused gate/parser/skill assertions, CLI type-check, workspace lint, root format, validation of all 53 OAT skills, 532-link docs crawl, and committed-range diff/version hygiene all passed.
-- **Decisions/deviations:** The independent review found three uncovered correlation defects in ambient containment, pre-parse declared-project validation, and invalid generation metadata. These are queued as `p02-t04` through `p02-t06`; only `oat-project-implement` advanced to `2.0.32`, with the other three lifecycle skill version bumps deferred to p04 as planned.
+- **Review fixes:** Ambient run matches must remain inside the resolved project; declared containing/frontmatter project identity is rejected before parsing or normalization; and missing/invalid generation timestamps no longer hide duplicate run IDs.
+- **Fix verification:** 122 focused gate/parser assertions, CLI type-check, workspace lint, root format, and committed-range diff checks all passed from the completed fix range.
+- **Decisions/deviations:** The independent review found three uncovered correlation defects in ambient containment, pre-parse declared-project validation, and invalid generation metadata. `p02-t04` through `p02-t06` close those defects without design or plan deviation; only `oat-project-implement` advanced to `2.0.32`, with the other three lifecycle skill version bumps deferred to p04 as planned.
 
 ## Phase 3: Aggregated Producer Provenance
 
@@ -233,6 +235,18 @@ oat_generated: false
 - Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 78f3259b-f16d-47ac-9e09-724af12003cd
+
+- Started: 2026-07-10T08:39:05Z
+- Scope: p02 review fixes (`p02-t04`, `p02-t05`, `p02-t06`)
+- Execution: exact pinned Codex implementer session
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model axis: `selected:gpt-5.6-sol`
+- Effort axis: `selected:high`
+- Policy source: user config
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Dispatch: scope=p02 action=fix role=fix producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -365,6 +379,8 @@ oat_generated: false
 - Focused p02-t05 verification reproduced malformed-findings misclassification and missing-heading mutation, then passed both immutable precedence regressions, all 118 gate/parser assertions, CLI type-check, and diff checks after the fix.
 - `p02-t06` completed in `ad82a1fb`: direct review candidates retain gate run identity when `oat_generated_at` is missing or invalid, malformed timestamps sort deterministically after valid timestamps, duplicate run IDs remain visible, and a unique malformed timestamp is classified as artifact validation.
 - Focused p02-t06 verification reproduced two hidden-duplicate false greens and two missing-run misclassifications, then passed all four regressions, all 122 gate/parser assertions, CLI type-check, and diff checks after the fix.
+- Final p02 fix verification passed all 122 gate/parser assertions, CLI type-check, workspace lint, root format, and `git diff --check ee8522d1..HEAD` after rerunning the asset-producing checks sequentially.
+- Committed-range self-review found no further targeting, parser-order, mutation, duplicate-correlation, handoff, or scope defects. The p02 review row is `fixes_completed`; `p03-t01` is a restart pointer only and p03 has not started.
 
 ### Review Received: p01
 
@@ -432,7 +448,9 @@ oat_generated: false
 - `I1` agreed, `Moderate`, `code_fix_required`: reject declared-project mismatch before verdict parsing or normalization can remediate or mutate the artifact.
 - `I2` agreed, `Moderate`, `code_fix_required`: retain run-correlated candidates with invalid generation metadata so duplicate detection and format classification remain accurate.
 
-**Next:** Execute `p02-t04` through `p02-t06`, then run an independent p02 re-review before starting p03.
+**Fix outcome:** `p02-t04` through `p02-t06` completed with focused RED/GREEN evidence, union verification, and committed-range self-review. The review is ready for independent re-review.
+
+**Next:** Run an independent p02 re-review before starting p03.
 
 ## Deviations from Plan / Design
 
@@ -469,6 +487,7 @@ oat_generated: false
 | p02-t04    | RED ambient sibling regressions; 100 gate assertions; CLI type-check; diff                                       | 103    | 0      | Ambient containment with ambient provenance preserved        |
 | p02-t05    | RED parse/normalization precedence; 118 gate/parser assertions; CLI type-check; diff                             | 121    | 0      | Declared project validation before parse or mutation         |
 | p02-t06    | RED malformed timestamp matrix; 122 gate/parser assertions; CLI type-check; diff                                 | 127    | 0      | Run-first duplicate detection and format classification      |
+| p02 fixes  | 122 gate/parser assertions; CLI type-check; lint; format; diff                                                   | 126    | 0      | Committed-tree p02 review-fix union and self-review          |
 
 ## Final Summary (for PR/docs)
 
