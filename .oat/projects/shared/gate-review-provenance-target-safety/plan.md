@@ -1432,7 +1432,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t23: (final review) Enforce canonical dispatch action-role pairs
 
-**Status:** pending
+**Status:** completed (`1f1ca823`)
 **Finding:** `M2` (Medium; Moderate; `code_fix_required`)
 
 **Files:**

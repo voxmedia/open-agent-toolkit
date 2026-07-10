@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t23
+oat_current_task_id: p04-t24
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 25    | 22/25     |
+| p04   | in_progress | 25    | 23/25     |
 
-**Total:** 45/48 tasks completed
+**Total:** 46/48 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -382,11 +382,14 @@ oat_generated: false
 
 ### Task p04-t23: (final review) Enforce canonical dispatch action-role pairs
 
-**Status:** pending
+**Status:** completed
+**Commit:** `1f1ca823`
 **Finding:** `M2` (Medium; Moderate; `code_fix_required`)
 
-- Reject action/role mismatches before exact or aggregate producer resolution.
-- Correct the remaining historical `scope=p00 action=fix role=implementer` record without changing its identity metadata.
+- Modern dispatch parsing now accepts only `implementation/implementer`, `fix/fix`, and `review/reviewer` and warns before rejecting all six incompatible pairs.
+- Exact, final, and range producer resolution discard incompatible stamps before role filtering or contributor aggregation.
+- The remaining historical p00 fix stamp now uses `role=fix`; every other identity and dispatch field is unchanged.
+- RED/GREEN verification passed 141 focused identity/gate assertions and CLI type-check.
 
 ### Task p04-t24: (final review) Resume interrupted quick-plan review
 
@@ -406,12 +409,12 @@ oat_generated: false
 
 ### Phase Summary
 
-- **Outcome:** The first 22 p04 tasks are complete. Final review cycle 3 added six sequential fixes for realpath containment, user-status input composition, managed-role header parsing, dispatch-pair validation, quick-plan resumption, and user-scope docs parity; the first three fixes are now complete.
+- **Outcome:** The first 23 p04 tasks are complete. Final review cycle 3 added six sequential fixes for realpath containment, user-status input composition, managed-role header parsing, dispatch-pair validation, quick-plan resumption, and user-scope docs parity; the first four fixes are now complete.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** Final review cycle 3 is `fixes_added`. Execute `p04-t23` through `p04-t25` before any further review or explicit p04 HiLL approval.
+- **Review status:** Final review cycle 3 is `fixes_added`. Execute `p04-t24` through `p04-t25` before any further review or explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
@@ -1043,6 +1046,7 @@ oat_generated: false
 | p04-t20    | RED/GREEN realpath containment matrix; 226 focused assertions; CLI type-check                                         | 226    | 0      | Canonical in-repo identity and fail-closed symlink handling   |
 | p04-t21    | RED/GREEN real custom-target status; 69 focused status/sync/scanner assertions; CLI type-check                        | 69     | 0      | User Codex drift parity with narrowly composed agent inputs   |
 | p04-t22    | RED/GREEN strict header parser; 33 focused shared-codec/materialization assertions; CLI type-check                    | 33     | 0      | Header-only authority and owner-safe stale cleanup            |
+| p04-t23    | RED/GREEN incompatible-pair matrix; 141 focused identity/gate assertions; CLI type-check                              | 141    | 0      | Canonical dispatch pairs before producer aggregation          |
 
 ## Final Summary (for PR/docs)
 
@@ -1069,9 +1073,9 @@ for aggregate producer accounting. Their focused verification is now recorded
 in the ledger above.
 
 Final review cycle 3 found the remaining realpath, user-status, header-marker,
-dispatch-pair, quick-resumption, and docs-parity gaps. Realpath containment,
-user-status composition, and header parsing are complete; `p04-t23` through
-`p04-t25` remain: 45 of 48 tasks are complete and p04 is 22 of 25.
+dispatch-pair, quick-resumption, and docs-parity gaps. The first four fixes are
+complete; `p04-t24` and `p04-t25` remain: 46 of 48 tasks are complete and p04 is
+23 of 25.
 The final review is `fixes_added`; explicit p04 HiLL approval remains blocked
 until the tasks and review disposition are complete. No additional public
 package version bump has been made; all five packages remain at `0.1.47`.
