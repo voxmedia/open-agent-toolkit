@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t18
-oat_last_commit: 59fa1f70
+oat_current_task: p04-t19
+oat_last_commit: a07c8cc8
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T13:14:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T13:22:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 40 of 42 planned tasks are complete; p04 is 17/19. The latest final review is `fixes_added`; supplemental fixes resume at `p04-t18`.
+Implementation - 41 of 42 planned tasks are complete; p04 is 18/19. The latest final review is `fixes_added`; supplemental fixes resume at `p04-t19`.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 40 of 42 planned tasks are complete; p04 is 17/19. The latest f
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (40/42 tasks complete; final review is `fixes_added`)
+- **Implementation:** `implementation.md` (41/42 tasks complete; final review is `fixes_added`)
 
 ## Progress
 
@@ -173,7 +173,9 @@ Implementation - 40 of 42 planned tasks are complete; p04 is 17/19. The latest f
 - ✓ p04-t16 RED/GREEN verification passed 86 focused config/sync assertions, CLI type-check, and zero-operation source project-sync dry-run
 - ✓ `p04-t17` binds resolver-selected Claude and Cursor models to actual artifact, phase, and final reviewer invocations while preserving exact Codex dispatch
 - ✓ p04-t17 verification passed 58 focused contracts, all 53 skills, 532 docs links, root format, and five-package release validation at `0.1.47`
-- ⧗ Execute `p04-t18` through `p04-t19`, then run final review cycle 3
+- ✓ `p04-t18` keeps quick, imported, and provider-native plans non-ready until their review disposition is durably recorded
+- ✓ p04-t18 verification passed 59 focused contracts, all 53 skills, root format, bundled-asset equality, and five-package release validation at `0.1.47`
+- ⧗ Execute `p04-t19`, then run final review cycle 3
 
 ## Blockers
 
@@ -181,4 +183,4 @@ None
 
 ## Next Milestone
 
-Execute supplemental final-review fixes `p04-t18` through `p04-t19`. If final review cycle 3 passes, request explicit p04 HiLL approval before lifecycle finalization.
+Execute supplemental final-review fix `p04-t19`. If final review cycle 3 passes, request explicit p04 HiLL approval before lifecycle finalization.

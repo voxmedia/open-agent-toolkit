@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** supplemental final-review fixes in progress (17/19)
+**Implementation Status:** supplemental final-review fixes in progress (18/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1284,7 +1284,7 @@ pnpm release:validate
 
 ### Task p04-t18: (final review) Defer plan readiness until review completes
 
-**Status:** pending
+**Status:** completed (`a07c8cc8`)
 
 **Files:**
 

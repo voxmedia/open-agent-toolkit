@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t18
+oat_current_task_id: p04-t19
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 19    | 17/19     |
+| p04   | in_progress | 19    | 18/19     |
 
-**Total:** 40/42 tasks completed
+**Total:** 41/42 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** supplemental final-review fixes in progress (17/19)
+**Status:** supplemental final-review fixes in progress (18/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -331,10 +331,13 @@ oat_generated: false
 
 ### Task p04-t18: (final review) Defer plan readiness until review completes
 
-**Status:** pending
+**Status:** completed
+**Commit:** `a07c8cc8`
 
-- Keep quick/import/provider-plan-via-import plans non-complete and not ready until dispatch readiness and artifact review complete.
-- Add interruption-state contracts against premature `oat-project-next` routing.
+- Quick-start, import-plan, and provider-plan-via-import now retain an interruption-safe `in_progress`, not-ready, current-phase marker through dispatch readiness, phase-review setup, and artifact review.
+- The workflows write the plan review row or explicit disabled-review note before atomically marking the plan complete, implementation-ready, and non-template.
+- Unresolved dispatch, failed review, or interrupted execution leaves a committed state that `oat-project-next` routes back to planning instead of implementation.
+- RED reproduced the premature quick-start completion. GREEN passed all 59 focused contracts, validation of all 53 OAT skills, root formatting, byte-identical bundled skills, and release validation for all five public packages at `0.1.47`.
 
 ### Task p04-t19: (final review) Repair final-review dispatch stamps
 
@@ -350,7 +353,7 @@ oat_generated: false
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The latest final review is `fixes_added`. Execute `p04-t18` through `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
+- **Review status:** The latest final review is `fixes_added`. Execute `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
