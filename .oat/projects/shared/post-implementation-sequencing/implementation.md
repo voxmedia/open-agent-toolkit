@@ -146,3 +146,16 @@ Populate from completed phase summaries before final review and PR generation.
 
 **Next:** Begin implementation at `p01-t01`. The user explicitly waived the
 configured gate rerun after these artifact corrections.
+
+### Plan Refresh After Rebase
+
+**Date:** 2026-07-10
+**New base:** `c5190684` (`feat: harden workflow gates and adaptive subagent dispatch (#132)`)
+
+- Rebase completed without conflicts.
+- Plan readiness was moved back to in progress because the updated plan-writing
+  contract requires a complete dispatch ladder, a project named ceiling, an
+  explicit phase-review choice when qualifying targets exist, and a managed
+  post-rebase artifact review.
+- Release planning now targets `0.1.49` from the rebased `0.1.48` package set.
+- Implementation remains paused at `p01-t01` until plan readiness is restored.

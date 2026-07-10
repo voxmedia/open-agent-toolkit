@@ -1,16 +1,17 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_source: quick
 oat_plan_parallel_groups: []
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: post-implementation-sequencing
@@ -38,6 +39,9 @@ Vitest, Fumadocs, pnpm workspaces, and Turborepo.
 - [x] Verification and atomic commit supplied for every task
 - [x] Release and generated-asset requirements included
 - [x] Phase dependencies and write sets evaluated
+- [ ] Complete dispatch ladder adopted and project named ceiling recorded
+- [ ] Optional phase-review choice recorded
+- [ ] Post-rebase managed reviewer contract resolved and plan re-reviewed
 - [ ] Implementation HiLL checkpoints confirmed at implementation preflight
 
 ## Parallelism
@@ -72,7 +76,9 @@ Cover:
   rejection;
 - shared, local, and user round trips;
 - atomic layer precedence for mixed string/object values without child-array
-  merging.
+  merging;
+- regression coverage proving the existing dispatch candidate ladders remain
+  atomic and unchanged when the new sequence leaf is introduced.
 
 Run:
 
@@ -92,9 +98,9 @@ Expected: New cases fail before implementation.
 - Validate structured values as exact objects with both arrays present.
 - Preserve invalid-config compatibility by excluding an invalid whole value;
   never partially retain one boundary.
-- Teach effective-config flattening to preserve
-  `workflow.postImplementSequence` as an atomic leaf so one layer wins as a
-  whole value.
+- Generalize the rebased resolver's existing candidate-ladder atomic-leaf
+  handling so `workflow.postImplementSequence` also resolves as one whole value
+  without regressing dispatch ladder flattening.
 
 **Step 3: Verify**
 
@@ -134,7 +140,7 @@ Cover:
 - quoted JSON object input at local, shared, and user scopes;
 - exact validation errors with no write on invalid JSON or structure;
 - legacy plain `get`, compact-JSON object `get`, and typed object value in
-  `get --json`;
+  `get --json`, accounting for the rebased generic plain-object formatter;
 - list/dump formatting paths that share resolved-value serialization;
 - `describe` output for both forms, allowed steps, mappings, timing, and a JSON
   example.
@@ -152,8 +158,9 @@ Expected: New structured-value cases fail before implementation.
 
 - Keep enum parsing for known legacy values and parse other input as JSON.
 - Reuse the configuration validator rather than duplicating sequence rules.
-- Preserve structured objects in JSON logger output and serialize them as
-  compact JSON only for plain output.
+- Reuse the rebased `formatResolvedValue` object serialization for plain output,
+  while preserving the raw structured object in JSON logger output instead of
+  pre-formatting it into a string.
 - Update catalog metadata and owning-command guidance without changing layer
   precedence or flags.
 
@@ -191,6 +198,8 @@ git commit -m "feat(cli): manage structured post-implementation sequences"
 Assert that the canonical skill:
 
 - leaves non-final plan checkpoint handling unchanged;
+- leaves the rebased target-first dispatch ladder, phase coordinator, and exact
+  task-worker target selection contracts unchanged;
 - defers only the final checkpoint and preserves final checkpoint auto-review;
 - completes final verification and final review before pre-approval dispatch;
 - snapshots configured legacy/structured values using the approved state model;
@@ -216,6 +225,9 @@ Expected: The new contract suite fails against the current ordering.
 **Step 2: Implement final-closeout orchestration**
 
 - Increase the canonical `oat-project-implement` skill version once for the PR.
+- Keep final closeout orchestrator-owned after the rebased phase coordinator has
+  finished; do not move lifecycle sequencing into task workers or weaken exact
+  target selection.
 - Separate final from non-final checkpoint handling without weakening existing
   non-final gates or review scopes.
 - Normalize the effective preference, persist the immutable snapshot after final
@@ -337,6 +349,10 @@ Document:
 - the unchanged behavior of non-final checkpoints and the unset-preference
   fallback.
 
+Integrate these changes into the post-`#132` docs without removing its configured
+gate provenance, complete dispatch ladder, target-first reviewer, or adaptive
+task-worker guidance.
+
 Do not hand-edit `apps/oat-docs/index.md`; regenerate it through the documented
 command if source changes affect the generated index.
 
@@ -377,8 +393,8 @@ git commit -m "docs(workflow): explain approval-aware post-implementation sequen
 
 **Step 1: Apply release metadata and generate assets**
 
-- Bump all five public packages from the current lockstep version `0.1.46` to
-  `0.1.47`.
+- Bump all five public packages from the rebased lockstep version `0.1.48` to
+  `0.1.49`.
 - Refresh the lockfile if package metadata requires it.
 - Run bundled-asset generation once, after all canonical skill and docs edits.
 - Regenerate the docs index through the CLI source command; never hand-edit it.
@@ -432,7 +448,7 @@ git add packages/cli/package.json \
   pnpm-lock.yaml \
   apps/oat-docs/index.md
 git add -f packages/cli/assets/public-package-versions.json
-git commit -m "chore(release): bump public packages to 0.1.47"
+git commit -m "chore(release): bump public packages to 0.1.49"
 ```
 
 If an optional generated file is unchanged, omit it from `git add` rather than
@@ -490,15 +506,15 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
-| p03    | code     | pending | -          | -                                                           |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | passed  | 2026-07-10 | N/A (quick mode; no spec required)                          |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T120448Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                      |
+| ------ | -------- | ------- | ---------- | --------------------------------------------- |
+| p01    | code     | pending | -          | -                                             |
+| p02    | code     | pending | -          | -                                             |
+| p03    | code     | pending | -          | -                                             |
+| final  | code     | pending | -          | -                                             |
+| spec   | artifact | passed  | 2026-07-10 | N/A (quick mode; no spec required)            |
+| design | artifact | pending | -          | -                                             |
+| plan   | artifact | pending | 2026-07-10 | re-review required after rebase onto c5190684 |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` →
 `passed`
@@ -513,11 +529,13 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 
 **Total: 3 phases, 7 tasks**
 
-Ready for implementation after the plan artifact review passes and implementation
-preflight confirms HiLL checkpoints.
+Ready for implementation only after the complete dispatch ladder, project named
+ceiling, optional phase-review choice, and post-rebase plan review are recorded.
 
-Plan review findings were resolved directly in this artifact. The user explicitly
-waived the configured gate rerun on 2026-07-10.
+The pre-rebase gate findings were resolved directly in this artifact, and the user
+waived that configured gate rerun on 2026-07-10. The later rebase onto `c5190684`
+introduced new plan-writing readiness contracts, so a new managed artifact review
+is required before implementation readiness is restored.
 
 ## References
 
