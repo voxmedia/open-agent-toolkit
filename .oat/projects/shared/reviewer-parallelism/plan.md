@@ -1,185 +1,254 @@
 ---
+oat_plan_source: quick
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-07-10
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: []
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_last_updated: 2026-07-10
 oat_generated: false
 ---
 
 # Implementation Plan: reviewer-parallelism
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Enable `oat-reviewer` to accelerate broad reviews through bounded, cheaper/faster reconnaissance workers without delegating source validation, synthesis, severity judgment, validation decisions, or final findings.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Extend the canonical reviewer instruction contract with one provider-neutral, capability-gated reconnaissance layer. Preserve the existing review process and output sinks; workers only gather advisory evidence, while semantic tests, documentation, provider sync, and release validation keep the contract durable and distributable.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Canonical Markdown agent definitions, TypeScript/Vitest contract tests, Fumadocs Markdown, OAT provider sync, pnpm workspace release tooling.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `{type}(pNN-tNN): {description}`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+- [x] Requirements confirmed with the user
+- [x] Lightweight design evaluated and intentionally skipped
+- [x] Phases evaluated for parallelism
+- [x] `oat_plan_parallel_groups` set from dependency/write-set analysis
+- [ ] Dispatch policy resolved before implementation readiness
+- [ ] Plan artifact review passed
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+`oat_plan_parallel_groups: []` keeps execution sequential. Phase 2 must document the finalized reviewer contract from Phase 1, and Phase 3 must generate provider views and release assets from the combined canonical-agent and documentation changes. Running distribution or release validation concurrently would risk stale generated output and would validate an incomplete shipped diff.
 
 ---
 
-## Dispatch Profile
+## Phase 1: Canonical Reviewer Orchestration Contract
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add bounded reconnaissance behavior with semantic regression coverage
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Write the contract test (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Add a dedicated semantic contract test that reads the canonical reviewer and asserts all load-bearing boundaries:
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+- broad-review eligibility examples: final code reviews, broad phase/range reviews, docs sweeps, and provider-view audits;
+- narrow-review inline behavior;
+- one bounded, read-only, non-recursive round of disjoint lanes;
+- compact reports with exact `file:line` evidence, coverage/gaps, and explicit uncertainty;
+- cheaper/faster worker preference only when the host reliably exposes that control;
+- primary-only source validation, reconciliation, synthesis, severity, validation decisions, artifact writing, and `StructuredFindings`;
+- capability/authorization/failure fallback with no checklist or output-contract downgrade.
 
-**Step 2: Implement (GREEN)**
-
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
+Run:
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+```
+
+Expected: the new assertions fail because the orchestration contract is not yet present.
+
+**Step 2: Implement the canonical reviewer contract (GREEN)**
+
+Update `.agents/agents/oat-reviewer.md`:
+
+- bump `version` from `1.1.5` to `1.1.6`;
+- add a provider-neutral bounded-reconnaissance policy after dispatch control;
+- make the primary reviewer establish authoritative scope before considering delegation;
+- define a compact lane prompt/return contract and one-level fan-out limit;
+- require direct re-verification of load-bearing positive and negative claims;
+- keep workers advisory and prevent them from mutating files, emitting findings, assigning severity, or writing either output sink;
+- preserve the existing artifact-mode, gate-parsing, and structured-output schemas unchanged;
+- fall back to inline coverage when nested delegation or tier selection is unavailable.
+
+Do not hard-code provider model names or claim that nested workers inherit the primary reviewer's managed target.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run   src/validation/skills.test.ts   src/agents/canonical/parse.test.ts   src/commands/init/tools/shared/review-skill-contracts.test.ts
+```
+
+Expected: all focused reviewer and canonical-agent contract tests pass.
+
+**Step 3: Verify scope and formatting**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm exec oxfmt --check .agents/agents/oat-reviewer.md packages/cli/src/validation/skills.test.ts
+git diff --check
+```
+
+Expected: tests and formatting pass; the diff changes no review payload schema, CLI runtime, severity definitions, or final output structure.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/agents/oat-reviewer.md packages/cli/src/validation/skills.test.ts
+git commit -m "feat(p01-t01): add bounded reviewer reconnaissance"
 ```
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase 2: Review Workflow Documentation
+
+### Task p02-t01: Document broad-review latency benefit and safety boundary
 
 **Files:**
 
-- {File list}
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
 
-**Step 1: Write test (RED)**
+**Step 1: Extend the existing review documentation**
 
-{Test code}
+Expand the existing `Subagent Compatibility` section to distinguish:
 
-**Step 2: Implement (GREEN)**
+- outer dispatch of `oat-reviewer` from optional reviewer-local reconnaissance;
+- eligible broad-review examples and the expected wall-clock/cost benefit;
+- the one-round, read-only, non-recursive lane boundary;
+- evidence and uncertainty requirements;
+- primary-reviewer ownership of verification, synthesis, severity, and final findings;
+- inline fallback when nested workers or explicit cheaper-tier controls are unavailable.
 
-{Implementation code or signatures}
+Do not add a new page or modify generated navigation; this is a focused edit to an existing authored page.
 
-**Step 3: Refactor**
+**Step 2: Verify documentation**
 
-{Optional cleanup}
-
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
+Run:
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+pnpm docs:check-links
+pnpm build:docs
+pnpm exec oxfmt --check apps/oat-docs/docs/workflows/projects/reviews.md
+git diff --check
+```
+
+Expected: links, docs build, and formatting pass; the documentation matches the canonical reviewer contract without promising unsupported provider behavior.
+
+**Step 3: Commit**
+
+```bash
+git add apps/oat-docs/docs/workflows/projects/reviews.md
+git commit -m "docs(p02-t01): explain reviewer reconnaissance boundaries"
 ```
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 3: Provider Sync and Shipped Release Validation
 
-### Task p02-t01: {Task Name}
+### Task p03-t01: Regenerate provider views and finalize lockstep release metadata
 
-{Continue TDD pattern...}
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Regenerate: `packages/cli/assets/public-package-versions.json`
+- Regenerate: `.codex/agents/oat-reviewer.toml`
+- Regenerate as applicable: `.oat/sync/manifest.json`
+- Verify symlink-backed views: `.claude/agents/oat-reviewer.md`, `.cursor/agents/oat-reviewer.md`
+
+**Step 1: Apply the lockstep patch release**
+
+Bump all five public packages from `0.1.46` to `0.1.47`. Keep the versions identical.
+
+Run the asset bundler after the version changes:
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+```
+
+Expected: `packages/cli/assets/public-package-versions.json` reflects the new public package versions. Do not run the asset bundler concurrently with builds or validations that read `packages/cli/assets`.
+
+**Step 2: Refresh provider views**
+
+Run:
+
+```bash
+pnpm run cli -- sync --scope all
+pnpm run cli -- sync --scope project --dry-run
+```
+
+Expected: the tracked Codex reviewer view contains the finalized canonical contract; Claude and Cursor symlinks still resolve to the canonical agent; the project-scope dry run reports no remaining drift. Stage only the tracked repository outputs for this task.
+
+**Step 3: Run focused distribution checks**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run   src/validation/skills.test.ts   src/agents/canonical/parse.test.ts   src/commands/init/tools/shared/review-skill-contracts.test.ts   src/providers/codex/codec/sync-extension.test.ts
+pnpm release:check-versions
+pnpm format
+git diff --check
+```
+
+Expected: reviewer contracts, provider generation, version checks, and formatting pass.
+
+**Step 4: Commit the shipped surface**
+
+```bash
+git add   packages/cli/package.json   packages/control-plane/package.json   packages/docs-config/package.json   packages/docs-theme/package.json   packages/docs-transforms/package.json   packages/cli/assets/public-package-versions.json   .codex/agents/oat-reviewer.toml   .oat/sync/manifest.json
+git commit -m "chore(p03-t01): finalize reviewer orchestration release"
+```
+
+If a listed generated file is unchanged, omit it from `git add`.
+
+**Step 5: Validate the committed release diff**
+
+Run sequentially after the task commit so release tooling evaluates the committed `merge-base..HEAD` surface:
+
+```bash
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
+pnpm build:docs
+pnpm release:check-versions
+pnpm release:validate
+```
+
+Expected: all repository and publishable-package checks pass. If a correction is required, fix it within this task and amend the task commit before continuing.
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
 | Scope  | Type     | Status  | Date | Artifact |
 | ------ | -------- | ------- | ---- | -------- |
 | p01    | code     | pending | -    | -        |
 | p02    | code     | pending | -    | -        |
+| p03    | code     | pending | -    | -        |
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
+| plan   | artifact | pending | -    | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+Quick-mode implementation readiness depends on the `plan` artifact review, not on optional `spec` or `design` rows.
 
 ---
 
@@ -187,18 +256,20 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
+- Phase 2: 1 task - User-facing review workflow documentation
+- Phase 3: 1 task - Provider synchronization and lockstep release validation
 
-**Total: {N} tasks**
+**Total: 3 phases, 3 tasks**
 
-Ready for code review and merge.
+Ready for code review and merge after all tasks and required reviews pass.
 
 ---
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Backlog item: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md`
+- Current reviewer: `.agents/agents/oat-reviewer.md`
+- Review workflow docs: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Project summary follow-up: `.oat/repo/reference/project-summaries/20260709-codex-family-subagents.md`
