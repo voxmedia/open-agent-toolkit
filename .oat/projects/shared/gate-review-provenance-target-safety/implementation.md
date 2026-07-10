@@ -413,7 +413,18 @@ oat_generated: false
 - Bundled docs are byte-identical to the authored guide; no skill or public-package version changed.
 - Verification passed 61 focused contracts, the 532-link docs crawl, workspace format, and five-package release validation at `0.1.47`.
 
-### Tasks p04-t26 through p04-t30: Adaptive dispatch ceilings
+### Task p04-t26: Define unified provider candidate ladders
+
+**Status:** completed
+**Commit:** `8e72e02d`
+
+- Named provider tiers now normalize to `{ candidates: [...] }`; the final candidate is the tier ceiling, while `{ route: [...] }` remains an explicit fallback candidate rather than a candidate-order alias.
+- Legacy single values and route arrays normalize to one-candidate ladders without changing Codex model/effort objects, Claude model values, or opaque Cursor model strings.
+- The bundled `2026-07-10.2` recommendation declares all 13 canonical candidate levels for both Codex and Cursor across the four named tiers and retains the Claude `haiku -> sonnet -> opus -> fable` ordering.
+- During the staged rollout, existing dispatch and sync behavior consumes only each tier's final ceiling candidate; `p04-t27` owns lower-candidate selection and `p04-t28` owns all-candidate materialization.
+- RED/GREEN verification passed the required 115 config/resolve assertions, 227 compatibility assertions across config, doctor, dispatch, and Codex sync, and CLI type-check (342 focused assertions total).
+
+### Tasks p04-t27 through p04-t30: Adaptive dispatch ceilings
 
 **Status:** pending
 

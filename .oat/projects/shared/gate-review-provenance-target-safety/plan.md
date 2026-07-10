@@ -1521,7 +1521,7 @@ pnpm release:validate
 
 ### Task p04-t26: Define unified provider candidate ladders
 
-**Status:** pending
+**Status:** completed (`8e72e02d`)
 
 **Files:**
 
