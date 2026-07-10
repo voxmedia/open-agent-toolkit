@@ -151,6 +151,10 @@ type GateDiversityAchieved =
   | 'unknown-producer';
 type GateWriteLayer = 'shared' | 'local' | 'user';
 type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
+type ReviewProjectResolutionSource =
+  | 'declared'
+  | 'active-project'
+  | 'single-candidate';
 type GateConfigContainer = OatConfig | OatLocalConfig | UserConfig;
 type GateConfigMutation = (config: GateConfigContainer) => GateConfigContainer;
 
@@ -200,6 +204,11 @@ interface GateInvocationMetadata {
   readonly model: string | 'provider-default' | 'unknown';
   readonly reasoningEffort: string | 'provider-default' | 'unknown';
   readonly source: 'exec-target-config' | 'unknown';
+}
+
+interface ResolvedReviewProject {
+  path: string;
+  source: ReviewProjectResolutionSource;
 }
 
 type CorroborationStatus = 'matched' | 'missing' | 'mismatched';
@@ -263,8 +272,11 @@ const REVIEW_GATE_CONTEXT_NOTE =
 const GATE_CHECK_TIMEOUT_MS = 5_000;
 const GATE_EXEC_TIMEOUT_MS = 10 * 60 * 1_000;
 
-function reviewGateProjectContext(projectPath: string): string {
-  return `Resolved OAT project path: ${projectPath}. Run the review for this project path.`;
+function reviewGateProjectContext(project: ResolvedReviewProject): string {
+  return [
+    `Resolved OAT project path: ${project.path}. Run the review for this project path.`,
+    `Project resolution source: ${project.source}.`,
+  ].join('\n');
 }
 
 function assembleReviewGatePrompt(segments: string[]): string {
@@ -1492,7 +1504,7 @@ async function resolveReviewProject(options: {
   repoRoot: string;
   effective: ResolvedConfig;
   project?: string;
-}): Promise<string> {
+}): Promise<ResolvedReviewProject> {
   const projectsRoot = String(
     options.effective.resolved['projects.root']?.value ??
       options.effective.shared.projects?.root ??
@@ -1500,16 +1512,22 @@ async function resolveReviewProject(options: {
   );
 
   if (options.project !== undefined) {
-    return resolveExplicitReviewProject(
-      options.repoRoot,
-      projectsRoot,
-      options.project,
-    );
+    return {
+      path: await resolveExplicitReviewProject(
+        options.repoRoot,
+        projectsRoot,
+        options.project,
+      ),
+      source: 'declared',
+    };
   }
 
   const activeProject = options.effective.local.activeProject?.trim();
   if (activeProject) {
-    return assertProjectPath(options.repoRoot, activeProject, 'Active');
+    return {
+      path: await assertProjectPath(options.repoRoot, activeProject, 'Active'),
+      source: 'active-project',
+    };
   }
 
   const candidates = await listProjectCandidates(
@@ -1527,7 +1545,10 @@ async function resolveReviewProject(options: {
     );
   }
 
-  return candidates[0]!;
+  return {
+    path: candidates[0]!,
+    source: 'single-candidate',
+  };
 }
 
 function reviewGateLifecycleRank(scope: string): number {
@@ -1739,6 +1760,7 @@ function writeReviewGateResult(
     runId: string;
     target: string;
     project: string;
+    projectResolutionSource: ReviewProjectResolutionSource;
     artifactPath: string;
     generatedAt: string;
     threshold: ReviewGateThreshold;
@@ -1798,6 +1820,7 @@ function writeReviewGateExecutionFailure(
     runId: string;
     target: string;
     project: string;
+    projectResolutionSource: ReviewProjectResolutionSource;
     exitCode: number;
     timedOut?: boolean;
     timeoutMs?: number;
@@ -1815,6 +1838,7 @@ function writeReviewGateExecutionFailure(
       runId: payload.runId,
       target: payload.target,
       project: payload.project,
+      projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
       ...(payload.corroboration
         ? { corroboration: payload.corroboration }
@@ -1836,6 +1860,7 @@ function writeReviewGateUnexpectedFailure(
   context: CommandContext,
   payload: {
     project: string;
+    projectResolutionSource: ReviewProjectResolutionSource;
     target: string;
     gateInvocation: GateInvocationMetadata;
     error: unknown;
@@ -1852,6 +1877,7 @@ function writeReviewGateUnexpectedFailure(
       runId: payload.gateInvocation.runId,
       target: payload.target,
       project: payload.project,
+      projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
       message,
     });
@@ -1869,6 +1895,7 @@ function writeReviewGateArtifactValidationFailure(
     runId: string;
     target: string;
     project: string;
+    projectResolutionSource: ReviewProjectResolutionSource;
     artifactPath: string | null;
     generatedAt: string | null;
     message: string;
@@ -1884,6 +1911,7 @@ function writeReviewGateArtifactValidationFailure(
       runId: payload.runId,
       target: payload.target,
       project: payload.project,
+      projectResolutionSource: payload.projectResolutionSource,
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
       gateInvocation: payload.gateInvocation,
@@ -2122,6 +2150,7 @@ async function runReviewGate(
   let postSelectionContext:
     | {
         project: string;
+        projectResolutionSource: ReviewProjectResolutionSource;
         target: string;
         gateInvocation: GateInvocationMetadata;
       }
@@ -2134,11 +2163,12 @@ async function runReviewGate(
       userConfigDir,
       dependencies.processEnv,
     );
-    const projectPath = await resolveReviewProject({
+    const reviewProject = await resolveReviewProject({
       repoRoot,
       effective,
       project: options.project,
     });
+    const projectPath = reviewProject.path;
     const targets = resolveExecTargets(effective);
     const producerIdentity = await resolveReviewProducerIdentity({
       explicit: options.producerIdentity,
@@ -2156,6 +2186,7 @@ async function runReviewGate(
     const gateInvocation = createGateInvocationMetadata(runId, selected);
     postSelectionContext = {
       project: projectPath,
+      projectResolutionSource: reviewProject.source,
       target: selected.id,
       gateInvocation,
     };
@@ -2166,7 +2197,7 @@ async function runReviewGate(
     });
     const reviewPrompt = assembleReviewGatePrompt([
       REVIEW_GATE_CONTEXT_NOTE,
-      reviewGateProjectContext(projectPath),
+      reviewGateProjectContext(reviewProject),
       gateInvocationPromptContext(gateInvocation),
       ...(options.reviewType?.trim()
         ? [`Review type: ${options.reviewType.trim()}.`]
@@ -2189,6 +2220,7 @@ async function runReviewGate(
         runId,
         target: selected.id,
         project: projectPath,
+        projectResolutionSource: reviewProject.source,
         exitCode: childExitCode,
         timedOut: childResult.timedOut ?? false,
         timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
@@ -2208,6 +2240,7 @@ async function runReviewGate(
         runId,
         target: selected.id,
         project: projectPath,
+        projectResolutionSource: reviewProject.source,
         artifactPath: null,
         generatedAt: null,
         message: `No new review artifact was detected for project ${projectPath}.`,
@@ -2233,6 +2266,7 @@ async function runReviewGate(
         runId,
         target: selected.id,
         project: projectPath,
+        projectResolutionSource: reviewProject.source,
         artifactPath: producedArtifact.path,
         generatedAt: producedArtifact.generatedAt,
         message: detail,
@@ -2257,6 +2291,7 @@ async function runReviewGate(
         runId,
         target: selected.id,
         project: projectPath,
+        projectResolutionSource: reviewProject.source,
         artifactPath: producedArtifact.path,
         generatedAt: producedArtifact.generatedAt,
         message: missing
@@ -2274,6 +2309,7 @@ async function runReviewGate(
         runId,
         target: selected.id,
         project: projectPath,
+        projectResolutionSource: reviewProject.source,
         artifactPath: producedArtifact.path,
         generatedAt: producedArtifact.generatedAt,
         message:
@@ -2298,6 +2334,7 @@ async function runReviewGate(
       runId,
       target: selected.id,
       project: projectPath,
+      projectResolutionSource: reviewProject.source,
       artifactPath: producedArtifact.path,
       generatedAt: producedArtifact.generatedAt,
       threshold,

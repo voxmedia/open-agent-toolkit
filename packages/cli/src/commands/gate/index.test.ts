@@ -2599,6 +2599,7 @@ describe('oat gate', () => {
       promptSnippets: [
         'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
         `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+        'Project resolution source: active-project.',
         'Review type: artifact.',
         'Review scope: plan.',
         'Use oat-project-review-provide artifact plan.',
@@ -2607,6 +2608,7 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
       project: projectPath,
+      projectResolutionSource: 'active-project',
       artifactPath,
       threshold: 'important',
       counts: { critical: 0, important: 1 },
@@ -2642,6 +2644,7 @@ describe('oat gate', () => {
 
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'artifact_validation_failed',
+      projectResolutionSource: 'active-project',
       message: expect.stringContaining('invocation metadata'),
       corroboration: {
         run: 'missing',
@@ -2680,6 +2683,7 @@ describe('oat gate', () => {
 
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'artifact_validation_failed',
+        projectResolutionSource: 'active-project',
         message: expect.stringContaining('gate invocation marker'),
         corroboration: {
           run: 'matched',
@@ -2715,6 +2719,7 @@ describe('oat gate', () => {
 
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'artifact_validation_failed',
+      projectResolutionSource: 'active-project',
       message: expect.stringContaining('does not match'),
       corroboration: {
         run: 'matched',
@@ -2793,6 +2798,7 @@ describe('oat gate', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'ok',
         project: projectPath,
+        projectResolutionSource: 'active-project',
         blocking: false,
       });
       expect(process.exitCode).toBe(0);
@@ -3076,6 +3082,7 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       project: projectPath,
+      projectResolutionSource: 'active-project',
       blocking: false,
       counts: { critical: 0, important: 0 },
       runId: expect.any(String),
@@ -3185,6 +3192,7 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'artifact_validation_failed',
       outcome: 'review_completed_artifact_validation_failed',
+      projectResolutionSource: 'active-project',
       artifactPath,
       message: expect.stringContaining('cannot be safely normalized'),
       recovery: expect.stringContaining('oat-project-review-receive'),
@@ -3358,7 +3366,7 @@ describe('oat gate', () => {
     await writeActiveProject(root, projectPath);
     const runner = createProcessRunner({ executeExitCode: 7 });
 
-    await runReviewGate({
+    const capture = await runReviewGate({
       root,
       home,
       runProcess: runner.runProcess,
@@ -3367,6 +3375,10 @@ describe('oat gate', () => {
     expect(runner.calls.at(-1)).toMatchObject({
       purpose: 'execute',
       stdio: 'inherit',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      projectResolutionSource: 'active-project',
     });
     expect(process.exitCode).toBe(7);
   });
@@ -3393,6 +3405,7 @@ describe('oat gate', () => {
       runId: expect.any(String),
       target: 'codex-default',
       project: projectPath,
+      projectResolutionSource: 'active-project',
       gateInvocation: {
         runId: expect.any(String),
         targetId: 'codex-default',
@@ -3432,6 +3445,7 @@ describe('oat gate', () => {
       runId: expect.any(String),
       target: 'codex-default',
       project: projectPath,
+      projectResolutionSource: 'active-project',
       gateInvocation: {
         runId: expect.any(String),
         targetId: 'codex-default',
@@ -3472,6 +3486,7 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'review_failed',
       outcome: 'review_did_not_complete',
+      projectResolutionSource: 'active-project',
       exitCode: 124,
       timedOut: true,
       timeoutMs: 1234,
@@ -3511,9 +3526,13 @@ describe('oat gate', () => {
     expect(runner.calls[0]?.args.at(-1)).toContain(
       `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
     );
+    expect(runner.calls[0]?.args.at(-1)).toContain(
+      'Project resolution source: declared.',
+    );
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       project: projectPath,
+      projectResolutionSource: 'declared',
     });
     expect(process.exitCode).toBe(0);
   });
@@ -3558,6 +3577,36 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       project: explicitProjectPath,
+      projectResolutionSource: 'declared',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports single-candidate project resolution in the prompt and result', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(
+      root,
+      '.oat/projects/shared/only-project',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls[0]?.args.at(-1)).toContain(
+      'Project resolution source: single-candidate.',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: projectPath,
+      projectResolutionSource: 'single-candidate',
     });
     expect(process.exitCode).toBe(0);
   });
