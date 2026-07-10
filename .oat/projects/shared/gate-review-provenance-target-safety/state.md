@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t06
-oat_last_commit: 5b3c8312
+oat_current_task: p01-t07
+oat_last_commit: 663fc203
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T07:30:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T07:32:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - `p01-t05` complete; ready to execute `p01-t06`
+Implementation - `p01-t06` complete; ready to execute `p01-t07`
 
 ## Artifacts
 
@@ -109,6 +109,7 @@ Implementation - `p01-t05` complete; ready to execute `p01-t06`
 - ✓ Independent p01 review received with 4 Important and 1 Medium finding
 - ✓ Review findings converted autonomously to `p01-t05` through `p01-t09`
 - ✓ `p01-t05` preserves nonzero target priority during invocation-only updates
+- ✓ `p01-t06` isolates rejected availability probes without executing reviewers
 - ⧗ p01 review fixes pending
 
 ## Blockers
@@ -117,4 +118,4 @@ None
 
 ## Next Milestone
 
-Execute `p01-t06` through `p01-t09`, then run an independent p01 re-review before starting `p02-t01`
+Execute `p01-t07` through `p01-t09`, then run an independent p01 re-review before starting `p02-t01`

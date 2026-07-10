@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t06
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
-| p01   | in_progress | 9     | 5/9       |
+| p01   | in_progress | 9     | 6/9       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 11/22 tasks completed
+**Total:** 12/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -91,8 +91,8 @@ oat_generated: false
 
 ### Task p01-t06: (review) Isolate target availability probe failures
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `663fc203`
 
 ### Task p01-t07: (review) Require the gate artifact invocation marker
 
@@ -299,6 +299,8 @@ oat_generated: false
 - Post-self-review hardening in `a579f4c9` added two resolver assertions that lock complete re-enablement and partial non-resurrection after an intervening exec-target tombstone.
 - `p01-t05` completed in `5b3c8312`: target mutations now omit an unspecified priority, preserving a nonzero same-layer value and untouched invocation metadata, while genuinely new targets still materialize priority `0`.
 - Focused p01-t05 verification reproduced the regression at priority `0`, then passed the focused test, all 74 gate command tests, and CLI type-check after the fix.
+- `p01-t06` completed in `663fc203`: target listing now treats a rejected availability command as `available: false` for only that target and continues reporting other targets without selecting or executing reviewers.
+- Focused p01-t06 verification reproduced the top-level listing error, then passed the focused test, all 75 gate command tests, and the live source target-list probe after the fix.
 
 ### Review Received: p01
 
@@ -346,6 +348,7 @@ oat_generated: false
 | p01-t04   | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs         |
 | p01 final | 240 focused assertions; type-check; live target list; skill validation; docs links                               | 244    | 0      | Committed-tree phase verification and self-review            |
 | p01-t05   | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                | 76     | 0      | Partial target mutation preserves nonzero priority           |
+| p01-t06   | RED/GREEN rejected probe; 75 gate assertions; live target list                                                   | 77     | 0      | Per-target availability isolation; listing remains read-only |
 
 ## Final Summary (for PR/docs)
 

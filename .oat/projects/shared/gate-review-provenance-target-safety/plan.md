@@ -260,7 +260,7 @@ pnpm exec oxfmt --check .agents/skills/oat-project-plan-writing/SKILL.md apps/oa
 
 ## Phase 1: Configured Invocation Provenance
 
-**Implementation Status:** review fixes in progress (5/9 tasks completed)
+**Implementation Status:** review fixes in progress (6/9 tasks completed)
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -412,7 +412,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p01-t06: (review) Isolate target availability probe failures
 
-**Status:** pending
+**Status:** completed (`663fc203`)
 
 **Files:**
 
