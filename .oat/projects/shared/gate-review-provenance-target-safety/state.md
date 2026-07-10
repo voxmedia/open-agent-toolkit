@@ -1,6 +1,6 @@
 ---
-oat_current_task: p00-t02
-oat_last_commit: 0129dd3d
+oat_current_task: p00-t03
+oat_last_commit: 30767b16
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T05:42:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T05:55:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Executing `p00-t02`
+Implementation - Executing `p00-t03`
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - Executing `p00-t02`
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00-t01` complete; `p00-t02` in progress)
+- **Implementation:** `implementation.md` (`p00-t01` and `p00-t02` complete; `p00-t03` in progress)
 
 ## Progress
 
@@ -83,6 +83,8 @@ Implementation - Executing `p00-t02`
 - ✓ Three minor plan findings resolved and dispositioned
 - ✓ `p00-t01` fail-closed managed dispatch and Codex `max` support completed
 - ✓ User Codex Frontier target restored to `gpt-5.6-sol/max` without altering other matrix choices
+- ✓ `p00-t02` complete supported catalogue and scoped custom-role sync completed
+- ✓ Project `.codex` view regenerated with exactly 26 tracked pinned variants
 
 ## Blockers
 
@@ -90,4 +92,4 @@ None
 
 ## Next Milestone
 
-Execute `p00-t02`: Generate the supported catalogue and scoped custom roles
+Execute `p00-t03`: Use deterministic pinned dispatch across workflow reviews

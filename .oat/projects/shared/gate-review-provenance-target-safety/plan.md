@@ -84,6 +84,8 @@ pnpm run cli:source -- project dispatch-ceiling resolve --provider cursor --role
 
 ### Task p00-t02: Generate the supported catalogue and scoped custom roles
 
+**Status:** completed (`30767b16`)
+
 **Files:**
 
 - Modify: `packages/cli/config/dispatch-matrix-recommendation.json`

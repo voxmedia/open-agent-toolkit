@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p00-t02
+oat_current_task_id: p00-t03
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p00   | in_progress | 3     | 1/3       |
+| p00   | in_progress | 3     | 2/3       |
 | p01   | pending     | 4     | 0/4       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 1/14 tasks completed
+**Total:** 2/14 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -37,12 +37,12 @@ oat_generated: false
 
 ### Task p00-t02: Generate the supported catalogue and scoped custom roles
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `30767b16`
 
 ### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ## Phase 1: Configured Invocation Provenance
@@ -166,6 +166,10 @@ oat_generated: false
 - `p00-t01` completed in `0129dd3d`: managed preflight now fails closed when the active provider cannot compile concrete controls, Codex `max` is ordered and materializable, lower preferred efforts retain their corresponding model-plus-effort target, and all four configured Cursor model strings round-trip unchanged for implementer and reviewer resolution.
 - Focused verification passed 156 tests across resolver, config, and adapter coverage; CLI type-check passed. Live Codex and Cursor implementer/reviewer preflight all resolved enforced controls under the user's managed `high` policy.
 - Updated the user-scoped Codex Frontier matrix cell in `~/.oat/config.json` from `gpt-5.6-sol/xhigh` to `gpt-5.6-sol/max`; all other user matrix choices were preserved.
+- `p00-t02` completed in `30767b16`: added the immutable 13-target Codex catalogue, generated and registered exactly 26 tracked implementer/reviewer variants, routed custom targets by user/project config provenance, and constrained stale cleanup by ownership.
+- Dispatch-matrix adoption now recursively fills missing provider/tier cells while preserving explicit values. The bundled recommendation pins all Codex and Claude tiers plus the four opaque Cursor strings.
+- Focused t02 verification passed 262 tests and CLI type-check. Project sync was applied, reviewed, and rerun idempotently with 26 pinned roles and zero pending Codex operations.
+- `pnpm docs:check-links` could not launch because the local Playwright Chromium binary is missing; no link failure was reported. Retry during final p00 verification after resolving the local browser prerequisite.
 
 ## Deviations from Plan / Design
 
@@ -175,9 +179,10 @@ oat_generated: false
 
 ## Test Results
 
-| Phase   | Tests Run                                                                         | Passed | Failed | Coverage                                             |
-| ------- | --------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------- |
-| p00-t01 | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight |
+| Phase   | Tests Run                                                                               | Passed | Failed | Coverage                                                   |
+| ------- | --------------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------- |
+| p00-t01 | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes       | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight       |
+| p00-t02 | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption |
 
 ## Final Summary (for PR/docs)
 
