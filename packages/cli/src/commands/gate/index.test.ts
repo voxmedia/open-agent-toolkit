@@ -2123,6 +2123,10 @@ describe('oat gate', () => {
                 runtime: 'cursor',
                 baseCommand: ['cursor-agent', '-p'],
                 models: ['gpt-5.3-codex'],
+                invocation: {
+                  model: 'gpt-5.3-codex',
+                  reasoningEffort: 'provider-default',
+                },
                 priority: 150,
               },
             },
@@ -3409,6 +3413,114 @@ describe('oat gate', () => {
       expect(prompt).toContain(`oat_invocation_source: ${expected.source}`);
     },
   );
+
+  it('stamps the exact non-first structured model selected for gate execution', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                invocation: { reasoningEffort: 'provider-default' },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'gpt-5.5-xhigh:declared', 'Review'],
+    });
+
+    const executeCall = runner.calls.find((call) => call.purpose === 'execute');
+    expect(executeCall).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+    });
+    expect(executeCall?.args.at(-1)).toContain(
+      'oat_invocation_model: composer-2.5',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      gateInvocation: {
+        model: 'composer-2.5',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      corroboration: { invocation: 'matched' },
+      diversity: {
+        reviewer: { target: 'cursor-reviewer', model: 'composer-2.5' },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects static invocation metadata that contradicts the selected structured model', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['composer-2.5'],
+                invocation: {
+                  model: 'gpt-5.5',
+                  reasoningEffort: 'provider-default',
+                },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'cursor-reviewer', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(
+        /invocation model gpt-5\.5.*selected model composer-2\.5/i,
+      ),
+    });
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(process.exitCode).toBe(1);
+  });
 
   it.each([
     {

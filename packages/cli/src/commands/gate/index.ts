@@ -331,11 +331,30 @@ function createGateInvocationMetadata(
   runId: string,
   selected: SelectedExecTarget,
 ): GateInvocationMetadata {
+  const configuredInvocation = normalizedTargetInvocation(selected.target);
+  const appendedModel =
+    selected.model && !findPinnedModelArg(selected.target.baseCommand)
+      ? selected.model
+      : undefined;
+  const configuredModel = selected.target.invocation?.model;
+  if (
+    appendedModel &&
+    configuredModel !== undefined &&
+    configuredModel !== appendedModel
+  ) {
+    throw new Error(
+      `Exec target "${selected.id}" configures invocation model ${configuredModel}, but selected model ${appendedModel} would be executed.`,
+    );
+  }
+
   return Object.freeze({
     runId,
     targetId: selected.id,
     runtime: selected.target.runtime,
-    ...normalizedTargetInvocation(selected.target),
+    ...configuredInvocation,
+    ...(appendedModel
+      ? { model: appendedModel, source: 'exec-target-config' as const }
+      : {}),
   });
 }
 
