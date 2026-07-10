@@ -7,6 +7,7 @@ oat_phase: plan
 oat_phase_status: complete
 oat_plan_source: quick
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p03']
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
@@ -616,6 +617,10 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 Ready for implementation only after the complete dispatch ladder, project named
 ceiling, optional Phase gate review choice, and post-rebase plan review are
 recorded.
+
+Implementation preflight confirmed `p03` as the sole plan-phase HiLL checkpoint:
+the run continues through p01 and p02 without pausing, then requests approval
+after p03 completes.
 
 The pre-rebase gate findings were resolved directly in this artifact, and the user
 waived that configured gate rerun on 2026-07-10. The later rebase onto `c5190684`

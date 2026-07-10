@@ -195,3 +195,10 @@ configured gate rerun after these artifact corrections.
 - A delayed artifact from the original High review added one valid ordering
   contract gap; the subsequent High re-review passed cleanly.
 - The plan is implementation-ready; next task remains `p01-t01`.
+
+### Implementation Preflight
+
+**Date:** 2026-07-10
+
+- User selected `p03` as the sole plan-phase HiLL checkpoint. The run will pause
+  for approval only after the final phase completes.
