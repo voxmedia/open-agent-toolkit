@@ -16,23 +16,23 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p00   | pending | 3     | 0/3       |
-| p01   | pending | 4     | 0/4       |
-| p02   | pending | 3     | 0/3       |
-| p03   | pending | 1     | 0/1       |
-| p04   | pending | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p00   | in_progress | 3     | 0/3       |
+| p01   | pending     | 4     | 0/4       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 3     | 0/3       |
 
 **Total:** 0/14 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ### Task p00-t02: Provide complete non-destructive dispatch defaults
@@ -120,7 +120,13 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 
-_No implementation runs yet._
+### Run 8bde04de-a5a4-4d4f-91a1-b068a6f5777c
+
+- Started: 2026-07-10T04:51:49Z
+- Scope: p00
+- Execution: fresh pinned Codex child process
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Dispatch: scope=p00 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
