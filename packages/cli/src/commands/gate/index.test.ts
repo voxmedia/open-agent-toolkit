@@ -20,12 +20,14 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGateCommand, selectExecTarget } from './index';
+import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
 interface HarnessOptions {
   cwd: string;
   home: string;
   processEnv?: NodeJS.ProcessEnv;
   runProcess?: ProcessRunner;
+  parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
 }
 
 interface ProcessCall {
@@ -74,6 +76,9 @@ function createHarness(options: HarnessOptions): {
     resolveProjectRoot: vi.fn(async () => options.cwd),
     processEnv: options.processEnv ?? {},
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
+    ...(options.parseReviewGateVerdict
+      ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
+      : {}),
   } as Parameters<typeof createGateCommand>[0];
 
   const command = createGateCommand(overrides);
@@ -244,6 +249,7 @@ async function runReviewGate(options: {
   home: string;
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
+  parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -253,6 +259,7 @@ async function runReviewGate(options: {
     home: options.home,
     processEnv: options.processEnv,
     runProcess: options.runProcess,
+    parseReviewGateVerdict: options.parseReviewGateVerdict,
   });
   await runCommand(
     command,
@@ -4662,6 +4669,79 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     },
   );
+
+  it('rejects an artifact mutated between correlation and verdict evaluation', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    let artifactPath = '';
+    let mutatedContent = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: declaredProject,
+          artifactProject: declaredProject,
+          reviewScope: 'p01',
+          finding: 'important',
+          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+          gateInvocationOverrides: {
+            oat_invocation_model: 'stale-model',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: async (absolutePath, options) => {
+        mutatedContent = (await readFile(absolutePath, 'utf8'))
+          .replace(
+            `oat_project: ${declaredProject}`,
+            `oat_project: ${siblingProject}`,
+          )
+          .replace('oat_review_scope: p01', 'oat_review_scope: final')
+          .replace(
+            'oat_invocation_model: stale-model',
+            'oat_invocation_model: provider-default',
+          )
+          .replace(
+            'oat_review_important_count: 1',
+            'oat_review_important_count: 0',
+          )
+          .replace('- Important finding that should block.', 'None.');
+        await writeFile(absolutePath, mutatedContent, 'utf8');
+        return parseReviewGateVerdictFromDisk(absolutePath, options);
+      },
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      artifactPath,
+      receiveEligible: false,
+      handoff: null,
+      message: expect.stringMatching(/changed|signature/i),
+    });
+    await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+      mutatedContent,
+    );
+    expect(process.exitCode).toBe(1);
+  });
 
   it('rejects duplicate direct artifacts carrying the same gate run id', async () => {
     const { root, home } = await setup();

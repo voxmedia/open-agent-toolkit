@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
@@ -33,8 +34,14 @@ export interface ReviewArtifactGateInvocation {
 
 export type Severity = keyof ReviewGateVerdict['counts'];
 
+export interface ReviewGateArtifactSnapshot {
+  readonly content: string;
+  readonly signature: string;
+}
+
 export interface ParseReviewGateVerdictOptions {
   normalizeMissingEmptySeveritySections?: boolean;
+  artifactSnapshot?: ReviewGateArtifactSnapshot;
 }
 
 interface SeverityHeading {
@@ -67,6 +74,35 @@ const FRONTMATTER_COUNT_KEYS: Readonly<Record<Severity, readonly string[]>> = {
   medium: ['oat_review_medium_count', 'medium'],
   minor: ['oat_review_minor_count', 'minor'],
 };
+
+function artifactContentSignature(content: string): string {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+async function assertArtifactContentCurrent(
+  artifactPath: string,
+  expectedContent: string,
+): Promise<void> {
+  let currentContent: string;
+  try {
+    currentContent = await readFile(artifactPath, 'utf8');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Unable to verify review artifact snapshot at ${artifactPath}: ${detail}`,
+      { cause: error },
+    );
+  }
+
+  if (
+    artifactContentSignature(currentContent) !==
+    artifactContentSignature(expectedContent)
+  ) {
+    throw new Error(
+      `Review artifact at ${artifactPath} changed after gate correlation; rerun the gate so correlation and verdict evaluation use one immutable snapshot.`,
+    );
+  }
+}
 
 function normalizeReviewType(value: unknown): ReviewGateVerdict['reviewType'] {
   return value === 'code' || value === 'artifact' ? value : 'unknown';
@@ -451,7 +487,9 @@ async function normalizeMissingEmptySeveritySections(
   }
 
   if (insertedSeverities.length > 0) {
+    await assertArtifactContentCurrent(artifactPath, content);
     await writeFile(artifactPath, normalizedContent, 'utf8');
+    await assertArtifactContentCurrent(artifactPath, normalizedContent);
   }
 
   return { content: normalizedContent, insertedSeverities };
@@ -479,14 +517,26 @@ export async function parseReviewGateVerdict(
   options: ParseReviewGateVerdictOptions = {},
 ): Promise<ReviewGateVerdict> {
   let content: string;
-  try {
-    content = await readFile(artifactPath, 'utf8');
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Unable to read review artifact at ${artifactPath}: ${detail}`,
-      { cause: error },
-    );
+  if (options.artifactSnapshot) {
+    content = options.artifactSnapshot.content;
+    if (
+      artifactContentSignature(content) !== options.artifactSnapshot.signature
+    ) {
+      throw new Error(
+        `Review artifact snapshot signature at ${artifactPath} does not match its content.`,
+      );
+    }
+    await assertArtifactContentCurrent(artifactPath, content);
+  } else {
+    try {
+      content = await readFile(artifactPath, 'utf8');
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Unable to read review artifact at ${artifactPath}: ${detail}`,
+        { cause: error },
+      );
+    }
   }
 
   const frontmatterBlock = getFrontmatterBlock(content);
@@ -517,6 +567,10 @@ export async function parseReviewGateVerdict(
   }
 
   const gateInvocation = readGateInvocation(frontmatter);
+
+  if (options.artifactSnapshot) {
+    await assertArtifactContentCurrent(artifactPath, content);
+  }
 
   return {
     artifactPath,

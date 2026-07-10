@@ -84,6 +84,7 @@ interface GateCommandDependencies {
     args: string[],
     options: ProcessRunOptions,
   ) => Promise<ProcessRunResult>;
+  parseReviewGateVerdict: typeof parseReviewGateVerdict;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -258,6 +259,7 @@ interface ReviewGateArtifactCandidate extends Omit<
   generatedTime: number;
   lifecycleRank: number;
   signature: string;
+  content: string;
 }
 
 const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
@@ -271,6 +273,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   writeUserConfig,
   resolveEffectiveConfig,
   runProcess: runChildProcess,
+  parseReviewGateVerdict,
   processEnv: process.env,
 };
 
@@ -1703,6 +1706,7 @@ async function readReviewGateArtifactCandidate(
     generatedTime,
     lifecycleRank: reviewGateLifecycleRank(scope),
     signature: createHash('sha256').update(content).digest('hex'),
+    content,
   };
 }
 
@@ -2126,6 +2130,8 @@ function writeReviewGateArtifactValidationFailure(
       ...(payload.corroboration
         ? { corroboration: payload.corroboration }
         : {}),
+      receiveEligible: false,
+      handoff: null,
       message: payload.message,
       recovery: payload.recovery,
     });
@@ -2591,10 +2597,14 @@ async function runReviewGate(
 
     let verdict: ReviewGateVerdict;
     try {
-      verdict = await parseReviewGateVerdict(
+      verdict = await dependencies.parseReviewGateVerdict(
         join(repoRoot, producedArtifact.path),
         {
           normalizeMissingEmptySeveritySections: true,
+          artifactSnapshot: {
+            content: producedArtifact.content,
+            signature: producedArtifact.signature,
+          },
         },
       );
     } catch (error) {

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -413,6 +414,67 @@ None
     expect(normalizedContent).toMatch(
       /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
     );
+  });
+
+  it('refuses to normalize when the supplied artifact snapshot is stale', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+oat_project: .oat/projects/shared/declared
+oat_gate_run_id: 11111111-1111-4111-8111-111111111111
+oat_gate_target: codex-default
+oat_gate_runtime: codex
+oat_invocation_model: stale-model
+oat_invocation_reasoning_effort: provider-default
+oat_invocation_source: exec-target-config
+oat_review_critical_count: 0
+oat_review_important_count: 1
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+- Blocking finding.
+
+### Minor
+
+None
+`);
+    const snapshotContent = await readFile(artifactPath, 'utf8');
+    const mutatedContent = snapshotContent
+      .replace(
+        'oat_project: .oat/projects/shared/declared',
+        'oat_project: .oat/projects/shared/sibling',
+      )
+      .replace('oat_review_scope: p01', 'oat_review_scope: final')
+      .replace(
+        'oat_invocation_model: stale-model',
+        'oat_invocation_model: provider-default',
+      )
+      .replace('oat_review_important_count: 1', 'oat_review_important_count: 0')
+      .replace('- Blocking finding.', 'None.');
+    await writeFile(artifactPath, mutatedContent, 'utf8');
+
+    await expect(
+      parseReviewGateVerdict(artifactPath, {
+        normalizeMissingEmptySeveritySections: true,
+        artifactSnapshot: {
+          content: snapshotContent,
+          signature: createHash('sha256').update(snapshotContent).digest('hex'),
+        },
+      }),
+    ).rejects.toThrow(/changed after gate correlation/i);
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(mutatedContent);
   });
 
   it('does not insert duplicate severity headings when fenced code contains markdown headings', async () => {
