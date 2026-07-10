@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t09
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | completed   | 6     | 6/6       |
-| p01   | in_progress | 9     | 8/9       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | completed | 9     | 9/9       |
+| p02   | pending   | 3     | 0/3       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 3     | 0/3       |
 
-**Total:** 14/22 tasks completed
+**Total:** 15/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 1: Configured Invocation Provenance
 
-**Status:** in_progress
+**Status:** completed; awaiting independent re-review
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -106,14 +106,16 @@ oat_generated: false
 
 ### Task p01-t09: (review) Emit YAML-safe gate invocation fields
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `11cd61aa`
 
 ### Phase Summary
 
 - **Outcome:** Gate targets now carry explicit configured model/effort metadata; operators can mutate and inspect it with provenance and availability; gate reviews emit one immutable prompt/JSON invocation record; and artifacts must copy matching run/target/runtime/model/effort/source fields before severity evaluation.
 - **Key files touched:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/config/resolve.ts`, `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/review-verdict.ts`, `.agents/agents/oat-reviewer.md`, `.agents/skills/oat-project-review-provide/SKILL.md`, and the workflow gate/review/artifact docs.
 - **Verification:** 106 config/resolver assertions; 107 gate/resolver assertions plus live target listing; 72 gate invocation assertions; 133 parser/gate/skill-contract assertions; CLI type-check; 53-skill validation; and 532-link docs crawl with zero broken links.
+- **Review fixes:** Nonzero priority survives invocation-only updates; failed availability probes are isolated; gate artifacts require gate provenance; unexpected post-selection failures retain exact structured provenance; and prompt metadata is YAML-safe for arbitrary valid configured strings.
+- **Fix verification:** 255 focused assertions; CLI type-check; live seven-target listing; 53-skill validation; 532-link docs crawl with zero broken links; root formatting; and baseline range diff checks all passed.
 - **Decisions/deviations:** No design or plan deviations. Configured invocation remains distinct from observed/self-reported producer identity; omitted values remain `unknown`, while `provider-default` is explicit.
 
 ## Phase 2: Declared Review Target Safety
@@ -191,6 +193,15 @@ oat_generated: false
 - Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — explicitly pinned fresh child)
 - Dispatch: scope=p01 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 9e8b74d6-0fbd-4aec-b7c4-a9a31b7e390e
+
+- Started: 2026-07-10T07:42:53Z
+- Scope: p01 review fixes (`p01-t05` through `p01-t09`)
+- Execution: exact pinned Codex implementer session
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Dispatch: scope=p01 action=fix role=fix producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -305,6 +316,10 @@ oat_generated: false
 - Focused p01-t07 verification reproduced successful acceptance for missing, manual, and auto markers, then passed all three cases, 94 combined gate/parser tests, and CLI type-check after the fix.
 - `p01-t08` completed in `80da9021`: unexpected failures after selection now retain the exact immutable run/project/target/invocation record in structured JSON, including launch rejection and review-filesystem errors, while pre-selection failures keep the existing generic envelope.
 - Focused p01-t08 verification reproduced provenance-free generic JSON for both failure classes, then passed both cases, all 80 gate command tests, and CLI type-check after the fix.
+- `p01-t09` completed in `11cd61aa`: gate prompt metadata now uses YAML-library serialization so target, runtime, model, and effort strings round-trip exactly across numeric-, boolean-, null-, colon-, hash-, quote-, and newline-like values.
+- Focused p01-t09 verification reproduced seven scalar-family failures, then passed all seven cases, 103 combined gate/parser tests, and CLI type-check after the fix.
+- Final p01 fix verification passed 255 focused assertions, CLI type-check, the live seven-target listing, validation of all 53 OAT skills, the 532-link docs crawl, root formatting, and baseline range diff checks.
+- The p01 review row is `fixes_completed`; p01 implementation is complete and awaits independent re-review. Restart-safe state points to `p02-t01`, but p02 has not started.
 
 ### Review Received: p01
 
@@ -328,7 +343,9 @@ oat_generated: false
 - `I4` agreed, `Moderate`, `code_fix_required`: keep the immutable selected invocation record on unexpected post-selection failures.
 - `M1` agreed, `Minor`, `code_fix_required`: serialize prompt-provided invocation values as YAML-safe scalars.
 
-**Next:** Execute `p01-t05` through `p01-t09`, mark the review `fixes_completed`, and run an independent p01 re-review before starting p02.
+**Fix outcome:** `p01-t05` through `p01-t09` completed with focused RED/GREEN evidence and union verification. The review is ready for independent re-review.
+
+**Next:** Run an independent p01 re-review before starting p02.
 
 ## Deviations from Plan / Design
 
@@ -355,6 +372,8 @@ oat_generated: false
 | p01-t06   | RED/GREEN rejected probe; 75 gate assertions; live target list                                                   | 77     | 0      | Per-target availability isolation; listing remains read-only |
 | p01-t07   | RED/GREEN marker cases; 94 gate/parser assertions; CLI type-check                                                | 98     | 0      | Gate-only marker enforcement; parser compatibility retained  |
 | p01-t08   | RED/GREEN launch and filesystem failures; 80 gate assertions; CLI type-check                                     | 83     | 0      | Exact post-selection structured provenance retained          |
+| p01-t09   | RED/GREEN YAML scalar matrix; 103 gate/parser assertions; CLI type-check                                         | 111    | 0      | Arbitrary configured strings round-trip exactly              |
+| p01 fixes | 255 focused assertions; type-check; live list; skills; docs; format; diff                                        | 261    | 0      | Committed-tree review-fix union verification                 |
 
 ## Final Summary (for PR/docs)
 
