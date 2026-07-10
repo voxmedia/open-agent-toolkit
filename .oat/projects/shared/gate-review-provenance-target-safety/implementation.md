@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t25
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 25    | 24/25     |
+| p04   | in_progress | 25    | 25/25     |
 
-**Total:** 47/48 tasks completed
+**Total:** 48/48 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** cycle-3 final-review fixes queued (19/25)
+**Status:** cycle-3 final-review fixes completed (25/25); cycle-cap override pending
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -404,20 +404,23 @@ oat_generated: false
 
 ### Task p04-t25: (final review) Correct user Codex materialization guidance
 
-**Status:** pending
+**Status:** completed
+**Commit:** `70514a1e`
 **Finding:** `M4` (Medium; Minor; `artifact_alignment_required`)
 
-- Replace deferred user-scope role-generation guidance with shipped `~/.codex` user-config materialization behavior.
-- Add a semantic docs contract and regenerate bundled docs.
+- The review guide now states that user-config Codex roles materialize under `~/.codex`, while project-config and supported-catalogue roles remain project-scoped and version controlled.
+- A semantic contract requires that ownership rule and rejects deferred or unavailable user-scope wording.
+- Bundled docs are byte-identical to the authored guide; no skill or public-package version changed.
+- Verification passed 61 focused contracts, the 532-link docs crawl, workspace format, and five-package release validation at `0.1.47`.
 
 ### Phase Summary
 
-- **Outcome:** The first 24 p04 tasks are complete. Final review cycle 3 added six sequential fixes for realpath containment, user-status input composition, managed-role header parsing, dispatch-pair validation, quick-plan resumption, and user-scope docs parity; only the docs-parity fix remains.
+- **Outcome:** All 25 p04 tasks and all 48 project tasks are complete. Final review cycle 3's six realpath, user-status, header, dispatch-pair, quick-resumption, and docs-parity fixes are complete.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** Final review cycle 3 is `fixes_added`. Execute `p04-t25` before any further review or explicit p04 HiLL approval.
+- **Review status:** Final review cycle 3 is `fixes_completed`. The standard three-cycle cap is reached; await explicit user override before a fourth final review, and do not request p04 HiLL approval until the review disposition is resolved.
 
 ## Orchestration Runs
 
@@ -980,9 +983,9 @@ oat_generated: false
 
 **Deferred Findings Ledger:** None. Auto-disposition converted all Important and Medium findings; the sole Minor was resolved in tracking.
 
-**Review-cycle limit:** This is standard review cycle 3 of 3. After the new fixes complete, any additional automated final review requires explicit user override before p04 HiLL approval.
+**Review-cycle limit:** Standard review cycle 3 of 3 is complete. Any fourth final review requires explicit user override before p04 HiLL approval.
 
-**Next:** Execute `p04-t20` through `p04-t25` with `oat-project-implement`. Then mark final review `fixes_completed`; do not request p04 HiLL approval until the final-review disposition is resolved.
+**Next:** Await explicit user override for a fourth final review. The final review is `fixes_completed`; do not request p04 HiLL approval until its disposition is resolved.
 
 ## Deviations from Plan / Design
 
@@ -1051,6 +1054,7 @@ oat_generated: false
 | p04-t22    | RED/GREEN strict header parser; 33 focused shared-codec/materialization assertions; CLI type-check                    | 33     | 0      | Header-only authority and owner-safe stale cleanup            |
 | p04-t23    | RED/GREEN incompatible-pair matrix; 141 focused identity/gate assertions; CLI type-check                              | 141    | 0      | Canonical dispatch pairs before producer aggregation          |
 | p04-t24    | RED/GREEN mode-specific tier-3 routing; 60 focused contracts; 53 skills; format; release                              | 60     | 0      | Interrupted quick review resumes through quick-start          |
+| p04-t25    | RED/GREEN user Codex ownership docs; 61 focused contracts; 532 links; format; release                                 | 61     | 0      | Shipped materialization guidance and bundled-doc parity       |
 
 ## Final Summary (for PR/docs)
 
@@ -1076,9 +1080,9 @@ readiness until review disposition was durable, and normalized p04 fix stamps
 for aggregate producer accounting. Their focused verification is now recorded
 in the ledger above.
 
-Final review cycle 3 found the remaining realpath, user-status, header-marker,
-dispatch-pair, quick-resumption, and docs-parity gaps. The first five fixes are
-complete; only `p04-t25` remains: 47 of 48 tasks are complete and p04 is 24 of 25.
-The final review is `fixes_added`; explicit p04 HiLL approval remains blocked
-until the tasks and review disposition are complete. No additional public
-package version bump has been made; all five packages remain at `0.1.47`.
+Final review cycle 3's realpath, user-status, header-marker, dispatch-pair,
+quick-resumption, and docs-parity fixes are complete. All 48 tasks are complete,
+p04 is 25 of 25, and the final review is `fixes_completed`. The standard
+three-cycle cap is reached, so a fourth final review requires explicit user
+override before p04 HiLL approval. No additional public-package version bump was
+made; all five packages remain at `0.1.47`.

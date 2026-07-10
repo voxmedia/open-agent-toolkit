@@ -1491,7 +1491,7 @@ pnpm release:validate
 
 ### Task p04-t25: (final review) Correct user Codex materialization guidance
 
-**Status:** pending
+**Status:** completed (`70514a1e`)
 **Finding:** `M4` (Medium; Minor; `artifact_alignment_required`)
 
 **Files:**
@@ -1521,19 +1521,19 @@ pnpm release:validate
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed      | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T134214Z.md         |
-| spec   | artifact | pending     | -          | -                                                           |
-| design | artifact | pending     | -          | -                                                           |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed          | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed          | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed          | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | fixes_completed | 2026-07-10 | reviews/archived/final-review-2026-07-10T134214Z.md         |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -1551,8 +1551,9 @@ pnpm release:validate
 
 Phase 0 through Phase 4 reviews have passed. The first final review added ten
 fix tasks; cycle 2 added five supplemental fix tasks; and cycle 3 added six more
-tasks. Execute `p04-t20` through `p04-t25` before any further final review or
-explicit p04 HiLL approval.
+tasks. All 48 tasks are complete and the final review is `fixes_completed`.
+The standard three-cycle cap is reached, so a fourth final review requires
+explicit user override before any p04 HiLL approval.
 
 ## References
 
