@@ -159,7 +159,7 @@ Requested outcomes:
 - **`cursor-agent` provisioning details:** Auth flow with `CURSOR_API_KEY` in image build vs. startup; failure behavior when the secret is absent.
 - **VoxDocs unreachable behavior:** Auto-attachment via Default On is verified (attached mid-session in this run after the installation mode was flipped). Remaining: define skill behavior when the server is unreachable, unattached (e.g., non-team contexts), or returns no coverage for the queried repo.
 - **Plugin distribution verification:** Confirm team-marketplace plugin skills reach cloud agent VMs (plugin-cache loading observed for a Cursor-public plugin this session; undocumented for team plugins). Choose installation mode for the skill-only `internal-docs-mcp` plugin. Lifecycle care for the auto-linked `vox-docs` marketplace entry: removing a marketplace plugin linked to a Team MCP server can delete the team server for cloud agents.
-- **vox-docs index coverage:** `open-agent-toolkit` (and possibly other repos relevant to autonomous runs) is not yet indexed in vox-docs. Decide which repos must be indexed (via `scrape_docs` / indexing jobs) as part of this project vs. ongoing ownership of index freshness; the skill should teach a `list_libraries` coverage check before relying on search results.
+- **vox-docs index coverage:** Most Vox repos are indexed via CI, but `bruno`, `pntr`, `open-agent-toolkit`, and `cloud-agent-env-node` are not (verified via live `list_libraries`). Adding them is operator-owned CI work — see Operator Action Items. The skill should still teach a `list_libraries` coverage check before relying on search results.
 - **`internal-docs-mcp` skill contract:** Trigger rules (when to reach for VoxDocs vs. local checkout), inputs (which indexes exist), and how the autonomous skill's evidence-gathering step references it without hard-depending on it (environments without the MCP must still run). Home: `plugins/internal-docs-mcp/` in the pntr repo (multi-plugin layout), keeping the pntr plugin's cloud-handoff scope clean.
 
 ## Assumptions
@@ -192,6 +192,15 @@ Requested outcomes:
   - **Likelihood:** Medium
   - **Impact:** Medium
   - **Mitigation Ideas:** Orientation skill's precedence instruction; freshness automation (out of scope but complementary).
+
+## Operator Action Items
+
+Steps owned by the operator (not agent-executable), tracked here so the project can reference and verify them:
+
+- [x] **Set vox-docs marketplace installation mode to Default On** — done 2026-07-10; auto-attachment verified live (propagated into a running cloud session).
+- [ ] **Add vox-docs CI indexing for missing repos** — `bruno`, `pntr`, `open-agent-toolkit`, and `cloud-agent-env-node` are not indexed (most other repos are; indexing is CI-driven). Needed so autonomous runs can research these repos without local checkouts.
+- [ ] **Provision `CURSOR_API_KEY` as a Cloud Agents secret** — required for headless `cursor-agent` gate execution once the environment-setup work lands.
+- [ ] **Publish / set installation mode for the `internal-docs-mcp` plugin** — once the skill-only plugin exists in pntr, add it to the team marketplace and choose Default On vs. Required.
 
 ## Next Steps
 
