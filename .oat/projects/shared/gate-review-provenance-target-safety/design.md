@@ -330,7 +330,44 @@ This procedure is called by spec-driven planning, quick-start planning, and impo
 
 ## Error Handling
 
-_Pending collaborative validation._
+### Configuration Errors
+
+- Reject malformed invocation objects and invalid empty values through the existing config normalization/mutation error path.
+- Treat the reserved `provider-default` sentinel as valid and omission as `unknown`.
+- A missing or unavailable qualifying target causes the phase-review planning prompt to be skipped; it does not block ordinary plan generation.
+- If the read-only target probe itself fails, warn, leave phase review unchanged/disabled, and continue planning rather than guessing that a target is usable.
+
+### Provider Execution Errors
+
+- Preserve existing provider nonzero exit and timeout behavior.
+- Include project resolution and configured invocation metadata in the diagnostic JSON whenever selection completed.
+- Do not claim artifact corroboration when no run-correlated artifact exists.
+
+### Target and Run Corroboration Errors
+
+- A missing/mismatched run ID, an artifact written under a different project, or `oat_project` that differs from an explicitly declared project produces a dedicated fail-closed targeting/correlation outcome.
+- This outcome exits nonzero regardless of finding counts, is escalation-biased, and does not consume a review-fix remediation attempt.
+- Preserve the discovered artifact path and expected/actual values for diagnosis, but mark the artifact ineligible for automatic review-receive bookkeeping.
+- When `--project` was omitted, retain ambient compatibility and report the ambient resolution source instead of pretending the project was declared.
+
+### Invocation Metadata Errors
+
+- Missing or mismatched configured invocation fields produce artifact-validation failure and cannot pass the gate.
+- These failures may use the existing bounded artifact-remediation/retry path because a reviewer can correct exact field stamping without changing review scope.
+- A model self-report that differs from configured invocation metadata is diagnostic only: preserve it separately when available, never overwrite configured fields, and do not treat it as proof of the provider's actual runtime model.
+
+### Review Verdict and Handoff
+
+- Only after identity corroboration succeeds does the existing severity threshold determine pass/block status.
+- Valid gate artifacts are handed to `oat-project-review-receive` whether findings are blocking or sub-threshold, preserving the current durable-disposition contract.
+- Invalid or uncorrelated artifacts are reported for diagnosis but are not automatically received into lifecycle state.
+
+### Planning Errors
+
+- Validate selected phase IDs against the finished plan before writing frontmatter.
+- Invalid user-selected IDs are corrected during the planning interaction rather than persisted.
+- Existing malformed `oat_phase_review_gate` frontmatter remains a blocking implementation-preflight error; planning must not silently disable it.
+- Imported or resumed explicit settings remain authoritative unless the user chooses to change them.
 
 ## Testing Strategy
 
