@@ -489,7 +489,10 @@ function normalizeWorkflowConfig(
     parsed.postImplementSequence,
   );
   if (postImplementSequence !== undefined) {
-    next.postImplementSequence = postImplementSequence;
+    next.postImplementSequence =
+      typeof parsed.postImplementSequence === 'string'
+        ? (parsed.postImplementSequence as WorkflowPostImplementLegacySequence)
+        : postImplementSequence;
   }
 
   if (

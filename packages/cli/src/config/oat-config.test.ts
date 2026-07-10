@@ -15,6 +15,7 @@ import {
   BUILTIN_EXEC_TARGETS,
   clearActiveIdea,
   clearActiveProject,
+  normalizeWorkflowPostImplementSequence,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -683,19 +684,10 @@ describe('oat-config', () => {
       ],
     ] as const)(
       'normalizes legacy post-implementation sequence %s canonically',
-      async (sequence, expected) => {
-        const repoRoot = await createRepoRoot();
-        await writeFile(
-          join(repoRoot, '.oat', 'config.json'),
-          JSON.stringify({
-            version: 1,
-            workflow: { postImplementSequence: sequence },
-          }),
-          'utf8',
+      (sequence, expected) => {
+        expect(normalizeWorkflowPostImplementSequence(sequence)).toEqual(
+          expected,
         );
-
-        const config = await readOatConfig(repoRoot);
-        expect(config.workflow?.postImplementSequence).toEqual(expected);
       },
     );
 
@@ -825,10 +817,7 @@ describe('oat-config', () => {
         hillCheckpointDefault: 'final',
         archiveOnComplete: true,
         createPrOnComplete: true,
-        postImplementSequence: {
-          preApproval: ['summary', 'pr'],
-          postApproval: [],
-        },
+        postImplementSequence: 'pr',
         reviewExecutionModel: 'subagent',
         autoReviewAtHillCheckpoints: true,
         autoNarrowReReviewScope: false,
@@ -943,10 +932,7 @@ describe('oat-config', () => {
       expect(localConfig.workflow).toEqual({
         hillCheckpointDefault: 'every',
         archiveOnComplete: false,
-        postImplementSequence: {
-          preApproval: ['summary', 'document', 'pr'],
-          postApproval: [],
-        },
+        postImplementSequence: 'docs-pr',
         reviewExecutionModel: 'inline',
         autoReviewAtHillCheckpoints: false,
       });
@@ -1013,10 +999,7 @@ describe('oat-config', () => {
         hillCheckpointDefault: 'final',
         archiveOnComplete: true,
         createPrOnComplete: true,
-        postImplementSequence: {
-          preApproval: ['summary', 'document', 'pr'],
-          postApproval: [],
-        },
+        postImplementSequence: 'docs-pr',
         reviewExecutionModel: 'subagent',
         autoReviewAtHillCheckpoints: true,
         autoNarrowReReviewScope: true,
