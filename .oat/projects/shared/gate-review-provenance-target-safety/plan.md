@@ -516,6 +516,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ## Phase 2: Declared Review Target Safety
 
+**Implementation Status:** completed; awaiting independent review
+
 > **Phase review note:** p02 intentionally defers the single PR-scoped version bumps for `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until their final edits in p04-t02. Do not flag those interim versions as missing bumps.
 
 ### Task p02-t01: Expose review-project resolution provenance
@@ -573,6 +575,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 ---
 
 ### Task p02-t03: Declare lifecycle review subjects in guidance
+
+**Status:** completed (`9012d6c4`)
 
 **Files:**
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t03
-oat_last_commit: 6b3b4ba0
+oat_current_task: p03-t01
+oat_last_commit: 9012d6c4
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T08:08:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T08:15:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - `p02-t02` completed; ready to execute `p02-t03`.
+Implementation - `p02` tasks completed and verified; awaiting independent p02 review. `p03-t01` is the restart pointer and remains unstarted.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - `p02-t02` completed; ready to execute `p02-t03`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` and `p01` reviews passed; ready for `p02-t01`)
+- **Implementation:** `implementation.md` (`p00` and `p01` reviews passed; p02 implementation complete and awaiting review)
 
 ## Progress
 
@@ -119,6 +119,9 @@ Implementation - `p02-t02` completed; ready to execute `p02-t03`.
 - ✓ p01 review status advanced to `passed`
 - ✓ `p02-t01` exposes declared and ambient review-project resolution provenance
 - ✓ `p02-t02` correlates direct artifacts by run ID and rejects declared-project mismatches
+- ✓ `p02-t03` declares exported, target-neutral lifecycle review subjects
+- ✓ All p02 implementation commits and per-task bookkeeping commits completed
+- ✓ Final p02 union verification and self-review passed
 
 ## Blockers
 
@@ -126,4 +129,4 @@ None
 
 ## Next Milestone
 
-Execute `p02-t03` to complete the declared review-target safety phase.
+Run an independent p02 review. After it passes, resume at `p03-t01`; p03 remains unstarted.

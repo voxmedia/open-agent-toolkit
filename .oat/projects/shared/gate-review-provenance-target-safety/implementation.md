@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | completed   | 6     | 6/6       |
-| p01   | completed   | 9     | 9/9       |
-| p02   | in_progress | 3     | 2/3       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 6     | 6/6       |
+| p01   | completed | 9     | 9/9       |
+| p02   | completed | 3     | 3/3       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 3     | 0/3       |
 
-**Total:** 17/22 tasks completed
+**Total:** 18/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -120,7 +120,7 @@ oat_generated: false
 
 ## Phase 2: Declared Review Target Safety
 
-**Status:** in_progress
+**Status:** completed; awaiting independent review
 
 ### Task p02-t01: Expose review-project resolution provenance
 
@@ -134,8 +134,15 @@ oat_generated: false
 
 ### Task p02-t03: Declare lifecycle review subjects in guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9012d6c4`
+
+### Phase Summary
+
+- **Outcome:** Gate review project resolution now reports its declaration or ambient source; direct active review artifacts are selected by unique run ID across project directories; explicitly declared projects fail closed on containing-project, `oat_project`, or run-correlation mismatches; and lifecycle review commands declare the exported project while remaining provider/model target-neutral.
+- **Key files touched:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/review-verdict.ts`, the four gate-aware lifecycle skills, `packages/cli/src/validation/skills.test.ts`, and workflow-gate/contributing-skill docs.
+- **Verification:** 160 focused gate/parser/skill assertions, CLI type-check, workspace lint, root format, validation of all 53 OAT skills, 532-link docs crawl, and committed-range diff/version hygiene all passed.
+- **Decisions/deviations:** No design or plan deviations. Ambient active-project/single-candidate behavior remains compatible and reports `ambient`; only `oat-project-implement` advanced to `2.0.32`, with the other three lifecycle skill version bumps deferred to p04 as planned.
 
 ## Phase 3: Aggregated Producer Provenance
 
@@ -202,6 +209,15 @@ oat_generated: false
 - Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Dispatch: scope=p01 action=fix role=fix producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 8e0cc181-cb6f-4fd2-9cba-9da51596a8c5
+
+- Started: 2026-07-10T08:00:00Z
+- Scope: p02
+- Execution: exact pinned Codex implementer session
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -324,6 +340,10 @@ oat_generated: false
 - Focused p02-t01 verification reproduced 18 missing-source failures, then passed all 88 gate command tests after the fix.
 - `p02-t02` completed in `6b3b4ba0`: gate reviews now parse `oat_project`, select direct active artifacts by unique gate run ID across project review directories, include explicitly resolved projects outside the shared root, and fail closed with a non-remediable non-receive-eligible targeting outcome for run or declared-project mismatches.
 - Focused p02-t02 verification reproduced 21 parser/correlation failures, then passed 114 gate/parser assertions, CLI type-check, targeted lint/format, and diff checks after the fix.
+- `p02-t03` completed in `9012d6c4`: plan, quick-start, import-plan, and implement now export `PROJECT_PATH`, require stored lifecycle review commands to include `--project "$PROJECT_PATH"`, execute those commands unchanged, and prohibit reusable provider/model `--target` pins. Workflow and contributor docs include the migration and targeting-failure contract.
+- Focused p02-t03 verification reproduced three contract failures, then passed all 46 skill assertions, validation of 53 OAT skills, and the 532-link docs crawl.
+- Final p02 verification passed 160 focused assertions, CLI type-check, workspace lint, root format, 53-skill validation, the 532-link crawl, and committed-range diff/version checks. Self-review found no scope, correlation-order, compatibility, versioning, or handoff defects.
+- p02 implementation is complete and awaiting independent review. No p03 work has started; `p03-t01` is the restart pointer after review.
 
 ### Review Received: p01
 
@@ -401,6 +421,8 @@ oat_generated: false
 | p01 review | 103 gate/parser assertions; CLI type-check; format; live list; diff hygiene                                      | 107    | 0      | Independent re-review closed all prior findings              |
 | p02-t01    | RED source expectations; 88 gate command assertions; targeted format and diff checks                             | 89     | 0      | Declared and ambient project-resolution provenance           |
 | p02-t02    | RED parser/correlation matrix; 114 gate/parser assertions; CLI type-check; lint; format; diff                    | 118    | 0      | Run/project corroboration and fail-closed targeting          |
+| p02-t03    | RED lifecycle contracts; 46 skill assertions; 53-skill validation; 532-link crawl                                | 49     | 0      | Declared target-neutral lifecycle review commands            |
+| p02 final  | 160 focused assertions; CLI type-check; lint; format; skills; docs links; diff/version hygiene                   | 166    | 0      | Committed-tree phase verification and self-review            |
 
 ## Final Summary (for PR/docs)
 
