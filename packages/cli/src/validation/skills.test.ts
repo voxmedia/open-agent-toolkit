@@ -2012,9 +2012,6 @@ describe('validateOatSkills', () => {
     const lifecycle = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/lifecycle.md',
     );
-    const directory = await readRepoFile(
-      'apps/oat-docs/docs/reference/oat-directory-structure.md',
-    );
     const dispatchPolicy = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
     );
