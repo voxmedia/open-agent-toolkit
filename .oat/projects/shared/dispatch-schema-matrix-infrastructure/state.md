@@ -75,7 +75,7 @@ Planning - Draft complete; configuring review gates
 - ✓ Full revised lightweight design drafted
 - ✓ Project dispatch ceiling selected: High
 - ✓ Lightweight design approved
-- ✓ Quick implementation plan drafted (5 phases, 22 tasks)
+- ✓ Quick implementation plan drafted (5 phases, 23 tasks)
 - ✓ Parallel execution group identified (`p02` + `p03`)
 - ⧗ Configuring optional phase review before plan artifact review
 

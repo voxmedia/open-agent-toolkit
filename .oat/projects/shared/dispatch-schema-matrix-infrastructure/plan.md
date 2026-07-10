@@ -606,6 +606,48 @@ git add packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/i
 git commit -m "feat(p03-t05): report immutable gate invocation"
 ```
 
+### Task p03-t06: Integrate reports into implementation and review workflows
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)**
+
+Require implementation and review dispatches to supply explicit report scope
+and action, consume the versioned report for human output, and derive the
+formal compatibility stamp from that report. Require each changed canonical
+skill's frontmatter version to increase once in this PR.
+
+**Step 2: Implement (GREEN)**
+
+Update implementation and local/remote review workflows to invoke the resolver
+with `--report-scope`/`--report-action`, render or consume the report, and retain
+the exact managed provider target. Do not add provider/model `--target`
+arguments to lifecycle gates.
+
+**Step 3: Refactor**
+
+Keep configured invocation, work-producer diversity, and runtime reviewer
+identity distinct in all workflow guidance.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`
+Expected: Workflow report/stamp contracts, skill versions, and bundled views pass.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-provide-remote/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts packages/cli/src/validation/skills.test.ts
+git commit -m "feat(p03-t06): integrate dispatch reports into workflows"
+```
+
 ---
 
 ## Phase p04: Cursor Evidence and User Documentation
@@ -619,17 +661,22 @@ from that evidence.
 **Files:**
 
 - Create: `.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`
+- Create: `tools/verification/verify-cursor-subagent-evidence.mjs`
+- Create: `tools/verification/verify-cursor-subagent-evidence.test.mjs`
 - Read: `packages/cli/config/dispatch-matrix-recommendation.json`
 
 **Step 1: Write evidence assertions (RED)**
 
-Enumerate all distinct recommendation-version Cursor candidates and assert the
-artifact has one pending row per exact string plus a separate configured-subset
-section.
+Define fixtures that fail on missing, duplicate, extra, or incomplete candidate
+records. Enumerate all distinct recommendation-version Cursor candidates and
+assert the artifact has exactly one pending record per exact string plus a
+separate configured-subset section.
 
 **Step 2: Implement (GREEN)**
 
-Record recommendation version, canonical prompt/sentinel, exact command shape,
+Add a deterministic checker that derives the candidate set from the current
+recommendation JSON and validates machine-delimited evidence records. Record
+recommendation version, canonical prompt/sentinel, exact command shape,
 sanitized environment fields, capture rules, outcome vocabulary, and the 13
 derived candidates.
 
@@ -639,13 +686,13 @@ Exclude credentials and make broad catalog data explicitly diagnostic-only.
 
 **Step 4: Verify**
 
-Run: `rg -n "gpt-5.6-|OAT_CURSOR_SUBAGENT_MODEL_VALID|recheck|configured" .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`
-Expected: Protocol, 13-candidate inventory, configured subset, and recheck fields are present.
+Run: `node --test tools/verification/verify-cursor-subagent-evidence.test.mjs && node tools/verification/verify-cursor-subagent-evidence.mjs --allow-pending --recommendation packages/cli/config/dispatch-matrix-recommendation.json --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`
+Expected: Checker tests pass and the pending artifact exactly matches the current candidate set.
 
 **Step 5: Commit**
 
 ```bash
-git add .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+git add .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md tools/verification/verify-cursor-subagent-evidence.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
 git commit -m "docs(p04-t01): define cursor verification protocol"
 ```
 
@@ -674,8 +721,8 @@ catalog presence.
 
 **Step 4: Verify**
 
-Run: `rg -n "exit status|stdout|stderr|sentinel|recheck date" .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`
-Expected: Every candidate has complete reproducible evidence or a dated recheck.
+Run: `node tools/verification/verify-cursor-subagent-evidence.mjs --recommendation packages/cli/config/dispatch-matrix-recommendation.json --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`
+Expected: Every distinct candidate has exactly one complete record; every non-definitive outcome has a recheck date.
 
 **Step 5: Commit**
 
@@ -842,12 +889,12 @@ git diff --cached --quiet || git commit -m "fix(p05-t02): resolve release valida
 
 **Files:**
 
-- Modify: `.oat/repo/pjm/backlog/items/BL-260709-add-dispatch-machine-schema.md`
-- Modify: `.oat/repo/pjm/backlog/items/BL-260707-consolidate-dispatch-matrix.md`
-- Modify: `.oat/repo/pjm/backlog/items/BL-260707-cache-cursor-model-catalog.md`
-- Modify: `.oat/repo/pjm/backlog/items/BL-260708-verify-cursor-gpt-5-6-subagent.md`
-- Modify: `.oat/repo/pjm/backlog/index.md`
-- Modify if used by current convention: `.oat/repo/pjm/backlog/completed.md`
+- Move when evidence-complete: `.oat/repo/pjm/backlog/items/BL-260709-add-dispatch-machine-schema.md` → `.oat/repo/pjm/backlog/archived/BL-260709-add-dispatch-machine-schema.md`
+- Move when evidence-complete: `.oat/repo/pjm/backlog/items/BL-260707-consolidate-dispatch-matrix.md` → `.oat/repo/pjm/backlog/archived/BL-260707-consolidate-dispatch-matrix.md`
+- Move when evidence-complete: `.oat/repo/pjm/backlog/items/BL-260707-cache-cursor-model-catalog.md` → `.oat/repo/pjm/backlog/archived/BL-260707-cache-cursor-model-catalog.md`
+- Move when evidence-complete: `.oat/repo/pjm/backlog/items/BL-260708-verify-cursor-gpt-5-6-subagent.md` → `.oat/repo/pjm/backlog/archived/BL-260708-verify-cursor-gpt-5-6-subagent.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Regenerate: `.oat/repo/pjm/backlog/index.md`
 
 **Step 1: Verify acceptance criteria**
 
@@ -856,13 +903,25 @@ and the live Cursor evidence. Leave an item open if its evidence is incomplete.
 
 **Step 2: Implement closeout**
 
-Update status, timestamp, outcome notes, and project/evidence references; refresh
-the managed backlog index without overwriting curated narrative.
+For each evidence-complete item, run the source CLI's atomic archive command
+with a one-line outcome summary. The command sets terminal status, appends
+completed history, moves the item, and regenerates the managed index. Keep any
+incomplete item active with an evidence/recheck note rather than archiving it.
 
 **Step 3: Refactor**
 
+Use these command shapes for the items that satisfy acceptance:
+
+```bash
+pnpm run cli -- backlog archive BL-260709-add-dispatch-machine-schema --summary "Delivered Dispatch Report V1 schema, formatters, and workflow integration." --json
+pnpm run cli -- backlog archive BL-260707-consolidate-dispatch-matrix --summary "Consolidated dispatch matrix normalization and traversal behind shared adapters." --json
+pnpm run cli -- backlog archive BL-260707-cache-cursor-model-catalog --summary "Added pass-scoped Cursor probe and broad-catalog caching for adoption and doctor." --json
+pnpm run cli -- backlog archive BL-260708-verify-cursor-gpt-5-6-subagent --summary "Recorded reproducible live Task evidence for the recommended GPT-5.6 Cursor candidates." --json
+```
+
 Distinguish a successfully verified slug from an unavailable slug with a dated
-recheck; do not claim closure beyond recorded evidence.
+recheck; do not claim closure beyond recorded evidence. Use `backlog
+regenerate-index` only if a separate curated narrative edit requires it.
 
 **Step 4: Verify**
 
@@ -872,7 +931,7 @@ Expected: PJM references and backlog index are consistent.
 **Step 5: Commit**
 
 ```bash
-git add .oat/repo/pjm/backlog
+git add .oat/repo/pjm/backlog/items .oat/repo/pjm/backlog/archived .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
 git commit -m "chore(p05-t03): close dispatch infrastructure backlog"
 ```
 
@@ -904,11 +963,11 @@ findings were resolved. No formal `spec.md` exists in quick mode.
 
 - Phase p01: 6 tasks — shared matrix core and adapters
 - Phase p02: 4 tasks — pass-scoped Cursor validation
-- Phase p03: 5 tasks — Dispatch Report V1 and integrations
+- Phase p03: 6 tasks — Dispatch Report V1 and workflow integrations
 - Phase p04: 4 tasks — live evidence, recommendation, and docs
 - Phase p05: 3 tasks — release validation and backlog closeout
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
 Ready for implementation only after optional phase-review setup and the managed
 plan artifact review complete.
