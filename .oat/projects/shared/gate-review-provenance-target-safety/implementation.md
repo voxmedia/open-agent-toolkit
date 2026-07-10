@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t01
+oat_current_task_id: p00-t01
 oat_generated: false
 ---
 
@@ -16,18 +16,38 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 4     | 0/4       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status  | Tasks | Completed |
+| ----- | ------- | ----- | --------- |
+| p00   | pending | 3     | 0/3       |
+| p01   | pending | 4     | 0/4       |
+| p02   | pending | 3     | 0/3       |
+| p03   | pending | 1     | 0/1       |
+| p04   | pending | 3     | 0/3       |
 
-**Total:** 0/11 tasks completed
+**Total:** 0/14 tasks completed
+
+## Phase 0: Managed Dispatch Readiness Prerequisite
+
+**Status:** pending
+
+### Task p00-t01: Fail closed and retain the selected Codex target
+
+**Status:** pending
+**Commit:** -
+
+### Task p00-t02: Provide complete non-destructive dispatch defaults
+
+**Status:** pending
+**Commit:** -
+
+### Task p00-t03: Materialize selected roles during implementation preflight
+
+**Status:** pending
+**Commit:** -
 
 ## Phase 1: Configured Invocation Provenance
 
-**Status:** in_progress
+**Status:** pending
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -117,7 +137,9 @@ _No implementation runs yet._
   - `m2` resolved in `plan.md` with an explicit p02 phase-review note for the intentional PR-scoped version-bump deferral.
 - Live `~/.oat/config.json` inspection supplied concrete Codex, Claude, and Cursor invocation fixtures and confirmed all four lifecycle gates still use ambient project wording that p02-t03 must migrate.
 - The Codex session in `codex-family-subagents` confirmed this project should precede implementation of workflows that expand configured gate usage, while planning those projects remains safe.
-- Next task: `p01-t01`.
+- Implementation preflight exposed an incomplete managed Codex configuration: policy `high` resolved without a model-plus-effort target, concrete variant, or materialized role. The user authorized a prerequisite `p00` repair before gate-provenance implementation.
+- Session-observer evidence confirmed Cursor targets were persisted, Claude intentionally relies on the valid built-in ladder, and Codex gate exec configuration was mistaken for subagent dispatch configuration.
+- Plan revision and a new artifact gate are required before implementation resumes. Next task is now `p00-t01`.
 
 ## Deviations from Plan / Design
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: 66a9a38e
+oat_current_task: p00-t01
+oat_last_commit: a827a260
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -15,7 +15,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -44,21 +44,21 @@ oat_generated: false
 
 # Project State: gate-review-provenance-target-safety
 
-**Status:** Implementation
+**Status:** Plan Revision
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Implementation - Starting `p01-t01`
+Plan - Adding prerequisite dispatch-readiness phase
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete; artifact review passed)
-- **Implementation:** `implementation.md` (initialized; next task `p01-t01`)
+- **Plan:** `plan.md` (revision in progress; prior artifact review retained as history)
+- **Implementation:** `implementation.md` (initialized; next task `p00-t01` after revised plan review)
 
 ## Progress
 
@@ -73,11 +73,14 @@ Implementation - Starting `p01-t01`
 - ✓ Implementation tracker initialized
 - ✓ Tier 1 subagent execution selected
 - ✓ Final-phase HiLL checkpoint and auto-review confirmed from config
+- ✓ Managed Codex dispatch regression reproduced during implementation preflight
+- ✓ Prerequisite phase authorized by the user
+- ○ Revised plan artifact review pending
 
 ## Blockers
 
-None
+Implementation is blocked until the revised plan passes artifact review.
 
 ## Next Milestone
 
-Execute Phase 1: Configured Invocation Provenance
+Pass revised plan artifact review, then execute Phase 0: Managed Dispatch Readiness Prerequisite

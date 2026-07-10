@@ -11,9 +11,11 @@ oat_template: false
 
 ## Overview
 
-This project hardens `oat gate review` at the two identity boundaries that a workflow gate must know without inference: the review subject and the configured invocation that performed the review. The CLI will preserve provider-neutral target selection, then construct a small immutable invocation record from the selected exec target. That record will be injected into the reviewer prompt, stamped into artifact frontmatter, parsed and corroborated after execution, and returned in the gate JSON envelope. Separately, an explicitly declared project will be carried with a resolution source and corroborated against the artifact's `oat_project` value before a gate can pass.
+This project first repairs the managed-dispatch preflight required to execute its own subagent phases deterministically, then hardens `oat gate review` at the two identity boundaries that a workflow gate must know without inference: the review subject and the configured invocation that performed the review. Dispatch readiness is based on whether the active provider can compile concrete native controls, not merely whether an abstract policy label exists. Missing Codex model-plus-effort targets prompt or block, defaults can be adopted without erasing explicit provider choices, and the selected role is materialized before dispatch.
 
-The implementation extends the existing gate path instead of replacing it. Current exact-scope producer resolution and final/range family-union avoidance stay in place; aggregation output gains an explicit aggregated-stamps source and focused range coverage. The exec-target extension is deliberately local and minimal, containing only invocation model and reasoning effort plus derived source semantics. It does not introduce the broader dispatch-machine route, policy, defaults, or runtime-confirmation schema.
+After that prerequisite, the CLI will preserve provider-neutral gate target selection, then construct a small immutable invocation record from the selected exec target. That record will be injected into the reviewer prompt, stamped into artifact frontmatter, parsed and corroborated after execution, and returned in the gate JSON envelope. Separately, an explicitly declared project will be carried with a resolution source and corroborated against the artifact's `oat_project` value before a gate can pass.
+
+The implementation extends the existing gate path instead of replacing it. Current exact-scope producer resolution and final/range family-union avoidance stay in place; aggregation output gains an explicit aggregated-stamps source and focused range coverage. The exec-target extension is deliberately local and minimal, containing only invocation model and reasoning effort plus derived source semantics. The prerequisite repairs existing dispatch-policy behavior but does not introduce the broader dispatch-machine report schema, generalized renderer, or runtime-confirmation contract.
 
 Only after these safety contracts are verified will shared planning guidance detect a deliberately configured review target and offer project-level phase-review enablement. The prompt writes the existing `oat_phase_review_gate` shape for all phases, selected phases, or disabled, while reusable lifecycle commands continue to declare `--project` and omit provider/model `--target` pins.
 
@@ -26,6 +28,7 @@ Only after these safety contracts are verified will shared planning guidance det
 **Key components:**
 
 - **Exec-target configuration:** Stores minimal configured invocation metadata alongside the existing runtime and command definition.
+- **Dispatch readiness preflight:** Joins policy, provider target, native adapter compilation, and selected-role availability before implementation can dispatch.
 - **Gate invocation assembler:** Resolves project source and selected target, creates a unique run correlation ID, and assembles exact prompt metadata.
 - **Review artifact parser and corroborator:** Parses typed frontmatter, correlates the artifact to the run, and compares project and invocation fields with the gate-owned records.
 - **Producer identity resolver:** Preserves exact-scope resolution and represents final/range aggregation explicitly.
@@ -59,6 +62,7 @@ producer dispatch stamps --> producer resolver                   |
 
 ### Data Flow
 
+0. Before implementation, resolve the active provider and selected work effort. A managed target is ready only when native dispatch args compile; otherwise prompt with fill-missing defaults or block. Materialize the resolver-selected Codex role before spawning it.
 1. Resolve the project as `{ path, source }`, distinguishing an explicit declaration from active-project or single-candidate ambient fallback.
 2. Resolve producer identity from an explicit flag, an exact dispatch stamp, aggregated in-scope stamps, or unknown; retain the union of families to avoid.
 3. Select an exec target without adding a provider/model pin to lifecycle commands, then derive one immutable configured invocation record containing run ID, target ID, runtime, model, reasoning effort, and source.
@@ -69,6 +73,22 @@ producer dispatch stamps --> producer resolver                   |
 8. After the safety work is available, planning workflows use a canonical read-only gate-target probe to decide whether to offer phase-review enablement; the user choice writes the already-consumed `oat_phase_review_gate` plan shape.
 
 ## Component Design
+
+### Dispatch Readiness and Materialization
+
+**Purpose:** Prevent managed implementation from silently degrading to provider defaults when policy intent cannot produce concrete provider controls.
+
+**Responsibilities:**
+
+- Preserve valid built-in provider compilation, including Claude's canonical policy ladder.
+- Treat a managed Codex selection without a complete same-harness model-plus-effort target as incomplete configuration during preflight.
+- Resolve a lower preferred Codex effort against the corresponding configured matrix target after applying the policy cap.
+- Offer versioned provider defaults and merge only missing provider/tier cells, preserving explicit user, shared, and local overrides.
+- Before a Codex spawn, verify the resolver-selected materialized role exists; invoke project materialization/sync when absent, then re-resolve and fail closed if the role is still unavailable.
+
+**Boundary:**
+
+This component reuses the existing resolver response, dispatch matrix, materialization codec, and sync surface. It does not add the deferred generalized dispatch-machine schema or infer targets from gate exec commands.
 
 ### Exec-Target Invocation Metadata
 
@@ -181,6 +201,20 @@ interface GateCorroboration {
 
 ## Data Models
 
+### Dispatch Recommendation
+
+Recommended Codex cells use complete same-harness targets rather than legacy effort-only strings:
+
+```json
+{
+  "harness": "codex",
+  "model": "gpt-5.6-sol",
+  "effort": "xhigh"
+}
+```
+
+The versioned default ladder uses provider-valid values: Codex cells carry model plus effort, while Claude retains its native model values including `frontier: fable`. Adoption fills missing cells recursively and never replaces an explicit existing provider/tier value unless a separate explicit replacement operation is requested.
+
 ### Exec-Target Configuration
 
 ```typescript
@@ -259,6 +293,20 @@ oat_phase_review_gate:
 
 ## API Design
 
+### Dispatch Preflight
+
+The existing resolver command remains the source of truth:
+
+```bash
+oat project dispatch-ceiling resolve --provider <provider> --preflight --json
+```
+
+- A managed result is runnable only when the active provider has concrete native dispatch arguments or an explicit cross-harness target.
+- Interactive incomplete configuration returns a promptable unresolved result with recommended remediation.
+- `--non-interactive` exits nonzero before work starts.
+- Inherit/default behavior and managed uncapped reviewer fallback remain explicit exceptions; they are not inferred from a missing managed target.
+- When a selected Codex variant is not present locally, implementation invokes project materialization/sync and verifies the role before spawning.
+
 ### Exec-Target Mutation
 
 Extend the existing command without changing current flags:
@@ -332,6 +380,9 @@ This procedure is called by spec-driven planning, quick-start planning, and impo
 
 ### Configuration Errors
 
+- Treat a managed active-provider selection that cannot compile native controls as incomplete dispatch configuration, even when the abstract policy label resolved.
+- Preserve valid built-in provider mappings; an absent explicit Claude column is not an error when the canonical policy compiles a native model argument.
+- Default adoption fills missing cells and preserves explicit provider/tier values.
 - Reject malformed invocation objects and invalid empty values through the existing config normalization/mutation error path.
 - Treat the reserved `provider-default` sentinel as valid and omission as `unknown`.
 - A missing or unavailable qualifying target causes the phase-review planning prompt to be skipped; it does not block ordinary plan generation.
@@ -373,6 +424,10 @@ This procedure is called by spec-driven planning, quick-start planning, and impo
 
 ### Unit Tests
 
+- **Dispatch readiness:** Missing Codex target, complete Codex target, valid built-in Claude target, explicit cross-harness route, inherit/default, and non-interactive blocking.
+- **Selected-target resolution:** Preferred below/equal/above cap, reviewer cap, and managed uncapped paths retain the correct model-plus-effort target and compiled role.
+- **Default adoption:** Complete Codex targets validate and existing Cursor/Claude/custom cells survive fill-missing adoption.
+- **Materialization:** The selected resolver variant is generated from effective config/project state and is present before dispatch.
 - **Config model and normalization:** Explicit model/effort, `provider-default`, omitted/unknown values, malformed values, target tombstones, and partial layered invocation overrides.
 - **Target selection and cloning:** Invocation metadata survives built-in/config resolution, candidate expansion, selection, and both clone paths without changing provider-neutral selection.
 - **Project resolution:** Declared path/name, active-project fallback, single-candidate fallback, normalization, and source reporting.
@@ -394,6 +449,8 @@ This procedure is called by spec-driven planning, quick-start planning, and impo
 
 ### Workflow Contract Tests
 
+- Implementation preflight may use a base Codex role only for explicit inherit/default or documented uncapped-reviewer behavior, never because a managed target is missing.
+- Plan-producing workflows flag an incomplete active-provider matrix and offer valid defaults before implementation readiness.
 - Spec-driven plan, quick-start, and import-plan skill text all invoke the shared phase-review setup after stable phase IDs and before plan artifact review.
 - Provider-plan import inherits the import-plan behavior.
 - Built-in-only, unavailable, or failed target probes do not prompt or enable the phase gate.
