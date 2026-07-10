@@ -150,7 +150,69 @@ legacy input.
 
 ## Data Models
 
-_Pending collaborative review._
+### Configuration Types
+
+```typescript
+type WorkflowPostImplementStep = 'summary' | 'document' | 'pr';
+
+type WorkflowPostImplementLegacySequence =
+  | 'wait'
+  | 'summary'
+  | 'pr'
+  | 'docs-pr';
+
+interface WorkflowPostImplementStructuredSequence {
+  preApproval: WorkflowPostImplementStep[];
+  postApproval: WorkflowPostImplementStep[];
+}
+
+type WorkflowPostImplementSequence =
+  | WorkflowPostImplementLegacySequence
+  | WorkflowPostImplementStructuredSequence;
+```
+
+**Validation Rules:**
+
+- Both arrays are required; empty arrays are valid.
+- Only the three known steps are accepted.
+- Each step may appear at most once across the complete structure, keeping
+  execution and progress exactly once.
+- Partial objects, extra keys, unknown steps, and duplicates are invalid.
+- Legacy normalization is exact:
+  - `wait` → `{ preApproval: [], postApproval: [] }`
+  - `summary` → `{ preApproval: ['summary'], postApproval: [] }`
+  - `pr` → `{ preApproval: ['summary', 'pr'], postApproval: [] }`
+  - `docs-pr` →
+    `{ preApproval: ['summary', 'document', 'pr'], postApproval: [] }`
+
+### Persisted Closeout Snapshot
+
+```yaml
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  final_phase: p03
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending # pending | approved | not_required
+  post_approval: []
+  post_approval_completed: []
+  failure: null
+```
+
+On failure:
+
+```yaml
+failure:
+  boundary: pre_approval # pre_approval | post_approval
+  step: document
+  message: 'Concise failure and recovery context'
+```
+
+The snapshot is written only for a configured legacy or structured value. If
+the preference is unset, the existing interactive next-step prompt remains
+after any final approval. Once created, the snapshot is authoritative for
+resumes; configuration changes do not mutate an in-progress closeout. Completed
+snapshots remain in state for auditability, while routing ignores them.
 
 ## API Design
 
