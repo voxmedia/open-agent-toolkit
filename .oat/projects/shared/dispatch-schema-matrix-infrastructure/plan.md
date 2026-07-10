@@ -54,6 +54,9 @@ writes report, stamp, resolver, help, and gate files. Neither phase owns shared
 generated assets or documentation. `p04` waits for both so evidence-driven
 documentation can describe the final contracts, and `p05` remains sequential
 because package assets and release validation are repository-wide.
+After folding the parallel branches back together, rerun
+`src/commands/commands.integration.test.ts` on the combined tree because p02
+changes config/doctor runtime behavior while p03 owns that integration surface.
 
 ---
 
@@ -635,6 +638,8 @@ arguments to lifecycle gates.
 
 Keep configured invocation, work-producer diversity, and runtime reviewer
 identity distinct in all workflow guidance.
+Do not hand-edit the bundled mirrors under `packages/cli/assets/skills/`;
+the p05 build regenerates them from the canonical skills.
 
 **Step 4: Verify**
 
@@ -824,7 +829,11 @@ checks pass, and the four associated backlog items record their actual outcomes.
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `pnpm-lock.yaml`
 - Regenerate: `packages/cli/assets/public-package-versions.json`
-- Regenerate: other CLI bundled assets affected by this project
+- Regenerate via `bash packages/cli/scripts/bundle-assets.sh`:
+  - `packages/cli/assets/skills/oat-project-implement/SKILL.md`
+  - `packages/cli/assets/skills/oat-project-review-provide/SKILL.md`
+  - `packages/cli/assets/skills/oat-project-review-provide-remote/SKILL.md`
+  - `packages/cli/assets/config/dispatch-matrix-recommendation.json`
 
 **Step 1: Verify baseline (RED)**
 
@@ -834,7 +843,8 @@ from the current `0.1.48` baseline.
 **Step 2: Implement (GREEN)**
 
 Bump all five public packages together, update the lockfile, and regenerate
-assets through repository scripts rather than hand-editing mirrors.
+the public-version, skill, and recommendation mirrors with
+`bash packages/cli/scripts/bundle-assets.sh` rather than hand-editing them.
 
 **Step 3: Refactor**
 
@@ -952,10 +962,13 @@ git commit -m "chore(p05-t03): close dispatch infrastructure backlog"
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |
-| plan   | artifact | received        | 2026-07-10 | reviews/artifact-plan-review-2026-07-10T215126Z.md            |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T215126Z.md   |
 
 The user approved the lightweight design after all six received design-review
 findings were resolved. No formal `spec.md` exists in quick mode.
+The configured cross-runtime plan gate passed at the Important threshold; its
+three Minor clarity findings were applied directly to this plan with user
+approval.
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
