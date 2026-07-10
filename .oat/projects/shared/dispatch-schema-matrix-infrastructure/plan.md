@@ -860,8 +860,11 @@ git commit -m "chore(p05-t01): bump public package versions"
 
 **Step 1: Run focused regression suites**
 
-Run all exact matrix, resolver, config, doctor, availability, validation,
-report, stamp, gate, help, integration, and bundle test files changed above.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts src/providers/identity/availability.test.ts src/providers/identity/dispatch-validation.test.ts src/providers/identity/dispatch-report.test.ts src/providers/identity/stamp.test.ts src/commands/gate/index.test.ts src/commands/help-snapshots.test.ts src/commands/commands.integration.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`
+
+Expected: Every focused matrix, resolver, config, doctor, availability,
+validation, report, stamp, gate, help, integration, workflow-contract, and
+bundle suite passes.
 
 **Step 2: Run repository checks**
 
