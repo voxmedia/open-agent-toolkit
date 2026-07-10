@@ -193,4 +193,5 @@ configured gate rerun after these artifact corrections.
 
 - High re-review passed with no findings after the two plan corrections.
 - A delayed artifact from the original High review added one valid ordering
-  contract gap; readiness remains pending its final re-review.
+  contract gap; the subsequent High re-review passed cleanly.
+- The plan is implementation-ready; next task remains `p01-t01`.
