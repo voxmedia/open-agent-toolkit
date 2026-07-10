@@ -1604,6 +1604,39 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('routes interrupted tier-3 plans to their mode-specific planning workflow', async () => {
+    const next = await readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+    const specTable = next.slice(
+      next.indexOf('**Spec-Driven Mode**'),
+      next.indexOf('**Quick Mode:**'),
+    );
+    const quickTable = next.slice(
+      next.indexOf('**Quick Mode:**'),
+      next.indexOf('**Import Mode:**'),
+    );
+    const importTable = next.slice(
+      next.indexOf('**Import Mode:**'),
+      next.indexOf('### Step 4:'),
+    );
+    const planTier3Row = (table: string): string | undefined =>
+      table
+        .split('\n')
+        .find(
+          (line) =>
+            line.includes('| plan') &&
+            line.includes('| in_progress') &&
+            line.includes('| tier 3'),
+        );
+
+    expect(next).toMatch(
+      /\*\*Tier 3 \(Template\/Empty\):\*\*[\s\S]{0,220}`oat_template == true`/,
+    );
+    expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
+    expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
+    expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.6');
+  });
+
   it('documents phase-review setup across project workflow references', async () => {
     const artifacts = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/artifacts.md',
