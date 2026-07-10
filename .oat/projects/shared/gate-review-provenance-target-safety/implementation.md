@@ -12,160 +12,107 @@ oat_generated: false
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> `oat_current_task_id` points to the next task to execute. Review status is tracked in `plan.md`.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 4     | 0/4       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/11 tasks completed
 
----
-
-## Phase 1: {Phase Name}
+## Phase 1: Configured Invocation Provenance
 
 **Status:** in_progress
-**Started:** 2026-07-10
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Add minimal exec-target invocation metadata
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+### Task p01-t02: Add target mutation and inspection APIs
 
 **Status:** pending
 **Commit:** -
 
----
+### Task p01-t03: Assemble and emit gate invocation provenance
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Stamp, parse, and validate invocation metadata
+
+**Status:** pending
+**Commit:** -
+
+## Phase 2: Declared Review Target Safety
+
+**Status:** pending
+
+### Task p02-t01: Expose review-project resolution provenance
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Correlate artifacts and reject project mismatches
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Declare lifecycle review subjects in guidance
+
+**Status:** pending
+**Commit:** -
+
+## Phase 3: Aggregated Producer Provenance
+
+**Status:** pending
+
+### Task p03-t01: Make final and range aggregation explicit
+
+**Status:** pending
+**Commit:** -
+
+## Phase 4: Opt-In Phase Review Setup
+
+**Status:** pending
+
+### Task p04-t01: Define the shared phase-review setup contract
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Wire phase-review setup into every plan path
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t03: Sync, package, and validate the shipped surface
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_No implementation runs yet._
 
 <!-- orchestration-runs-end -->
 
----
-
 ## Implementation Log
 
-Chronological log of implementation progress.
-
 ### 2026-07-10
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-10
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- Quick-start discovery and lightweight design completed.
+- Four-phase, eleven-task sequential plan passed structured artifact review.
+- Next task: `p01-t01`.
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +120,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| -     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
-
-## References
-
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+_Fill after implementation completes._

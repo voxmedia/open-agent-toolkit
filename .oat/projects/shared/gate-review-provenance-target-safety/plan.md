@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: null
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
@@ -358,16 +358,16 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact                    |
+| ------ | -------- | ------- | ---------- | --------------------------- |
+| p01    | code     | pending | -          | -                           |
+| p02    | code     | pending | -          | -                           |
+| p03    | code     | pending | -          | -                           |
+| p04    | code     | pending | -          | -                           |
+| final  | code     | pending | -          | -                           |
+| spec   | artifact | pending | -          | -                           |
+| design | artifact | pending | -          | -                           |
+| plan   | artifact | passed  | 2026-07-10 | in-memory structured review |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
