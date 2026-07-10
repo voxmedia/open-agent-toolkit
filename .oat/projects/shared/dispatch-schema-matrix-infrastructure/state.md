@@ -15,7 +15,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -38,25 +38,25 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T01:09:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T01:37:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: dispatch-schema-matrix-infrastructure
 
-**Status:** Discovery
+**Status:** Design
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Design - Validating a lightweight architecture before planning
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
+- **Design:** `design.md` (in_progress)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -65,7 +65,8 @@ Discovery - Gathering requirements for a quick workflow before planning
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ✓ Scope and success criteria captured
-- ⧗ Awaiting design-depth decision
+- ✓ Lightweight design selected
+- ⧗ Collaborative design review in progress
 
 ## Blockers
 
@@ -73,4 +74,4 @@ None
 
 ## Next Milestone
 
-Confirm design depth, complete discovery, and generate a quick implementation plan
+Complete lightweight design, then generate a quick implementation plan
