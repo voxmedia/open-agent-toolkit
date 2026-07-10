@@ -193,9 +193,10 @@ Selection modes:
 Codex uses materialized roles because per-call model/effort controls were
 unreliable in dogfooding. The resolver compiles an explicit model+effort target
 into a role name such as `oat-phase-implementer-gpt-5-6-terra-xhigh`, and the
-Codex spawn payload uses that role as `agent_type`. For managed `Uncapped`, OAT
-still selects the preferred materialized target. If the Codex preferred value is
-an effort rather than a matrix tier, OAT resolves the matching model+effort
+Codex spawn payload uses that role as `agent_type`. For a capped managed
+implementer, OAT preserves the policy-selected target's model and applies
+`min(preferred, cap)` to its effort. It does not search other matrix tiers for a
+matching effort. Managed `Uncapped` instead selects the preferred materialized
 target from the matrix. `max` is a first-class effort, not an alias for `xhigh`.
 The old effort-only Codex pins are not the managed dispatch contract for new
 projects.
