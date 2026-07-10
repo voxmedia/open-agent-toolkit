@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ oat_generated: false
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
 | p01   | completed   | 9     | 9/9       |
-| p02   | in_progress | 3     | 1/3       |
+| p02   | in_progress | 3     | 2/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 16/22 tasks completed
+**Total:** 17/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -129,8 +129,8 @@ oat_generated: false
 
 ### Task p02-t02: Correlate artifacts and reject project mismatches
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6b3b4ba0`
 
 ### Task p02-t03: Declare lifecycle review subjects in guidance
 
@@ -322,6 +322,8 @@ oat_generated: false
 - The p01 review row advanced from `fixes_completed` to `passed` after an independent re-review closed all four prior Important findings and the prior Medium finding.
 - `p02-t01` completed in `c1c98ce2`: review-project resolution now returns the normalized path with a `declared`, `active-project`, or `single-candidate` source, includes that source in the review prompt, and preserves it across success/block, child failure, artifact validation, and unexpected post-selection JSON outcomes.
 - Focused p02-t01 verification reproduced 18 missing-source failures, then passed all 88 gate command tests after the fix.
+- `p02-t02` completed in `6b3b4ba0`: gate reviews now parse `oat_project`, select direct active artifacts by unique gate run ID across project review directories, include explicitly resolved projects outside the shared root, and fail closed with a non-remediable non-receive-eligible targeting outcome for run or declared-project mismatches.
+- Focused p02-t02 verification reproduced 21 parser/correlation failures, then passed 114 gate/parser assertions, CLI type-check, targeted lint/format, and diff checks after the fix.
 
 ### Review Received: p01
 
@@ -398,6 +400,7 @@ oat_generated: false
 | p01 fixes  | 255 focused assertions; type-check; live list; skills; docs; format; diff                                        | 261    | 0      | Committed-tree review-fix union verification                 |
 | p01 review | 103 gate/parser assertions; CLI type-check; format; live list; diff hygiene                                      | 107    | 0      | Independent re-review closed all prior findings              |
 | p02-t01    | RED source expectations; 88 gate command assertions; targeted format and diff checks                             | 89     | 0      | Declared and ambient project-resolution provenance           |
+| p02-t02    | RED parser/correlation matrix; 114 gate/parser assertions; CLI type-check; lint; format; diff                    | 118    | 0      | Run/project corroboration and fail-closed targeting          |
 
 ## Final Summary (for PR/docs)
 

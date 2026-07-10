@@ -545,6 +545,8 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.te
 
 ### Task p02-t02: Correlate artifacts and reject project mismatches
 
+**Status:** completed (`6b3b4ba0`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/gate/review-verdict.ts`
