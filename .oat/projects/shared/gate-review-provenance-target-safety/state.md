@@ -1,6 +1,6 @@
 ---
 oat_current_task: p00-t01
-oat_last_commit: 23c0110f
+oat_last_commit: 932426f3
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -15,14 +15,14 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
 #   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
+#     codex: high # low|medium|high|xhigh|max
 #     claude: sonnet # haiku|sonnet|opus|fable
 #   matrix: # optional sparse project override; full dispatch matrix lives in layered config
 #     cursor:
@@ -38,27 +38,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T04:51:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T05:35:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-review-provenance-target-safety
 
-**Status:** Plan Revision
+**Status:** Implementation
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Plan revision - re-gating the supported-catalogue and scoped-materialization architecture
+Implementation - Resuming `p00-t01`
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (in progress; architecture revision awaiting artifact review)
-- **Implementation:** `implementation.md` (paused at `p00-t01`; failing TDD tests preserved)
+- **Plan:** `plan.md` (complete; three plan artifact reviews passed)
+- **Implementation:** `implementation.md` (resuming `p00-t01`; failing TDD tests preserved)
 
 ## Progress
 
@@ -79,7 +79,8 @@ Plan revision - re-gating the supported-catalogue and scoped-materialization arc
 - ✓ User confirmed a finite committed supported Codex catalogue instead of runtime-only selected-role generation
 - ✓ User confirmed user-config roles belong in user scope and project-config roles belong in tracked project scope
 - ✓ User confirmed workflow correctness must not require provider restart or hot reload
-- ◌ Revised static-catalogue plan artifact review pending
+- ✓ Revised static-catalogue plan artifact gate passed with no blocking findings
+- ✓ Three minor plan findings resolved and dispositioned
 
 ## Blockers
 
@@ -87,4 +88,4 @@ None
 
 ## Next Milestone
 
-Validate and gate the revised plan, then resume Phase 0 at `p00-t01`
+Execute Phase 0: Managed Dispatch Readiness Prerequisite, starting at `p00-t01`

@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p04']
 oat_auto_review_at_hill_checkpoints: true
@@ -35,7 +35,7 @@ oat_generated: false
 - [x] Dispatch policy resolved from user config: managed `high`
 - [x] Implementation regression identified and prerequisite scope authorized
 - [x] Initial prerequisite plan artifact review passed
-- [ ] Static-catalogue and scoped-materialization revision artifact review passed
+- [x] Static-catalogue and scoped-materialization revision artifact review passed
 
 ## Parallelism
 
@@ -63,13 +63,17 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 3. Extend `WorkflowCodexDispatchCeiling`, `VALID_CODEX_DISPATCH_CEILINGS`, and the resolver/provider ordered value path from `low | medium | high | xhigh` to `low | medium | high | xhigh | max`, allowing the existing materializer to compile explicit `max` targets without coercion.
 4. After applying a Codex effort cap, resolve the matrix target corresponding to the selected effort instead of dropping the target whenever preferred effort is below the policy cap.
 5. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, explicit `max` targets, reviewer, and uncapped paths. Prove the configured Cursor values remain opaque and compile unchanged: `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and `gpt-5.6-sol-max`.
-6. After `max` resolves successfully, restore the user Codex Frontier target in `~/.oat/config.json` to `gpt-5.6-sol/max` and verify implementer/reviewer resolution plus all four Cursor tiers from the live layered configuration.
+6. After `max` resolves successfully, restore the user Codex Frontier target in `~/.oat/config.json` to `gpt-5.6-sol/max`. Verify live Codex and Cursor implementer/reviewer resolution under the configured policy; the resolver tests in step 5 pin all four Cursor tiers.
 
 **Verify:**
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/providers/ceiling/registry.test.ts
 pnpm --filter @open-agent-toolkit/cli type-check
+pnpm run cli:source -- project dispatch-ceiling resolve --provider codex --role implementer --preflight --json
+pnpm run cli:source -- project dispatch-ceiling resolve --provider codex --role reviewer --preflight --json
+pnpm run cli:source -- project dispatch-ceiling resolve --provider cursor --role implementer --preflight --json
+pnpm run cli:source -- project dispatch-ceiling resolve --provider cursor --role reviewer --preflight --json
 ```
 
 **Commit:** `fix(dispatch): fail closed on incomplete managed targets`
@@ -109,9 +113,9 @@ pnpm --filter @open-agent-toolkit/cli type-check
 1. Add an immutable supported Codex target catalogue: Luna and Terra at `low`, `medium`, `high`, and `xhigh`; Sol at those efforts plus `max`. Deterministically expand all 13 targets for both implementer and reviewer roles, yielding exactly 26 committed project variants and stable `.codex/config.toml` registrations.
 2. Distinguish generated ownership as `supported-catalogue`, `user-config`, or `project-config`. Reconcile user-config custom targets only under `~/.codex`; reconcile project-config custom targets only under the project's `.codex` view and treat that output as version-controlled project state.
 3. Make `oat sync --scope user|project|all` apply the corresponding reconciliation passes. Scope cleanup to matching ownership markers so a sync cannot remove supported roles, roles from another config scope, or unrelated provider entries. Use the same scoped reconciler best-effort from config mutation where practical without making hot reload a correctness requirement.
-4. Replace effort-only recommended Codex cells with the confirmed ladder: `economy -> gpt-5.6-luna/high`, `balanced -> gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier -> gpt-5.6-sol/max`; retain Claude `economy/balanced -> sonnet`, `high -> opus`, and `frontier -> fable`.
+4. Replace effort-only recommended Codex cells with the confirmed ladder: `economy -> gpt-5.6-luna/high`, `balanced -> gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier -> gpt-5.6-sol/max`. Set the recommended Claude ladder to `economy/balanced -> sonnet`, `high -> opus`, and `frontier -> fable`.
 5. Change default adoption to recursively fill missing provider/tier cells while preserving existing explicit values, including the exact configured Cursor strings and custom Claude/Codex cells. Keep destructive replacement, if retained, behind a separately explicit operation.
-6. Cover exact catalogue membership, stable/idempotent generation, user/project/all scope routing, ownership-safe cleanup, fresh and partial adoption, and custom-value preservation.
+6. Cover exact catalogue membership, stable/idempotent generation, user/project/all scope routing, ownership-safe cleanup, fresh and partial adoption, custom-value preservation, and every recommended Claude and Codex cell.
 
 **Verify:**
 
@@ -147,7 +151,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 2. Route spec-driven, quick-start, import-plan, provider-plan import, implementation phases, artifact reviews, and phase/final reviews through the same resolver-selected role contract.
 3. For managed Codex dispatch, use the exact registered implementer/reviewer variant when the host supports role selection. When the current host cannot select it, launch a fresh Codex child with explicit model, reasoning effort, and canonical role instructions; do not require provider restart or workflow-time materialization.
 4. Permit a base Codex role only for explicit inherit/default and documented managed-uncapped reviewer behavior. Missing managed targets must prompt or block, and unavailable role selection must never silently downgrade to the base reviewer.
-5. Add workflow contract tests for all plan-writing paths, implementation and review dispatch, registered-role selection, pinned-child fallback, exact Cursor model strings, and the absence of generic managed fallback.
+5. Add workflow contract tests for all plan-writing paths, implementation and review dispatch, registered-role selection, pinned-child fallback, and the absence of generic managed fallback. Keep exact Cursor model-string compilation coverage in p00-t01.
 6. Defer the single PR-scoped version bumps for `oat-project-implement`, `oat-project-review-provide`, `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` until each skill's final edit later in the PR.
 
 **Verify:**
@@ -490,19 +494,19 @@ git status --short
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | pending  | -          | -                                                           |
-| p01    | code     | pending  | -          | -                                                           |
-| p02    | code     | pending  | -          | -                                                           |
-| p03    | code     | pending  | -          | -                                                           |
-| p04    | code     | pending  | -          | -                                                           |
-| final  | code     | pending  | -          | -                                                           |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed   | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | received | 2026-07-10 | reviews/artifact-plan-review-2026-07-10T052617Z.md          |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | pending | -          | -                                                           |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| p04    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed  | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 

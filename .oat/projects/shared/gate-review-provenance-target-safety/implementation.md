@@ -157,7 +157,12 @@ oat_generated: false
 - Before source implementation resumed, the user replaced runtime-only selected-role materialization with a finite committed catalogue: Luna and Terra at four efforts and Sol at those efforts plus `max`, expanded for both implementer and reviewer roles.
 - Custom role ownership now follows configuration provenance. User-config targets materialize under `~/.codex`; project-config targets materialize under the project `.codex` view and are ordinary version-controlled project assets. OAT will not infer that a project setting is personal or attempt to hide its generated output from Git.
 - `oat sync` is the earliest best-effort materialization boundary, but workflow correctness cannot require provider restart or hot reload. Managed dispatch must use the exact registered role or a fresh child pinned to the resolved model and effort, including artifact reviews before implementation.
-- Implementation is paused at `p00-t01` while this architecture revision receives a new plan artifact gate. The three existing failing TDD test-file edits remain preserved and are intentionally excluded from the plan-revision bookkeeping commit.
+- Implementation was paused at `p00-t01` while this architecture revision received a new plan artifact gate. The three existing failing TDD test-file edits remained preserved and were intentionally excluded from the plan-revision bookkeeping commit.
+- The revised plan passed its target-neutral declared-project gate with 0 Critical, 0 Important, 0 Medium, and 3 Minor findings. The review was received from `reviews/archived/artifact-plan-review-2026-07-10T052617Z.md` under the user's standing instruction to continue through all phases:
+  - `m1` resolved in `plan.md` by stating that p00-t02 sets, rather than retains, the Claude recommendation ladder and by pinning all Claude/Codex recommendation cells in tests.
+  - `m2` resolved in `plan.md` by adding executable live Codex and Cursor implementer/reviewer preflight commands after restoring Frontier Sol/max.
+  - `m3` resolved in `plan.md` by keeping exact Cursor compilation coverage in p00-t01 and limiting p00-t03 to workflow dispatch contracts.
+- The passing plan gate did not require re-review after these wording-only fixes. Implementation resumed at `p00-t01` with the preserved failing tests.
 
 ## Deviations from Plan / Design
 
