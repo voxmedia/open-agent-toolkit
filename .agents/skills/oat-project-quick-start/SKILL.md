@@ -729,11 +729,14 @@ Before reporting this skill as complete, run the configured gate as the final st
 
    If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
 
-3. Execute the resolved command exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
+3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
 
 4. Review-artifact handoff:
-   - If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.
-   - This applies to `oat gate review ...` outputs regardless of whether the gate ultimately exits zero or nonzero; the command output owns the exact artifact path, and receive-review owns disposition and archival.
+   - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
+   - Invoke receive only when `status` is `ok` or `blocked` and a non-null `handoff` confirms the artifact was corroborated, or when the envelope explicitly sets `receiveEligible: true`.
+   - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
+   - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
+   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
 
 5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
@@ -763,4 +766,4 @@ Report:
 - ✅ `plan.md` records the plan artifact review row unless `workflow.autoArtifactReview.plan` was explicitly disabled.
 - ✅ `implementation.md` is initialized for resumable execution.
 - ✅ Changed quick-start artifacts are committed before handoff or pause; `.oat/state.md` is refreshed locally when available.
-- ✅ Configured gate has run, and any produced review artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.
+- ✅ Configured gate has run, and only a corroborated, receive-eligible artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.

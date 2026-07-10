@@ -69,9 +69,11 @@ review side effects are expected:
   tracked state
 
 Gate-produced review artifacts use `oat_review_invocation: gate` in
-frontmatter. After a gate review reports a produced artifact, the host must run
-or hand off to `oat-project-review-receive` before treating the review as
-dispositioned. Until receive runs, the artifact is only produced, not consumed.
+frontmatter. After a gate returns a corroborated `ok` or `blocked` result with a
+non-null `handoff`, the host must run or hand off to
+`oat-project-review-receive` before treating the review as dispositioned. An
+artifact path by itself is not receive eligibility. Until receive runs for a
+receive-eligible result, the artifact is only produced, not consumed.
 
 Gate-originated artifacts also copy the configured invocation record that the
 CLI places in the review prompt:
@@ -144,7 +146,16 @@ and disambiguate re-gate rounds:
 | `blocked`                      | 1    | Review completed; findings at/above the threshold.           |
 | `review_failed`                | ≠0   | The provider target exited non-zero; no verdict.             |
 | `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid. |
-| `targeting_correlation_failed` | 1    | Run or declared-project identity did not correlate.          |
+| `targeting_correlation_failed` | 1    | Identity did not correlate; do not run review-receive.       |
+
+Only `ok` and `blocked` are positive, receive-eligible review outcomes: both
+follow successful identity corroboration and carry a non-null `handoff`.
+`blocked` exits nonzero because of findings, while `ok` exits zero; callers must
+therefore route receive from the structured status and handoff rather than from
+the exit code. `review_failed` has no validated verdict and is not eligible.
+For `artifact_validation_failed`, correct the artifact and rerun the gate; do
+not invoke review-receive until the gate successfully revalidates it as `ok` or
+`blocked`.
 
 `ok` and `blocked` also include `outcome`, `artifactPath`, `counts`, `scope`,
 `handoff`, `gateInvocation`, and `corroboration`. `gateInvocation` contains the
@@ -160,10 +171,11 @@ not a passing gate.
 
 `targeting_correlation_failed` is non-remediable by review-fix retries. Its JSON
 sets `receiveEligible: false`, `remediable: false`, and `handoff: null`; do not
-run review-receive for that artifact. Correct the stored project declaration or
-reviewer output routing and run a new gate instead. Invocation-only mismatch
-continues to use `artifact_validation_failed` and can be remediated by copying
-the exact configured invocation fields.
+run review-receive for that artifact even when `artifactPath` is present.
+Correct the stored project declaration or reviewer output routing and run a new
+gate instead. Invocation-only mismatch continues to use
+`artifact_validation_failed`; correct the exact configured invocation fields
+and rerun the gate for successful revalidation before receive.
 
 **Drive gates through `oat gate review`, not raw provider invocation.** An
 orchestrator that hand-rolls the review (for example, calling

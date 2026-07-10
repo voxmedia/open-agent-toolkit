@@ -812,10 +812,7 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('keeps gate-aware lifecycle review handoff wording consistent', async () => {
-    const handoffSentence =
-      'If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.';
-
+  it('routes lifecycle gate handoff only for receive-eligible corroborated results', async () => {
     for (const skillName of [
       'oat-project-plan',
       'oat-project-implement',
@@ -825,12 +822,72 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
+      const gateSection = content.slice(
+        content.lastIndexOf('### Gate Execution'),
+      );
 
-      expect(content, `${skillName} handoff contract`).toContain(
-        handoffSentence,
+      expect(gateSection, `${skillName} positive statuses`).toMatch(
+        /status.*`ok`.*`blocked`/is,
+      );
+      expect(gateSection, `${skillName} corroborated handoff`).toMatch(
+        /non-null `handoff`.*corroborat/is,
+      );
+      expect(gateSection, `${skillName} explicit eligibility`).toContain(
+        '`receiveEligible: true`',
+      );
+      expect(gateSection, `${skillName} hard stop`).toContain(
+        '`receiveEligible: false`',
+      );
+      expect(gateSection, `${skillName} targeting failure`).toContain(
+        '`targeting_correlation_failed`',
+      );
+      expect(gateSection, `${skillName} validation failure`).toMatch(
+        /`artifact_validation_failed`.*correct.*revalidat/is,
+      );
+      expect(gateSection, `${skillName} no artifact-path shortcut`).toMatch(
+        /artifact path.*never authorizes|never authorize.*artifact path/is,
+      );
+      expect(
+        gateSection,
+        `${skillName} no unsafe unconditional handoff`,
+      ).not.toContain(
+        'regardless of whether the gate ultimately exits zero or nonzero',
       );
       expect(content, `${skillName} durable gate examples`).not.toMatch(
         /dist\/index\.js|node\s+.*\/dist\//,
+      );
+    }
+  });
+
+  it('documents the complete gate result union and receive-eligibility contract', async () => {
+    const workflowGates = await readRepoFile(
+      'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
+    );
+    const cliReference = await readRepoFile(
+      'apps/oat-docs/docs/reference/cli-reference.md',
+    );
+
+    for (const [name, content] of [
+      ['workflow gates', workflowGates],
+      ['CLI reference', cliReference],
+    ] as const) {
+      for (const status of [
+        'ok',
+        'blocked',
+        'review_failed',
+        'artifact_validation_failed',
+        'targeting_correlation_failed',
+      ]) {
+        expect(content, `${name} ${status}`).toContain(status);
+      }
+      expect(content, `${name} positive eligibility`).toMatch(
+        /receiveEligible: true|receive-eligible/is,
+      );
+      expect(content, `${name} targeting hard stop`).toMatch(
+        /targeting_correlation_failed[\s\S]{0,600}(?:do not|must not).*review-receive/i,
+      );
+      expect(content, `${name} validation revalidation`).toMatch(
+        /artifact_validation_failed[\s\S]{0,800}(?:correct|fix)[\s\S]{0,300}revalidat/i,
       );
     }
   });
