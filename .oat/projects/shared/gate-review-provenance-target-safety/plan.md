@@ -690,6 +690,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p03-t01: Make final and range aggregation explicit
 
+**Status:** completed (`29391b36`)
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/gate/index.ts`

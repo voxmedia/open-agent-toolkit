@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ oat_generated: false
 | p00   | completed | 6     | 6/6       |
 | p01   | completed | 9     | 9/9       |
 | p02   | completed | 6     | 6/6       |
-| p03   | pending   | 1     | 0/1       |
+| p03   | completed | 1     | 1/1       |
 | p04   | pending   | 3     | 0/3       |
 
-**Total:** 21/25 tasks completed
+**Total:** 22/25 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -164,12 +164,19 @@ oat_generated: false
 
 ## Phase 3: Aggregated Producer Provenance
 
-**Status:** pending
+**Status:** completed; awaiting independent review
 
 ### Task p03-t01: Make final and range aggregation explicit
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `29391b36`
+
+### Phase Summary
+
+- **Outcome:** Exact phase/task producer resolution remains a single `stamp`, while final and contiguous range scopes now report `aggregated-stamps`, count every valid in-scope implementer/fix stamp, preserve document-order scope deduplication, and route against only the stable union of claimable known families.
+- **Key files touched:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `apps/oat-docs/docs/cli-utilities/workflow-gates.md`, and `apps/oat-docs/docs/workflows/projects/reviews.md`.
+- **Verification:** RED reproduced five provenance/fallback failures; GREEN passed all 112 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and committed-range diff hygiene.
+- **Decisions/deviations:** No design or plan deviations. Aggregates intentionally use an unknown representative; `avoidFamilies`, `contributingScopes`, and `contributingStampCount` carry aggregate facts without presenting the latest stamp as aggregate truth.
 
 ## Phase 4: Opt-In Phase Review Setup
 
@@ -248,6 +255,19 @@ oat_generated: false
 - Policy source: user config
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Dispatch: scope=p02 action=fix role=fix producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run a8dd36fb-343d-4052-be54-f7c7222a58c0
+
+- Started: 2026-07-10T09:06:46Z
+- Scope: p03
+- Execution: exact pinned Codex implementer session
+- Resolved role: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model axis: `selected:gpt-5.6-sol`
+- Effort axis: `selected:high`
+- Policy source: user config
+- Provider default effort: `max`
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
+- Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -382,6 +402,10 @@ oat_generated: false
 - Focused p02-t06 verification reproduced two hidden-duplicate false greens and two missing-run misclassifications, then passed all four regressions, all 122 gate/parser assertions, CLI type-check, and diff checks after the fix.
 - Final p02 fix verification passed all 122 gate/parser assertions, CLI type-check, workspace lint, root format, and `git diff --check ee8522d1..HEAD` after rerunning the asset-producing checks sequentially.
 - Committed-range self-review found no further targeting, parser-order, mutation, duplicate-correlation, handoff, or scope defects. The p02 review row is `fixes_completed`; `p03-t01` is a restart pointer only and p03 has not started.
+- `p03-t01` completed in `29391b36`: exact phase/task identities remain source `stamp` without contributor fields; final and contiguous range scopes use `aggregated-stamps` for any nonempty in-scope stamp set, including a single or wholly non-claimable set; and zero relevant stamps remain `unknown`.
+- Aggregate provenance now uses an explicit unknown representative, counts every valid implementer/fix stamp, deduplicates contributing scopes and claimable known families in document order, mirrors contributor fields into `diversity.producer`, and preserves explicit-flag precedence plus same-family fallback behavior.
+- RED reproduced five existing aggregate provenance/fallback gaps. GREEN and final committed-tree verification passed all 112 gate-index tests, CLI type-check, focused formatting, the 532-link docs crawl, and `git diff --check e6f2aa3c..29391b36`.
+- Committed-range self-review found no correctness, scope, routing, fallback, or documentation issues. p03 is complete and awaiting independent review; `p04-t01` is the restart pointer after that review, and no p04 work has started.
 
 ### Review Received: p01
 
@@ -506,6 +530,7 @@ oat_generated: false
 | p02-t06    | RED malformed timestamp matrix; 122 gate/parser assertions; CLI type-check; diff                                 | 127    | 0      | Run-first duplicate detection and format classification      |
 | p02 fixes  | 122 gate/parser assertions; CLI type-check; lint; format; diff                                                   | 126    | 0      | Committed-tree p02 review-fix union and self-review          |
 | p02 review | 122 gate/parser assertions; CLI type-check; targeted format; diff hygiene                                        | 126    | 0      | Independent re-review closed all prior findings              |
+| p03-t01    | RED/GREEN aggregate provenance matrix; 112 gate assertions; type-check; docs links; format; diff                 | 116    | 0      | Exact/flag precedence, final/range contributors, fallback    |
 
 ## Final Summary (for PR/docs)
 
