@@ -661,7 +661,7 @@ Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
 Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)
 Dispatch policy: frontier; selected=fable; cap=fable (claude, enforced — Task model arg)
-Dispatch policy: high; selected=none; cap=high (cursor, unsupported — no adapter; informational)
+Cursor opaque model-string example: Dispatch policy: frontier; selected=gpt-5.6-sol-max; cap=gpt-5.6-sol-max (cursor, enforced — model arg gpt-5.6-sol-max)
 Dispatch policy: unresolved; selected=none; cap=none (codex, advisory — policy set but no value resolved)
 ```
 

@@ -1442,6 +1442,66 @@ describe('validateOatSkills', () => {
     expect(lifecycle).toMatch(/provider native plan mode[\s\S]*import/i);
   });
 
+  it('aligns dispatch readiness, cursor enforcement, and codex output ownership', async () => {
+    const lifecycle = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/lifecycle.md',
+    );
+    const directory = await readRepoFile(
+      'apps/oat-docs/docs/reference/oat-directory-structure.md',
+    );
+    const execution = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+    );
+    const scope = await readRepoFile(
+      'apps/oat-docs/docs/provider-sync/scope-and-surface.md',
+    );
+    const providers = await readRepoFile(
+      'apps/oat-docs/docs/provider-sync/providers.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(lifecycle).toMatch(
+      /non-interactive planning[\s\S]{0,220}not implementation-ready[\s\S]{0,220}(?:block|resolver succeeds)/i,
+    );
+    expect(lifecycle).not.toMatch(
+      /non-interactive planning leaves it unresolved[\s\S]{0,160}implementation preflight/i,
+    );
+    expect(directory).toMatch(
+      /providers\.codex[\s\S]{0,360}`low`[\s\S]{0,80}`medium`[\s\S]{0,80}`high`[\s\S]{0,80}`xhigh`[\s\S]{0,80}`max`/i,
+    );
+
+    for (const [name, content] of [
+      ['canonical implement skill', implement],
+      ['implementation execution docs', execution],
+    ] as const) {
+      expect(content, `${name} cursor model arg`).toMatch(
+        /Cursor[\s\S]{0,320}opaque[\s\S]{0,240}enforced[\s\S]{0,200}model arg/i,
+      );
+      expect(
+        content,
+        `${name} no stale cursor unsupported example`,
+      ).not.toMatch(/cursor, unsupported — no adapter; informational/i);
+    }
+
+    expect(scope).toMatch(
+      /\.codex\/config\.toml[\s\S]{0,320}(?:every|all) generated project[\s\S]{0,240}(?:repository-owned|version-controlled)[\s\S]{0,240}no automatic ignore/i,
+    );
+    expect(scope).toMatch(/user[\s\S]{0,180}~\/\.codex/i);
+    expect(scope).not.toMatch(/user-scope role generation remains.*deferred/i);
+
+    expect(providers).toMatch(
+      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,320}26 pinned variants/i,
+    );
+    expect(providers).not.toMatch(
+      /Project sync commits the supported catalogue/i,
+    );
+    expect(providers).toMatch(
+      /project-generated[\s\S]{0,180}(?:repository-owned|version-controlled)[\s\S]{0,200}(?:never|no)[\s\S]{0,80}(?:auto-ignore|automatic ignore)/i,
+    );
+  });
+
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.7'],

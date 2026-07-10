@@ -47,9 +47,9 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
-- Codex project-scope subagent sync is generated output (`.codex/agents/*.toml` + `.codex/config.toml`) computed at command layer after path-mapping sync. Generated Codex roles - including materialized model+effort implementer and reviewer variants - are tracked as managed by `oat status` and `oat init`, not as strays.
+- Codex project-scope subagent sync writes `.codex/config.toml` and `.codex/agents/*.toml` at command layer after path-mapping sync. Every generated project Codex variant and registration is repository-owned, version-controlled provider output. OAT provides no automatic ignore mechanism for this project output; collaborators review and commit it like other project configuration.
 - Codex aggregate config drift is reported via sync/status extension metadata (`aggregateConfigHash`); it is not persisted as a separate manifest schema entry.
-- Codex user-scope role generation remains intentionally deferred in this release.
+- Codex user-config materialization writes user-owned implementer and reviewer roles under the user provider directory, `~/.codex`; it does not write those roles into the repository.
 
 ## Non-interop namespaces in the same CLI
 

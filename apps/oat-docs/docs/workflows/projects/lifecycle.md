@@ -154,10 +154,12 @@ legacy `workflow.dispatchCeiling.providers.<provider>` config and
 `oat_dispatch_ceiling` frontmatter remain compatibility inputs for capped
 managed policies. If no policy is configured and the session is interactive,
 planning asks once and stores the answer as `oat_dispatch_policy`;
-non-interactive planning leaves it unresolved so implementation preflight can
-fail before work starts with setup instructions. `Uncapped` is explicit managed
-selection with no maximum cap; `Inherit Host Defaults` is separate and means OAT
-does not select model or effort controls.
+non-interactive planning with an unresolved policy is not implementation-ready
+and blocks at the planning boundary until the resolver succeeds. Implementation
+preflight retains the same defensive check, but it is not the first place an
+unresolved plan fails. `Uncapped` is explicit managed selection with no maximum
+cap; `Inherit Host Defaults` is separate and means OAT does not select model or
+effort controls.
 
 ### Quick lane
 

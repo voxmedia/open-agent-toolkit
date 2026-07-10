@@ -89,6 +89,10 @@ Note: OAT will use resolver-returned materialized Codex role names up to high. B
 - `advisory` — the provider is supported but no value resolved, or an upgrade request was not honored by the provider.
 - `unsupported` — the provider has no registered adapter; the policy is informational only. Dispatch follows provider behavior.
 
+Cursor model identifiers are opaque strings. Configured Cursor cells resolve as
+`enforced` model args and round-trip unchanged; OAT does not parse Codex-style
+family or effort suffixes from values such as `gpt-5.6-sol-max`.
+
 In non-interactive mode, an unresolved policy blocks before any implementation work:
 
 ```text
