@@ -153,6 +153,7 @@ oat_generated: false
   - `m4` rejected: quick-mode plans retain the canonical `spec` review row, `n/a` is not a valid review status, and implementation readiness does not depend on a spec review.
 - Next task is `p00-t01`.
 - The first implementation bootstrap incorrectly inferred Codex defaults from the legacy policy effort ladder. Those user-config edits and generated roles were removed before any phase worker launched. Session-observer evidence then recovered the exact locked Codex, Claude, and Cursor matrices, which were persisted by the sibling configuration session and are the source of truth for p00.
+- The first p00 worker was interrupted after writing only failing resolver tests when the live configuration session temporarily reduced Codex Frontier to `xhigh`. The user clarified that p00 must implement `max`; the plan now explicitly extends the Codex dispatch enum/order while preserving the worker's TDD changes for continuation.
 
 ## Deviations from Plan / Design
 

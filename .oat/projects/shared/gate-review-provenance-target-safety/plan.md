@@ -48,21 +48,25 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 
 **Files:**
 
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
 - Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
 - Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- Modify: `packages/cli/src/providers/ceiling/registry.ts`
 - Modify: `packages/cli/src/providers/ceiling/registry.test.ts`
 
 **Steps:**
 
 1. Distinguish abstract policy resolution from runnable active-provider resolution. During preflight, a managed provider that cannot compile native dispatch controls is unresolved and blocks non-interactive execution.
 2. Preserve valid built-in compilation such as Claude `high -> opus` and `frontier -> fable`, explicit inherit/default behavior, managed uncapped reviewer behavior, and deliberate cross-harness advisory routes.
-3. After applying a Codex effort cap, resolve the matrix target corresponding to the selected effort instead of dropping the target whenever preferred effort is below the policy cap.
-4. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, explicit `max` materialized targets, reviewer, uncapped, and Cursor/model-argument selections so existing user matrix behavior remains stable.
+3. Extend `WorkflowCodexDispatchCeiling`, `VALID_CODEX_DISPATCH_CEILINGS`, and the resolver/provider ordered value path from `low | medium | high | xhigh` to `low | medium | high | xhigh | max`, allowing the existing materializer to compile explicit `max` targets without coercion.
+4. After applying a Codex effort cap, resolve the matrix target corresponding to the selected effort instead of dropping the target whenever preferred effort is below the policy cap.
+5. Replace the existing lower-preferred unresolved-axis expectation with concrete model, effort, variant, source, and cap coverage for below/equal/above-cap, explicit `max` materialized targets, reviewer, uncapped, and Cursor/model-argument selections so existing user matrix behavior remains stable.
 
 **Verify:**
 
 ```bash
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts src/providers/ceiling/registry.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/providers/ceiling/registry.test.ts
 pnpm --filter @open-agent-toolkit/cli type-check
 ```
 
