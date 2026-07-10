@@ -699,28 +699,6 @@ function resolveProviderMatrixCell(
   return selected;
 }
 
-function resolveCodexMatrixCellForValue(
-  value: DispatchCeilingValue,
-  resolvedConfig: ResolvedConfig,
-  projectMatrix: ProjectDispatchMatrix | null,
-  escalationLevel: number,
-): MatrixCellResolution | null {
-  for (const tier of VALID_DISPATCH_MATRIX_TIERS) {
-    const candidate = resolveProviderMatrixCell(
-      'codex',
-      tier,
-      resolvedConfig,
-      projectMatrix,
-      escalationLevel,
-    );
-    if (candidate?.value === value) {
-      return candidate;
-    }
-  }
-
-  return null;
-}
-
 function readProjectDispatchPolicy(
   provider: DispatchCeilingProvider,
   content: string,
@@ -1669,24 +1647,17 @@ async function resolveCeilingValue(
       if (order && preferredIndex >= 0 && ceilingIndex >= 0) {
         const selectedValue = order[Math.min(preferredIndex, ceilingIndex)]!;
         if (selectedValue !== matrixCell.value) {
-          const selectedCell = resolveCodexMatrixCellForValue(
-            selectedValue,
-            resolvedConfig,
-            projectCeiling?.matrix ?? null,
-            escalationLevel,
-          );
+          const selectedTarget =
+            matrixCell.target?.harness === 'codex'
+              ? { ...matrixCell.target, effort: selectedValue }
+              : matrixCell.target;
           return {
             ...baseCeiling,
             value: matrixCell.value,
-            cellSource: selectedCell?.cellSource ?? matrixCell.cellSource,
-            target: selectedCell?.target ?? null,
-            selectionBranch:
-              selectedCell?.selectionBranch ?? matrixCell.selectionBranch,
-            warnings: [
-              ...baseCeiling.warnings,
-              ...matrixCell.warnings,
-              ...(selectedCell?.warnings ?? []),
-            ],
+            cellSource: matrixCell.cellSource,
+            target: selectedTarget,
+            selectionBranch: matrixCell.selectionBranch,
+            warnings: [...baseCeiling.warnings, ...matrixCell.warnings],
           };
         }
       }

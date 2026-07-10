@@ -1071,11 +1071,106 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('retains the configured codex target for a lower preferred selection', async () => {
+  it.each([
+    ['low', 'low', false],
+    ['medium', 'medium', false],
+    ['high', 'high', false],
+    ['xhigh', 'high', true],
+    ['max', 'high', true],
+  ] as const)(
+    'retains the shipped managed High Codex model for preferred %s',
+    async (preferred, selected, capped) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                economy: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-luna',
+                    effort: 'high',
+                  },
+                ],
+                balanced: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'xhigh',
+                  },
+                ],
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+                frontier: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'max',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preferred',
+        preferred,
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        value: 'high',
+        unresolved: false,
+        providers: {
+          codex: {
+            mode: 'enforced',
+            dispatchArgs: {
+              variant: `oat-phase-implementer-gpt-5-6-sol-${selected}`,
+            },
+            modelAxis: 'selected:gpt-5.6-sol',
+            effortAxis: `selected:${selected}`,
+            selection: {
+              preferredValue: preferred,
+              selectedValue: selected,
+              capped,
+              target: {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: selected,
+                crossHarness: false,
+              },
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('does not select another Codex model from duplicate effort cells', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
       version: 1,
       workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
         dispatchCeiling: {
           providers: {
             codex: {
@@ -1083,14 +1178,21 @@ describe('oat project dispatch-ceiling resolve', () => {
                 {
                   harness: 'codex',
                   model: 'gpt-5.6-luna',
-                  effort: 'medium',
+                  effort: 'high',
+                },
+              ],
+              balanced: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-terra',
+                  effort: 'high',
                 },
               ],
               high: [
                 {
                   harness: 'codex',
                   model: 'gpt-5.6-sol',
-                  effort: 'high',
+                  effort: 'xhigh',
                 },
               ],
             },
@@ -1098,22 +1200,6 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
-    await writeFile(
-      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
-      [
-        '---',
-        'oat_phase: implement',
-        'oat_dispatch_policy:',
-        '  mode: managed',
-        '  policy: high',
-        '  source: project-state',
-        '---',
-        '',
-        '# State',
-        '',
-      ].join('\n'),
-      'utf8',
-    );
 
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
@@ -1122,35 +1208,33 @@ describe('oat project dispatch-ceiling resolve', () => {
       '--role',
       'implementer',
       '--preferred',
-      'medium',
+      'high',
+      '--preflight',
+      '--non-interactive',
       '--json',
     ]);
 
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'resolved',
-      value: 'high',
+      value: 'xhigh',
       providers: {
         codex: {
-          mode: 'enforced',
           dispatchArgs: {
-            variant: 'oat-phase-implementer-gpt-5-6-luna-medium',
+            variant: 'oat-phase-implementer-gpt-5-6-sol-high',
           },
-          modelAxis: 'selected:gpt-5.6-luna',
-          effortAxis: 'selected:medium',
+          modelAxis: 'selected:gpt-5.6-sol',
+          effortAxis: 'selected:high',
           selection: {
-            preferredValue: 'medium',
-            selectedValue: 'medium',
-            capped: false,
+            selectedValue: 'high',
             target: {
-              harness: 'codex',
-              model: 'gpt-5.6-luna',
-              effort: 'medium',
-              crossHarness: false,
+              model: 'gpt-5.6-sol',
+              effort: 'high',
             },
           },
         },
       },
     });
+    expect(process.exitCode).toBe(0);
   });
 
   it('retains the capped codex target when preferred effort exceeds it', async () => {
