@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t30
+oat_current_task_id: p04-t31
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 31    | 29/31     |
+| p04   | in_progress | 31    | 30/31     |
 
-**Total:** 52/54 tasks completed
+**Total:** 53/54 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** adaptive dispatch-ceiling extension in progress (28/31)
+**Status:** adaptive dispatch-ceiling extension in progress (30/31)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -457,14 +457,23 @@ oat_generated: false
 - Canonical versions advanced once: plan-writing `1.2.8`, plan `1.3.12`, quick-start `2.1.13`, import-plan `1.4.4`, and review-provide `1.3.12`.
 - Verification passed 100 affected skill/bundle assertions, all 53 OAT skills, workspace format, byte-identical generated skill assets, and five-package release validation at unchanged `0.1.47`.
 
-### Tasks p04-t30 through p04-t31: Adaptive dispatch ceilings
+### Task p04-t30: Coordinate phases and dispatch one pinned worker per task
+
+**Status:** completed
+**Commit:** `3a59458b`
+
+- `oat project dispatch-ceiling resolve` now accepts the validated invocation-only `--ceiling-tier <economy|balanced|high|frontier>` override. It supersedes layered active-policy ceilings for one call, reports `source: invocation`, retains candidate-definition ownership in `cellSource`, and never rewrites config or project state.
+- The canonical phase implementer is version `1.0.4` and explicitly distinguishes Phase Coordinator from Task Worker scopes. Coordinators read a phase once, resolve one exact candidate per bounded task, dispatch serially in one worktree, verify each result/commit/file boundary, and perform phase-wide integration review without implementing ordinary tasks themselves.
+- The implementation skill is version `2.0.33`. It passes the recorded project or narrower phase named maximum through `--ceiling-tier`, preserves exact Codex variants and Claude/Cursor model payloads, treats Cursor strings as opaque, and blocks rather than falling back to the coordinator, base role, or provider default.
+- Project sync regenerated the base plus 13 Luna/Terra/Sol phase-implementer views and their `.codex/config.toml` descriptions. The ignored bundled canonical agent and skill assets are byte-identical to source, and the immediate source-CLI project sync dry-run reports zero operations.
+- RED/GREEN and final verification passed 212 required resolver/help/skill assertions, 81 supplemental sync/bundle/role-contract assertions, CLI type-check, all 53 OAT skills, workspace format, and five-package release validation at unchanged `0.1.47`.
+
+### Task p04-t31: Document adaptive dispatch ceilings
 
 **Status:** pending
 
-- Replace exact-policy model pinning with unified ordered provider candidate ladders whose final values define named ceilings.
-- Adopt the complete recommendation into an explicit ownership scope and retain project or phase named ceilings as maximum constraints rather than exact model preferences.
-- Use a phase coordinator for ordering and integration, then select and dispatch one exact resolver-validated worker per task at or below that ceiling; preserve provider-specific Codex roles and Claude/Cursor invocation controls.
-- Materialize every configured Codex candidate, adopt complete recommendations explicitly by ownership scope, and document the migration.
+- Document ordered candidates, named maximum ceilings, ownership, and materialization.
+- Document phase coordinator versus exact task-worker execution, provider-specific payloads, and migration behavior.
 
 ### Phase Summary
 
@@ -1110,6 +1119,7 @@ oat_generated: false
 | p04-t25    | RED/GREEN user Codex ownership docs; 61 focused contracts; 532 links; format; release                                 | 61     | 0      | Shipped materialization guidance and bundled-doc parity        |
 | p04-t28    | RED/GREEN project/user ladder materialization; 46 focused assertions; type-check; project sync                        | 46     | 0      | All candidates, scoped ownership, byte-identical second sync   |
 | p04-t29    | RED/GREEN adaptive planning contracts; 100 affected assertions; 53 skills; format; release                            | 100    | 0      | Owned ladders, named maxima, reviewer ceilings, exact payloads |
+| p04-t30    | RED/GREEN resolver/help/worker contracts; sync/bundle supplements; type-check; skills; format; release                | 293    | 0      | Ephemeral tier override and serial exact task-worker dispatch  |
 
 ## Final Summary (for PR/docs)
 

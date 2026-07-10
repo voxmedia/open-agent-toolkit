@@ -1642,7 +1642,7 @@ pnpm release:validate
 
 ### Task p04-t30: Coordinate phases and dispatch one pinned worker per task
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
