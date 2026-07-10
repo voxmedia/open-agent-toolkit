@@ -749,7 +749,11 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
+**Implementation Status:** completed; awaiting independent review
+
 ### Task p04-t01: Define the shared phase-review setup contract
+
+**Status:** completed (`c7124441`)
 
 **Files:**
 
@@ -775,6 +779,8 @@ pnpm run oat:validate-skills
 ---
 
 ### Task p04-t02: Wire phase-review setup into every plan path
+
+**Status:** completed (`fd48fcad`)
 
 **Files:**
 
@@ -805,6 +811,8 @@ pnpm docs:check-links
 ---
 
 ### Task p04-t03: Sync, package, and validate the shipped surface
+
+**Status:** completed (`44b0d6c8`)
 
 **Files:**
 
@@ -873,8 +881,8 @@ git status --short
 
 **Total: 26 tasks**
 
-Phase 0 through Phase 3 reviews have passed. Phase 4 is ready to begin from
-`p04-t01`.
+Phase 0 through Phase 3 reviews have passed. Phase 4 implementation is complete
+and awaiting independent review; final review remains pending.
 
 ## References
 

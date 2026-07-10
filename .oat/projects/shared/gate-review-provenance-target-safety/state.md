@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: d6c47baf
+oat_current_task: null
+oat_last_commit: 44b0d6c8
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -33,12 +33,12 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T09:32:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T10:01:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - p03 re-review passed. Restart pointer: `p04-t01` (not started).
+Implementation - all 26 planned tasks are complete. p04 is awaiting independent review; final review remains pending.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - p03 re-review passed. Restart pointer: `p04-t01` (not started).
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (`p00` through `p03` reviews passed; p04 is next)
+- **Implementation:** `implementation.md` (all tasks complete; p04 and final reviews pending)
 
 ## Progress
 
@@ -138,7 +138,14 @@ Implementation - p03 re-review passed. Restart pointer: `p04-t01` (not started).
 - ✓ Independent p03 re-review closed I1 without code or aggregate-provenance regressions
 - ✓ Sole p03 re-review Minor finding corrected during review-receive bookkeeping
 - ✓ p03 review status advanced to `passed`
-- ⧗ Ready to begin p04 from `p04-t01`
+- ✓ `p04-t01` canonical shared phase-review setup contract completed
+- ✓ `p04-t02` spec-driven, quick, import, and provider-plan paths wired to the shared setup
+- ✓ Planned canonical skills received exactly one PR-scoped version bump
+- ✓ `p04-t03` project/user ownership-preserving sync and generated-view audit completed
+- ✓ Five public packages and bundled metadata advanced to `0.1.47`
+- ✓ Live Codex Frontier resolves to Sol/max and Cursor opaque model strings remain exact
+- ✓ Final focused, workspace, docs, release, sync-idempotence, and diff verification passed
+- ⧗ p04 implementation complete; awaiting independent p04 review, then final review
 
 ## Blockers
 
@@ -146,4 +153,4 @@ None
 
 ## Next Milestone
 
-Begin p04 at `p04-t01`, then complete release validation and the final-phase review sequence.
+Run the independent p04 code review. After p04 review disposition passes, run the final code review; do not mark the project complete before both are closed.
