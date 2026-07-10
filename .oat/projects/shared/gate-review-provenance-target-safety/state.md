@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t11
-oat_last_commit: 380244f2
+oat_current_task: p04-t12
+oat_last_commit: b9568c53
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T11:42:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T11:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 33 of 37 planned tasks are complete. Final-review fixes `p04-t05` through `p04-t10` are complete; `p04-t11` through `p04-t14` remain.
+Implementation - 34 of 37 planned tasks are complete. Final-review fixes `p04-t05` through `p04-t11` are complete; `p04-t12` through `p04-t14` remain.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 33 of 37 planned tasks are complete. Final-review fixes `p04-t0
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (33/37 tasks complete; final review remains `fixes_added`)
+- **Implementation:** `implementation.md` (34/37 tasks complete; final review remains `fixes_added`)
 
 ## Progress
 
@@ -158,8 +158,9 @@ Implementation - 33 of 37 planned tasks are complete. Final-review fixes `p04-t0
 - ✓ `p04-t08` safely correlates malformed expected-run YAML and accepts valid quoted timestamps
 - ✓ `p04-t09` routes lifecycle review-receive only when positive status, explicit eligibility, and corroborated handoff all agree
 - ✓ `p04-t10` preserves complete raw phase-review settings across spec-driven plan Overwrite
+- ✓ `p04-t11` rejects typo, whitespace, and case-mismatched dispatch roles before argument resolution
 - ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
-- ⧗ Execute `p04-t11` through `p04-t14`, then final re-review
+- ⧗ Execute `p04-t12` through `p04-t14`, then final re-review
 
 ## Blockers
 
@@ -167,4 +168,4 @@ None
 
 ## Next Milestone
 
-Execute final review fix tasks from `p04-t11`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.
+Execute final review fix tasks from `p04-t12`. After final re-review passes, request explicit p04 HiLL approval before lifecycle finalization.

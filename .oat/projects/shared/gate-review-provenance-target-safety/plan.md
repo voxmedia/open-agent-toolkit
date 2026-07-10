@@ -1082,7 +1082,7 @@ pnpm run oat:validate-skills
 
 ### Task p04-t11: (final review) Reject invalid dispatch roles
 
-**Status:** pending
+**Status:** completed (`b9568c53`)
 
 **Files:**
 
