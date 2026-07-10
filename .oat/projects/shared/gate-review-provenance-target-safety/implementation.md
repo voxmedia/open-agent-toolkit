@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t29
+oat_current_task_id: p04-t30
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 31    | 28/31     |
+| p04   | in_progress | 31    | 29/31     |
 
-**Total:** 51/54 tasks completed
+**Total:** 52/54 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -445,7 +445,19 @@ oat_generated: false
 - Project coverage proves 32 managed roles for two base roles plus 26 supported and four custom variants. Active-project-state coverage proves three custom candidates, and the real user scanner proves four user-owned custom variants.
 - RED/GREEN verification passed 46 focused sync/codec assertions, CLI type-check, and a zero-operation project sync dry-run; the second generated view is byte-identical.
 
-### Tasks p04-t29 through p04-t31: Adaptive dispatch ceilings
+### Task p04-t29: Adopt complete ladders and record named ceilings
+
+**Status:** completed
+**Commit:** `0f33a27f`
+
+- The shared planning contract now compares effective ordered candidates with the complete bundled recommendation, presents all canonical Codex, Claude, and opaque Cursor candidates, and asks for explicit shared, local, or user ownership before adoption.
+- Spec-driven, quick, import, and provider-plan-via-import paths re-check after non-destructive adoption and fail closed when legacy or partial explicit cells still leave the ladder incomplete.
+- Project and optional phase settings now store named maximum tiers rather than compiled provider/model preferences. A High ceiling retains configured Economy, Balanced, and High candidates for later exact task selection.
+- Artifact and project reviewers continue to use the final candidate at the configured review ceiling. Lower reviewer selection requires a separate reviewed contract, while exact Claude/Cursor payloads survive retry and lifecycle gates remain target-neutral.
+- Canonical versions advanced once: plan-writing `1.2.8`, plan `1.3.12`, quick-start `2.1.13`, import-plan `1.4.4`, and review-provide `1.3.12`.
+- Verification passed 100 affected skill/bundle assertions, all 53 OAT skills, workspace format, byte-identical generated skill assets, and five-package release validation at unchanged `0.1.47`.
+
+### Tasks p04-t30 through p04-t31: Adaptive dispatch ceilings
 
 **Status:** pending
 
@@ -1038,65 +1050,66 @@ oat_generated: false
 
 ## Test Results
 
-| Phase      | Tests Run                                                                                                             | Passed | Failed | Coverage                                                      |
-| ---------- | --------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------- |
-| p00-t01    | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes                                     | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight          |
-| p00-t02    | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync                               | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption    |
-| p00-t03    | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl                                            | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths   |
-| p00 final  | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                                   | 494    | 0      | Committed-tree phase verification and self-review             |
-| p00 fixes  | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation      | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown  |
-| p01-t01    | 106 focused config/resolver assertions; CLI type-check                                                                | 107    | 0      | Invocation normalization, defaults, cloning, layered merge    |
-| p01-t02    | 107 focused gate/resolver assertions; CLI type-check; live target list                                                | 109    | 0      | Mutation flags, provenance view, availability-only listing    |
-| p01-t03    | 72 focused gate assertions; CLI type-check                                                                            | 73     | 0      | Immutable prompt/JSON invocation provenance                   |
-| p01-t04    | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                     | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs          |
-| p01 final  | 240 focused assertions; type-check; live target list; skill validation; docs links                                    | 244    | 0      | Committed-tree phase verification and self-review             |
-| p01-t05    | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                     | 76     | 0      | Partial target mutation preserves nonzero priority            |
-| p01-t06    | RED/GREEN rejected probe; 75 gate assertions; live target list                                                        | 77     | 0      | Per-target availability isolation; listing remains read-only  |
-| p01-t07    | RED/GREEN marker cases; 94 gate/parser assertions; CLI type-check                                                     | 98     | 0      | Gate-only marker enforcement; parser compatibility retained   |
-| p01-t08    | RED/GREEN launch and filesystem failures; 80 gate assertions; CLI type-check                                          | 83     | 0      | Exact post-selection structured provenance retained           |
-| p01-t09    | RED/GREEN YAML scalar matrix; 103 gate/parser assertions; CLI type-check                                              | 111    | 0      | Arbitrary configured strings round-trip exactly               |
-| p01 fixes  | 255 focused assertions; type-check; live list; skills; docs; format; diff                                             | 261    | 0      | Committed-tree review-fix union verification                  |
-| p01 review | 103 gate/parser assertions; CLI type-check; format; live list; diff hygiene                                           | 107    | 0      | Independent re-review closed all prior findings               |
-| p02-t01    | RED source expectations; 88 gate command assertions; targeted format and diff checks                                  | 89     | 0      | Declared and ambient project-resolution provenance            |
-| p02-t02    | RED parser/correlation matrix; 114 gate/parser assertions; CLI type-check; lint; format; diff                         | 118    | 0      | Run/project corroboration and fail-closed targeting           |
-| p02-t03    | RED lifecycle contracts; 46 skill assertions; 53-skill validation; 532-link crawl                                     | 49     | 0      | Declared target-neutral lifecycle review commands             |
-| p02 final  | 160 focused assertions; CLI type-check; lint; format; skills; docs links; diff/version hygiene                        | 166    | 0      | Committed-tree phase verification and self-review             |
-| p02-t04    | RED ambient sibling regressions; 100 gate assertions; CLI type-check; diff                                            | 103    | 0      | Ambient containment with ambient provenance preserved         |
-| p02-t05    | RED parse/normalization precedence; 118 gate/parser assertions; CLI type-check; diff                                  | 121    | 0      | Declared project validation before parse or mutation          |
-| p02-t06    | RED malformed timestamp matrix; 122 gate/parser assertions; CLI type-check; diff                                      | 127    | 0      | Run-first duplicate detection and format classification       |
-| p02 fixes  | 122 gate/parser assertions; CLI type-check; lint; format; diff                                                        | 126    | 0      | Committed-tree p02 review-fix union and self-review           |
-| p02 review | 122 gate/parser assertions; CLI type-check; targeted format; diff hygiene                                             | 126    | 0      | Independent re-review closed all prior findings               |
-| p03-t01    | RED/GREEN aggregate provenance matrix; 112 gate assertions; type-check; docs links; format; diff                      | 116    | 0      | Exact/flag precedence, final/range contributors, fallback     |
-| p03-t02    | RED exact compatibility regressions; 114 gate assertions; type-check; docs links; format; diff                        | 118    | 0      | Legacy/non-claimable exact stamps remain fully unknown        |
-| p04-t01    | RED/GREEN shared setup contracts; focused skill tests; 53-skill validation                                            | 51     | 0      | Canonical qualification, preservation, choices, failure modes |
-| p04-t02    | RED/GREEN all-path ordering/preservation contracts; skill validation; 532-link crawl                                  | 56     | 0      | Spec, quick, import, and provider-plan inheritance            |
-| p04-t04    | RED/GREEN rewrite-boundary preservation contract; 53-skill validation; sync idempotence; format; lint; types; release | 61     | 0      | Complete explicit values survive quick/import rewrites        |
-| p04 final  | 49 affected integration/consistency assertions; full workspace tests; lint; format; type-check; builds; release       | 59     | 0      | Packaging, generated ownership, idempotence, release surface  |
-| p04-t05    | RED/GREEN scanner, command, and codec regressions; focused affected tests; CLI type-check                             | 51     | 0      | Real user expansion, fail-closed cleanup, owner preservation  |
-| p04-t06    | RED/GREEN normalized-collision regressions; focused affected tests; CLI type-check; project sync dry-run              | 78     | 0      | Stable custom identity shared by sync and dispatch            |
-| p04-t07    | RED/GREEN selected-model metadata regressions; gate suite; CLI type-check                                             | 116    | 0      | Non-first winner execution and metadata agreement             |
-| p04-t08    | RED/GREEN malformed-correlation and timestamp regressions; gate/verdict suites; CLI type-check                        | 138    | 0      | Validation classification without spoof or duplicate drift    |
-| p04-t09    | RED/GREEN receive-eligibility contracts; 53-skill validation; 532-link crawl                                          | 55     | 0      | Status-aware lifecycle handoff and documented result union    |
-| p04-t10    | RED/GREEN spec-driven Overwrite preservation contract; 53-skill validation                                            | 57     | 0      | Raw key/value preservation before shared phase-review setup   |
-| p04-t11    | RED/GREEN invalid-role matrix; 72 dispatch-ceiling assertions; CLI type-check                                         | 76     | 0      | Exact role union and omitted-only implementer default         |
-| p04-t12    | RED/GREEN target-preserving artifact-review contracts; 53-skill validation; 532-link crawl                            | 59     | 0      | Guarded inline exceptions and fail-closed timeout routing     |
-| p04-t13    | RED/GREEN readiness/provider/ownership contracts; skills; links; format; release                                      | 62     | 0      | Canonical/bundled parity and five packages at 0.1.47          |
-| p04-t14    | Live config contract; user sync; role/owner registration; zero-op dry-run; 5 resolver cells                           | 22     | 0      | Declared project, invocation metadata, user materialization   |
-| p04 final  | 129 focused assertions; 2,561 workspace assertions; skills; links; sync; format; lint; types; builds; release         | 2701   | 0      | Committed-tree final verification                             |
-| p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
-| p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing |
-| p04-t15    | 143 focused gate/parser assertions; CLI type-check                                                                    | 143    | 0      | Immutable correlated snapshot and in-memory normalization     |
-| p04-t16    | 86 focused config/sync assertions; CLI type-check; zero-op project sync                                               | 86     | 0      | Lexical active-project containment before materialization     |
-| p04-t17    | 58 focused skill contracts; 53-skill validation; docs links; format; release                                          | 58     | 0      | Concrete reviewer model payloads across providers             |
-| p04-t18    | 59 focused skill contracts; 53-skill validation; format; bundled parity; release                                      | 59     | 0      | Durable quick/import readiness after review disposition       |
-| p04-t19    | 130 focused identity/gate assertions; format                                                                          | 130    | 0      | Canonical p04 fix stamps and aggregate contributor recovery   |
-| p04-t20    | RED/GREEN realpath containment matrix; 226 focused assertions; CLI type-check                                         | 226    | 0      | Canonical in-repo identity and fail-closed symlink handling   |
-| p04-t21    | RED/GREEN real custom-target status; 69 focused status/sync/scanner assertions; CLI type-check                        | 69     | 0      | User Codex drift parity with narrowly composed agent inputs   |
-| p04-t22    | RED/GREEN strict header parser; 33 focused shared-codec/materialization assertions; CLI type-check                    | 33     | 0      | Header-only authority and owner-safe stale cleanup            |
-| p04-t23    | RED/GREEN incompatible-pair matrix; 141 focused identity/gate assertions; CLI type-check                              | 141    | 0      | Canonical dispatch pairs before producer aggregation          |
-| p04-t24    | RED/GREEN mode-specific tier-3 routing; 60 focused contracts; 53 skills; format; release                              | 60     | 0      | Interrupted quick review resumes through quick-start          |
-| p04-t25    | RED/GREEN user Codex ownership docs; 61 focused contracts; 532 links; format; release                                 | 61     | 0      | Shipped materialization guidance and bundled-doc parity       |
-| p04-t28    | RED/GREEN project/user ladder materialization; 46 focused assertions; type-check; project sync                        | 46     | 0      | All candidates, scoped ownership, byte-identical second sync  |
+| Phase      | Tests Run                                                                                                             | Passed | Failed | Coverage                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------------------------------------------- |
+| p00-t01    | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes                                     | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight           |
+| p00-t02    | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync                               | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption     |
+| p00-t03    | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl                                            | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths    |
+| p00 final  | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs                                   | 494    | 0      | Committed-tree phase verification and self-review              |
+| p00 fixes  | 94 resolver assertions; 42 skill-contract assertions; type-check; 2 live preflights; skill and format validation      | 136    | 0      | Policy-model retention, pinned fallbacks, canonical Markdown   |
+| p01-t01    | 106 focused config/resolver assertions; CLI type-check                                                                | 107    | 0      | Invocation normalization, defaults, cloning, layered merge     |
+| p01-t02    | 107 focused gate/resolver assertions; CLI type-check; live target list                                                | 109    | 0      | Mutation flags, provenance view, availability-only listing     |
+| p01-t03    | 72 focused gate assertions; CLI type-check                                                                            | 73     | 0      | Immutable prompt/JSON invocation provenance                    |
+| p01-t04    | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                     | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs           |
+| p01 final  | 240 focused assertions; type-check; live target list; skill validation; docs links                                    | 244    | 0      | Committed-tree phase verification and self-review              |
+| p01-t05    | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                     | 76     | 0      | Partial target mutation preserves nonzero priority             |
+| p01-t06    | RED/GREEN rejected probe; 75 gate assertions; live target list                                                        | 77     | 0      | Per-target availability isolation; listing remains read-only   |
+| p01-t07    | RED/GREEN marker cases; 94 gate/parser assertions; CLI type-check                                                     | 98     | 0      | Gate-only marker enforcement; parser compatibility retained    |
+| p01-t08    | RED/GREEN launch and filesystem failures; 80 gate assertions; CLI type-check                                          | 83     | 0      | Exact post-selection structured provenance retained            |
+| p01-t09    | RED/GREEN YAML scalar matrix; 103 gate/parser assertions; CLI type-check                                              | 111    | 0      | Arbitrary configured strings round-trip exactly                |
+| p01 fixes  | 255 focused assertions; type-check; live list; skills; docs; format; diff                                             | 261    | 0      | Committed-tree review-fix union verification                   |
+| p01 review | 103 gate/parser assertions; CLI type-check; format; live list; diff hygiene                                           | 107    | 0      | Independent re-review closed all prior findings                |
+| p02-t01    | RED source expectations; 88 gate command assertions; targeted format and diff checks                                  | 89     | 0      | Declared and ambient project-resolution provenance             |
+| p02-t02    | RED parser/correlation matrix; 114 gate/parser assertions; CLI type-check; lint; format; diff                         | 118    | 0      | Run/project corroboration and fail-closed targeting            |
+| p02-t03    | RED lifecycle contracts; 46 skill assertions; 53-skill validation; 532-link crawl                                     | 49     | 0      | Declared target-neutral lifecycle review commands              |
+| p02 final  | 160 focused assertions; CLI type-check; lint; format; skills; docs links; diff/version hygiene                        | 166    | 0      | Committed-tree phase verification and self-review              |
+| p02-t04    | RED ambient sibling regressions; 100 gate assertions; CLI type-check; diff                                            | 103    | 0      | Ambient containment with ambient provenance preserved          |
+| p02-t05    | RED parse/normalization precedence; 118 gate/parser assertions; CLI type-check; diff                                  | 121    | 0      | Declared project validation before parse or mutation           |
+| p02-t06    | RED malformed timestamp matrix; 122 gate/parser assertions; CLI type-check; diff                                      | 127    | 0      | Run-first duplicate detection and format classification        |
+| p02 fixes  | 122 gate/parser assertions; CLI type-check; lint; format; diff                                                        | 126    | 0      | Committed-tree p02 review-fix union and self-review            |
+| p02 review | 122 gate/parser assertions; CLI type-check; targeted format; diff hygiene                                             | 126    | 0      | Independent re-review closed all prior findings                |
+| p03-t01    | RED/GREEN aggregate provenance matrix; 112 gate assertions; type-check; docs links; format; diff                      | 116    | 0      | Exact/flag precedence, final/range contributors, fallback      |
+| p03-t02    | RED exact compatibility regressions; 114 gate assertions; type-check; docs links; format; diff                        | 118    | 0      | Legacy/non-claimable exact stamps remain fully unknown         |
+| p04-t01    | RED/GREEN shared setup contracts; focused skill tests; 53-skill validation                                            | 51     | 0      | Canonical qualification, preservation, choices, failure modes  |
+| p04-t02    | RED/GREEN all-path ordering/preservation contracts; skill validation; 532-link crawl                                  | 56     | 0      | Spec, quick, import, and provider-plan inheritance             |
+| p04-t04    | RED/GREEN rewrite-boundary preservation contract; 53-skill validation; sync idempotence; format; lint; types; release | 61     | 0      | Complete explicit values survive quick/import rewrites         |
+| p04 final  | 49 affected integration/consistency assertions; full workspace tests; lint; format; type-check; builds; release       | 59     | 0      | Packaging, generated ownership, idempotence, release surface   |
+| p04-t05    | RED/GREEN scanner, command, and codec regressions; focused affected tests; CLI type-check                             | 51     | 0      | Real user expansion, fail-closed cleanup, owner preservation   |
+| p04-t06    | RED/GREEN normalized-collision regressions; focused affected tests; CLI type-check; project sync dry-run              | 78     | 0      | Stable custom identity shared by sync and dispatch             |
+| p04-t07    | RED/GREEN selected-model metadata regressions; gate suite; CLI type-check                                             | 116    | 0      | Non-first winner execution and metadata agreement              |
+| p04-t08    | RED/GREEN malformed-correlation and timestamp regressions; gate/verdict suites; CLI type-check                        | 138    | 0      | Validation classification without spoof or duplicate drift     |
+| p04-t09    | RED/GREEN receive-eligibility contracts; 53-skill validation; 532-link crawl                                          | 55     | 0      | Status-aware lifecycle handoff and documented result union     |
+| p04-t10    | RED/GREEN spec-driven Overwrite preservation contract; 53-skill validation                                            | 57     | 0      | Raw key/value preservation before shared phase-review setup    |
+| p04-t11    | RED/GREEN invalid-role matrix; 72 dispatch-ceiling assertions; CLI type-check                                         | 76     | 0      | Exact role union and omitted-only implementer default          |
+| p04-t12    | RED/GREEN target-preserving artifact-review contracts; 53-skill validation; 532-link crawl                            | 59     | 0      | Guarded inline exceptions and fail-closed timeout routing      |
+| p04-t13    | RED/GREEN readiness/provider/ownership contracts; skills; links; format; release                                      | 62     | 0      | Canonical/bundled parity and five packages at 0.1.47           |
+| p04-t14    | Live config contract; user sync; role/owner registration; zero-op dry-run; 5 resolver cells                           | 22     | 0      | Declared project, invocation metadata, user materialization    |
+| p04 final  | 129 focused assertions; 2,561 workspace assertions; skills; links; sync; format; lint; types; builds; release         | 2701   | 0      | Committed-tree final verification                              |
+| p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification              |
+| p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing  |
+| p04-t15    | 143 focused gate/parser assertions; CLI type-check                                                                    | 143    | 0      | Immutable correlated snapshot and in-memory normalization      |
+| p04-t16    | 86 focused config/sync assertions; CLI type-check; zero-op project sync                                               | 86     | 0      | Lexical active-project containment before materialization      |
+| p04-t17    | 58 focused skill contracts; 53-skill validation; docs links; format; release                                          | 58     | 0      | Concrete reviewer model payloads across providers              |
+| p04-t18    | 59 focused skill contracts; 53-skill validation; format; bundled parity; release                                      | 59     | 0      | Durable quick/import readiness after review disposition        |
+| p04-t19    | 130 focused identity/gate assertions; format                                                                          | 130    | 0      | Canonical p04 fix stamps and aggregate contributor recovery    |
+| p04-t20    | RED/GREEN realpath containment matrix; 226 focused assertions; CLI type-check                                         | 226    | 0      | Canonical in-repo identity and fail-closed symlink handling    |
+| p04-t21    | RED/GREEN real custom-target status; 69 focused status/sync/scanner assertions; CLI type-check                        | 69     | 0      | User Codex drift parity with narrowly composed agent inputs    |
+| p04-t22    | RED/GREEN strict header parser; 33 focused shared-codec/materialization assertions; CLI type-check                    | 33     | 0      | Header-only authority and owner-safe stale cleanup             |
+| p04-t23    | RED/GREEN incompatible-pair matrix; 141 focused identity/gate assertions; CLI type-check                              | 141    | 0      | Canonical dispatch pairs before producer aggregation           |
+| p04-t24    | RED/GREEN mode-specific tier-3 routing; 60 focused contracts; 53 skills; format; release                              | 60     | 0      | Interrupted quick review resumes through quick-start           |
+| p04-t25    | RED/GREEN user Codex ownership docs; 61 focused contracts; 532 links; format; release                                 | 61     | 0      | Shipped materialization guidance and bundled-doc parity        |
+| p04-t28    | RED/GREEN project/user ladder materialization; 46 focused assertions; type-check; project sync                        | 46     | 0      | All candidates, scoped ownership, byte-identical second sync   |
+| p04-t29    | RED/GREEN adaptive planning contracts; 100 affected assertions; 53 skills; format; release                            | 100    | 0      | Owned ladders, named maxima, reviewer ceilings, exact payloads |
 
 ## Final Summary (for PR/docs)
 

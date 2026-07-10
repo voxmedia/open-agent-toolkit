@@ -1608,7 +1608,7 @@ pnpm run cli:source -- sync --scope project --dry-run
 
 ### Task p04-t29: Adopt complete ladders and record named ceilings
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 

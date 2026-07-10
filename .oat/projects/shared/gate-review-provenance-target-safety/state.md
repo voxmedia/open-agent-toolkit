@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t29
-oat_last_commit: 57dea10a
+oat_current_task: p04-t30
+oat_last_commit: 0f33a27f
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -21,9 +21,6 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh|max
-#     claude: sonnet # haiku|sonnet|opus|fable
 #   matrix: # optional sparse project override; full dispatch matrix lives in layered config
 #     cursor:
 #       high:
@@ -38,7 +35,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T16:39:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T17:00:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +47,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 51 of 54 planned tasks are complete and p04 is 28/31. Every configured Codex ladder candidate now materializes in its owning scope; execution continues at `p04-t29`, followed by an explicit phase-coordinator/task-worker dispatch boundary.
+Implementation - 52 of 54 planned tasks are complete and p04 is 29/31. Planning paths now adopt complete owned ladders and record named maximum ceilings; execution continues at `p04-t30` for the phase-coordinator/task-worker boundary.
 
 ## Artifacts
 
@@ -58,7 +55,7 @@ Implementation - 51 of 54 planned tasks are complete and p04 is 28/31. Every con
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (51/54 tasks complete; adaptive dispatch extension in progress)
+- **Implementation:** `implementation.md` (52/54 tasks complete; adaptive dispatch extension in progress)
 
 ## Progress
 
@@ -198,7 +195,9 @@ Implementation - 51 of 54 planned tasks are complete and p04 is 28/31. Every con
 - ✓ p04-t27 verification passed 121 focused dispatch/registry assertions and CLI type-check
 - ✓ `p04-t28` materializes every unique configured Codex ladder and fallback-route candidate in its owning scope
 - ✓ p04-t28 verification passed 46 focused sync assertions, CLI type-check, and a zero-operation project sync dry-run
-- ⧗ Implement `p04-t29` through `p04-t31`, then obtain a final review disposition before p04 HiLL approval
+- ✓ `p04-t29` adopts complete ladders in an explicit ownership scope and records project/phase named maxima
+- ✓ p04-t29 verification passed 100 affected assertions, all 53 skills, format, bundle parity, and five-package release validation
+- ⧗ Implement `p04-t30` through `p04-t31`, then obtain a final review disposition before p04 HiLL approval
 
 ## Blockers
 
@@ -206,4 +205,4 @@ None
 
 ## Next Milestone
 
-Adopt complete ladders and record named ceilings in `p04-t29`. The subsequent `p04-t30` phase coordinator will dispatch one exact worker per task beneath that ceiling. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
+Coordinate phases and dispatch one resolver-validated, exact target-pinned worker per task in `p04-t30`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
