@@ -191,6 +191,15 @@ interface GateDiversityMetadata {
   warning?: string;
 }
 
+interface GateInvocationMetadata {
+  readonly runId: string;
+  readonly targetId: string;
+  readonly runtime: string;
+  readonly model: string | 'provider-default' | 'unknown';
+  readonly reasoningEffort: string | 'provider-default' | 'unknown';
+  readonly source: 'exec-target-config' | 'unknown';
+}
+
 interface ReviewGateArtifactCandidate extends LatestReview {
   generatedTime: number;
   lifecycleRank: number;
@@ -248,6 +257,43 @@ function assembleReviewGatePrompt(segments: string[]): string {
     .map((segment) => segment.trim())
     .filter((segment) => segment.length > 0)
     .join('\n\n');
+}
+
+function normalizedTargetInvocation(
+  target: ExecTarget,
+): Pick<GateInvocationMetadata, 'model' | 'reasoningEffort' | 'source'> {
+  const invocation = target.invocation;
+  return {
+    model: invocation?.model ?? 'unknown',
+    reasoningEffort: invocation?.reasoningEffort ?? 'unknown',
+    source: invocation ? 'exec-target-config' : 'unknown',
+  };
+}
+
+function createGateInvocationMetadata(
+  runId: string,
+  selected: SelectedExecTarget,
+): GateInvocationMetadata {
+  return Object.freeze({
+    runId,
+    targetId: selected.id,
+    runtime: selected.target.runtime,
+    ...normalizedTargetInvocation(selected.target),
+  });
+}
+
+function gateInvocationPromptContext(
+  invocation: GateInvocationMetadata,
+): string {
+  return [
+    'Gate invocation metadata (copy these exact values into the gate review artifact frontmatter):',
+    `oat_gate_run_id: ${invocation.runId}`,
+    `oat_gate_target: ${invocation.targetId}`,
+    `oat_gate_runtime: ${invocation.runtime}`,
+    `oat_invocation_model: ${invocation.model}`,
+    `oat_invocation_reasoning_effort: ${invocation.reasoningEffort}`,
+    `oat_invocation_source: ${invocation.source}`,
+  ].join('\n');
 }
 
 async function runChildProcess(
@@ -1648,6 +1694,7 @@ function writeReviewGateResult(
     normalization?: ReviewGateVerdict['normalization'];
     handoff: string;
     diversity?: GateDiversityMetadata;
+    gateInvocation: GateInvocationMetadata;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -1697,6 +1744,7 @@ function writeReviewGateExecutionFailure(
     exitCode: number;
     timedOut?: boolean;
     timeoutMs?: number;
+    gateInvocation: GateInvocationMetadata;
   },
 ): void {
   const message = payload.timedOut
@@ -1709,6 +1757,7 @@ function writeReviewGateExecutionFailure(
       runId: payload.runId,
       target: payload.target,
       project: payload.project,
+      gateInvocation: payload.gateInvocation,
       exitCode: payload.exitCode,
       timedOut: payload.timedOut ?? false,
       ...(payload.timeoutMs !== undefined
@@ -1732,6 +1781,7 @@ function writeReviewGateArtifactValidationFailure(
     generatedAt: string | null;
     message: string;
     recovery: string;
+    gateInvocation: GateInvocationMetadata;
   },
 ): void {
   if (context.json) {
@@ -1743,6 +1793,7 @@ function writeReviewGateArtifactValidationFailure(
       project: payload.project,
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
+      gateInvocation: payload.gateInvocation,
       message: payload.message,
       recovery: payload.recovery,
     });
@@ -1923,7 +1974,7 @@ async function runTargetList(
                   },
                 )
               ).exitCode === 0);
-          const invocation = view.target.invocation;
+          const invocation = normalizedTargetInvocation(view.target);
           return {
             id,
             runtime: view.target.runtime,
@@ -1932,9 +1983,7 @@ async function runTargetList(
             enabled: view.enabled,
             available,
             invocation: {
-              model: invocation?.model ?? 'unknown',
-              reasoningEffort: invocation?.reasoningEffort ?? 'unknown',
-              source: invocation ? 'exec-target-config' : 'unknown',
+              ...invocation,
             },
           };
         }),
@@ -2008,6 +2057,7 @@ async function runReviewGate(
       context,
       dependencies,
     );
+    const gateInvocation = createGateInvocationMetadata(runId, selected);
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
     const before = await listActiveProjectReviewCandidates({
       repoRoot,
@@ -2016,6 +2066,7 @@ async function runReviewGate(
     const reviewPrompt = assembleReviewGatePrompt([
       REVIEW_GATE_CONTEXT_NOTE,
       reviewGateProjectContext(projectPath),
+      gateInvocationPromptContext(gateInvocation),
       ...(options.reviewType?.trim()
         ? [`Review type: ${options.reviewType.trim()}.`]
         : []),
@@ -2040,6 +2091,7 @@ async function runReviewGate(
         exitCode: childExitCode,
         timedOut: childResult.timedOut ?? false,
         timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
+        gateInvocation,
       });
       process.exitCode = childExitCode;
       return;
@@ -2060,6 +2112,7 @@ async function runReviewGate(
         message: `No new review artifact was detected for project ${projectPath}.`,
         recovery:
           'Ensure the review provider wrote a project review artifact. If it did, fix or attach that artifact and run oat-project-review-receive before treating the review as consumed.',
+        gateInvocation,
       });
       process.exitCode = 1;
       return;
@@ -2083,6 +2136,7 @@ async function runReviewGate(
         generatedAt: producedArtifact.generatedAt,
         message: detail,
         recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then run oat-project-review-receive for ${producedArtifact.path}; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
+        gateInvocation,
       });
       process.exitCode = 1;
       return;
@@ -2111,6 +2165,7 @@ async function runReviewGate(
       normalization: verdict.normalization,
       handoff,
       diversity: selected.diversity,
+      gateInvocation,
     });
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {

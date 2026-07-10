@@ -2566,6 +2566,142 @@ describe('oat gate', () => {
     },
   );
 
+  it.each([
+    {
+      target: 'codex-configured',
+      runtime: 'codex',
+      baseCommand: ['codex', 'exec'],
+      invocation: {
+        model: 'gpt-5.6-sol',
+        reasoningEffort: 'max',
+      },
+      expected: {
+        model: 'gpt-5.6-sol',
+        reasoningEffort: 'max',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'claude-configured',
+      runtime: 'claude',
+      baseCommand: ['claude', '-p'],
+      invocation: {
+        model: 'fable',
+        reasoningEffort: 'provider-default',
+      },
+      expected: {
+        model: 'fable',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'cursor-sol',
+      runtime: 'cursor',
+      baseCommand: ['cursor-agent', '-p'],
+      invocation: {
+        model: 'gpt-5.6-sol-max',
+        reasoningEffort: 'provider-default',
+      },
+      expected: {
+        model: 'gpt-5.6-sol-max',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'cursor-fable',
+      runtime: 'cursor',
+      baseCommand: ['cursor-agent', '-p'],
+      invocation: {
+        model: 'claude-fable-5-xhigh',
+        reasoningEffort: 'provider-default',
+      },
+      expected: {
+        model: 'claude-fable-5-xhigh',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'unknown-configured',
+      runtime: 'custom',
+      baseCommand: ['custom-review'],
+      invocation: undefined,
+      expected: {
+        model: 'unknown',
+        reasoningEffort: 'unknown',
+        source: 'unknown',
+      },
+    },
+  ])(
+    'emits immutable gate invocation metadata for $target without parsing its command',
+    async ({ target, runtime, baseCommand, invocation, expected }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                [target]: {
+                  runtime,
+                  baseCommand,
+                  ...(invocation ? { invocation } : {}),
+                  priority: 200,
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', target, 'Review'],
+      });
+
+      const payload = capture.jsonPayloads[0] as {
+        gateInvocation: {
+          runId: string;
+          targetId: string;
+          runtime: string;
+          model: string;
+          reasoningEffort: string;
+          source: string;
+        };
+      };
+      expect(payload.gateInvocation).toMatchObject({
+        runId: expect.any(String),
+        targetId: target,
+        runtime,
+        ...expected,
+      });
+      const prompt = runner.calls.at(-1)?.args.at(-1) ?? '';
+      expect(prompt).toContain(
+        `oat_gate_run_id: ${payload.gateInvocation.runId}`,
+      );
+      expect(prompt).toContain(`oat_gate_target: ${target}`);
+      expect(prompt).toContain(`oat_gate_runtime: ${runtime}`);
+      expect(prompt).toContain(`oat_invocation_model: ${expected.model}`);
+      expect(prompt).toContain(
+        `oat_invocation_reasoning_effort: ${expected.reasoningEffort}`,
+      );
+      expect(prompt).toContain(`oat_invocation_source: ${expected.source}`);
+    },
+  );
+
   it('defaults to cross-provider target selection and returns zero for clean gate review artifacts', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -2710,6 +2846,14 @@ describe('oat gate', () => {
       artifactPath,
       message: expect.stringContaining('cannot be safely normalized'),
       recovery: expect.stringContaining('oat-project-review-receive'),
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        model: 'provider-default',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
     });
     expect(process.exitCode).toBe(1);
   });
@@ -2910,6 +3054,14 @@ describe('oat gate', () => {
       timedOut: true,
       timeoutMs: 1234,
       message: expect.stringContaining('timed out after 1234ms'),
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: expect.any(String),
+        runtime: expect.any(String),
+        model: expect.any(String),
+        reasoningEffort: expect.any(String),
+        source: expect.any(String),
+      },
     });
     expect(process.exitCode).toBe(124);
   });
