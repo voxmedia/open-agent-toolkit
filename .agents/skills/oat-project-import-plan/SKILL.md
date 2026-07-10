@@ -276,7 +276,9 @@ Apply the shared loop exactly:
 
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
-- Dispatch `oat-reviewer` in structured mode using Tier 1 subagent when available and Tier 2 inline fallback otherwise.
+- For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
+- Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
+- If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
 - Apply Critical and Important artifact-local fixes when unambiguous and limited to canonical conformance/completeness; offer Medium and Minor fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.

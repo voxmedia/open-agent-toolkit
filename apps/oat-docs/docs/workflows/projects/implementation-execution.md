@@ -11,7 +11,7 @@ This page covers how `oat-project-implement` actually runs a plan: tier selectio
 
 - **When to use:** you have a plan ready and want to understand what happens during `oat-project-implement`.
 - **Unit of dispatch:** one phase at a time (not one task). A phase implementer executes all tasks in the phase, commits per task, and returns a single summary.
-- **Two tiers, one lock:** capability detection picks Tier 1 (native subagents) or Tier 2 (inline) at start. The tier is locked for the whole run — no mid-run downgrades.
+- **Two tiers, one target contract:** capability detection picks Tier 1 (native subagents) or Tier 2 (guarded execution) at start. A concrete managed target still requires its exact registered role or a fresh pinned child; inline is conditional, not a generic fallback.
 - **Dispatch policy:** implementation resolves an OAT-owned dispatch policy before work starts. Managed policies are `Economy`, `Balanced`, `High`, `Frontier`, and `Uncapped`; `Inherit Host Defaults` explicitly leaves model/effort controls to the host.
 - **Runtime dispatch:** each phase uses the lowest available model/effort/control that can confidently complete the work. Capped managed policies cap preferred selections, managed `Uncapped` uses preferred selections directly, and inherit/default mode uses no OAT-selected control.
 
@@ -23,9 +23,9 @@ At skill start, `oat-project-implement` detects whether the host supports native
 
 - **Claude Code / Cursor:** native subagent dispatch → Tier 1.
 - **Codex multi-agent:** Tier 1 if `spawn_agent` is allowed without authorization, or after an explicit single prompt at skill start if authorization is required. Codex subagent dispatch should use self-contained scope packets with fresh context; do not assume pinned OAT roles can also inherit the full parent thread.
-- **Authorization declined or agents do not resolve:** Tier 2 (inline). The orchestrator reads `.agents/agents/oat-phase-implementer.md` and `.agents/agents/oat-reviewer.md` as reference and executes that process itself.
+- **Authorization declined or agents do not resolve:** Tier 2 selects a sequential target-preserving route. A concrete managed target still uses its exact registered role or a fresh Codex child pinned to the resolved model and effort. Inline is allowed only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception; otherwise execution fails closed.
 
-The approval decision covers both phase implementation and checkpoint review for the run. The orchestrator should not drift into a mixed mode based on conversational emphasis alone; if Tier 1 was not approved, stay inline throughout unless the user explicitly requests mixed execution.
+The approval decision covers both phase implementation and checkpoint review for the run. The orchestrator should not drift into a mixed mode based on conversational emphasis alone; if Tier 1 was not approved, retain Tier 2 mechanics without weakening the resolved target contract unless the user explicitly requests mixed execution.
 
 The selected tier is reported to the user and locked for the remainder of the run:
 
@@ -100,7 +100,7 @@ Dry-run reports unresolved policy and planned behavior without writing project s
 
 ### Runtime dispatch selection
 
-Tier selection decides whether OAT uses native subagents or inline fallback. Runtime dispatch selection is separate: it decides which provider-specific model and effort controls to use for a specific phase when the host exposes those axes.
+Tier selection decides how OAT invokes work; it does not authorize a target downgrade. Runtime dispatch selection is separate: it decides which provider-specific model and effort controls to use for a specific phase when the host exposes those axes. Inline execution remains guarded by verified equivalent current-host controls or the explicit inherit/default and managed-uncapped reviewer exceptions.
 
 The default rule is conservative: use the lowest available model and/or effort that can confidently complete the phase. Escalate before dispatch when the phase is high-risk, broad, cross-cutting, or when retry evidence suggests the current control is underpowered.
 
@@ -217,7 +217,7 @@ For each phase in the plan (whether sequential or inside a parallel group):
 2. **Dispatch the selected implementer role** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known). In Codex, use the exact resolver-returned registered role when selectable. If it is not selectable in the current session, launch a fresh Codex child pinned to the resolved model and reasoning effort with `.agents/agents/oat-phase-implementer.md` as its canonical instructions. Never silently use the managed base role.
 3. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
    - `BLOCKED` stops the run and surfaces the blocker to the user.
-4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use the exact resolver-returned registered role when selectable, otherwise launch a fresh child pinned to the resolved model and reasoning effort with `.agents/agents/oat-reviewer.md` as canonical instructions. Base `oat-reviewer` is valid only for explicit inherit/default behavior and the documented managed-uncapped reviewer fallback. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer does not conclude on the first wait, poll once more, then send a concise "return now with current findings" nudge before falling back inline for that phase.
+4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use the exact resolver-returned registered reviewer role when selectable, otherwise launch a fresh Codex child pinned to the resolved model and reasoning effort with `.agents/agents/oat-reviewer.md` as canonical instructions. Base `oat-reviewer` is valid only for explicit inherit/default behavior and the documented managed-uncapped reviewer exception. Inline review requires verified equivalent current-host model and effort controls. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer times out or does not conclude on the first wait, poll once more and send a concise "return now with current findings" nudge. Then retry the same exact role or pinned child within the retry bound; if the target-preserving retry still fails, fail closed instead of downgrading inline.
 5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
 6. **On fail, run the bounded fix loop** (see below).
 7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.
@@ -264,8 +264,8 @@ oat_plan_parallel_groups: [['p02', 'p03'], ['p04', 'p05']]
 1. **Bootstrap worktrees** via `oat-worktree-bootstrap-auto`, one per phase, branch name `{project-name}/{pNN}`.
    - The bootstrap checks inherited git cleanliness before the all-scope provider sync sweep.
    - If that sync leaves `.oat/sync/manifest.json` or provider directories dirty, bootstrap commits only existing or tracked sync-managed paths (`.oat/sync/manifest.json`, `.claude`, `.cursor`, `.codex`) as `chore: run sync` and reports `sync_commit: pass | fail | skip`.
-   - If any bootstrap fails, cancel successful worktrees and **degrade the entire group** to sequential inline execution.
-2. **Concurrent dispatch** of `oat-phase-implementer` into each worktree (Tier 1 only — Tier 2 cannot run concurrently and also degrades to sequential).
+   - If any bootstrap fails, cancel successful worktrees and **degrade the entire group** to sequential target-preserving execution.
+2. **Concurrent dispatch** of `oat-phase-implementer` into each worktree (Tier 1 only — Tier 2 cannot run concurrently and therefore executes sequentially while retaining the exact-role, pinned-child, or guarded-inline contract).
 3. **Wait for terminal verdicts** (`pass` or `failed`) across every phase in the group.
 4. **Fan-in reconciliation in plan order:** for each passing phase, `git merge --no-ff {project-name}/{pNN}`. Integration verification (`pnpm test && pnpm lint && pnpm type-check`) runs after each merge.
 5. **Failed phases are excluded** — their worktrees are preserved and logged in `implementation.md` Outstanding Items. Passing phases still merge (partial merge-back, not atomic).

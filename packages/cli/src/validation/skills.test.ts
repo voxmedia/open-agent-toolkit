@@ -1182,6 +1182,50 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('keeps every artifact-review caller on its resolved target', async () => {
+    const callers = [
+      [
+        'spec-driven plan',
+        await readRepoFile('.agents/skills/oat-project-plan/SKILL.md'),
+      ],
+      [
+        'quick-start plan',
+        await readRepoFile('.agents/skills/oat-project-quick-start/SKILL.md'),
+      ],
+      [
+        'import-plan',
+        await readRepoFile('.agents/skills/oat-project-import-plan/SKILL.md'),
+      ],
+      [
+        'implementation execution docs',
+        await readRepoFile(
+          'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+        ),
+      ],
+    ] as const;
+
+    for (const [name, content] of callers) {
+      expect(content, `${name} exact or pinned route`).toMatch(
+        /exact (?:resolver-returned |registered )*(?:reviewer )?(?:role|variant)[\s\S]{0,500}(?:fresh|new) Codex child[\s\S]{0,300}pinned/i,
+      );
+      expect(content, `${name} guarded inline route`).toMatch(
+        /inline[\s\S]{0,320}verified equivalent current-host[\s\S]{0,240}(?:model|effort|controls)/i,
+      );
+      expect(content, `${name} explicit base exceptions`).toMatch(
+        /explicit inherit[\s\S]{0,240}managed-uncapped/i,
+      );
+      expect(content, `${name} target-preserving timeout retry`).toMatch(
+        /(?:timeout|does not conclude)[\s\S]{0,500}retry[\s\S]{0,320}(?:same exact|pinned)[\s\S]{0,320}(?:fail closed|block)/i,
+      );
+      expect(content, `${name} no unconditional tier fallback`).not.toMatch(
+        /Tier 2 inline fallback otherwise/i,
+      );
+      expect(content, `${name} no timeout inline downgrade`).not.toMatch(
+        /(?:timeout|does not conclude)[\s\S]{0,240}fall(?:ing)? back inline/i,
+      );
+    }
+  });
+
   it('covers spec, quick, import, and provider-plan-via-import planning paths', async () => {
     const plan = await readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
     const quick = await readRepoFile(
