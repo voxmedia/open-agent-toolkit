@@ -1,14 +1,14 @@
 ---
 id: BL-260707-record-gate-review-model
 title: 'Stamp gate invocation target metadata on review artifacts'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: high
 scope: feature
 scope_estimate: M
 labels: [reviews, workflow-gates, provenance]
 assignee: null
 created: '2026-07-07T05:23:03Z'
-updated: '2026-07-09T14:55:19Z'
+updated: '2026-07-10T18:15:12Z'
 associated_issues: [BL-260707-ask-to-enable-phase-review]
 ---
 

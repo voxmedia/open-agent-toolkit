@@ -86,12 +86,31 @@ This distinction matters during completion: `oat-project-complete` can skip the 
 
 When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
 
+### Phase-review setup during planning
+
+Spec-driven, quick, and import planning run one shared setup after stable phase
+IDs exist and before the plan artifact review. The target probe qualifies only
+an explicitly configured, enabled, and available review target, then offers all
+phases, selected phases, or disabled. Existing explicit
+`oat_phase_review_gate` values are preserved unchanged without re-prompting.
+Probe failure, no qualifying target, non-interactive execution, or user decline
+leaves phase review disabled. Provider native plan mode inherits this behavior
+through the import-plan lane.
+
 ## Implementation modes
 
 `oat-project-implement` v2.0 dispatches one subagent per phase (not per task). Capability detection at skill start selects a tier, locked for the run:
 
 - **Tier 1 (subagents):** native subagent dispatch via Claude Code, Cursor, or Codex with spawn authorization.
-- **Tier 2 (inline):** orchestrator reads the agent files and executes the process itself when subagents are unavailable or authorization is declined.
+- **Tier 2 (guarded sequential execution):** orchestrator reads the agent files and uses a target-preserving route when native subagents are unavailable or authorization is declined.
+
+A concrete managed reviewer remains bound across both tiers. Codex uses the
+exact registered role or a child pinned to the resolved model and effort;
+Claude and Cursor pass the exact resolver-returned `dispatchArgs.model` in the
+actual provider invocation, including retries. Tier 2 does not authorize a
+target downgrade. Inline review is allowed only with verified equivalent host
+controls, or for explicit inherit/default behavior or the documented
+managed-uncapped reviewer base-role exception; otherwise the review blocks.
 
 Within either tier, parallelism is expressed as plan metadata:
 
@@ -143,10 +162,12 @@ legacy `workflow.dispatchCeiling.providers.<provider>` config and
 `oat_dispatch_ceiling` frontmatter remain compatibility inputs for capped
 managed policies. If no policy is configured and the session is interactive,
 planning asks once and stores the answer as `oat_dispatch_policy`;
-non-interactive planning leaves it unresolved so implementation preflight can
-fail before work starts with setup instructions. `Uncapped` is explicit managed
-selection with no maximum cap; `Inherit Host Defaults` is separate and means OAT
-does not select model or effort controls.
+non-interactive planning with an unresolved policy is not implementation-ready
+and blocks at the planning boundary until the resolver succeeds. Implementation
+preflight retains the same defensive check, but it is not the first place an
+unresolved plan fails. `Uncapped` is explicit managed selection with no maximum
+cap; `Inherit Host Defaults` is separate and means OAT does not select model or
+effort controls.
 
 ### Quick lane
 

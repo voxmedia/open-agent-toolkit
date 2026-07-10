@@ -23,8 +23,13 @@ import {
   VALID_CODEX_DISPATCH_CEILINGS,
   VALID_DISPATCH_MATRIX_TIERS,
   VALID_MANAGED_DISPATCH_POLICIES,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
+  toWorkflowDispatchCandidateLadder,
   validateDispatchRouteTarget,
   type ActiveProjectResolution,
+  type WorkflowDispatchCandidate,
+  type WorkflowDispatchCandidateLadder,
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchMatrixTier,
   type WorkflowDispatchProviderValue,
@@ -44,6 +49,8 @@ import { resolveProjectRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
 import {
   getCeilingAdapter,
+  isDirectDispatchRoleName,
+  CLAUDE_TIER_ORDER,
   type CeilingDispatchArgs,
   type CeilingRole,
   type EnforcementMechanism,
@@ -52,7 +59,7 @@ import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import YAML from 'yaml';
 
 // Provider-neutral: accept arbitrary provider names. Codex/Claude get concrete
@@ -66,7 +73,8 @@ type DispatchCeilingSource =
   | 'repo-config'
   | 'user-config'
   | 'env'
-  | 'project-state';
+  | 'project-state'
+  | 'invocation';
 
 type DispatchCeilingMode = 'enforced' | 'advisory' | 'unsupported';
 type ProjectDispatchMatrix = Record<string, WorkflowDispatchProviderValue>;
@@ -103,6 +111,9 @@ interface DispatchCeilingResolveOptions {
   role?: string;
   orchestratorTier?: string;
   preferred?: string;
+  ceilingTier?: string;
+  candidateModel?: string;
+  candidateEffort?: string;
   escalationLevel?: string;
   projectPath?: string;
   preflight?: boolean;
@@ -140,6 +151,7 @@ const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
 ];
 
 type DispatchSelectionMode =
+  | 'candidate'
   | 'capped'
   | 'uncapped'
   | 'review-target'
@@ -147,6 +159,7 @@ type DispatchSelectionMode =
   | 'inherit-default'
   | 'unresolved';
 type DispatchSelectionBranch =
+  | 'candidate-requested'
   | 'matrix-pinned'
   | 'prompt-persisted'
   | 'escalation-target'
@@ -165,6 +178,10 @@ interface ResolvedDispatchRouteTarget {
 interface DispatchSelection {
   role: CeilingRole;
   preferredValue: DispatchCeilingValue | null;
+  requestedCandidate: RequestedDispatchCandidate | null;
+  candidateTier: WorkflowDispatchMatrixTier | null;
+  ceilingTier: WorkflowDispatchMatrixTier | null;
+  ceilingTarget: ResolvedDispatchRouteTarget | null;
   selectedValue: DispatchCeilingValue | null;
   capped: boolean;
   selectionMode: DispatchSelectionMode;
@@ -174,6 +191,11 @@ interface DispatchSelection {
   cellSource: DispatchCeilingSource | null;
   policyMode: WorkflowDispatchPolicyMode | null;
   policy: WorkflowManagedDispatchPolicy | 'legacy-ceiling' | null;
+}
+
+interface RequestedDispatchCandidate {
+  model: string;
+  effort?: string;
 }
 
 const DEFAULT_DEPENDENCIES: DispatchCeilingDependencies = {
@@ -254,6 +276,8 @@ function sourceLabel(source: DispatchCeilingSource | null): string {
       return 'environment';
     case 'project-state':
       return 'project state';
+    case 'invocation':
+      return 'explicit invocation';
     default:
       return 'none';
   }
@@ -288,6 +312,10 @@ interface ResolvedDispatchPolicy {
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
+  requestedCandidate?: RequestedDispatchCandidate;
+  candidateTier?: WorkflowDispatchMatrixTier;
+  ceilingTier?: WorkflowDispatchMatrixTier;
+  ceilingTarget?: ResolvedDispatchRouteTarget | null;
 }
 
 type ConfigCandidateSource = Exclude<ResolvedConfigSource, 'default'>;
@@ -371,15 +399,10 @@ function normalizeProjectMatrixRouteTarget(
   return Object.keys(target).length > 0 ? target : undefined;
 }
 
-function normalizeProjectMatrixCell(
+function normalizeProjectMatrixRoute(
   provider: DispatchCeilingProvider,
   value: unknown,
-): WorkflowDispatchMatrixCell | undefined {
-  const bareValue = normalizeProjectMatrixBareValue(provider, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
+): WorkflowDispatchRoute | undefined {
   if (!Array.isArray(value) || value.length === 0) {
     return undefined;
   }
@@ -399,6 +422,46 @@ function normalizeProjectMatrixCell(
   }
 
   return route.length > 0 ? route : undefined;
+}
+
+function normalizeProjectMatrixCandidate(
+  provider: DispatchCeilingProvider,
+  value: unknown,
+): WorkflowDispatchCandidate | undefined {
+  const bareValue = normalizeProjectMatrixBareValue(provider, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (isWorkflowDispatchFallbackRoute(value)) {
+    const route = normalizeProjectMatrixRoute(provider, value.route);
+    return route ? { route } : undefined;
+  }
+
+  return normalizeProjectMatrixRouteTarget(value);
+}
+
+function normalizeProjectMatrixCell(
+  provider: DispatchCeilingProvider,
+  value: unknown,
+): WorkflowDispatchMatrixCell | undefined {
+  const bareValue = normalizeProjectMatrixBareValue(provider, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (isWorkflowDispatchCandidateLadder(value)) {
+    const candidates: WorkflowDispatchCandidate[] = [];
+    for (const candidate of value.candidates) {
+      const normalized = normalizeProjectMatrixCandidate(provider, candidate);
+      if (normalized !== undefined) {
+        candidates.push(normalized);
+      }
+    }
+    return candidates.length > 0 ? { candidates } : undefined;
+  }
+
+  return normalizeProjectMatrixRoute(provider, value);
 }
 
 function normalizeProjectMatrixProviderValue(
@@ -653,6 +716,25 @@ function resolveProviderCellFromValue(
     };
   }
 
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    const ceiling = cell.candidates.at(-1);
+    if (ceiling === undefined) {
+      return null;
+    }
+    if (typeof ceiling === 'string') {
+      return resolveRouteMatrixCell(
+        provider,
+        [ceiling],
+        escalationLevel,
+        cellSource,
+      );
+    }
+    const route = isWorkflowDispatchFallbackRoute(ceiling)
+      ? ceiling.route
+      : ([ceiling] satisfies WorkflowDispatchRoute);
+    return resolveRouteMatrixCell(provider, route, escalationLevel, cellSource);
+  }
+
   return resolveRouteMatrixCell(provider, cell, escalationLevel, cellSource);
 }
 
@@ -697,6 +779,351 @@ function resolveProviderMatrixCell(
   }
 
   return selected;
+}
+
+interface ResolvedMatrixCellDefinition {
+  cell: WorkflowDispatchMatrixCell;
+  cellSource: DispatchCeilingSource;
+}
+
+interface RequestedMatrixCandidateResolution {
+  resolution: MatrixCellResolution;
+  candidateTier: WorkflowDispatchMatrixTier;
+}
+
+function resolveProviderMatrixCellDefinition(
+  provider: DispatchCeilingProvider,
+  tier: WorkflowDispatchMatrixTier,
+  resolvedConfig: ResolvedConfig,
+  projectMatrix: ProjectDispatchMatrix | null,
+): ResolvedMatrixCellDefinition | null {
+  let selected: ResolvedMatrixCellDefinition | null = null;
+  const layers: Array<{
+    source: DispatchCeilingSource;
+    providers: ProjectDispatchMatrix | undefined | null;
+  }> = [
+    {
+      source: 'user-config',
+      providers: resolvedConfig.user.workflow?.dispatchCeiling?.providers,
+    },
+    {
+      source: 'repo-config',
+      providers: resolvedConfig.shared.workflow?.dispatchCeiling?.providers,
+    },
+    {
+      source: 'local-config',
+      providers: resolvedConfig.local.workflow?.dispatchCeiling?.providers,
+    },
+    { source: 'project-state', providers: projectMatrix },
+  ];
+
+  for (const layer of layers) {
+    const providerValue = layer.providers?.[provider];
+    if (typeof providerValue === 'string') {
+      selected = null;
+      continue;
+    }
+    const cell = providerValue?.[tier];
+    if (cell !== undefined) {
+      selected = { cell, cellSource: layer.source };
+    }
+  }
+
+  return selected;
+}
+
+function candidateRoute(
+  candidate: WorkflowDispatchCandidate,
+): WorkflowDispatchRoute {
+  return isWorkflowDispatchFallbackRoute(candidate)
+    ? candidate.route
+    : [candidate];
+}
+
+function candidatePrimaryTarget(
+  provider: DispatchCeilingProvider,
+  tier: WorkflowDispatchMatrixTier,
+  candidate: WorkflowDispatchCandidate,
+): ResolvedDispatchRouteTarget {
+  const route = candidateRoute(candidate);
+  const entry = route[0];
+  if (entry === undefined) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: fallback routes cannot be empty.`,
+    );
+  }
+  if (typeof entry !== 'string') {
+    const validation = validateDispatchRouteTarget(provider, entry);
+    if (!validation.valid) {
+      throw new Error(
+        `Malformed ${provider} candidate ordering in ${tier}: ${validation.reason}`,
+      );
+    }
+  }
+
+  const target =
+    typeof entry === 'string'
+      ? routeTargetFromBareValue(provider, entry, 0, route.length)
+      : routeTargetFromObject(provider, entry, 0, route.length);
+  if (target.model && isDirectDispatchRoleName(target.model)) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: direct dispatch role names are not candidate models.`,
+    );
+  }
+  const targetAdapter = getCeilingAdapter(target.harness);
+  if (
+    targetAdapter.mechanism === 'pinned-variant' &&
+    (!target.model ||
+      !target.effort ||
+      !CODEX_VALUES.includes(target.effort as WorkflowCodexDispatchCeiling))
+  ) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: Codex candidates require a model and supported effort.`,
+    );
+  }
+  if (targetAdapter.mechanism === 'model-arg' && !target.model) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: model-argument candidates require a model.`,
+    );
+  }
+
+  return target;
+}
+
+function candidateTargetKey(target: ResolvedDispatchRouteTarget): string {
+  return JSON.stringify([
+    target.harness,
+    target.model ?? null,
+    target.effort ?? null,
+  ]);
+}
+
+function assertCandidateOrder(
+  provider: DispatchCeilingProvider,
+  tier: WorkflowDispatchMatrixTier,
+  ladder: WorkflowDispatchCandidateLadder,
+): ResolvedDispatchRouteTarget[] {
+  if (ladder.candidates.length === 0) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: candidates cannot be empty.`,
+    );
+  }
+
+  const targets: ResolvedDispatchRouteTarget[] = [];
+  const seen = new Set<string>();
+  let previousClaudeRank: number | null = null;
+  const codexRanksByModel = new Map<string, number>();
+  for (const candidate of ladder.candidates) {
+    const target = candidatePrimaryTarget(provider, tier, candidate);
+    const key = candidateTargetKey(target);
+    if (seen.has(key)) {
+      throw new Error(
+        `Malformed ${provider} candidate ordering in ${tier}: duplicate candidate ${key}.`,
+      );
+    }
+    seen.add(key);
+
+    if (target.harness === 'claude' && target.model) {
+      const rank = CLAUDE_TIER_ORDER.indexOf(target.model);
+      if (rank < 0) {
+        throw new Error(
+          `Malformed ${provider} candidate ordering in ${tier}: unsupported Claude model ${JSON.stringify(target.model)}.`,
+        );
+      }
+      if (previousClaudeRank !== null && rank < previousClaudeRank) {
+        throw new Error(
+          `Malformed ${provider} candidate ordering in ${tier}: Claude candidates must be nondecreasing.`,
+        );
+      }
+      previousClaudeRank = rank;
+    }
+
+    if (target.harness === 'codex' && target.model && target.effort) {
+      const rank = CODEX_VALUES.indexOf(
+        target.effort as WorkflowCodexDispatchCeiling,
+      );
+      const previousRank = codexRanksByModel.get(target.model);
+      if (previousRank !== undefined && rank < previousRank) {
+        throw new Error(
+          `Malformed ${provider} candidate ordering in ${tier}: Codex efforts for ${target.model} must be nondecreasing.`,
+        );
+      }
+      codexRanksByModel.set(target.model, rank);
+    }
+
+    targets.push(target);
+  }
+
+  return targets;
+}
+
+function assertTierCeilingsNondecreasing(
+  provider: DispatchCeilingProvider,
+  previous: ResolvedDispatchRouteTarget | null,
+  current: ResolvedDispatchRouteTarget,
+  tier: WorkflowDispatchMatrixTier,
+): void {
+  if (!previous || previous.harness !== current.harness) {
+    return;
+  }
+
+  if (
+    current.harness === 'claude' &&
+    previous.model &&
+    current.model &&
+    CLAUDE_TIER_ORDER.indexOf(current.model) <
+      CLAUDE_TIER_ORDER.indexOf(previous.model)
+  ) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: named tier ceilings must be nondecreasing.`,
+    );
+  }
+  if (
+    current.harness === 'codex' &&
+    previous.model === current.model &&
+    previous.effort &&
+    current.effort &&
+    CODEX_VALUES.indexOf(current.effort as WorkflowCodexDispatchCeiling) <
+      CODEX_VALUES.indexOf(previous.effort as WorkflowCodexDispatchCeiling)
+  ) {
+    throw new Error(
+      `Malformed ${provider} candidate ordering in ${tier}: named tier ceilings must be nondecreasing.`,
+    );
+  }
+}
+
+function requestedCandidateMatches(
+  provider: DispatchCeilingProvider,
+  requested: RequestedDispatchCandidate,
+  target: ResolvedDispatchRouteTarget,
+): boolean {
+  if (target.harness !== provider || target.model !== requested.model) {
+    return false;
+  }
+  return provider !== 'codex' || target.effort === requested.effort;
+}
+
+function formatRequestedCandidate(
+  provider: DispatchCeilingProvider,
+  requested: RequestedDispatchCandidate,
+): string {
+  return provider === 'codex'
+    ? `${requested.model}/${requested.effort}`
+    : requested.model;
+}
+
+function resolveRequestedMatrixCandidate(
+  provider: DispatchCeilingProvider,
+  requested: RequestedDispatchCandidate,
+  ceilingTier: WorkflowDispatchMatrixTier | null,
+  resolvedConfig: ResolvedConfig,
+  projectMatrix: ProjectDispatchMatrix | null,
+  escalationLevel: number,
+): RequestedMatrixCandidateResolution {
+  const ceilingIndex =
+    ceilingTier === null
+      ? VALID_DISPATCH_MATRIX_TIERS.length - 1
+      : VALID_DISPATCH_MATRIX_TIERS.indexOf(ceilingTier);
+  let ceilingCellFound = ceilingTier === null;
+  let previousCeiling: ResolvedDispatchRouteTarget | null = null;
+  let allowedMatch:
+    | {
+        tier: WorkflowDispatchMatrixTier;
+        candidate: WorkflowDispatchCandidate;
+        cellSource: DispatchCeilingSource;
+        routeSignature: string;
+      }
+    | undefined;
+  let foundAboveCeiling = false;
+
+  for (const [tierIndex, tier] of VALID_DISPATCH_MATRIX_TIERS.entries()) {
+    const definition = resolveProviderMatrixCellDefinition(
+      provider,
+      tier,
+      resolvedConfig,
+      projectMatrix,
+    );
+    if (!definition) {
+      continue;
+    }
+    if (tier === ceilingTier) {
+      ceilingCellFound = true;
+    }
+
+    const ladder = toWorkflowDispatchCandidateLadder(definition.cell);
+    const targets = assertCandidateOrder(provider, tier, ladder);
+    const currentCeiling = targets.at(-1)!;
+    assertTierCeilingsNondecreasing(
+      provider,
+      previousCeiling,
+      currentCeiling,
+      tier,
+    );
+    previousCeiling = currentCeiling;
+
+    for (const [candidateIndex, target] of targets.entries()) {
+      if (!requestedCandidateMatches(provider, requested, target)) {
+        continue;
+      }
+      const candidate = ladder.candidates[candidateIndex]!;
+      const routeSignature = JSON.stringify(candidateRoute(candidate));
+      if (tierIndex > ceilingIndex) {
+        foundAboveCeiling = true;
+        continue;
+      }
+      if (allowedMatch && allowedMatch.routeSignature !== routeSignature) {
+        throw new Error(
+          `Ambiguous ${provider} candidate ${formatRequestedCandidate(provider, requested)} is configured with multiple routes at or below the ${ceilingTier ?? 'uncapped'} ceiling.`,
+        );
+      }
+      allowedMatch ??= {
+        tier,
+        candidate,
+        cellSource: definition.cellSource,
+        routeSignature,
+      };
+    }
+  }
+
+  if (!ceilingCellFound) {
+    throw new Error(
+      `Exact candidate selection requires a configured ${ceilingTier} candidate ladder for ${provider}.`,
+    );
+  }
+  if (!allowedMatch) {
+    const label = formatRequestedCandidate(provider, requested);
+    if (foundAboveCeiling) {
+      throw new Error(
+        `${provider} candidate ${label} is above the configured ${ceilingTier} ceiling.`,
+      );
+    }
+    throw new Error(
+      `${provider} candidate ${label} is not present in the configured ${provider} candidate ladders.`,
+    );
+  }
+
+  const resolution = resolveRouteMatrixCell(
+    provider,
+    candidateRoute(allowedMatch.candidate),
+    escalationLevel,
+    allowedMatch.cellSource,
+  );
+  if (!resolution || resolution.value === null) {
+    throw new Error(
+      `Configured ${provider} candidate ${formatRequestedCandidate(provider, requested)} cannot compile to an exact dispatch target.`,
+    );
+  }
+
+  return {
+    resolution: {
+      ...resolution,
+      selectionBranch:
+        resolution.selectionBranch === 'escalation-target'
+          ? 'escalation-target'
+          : 'candidate-requested',
+    },
+    candidateTier: allowedMatch.tier,
+  };
 }
 
 function readProjectDispatchPolicy(
@@ -1073,7 +1500,15 @@ function readResolvedConfigCeiling(
 }
 
 function normalizeRole(value: string | undefined): CeilingRole {
-  return value === 'reviewer' ? 'reviewer' : 'implementer';
+  if (value === undefined) {
+    return 'implementer';
+  }
+  if (value === 'implementer' || value === 'reviewer') {
+    return value;
+  }
+  throw new Error(
+    `Invalid dispatch role ${JSON.stringify(value)}. Expected implementer or reviewer.`,
+  );
 }
 
 function providerValueOrder(
@@ -1116,6 +1551,92 @@ function normalizePreferredValue(
   return normalized;
 }
 
+function normalizeCeilingTier(
+  value: string | undefined,
+  role: CeilingRole,
+): WorkflowDispatchMatrixTier | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (
+    !(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(normalized)
+  ) {
+    throw new Error(
+      `Invalid invocation ceiling tier "${normalized}". Valid tiers: ${VALID_DISPATCH_MATRIX_TIERS.join(', ')}.`,
+    );
+  }
+  if (role === 'reviewer') {
+    throw new Error(
+      'Invocation ceiling tiers are only supported for implementer/fix task dispatch; reviewers use the configured review ceiling.',
+    );
+  }
+
+  return normalized as WorkflowDispatchMatrixTier;
+}
+
+function normalizeRequestedCandidate(
+  provider: DispatchCeilingProvider,
+  role: CeilingRole,
+  options: DispatchCeilingResolveOptions,
+): RequestedDispatchCandidate | null {
+  const model = options.candidateModel?.trim() ?? '';
+  const effort = options.candidateEffort?.trim() ?? '';
+  if (!model && !effort) {
+    return null;
+  }
+
+  if (options.preferred?.trim()) {
+    throw new Error(
+      'Exact candidate flags cannot be combined with --preferred; use one selection path.',
+    );
+  }
+  if (role === 'reviewer') {
+    throw new Error(
+      'Reviewer candidate requests are not supported; reviewers use the configured review ceiling.',
+    );
+  }
+  if (!model) {
+    throw new Error('--candidate-model is required for an exact candidate.');
+  }
+  if (isDirectDispatchRoleName(model)) {
+    throw new Error(
+      'Direct dispatch role names are not candidate models; request the configured provider model and effort instead.',
+    );
+  }
+
+  if (provider === 'codex') {
+    if (!effort) {
+      throw new Error(
+        '--candidate-effort is required for an exact Codex candidate.',
+      );
+    }
+    if (!CODEX_VALUES.includes(effort as WorkflowCodexDispatchCeiling)) {
+      throw new Error(
+        `Invalid Codex candidate effort "${effort}". Valid values: ${CODEX_VALUES.join(', ')}.`,
+      );
+    }
+    return { model, effort };
+  }
+
+  if (effort) {
+    throw new Error(
+      `--candidate-effort is only valid for Codex; ${provider} candidates use --candidate-model only.`,
+    );
+  }
+  if (
+    provider === 'claude' &&
+    !CLAUDE_VALUES.includes(model as WorkflowClaudeDispatchCeiling)
+  ) {
+    throw new Error(
+      `Invalid Claude candidate model "${model}". Valid values: ${CLAUDE_VALUES.join(', ')}.`,
+    );
+  }
+
+  return { model };
+}
+
 function normalizeEscalationLevel(value: string | undefined): number {
   if (value === undefined) {
     return 0;
@@ -1153,6 +1674,10 @@ function selectDispatchValue(
     policy: policy.policy,
     cellSource: policy.cellSource,
     target: policy.target,
+    requestedCandidate: policy.requestedCandidate ?? null,
+    candidateTier: policy.candidateTier ?? null,
+    ceilingTier: policy.ceilingTier ?? policyTier(policy.policy),
+    ceilingTarget: policy.ceilingTarget ?? policy.target,
   };
 
   if (policy.mode === 'inherit') {
@@ -1165,6 +1690,22 @@ function selectDispatchValue(
       selectionBranch: 'inherit',
       family: 'unknown',
       target: null,
+    };
+  }
+
+  if (policy.requestedCandidate) {
+    const selectedValue = policy.target
+      ? dispatchValueFromRouteTarget(policy.target)
+      : null;
+    return {
+      ...baseSelection,
+      preferredValue: null,
+      selectedValue,
+      capped: false,
+      selectionMode: selectedValue ? 'candidate' : 'unresolved',
+      selectionBranch: policy.selectionBranch,
+      family: selectionFamily(provider, selectedValue, policy.target),
+      target: policy.target,
     };
   }
 
@@ -1233,6 +1774,10 @@ function selectDispatchValue(
 
   const selectedIndex = Math.min(preferredIndex, ceilingIndex);
   const selectedValue = order[selectedIndex]!;
+  const targetValue = policy.target
+    ? dispatchValueFromRouteTarget(policy.target)
+    : null;
+  const selectedTarget = targetValue === selectedValue ? policy.target : null;
   return {
     ...baseSelection,
     preferredValue,
@@ -1240,12 +1785,8 @@ function selectDispatchValue(
     capped: preferredIndex > ceilingIndex,
     selectionMode: 'capped',
     selectionBranch: policy.selectionBranch,
-    family: selectionFamily(
-      provider,
-      selectedValue,
-      selectedValue === policy.value ? policy.target : null,
-    ),
-    target: selectedValue === policy.value ? policy.target : null,
+    family: selectionFamily(provider, selectedValue, selectedTarget),
+    target: selectedTarget,
   };
 }
 
@@ -1336,6 +1877,10 @@ function buildProviderResolution(
       selection: {
         role,
         preferredValue,
+        requestedCandidate: null,
+        candidateTier: null,
+        ceilingTier: null,
+        ceilingTarget: null,
         selectedValue: null,
         capped: false,
         selectionMode: 'unresolved',
@@ -1461,7 +2006,13 @@ async function resolveDispatchCeiling(
     provider === 'codex'
       ? await resolveCodexProviderDefaultEffort(repoRoot, context, dependencies)
       : 'not-applicable';
+  const requestedCandidate = normalizeRequestedCandidate(
+    provider,
+    role,
+    options,
+  );
   const preferredValue = normalizePreferredValue(provider, options.preferred);
+  const ceilingTier = normalizeCeilingTier(options.ceilingTier, role);
   const escalationLevel = normalizeEscalationLevel(options.escalationLevel);
 
   const resolvedValue = await resolveCeilingValue(
@@ -1472,6 +2023,8 @@ async function resolveDispatchCeiling(
     escalationLevel,
     role,
     preferredValue,
+    requestedCandidate,
+    ceilingTier,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);
@@ -1489,6 +2042,36 @@ async function resolveDispatchCeiling(
   };
 
   if (resolvedValue) {
+    const incompleteManagedPreflight =
+      options.preflight === true &&
+      resolvedValue.mode === 'managed' &&
+      providerResolution.mode === 'advisory' &&
+      providerResolution.selection.target?.crossHarness !== true &&
+      providerResolution.selection.selectionMode !== 'no-review-target';
+
+    if (incompleteManagedPreflight) {
+      const shouldBlock =
+        options.nonInteractive === true ||
+        isNonInteractiveEnv(dependencies.processEnv) ||
+        (!context.interactive && !context.json);
+      const message = shouldBlock ? blockMessage(provider) : undefined;
+      return {
+        status: shouldBlock ? 'blocked' : 'unresolved',
+        provider,
+        value: resolvedValue.value,
+        policyMode: resolvedValue.mode,
+        policy: resolvedValue.policy,
+        source: resolvedValue.source,
+        preset: resolvedValue.preset,
+        unresolved: true,
+        projectPath,
+        providerDefaultEffort,
+        matrix: resolvedValue.matrix,
+        providers,
+        message,
+      };
+    }
+
     return {
       status: 'resolved',
       provider,
@@ -1538,6 +2121,10 @@ interface ResolvedCeilingValue {
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
+  requestedCandidate?: RequestedDispatchCandidate;
+  candidateTier?: WorkflowDispatchMatrixTier;
+  ceilingTier?: WorkflowDispatchMatrixTier;
+  ceilingTarget?: ResolvedDispatchRouteTarget | null;
 }
 
 /**
@@ -1554,6 +2141,8 @@ async function resolveCeilingValue(
   escalationLevel: number,
   role: CeilingRole,
   preferredValue: DispatchCeilingValue | null,
+  requestedCandidate: RequestedDispatchCandidate | null,
+  invocationCeilingTier: WorkflowDispatchMatrixTier | null,
 ): Promise<ResolvedCeilingValue | null> {
   const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
   const projectCeiling = await resolveProjectStateCeiling(
@@ -1562,13 +2151,80 @@ async function resolveCeilingValue(
     dependencies,
   );
 
-  const baseCeiling = configCeiling ?? projectCeiling;
+  let baseCeiling = configCeiling ?? projectCeiling;
   if (!baseCeiling) {
     return null;
   }
 
+  if (invocationCeilingTier) {
+    baseCeiling = {
+      ...baseCeiling,
+      mode: 'managed',
+      policy: invocationCeilingTier,
+      value: compiledPolicyValueForProvider(
+        provider,
+        compileDispatchPolicyPreset(invocationCeilingTier),
+      ),
+      source: 'invocation',
+      preset: invocationCeilingTier,
+      matrix: projectCeiling?.matrix ?? baseCeiling.matrix,
+      cellSource: null,
+      target: null,
+      selectionBranch: 'prompt-persisted',
+      ceilingTier: invocationCeilingTier,
+      ceilingTarget: null,
+    };
+  }
+
   if (baseCeiling.mode === 'inherit') {
+    if (requestedCandidate) {
+      throw new Error(
+        'Exact candidate selection requires a managed dispatch policy and configured candidate ladder.',
+      );
+    }
     return baseCeiling;
+  }
+
+  if (requestedCandidate) {
+    if (baseCeiling.policy === 'legacy-ceiling') {
+      throw new Error(
+        'Exact candidate selection requires a configured candidate ladder; legacy scalar dispatch ceilings support --preferred only during migration.',
+      );
+    }
+    const ceilingTier = policyTier(baseCeiling.policy);
+    const selected = resolveRequestedMatrixCandidate(
+      provider,
+      requestedCandidate,
+      ceilingTier,
+      resolvedConfig,
+      projectCeiling?.matrix ?? null,
+      escalationLevel,
+    );
+    const ceilingCell = ceilingTier
+      ? resolveProviderMatrixCell(
+          provider,
+          ceilingTier,
+          resolvedConfig,
+          projectCeiling?.matrix ?? null,
+          escalationLevel,
+        )
+      : null;
+    return {
+      ...baseCeiling,
+      value: ceilingCell?.value ?? baseCeiling.value,
+      cellSource: selected.resolution.cellSource,
+      target: selected.resolution.target,
+      selectionBranch: selected.resolution.selectionBranch,
+      warnings: [
+        ...baseCeiling.warnings,
+        ...(ceilingCell?.warnings ?? []),
+        ...selected.resolution.warnings,
+      ],
+      requestedCandidate,
+      candidateTier: selected.candidateTier,
+      ceilingTarget: ceilingCell?.target ?? null,
+      ...(ceilingTier ? { ceilingTier } : {}),
+    };
   }
 
   if (baseCeiling.policy === 'uncapped') {
@@ -1605,6 +2261,34 @@ async function resolveCeilingValue(
     escalationLevel,
   );
   if (matrixCell) {
+    if (
+      provider === 'codex' &&
+      role === 'implementer' &&
+      preferredValue !== null &&
+      matrixCell.value !== null
+    ) {
+      const order = providerValueOrder(provider);
+      const preferredIndex = order?.indexOf(preferredValue) ?? -1;
+      const ceilingIndex = order?.indexOf(matrixCell.value) ?? -1;
+      if (order && preferredIndex >= 0 && ceilingIndex >= 0) {
+        const selectedValue = order[Math.min(preferredIndex, ceilingIndex)]!;
+        if (selectedValue !== matrixCell.value) {
+          const selectedTarget =
+            matrixCell.target?.harness === 'codex'
+              ? { ...matrixCell.target, effort: selectedValue }
+              : matrixCell.target;
+          return {
+            ...baseCeiling,
+            value: matrixCell.value,
+            cellSource: matrixCell.cellSource,
+            target: selectedTarget,
+            selectionBranch: matrixCell.selectionBranch,
+            warnings: [...baseCeiling.warnings, ...matrixCell.warnings],
+          };
+        }
+      }
+    }
+
     return {
       ...baseCeiling,
       value: matrixCell.value,
@@ -1659,6 +2343,21 @@ function writeHumanResolution(
     context.logger.info(
       `Selection: ${providerResolution.selection.selectionMode}`,
     );
+    if (providerResolution.selection.requestedCandidate) {
+      const requested = providerResolution.selection.requestedCandidate;
+      context.logger.info(
+        `Requested candidate: model=${requested.model}${requested.effort ? ` effort=${requested.effort}` : ''}`,
+      );
+      context.logger.info(
+        `Candidate tier: ${providerResolution.selection.candidateTier ?? 'none'}; ceiling tier: ${providerResolution.selection.ceilingTier ?? 'uncapped'}`,
+      );
+      const ceilingTarget = providerResolution.selection.ceilingTarget;
+      if (ceilingTarget) {
+        context.logger.info(
+          `Effective ceiling target: model=${ceilingTarget.model ?? 'none'}${ceilingTarget.effort ? ` effort=${ceilingTarget.effort}` : ''}`,
+        );
+      }
+    }
     if (providerResolution.target) {
       const details = [
         `harness=${providerResolution.target.harness}`,
@@ -1822,9 +2521,11 @@ export function createProjectDispatchCeilingCommand(
         '--provider <provider>',
         'Provider name: codex, claude, or cursor are enforced; unregistered providers resolve as unsupported advisory',
       )
-      .option(
-        '--role <role>',
-        'Dispatch role for variant compilation: implementer (default) or reviewer',
+      .addOption(
+        new Option(
+          '--role <role>',
+          'Dispatch role for variant compilation: implementer (default) or reviewer',
+        ).choices(['implementer', 'reviewer']),
       )
       .option(
         '--orchestrator-tier <tier>',
@@ -1832,7 +2533,21 @@ export function createProjectDispatchCeilingCommand(
       )
       .option(
         '--preferred <value>',
-        'Preferred implementer/fix dispatch value before applying the resolved policy',
+        'Legacy preferred implementer/fix value before applying the resolved policy',
+      )
+      .addOption(
+        new Option(
+          '--ceiling-tier <tier>',
+          'Invocation-only named maximum tier; never persists configuration or project state',
+        ).choices([...VALID_DISPATCH_MATRIX_TIERS]),
+      )
+      .option(
+        '--candidate-model <model>',
+        'Exact configured implementer candidate model beneath the named ceiling',
+      )
+      .option(
+        '--candidate-effort <effort>',
+        'Exact configured Codex candidate effort paired with --candidate-model',
       )
       .option(
         '--escalation-level <level>',

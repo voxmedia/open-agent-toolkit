@@ -50,9 +50,9 @@
     - [Workflow & Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - [Project Artifacts](workflows/projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
     - [Design Modes](workflows/projects/design-modes.md) — How oat-project-design balances section-by-section collaboration, selective review, and draft-and-review.
-    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT dispatch policy works: managed tiers, dispatch matrix cells, ordered routes, producer provenance, legacy compatibility, and provider-specific enforcement.
+    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT combines owned provider candidate ladders, project and phase named maximum ceilings, exact task dispatch, and provider-specific enforcement.
     - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
-    - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase-subagent dispatch, tier detection, runtime dispatch selection, bounded fix loop, plan-declared parallelism, and dry-run mode in oat-project-implement v2.0.
+    - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase coordination, exact task-worker dispatch, named maximum ceilings, reviews, bounded fixes, plan-declared parallel worktrees, and resumption in oat-project-implement.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
     - [Repository PR Comment Analysis](workflows/projects/repo-analysis.md) — Repository-level PR comment analysis commands for collecting and triaging review feedback.

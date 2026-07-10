@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.10
+version: 1.3.12
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -31,7 +31,7 @@ Before acting, verify that there is an active OAT project or a user-provided rev
 
 When the invocation is manual, summarize the inferred review type and scope, then ask before running the review.
 
-**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary. If subagent dispatch is unavailable, run the review inline in the current gate session instead of handing off to a fresh session.
+**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary, but it does not waive dispatch controls. Resolve the reviewer target and use the exact registered role or explicitly pinned fresh child. Inline gate review is allowed only with verified equivalent current-host model and effort controls or a documented base-role exception; otherwise fail closed.
 
 ## Mode Assertion
 
@@ -428,23 +428,30 @@ Proceed with review?
 
 If `REVIEW_INVOCATION=gate`, print the same scope summary but do not ask `Proceed with review?`; continue directly.
 
-### Step 4.1: Dispatch Profile Override Advisory (Artifact Plan Only)
+### Step 4.1: Dispatch Profile Ceiling Advisory (Artifact Plan Only)
 
-When reviewing `artifact plan`, apply this Dispatch Profile override advisory:
+When reviewing `artifact plan`, apply this Dispatch Profile named-ceiling
+advisory:
 
 - A missing `## Dispatch Profile` section is normal and must not be flagged.
 - Important findings:
   - invalid phase ID that does not match a real plan phase
-  - unknown active-provider tier value
-  - low-tier override for multi-file integration, architecture, or review-heavy work
-  - low-tier override with missing or generic rationale
+  - unknown named ceiling or a phase ceiling above the project ceiling
+  - wording that pins an exact provider model, family, effort, or role instead
+    of a named maximum
+  - low named ceiling for multi-file integration, architecture, or review-heavy
+    work
+  - low named ceiling with missing or generic rationale
 - Medium findings:
   - malformed but recoverable Dispatch Profile table structure
-  - mid-tier override for architecture-heavy work without convincing rationale
+  - mid-tier ceiling for architecture-heavy work without convincing rationale
 - Minor findings:
   - rationale is present but weakly tied to phase scope
 
-Include this advisory in the Review Scope metadata for artifact plan reviews so the reviewer evaluates explicit override rows without treating omitted rows as a gap.
+Include this advisory in the Review Scope metadata for artifact plan reviews so
+the reviewer evaluates explicit ceiling rows without treating omitted rows as a
+gap. A named ceiling is a maximum; lower configured candidates remain eligible
+for later task selection.
 
 ### Step 4.5: Gather Deferred Findings Ledger (Final Scope Only)
 
@@ -510,6 +517,56 @@ Build the "Review Scope" metadata for the reviewer:
 
 ### Step 6: Execute Review (3-Tier Capability Model)
 
+**Step 6.0: Resolve the managed reviewer target**
+
+Before capability-tier selection, resolve the same reviewer contract used by
+plan artifact review and implementation phase/final review:
+
+```bash
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
+```
+
+The reviewer resolver selects the final candidate of the configured review
+ceiling. Do not supply ephemeral implementer candidate requests for artifact,
+phase, project, or final review. A lower candidate is allowed only when a
+separate reviewed contract explicitly authorizes reviewer lowering and defines
+its bounds; a Dispatch Profile row does not authorize it.
+
+Resolve every concrete managed reviewer target before probing generic subagent
+availability or selecting Tier 1/Tier 2/Tier 3. The concrete target takes
+precedence over all availability, preference, timeout, fresh-session, and gate
+fallbacks.
+A concrete managed Codex target takes precedence over tier availability.
+Build the actual provider invocation before reporting the target as enforced:
+
+- Codex uses the exact registered reviewer role or variant from
+  `providers.codex.dispatchArgs.variant` when selectable. If the current host
+  cannot select it, launch a fresh Codex child with the resolver target's
+  explicit model, reasoning effort, canonical role instructions from
+  `.agents/agents/oat-reviewer.md`, and the same Review Scope payload.
+  If that fresh child is unavailable, use only a verified-equivalent inline
+  route or block the review.
+- Claude requires a non-empty `providers.claude.dispatchArgs.model`; the actual
+  provider invocation must include that exact value as its `model` argument.
+- Cursor requires a non-empty `providers.cursor.dispatchArgs.model`; the actual
+  provider invocation must include that exact opaque string as its `model`
+  argument without normalization.
+
+Managed incomplete resolver results, including a missing or incomplete
+candidate ladder, fail closed before review. Route interactive repair through
+the planning workflow's `Complete Dispatch Ladder Adoption Contract`; do not
+invent a reviewer target.
+
+On timeout or retry, reuse the same exact role or complete invocation payload,
+including the Claude or Cursor model argument. If the host cannot apply a
+required role or model argument, fail closed or block unless inline execution
+has verified equivalent current-host controls.
+Workflow correctness must not require provider restart or hot reload.
+Never use a managed base role because a target is missing or unavailable; a
+managed base role is forbidden except for
+explicit inherit/default behavior or the documented managed-uncapped reviewer
+fallback.
+
 **Step 6a: Probe Subagent Availability**
 
 Before selecting a tier, announce the probe and its result so the user can see what's happening:
@@ -526,8 +583,7 @@ Detection logic:
 - If the host is Cursor, invoke `oat-reviewer` using Cursor-native explicit invocation (`/oat-reviewer`) or natural mention, and resolve from `.cursor/agents/oat-reviewer.md` (or `.claude/agents/oat-reviewer.md` compatibility path).
 - If the host is Codex multi-agent, verify Codex requirements first:
   - `[features] multi_agent = true` is enabled in active Codex config.
-  - If explicit role pinning is desired, `agent_type` must be a built-in role (`default`/`worker`/`explorer`) or a custom role declared under `[agents.<name>]`.
-  - Codex may also auto-select and spawn agents without explicit role pinning.
+  - For a concrete managed target, `agent_type` must be the exact custom role declared under `[agents.<name>]`; built-in roles and auto-selection are not equivalent fallbacks.
   - If the current Codex host requires explicit user authorization before calling `spawn_agent`, do not mark `oat-reviewer` as unresolved. Announce `authorization required` and ask one concise confirmation question before selecting Tier 2 or Tier 3:
 
     ```
@@ -535,12 +591,12 @@ Detection logic:
     ```
 
   - If the user authorizes delegation and Codex role prerequisites are satisfied, use **Tier 1**.
-  - If the user declines delegation, continue with the existing Tier 2 / Tier 3 fallback flow.
+  - If the user declines delegation, continue only through a target-preserving pinned-child or guarded inline route. Otherwise block.
 
 - If the runtime can dispatch reviewer work (`subagent_type` in Claude Code, Cursor invocation via `/name` or natural mention, or Codex multi-agent spawn/auto-spawn) → **Tier 1**.
-- If the Task tool is not available or subagent dispatch is not supported → **Tier 2**.
-- If user explicitly requests inline or confirms they are already in a fresh session → **Tier 3**.
-- If `REVIEW_INVOCATION=gate` and Tier 1 is unavailable, skip Tier 2 and use **Tier 3** inline. Do not return fresh-session instructions from a gate invocation.
+- If the Task tool is not available or subagent dispatch is not supported, use **Tier 2** only after applying the target-first contract.
+- If the user explicitly requests inline or confirms they are already in a fresh session, use **Tier 3** only when the guarded inline route is valid.
+- Gate-originated review skips fresh-session handoff instructions and immediately uses the first target-preserving route available from Step 6.0. If none exists, fail closed.
 
 **Step 6b: Tier 1 — Subagent (if available)**
 
@@ -549,9 +605,9 @@ First, pre-compute the review artifact path using Step 7 naming conventions so i
 Then spawn the reviewer:
 
 - Use provider-appropriate dispatch:
-  - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`).
-  - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path.
-  - Codex style: ask Codex to spawn agent(s) for review work and wait for all results; optionally pin `agent_type` when a specific built-in/custom role is required.
+  - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`). For a concrete managed target, the payload must also contain `model: providers.claude.dispatchArgs.model` with the resolver-returned value.
+  - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path. For a concrete managed target, the invocation must also contain `model: providers.cursor.dispatchArgs.model` with the exact opaque resolver-returned string.
+  - Codex style: for a concrete managed target, spawn the exact resolver-returned `agent_type`; if it cannot be selected, use the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
 - Pass the Review Scope metadata block from Step 5 as the prompt
 - Include the pre-computed artifact path for the subagent to write to
 - **If a worktree was resolved in Step 1.5:** include the worktree path in the prompt so the subagent writes the artifact to the worktree directory, not the current session's working directory
@@ -566,12 +622,12 @@ After the subagent completes:
 
 **Step 6c: Tier 2 — Fresh Session (recommended fallback)**
 
-If subagent not available:
+If target-preserving subagent dispatch is not available:
 
 - If user is already in a fresh session (confirmed), proceed to Tier 3.
 - If Codex reported `authorization required` and the user approved delegation, do **not** use Tier 2. Return to Tier 1 and delegate to `oat-reviewer`.
 - If user prefers fresh session: provide instructions and exit.
-- If `REVIEW_INVOCATION=gate`: do not provide fresh-session instructions; run Tier 3 inline instead.
+- Gate-originated review does not return fresh-session instructions; it uses the guarded route selected in Step 6.0 or fails closed.
 
 Instructions for fresh session:
 
@@ -585,7 +641,13 @@ To run review in a fresh session:
 
 **Step 6d: Tier 3 — Inline Reset (fallback)**
 
-If user insists on inline review in current session:
+If the user requests inline review, first verify equivalent current-host model
+and effort controls. Inline is also allowed for explicit inherit/default or the
+documented managed-uncapped reviewer behavior. User preference alone does not
+override a concrete managed target; if the guard fails, use the exact/pinned
+route or block.
+
+When inline is allowed:
 
 - Run "reset protocol":
   1. Re-read required artifacts for current workflow mode from scratch
@@ -649,6 +711,13 @@ oat_review_scope: { scope }
 oat_review_type: { code|artifact }
 oat_review_invocation: { manual|auto|gate }
 oat_project: { PROJECT_PATH }
+# Gate-only: copy the exact prompt-provided fields below.
+oat_gate_run_id: { gate run id }
+oat_gate_target: { configured target id }
+oat_gate_runtime: { configured runtime }
+oat_invocation_model: { configured model|provider-default|unknown }
+oat_invocation_reasoning_effort: { configured effort|provider-default|unknown }
+oat_invocation_source: { exec-target-config|unknown }
 ---
 
 # {Code|Artifact} Review: {scope}
@@ -668,6 +737,8 @@ oat_project: { PROJECT_PATH }
 When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter.
 
 When `oat gate review` invokes this skill, it includes gate-originated context instructing the reviewer to write `oat_review_invocation: gate`. Honor that instruction in the artifact frontmatter.
+
+The gate prompt also supplies exact values for `oat_gate_run_id`, `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`, `oat_invocation_reasoning_effort`, and `oat_invocation_source`. Copy all six values verbatim for gate-originated artifacts. These fields record OAT's configured invocation; do not derive them from `baseCommand`, the target id, model self-identification, or surrounding dispatch prose. Optional observed/self-reported identity is separate and non-authoritative.
 
 For all other invocations (user-triggered, fresh session), use `manual`.
 
@@ -784,7 +855,8 @@ For best review quality, run in a fresh session:
 2. Run the oat-project-review-provide skill with: code {scope}
 3. Return here and run the oat-project-review-receive skill
 
-Or say "inline" to run review in current session (less reliable).
+Or say "inline" to request review in the current session; the managed-target
+guard still applies.
 
 ```
 

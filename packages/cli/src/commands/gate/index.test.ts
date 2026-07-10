@@ -4,6 +4,7 @@ import {
   readdir,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -20,12 +21,14 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGateCommand, selectExecTarget } from './index';
+import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
 interface HarnessOptions {
   cwd: string;
   home: string;
   processEnv?: NodeJS.ProcessEnv;
   runProcess?: ProcessRunner;
+  parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
 }
 
 interface ProcessCall {
@@ -52,6 +55,8 @@ type ProcessCallInput = ProcessCall & {
   cwd: string;
 };
 
+let lastExecutePrompt = '';
+
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
@@ -72,6 +77,9 @@ function createHarness(options: HarnessOptions): {
     resolveProjectRoot: vi.fn(async () => options.cwd),
     processEnv: options.processEnv ?? {},
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
+    ...(options.parseReviewGateVerdict
+      ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
+      : {}),
   } as Parameters<typeof createGateCommand>[0];
 
   const command = createGateCommand(overrides);
@@ -195,6 +203,7 @@ function createProcessRunner(
     }
 
     if (runOptions.purpose === 'execute') {
+      lastExecutePrompt = args.at(-1) ?? '';
       await options.onExecute?.({
         command,
         args: [...args],
@@ -241,6 +250,7 @@ async function runReviewGate(options: {
   home: string;
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
+  parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -250,6 +260,7 @@ async function runReviewGate(options: {
     home: options.home,
     processEnv: options.processEnv,
     runProcess: options.runProcess,
+    parseReviewGateVerdict: options.parseReviewGateVerdict,
   });
   await runCommand(
     command,
@@ -276,6 +287,7 @@ describe('oat gate', () => {
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
+    lastExecutePrompt = '';
   });
 
   afterEach(async () => {
@@ -336,7 +348,7 @@ describe('oat gate', () => {
     root: string;
     projectPath: string;
     fileName?: string;
-    generatedAt?: string;
+    generatedAt?: string | null;
     reviewScope?: string;
     finding?: 'important' | 'minor' | 'clean';
     omitMediumSection?: boolean;
@@ -346,6 +358,18 @@ describe('oat gate', () => {
       medium: number;
       minor: number;
     };
+    reviewInvocation?: 'gate' | 'manual' | 'auto' | null;
+    artifactProject?: string | null;
+    omitGateInvocation?: boolean;
+    omitGateRunId?: boolean;
+    gateInvocationOverrides?: Partial<{
+      oat_gate_run_id: string;
+      oat_gate_target: string;
+      oat_gate_runtime: string;
+      oat_invocation_model: string;
+      oat_invocation_reasoning_effort: string;
+      oat_invocation_source: string;
+    }>;
   }): Promise<string> {
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
     await mkdir(join(options.root, dirname(relativePath)), {
@@ -370,16 +394,55 @@ describe('oat gate', () => {
     const mediumSection = options.omitMediumSection
       ? []
       : ['### Medium', '', 'None', ''];
+    const gateInvocationKeys = [
+      'oat_gate_run_id',
+      'oat_gate_target',
+      'oat_gate_runtime',
+      'oat_invocation_model',
+      'oat_invocation_reasoning_effort',
+      'oat_invocation_source',
+    ] as const;
+    const promptGateInvocationLines = lastExecutePrompt
+      .match(
+        /Gate invocation metadata \(copy these exact values into the gate review artifact frontmatter\):\n([\s\S]*?)\n\n(?=Review(?: type:| scope:|\s|$))/,
+      )?.[1]
+      ?.split('\n');
+    const gateInvocationLines = options.omitGateInvocation
+      ? []
+      : !options.gateInvocationOverrides &&
+          !options.omitGateRunId &&
+          promptGateInvocationLines
+        ? promptGateInvocationLines
+        : gateInvocationKeys
+            .filter(
+              (key) => !(options.omitGateRunId && key === 'oat_gate_run_id'),
+            )
+            .map((key) => {
+              const override = options.gateInvocationOverrides?.[key];
+              const promptValue = lastExecutePrompt.match(
+                new RegExp(`^${key}: (.+)$`, 'm'),
+              )?.[1];
+              return `${key}: ${override ?? promptValue ?? 'unknown'}`;
+            });
     await writeFile(
       join(options.root, relativePath),
       [
         '---',
         'oat_generated: true',
-        `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+        ...(options.generatedAt === null
+          ? []
+          : [
+              `oat_generated_at: ${options.generatedAt ?? '2026-06-01T00:00:00Z'}`,
+            ]),
         'oat_review_type: code',
         `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
-        'oat_review_invocation: gate',
-        `oat_project: ${options.projectPath}`,
+        ...(options.reviewInvocation === null
+          ? []
+          : [`oat_review_invocation: ${options.reviewInvocation ?? 'gate'}`]),
+        ...(options.artifactProject === null
+          ? []
+          : [`oat_project: ${options.artifactProject ?? options.projectPath}`]),
+        ...gateInvocationLines,
         ...countLines,
         '---',
         '',
@@ -762,6 +825,10 @@ describe('oat gate', () => {
       '["sh","-c","test -n \\"$CLAUDECODE\\""]',
       '--availability-json',
       '["claude","--version"]',
+      '--invocation-model',
+      'fable',
+      '--invocation-reasoning-effort',
+      'provider-default',
       '--priority',
       '50',
     ]);
@@ -790,6 +857,10 @@ describe('oat gate', () => {
       baseCommand: ['claude', '-p', '--model', 'opus'],
       hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
       availabilityCommand: ['claude', '--version'],
+      invocation: {
+        model: 'fable',
+        reasoningEffort: 'provider-default',
+      },
       priority: 50,
     });
     expect(targets['cursor-composer']?.baseCommand).toEqual([
@@ -807,6 +878,230 @@ describe('oat gate', () => {
       'high',
     ]);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves existing priority and invocation fields when target set omits flags', async () => {
+    const { root, home } = await setup();
+
+    await runGateCommand(root, home, [
+      'target',
+      'set',
+      'codex-reviewer',
+      '--runtime',
+      'codex',
+      '--base-command-json',
+      '["codex","exec"]',
+      '--invocation-model',
+      'gpt-5.6-sol',
+      '--invocation-reasoning-effort',
+      'max',
+      '--priority',
+      '75',
+      '--layer',
+      'shared',
+    ]);
+    await runGateCommand(root, home, [
+      'target',
+      'set',
+      'codex-reviewer',
+      '--runtime',
+      'codex',
+      '--base-command-json',
+      '["codex","exec","--quiet"]',
+      '--invocation-model',
+      'gpt-5.6-terra',
+      '--layer',
+      'shared',
+    ]);
+
+    expect((await readResolvedTargets(root, home))['codex-reviewer']).toEqual({
+      runtime: 'codex',
+      baseCommand: ['codex', 'exec', '--quiet'],
+      invocation: {
+        model: 'gpt-5.6-terra',
+        reasoningEffort: 'max',
+      },
+      priority: 75,
+    });
+  });
+
+  it('lists resolved targets with origin, enablement, availability, and invocation metadata', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                invocation: {
+                  model: 'gpt-5.6-sol',
+                  reasoningEffort: 'max',
+                },
+              },
+              'claude-default': null,
+              'custom-reviewer': {
+                runtime: 'custom',
+                baseCommand: ['custom-review'],
+                priority: 10,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      availableTargets: ['codex-default'],
+    });
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    await runCommand(command, ['target', 'list']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      targets: expect.arrayContaining([
+        {
+          id: 'codex-default',
+          runtime: 'codex',
+          origin: 'shared',
+          explicitlyConfigured: true,
+          enabled: true,
+          available: true,
+          invocation: {
+            model: 'gpt-5.6-sol',
+            reasoningEffort: 'max',
+            source: 'exec-target-config',
+          },
+        },
+        {
+          id: 'claude-default',
+          runtime: 'claude',
+          origin: 'shared',
+          explicitlyConfigured: true,
+          enabled: false,
+          available: false,
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+            source: 'exec-target-config',
+          },
+        },
+        {
+          id: 'cursor-default',
+          runtime: 'cursor',
+          origin: 'builtin',
+          explicitlyConfigured: false,
+          enabled: true,
+          available: false,
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+            source: 'exec-target-config',
+          },
+        },
+        {
+          id: 'custom-reviewer',
+          runtime: 'custom',
+          origin: 'shared',
+          explicitlyConfigured: true,
+          enabled: true,
+          available: true,
+          invocation: {
+            model: 'unknown',
+            reasoningEffort: 'unknown',
+            source: 'unknown',
+          },
+        },
+      ]),
+    });
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(
+      runner.calls.filter((call) => call.purpose === 'availability'),
+    ).toHaveLength(2);
+  });
+
+  it('isolates rejected availability probes while listing other targets', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'missing-reviewer': {
+                runtime: 'missing',
+                baseCommand: ['missing-reviewer'],
+                availabilityCommand: ['missing-reviewer', '--version'],
+                priority: 20,
+              },
+              'available-reviewer': {
+                runtime: 'available',
+                baseCommand: ['available-reviewer'],
+                availabilityCommand: ['available-reviewer', '--version'],
+                priority: 10,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const calls: ProcessCall[] = [];
+    const runProcess: ProcessRunner = async (command, args, options) => {
+      calls.push({
+        command,
+        args: [...args],
+        purpose: options.purpose,
+        stdio: options.stdio,
+        timeoutMs: options.timeoutMs,
+      });
+      if (options.purpose === 'execute') {
+        throw new Error('target list must not execute a reviewer');
+      }
+      if (
+        options.purpose === 'availability' &&
+        command === 'missing-reviewer'
+      ) {
+        throw new Error('spawn missing-reviewer ENOENT');
+      }
+      return {
+        exitCode:
+          options.purpose === 'availability' && command === 'available-reviewer'
+            ? 0
+            : 1,
+      };
+    };
+    const { command, capture } = createHarness({
+      cwd: root,
+      home,
+      runProcess,
+    });
+
+    await runCommand(command, ['target', 'list']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(capture.jsonPayloads[0]?.targets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'missing-reviewer',
+          available: false,
+        }),
+        expect.objectContaining({
+          id: 'available-reviewer',
+          available: true,
+        }),
+      ]),
+    );
+    expect(calls.filter((call) => call.purpose === 'execute')).toEqual([]);
   });
 
   it('normalizes exec target models from config', async () => {
@@ -1369,7 +1664,7 @@ describe('oat gate', () => {
       },
     });
 
-    await runReviewGate({
+    const capture = await runReviewGate({
       root,
       home,
       runProcess: runner.runProcess,
@@ -1381,8 +1676,151 @@ describe('oat gate', () => {
       args: expect.arrayContaining(['--model', 'composer-2.5']),
       purpose: 'execute',
     });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'gpt-5.5-xhigh',
+          family: 'openai',
+          source: 'stamp',
+          avoidFamilies: ['openai'],
+        },
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingScopes',
+    );
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingStampCount',
+    );
     expect(process.exitCode).toBe(0);
   });
+
+  it.each([
+    {
+      name: 'legacy',
+      stamp:
+        'Dispatch: p04 implementation used model_axis=inherited, effort_axis=selected:high, dispatch_policy=balanced, dispatch_ceiling=high, target=oat-phase-implementer-high',
+    },
+    {
+      name: 'modern unknown-provenance',
+      stamp:
+        'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.5 provenance=unknown model_axis=selected:gpt-5.5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-5-high',
+    },
+  ])(
+    'preserves unknown producer compatibility for an exact $name stamp',
+    async ({ stamp }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeImplementation(root, projectPath, stamp);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            reviewScope: 'p04',
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--review-scope', 'p04', '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        diversity: {
+          achieved: 'unknown-producer',
+          producer: {
+            value: 'unknown',
+            provenance: 'unknown',
+            confidence: 'unknown',
+            family: 'unknown',
+            source: 'unknown',
+            avoidFamilies: [],
+          },
+        },
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty(
+        'diversity.producer.contributingScopes',
+      );
+      expect(capture.jsonPayloads[0]).not.toHaveProperty(
+        'diversity.producer.contributingStampCount',
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it.each([
+    { name: 'exact', reviewScope: 'p02', aggregate: false },
+    { name: 'final', reviewScope: 'final', aggregate: true },
+    { name: 'range', reviewScope: 'p02-p03', aggregate: true },
+  ])(
+    'rejects incompatible modern stamps before $name producer resolution',
+    async ({ reviewScope, aggregate }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeImplementation(
+        root,
+        projectPath,
+        [
+          'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+          'Dispatch: scope=p02 action=review role=implementer producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+          'Dispatch: scope=p02 action=implementation role=reviewer producer=gemini-2.5-pro provenance=declared model_axis=selected:gemini effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gemini target=gemini',
+        ].join('\n'),
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            reviewScope,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--review-scope',
+          reviewScope,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        diversity: {
+          producer: aggregate
+            ? {
+                value: 'unknown',
+                source: 'aggregated-stamps',
+                avoidFamilies: ['openai'],
+                contributingScopes: ['p02'],
+                contributingStampCount: 1,
+              }
+            : {
+                value: 'gpt-5.5-xhigh',
+                family: 'openai',
+                source: 'stamp',
+                avoidFamilies: ['openai'],
+              },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
 
   it('aggregates producer families from implementation stamps for final review scope', async () => {
     const { root, home } = await setup();
@@ -1392,6 +1830,7 @@ describe('oat gate', () => {
       root,
       projectPath,
       [
+        'Dispatch: scope=p00 action=implementation role=implementer producer=gemini-2.5-pro provenance=declared model_axis=selected:gemini effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gemini target=gemini',
         'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
         'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
       ].join('\n'),
@@ -1457,15 +1896,348 @@ describe('oat gate', () => {
       diversity: {
         achieved: 'different-family',
         producer: {
-          value: 'claude-opus-4-8',
-          family: 'claude',
-          source: 'stamp',
-          avoidFamilies: expect.arrayContaining(['openai', 'claude']),
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai', 'claude'],
+          contributingScopes: ['p00', 'p02', 'p03'],
+          contributingStampCount: 3,
         },
         reviewer: {
           target: 'composer-reviewer',
           model: 'composer-2.5',
           family: 'composer',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('aggregates every producer stamp in a contiguous review range in document order', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p01 action=implementation role=implementer producer=gemini-2.5-pro provenance=declared model_axis=selected:gemini effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gemini target=gemini',
+        'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+        'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03 action=implementation role=implementer producer=claude-sonnet-4-5 provenance=observed model_axis=selected:sonnet effort_axis=not-applicable dispatch_policy=balanced dispatch_ceiling=sonnet target=claude',
+        'Dispatch: scope=p04 action=implementation role=implementer producer=composer-2.5 provenance=declared model_axis=selected:composer effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=composer target=cursor',
+      ].join('\n'),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p02-p03',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p02-p03',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          provenance: 'unknown',
+          confidence: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['claude', 'openai'],
+          contributingScopes: ['p03', 'p02'],
+          contributingStampCount: 3,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps an explicit producer flag authoritative over aggregate review stamps', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03 action=fix role=fix producer=claude-opus-4-8 provenance=declared model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=claude',
+      ].join('\n'),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'final',
+        '--producer-identity',
+        'composer-2.5:declared',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'composer-2.5',
+          family: 'composer',
+          source: 'flag',
+          avoidFamilies: ['composer'],
+        },
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingScopes',
+    );
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingStampCount',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports one unknown aggregate stamp without claiming a producer family', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'unknown-producer',
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: [],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports unknown producer identity when an aggregate scope has no relevant stamps', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p02-p03',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p02-p03',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          source: 'unknown',
+          avoidFamilies: [],
+        },
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingScopes',
+    );
+    expect(capture.jsonPayloads[0]).not.toHaveProperty(
+      'diversity.producer.contributingStampCount',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('counts non-claimable aggregate contributors while avoiding only known families', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      [
+        'Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown',
+        'Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+        'Dispatch: scope=p03-t02 action=fix role=fix producer=mystery-model provenance=unknown model_axis=host-auto effort_axis=host-auto dispatch_policy=unknown dispatch_ceiling=none target=unknown',
+      ].join('\n'),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p02-p03',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p02-p03',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai'],
+          contributingScopes: ['p02', 'p03', 'p03-t02'],
+          contributingStampCount: 3,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves same-family fallback semantics for a one-stamp aggregate', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.5-xhigh provenance=declared model_axis=inherited effort_axis=selected:xhigh dispatch_policy=high dispatch_ceiling=xhigh target=oat-phase-implementer-xhigh',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.3-codex'],
+                invocation: {
+                  model: 'gpt-5.3-codex',
+                  reasoningEffort: 'provider-default',
+                },
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'same-family - no diverse target available',
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
         },
       },
     });
@@ -2326,6 +3098,7 @@ describe('oat gate', () => {
       promptSnippets: [
         'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
         `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
+        'Project resolution source: active-project.',
         'Review type: artifact.',
         'Review scope: plan.',
         'Use oat-project-review-provide artifact plan.',
@@ -2333,11 +3106,175 @@ describe('oat gate', () => {
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
+      receiveEligible: true,
       project: projectPath,
+      projectResolutionSource: 'active-project',
       artifactPath,
       threshold: 'important',
       counts: { critical: 0, important: 1 },
       handoff: expect.stringContaining('oat-project-review-receive'),
+      corroboration: {
+        run: 'matched',
+        project: 'ambient',
+        invocation: 'matched',
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('treats gate artifacts missing all configured invocation metadata as uncorrelated runs', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          omitGateInvocation: true,
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      projectResolutionSource: 'active-project',
+      receiveEligible: false,
+      corroboration: {
+        run: 'missing',
+        project: 'ambient',
+        invocation: 'missing',
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps missing invocation fields remediable when the gate run id correlates', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_gate_target: '',
+            oat_gate_runtime: '',
+            oat_invocation_model: '',
+            oat_invocation_reasoning_effort: '',
+            oat_invocation_source: '',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      outcome: 'review_completed_artifact_validation_failed',
+      recovery: expect.stringContaining(
+        'Copy the exact gate invocation fields',
+      ),
+      corroboration: {
+        run: 'matched',
+        project: 'ambient',
+        invocation: 'missing',
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    ['missing', null],
+    ['manual', 'manual'],
+    ['auto', 'auto'],
+  ] as const)(
+    'rejects %s gate artifact invocation markers before severity evaluation',
+    async (_label, reviewInvocation) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            reviewInvocation,
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'artifact_validation_failed',
+        projectResolutionSource: 'active-project',
+        message: expect.stringContaining('gate invocation marker'),
+        corroboration: {
+          run: 'matched',
+          invocation: 'matched',
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('rejects mismatched configured invocation metadata before severity evaluation', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_invocation_model: 'self-reported-different-model',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      projectResolutionSource: 'active-project',
+      message: expect.stringContaining('does not match'),
+      corroboration: {
+        run: 'matched',
+        project: 'ambient',
+        invocation: 'mismatched',
+        actual: {
+          invocation: {
+            model: 'self-reported-different-model',
+          },
+        },
+      },
     });
     expect(process.exitCode).toBe(1);
   });
@@ -2406,7 +3343,467 @@ describe('oat gate', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'ok',
         project: projectPath,
+        projectResolutionSource: 'active-project',
+        corroboration: {
+          project: 'ambient',
+        },
         blocking: false,
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it.each([
+    {
+      target: 'codex-configured',
+      runtime: 'codex',
+      baseCommand: ['codex', 'exec'],
+      invocation: {
+        model: 'gpt-5.6-sol',
+        reasoningEffort: 'max',
+      },
+      expected: {
+        model: 'gpt-5.6-sol',
+        reasoningEffort: 'max',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'claude-configured',
+      runtime: 'claude',
+      baseCommand: ['claude', '-p'],
+      invocation: {
+        model: 'fable',
+        reasoningEffort: 'provider-default',
+      },
+      expected: {
+        model: 'fable',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'cursor-sol',
+      runtime: 'cursor',
+      baseCommand: ['cursor-agent', '-p'],
+      invocation: {
+        model: 'gpt-5.6-sol-max',
+        reasoningEffort: 'provider-default',
+      },
+      expected: {
+        model: 'gpt-5.6-sol-max',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'cursor-fable',
+      runtime: 'cursor',
+      baseCommand: ['cursor-agent', '-p'],
+      invocation: {
+        model: 'claude-fable-5-xhigh',
+        reasoningEffort: 'provider-default',
+      },
+      expected: {
+        model: 'claude-fable-5-xhigh',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+    },
+    {
+      target: 'unknown-configured',
+      runtime: 'custom',
+      baseCommand: ['custom-review'],
+      invocation: undefined,
+      expected: {
+        model: 'unknown',
+        reasoningEffort: 'unknown',
+        source: 'unknown',
+      },
+    },
+  ])(
+    'emits immutable gate invocation metadata for $target without parsing its command',
+    async ({ target, runtime, baseCommand, invocation, expected }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                [target]: {
+                  runtime,
+                  baseCommand,
+                  ...(invocation ? { invocation } : {}),
+                  priority: 200,
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', target, 'Review'],
+      });
+
+      const payload = capture.jsonPayloads[0] as {
+        gateInvocation: {
+          runId: string;
+          targetId: string;
+          runtime: string;
+          model: string;
+          reasoningEffort: string;
+          source: string;
+        };
+      };
+      expect(payload.gateInvocation).toMatchObject({
+        runId: expect.any(String),
+        targetId: target,
+        runtime,
+        ...expected,
+      });
+      const prompt = runner.calls.at(-1)?.args.at(-1) ?? '';
+      expect(prompt).toContain(
+        `oat_gate_run_id: ${payload.gateInvocation.runId}`,
+      );
+      expect(prompt).toContain(`oat_gate_target: ${target}`);
+      expect(prompt).toContain(`oat_gate_runtime: ${runtime}`);
+      expect(prompt).toContain(`oat_invocation_model: ${expected.model}`);
+      expect(prompt).toContain(
+        `oat_invocation_reasoning_effort: ${expected.reasoningEffort}`,
+      );
+      expect(prompt).toContain(`oat_invocation_source: ${expected.source}`);
+    },
+  );
+
+  it('stamps the exact non-first structured model selected for gate execution', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.5', 'composer-2.5'],
+                invocation: { reasoningEffort: 'provider-default' },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--producer-identity', 'gpt-5.5-xhigh:declared', 'Review'],
+    });
+
+    const executeCall = runner.calls.find((call) => call.purpose === 'execute');
+    expect(executeCall).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+    });
+    expect(executeCall?.args.at(-1)).toContain(
+      'oat_invocation_model: composer-2.5',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      gateInvocation: {
+        model: 'composer-2.5',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      corroboration: { invocation: 'matched' },
+      diversity: {
+        reviewer: { target: 'cursor-reviewer', model: 'composer-2.5' },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects static invocation metadata that contradicts the selected structured model', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['composer-2.5'],
+                invocation: {
+                  model: 'gpt-5.5',
+                  reasoningEffort: 'provider-default',
+                },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'cursor-reviewer', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(
+        /invocation model gpt-5\.5.*selected model composer-2\.5/i,
+      ),
+    });
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('stamps the exact model already pinned in the target command', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-pinned': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p', '--model', 'composer-2.5'],
+                invocation: { reasoningEffort: 'provider-default' },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'cursor-pinned', 'Review'],
+    });
+
+    const executeCall = runner.calls.find((call) => call.purpose === 'execute');
+    expect(executeCall).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+    });
+    expect(
+      executeCall?.args.filter((argument) => argument === '--model'),
+    ).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      gateInvocation: {
+        model: 'composer-2.5',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      corroboration: { invocation: 'matched' },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects invocation metadata that contradicts a model pinned in the command', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-pinned': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p', '--model', 'composer-2.5'],
+                invocation: {
+                  model: 'gpt-5.5',
+                  reasoningEffort: 'provider-default',
+                },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'cursor-pinned', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(
+        /invocation model gpt-5\.5.*selected model composer-2\.5/i,
+      ),
+    });
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    {
+      label: 'numeric-like',
+      target: '123',
+      runtime: '456',
+      model: '789',
+      effort: '1011',
+    },
+    {
+      label: 'boolean-like',
+      target: 'true',
+      runtime: 'false',
+      model: 'TRUE',
+      effort: 'False',
+    },
+    {
+      label: 'null-like',
+      target: 'null',
+      runtime: 'Null',
+      model: 'NULL',
+      effort: '~',
+    },
+    {
+      label: 'colon-containing',
+      target: 'target: reviewer',
+      runtime: 'runtime: custom',
+      model: 'model: canary',
+      effort: 'effort: max',
+    },
+    {
+      label: 'hash-containing',
+      target: 'target # canary',
+      runtime: 'runtime # custom',
+      model: 'model # canary',
+      effort: 'effort # max',
+    },
+    {
+      label: 'quote-like',
+      target: '"target"',
+      runtime: "'runtime'",
+      model: '"model"',
+      effort: "'effort'",
+    },
+    {
+      label: 'newline-like',
+      target: 'target\nreviewer',
+      runtime: 'runtime\ncustom',
+      model: 'model\ncanary',
+      effort: 'effort\nmax',
+    },
+  ])(
+    'round-trips $label configured invocation strings through gate YAML',
+    async ({ target, runtime, model, effort }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                [target]: {
+                  runtime,
+                  baseCommand: ['custom-review'],
+                  invocation: {
+                    model,
+                    reasoningEffort: effort,
+                  },
+                  priority: 200,
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', target, 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        gateInvocation: {
+          targetId: target,
+          runtime,
+          model,
+          reasoningEffort: effort,
+          source: 'exec-target-config',
+        },
+        corroboration: {
+          run: 'matched',
+          invocation: 'matched',
+        },
       });
       expect(process.exitCode).toBe(0);
     },
@@ -2443,7 +3840,9 @@ describe('oat gate', () => {
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
+      receiveEligible: true,
       project: projectPath,
+      projectResolutionSource: 'active-project',
       blocking: false,
       counts: { critical: 0, important: 0 },
       runId: expect.any(String),
@@ -2460,6 +3859,7 @@ describe('oat gate', () => {
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
     let artifactPath = '';
+    let originalContent = '';
     const runner = createProcessRunner({
       onExecute: async () => {
         artifactPath = await writeReviewArtifact({
@@ -2475,6 +3875,7 @@ describe('oat gate', () => {
             minor: 0,
           },
         });
+        originalContent = await readFile(join(root, artifactPath), 'utf8');
       },
     });
 
@@ -2508,12 +3909,12 @@ describe('oat gate', () => {
       },
       normalization: {
         insertedSeverities: ['medium'],
+        persisted: false,
       },
     });
     const artifactContent = await readFile(join(root, artifactPath), 'utf8');
-    expect(artifactContent).toMatch(
-      /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
-    );
+    expect(artifactContent).toBe(originalContent);
+    expect(artifactContent).not.toMatch(/### Medium/i);
     await expect(readdir(join(root, projectPath, 'reviews'))).resolves.toEqual([
       'p01-review.md',
     ]);
@@ -2553,9 +3954,18 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'artifact_validation_failed',
       outcome: 'review_completed_artifact_validation_failed',
+      projectResolutionSource: 'active-project',
       artifactPath,
       message: expect.stringContaining('cannot be safely normalized'),
       recovery: expect.stringContaining('oat-project-review-receive'),
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        model: 'provider-default',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
     });
     expect(process.exitCode).toBe(1);
   });
@@ -2718,7 +4128,7 @@ describe('oat gate', () => {
     await writeActiveProject(root, projectPath);
     const runner = createProcessRunner({ executeExitCode: 7 });
 
-    await runReviewGate({
+    const capture = await runReviewGate({
       root,
       home,
       runProcess: runner.runProcess,
@@ -2728,7 +4138,93 @@ describe('oat gate', () => {
       purpose: 'execute',
       stdio: 'inherit',
     });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      projectResolutionSource: 'active-project',
+    });
     expect(process.exitCode).toBe(7);
+  });
+
+  it('retains selected gate provenance when target launch rejects', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        throw new Error('spawn codex ENOENT');
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      runId: expect.any(String),
+      target: 'codex-default',
+      project: projectPath,
+      projectResolutionSource: 'active-project',
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        model: 'provider-default',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      message: expect.stringContaining('spawn codex ENOENT'),
+    });
+    expect(capture.jsonPayloads[0]?.runId).toBe(
+      capture.jsonPayloads[0]?.gateInvocation.runId,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('retains selected gate provenance on post-selection review filesystem errors', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, projectPath, 'reviews'),
+      'not a review directory',
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      runId: expect.any(String),
+      target: 'codex-default',
+      project: projectPath,
+      projectResolutionSource: 'active-project',
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        model: 'provider-default',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      message: expect.any(String),
+    });
+    expect(capture.jsonPayloads[0]?.runId).toBe(
+      capture.jsonPayloads[0]?.gateInvocation.runId,
+    );
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('reports review target timeouts with structured failure metadata', async () => {
@@ -2752,10 +4248,19 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'review_failed',
       outcome: 'review_did_not_complete',
+      projectResolutionSource: 'active-project',
       exitCode: 124,
       timedOut: true,
       timeoutMs: 1234,
       message: expect.stringContaining('timed out after 1234ms'),
+      gateInvocation: {
+        runId: expect.any(String),
+        targetId: expect.any(String),
+        runtime: expect.any(String),
+        model: expect.any(String),
+        reasoningEffort: expect.any(String),
+        source: expect.any(String),
+      },
     });
     expect(process.exitCode).toBe(124);
   });
@@ -2783,9 +4288,22 @@ describe('oat gate', () => {
     expect(runner.calls[0]?.args.at(-1)).toContain(
       `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
     );
+    expect(runner.calls[0]?.args.at(-1)).toContain(
+      'Project resolution source: declared.',
+    );
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       project: projectPath,
+      projectResolutionSource: 'declared',
+      corroboration: {
+        project: 'matched',
+        expected: { project: projectPath },
+        actual: {
+          containingProject: projectPath,
+          artifactProject: projectPath,
+          normalizedArtifactProject: projectPath,
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -2830,6 +4348,912 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       project: explicitProjectPath,
+      projectResolutionSource: 'declared',
+      corroboration: {
+        project: 'matched',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects an explicit project symlink whose real target escapes the repo', async () => {
+    const { root, home } = await setup();
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-gate-external-project-'),
+    );
+    tempDirs.push(externalProject);
+    await writeFile(
+      join(externalProject, 'state.md'),
+      ['---', 'oat_kind: implementation', '---'].join('\n'),
+      'utf8',
+    );
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    await mkdir(projectsRoot, { recursive: true });
+    await symlink(externalProject, join(projectsRoot, 'external-link'), 'dir');
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        '.oat/projects/shared/external-link',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(/inside.*repository|outside.*scope/i),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('accepts an explicit project symlink whose real target stays inside the repo', async () => {
+    const { root, home } = await setup();
+    const realProjectPath = await writeProject(
+      root,
+      '.oat/projects/shared/real-project',
+    );
+    await symlink(
+      'real-project',
+      join(root, '.oat', 'projects', 'shared', 'linked-project'),
+      'dir',
+    );
+    const projectPath = '.oat/projects/shared/linked-project';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: realProjectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(
+      runner.calls.find((call) => call.purpose === 'execute')?.args.at(-1),
+    ).toContain(`Resolved OAT project path: ${realProjectPath}.`);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: realProjectPath,
+      projectResolutionSource: 'declared',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports single-candidate project resolution in the prompt and result', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(
+      root,
+      '.oat/projects/shared/only-project',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(runner.calls[0]?.args.at(-1)).toContain(
+      'Project resolution source: single-candidate.',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: projectPath,
+      projectResolutionSource: 'single-candidate',
+      corroboration: {
+        project: 'ambient',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects an active-project review artifact written only under a sibling project', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root, '.oat/projects/shared/active');
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          artifactProject: projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      project: projectPath,
+      projectResolutionSource: 'active-project',
+      artifactPath,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      corroboration: {
+        project: 'ambient',
+        actual: {
+          containingProject: siblingProject,
+          artifactProject: projectPath,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects a single-candidate review artifact written only under a sibling project', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(
+      root,
+      '.oat/projects/shared/only-project',
+    );
+    const siblingProject = '.oat/projects/shared/late-sibling';
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeProject(root, siblingProject);
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          artifactProject: projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      project: projectPath,
+      projectResolutionSource: 'single-candidate',
+      artifactPath,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      corroboration: {
+        project: 'ambient',
+        actual: {
+          containingProject: siblingProject,
+          artifactProject: projectPath,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('finds a run-correlated artifact for an explicit project outside the configured shared root', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(
+      root,
+      '.oat/projects/team/outside-shared-root',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: projectPath,
+      projectResolutionSource: 'declared',
+      corroboration: {
+        run: 'matched',
+        project: 'matched',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects a run-correlated sibling-project write before invocation remediation or severity', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          artifactProject: declaredProject,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_invocation_model: 'also-wrong-but-targeting-wins',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      artifactPath,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      corroboration: {
+        run: 'matched',
+        project: 'mismatched',
+        expected: { project: declaredProject },
+        actual: {
+          containingProject: siblingProject,
+          artifactProject: declaredProject,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    ['missing', null, 'missing'],
+    ['wrong', '.oat/projects/shared/sibling', 'mismatched'],
+    ['outside-repo', '../../outside', 'mismatched'],
+  ] as const)(
+    'rejects %s oat_project for an explicitly declared review project',
+    async (_label, artifactProject, expectedStatus) => {
+      const { root, home } = await setup();
+      const declaredProject = await writeProject(
+        root,
+        '.oat/projects/shared/declared',
+      );
+      await writeProject(root, '.oat/projects/shared/sibling');
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath: declaredProject,
+            artifactProject,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--project',
+          declaredProject,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        receiveEligible: false,
+        handoff: null,
+        corroboration: {
+          run: 'matched',
+          project: expectedStatus,
+          actual: {
+            containingProject: declaredProject,
+            artifactProject,
+          },
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    {
+      label: 'malformed findings',
+      counts: { critical: 0, important: 0, medium: 1, minor: 0 },
+    },
+    {
+      label: 'normalizable missing heading',
+      counts: { critical: 0, important: 0, medium: 0, minor: 0 },
+    },
+  ])(
+    'rejects a declared-project mismatch before parsing $label',
+    async ({ counts }) => {
+      const { root, home } = await setup();
+      const declaredProject = await writeProject(
+        root,
+        '.oat/projects/shared/declared',
+      );
+      const siblingProject = await writeProject(
+        root,
+        '.oat/projects/shared/sibling',
+      );
+      let artifactPath = '';
+      let originalContent = '';
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          artifactPath = await writeReviewArtifact({
+            root,
+            projectPath: declaredProject,
+            artifactProject: siblingProject,
+            finding: 'clean',
+            omitMediumSection: true,
+            counts,
+          });
+          originalContent = await readFile(join(root, artifactPath), 'utf8');
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--project',
+          declaredProject,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        artifactPath,
+        receiveEligible: false,
+        remediable: false,
+        handoff: null,
+        corroboration: {
+          run: 'matched',
+          project: 'mismatched',
+          actual: {
+            containingProject: declaredProject,
+            artifactProject: siblingProject,
+          },
+        },
+      });
+      await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+        originalContent,
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    ['missing', true, undefined, 'missing'],
+    ['wrong', false, '11111111-1111-4111-8111-111111111111', 'mismatched'],
+  ] as const)(
+    'rejects a %s gate run id as non-remediable targeting failure',
+    async (_label, omitGateRunId, wrongRunId, expectedStatus) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            omitGateRunId,
+            ...(wrongRunId
+              ? {
+                  gateInvocationOverrides: {
+                    oat_gate_run_id: wrongRunId,
+                  },
+                }
+              : {}),
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        receiveEligible: false,
+        remediable: false,
+        handoff: null,
+        corroboration: {
+          run: expectedStatus,
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('rejects an artifact mutated between correlation and verdict evaluation', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    let artifactPath = '';
+    let mutatedContent = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath: declaredProject,
+          artifactProject: declaredProject,
+          reviewScope: 'p01',
+          finding: 'important',
+          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+          gateInvocationOverrides: {
+            oat_invocation_model: 'stale-model',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: async (absolutePath, options) => {
+        mutatedContent = (await readFile(absolutePath, 'utf8'))
+          .replace(
+            `oat_project: ${declaredProject}`,
+            `oat_project: ${siblingProject}`,
+          )
+          .replace('oat_review_scope: p01', 'oat_review_scope: final')
+          .replace(
+            'oat_invocation_model: stale-model',
+            'oat_invocation_model: provider-default',
+          )
+          .replace(
+            'oat_review_important_count: 1',
+            'oat_review_important_count: 0',
+          )
+          .replace('- Important finding that should block.', 'None.');
+        await writeFile(absolutePath, mutatedContent, 'utf8');
+        return parseReviewGateVerdictFromDisk(absolutePath, options);
+      },
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      artifactPath,
+      receiveEligible: false,
+      handoff: null,
+      message: expect.stringMatching(/changed|signature/i),
+    });
+    await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+      mutatedContent,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects duplicate direct artifacts carrying the same gate run id', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: declaredProject,
+          fileName: 'declared-review.md',
+          finding: 'clean',
+        });
+        await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          fileName: 'sibling-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      receiveEligible: false,
+      corroboration: {
+        run: 'mismatched',
+        actual: {
+          matchingArtifactPaths: expect.arrayContaining([
+            `${declaredProject}/reviews/declared-review.md`,
+            `${siblingProject}/reviews/sibling-review.md`,
+          ]),
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    ['single-quoted', "'2026-06-01T00:00:00Z'"],
+    ['double-quoted', '"2026-06-01T00:00:00Z"'],
+  ] as const)(
+    'accepts a valid %s oat_generated_at scalar',
+    async (_label, generatedAt) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            generatedAt,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        generatedAt: '2026-06-01T00:00:00Z',
+        corroboration: { run: 'matched' },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('classifies uniquely correlated malformed YAML as artifact validation without mutating it', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    let artifactPath = '';
+    let malformedContent = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+        malformedContent = (
+          await readFile(join(root, artifactPath), 'utf8')
+        ).replace(
+          'oat_invocation_source: exec-target-config',
+          'oat_invocation_source: [',
+        );
+        await writeFile(join(root, artifactPath), malformedContent, 'utf8');
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_validation_failed',
+      artifactPath,
+      generatedAt: '2026-06-01T00:00:00Z',
+      corroboration: { run: 'matched', project: 'matched' },
+      message: expect.stringMatching(/YAML|flow sequence/i),
+    });
+    await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+      malformedContent,
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('retains a malformed same-run artifact when detecting duplicate correlation', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    const validPath = `${projectPath}/reviews/valid-review.md`;
+    const malformedPath = `${projectPath}/reviews/malformed-review.md`;
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'valid-review.md',
+          finding: 'clean',
+        });
+        const path = await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'malformed-review.md',
+          finding: 'clean',
+        });
+        const content = await readFile(join(root, path), 'utf8');
+        await writeFile(
+          join(root, path),
+          content.replace(
+            'oat_invocation_source: exec-target-config',
+            'oat_invocation_source: [',
+          ),
+          'utf8',
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      receiveEligible: false,
+      corroboration: {
+        actual: {
+          matchingArtifactPaths: [malformedPath, validPath].sort(),
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not correlate malformed nested, comment, body, alias, or duplicate-key run-id spoofs', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        const runId = lastExecutePrompt.match(/^oat_gate_run_id: (.+)$/m)?.[1];
+        expect(runId).toBeTruthy();
+        const reviewsDir = join(root, projectPath, 'reviews');
+        await mkdir(reviewsDir, { recursive: true });
+        const cases = [
+          `nested:\n  oat_gate_run_id: ${runId}\nbroken: [`,
+          `# oat_gate_run_id: ${runId}\nbroken: [`,
+          `anchor: &run ${runId}\noat_gate_run_id: *run\nbroken: [`,
+          `oat_gate_run_id: ${runId}\noat_gate_run_id: ${runId}\nbroken: [`,
+        ];
+        await Promise.all(
+          cases.map((frontmatter, index) =>
+            writeFile(
+              join(reviewsDir, `spoof-${index}.md`),
+              `---\noat_generated: true\noat_generated_at: 2026-06-01T00:00:00Z\noat_review_scope: p01\n${frontmatter}\n---\n\n# Review\n\noat_gate_run_id: ${runId}\n`,
+              'utf8',
+            ),
+          ),
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      corroboration: {
+        run: 'missing',
+        actual: { matchingArtifactPaths: [] },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([
+    ['missing', null],
+    ['invalid', 'not-a-timestamp'],
+  ] as const)(
+    'retains a same-run duplicate with %s generation metadata',
+    async (_label, generatedAt) => {
+      const { root, home } = await setup();
+      const declaredProject = await writeProject(
+        root,
+        '.oat/projects/shared/declared',
+      );
+      const siblingProject = await writeProject(
+        root,
+        '.oat/projects/shared/sibling',
+      );
+      const validPath = `${declaredProject}/reviews/valid-review.md`;
+      const malformedPath = `${siblingProject}/reviews/malformed-review.md`;
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath: declaredProject,
+            fileName: 'valid-review.md',
+            finding: 'clean',
+          });
+          await writeReviewArtifact({
+            root,
+            projectPath: siblingProject,
+            fileName: 'malformed-review.md',
+            generatedAt,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--project',
+          declaredProject,
+          '--target',
+          'codex-default',
+          'Review',
+        ],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'targeting_correlation_failed',
+        receiveEligible: false,
+        corroboration: {
+          run: 'mismatched',
+          actual: {
+            matchingArtifactPaths: [validPath, malformedPath].sort(),
+          },
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    ['missing', null],
+    ['invalid', 'not-a-timestamp'],
+  ] as const)(
+    'classifies a single run-correlated artifact with %s generation metadata as invalid format',
+    async (_label, generatedAt) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      let artifactPath = '';
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          artifactPath = await writeReviewArtifact({
+            root,
+            projectPath,
+            generatedAt,
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'artifact_validation_failed',
+        outcome: 'review_completed_artifact_validation_failed',
+        artifactPath,
+        generatedAt,
+        message: expect.stringContaining('oat_generated_at'),
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('uses the unique run-id match instead of a changed wrong-run diagnostic artifact', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    let matchedArtifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'wrong-run-review.md',
+          finding: 'important',
+          gateInvocationOverrides: {
+            oat_gate_run_id: '11111111-1111-4111-8111-111111111111',
+          },
+        });
+        matchedArtifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'matched-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      artifactPath: matchedArtifactPath,
+      corroboration: {
+        run: 'matched',
+        project: 'matched',
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -2854,9 +5278,9 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'artifact_validation_failed',
-      outcome: 'review_completed_artifact_validation_failed',
-      message: expect.stringContaining('No new review artifact was detected'),
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
   });
@@ -2883,9 +5307,9 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'artifact_validation_failed',
-      outcome: 'review_completed_artifact_validation_failed',
-      message: expect.stringContaining('No new review artifact was detected'),
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
   });

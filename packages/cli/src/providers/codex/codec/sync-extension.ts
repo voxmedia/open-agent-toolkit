@@ -5,6 +5,9 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { parseCanonicalAgentFile } from '@agents/canonical';
 import {
   isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
+  normalizeProjectPath,
   resolveActiveProject,
   validateDispatchRouteTarget,
   type WorkflowDispatchMatrixCell,
@@ -14,14 +17,25 @@ import {
 } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
 import type { CanonicalEntry } from '@engine/index';
+import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
+import { validateRealPathWithinScope } from '@fs/paths';
 import TOML from '@iarna/toml';
 import YAML from 'yaml';
 
+import {
+  SUPPORTED_CODEX_BASE_ROLES,
+  SUPPORTED_CODEX_ROLE_TARGETS,
+} from './catalog';
 import { type CodexManagedRoleConfig, mergeCodexConfig } from './config-merge';
 import { exportCanonicalAgentToCodexRole } from './export-to-codex';
 import { materializeCodexRole } from './materialize';
-import { isOatManagedCodexRoleFile } from './shared';
+import {
+  isOatManagedCodexRoleFile,
+  readOatManagedCodexRoleOwner,
+  withOatManagedCodexRoleOwner,
+  type CodexRoleOwner,
+} from './shared';
 
 export type CodexExtensionAction = 'create' | 'update' | 'remove' | 'skip';
 export type CodexExtensionTarget = 'role' | 'config';
@@ -61,6 +75,7 @@ interface DesiredCodexRole {
 interface CodexMaterializationTarget {
   model: string;
   effort: string;
+  owner: CodexRoleOwner;
 }
 
 interface CodexMaterializationTargetOptions {
@@ -69,10 +84,9 @@ interface CodexMaterializationTargetOptions {
   env?: NodeJS.ProcessEnv;
 }
 
-const CODEX_MATERIALIZED_BASE_ROLES = new Set([
-  'oat-phase-implementer',
-  'oat-reviewer',
-]);
+const CODEX_MATERIALIZED_BASE_ROLES = new Set<string>(
+  SUPPORTED_CODEX_BASE_ROLES,
+);
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex');
@@ -160,10 +174,24 @@ async function desiredRolesFromCanonical(
           description: materialized.description,
           configFile: materialized.configFile,
           rolePath: join(scopeRoot, '.codex', materialized.configFile),
-          content: materialized.content,
+          content: withOatManagedCodexRoleOwner(
+            materialized.content,
+            target.owner,
+          ),
         });
       }
     }
+  }
+
+  const roleContents = new Map<string, string>();
+  for (const role of roles) {
+    const existing = roleContents.get(role.roleName);
+    if (existing !== undefined && existing !== role.content) {
+      throw new CliError(
+        `Distinct Codex targets produced the same role name ${role.roleName}. Refusing ambiguous role writes.`,
+      );
+    }
+    roleContents.set(role.roleName, role.content);
   }
 
   return roles.sort((left, right) =>
@@ -174,6 +202,7 @@ async function desiredRolesFromCanonical(
 function collectCodexTargetFromEntry(
   entry: WorkflowDispatchRouteEntry,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (typeof entry === 'string') {
     return;
@@ -188,28 +217,47 @@ function collectCodexTargetFromEntry(
     return;
   }
 
-  targets.set(`${entry.model}\0${entry.effort}`, {
-    model: entry.model,
-    effort: entry.effort,
-  });
+  const key = `${entry.model}\0${entry.effort}`;
+  if (!targets.has(key)) {
+    targets.set(key, {
+      model: entry.model,
+      effort: entry.effort,
+      owner,
+    });
+  }
 }
 
 function collectCodexTargetsFromCell(
   cell: WorkflowDispatchMatrixCell,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (typeof cell === 'string') {
     return;
   }
 
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    for (const candidate of cell.candidates) {
+      if (isWorkflowDispatchFallbackRoute(candidate)) {
+        for (const entry of candidate.route) {
+          collectCodexTargetFromEntry(entry, targets, owner);
+        }
+        continue;
+      }
+      collectCodexTargetFromEntry(candidate, targets, owner);
+    }
+    return;
+  }
+
   for (const entry of cell) {
-    collectCodexTargetFromEntry(entry, targets);
+    collectCodexTargetFromEntry(entry, targets, owner);
   }
 }
 
 function collectCodexMaterializationTargetsFromProvider(
   providerValue: WorkflowDispatchProviderValue | undefined,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (providerValue === undefined || typeof providerValue === 'string') {
     return;
@@ -217,7 +265,7 @@ function collectCodexMaterializationTargetsFromProvider(
 
   for (const cell of Object.values(providerValue)) {
     if (cell !== undefined) {
-      collectCodexTargetsFromCell(cell, targets);
+      collectCodexTargetsFromCell(cell, targets, owner);
     }
   }
 }
@@ -255,33 +303,69 @@ function routeTargetFromUnknown(
 function collectCodexTargetsFromUnknownCell(
   value: unknown,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
-  if (typeof value === 'string' || !Array.isArray(value)) {
+  const collectCandidate = (candidate: unknown): void => {
+    if (
+      !candidate ||
+      typeof candidate !== 'object' ||
+      Array.isArray(candidate)
+    ) {
+      return;
+    }
+
+    const route = (candidate as Record<string, unknown>)['route'];
+    if (Array.isArray(route)) {
+      for (const entry of route) {
+        const target = routeTargetFromUnknown(entry);
+        if (target) {
+          collectCodexTargetFromEntry(target, targets, owner);
+        }
+      }
+      return;
+    }
+
+    const target = routeTargetFromUnknown(candidate);
+    if (target) {
+      collectCodexTargetFromEntry(target, targets, owner);
+    }
+  };
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      collectCandidate(entry);
+    }
     return;
   }
 
-  for (const entry of value) {
+  if (!value || typeof value !== 'object') {
+    return;
+  }
+
+  const candidates = (value as Record<string, unknown>)['candidates'];
+  if (!Array.isArray(candidates)) {
+    return;
+  }
+
+  for (const entry of candidates) {
     if (typeof entry === 'string') {
       continue;
     }
-
-    const target = routeTargetFromUnknown(entry);
-    if (target) {
-      collectCodexTargetFromEntry(target, targets);
-    }
+    collectCandidate(entry);
   }
 }
 
 function collectCodexTargetsFromUnknownProvider(
   value: unknown,
   targets: Map<string, CodexMaterializationTarget>,
+  owner: CodexRoleOwner,
 ): void {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return;
   }
 
   for (const cell of Object.values(value)) {
-    collectCodexTargetsFromUnknownCell(cell, targets);
+    collectCodexTargetsFromUnknownCell(cell, targets, owner);
   }
 }
 
@@ -300,15 +384,41 @@ async function collectProjectStateCodexTargets(
   options: CodexMaterializationTargetOptions,
   targets: Map<string, CodexMaterializationTarget>,
 ): Promise<void> {
-  const projectPath =
+  const projectPathCandidate =
     options.projectPath === undefined
       ? (await resolveActiveProject(scopeRoot)).path
       : options.projectPath;
-  if (!projectPath) {
+  if (!projectPathCandidate) {
     return;
   }
 
-  const statePath = join(resolve(scopeRoot, projectPath), 'state.md');
+  const projectPath = normalizeProjectPath(scopeRoot, projectPathCandidate);
+  if (!projectPath) {
+    if (options.projectPath !== undefined) {
+      throw new CliError(
+        `Project-scoped Codex materialization path must be repo-relative or inside repo root: ${projectPathCandidate}`,
+      );
+    }
+    return;
+  }
+
+  let realProjectPath: string;
+  try {
+    const validated = await validateRealPathWithinScope(
+      join(scopeRoot, projectPath),
+      scopeRoot,
+    );
+    realProjectPath = validated.realPath;
+  } catch {
+    if (options.projectPath !== undefined) {
+      throw new CliError(
+        `Project-scoped Codex materialization path must be repo-relative or inside repo root: ${projectPathCandidate}`,
+      );
+    }
+    return;
+  }
+
+  const statePath = join(realProjectPath, 'state.md');
   const stateContent = await readOptionalFile(statePath);
   if (!stateContent) {
     return;
@@ -337,7 +447,18 @@ async function collectProjectStateCodexTargets(
   collectCodexTargetsFromUnknownProvider(
     (matrix as Record<string, unknown>)['codex'],
     targets,
+    'project-config',
   );
+}
+
+function isUserCodexScope(
+  scopeRoot: string,
+  options: CodexMaterializationTargetOptions,
+): boolean {
+  if (!options.userConfigDir) {
+    return false;
+  }
+  return resolve(scopeRoot) === resolve(options.userConfigDir, '..');
 }
 
 async function readCodexMaterializationTargets(
@@ -351,12 +472,31 @@ async function readCodexMaterializationTargets(
     options.env,
   );
 
+  if (isUserCodexScope(scopeRoot, options)) {
+    collectCodexMaterializationTargetsFromProvider(
+      effectiveConfig.user.workflow?.dispatchCeiling?.providers?.codex,
+      targets,
+      'user-config',
+    );
+    return sortCodexMaterializationTargets(targets);
+  }
+
+  for (const target of SUPPORTED_CODEX_ROLE_TARGETS) {
+    targets.set(`${target.model}\0${target.effort}`, {
+      ...target,
+      owner: 'supported-catalogue',
+    });
+  }
+
   for (const providerValue of [
-    effectiveConfig.user.workflow?.dispatchCeiling?.providers?.codex,
     effectiveConfig.shared.workflow?.dispatchCeiling?.providers?.codex,
     effectiveConfig.local.workflow?.dispatchCeiling?.providers?.codex,
   ]) {
-    collectCodexMaterializationTargetsFromProvider(providerValue, targets);
+    collectCodexMaterializationTargetsFromProvider(
+      providerValue,
+      targets,
+      'project-config',
+    );
   }
 
   await collectProjectStateCodexTargets(scopeRoot, options, targets);
@@ -401,6 +541,8 @@ async function collectStaleManagedRoles(
   scopeRoot: string,
   existingConfigContent: string | null,
   desiredRoleNames: Set<string>,
+  cleanupOwner: CodexRoleOwner,
+  removeLegacyProjectRoles: boolean,
 ): Promise<string[]> {
   const agents = parseConfigAgentTable(existingConfigContent);
   const stale = new Set<string>();
@@ -418,6 +560,17 @@ async function collectStaleManagedRoles(
     const rolePath = join(scopeRoot, '.codex', configFile);
     const roleContent = await readOptionalFile(rolePath);
     if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
+      continue;
+    }
+
+    const owner = readOatManagedCodexRoleOwner(roleContent);
+    const legacyProjectRole =
+      removeLegacyProjectRoles &&
+      owner === null &&
+      SUPPORTED_CODEX_BASE_ROLES.some((baseRole) =>
+        roleName.startsWith(`${baseRole}-`),
+      );
+    if (owner !== cleanupOwner && !legacyProjectRole) {
       continue;
     }
 
@@ -448,6 +601,17 @@ async function collectStaleManagedRoles(
       continue;
     }
 
+    const owner = readOatManagedCodexRoleOwner(roleContent);
+    const legacyProjectRole =
+      removeLegacyProjectRoles &&
+      owner === null &&
+      SUPPORTED_CODEX_BASE_ROLES.some((baseRole) =>
+        roleName.startsWith(`${baseRole}-`),
+      );
+    if (owner !== cleanupOwner && !legacyProjectRole) {
+      continue;
+    }
+
     stale.add(roleName);
   }
 
@@ -466,6 +630,25 @@ export async function computeCodexProjectExtensionPlan(
     scopeRoot,
     options,
   );
+  if (
+    !isPartialSync &&
+    isUserCodexScope(scopeRoot, options) &&
+    materializationTargets.length > 0
+  ) {
+    const canonicalBaseRoles = new Set(
+      canonicalEntries
+        .filter((entry) => entry.type === 'agent' && entry.isFile)
+        .map((entry) => entry.name.replace(/\.md$/i, '')),
+    );
+    const missingBaseRoles = SUPPORTED_CODEX_BASE_ROLES.filter(
+      (role) => !canonicalBaseRoles.has(role),
+    );
+    if (missingBaseRoles.length > 0) {
+      throw new CliError(
+        `Bundled managed Codex role definitions are unavailable for user sync: ${missingBaseRoles.join(', ')}. Refusing stale user-role cleanup.`,
+      );
+    }
+  }
   const desiredRoles = await desiredRolesFromCanonical(
     canonicalEntries.filter((entry) =>
       canonicalPathAllowed(scopeRoot, entry, allowedCanonicalPaths),
@@ -482,6 +665,8 @@ export async function computeCodexProjectExtensionPlan(
         scopeRoot,
         existingConfigContent,
         desiredRoleNames,
+        isUserCodexScope(scopeRoot, options) ? 'user-config' : 'project-config',
+        !isUserCodexScope(scopeRoot, options),
       );
 
   if (isPartialSync && desiredRoles.length === 0) {

@@ -18,6 +18,8 @@ import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
   isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -26,6 +28,7 @@ import {
   type WorkflowDispatchMatrixCell,
   type WorkflowDispatchMatrixTier,
   type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRouteEntry,
   type WorkflowDispatchRouteTarget,
   type WorkflowDispatchCeilingPreset,
   type WorkflowDispatchPolicyMode,
@@ -678,7 +681,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
-    type: 'low | medium | high | xhigh',
+    type: 'low | medium | high | xhigh | max',
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand:
@@ -837,6 +840,7 @@ const WORKFLOW_ENUM_VALUES = {
     'medium',
     'high',
     'xhigh',
+    'max',
   ],
   'workflow.dispatchCeiling.providers.claude': [
     'haiku',
@@ -1088,15 +1092,14 @@ function addDispatchMatrixCellRefs(
     return;
   }
 
-  for (const [index, entry] of cell.entries()) {
-    const entryPath = `${path}[${index}]`;
+  const addEntry = (entry: WorkflowDispatchRouteEntry, entryPath: string) => {
     if (typeof entry === 'string') {
       refs.push({ provider, value: entry, path: entryPath });
-      continue;
+      return;
     }
 
     if (!isRouteTarget(entry)) {
-      continue;
+      return;
     }
 
     const targetProvider = entry.harness ?? provider;
@@ -1108,7 +1111,7 @@ function addDispatchMatrixCellRefs(
           path: entryPath,
           target: entry,
         });
-        continue;
+        return;
       }
     }
 
@@ -1126,6 +1129,24 @@ function addDispatchMatrixCellRefs(
         path: `${entryPath}.effort`,
       });
     }
+  };
+
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    for (const [candidateIndex, candidate] of cell.candidates.entries()) {
+      const candidatePath = `${path}.candidates[${candidateIndex}]`;
+      if (isWorkflowDispatchFallbackRoute(candidate)) {
+        for (const [routeIndex, entry] of candidate.route.entries()) {
+          addEntry(entry, `${candidatePath}.route[${routeIndex}]`);
+        }
+        continue;
+      }
+      addEntry(candidate, candidatePath);
+    }
+    return;
+  }
+
+  for (const [index, entry] of cell.entries()) {
+    addEntry(entry, `${path}[${index}]`);
   }
 }
 
@@ -1169,21 +1190,40 @@ function collectDispatchMatrixTargetValidationErrors(
 
     const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
     for (const [tier, cell] of Object.entries(providerValue)) {
-      if (!Array.isArray(cell)) {
+      if (cell === undefined || typeof cell === 'string') {
         continue;
       }
 
-      for (const [index, entry] of cell.entries()) {
+      const validateEntry = (
+        entry: WorkflowDispatchRouteEntry,
+        entryPath: string,
+      ) => {
         if (!isRouteTarget(entry)) {
-          continue;
+          return;
         }
 
         const validation = validateDispatchRouteTarget(provider, entry);
         if (!validation.valid) {
-          errors.push(
-            `${providerPath}.${tier}[${index}]: ${validation.reason}`,
-          );
+          errors.push(`${entryPath}: ${validation.reason}`);
         }
+      };
+
+      if (isWorkflowDispatchCandidateLadder(cell)) {
+        for (const [candidateIndex, candidate] of cell.candidates.entries()) {
+          const candidatePath = `${providerPath}.${tier}.candidates[${candidateIndex}]`;
+          if (isWorkflowDispatchFallbackRoute(candidate)) {
+            for (const [routeIndex, entry] of candidate.route.entries()) {
+              validateEntry(entry, `${candidatePath}.route[${routeIndex}]`);
+            }
+            continue;
+          }
+          validateEntry(candidate, candidatePath);
+        }
+        continue;
+      }
+
+      for (const [index, entry] of cell.entries()) {
+        validateEntry(entry, `${providerPath}.${tier}[${index}]`);
       }
     }
   }
@@ -1319,6 +1359,9 @@ function formatResolvedValue(value: unknown): string | null {
   }
   if (Array.isArray(value)) {
     return value.join(',');
+  }
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
   }
   return String(value);
 }
@@ -1621,20 +1664,12 @@ async function setConfigValue(
 
 interface AdoptDispatchMatrixOptions {
   surface: ConfigSurface;
-  yes: boolean;
 }
 
 interface AdoptDispatchMatrixResult {
   key: string;
   value: string;
   source: Exclude<ConfigSurface, 'auto'>;
-}
-
-function hasExistingDispatchMatrix(config: {
-  workflow?: OatWorkflowConfig;
-}): boolean {
-  const providers = config.workflow?.dispatchCeiling?.providers;
-  return providers !== undefined && Object.keys(providers).length > 0;
 }
 
 async function loadDispatchMatrixRecommendation(
@@ -1699,41 +1734,32 @@ function applyDispatchMatrixRecommendation(
   workflow: OatWorkflowConfig | undefined,
   recommendation: DispatchMatrixRecommendation,
 ): OatWorkflowConfig {
+  const existingProviders = workflow?.dispatchCeiling?.providers ?? {};
+  const providers: Record<string, WorkflowDispatchProviderValue> = {
+    ...recommendation.providers,
+  };
+
+  for (const [provider, existingValue] of Object.entries(existingProviders)) {
+    const recommendedValue = recommendation.providers[provider];
+    if (
+      recommendedValue &&
+      typeof recommendedValue !== 'string' &&
+      typeof existingValue !== 'string'
+    ) {
+      providers[provider] = { ...recommendedValue, ...existingValue };
+    } else {
+      providers[provider] = existingValue;
+    }
+  }
+
   return {
     ...(workflow ?? {}),
     dispatchCeiling: {
       ...workflow?.dispatchCeiling,
       recommendationVersion: recommendation.version,
-      providers: recommendation.providers,
+      providers,
     },
   };
-}
-
-async function confirmDispatchMatrixOverwrite(
-  context: CommandContext,
-  dependencies: ConfigCommandDependencies,
-  source: Exclude<ConfigSurface, 'auto'>,
-  yes: boolean,
-): Promise<void> {
-  if (yes) {
-    return;
-  }
-
-  if (!context.interactive) {
-    throw new Error(
-      'Dispatch matrix already exists; rerun interactively or pass --yes to replace it.',
-    );
-  }
-
-  const shouldReplace = await dependencies.confirmAction(
-    `Replace existing dispatch matrix in ${source} config?`,
-    { interactive: context.interactive },
-  );
-  if (!shouldReplace) {
-    throw new Error(
-      'Dispatch matrix adoption cancelled; existing matrix unchanged.',
-    );
-  }
 }
 
 async function adoptDispatchMatrixRecommendation(
@@ -1749,14 +1775,6 @@ async function adoptDispatchMatrixRecommendation(
 
   if (source === 'user') {
     const userConfig = await dependencies.readUserConfig(userConfigDir);
-    if (hasExistingDispatchMatrix(userConfig)) {
-      await confirmDispatchMatrixOverwrite(
-        context,
-        dependencies,
-        source,
-        options.yes,
-      );
-    }
     await validateRecommendationCells(
       repoRoot,
       recommendation,
@@ -1779,14 +1797,6 @@ async function adoptDispatchMatrixRecommendation(
 
   if (source === 'local') {
     const localConfig = await dependencies.readOatLocalConfig(repoRoot);
-    if (hasExistingDispatchMatrix(localConfig)) {
-      await confirmDispatchMatrixOverwrite(
-        context,
-        dependencies,
-        source,
-        options.yes,
-      );
-    }
     await validateRecommendationCells(
       repoRoot,
       recommendation,
@@ -1808,14 +1818,6 @@ async function adoptDispatchMatrixRecommendation(
   }
 
   const sharedConfig = await dependencies.readOatConfig(repoRoot);
-  if (hasExistingDispatchMatrix(sharedConfig)) {
-    await confirmDispatchMatrixOverwrite(
-      context,
-      dependencies,
-      source,
-      options.yes,
-    );
-  }
   await validateRecommendationCells(
     repoRoot,
     recommendation,
@@ -2201,7 +2203,10 @@ export function createConfigCommand(
           'Write to the repo-local config (.oat/config.local.json)',
         )
         .option('--user', 'Write to the user-level config (~/.oat/config.json)')
-        .option('--yes', 'Replace an existing adopted matrix without prompting')
+        .option(
+          '--yes',
+          'Compatibility flag; adoption always preserves explicit existing cells',
+        )
         .action(
           async (
             template: string,
@@ -2231,12 +2236,7 @@ export function createConfigCommand(
               if (options.shared) surface = 'shared';
               else if (options.local) surface = 'local';
               else if (options.user) surface = 'user';
-              await runAdopt(
-                template,
-                { surface, yes: options.yes === true },
-                context,
-                dependencies,
-              );
+              await runAdopt(template, { surface }, context, dependencies);
             } catch (error) {
               const message =
                 error instanceof Error ? error.message : String(error);

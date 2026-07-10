@@ -86,6 +86,7 @@ export interface SyncCommandDependencies {
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
+  scanBundledManagedCodexAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],

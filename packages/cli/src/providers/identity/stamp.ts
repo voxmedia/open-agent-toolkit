@@ -154,6 +154,14 @@ function parseModernStamp(
     warn(options, lineNumber, 'missing or invalid role');
     return undefined;
   }
+  if (role !== inferRole(action)) {
+    warn(
+      options,
+      lineNumber,
+      `incompatible action/role pair ${action}/${role}`,
+    );
+    return undefined;
+  }
   const scope = singleToken(fields.get('scope'), '');
   if (!scope) {
     warn(options, lineNumber, 'missing scope');

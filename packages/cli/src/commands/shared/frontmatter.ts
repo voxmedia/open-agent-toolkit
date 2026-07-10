@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import YAML, { isMap, isScalar } from 'yaml';
+
 export const PROJECT_STATE_KINDS = ['implementation', 'coordination'] as const;
 
 export const PROJECT_STATE_PHASES = [
@@ -75,6 +77,39 @@ export function getFrontmatterField(
   const match = frontmatter.match(regex);
   if (!match) return null;
   return match[1]!.replace(/\s*#.*$/, '').trim();
+}
+
+export function parseFrontmatterScalarFields(
+  frontmatter: string,
+  fields: readonly string[],
+): { valid: boolean; values: Record<string, string> } {
+  const document = YAML.parseDocument(frontmatter, { uniqueKeys: true });
+  const values: Record<string, string> = {};
+
+  if (isMap(document.contents)) {
+    for (const field of fields) {
+      const matches = document.contents.items.filter(
+        (pair) => isScalar(pair.key) && pair.key.value === field,
+      );
+      if (matches.length !== 1) {
+        continue;
+      }
+
+      const valueNode = matches[0]?.value;
+      if (
+        !isScalar(valueNode) ||
+        valueNode.anchor !== undefined ||
+        valueNode.tag !== undefined ||
+        typeof valueNode.value !== 'string' ||
+        !valueNode.value.trim()
+      ) {
+        continue;
+      }
+      values[field] = valueNode.value.trim();
+    }
+  }
+
+  return { valid: document.errors.length === 0, values };
 }
 
 /**

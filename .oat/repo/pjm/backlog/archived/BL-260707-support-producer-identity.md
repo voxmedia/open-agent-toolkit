@@ -1,14 +1,14 @@
 ---
 id: BL-260707-support-producer-identity
 title: 'Support producer identity aggregation for final and range review gates'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: low # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [workflow-gates, provenance, review-followup]
 assignee: null
 created: '2026-07-07T21:16:23Z'
-updated: '2026-07-07T21:16:23Z'
+updated: '2026-07-10T18:15:13Z'
 associated_issues: [BL-260707-record-gate-review-model]
 oat_template: true
 oat_template_name: backlog-item

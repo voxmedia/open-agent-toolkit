@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.2
+version: 1.4.4
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -12,6 +12,13 @@ allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 # Import External Plan
 
 Import a markdown plan from an external coding provider and normalize it into OAT project artifacts.
+
+Provider native plan mode uses this same path: provider-plan-via-import
+preserves the provider plan first, and provider plan dispatch readiness
+inherits the same import workflow contract below, including complete ladder
+adoption, the project named ceiling, the `Shared Phase-Review Setup Contract`,
+and the rule that readiness and completion follow only after a durable review
+disposition. It does not add a separate provider-plan prompt.
 
 ## Prerequisites
 
@@ -154,9 +161,40 @@ If already present, write timestamped copy:
 
 - `references/imported-plan-YYYY-MM-DD-HHMM.md`
 
+### Step 2.5: Snapshot Explicit Phase-Review Setting Before Plan Normalization
+
+Before any template-based create, update, replacement, or normalization of
+`"$PROJECT_PATH/plan.md"`, inspect these sources in precedence order:
+
+1. Existing destination `plan.md`, when it contains a resumed explicit value.
+2. The preserved imported source, when it contains an imported explicit value
+   and the destination did not contain the key.
+
+Snapshot the key presence of `oat_phase_review_gate` as a separate boolean;
+presence is not truthiness and is authoritative regardless of validity. When
+present, snapshot the complete explicit value as the exact YAML frontmatter
+entry, including its full nested mapping or scalar form. Preserve enabled,
+disabled, selected-phase, `null`, and malformed-for-contract values verbatim;
+do not normalize, validate, or reconstruct the value while taking the snapshot.
+
+If both sources contain the key, the resumed destination value wins so an
+import cannot silently replace a project-level choice. Resumed and imported
+settings therefore preserve their complete explicit value across
+normalization. Explicit presence must not trigger a target probe or re-prompt,
+even when the preserved value is `null` or malformed for the phase-review
+contract.
+
 ### Step 3: Normalize Into Canonical OAT plan.md
 
 Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping:
+
+Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
+the first normalized plan write, before any later frontmatter rewrite and
+before Step 4.25 invokes the shared setup contract. Carry the snapshot
+losslessly through every subsequent plan update. When the key was explicitly
+present, its complete value must still be present exactly as captured; do not
+probe, re-prompt, validate, or replace it here. When the key was absent, do not
+invent one before the shared setup contract runs.
 
 - `## Phase N`
 - `### Task pNN-tNN` (stable task IDs)
@@ -173,25 +211,104 @@ Normalization rules:
 
 Dispatch Profile import handling:
 
-- Preserve recognizable OAT-format `## Dispatch Profile` rows as user-authored constraints or preferences.
-- Treat foreign model or effort hints as dispatch constraints only when the source clearly presents them as explicit requirements or preferences.
-- Otherwise preserve model or effort hints as rationale/context in the relevant task or phase text and let runtime selection decide.
+- Preserve recognizable OAT-format `## Dispatch Profile` rows only when
+  they use phase named ceilings at or below the project ceiling.
+- Preserve foreign model or effort hints as rationale/context in the relevant
+  task or phase text. Do not turn them into enduring exact model-family or
+  effort preferences.
 - Do not generate Dispatch Profile recommendation rows during import.
 
 ### Step 4: Update Plan Metadata
 
 Set frontmatter in `"$PROJECT_PATH/plan.md"`:
 
-- `oat_status: complete`
-- `oat_ready_for: null` (Step 4.5 sets this after the import-aware plan review)
+- `oat_status: in_progress`
+- `oat_ready_for: null`
 - `oat_phase: plan`
-- `oat_phase_status: complete`
+- `oat_phase_status: in_progress`
 - `oat_plan_source: imported`
 - `oat_import_reference: references/imported-plan.md`
 - `oat_import_source_path: {source-path}`
 - `oat_import_provider: {codex|cursor|claude|null}`
+- `oat_template: true`
+
+These values are the interruption-safe pre-review state. Here,
+`oat_template: true` keeps the normalized plan owned by the current import
+workflow until its review disposition is durable. If the skill pauses, is
+interrupted, or cannot resolve dispatch before Step 4.6, persist and commit this
+state. `oat-project-next` must route it back to the same planning workflow and
+cannot advance it to implementation.
+
+### Step 4.1: Adopt Complete Ladders and Record the Named Ceiling
+
+Invoke the `Complete Dispatch Ladder Adoption Contract` from
+`oat-project-plan-writing`. If the effective ladder is missing or incomplete,
+show the complete bundled recommendation and ask for its owning scope before
+running exactly one of:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config adopt dispatch-matrix --local
+oat config adopt dispatch-matrix --user
+```
+
+Adoption preserves explicit cells. Re-run the resolver and completeness check.
+An incomplete or missing ladder after adoption blocks readiness; do not
+overwrite explicit cells or infer provider defaults. Non-interactive import
+also blocks on a missing or incomplete ladder.
+
+The selected scope owns only reusable ladders. A project-specific active policy
+or ceiling must not be written to user `~/.oat/config.json`. Resolve or ask
+for the project named ceiling, then persist only the maximum constraint in
+`"$PROJECT_PATH/state.md"`:
+
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
+```
+
+The named `High` tier is a maximum, not an exact family preference:
+configured `Economy`, `Balanced`, and `High` candidates remain
+available at or below it. An optional phase Dispatch Profile may narrow the
+maximum. Use the canonical
+`oat project dispatch-ceiling choices --format markdown` prompt when no
+project ceiling resolves. `Uncapped` and `Inherit Host Defaults` remain
+explicit modes; `Leave Unresolved` is not implementation-ready.
+
+### Step 4.25: Configure Optional Phase Review
+
+After normalization has produced stable phase IDs and before Step 4.5 starts
+the import-aware plan artifact review, invoke the `Shared Phase-Review Setup
+Contract` from `oat-project-plan-writing`. Provider native plan mode uses this
+same import step and inherits its result.
+
+If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
+through the shared contract without probing, prompting, or mutation. Resumed or
+imported explicit values remain authoritative without re-prompting. Otherwise
+let the contract probe qualifying targets and offer all phases, selected
+phases, or disabled. If the probe fails, no target qualifies, or the user
+declines, leave phase review disabled and continue with the contract's concise
+status output.
+
+This phase-review setup is independent from HiLL checkpoints. Do not read or
+change HiLL fields here, and do not add a provider/model `--target` to any
+lifecycle command.
 
 ### Step 4.5: Run Import-Aware Plan Artifact Review Loop
+
+Before dispatching the artifact reviewer, invoke the `Managed Dispatch
+Readiness and Review Contract` from `oat-project-plan-writing`:
+
+```bash
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
+```
+
+If managed resolution or the complete ladder is unresolved, return to Step
+4.1, adopt the recommendation in the selected ownership scope, and re-run the
+resolver. Do not set `oat_ready_for: oat-project-implement` while either
+contract is unresolved.
 
 Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before advancing project state or handing off to implementation.
 
@@ -209,14 +326,43 @@ Apply the shared loop exactly:
 
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
-- Dispatch `oat-reviewer` in structured mode using Tier 1 subagent when available and Tier 2 inline fallback otherwise.
+- For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
+- For Claude or Cursor, pass the exact resolver-returned
+  `providers.<provider>.dispatchArgs.model` as the actual invocation's model
+  argument. Preserve the same complete payload on timeout and retry; Cursor
+  strings remain opaque.
+- Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
+- If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
 - Apply Critical and Important artifact-local fixes when unambiguous and limited to canonical conformance/completeness; offer Medium and Minor fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
 
-After the loop completes or is explicitly skipped, set `"$PROJECT_PATH/plan.md"` frontmatter:
+### Step 4.6: Record Review Disposition and Mark Plan Complete
 
+Before changing readiness, durably record the review outcome in `plan.md`:
+
+- When review ran, update the `plan` review row in the `## Reviews` section to
+  the outcome reached by Step 4.5. Use `passed` only for a clean result. If
+  residual findings remain, retain their actual non-passed status and add a
+  concise residual-finding disposition in the same section.
+- When `workflow.autoArtifactReview.plan` is explicitly `false`, record the
+  explicit skip in the `## Reviews` section as
+  `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`.
+  Do not claim that the plan passed review.
+
+The review row or explicit skip must be written to `plan.md`; chat or status
+output alone is not durable. Only after that write succeeds, atomically update
+the plan frontmatter:
+
+- `oat_status: complete`
 - `oat_ready_for: oat-project-implement`
+- `oat_phase_status: complete`
+- `oat_template: false`
+
+If dispatch remains unresolved, review execution fails closed, or the outcome
+cannot be recorded, leave the Step 4 pre-review values unchanged and commit
+them before stopping. Never expose a partially reviewed imported plan to
+`oat-project-implement`. Provider-plan-via-import inherits this exact boundary.
 
 ### Step 5: Update Project State
 
@@ -284,18 +430,29 @@ Before reporting this skill as complete, run the configured gate as the final st
 
    If the command returns JSON `null`, no gate is configured; the skill is complete.
 
-2. If a gate config is returned, run its `command` exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
+2. Export the resolved project path into the command shell:
 
-3. Review-artifact handoff:
-   - If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.
-   - This applies to `oat gate review ...` outputs regardless of whether the gate ultimately exits zero or nonzero; the command output owns the exact artifact path, and receive-review owns disposition and archival.
+   ```bash
+   export PROJECT_PATH
+   ```
 
-4. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
+
+3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
+
+4. Review-artifact handoff:
+   - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
+   - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
+   - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
+   - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
+   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
+
+5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
-5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands should normally omit `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
+6. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands must not include `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
 
 ### Step 7: Output Next Action
 
@@ -323,4 +480,4 @@ Report:
 - ✅ `activeProject` in `.oat/config.local.json` points to the imported project.
 - ✅ `.oat/state.md` has been refreshed locally after pointer update; it is not staged or committed.
 - ✅ Changed import artifacts are committed before handoff or pause.
-- ✅ Configured gate has run, and any produced review artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.
+- ✅ Configured gate has run, and only a corroborated, receive-eligible artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CLAUDE_TIER_ORDER,
   getCeilingAdapter,
+  isDirectDispatchRoleName,
   type ProviderCeilingAdapter,
 } from './registry';
 
@@ -14,7 +15,13 @@ describe('provider ceiling adapters', () => {
       expect(codex.provider).toBe('codex');
       expect(codex.supportsCeiling).toBe(true);
       expect(codex.mechanism).toBe('pinned-variant');
-      expect(codex.validValues).toEqual(['low', 'medium', 'high', 'xhigh']);
+      expect(codex.validValues).toEqual([
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ]);
     });
 
     it('compiles a codex model-effort target to the implementer materialized role name', () => {
@@ -37,8 +44,59 @@ describe('provider ceiling adapters', () => {
       });
     });
 
+    it('preserves explicit max effort in a codex materialized target', () => {
+      expect(
+        codex.compileToDispatchArgs('max', 'implementer', {
+          target: { model: 'gpt-5.6-sol', effort: 'max' },
+        }),
+      ).toEqual({
+        variant: 'oat-phase-implementer-gpt-5-6-sol-max',
+      });
+    });
+
+    it.each([
+      [
+        'vendor/model.x',
+        'vendor.model.x',
+        'oat-reviewer-vendor-model-x-high-5330f8196e',
+        'oat-reviewer-vendor-model-x-high-ff27ce33ce',
+      ],
+      [
+        'Vendor.Model.X',
+        'vendor.model.x',
+        'oat-reviewer-vendor-model-x-high-91728b819f',
+        'oat-reviewer-vendor-model-x-high-ff27ce33ce',
+      ],
+    ])(
+      'deterministically disambiguates custom targets %s and %s that normalize to the same role slug',
+      (leftModel, rightModel, leftVariant, rightVariant) => {
+        const compile = (model: string) =>
+          codex.compileToDispatchArgs('high', 'reviewer', {
+            target: { model, effort: 'high' },
+          });
+
+        const left = compile(leftModel);
+        const right = compile(rightModel);
+        expect(left).toEqual({ variant: leftVariant });
+        expect(right).toEqual({ variant: rightVariant });
+        expect(compile(leftModel)).toEqual(left);
+        expect(compile(rightModel)).toEqual(right);
+      },
+    );
+
     it('does not compile bare legacy effort values to deterministic dispatch args', () => {
       expect(codex.compileToDispatchArgs('high', 'implementer', {})).toBeNull();
+    });
+
+    it('rejects direct managed role names as candidate models', () => {
+      expect(
+        codex.compileToDispatchArgs('high', 'implementer', {
+          target: {
+            model: 'oat-phase-implementer-gpt-5-6-sol-high',
+            effort: 'high',
+          },
+        }),
+      ).toBeNull();
     });
 
     it('returns null for an invalid value', () => {
@@ -86,6 +144,16 @@ describe('provider ceiling adapters', () => {
 
     it('returns null for an invalid value', () => {
       expect(claude.compileToDispatchArgs('gpt', 'implementer', {})).toBeNull();
+    });
+
+    it('rejects direct managed role names as model args', () => {
+      expect(
+        claude.compileToDispatchArgs(
+          'oat-reviewer-gpt-5-6-sol-high',
+          'reviewer',
+          {},
+        ),
+      ).toBeNull();
     });
 
     it('flags verifyOnDispatch when the requested tier is above the orchestrator', () => {
@@ -149,6 +217,23 @@ describe('provider ceiling adapters', () => {
       expect(cursor.compileToDispatchArgs('   ', 'reviewer', {})).toBeNull();
     });
 
+    it('rejects direct managed role names while preserving opaque models', () => {
+      expect(
+        cursor.compileToDispatchArgs(
+          'oat-phase-implementer-gpt-5-6-sol-high',
+          'implementer',
+          {},
+        ),
+      ).toBeNull();
+      expect(
+        cursor.compileToDispatchArgs(
+          'opaque:model/lower [v1]',
+          'implementer',
+          {},
+        ),
+      ).toEqual({ model: 'opaque:model/lower [v1]' });
+    });
+
     it('never flags verifyOnDispatch because Cursor has no total order', () => {
       expect(
         cursor.verifyOnDispatch('gpt-5.3-codex-high', {
@@ -180,5 +265,17 @@ describe('provider ceiling adapters', () => {
         unknown.verifyOnDispatch('opus', { orchestratorTier: 'sonnet' }),
       ).toBe(false);
     });
+  });
+
+  it.each([
+    'oat-phase-implementer',
+    'oat-phase-implementer-gpt-5-6-sol-high',
+    'oat-reviewer-gpt-5-6-sol-high',
+  ])('recognizes direct managed role selector %s', (value) => {
+    expect(isDirectDispatchRoleName(value)).toBe(true);
+  });
+
+  it('does not infer role selectors from ordinary opaque model strings', () => {
+    expect(isDirectDispatchRoleName('opaque:oat-reviewer-ish')).toBe(false);
   });
 });

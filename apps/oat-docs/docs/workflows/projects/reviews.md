@@ -101,6 +101,15 @@ Status progression in `plan.md` Reviews table:
 
 When `workflow.autoReviewAtHillCheckpoints` is enabled (for example, `oat config set workflow.autoReviewAtHillCheckpoints true --user`) or per-project `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review. The review scope covers every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase checkpoint reviews use inclusive phase-range scopes such as `p02-p03`. The final phase checkpoint triggers a `code final` review.
 
+Producer-aware gate routing treats those range and final scopes as aggregate
+subjects. It considers every valid in-scope implementer/fix dispatch stamp,
+avoids the stable union of claimable model families, and reports contributor
+scope/count metadata in `diversity.producer`. Claimable exact phase/task stamps
+with a known family remain exact `stamp` identities; legacy or otherwise
+non-claimable exact stamps resolve to an unknown producer. An explicit
+`--producer-identity` flag takes precedence. An aggregate never presents its
+latest stamp as the producer for the whole scope.
+
 This is separate from Tier 1 phase gate reviews. Tier 1 implementation always runs `oat-reviewer` after each phase; `workflow.autoReviewAtHillCheckpoints` only controls the additional lifecycle review when a HiLL checkpoint is reached. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 
 Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Minor findings that are clearly out of scope are deferred with a note).
@@ -111,9 +120,25 @@ This feature is opt-in and disabled by default. When disabled, the manual `oat-p
 
 The phase review gate is an optional, **non-pausing** external review gate that runs after a phase's standard per-phase reviewer passes and the phase bookkeeping is committed. Where the Tier 1 reviewer is an in-session self-review, the gate calls `oat gate review` against the configured cross-provider target, adding an independent perspective before implementation moves to the next phase. It is enabled per-project through `plan.md` frontmatter (`oat_phase_review_gate`; see [Project Artifacts](artifacts.md#oat_phase_review_gate) for the field shape and validation).
 
+Plan-producing workflows run the shared setup after stable phase IDs exist and
+before the plan artifact review. A read-only probe requires an explicitly
+configured, enabled, and available target before it offers all phases, selected
+phases, or disabled. Existing explicit `oat_phase_review_gate` values are
+preserved unchanged without re-prompting, including resumed and imported plans.
+Probe failure, no qualifying target, non-interactive execution, or user decline
+leaves the gate disabled.
+
 It is independent of [HiLL checkpoints](hill-checkpoints.md): a passing gate does not pause, and the gate never touches `oat_hill_completed`, `oat_plan_hill_phases`, or `oat_auto_review_at_hill_checkpoints`.
 
-Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Either way the produced artifact is consumed by `oat-project-review-receive`, autonomously and without user prompts, so findings never evaporate:
+Gate-produced review artifacts use `oat_review_invocation: gate` in frontmatter (the third invocation marker alongside `manual` and `auto`). The gate verdict — controlled by `exit_nonzero_on` (default `important`) — decides whether the **phase stops**; it does not decide whether sub-threshold findings are ignored. Before invoking `oat-project-review-receive`, the result must satisfy all three eligibility conditions: `status` is `ok` or `blocked`, `receiveEligible` is `true`, and `handoff` is non-null. A missing or contradictory field is an operational failure even when `artifactPath` is present. Once eligibility is established, the produced artifact is consumed autonomously and without user prompts, so findings never evaporate:
+
+The gate prompt provides six additional frontmatter values: `oat_gate_run_id`,
+`oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`,
+`oat_invocation_reasoning_effort`, and `oat_invocation_source`. The reviewer
+copies them exactly. They represent OAT's configured invocation and remain
+separate from optional observed or self-reported producer identity. Missing or
+mismatched values produce `artifact_validation_failed` before finding severity
+is evaluated.
 
 - **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Minor — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/Important concern it escalates to the blocking path.
 - **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
@@ -180,7 +205,7 @@ Final review `passed` gate requires:
     - `[features] multi_agent = true`
     - If explicit role pinning is used, role must be built-in (`default`/`worker`/`explorer`) or configured under `[agents.<name>]`.
   - Project-scope Codex role files are generated from canonical `.agents/agents/*.md` during `oat sync --scope project`.
-  - User-scope Codex role generation (`~/.codex`) is intentionally deferred.
+  - User-config Codex roles materialize under `~/.codex`; project-config and supported-catalogue roles remain in the project-scoped, version-controlled `.codex` view.
   - Some Codex hosts require explicit user authorization before the skill may call `spawn_agent`. In those hosts, `oat-project-review-provide` should ask whether to delegate to `oat-reviewer` instead of reporting the reviewer as unresolved.
 - If subagent dispatch is unavailable, follow the existing fallback path (fresh session preferred, inline reset as fallback).
 

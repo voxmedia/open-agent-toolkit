@@ -330,18 +330,29 @@ describe('CLI command integration', () => {
   it('doctor on healthy setup reports all pass', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
-    await runCli(root, ['init']);
-    await seedCanonical(root);
-    await runCli(root, ['sync']);
+    const previousHome = process.env.HOME;
+    process.env.HOME = root;
 
-    const result = await runCli(root, ['doctor', '--json'], ['--json']);
-    const payload = JSON.parse(result.stdout);
-    expect(
-      payload.checks.every(
-        (check: { status: string }) => check.status === 'pass',
-      ),
-    ).toBe(true);
-    expect(result.exitCode).toBe(0);
+    try {
+      await runCli(root, ['init']);
+      await seedCanonical(root);
+      await runCli(root, ['sync']);
+
+      const result = await runCli(root, ['doctor', '--json'], ['--json']);
+      const payload = JSON.parse(result.stdout);
+      expect(
+        payload.checks.every(
+          (check: { status: string }) => check.status === 'pass',
+        ),
+      ).toBe(true);
+      expect(result.exitCode).toBe(0);
+    } finally {
+      if (previousHome === undefined) {
+        delete process.env.HOME;
+      } else {
+        process.env.HOME = previousHome;
+      }
+    }
   });
 
   it('providers list shows all registered adapters', async () => {

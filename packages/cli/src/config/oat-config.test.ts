@@ -1,6 +1,13 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -358,6 +365,98 @@ describe('oat-config', () => {
 
     const localConfig = await readOatLocalConfig(repoRoot);
     expect(localConfig.activeProject).toBe('.oat/projects/shared/demo');
+  });
+
+  it('resolves relative activeProject paths and rejects repo traversal', async () => {
+    const repoRoot = await createRepoRoot();
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(externalProject);
+    await writeFile(join(externalProject, 'state.md'), '---\n---\n', 'utf8');
+    const externalRelativePath = relative(repoRoot, externalProject);
+
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: externalRelativePath })}\n`,
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: null,
+    });
+    await expect(resolveActiveProject(repoRoot)).resolves.toEqual({
+      name: null,
+      path: null,
+      status: 'unset',
+    });
+    await expect(
+      setActiveProject(repoRoot, externalRelativePath),
+    ).rejects.toThrow(/inside repo root/i);
+
+    await writeOatLocalConfig(repoRoot, {
+      version: 1,
+      activeProject: '.oat/projects/shared/../demo',
+    });
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: '.oat/projects/demo',
+    });
+  });
+
+  it('rejects an activeProject symlink whose real target escapes the repo', async () => {
+    const repoRoot = await createRepoRoot();
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(externalProject);
+    await writeFile(join(externalProject, 'state.md'), '---\n---\n', 'utf8');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const linkedProject = join(projectsRoot, 'external-link');
+    await mkdir(projectsRoot, { recursive: true });
+    await symlink(externalProject, linkedProject, 'dir');
+    const projectPath = '.oat/projects/shared/external-link';
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: null,
+    });
+    await expect(resolveActiveProject(repoRoot)).resolves.toEqual({
+      name: null,
+      path: null,
+      status: 'unset',
+    });
+    await expect(setActiveProject(repoRoot, projectPath)).rejects.toThrow(
+      /inside repo root/i,
+    );
+  });
+
+  it('keeps an activeProject symlink whose real target remains inside the repo', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const realProject = join(projectsRoot, 'real-project');
+    const linkedProject = join(projectsRoot, 'linked-project');
+    await mkdir(realProject, { recursive: true });
+    await writeFile(join(realProject, 'state.md'), '---\n---\n', 'utf8');
+    await symlink('real-project', linkedProject, 'dir');
+    const projectPath = '.oat/projects/shared/linked-project';
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: '.oat/projects/shared/real-project',
+    });
+    await expect(resolveActiveProject(repoRoot)).resolves.toEqual({
+      name: 'real-project',
+      path: '.oat/projects/shared/real-project',
+      status: 'active',
+    });
   });
 
   it('resolveActiveProject reports active for valid config-local project paths', async () => {
@@ -882,6 +981,10 @@ describe('oat-config', () => {
                 'codex-custom': {
                   runtime: 'codex',
                   baseCommand: ['codex', 'exec'],
+                  invocation: {
+                    model: '  gpt-5.6-sol  ',
+                    reasoningEffort: '  max  ',
+                  },
                   hostDetectionCommand: [
                     'sh',
                     '-c',
@@ -892,6 +995,9 @@ describe('oat-config', () => {
                 },
                 'codex-default': {
                   priority: 80,
+                  invocation: {
+                    model: 'provider-default',
+                  },
                 },
                 'partial-command': {
                   baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
@@ -909,6 +1015,10 @@ describe('oat-config', () => {
                   hostDetectionCommand: ['sh', 1],
                   availabilityCommand: 'custom-agent --version',
                   priority: 10,
+                  invocation: {
+                    model: '   ',
+                    reasoningEffort: 42,
+                  },
                 },
                 disabled: null,
                 invalidOnly: {
@@ -928,12 +1038,19 @@ describe('oat-config', () => {
         'codex-custom': {
           runtime: 'codex',
           baseCommand: ['codex', 'exec'],
+          invocation: {
+            model: 'gpt-5.6-sol',
+            reasoningEffort: 'max',
+          },
           hostDetectionCommand: ['sh', '-c', 'test -n "$CODEX_THREAD_ID"'],
           availabilityCommand: ['codex', '--version'],
           priority: 80,
         },
         'codex-default': {
           priority: 80,
+          invocation: {
+            model: 'provider-default',
+          },
         },
         'partial-command': {
           baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
@@ -959,6 +1076,10 @@ describe('oat-config', () => {
         'codex-default': {
           runtime: 'codex',
           baseCommand: ['codex', 'exec'],
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+          },
           hostDetectionCommand: [
             'sh',
             '-c',
@@ -970,6 +1091,10 @@ describe('oat-config', () => {
         'claude-default': {
           runtime: 'claude',
           baseCommand: ['claude', '-p'],
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+          },
           hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
           availabilityCommand: ['claude', '--version'],
           priority: 100,
@@ -977,6 +1102,10 @@ describe('oat-config', () => {
         'cursor-default': {
           runtime: 'cursor',
           baseCommand: ['cursor-agent', '-p'],
+          invocation: {
+            model: 'provider-default',
+            reasoningEffort: 'provider-default',
+          },
           hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
           availabilityCommand: [
             'sh',
@@ -1181,7 +1310,9 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling).toEqual({
           recommendationVersion: '2026-07-07.1',
-          providers: { cursor: { high: 'composer-2.5' } },
+          providers: {
+            cursor: { high: { candidates: ['composer-2.5'] } },
+          },
         });
 
         await writeOatConfig(repoRoot, config);
@@ -1229,20 +1360,32 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           cursor: {
-            economy: 'composer-2.5',
-            balanced: [
-              'composer-2.5-fast',
-              {
-                harness: 'cursor',
-                model: 'gpt-5.3-codex-high',
-                effort: 'high',
-              },
-            ],
-            high: [
-              { harness: 'cursor', model: 'glm-5.2-max' },
-              'claude-opus-4-8',
-            ],
-            frontier: 'fable-5',
+            economy: { candidates: ['composer-2.5'] },
+            balanced: {
+              candidates: [
+                {
+                  route: [
+                    'composer-2.5-fast',
+                    {
+                      harness: 'cursor',
+                      model: 'gpt-5.3-codex-high',
+                      effort: 'high',
+                    },
+                  ],
+                },
+              ],
+            },
+            high: {
+              candidates: [
+                {
+                  route: [
+                    { harness: 'cursor', model: 'glm-5.2-max' },
+                    'claude-opus-4-8',
+                  ],
+                },
+              ],
+            },
+            frontier: { candidates: ['fable-5'] },
           },
         });
       });
@@ -1283,7 +1426,7 @@ describe('oat-config', () => {
                     economy: 'low',
                     balanced: 'medium',
                     high: 'high',
-                    frontier: 'xhigh',
+                    frontier: 'max',
                     stray: 'ignored',
                   },
                   claude: {
@@ -1302,16 +1445,16 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           codex: {
-            economy: 'low',
-            balanced: 'medium',
-            high: 'high',
-            frontier: 'xhigh',
+            economy: { candidates: ['low'] },
+            balanced: { candidates: ['medium'] },
+            high: { candidates: ['high'] },
+            frontier: { candidates: ['max'] },
           },
           claude: {
-            economy: 'haiku',
-            balanced: 'sonnet',
-            high: 'opus',
-            frontier: 'fable',
+            economy: { candidates: ['haiku'] },
+            balanced: { candidates: ['sonnet'] },
+            high: { candidates: ['opus'] },
+            frontier: { candidates: ['fable'] },
           },
         });
       });
@@ -1345,13 +1488,162 @@ describe('oat-config', () => {
         const config = await readOatConfig(repoRoot);
         expect(config.workflow?.dispatchCeiling?.providers).toEqual({
           codex: {
-            high: [
-              {
-                harness: 'codex',
-                model: 'gpt-5.6-terra',
-                effort: 'xhigh',
+            high: {
+              candidates: [
+                {
+                  route: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.6-terra',
+                      effort: 'xhigh',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('normalizes ordered provider candidates without conflating fallback routes', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  codex: {
+                    high: {
+                      candidates: [
+                        {
+                          harness: 'codex',
+                          model: 'gpt-5.6-luna',
+                          effort: 'medium',
+                          ignored: true,
+                        },
+                        {
+                          route: [
+                            {
+                              harness: 'codex',
+                              model: 'gpt-5.6-terra',
+                              effort: 'high',
+                            },
+                            {
+                              harness: 'claude',
+                              model: 'opus',
+                            },
+                          ],
+                          ignored: true,
+                        },
+                        {
+                          harness: 'codex',
+                          model: 'gpt-5.6-sol',
+                          effort: 'high',
+                        },
+                      ],
+                    },
+                  },
+                  claude: {
+                    high: { candidates: ['haiku', 'sonnet', 'opus'] },
+                  },
+                  cursor: {
+                    high: {
+                      candidates: [
+                        'opaque:model/a',
+                        'opaque model value with no capability name',
+                      ],
+                    },
+                  },
+                },
               },
-            ],
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          codex: {
+            high: {
+              candidates: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-luna',
+                  effort: 'medium',
+                },
+                {
+                  route: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.6-terra',
+                      effort: 'high',
+                    },
+                    { harness: 'claude', model: 'opus' },
+                  ],
+                },
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+          claude: {
+            high: { candidates: ['haiku', 'sonnet', 'opus'] },
+          },
+          cursor: {
+            high: {
+              candidates: [
+                'opaque:model/a',
+                'opaque model value with no capability name',
+              ],
+            },
+          },
+        });
+      });
+
+      it('normalizes legacy single values and routes as one-candidate ladders', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  claude: { high: 'opus' },
+                  cursor: {
+                    high: [
+                      'opaque-primary',
+                      { harness: 'claude', model: 'opaque-fallback' },
+                    ],
+                  },
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          claude: { high: { candidates: ['opus'] } },
+          cursor: {
+            high: {
+              candidates: [
+                {
+                  route: [
+                    'opaque-primary',
+                    { harness: 'claude', model: 'opaque-fallback' },
+                  ],
+                },
+              ],
+            },
           },
         });
       });

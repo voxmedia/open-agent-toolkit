@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { scanCanonical } from './scanner';
+import { scanBundledManagedCodexAgents, scanCanonical } from './scanner';
 
 describe('scanCanonical', () => {
   const tempDirs: string[] = [];
@@ -50,7 +50,7 @@ describe('scanCanonical', () => {
     ).toBe(true);
   });
 
-  it('skips agents for user scope (skills only)', async () => {
+  it('keeps generic user scope limited to skills', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
     tempDirs.push(root);
     await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
@@ -64,6 +64,16 @@ describe('scanCanonical', () => {
 
     expect(entries.some((entry) => entry.type === 'skill')).toBe(true);
     expect(entries.some((entry) => entry.type === 'agent')).toBe(false);
+  });
+
+  it('loads only the two bundled agents needed by Codex materialization', async () => {
+    const entries = await scanBundledManagedCodexAgents();
+
+    expect(entries.map((entry) => entry.name)).toEqual([
+      'oat-phase-implementer.md',
+      'oat-reviewer.md',
+    ]);
+    expect(entries.every((entry) => entry.type === 'agent')).toBe(true);
   });
 
   it('returns empty array when .agents/ does not exist', async () => {

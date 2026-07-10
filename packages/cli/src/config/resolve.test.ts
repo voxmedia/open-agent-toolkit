@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   resolveEffectiveConfig,
+  resolveExecTargetViews,
   resolveExecTargets,
   resolveGate,
   type ResolvedConfig,
@@ -881,6 +882,114 @@ describe('resolveEffectiveConfig', () => {
         source: 'shared',
       });
     });
+
+    it('resolves candidate ladders atomically with per-tier precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    codex: {
+                      high: {
+                        candidates: [
+                          {
+                            harness: 'codex',
+                            model: 'gpt-5.6-terra',
+                            effort: 'high',
+                          },
+                          {
+                            harness: 'codex',
+                            model: 'gpt-5.6-sol',
+                            effort: 'high',
+                          },
+                        ],
+                      },
+                    },
+                    cursor: {
+                      high: {
+                        candidates: ['shared-opaque-low', 'shared-opaque-high'],
+                      },
+                    },
+                  },
+                },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    cursor: {
+                      high: {
+                        candidates: ['local opaque one', 'local opaque two'],
+                      },
+                    },
+                  },
+                },
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    codex: {
+                      high: {
+                        candidates: [
+                          {
+                            harness: 'codex',
+                            model: 'gpt-5.6-luna',
+                            effort: 'medium',
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.codex.high'],
+      ).toEqual({
+        value: {
+          candidates: [
+            {
+              harness: 'codex',
+              model: 'gpt-5.6-terra',
+              effort: 'high',
+            },
+            {
+              harness: 'codex',
+              model: 'gpt-5.6-sol',
+              effort: 'high',
+            },
+          ],
+        },
+        source: 'shared',
+      });
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.cursor.high'],
+      ).toEqual({
+        value: { candidates: ['local opaque one', 'local opaque two'] },
+        source: 'local',
+      });
+      expect(
+        result.resolved[
+          'workflow.dispatchCeiling.providers.cursor.high.candidates'
+        ],
+      ).toBeUndefined();
+    });
   });
 
   it('surfaces archive.wrapUpExportPath with source default when unset', async () => {
@@ -1103,6 +1212,9 @@ describe('resolveExecTargets', () => {
     const customTarget: ExecTarget = {
       runtime: 'custom',
       baseCommand: ['custom-agent', '-p'],
+      invocation: {
+        model: 'custom-v1',
+      },
       hostDetectionCommand: ['sh', '-c', 'test -n "$CUSTOM_AGENT"'],
       availabilityCommand: ['custom-agent', '--version'],
       priority: 10,
@@ -1115,9 +1227,15 @@ describe('resolveExecTargets', () => {
             execTargets: {
               'codex-default': {
                 availabilityCommand: ['codex', 'doctor'],
+                invocation: {
+                  reasoningEffort: 'max',
+                },
                 priority: 120,
               },
               'custom-target': {
+                invocation: {
+                  reasoningEffort: 'provider-default',
+                },
                 priority: 50,
               },
             },
@@ -1131,6 +1249,9 @@ describe('resolveExecTargets', () => {
             execTargets: {
               'codex-default': {
                 baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
+                invocation: {
+                  model: 'gpt-5.5',
+                },
               },
             },
           },
@@ -1153,10 +1274,18 @@ describe('resolveExecTargets', () => {
       ...BUILTIN_EXEC_TARGETS['codex-default'],
       baseCommand: ['codex', 'exec', '--model', 'gpt-5.5'],
       availabilityCommand: ['codex', 'doctor'],
+      invocation: {
+        model: 'gpt-5.5',
+        reasoningEffort: 'max',
+      },
       priority: 120,
     });
     expect(resolveExecTargets(effective)['custom-target']).toEqual({
       ...customTarget,
+      invocation: {
+        model: 'custom-v1',
+        reasoningEffort: 'provider-default',
+      },
       priority: 50,
     });
   });
@@ -1205,6 +1334,10 @@ describe('resolveExecTargets', () => {
               'team-reviewer': {
                 runtime: 'team',
                 baseCommand: ['team-agent', 'review'],
+                invocation: {
+                  model: 'team-large',
+                  reasoningEffort: 'provider-default',
+                },
                 priority: 90,
               },
               'default-priority-reviewer': {
@@ -1220,12 +1353,219 @@ describe('resolveExecTargets', () => {
     expect(resolveExecTargets(effective)['team-reviewer']).toEqual({
       runtime: 'team',
       baseCommand: ['team-agent', 'review'],
+      invocation: {
+        model: 'team-large',
+        reasoningEffort: 'provider-default',
+      },
       priority: 90,
     });
     expect(resolveExecTargets(effective)['default-priority-reviewer']).toEqual({
       runtime: 'team',
       baseCommand: ['team-agent'],
       priority: 0,
+    });
+  });
+
+  it('deep-clones invocation metadata instead of sharing built-in state', () => {
+    const targets = resolveExecTargets(createResolvedConfig());
+
+    targets['codex-default'].invocation!.model = 'mutated';
+
+    expect(BUILTIN_EXEC_TARGETS['codex-default'].invocation).toEqual({
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    });
+  });
+
+  it('preserves target origin and enabled provenance across layered overrides', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                invocation: { model: 'gpt-user' },
+              },
+              'custom-target': {
+                runtime: 'custom',
+                baseCommand: ['custom-review'],
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': {
+                invocation: { reasoningEffort: 'high' },
+              },
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': { priority: 125 },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargetViews(effective)).toMatchObject({
+      'codex-default': {
+        origin: 'local',
+        explicitlyConfigured: true,
+        enabled: true,
+        target: {
+          invocation: {
+            model: 'gpt-user',
+            reasoningEffort: 'high',
+          },
+          priority: 125,
+        },
+      },
+      'claude-default': {
+        origin: 'builtin',
+        explicitlyConfigured: false,
+        enabled: true,
+      },
+      'custom-target': {
+        origin: 'shared',
+        explicitlyConfigured: true,
+        enabled: false,
+        target: {
+          runtime: 'custom',
+        },
+      },
+    });
+  });
+
+  it('re-enables a tombstoned target only from a complete higher-layer definition', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'user-runtime',
+                baseCommand: ['user-review'],
+                invocation: { model: 'user-model' },
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'local-runtime',
+                baseCommand: ['local-review'],
+                invocation: { reasoningEffort: 'high' },
+                priority: 10,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)['custom-target']).toEqual({
+      runtime: 'local-runtime',
+      baseCommand: ['local-review'],
+      invocation: { reasoningEffort: 'high' },
+      priority: 10,
+    });
+    expect(resolveExecTargetViews(effective)['custom-target']).toEqual({
+      target: {
+        runtime: 'local-runtime',
+        baseCommand: ['local-review'],
+        invocation: { reasoningEffort: 'high' },
+        priority: 10,
+      },
+      origin: 'local',
+      explicitlyConfigured: true,
+      enabled: true,
+    });
+  });
+
+  it('does not resurrect a tombstoned target from a partial higher-layer override', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'user-runtime',
+                baseCommand: ['user-review'],
+                invocation: { model: 'user-model' },
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                invocation: { reasoningEffort: 'high' },
+                priority: 10,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)).not.toHaveProperty('custom-target');
+    expect(resolveExecTargetViews(effective)['custom-target']).toEqual({
+      target: {
+        runtime: 'user-runtime',
+        baseCommand: ['user-review'],
+        invocation: { model: 'user-model' },
+        priority: 5,
+      },
+      origin: 'shared',
+      explicitlyConfigured: true,
+      enabled: false,
     });
   });
 });

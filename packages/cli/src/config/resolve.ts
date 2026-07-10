@@ -1,5 +1,6 @@
 import {
   BUILTIN_EXEC_TARGETS,
+  isWorkflowDispatchCandidateLadder,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -238,6 +239,71 @@ export function resolveExecTargets(
   return targets;
 }
 
+export type ExecTargetOrigin = 'builtin' | 'user' | 'shared' | 'local';
+
+export interface ResolvedExecTargetView {
+  target: ExecTarget;
+  origin: ExecTargetOrigin;
+  explicitlyConfigured: boolean;
+  enabled: boolean;
+}
+
+export function resolveExecTargetViews(
+  effective: ResolvedConfig,
+): Record<string, ResolvedExecTargetView> {
+  const targets = cloneExecTargetRegistry(BUILTIN_EXEC_TARGETS);
+  const views: Record<string, ResolvedExecTargetView> = Object.fromEntries(
+    Object.entries(targets).map(([id, target]) => [
+      id,
+      {
+        target: cloneExecTarget(target),
+        origin: 'builtin',
+        explicitlyConfigured: false,
+        enabled: true,
+      } satisfies ResolvedExecTargetView,
+    ]),
+  );
+
+  for (const [origin, layer] of [
+    ['user', effective.user.workflow?.gates?.execTargets],
+    ['shared', effective.shared.workflow?.gates?.execTargets],
+    ['local', effective.local.workflow?.gates?.execTargets],
+  ] as const) {
+    if (!layer) {
+      continue;
+    }
+
+    for (const [id, override] of Object.entries(layer)) {
+      if (override === null) {
+        const target = targets[id] ?? views[id]?.target;
+        delete targets[id];
+        if (target) {
+          views[id] = {
+            target: cloneExecTarget(target),
+            origin,
+            explicitlyConfigured: true,
+            enabled: false,
+          };
+        }
+        continue;
+      }
+
+      mergeExecTargetLayer(targets, { [id]: override });
+      const target = targets[id];
+      if (target) {
+        views[id] = {
+          target: cloneExecTarget(target),
+          origin,
+          explicitlyConfigured: true,
+          enabled: true,
+        };
+      }
+    }
+  }
+
+  return views;
+}
+
 type ExecTargetOverride = Partial<ExecTarget> | null;
 
 function mergeExecTargetLayer(
@@ -259,6 +325,10 @@ function mergeExecTargetLayer(
       targets[id] = cloneExecTarget({
         runtime: override.runtime ?? existing.runtime,
         baseCommand: override.baseCommand ?? existing.baseCommand,
+        invocation: mergeExecTargetInvocation(
+          existing.invocation,
+          override.invocation,
+        ),
         models: override.models ?? existing.models,
         hostDetectionCommand:
           override.hostDetectionCommand ?? existing.hostDetectionCommand,
@@ -297,6 +367,9 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
   if (target.hostDetectionCommand) {
     next.hostDetectionCommand = [...target.hostDetectionCommand];
   }
+  if (target.invocation) {
+    next.invocation = { ...target.invocation };
+  }
   if (target.availabilityCommand) {
     next.availabilityCommand = [...target.availabilityCommand];
   }
@@ -323,6 +396,10 @@ function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
         : 0,
   };
 
+  if (target.invocation) {
+    completeTarget.invocation = { ...target.invocation };
+  }
+
   if (isValidArgv(target.hostDetectionCommand)) {
     completeTarget.hostDetectionCommand = [...target.hostDetectionCommand];
   }
@@ -334,6 +411,20 @@ function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
   }
 
   return completeTarget;
+}
+
+function mergeExecTargetInvocation(
+  existing: ExecTarget['invocation'],
+  override: ExecTarget['invocation'],
+): ExecTarget['invocation'] {
+  if (!existing && !override) {
+    return undefined;
+  }
+
+  return {
+    ...existing,
+    ...override,
+  };
 }
 
 function isValidStringList(value: unknown): value is string[] {
@@ -372,7 +463,10 @@ function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
     }
 
     const nextKey = prefix ? `${prefix}.${key}` : key;
-    if (isRecord(nestedValue)) {
+    if (
+      isRecord(nestedValue) &&
+      !isWorkflowDispatchCandidateLadder(nestedValue)
+    ) {
       Object.assign(flattened, flattenConfig(nestedValue, nextKey));
       continue;
     }

@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.5
+version: 1.0.6
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -218,7 +218,7 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 | discovery     | in_progress  | tier 3        | `oat-project-discover`     |
 | discovery     | in_progress  | tier 2        | `oat-project-plan`         |
 | discovery     | complete     | tier 1        | `oat-project-plan`         |
-| plan          | in_progress  | tier 3        | `oat-project-plan`         |
+| plan          | in_progress  | tier 3        | `oat-project-quick-start`  |
 | plan          | in_progress  | tier 2        | `oat-project-implement` \* |
 | plan          | complete     | tier 1        | `oat-project-implement` \* |
 | implement     | in_progress  | —             | `oat-project-implement` \* |

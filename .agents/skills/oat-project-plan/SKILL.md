@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.10
+version: 1.3.12
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -155,6 +155,20 @@ Read for implementation context:
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
 
+### Step 4.9: Snapshot Explicit Phase-Review Setting Before Plan Overwrite
+
+Before Step 5 can replace an existing `plan.md`, inspect the source text and
+snapshot both the key presence and the complete explicit value of
+`oat_phase_review_gate`. Presence is authoritative regardless of validity; it
+is not a truthiness check and must distinguish a missing key from an explicit
+`null` value.
+
+Preserve the complete raw YAML entry exactly as written, including its nested
+block when present. The snapshot must survive enabled, disabled,
+selected-phase, `null`, and malformed values without normalizing, repairing, or
+discarding them. Explicit presence remains authoritative and must not trigger a
+target probe or re-prompt later in this workflow.
+
 ### Step 5: Initialize Plan Document
 
 Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
@@ -165,7 +179,7 @@ Check whether a plan already exists at `"$PROJECT_PATH/plan.md"`.
 - Ask the user:
   - **Resume** (default): continue editing the existing plan in place
   - **View**: show the existing plan and stop
-  - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits)
+  - **Overwrite**: replace with a fresh copy of the template (warn about losing draft edits). Restore the exact snapshot into the resulting `plan.md` frontmatter immediately after the template replacement and before any other plan write. Preserve the raw `oat_phase_review_gate` entry byte-for-byte; do not parse or normalize it.
 - If resuming: ensure the document contains the required sections from the template (at minimum: `## Reviews`, `## Implementation Complete`, `## References`). If any are missing, add them using the template headings (do not delete existing content).
 
 **If `"$PROJECT_PATH/plan.md"` does not exist:**
@@ -186,6 +200,13 @@ oat_generated: false
 oat_template: false
 ---
 ```
+
+When Overwrite restored an explicit phase-review snapshot, keep that exact
+entry in this first rewritten frontmatter. Do not let the generic frontmatter
+update remove or replace it. The shared phase-review setup in Step 12.25 must
+observe the restored key and preserve it without probing, prompting, or
+mutation. When the key was absent from the overwritten plan, do not invent it
+before the shared setup contract runs.
 
 ### Step 6: Define Phases
 
@@ -316,109 +337,72 @@ If `## Planning Checklist` is missing (older plans), add it before finalizing wi
 
 ### Step 11.5: Resolve Dispatch Policy Before Implementation Readiness
 
-Before marking the plan ready for implementation, resolve the dispatch policy.
+Before marking the plan ready for implementation, invoke the
+`Complete Dispatch Ladder Adoption Contract` from
+`oat-project-plan-writing` and then resolve the project named ceiling.
+
+#### A. Ensure a complete owned ladder
+
+Inspect the effective candidate ladders and compare them with the complete
+bundled recommendation. If the ladder is missing or incomplete, show that full
+recommendation and ask the user to choose the owning scope before running
+exactly one of:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config adopt dispatch-matrix --local
+oat config adopt dispatch-matrix --user
+```
+
+Adoption fills missing cells but preserves explicit values. Re-run the resolver
+and the completeness check. An incomplete or missing ladder after adoption
+blocks readiness; do not overwrite explicit cells, infer a fallback, or mark
+the plan ready. Non-interactive setup also blocks on a missing or incomplete
+ladder.
+
+The owning scope stores only the reusable ladders. A project-specific active
+policy or ceiling must not be written to user `~/.oat/config.json`.
+
+#### B. Record the project named ceiling
 
 Resolution order:
 
-1. Config keys `workflow.dispatchPolicy.mode` / `workflow.dispatchPolicy.policy` via the resolver CLI
-2. Layered dispatch matrix / compatibility config under `workflow.dispatchCeiling.providers.<provider>` and `workflow.dispatchCeiling.providers.<provider>.<tier>`
-3. Project `state.md` frontmatter key `oat_dispatch_policy`
-4. Legacy project `state.md` frontmatter key `oat_dispatch_ceiling`
-5. Interactive planning prompt (below)
-6. Leave unresolved for implementation preflight when non-interactive
+1. Project `state.md` frontmatter key `oat_dispatch_policy`
+2. Legacy project `state.md` frontmatter key `oat_dispatch_ceiling`
+3. Config defaults `workflow.dispatchPolicy.mode` /
+   `workflow.dispatchPolicy.policy` as a proposed starting value
+4. Interactive planning prompt
+5. Unresolved non-interactive state blocks implementation readiness
 
-If no policy resolves and the session is interactive, present the dispatch
-policy prompt once before final plan review:
+Generate the canonical choice text with:
 
-```text
-Set the dispatch policy — how OAT should choose subagent model/effort controls.
-
-  Managed capped policies:
-  1. Economy   — Codex: medium · Claude: sonnet
-  2. Balanced  — Codex: high   · Claude: sonnet  (recommended)
-  3. High      — Codex: xhigh  · Claude: opus
-  4. Frontier  — Codex: xhigh  · Claude: fable
-
-  Managed uncapped:
-  5. Uncapped — OAT selects the preferred implementer/fix target without a stored maximum cap.
-
-  Host defaults:
-  6. Inherit Host Defaults — OAT does not select model/effort controls.
-
-OAT applies managed policies where the provider exposes a reliable mechanism
-(Codex: pinned variants; Claude: Task model parameter). Other providers may
-treat managed policies as advisory until their provider column has a resolvable
-matrix cell.
-
-For multi-family providers such as Cursor, these options choose the abstract
-policy rung; concrete model values live in the dispatch matrix under
-`workflow.dispatchCeiling.providers.*`. If the user wants OAT's recommended
-starting matrix, offer `oat config adopt dispatch-matrix` for the chosen config
-layer before finalizing the plan.
+```bash
+oat project dispatch-ceiling choices --format markdown
 ```
 
-**Managed capped policy selection (options 1-4)** persists `mode: managed`,
-`policy`, and the compiled provider targets. On selection, print the exact
-compiled result (e.g., "Dispatch policy set: balanced → Codex: high · Claude:
-sonnet") before proceeding.
-
-If the resolver reports that the selected policy has a missing matrix cell for
-the active provider/tier, run prompt-and-persist once before final review:
-
-1. Ask for the exact provider value for the missing cell, using the provider's
-   native vocabulary (for example, `composer-2.5`, `gpt-5.5-xhigh`, `opus`, or
-   `xhigh`), or an ordered route when escalation needs multiple targets.
-2. Persist the answer to the selected config layer with
-   `workflow.dispatchCeiling.providers.<provider>.<tier>`. Use project
-   `state.md` only for sparse project-specific matrix overrides.
-3. Re-run the resolver. Do not silently treat a missing cell as uncapped,
-   inherited, or provider-default behavior.
-
-**Uncapped (option 5)** persists explicit managed uncapped state. It does not
-write provider caps, and it must not be represented by leaving dispatch policy
-state absent.
-
-**Inherit Host Defaults (option 6)** persists explicit inherit/default state.
-Use this only when the user wants OAT to leave implementation, fix, and review
-model/effort controls to the executing host/provider.
-
-Persist the answer in `"$PROJECT_PATH/state.md"` frontmatter using the
-normalized shape:
+Do not abbreviate the menu. Include every managed named tier plus `Uncapped`,
+`Inherit Host Defaults`, and `Leave Unresolved`. A managed named tier
+is a maximum candidate tier, not an enduring exact model-family or effort
+preference. For example, a named `High` ceiling leaves configured candidates
+from `Economy`, `Balanced`, and `High` available at or below the
+maximum. An optional phase `## Dispatch Profile` row may narrow that maximum.
 
 ```yaml
 oat_dispatch_policy:
   mode: managed
-  policy: balanced
-  providers:
-    codex: high
-    claude: sonnet
+  policy: high
   source: project-state
 ```
 
-For `Uncapped`:
+Persist this normalized shape only in `"$PROJECT_PATH/state.md"`. Never copy
+compiled provider targets into project state, and do not persist the active
+project ceiling to user config.
 
-```yaml
-oat_dispatch_policy:
-  mode: managed
-  policy: uncapped
-  source: project-state
-```
-
-For `Inherit Host Defaults`:
-
-```yaml
-oat_dispatch_policy:
-  mode: inherit
-  source: project-state
-```
-
-Do not prompt when `OAT_NON_INTERACTIVE=1` or when no user-response channel
-exists. In that case, leave the value unresolved. `oat-project-implement`
-must block before work starts if it still cannot resolve a policy.
-
-Do not treat provider default effort as the OAT dispatch policy. Provider
-defaults apply only for explicit inherit/default behavior or base/unpinned
-fallback paths.
+`Uncapped` persists explicit managed uncapped state. `Inherit Host
+Defaults` persists explicit inherit/default state. `Leave Unresolved` is
+a planning deferral and is not implementation-ready. Do not prompt when
+`OAT_NON_INTERACTIVE=1` or no response channel exists; leave the ceiling
+unresolved and block readiness.
 
 ### Step 12: Review Plan with User
 
@@ -433,7 +417,36 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
+### Step 12.25: Configure Optional Phase Review
+
+After the confirmed plan has stable phase IDs and before Step 12.5 starts the
+plan artifact review, invoke the `Shared Phase-Review Setup Contract` from
+`oat-project-plan-writing`.
+
+If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
+through the shared contract without probing, prompting, or mutation. Otherwise
+let the contract probe qualifying targets and offer all phases, selected
+phases, or disabled. If the probe fails, no target qualifies, or the user
+declines, leave phase review disabled and continue with the contract's concise
+status output.
+
+This phase-review setup is independent from HiLL checkpoints. Do not read or
+change HiLL fields here, and do not add a provider/model `--target` to any
+lifecycle command.
+
 ### Step 12.5: Run Plan Artifact Review Loop
+
+Before dispatching the artifact reviewer, invoke the `Managed Dispatch
+Readiness and Review Contract` from `oat-project-plan-writing`:
+
+```bash
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
+```
+
+If managed resolution or the complete ladder is unresolved, return to Step
+11.5, adopt the recommendation in the selected ownership scope, and re-run the
+resolver. Do not mark the spec-driven plan ready while either contract is
+unresolved.
 
 Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before setting `plan.md` to implementation-ready.
 
@@ -449,7 +462,13 @@ Apply the shared loop exactly:
 
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
-- Dispatch `oat-reviewer` in structured mode using Tier 1 subagent when available and Tier 2 inline fallback otherwise.
+- For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
+- For Claude or Cursor, pass the exact resolver-returned
+  `providers.<provider>.dispatchArgs.model` value as the actual invocation's
+  model argument. Preserve that same complete payload on timeout and retry;
+  Cursor strings remain opaque.
+- Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
+- If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
 - Apply Critical and Important artifact-local fixes when unambiguous; offer Medium and Minor fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
@@ -564,18 +583,29 @@ Before reporting this skill as complete, run the configured gate as the final st
 
    If the command returns JSON `null`, no gate is configured; the skill is complete.
 
-2. If a gate config is returned, run its `command` exactly as configured. Capture stdout, stderr, and the exit code. A zero exit code means the gate passed and the skill is complete.
+2. Export the resolved project path into the command shell:
 
-3. Review-artifact handoff:
-   - If the gate reports a produced review artifact, the host must run `oat-project-review-receive` to receive and disposition that artifact before treating the review as consumed.
-   - This applies to `oat gate review ...` outputs regardless of whether the gate ultimately exits zero or nonzero; the command output owns the exact artifact path, and receive-review owns disposition and archival.
+   ```bash
+   export PROJECT_PATH
+   ```
 
-4. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
+
+3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
+
+4. Review-artifact handoff:
+   - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
+   - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
+   - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
+   - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
+   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
+
+5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
-5. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands should normally omit `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
+6. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands must not include `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
 
 ## Success Criteria
 

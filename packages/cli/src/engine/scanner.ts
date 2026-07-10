@@ -2,7 +2,12 @@ import { readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { CliError } from '@errors/index';
-import { SCOPE_CONTENT_TYPES, type Scope } from '@shared/types';
+import { resolveAssetsRoot } from '@fs/assets';
+import {
+  SCOPE_CONTENT_TYPES,
+  USER_SCOPE_MANAGED_AGENT_FILES,
+  type Scope,
+} from '@shared/types';
 
 type ConcreteScope = Exclude<Scope, 'all'>;
 
@@ -67,6 +72,32 @@ async function readEntries(dirPath: string): Promise<ScannedEntry[]> {
     }
     throw error;
   }
+}
+
+export async function scanBundledManagedCodexAgents(): Promise<
+  CanonicalEntry[]
+> {
+  const agentsDir = join(await resolveAssetsRoot(), 'agents');
+  const entries = await readEntries(agentsDir);
+  const available = new Set(
+    entries.filter((entry) => entry.isFile).map((entry) => entry.name),
+  );
+  const missing = USER_SCOPE_MANAGED_AGENT_FILES.filter(
+    (name) => !available.has(name),
+  );
+
+  if (missing.length > 0) {
+    throw new CliError(
+      `Bundled managed Codex role definitions are unavailable: ${missing.join(', ')}. Reinstall or rebuild OAT before running user sync.`,
+    );
+  }
+
+  return USER_SCOPE_MANAGED_AGENT_FILES.map((name) => ({
+    name,
+    type: 'agent',
+    canonicalPath: join(agentsDir, name),
+    isFile: true,
+  }));
 }
 
 export async function scanCanonical(

@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,6 +11,7 @@ import {
   resolveScopeRoot,
   toPosixPath,
   validatePathWithinScope,
+  validateRealPathWithinScope,
 } from './paths';
 
 describe('fs/paths', () => {
@@ -70,6 +71,38 @@ describe('fs/paths', () => {
     const resolved = validatePathWithinScope(insidePath, scopeRoot);
 
     expect(resolved).toBe(insidePath);
+  });
+
+  it('validateRealPathWithinScope rejects missing and symlink-escaping paths', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-paths-scope-'));
+    const outsideRoot = await mkdtemp(join(tmpdir(), 'oat-paths-outside-'));
+    tempDirs.push(scopeRoot, outsideRoot);
+    const escapingLink = join(scopeRoot, 'external-project');
+    await symlink(outsideRoot, escapingLink, 'dir');
+
+    await expect(
+      validateRealPathWithinScope(join(scopeRoot, 'missing'), scopeRoot),
+    ).rejects.toThrow(/real path/i);
+    await expect(
+      validateRealPathWithinScope(escapingLink, scopeRoot),
+    ).rejects.toThrow(/outside scope root/i);
+  });
+
+  it('validateRealPathWithinScope canonicalizes an in-scope symlink to its in-scope real target', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-paths-scope-'));
+    tempDirs.push(scopeRoot);
+    const projectsRoot = join(scopeRoot, 'projects');
+    const realProject = join(projectsRoot, 'real-project');
+    const linkedProject = join(projectsRoot, 'linked-project');
+    await mkdir(realProject, { recursive: true });
+    await symlink('real-project', linkedProject, 'dir');
+
+    await expect(
+      validateRealPathWithinScope(linkedProject, scopeRoot),
+    ).resolves.toEqual({
+      realScopeRoot: await realpath(scopeRoot),
+      realPath: await realpath(realProject),
+    });
   });
 
   it('toPosixPath converts windows separators to posix separators', () => {

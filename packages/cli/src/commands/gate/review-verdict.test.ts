@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,6 +30,13 @@ describe('parseReviewGateVerdict', () => {
 oat_review_type: artifact
 oat_review_scope: plan
 oat_review_invocation: gate
+oat_project: .oat/projects/shared/demo
+oat_gate_run_id: 11111111-1111-4111-8111-111111111111
+oat_gate_target: codex-sol-max
+oat_gate_runtime: codex
+oat_invocation_model: gpt-5.6-sol
+oat_invocation_reasoning_effort: max
+oat_invocation_source: exec-target-config
 oat_review_critical_count: 2
 oat_review_important_count: 1
 oat_review_medium_count: 3
@@ -49,6 +57,15 @@ None.
       reviewType: 'artifact',
       scope: 'plan',
       invocation: 'gate',
+      project: '.oat/projects/shared/demo',
+      gateInvocation: {
+        runId: '11111111-1111-4111-8111-111111111111',
+        targetId: 'codex-sol-max',
+        runtime: 'codex',
+        model: 'gpt-5.6-sol',
+        reasoningEffort: 'max',
+        source: 'exec-target-config',
+      },
       counts: {
         critical: 2,
         important: 1,
@@ -57,6 +74,25 @@ None.
       },
       blocking: true,
     });
+  });
+
+  it('keeps manual artifacts compatible when gate-only fields are absent', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: manual
+---
+
+# Review
+
+Findings: 0 critical, 0 important, 0 medium, 0 minor
+`);
+
+    const verdict = await parseReviewGateVerdict(artifactPath);
+
+    expect(verdict.invocation).toBe('manual');
+    expect(verdict.project).toBeNull();
+    expect(verdict).not.toHaveProperty('gateInvocation');
   });
 
   it('falls back to standard Findings severity sections', async () => {
@@ -372,12 +408,121 @@ None
       blocking: false,
       normalization: {
         insertedSeverities: ['medium'],
+        persisted: true,
       },
     });
     const normalizedContent = await readFile(artifactPath, 'utf8');
     expect(normalizedContent).toMatch(
       /### Important[\s\S]*None[\s\S]*### Medium\s+None[\s\S]*### Minor/i,
     );
+  });
+
+  it('normalizes a current supplied snapshot in memory without rewriting it', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: final
+oat_review_invocation: gate
+oat_review_critical_count: 0
+oat_review_important_count: 0
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+None
+
+### Minor
+
+None
+`);
+    const snapshotContent = await readFile(artifactPath, 'utf8');
+
+    const verdict = await parseReviewGateVerdict(artifactPath, {
+      normalizeMissingEmptySeveritySections: true,
+      artifactSnapshot: {
+        content: snapshotContent,
+        signature: createHash('sha256').update(snapshotContent).digest('hex'),
+      },
+    });
+
+    expect(verdict).toMatchObject({
+      counts: { critical: 0, important: 0, medium: 0, minor: 0 },
+      normalization: {
+        insertedSeverities: ['medium'],
+        persisted: false,
+      },
+    });
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(snapshotContent);
+  });
+
+  it('refuses to normalize when the supplied artifact snapshot is stale', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+oat_project: .oat/projects/shared/declared
+oat_gate_run_id: 11111111-1111-4111-8111-111111111111
+oat_gate_target: codex-default
+oat_gate_runtime: codex
+oat_invocation_model: stale-model
+oat_invocation_reasoning_effort: provider-default
+oat_invocation_source: exec-target-config
+oat_review_critical_count: 0
+oat_review_important_count: 1
+oat_review_medium_count: 0
+oat_review_minor_count: 0
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### Important
+
+- Blocking finding.
+
+### Minor
+
+None
+`);
+    const snapshotContent = await readFile(artifactPath, 'utf8');
+    const mutatedContent = snapshotContent
+      .replace(
+        'oat_project: .oat/projects/shared/declared',
+        'oat_project: .oat/projects/shared/sibling',
+      )
+      .replace('oat_review_scope: p01', 'oat_review_scope: final')
+      .replace(
+        'oat_invocation_model: stale-model',
+        'oat_invocation_model: provider-default',
+      )
+      .replace('oat_review_important_count: 1', 'oat_review_important_count: 0')
+      .replace('- Blocking finding.', 'None.');
+    await writeFile(artifactPath, mutatedContent, 'utf8');
+
+    await expect(
+      parseReviewGateVerdict(artifactPath, {
+        normalizeMissingEmptySeveritySections: true,
+        artifactSnapshot: {
+          content: snapshotContent,
+          signature: createHash('sha256').update(snapshotContent).digest('hex'),
+        },
+      }),
+    ).rejects.toThrow(/changed after gate correlation/i);
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(mutatedContent);
   });
 
   it('does not insert duplicate severity headings when fenced code contains markdown headings', async () => {
@@ -510,6 +655,33 @@ None
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
       /incomplete Findings section.*Important.*Minor/i,
     );
+  });
+
+  it('does not mutate malformed YAML when normalization is requested', async () => {
+    const content = `---
+oat_review_type: code
+oat_review_scope: p02
+oat_review_invocation: gate
+oat_gate_run_id: 11111111-1111-4111-8111-111111111111
+broken: [
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+`;
+    const artifactPath = await writeArtifact(content);
+
+    await expect(
+      parseReviewGateVerdict(artifactPath, {
+        normalizeMissingEmptySeveritySections: true,
+      }),
+    ).rejects.toThrow(/YAML|flow sequence/i);
+    await expect(readFile(artifactPath, 'utf8')).resolves.toBe(content);
   });
 
   it('returns an actionable read error for missing artifacts', async () => {

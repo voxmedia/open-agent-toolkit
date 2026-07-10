@@ -31,6 +31,28 @@ Mode-sensitive notes:
 - `references/imported-plan.md`: preserved source plan for import mode
 - `references/split-plan.json`: persisted split plan for a coordination parent, used as the durable resume source when `oat-project-split` is interrupted
 
+### Gate review frontmatter
+
+Review artifacts produced by `oat gate review` use the normal review fields plus
+an exact copy of the gate-owned configured invocation:
+
+```yaml
+oat_review_invocation: gate
+oat_project: .oat/projects/shared/example
+oat_gate_run_id: 00000000-0000-0000-0000-000000000000
+oat_gate_target: codex-sol-max
+oat_gate_runtime: codex
+oat_invocation_model: gpt-5.6-sol
+oat_invocation_reasoning_effort: max
+oat_invocation_source: exec-target-config
+```
+
+`oat_invocation_model` and `oat_invocation_reasoning_effort` may be
+`provider-default` when OAT deliberately leaves a control to the provider, or
+`unknown` when the target does not declare it. These fields are configured
+invocation metadata, not runtime-confirmed or self-reported model identity.
+Manual and auto review artifacts do not require the gate-only fields.
+
 ## Contract
 
 Artifacts are the project system of record; automation and routing should derive from these files, not memory.
@@ -75,7 +97,7 @@ Each inner array is a group of phases that execute concurrently in their own wor
 - Each group must contain **2 or more** phases — singleton groups are rejected.
 - Every phase ID must exist in the plan body.
 - No phase may appear in more than one group.
-- Parallelism is only honored at Tier 1 (native subagents). Tier 2 degrades parallel groups to sequential inline execution.
+- Parallelism is only honored at Tier 1 (native subagents). Tier 2 degrades parallel groups to sequential target-preserving execution, not unconditional inline review. Concrete managed Claude and Cursor reviewers retain the exact resolver-returned `dispatchArgs.model` in the actual invocation and every retry; Codex retains its exact role or pinned child. Inline review requires verified equivalent host controls or an explicit inherit/default or managed-uncapped base-role exception, and otherwise blocks.
 
 **Authoring responsibility:**
 
@@ -89,6 +111,14 @@ Before dispatching, `oat-project-implement` invokes `oat project validate-plan -
 #### oat_phase_review_gate
 
 Enable an optional, non-pausing external review gate that runs after each selected phase's standard reviewer passes and its bookkeeping is committed:
+
+Planning offers this setting after stable phase IDs exist and before the plan
+artifact review. The read-only target probe qualifies only an explicitly
+configured, enabled, and available target, then offers all phases, selected
+phases, or disabled. An explicit `oat_phase_review_gate` value from a resumed or
+imported plan is preserved unchanged without re-prompting. If the probe fails,
+no target qualifies, the run is non-interactive, or the user declines, planning
+leaves phase review disabled.
 
 ```yaml
 oat_phase_review_gate:

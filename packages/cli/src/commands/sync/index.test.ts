@@ -1,14 +1,29 @@
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
-import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
+import {
+  scanBundledManagedCodexAgents as scanBundledManagedCodexAgentsFromDisk,
+  scanCanonical as scanCanonicalFromDisk,
+  type CanonicalEntry,
+  type SyncPlan,
+  type SyncResult,
+} from '@engine/index';
 import type { Manifest } from '@manifest/index';
+import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import type {
   CodexExtensionApplyResult,
   CodexExtensionPlan,
+} from '@providers/codex/codec/sync-extension';
+import {
+  applyCodexProjectExtensionPlan as applyCodexExtensionPlanToDisk,
+  computeCodexProjectExtensionPlan as computeCodexExtensionPlanFromDisk,
 } from '@providers/codex/codec/sync-extension';
 import type {
   ConfigAwareAdaptersResult,
@@ -33,6 +48,11 @@ interface HarnessOptions {
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
   canonicalEntries?: CanonicalEntry[];
+  cwd?: string;
+  home?: string;
+  useDiskCodexExtension?: boolean;
+  useDiskScanner?: boolean;
+  useDiskBundledCodexAgents?: boolean;
 }
 
 interface RunSyncArgs {
@@ -213,19 +233,25 @@ function createHarness(options: HarnessOptions = {}): {
   });
 
   const codexExtensionPlans = [...(options.codexExtensionPlans ?? [])];
-  const computeCodexProjectExtensionPlan = vi.fn(async () => {
-    return (
-      codexExtensionPlans.shift() ?? {
-        operations: [],
-        managedRoles: [],
-        aggregateConfigHash: 'hash',
-      }
-    );
-  });
+  const computeCodexProjectExtensionPlan = options.useDiskCodexExtension
+    ? vi.fn(computeCodexExtensionPlanFromDisk)
+    : vi.fn(async () => {
+        return (
+          codexExtensionPlans.shift() ?? {
+            operations: [],
+            managedRoles: [],
+            aggregateConfigHash: 'hash',
+          }
+        );
+      });
   const codexApplyResults = [...(options.codexExtensionApplyResults ?? [])];
-  const applyCodexProjectExtensionPlan = vi.fn(async () => {
-    return codexApplyResults.shift() ?? { applied: 0, failed: 0, skipped: 0 };
-  });
+  const applyCodexProjectExtensionPlan = options.useDiskCodexExtension
+    ? vi.fn(applyCodexExtensionPlanToDisk)
+    : vi.fn(async () => {
+        return (
+          codexApplyResults.shift() ?? { applied: 0, failed: 0, skipped: 0 }
+        );
+      });
 
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
   const selectProvidersWithAbort = vi.fn(
@@ -245,21 +271,28 @@ function createHarness(options: HarnessOptions = {}): {
       dryRun: globalOptions.dryRun ?? false,
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
-      cwd: globalOptions.cwd ?? '/tmp/workspace',
-      home: '/tmp/home',
+      cwd: globalOptions.cwd ?? options.cwd ?? '/tmp/workspace',
+      home: options.home ?? '/tmp/home',
       interactive: options.interactive ?? !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
-    resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+    resolveScopeRoot: vi.fn(async (scope) =>
+      scope === 'user'
+        ? (options.home ?? '/tmp/home')
+        : (options.cwd ?? '/tmp/workspace'),
+    ),
     loadManifest: vi.fn(async () => manifestQueue.shift() ?? createManifest()),
     loadSyncConfig: vi.fn(
       async () =>
         options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
     ),
     saveSyncConfig,
-    scanCanonical: vi.fn(
-      async () => options.canonicalEntries ?? [createCanonicalEntry()],
-    ),
+    scanCanonical: options.useDiskScanner
+      ? vi.fn(scanCanonicalFromDisk)
+      : vi.fn(async () => options.canonicalEntries ?? [createCanonicalEntry()]),
+    scanBundledManagedCodexAgents: options.useDiskBundledCodexAgents
+      ? vi.fn(scanBundledManagedCodexAgentsFromDisk)
+      : vi.fn(async () => []),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     selectProvidersWithAbort,
@@ -731,6 +764,75 @@ describe('createSyncCommand', () => {
     });
   });
 
+  it.each(['user', 'project'] as const)(
+    'routes Codex extension reconciliation for %s sync scope',
+    async (scope) => {
+      const { command, computeCodexProjectExtensionPlan } = createHarness({
+        adapters: [createCodexAdapter()],
+        plans: [createEmptyPlan(scope)],
+        configAwareResults: [
+          {
+            activeAdapters: [createCodexAdapter()],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', scope],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        scope === 'user' ? '/tmp/home' : '/tmp/workspace',
+        expect.any(Array),
+        undefined,
+        { userConfigDir: '/tmp/home/.oat' },
+      );
+    },
+  );
+
+  it('routes Codex extension reconciliation for both scopes during all sync', async () => {
+    const { command, computeCodexProjectExtensionPlan } = createHarness({
+      adapters: [createCodexAdapter()],
+      plans: [createEmptyPlan('user'), createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [createCodexAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [createCodexAdapter()],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'all'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(computeCodexProjectExtensionPlan).toHaveBeenCalledTimes(2);
+    expect(computeCodexProjectExtensionPlan).toHaveBeenNthCalledWith(
+      1,
+      '/tmp/workspace',
+      expect.any(Array),
+      undefined,
+      { userConfigDir: '/tmp/home/.oat' },
+    );
+    expect(computeCodexProjectExtensionPlan).toHaveBeenNthCalledWith(
+      2,
+      '/tmp/home',
+      expect.any(Array),
+      undefined,
+      { userConfigDir: '/tmp/home/.oat' },
+    );
+  });
+
   it('forwards install-triggered canonical filters into codex extension planning', async () => {
     const { command, computeCodexProjectExtensionPlan } = createHarness({
       adapters: [createCodexAdapter()],
@@ -816,6 +918,169 @@ describe('createSyncCommand', () => {
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(applyCodexProjectExtensionPlan).toHaveBeenCalledTimes(1);
     expect(capture.success).toContain('\nSync applied successfully.');
+  });
+
+  it('materializes user-owned Codex roles through the real user scanner and preserves every owner idempotently', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-sync-user-home-'));
+    const project = await mkdtemp(join(tmpdir(), 'oat-sync-user-project-'));
+
+    try {
+      await mkdir(join(home, '.oat'), { recursive: true });
+      await mkdir(join(home, '.codex', 'agents'), { recursive: true });
+      await writeFile(
+        join(home, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                codex: {
+                  high: {
+                    candidates: [
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.7-user-lower-custom',
+                        effort: 'medium',
+                      },
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.7-user-custom',
+                        effort: 'high',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const existingUserRole = buildCodexMaterializedTargetRoleName({
+        agentName: 'oat-reviewer',
+        model: 'gpt-5.7-user-custom',
+        effort: 'high',
+      });
+      const preservedRoles = [
+        [existingUserRole, 'user-config'],
+        ['keep-project', 'project-config'],
+        ['keep-supported', 'supported-catalogue'],
+        ['keep-unrelated', null],
+      ] as const;
+      for (const [role, owner] of preservedRoles) {
+        await writeFile(
+          join(home, '.codex', 'agents', `${role}.toml`),
+          [
+            '# oat-managed: true',
+            `# oat-role: ${role}`,
+            ...(owner ? [`# oat-owner: ${owner}`] : []),
+            'developer_instructions = "preserve"',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+      }
+      await writeFile(
+        join(home, '.codex', 'config.toml'),
+        preservedRoles
+          .map(
+            ([role]) =>
+              `[agents.${role}]\ndescription = "${role}"\nconfig_file = "agents/${role}.toml"\n`,
+          )
+          .join('\n'),
+        'utf8',
+      );
+
+      const run = async () => {
+        const harness = createHarness({
+          adapters: [createCodexAdapter()],
+          plans: [createEmptyPlan('user')],
+          configAwareResults: [
+            {
+              activeAdapters: [createCodexAdapter()],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+          ],
+          cwd: project,
+          home,
+          useDiskCodexExtension: true,
+          useDiskScanner: true,
+          useDiskBundledCodexAgents: true,
+        });
+        await runSyncCommand(harness.command, {
+          globalArgs: ['--scope', 'user'],
+        });
+        return harness;
+      };
+
+      const first = await run();
+      expect(first.computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        home,
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'oat-phase-implementer.md',
+            type: 'agent',
+          }),
+          expect.objectContaining({ name: 'oat-reviewer.md', type: 'agent' }),
+        ]),
+        undefined,
+        { userConfigDir: join(home, '.oat') },
+      );
+      expect(first.computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          canonical: expect.not.arrayContaining([
+            expect.objectContaining({ type: 'agent' }),
+          ]),
+        }),
+      );
+
+      const generatedRoles = ['oat-phase-implementer', 'oat-reviewer'].flatMap(
+        (agentName) =>
+          [
+            ['gpt-5.7-user-lower-custom', 'medium'],
+            ['gpt-5.7-user-custom', 'high'],
+          ].map(([model, effort]) =>
+            buildCodexMaterializedTargetRoleName({
+              agentName,
+              model,
+              effort,
+            }),
+          ),
+      );
+      expect(generatedRoles).toContain(existingUserRole);
+      for (const role of generatedRoles) {
+        await expect(
+          readFile(join(home, '.codex', 'agents', `${role}.toml`), 'utf8'),
+        ).resolves.toContain('# oat-owner: user-config');
+      }
+      for (const [role] of preservedRoles.slice(1)) {
+        await expect(
+          readFile(join(home, '.codex', 'agents', `${role}.toml`), 'utf8'),
+        ).resolves.toContain('developer_instructions = "preserve"');
+      }
+
+      const trackedFiles = [
+        join(home, '.codex', 'config.toml'),
+        ...[...generatedRoles, ...preservedRoles.map(([role]) => role)].map(
+          (role) => join(home, '.codex', 'agents', `${role}.toml`),
+        ),
+      ];
+      const firstBytes = await Promise.all(
+        trackedFiles.map((path) => readFile(path, 'utf8')),
+      );
+      await run();
+      const secondBytes = await Promise.all(
+        trackedFiles.map((path) => readFile(path, 'utf8')),
+      );
+      expect(secondBytes).toEqual(firstBytes);
+    } finally {
+      await Promise.all([
+        rm(home, { recursive: true, force: true }),
+        rm(project, { recursive: true, force: true }),
+      ]);
+    }
   });
 
   it('exits 0 on success, 1 on partial failure', async () => {

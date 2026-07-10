@@ -1051,6 +1051,22 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('dispatch-ceiling resolve help documents the ephemeral named ceiling tier', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'dispatch-ceiling',
+      'resolve',
+    ]).helpInformation();
+
+    expect(help).toContain('--ceiling-tier <tier>');
+    expect(help).toMatch(
+      /choices: "economy", "balanced", "high",\s+"frontier"/,
+    );
+    expect(help).toMatch(/Invocation-only named maximum tier/);
+    expect(help).toMatch(/never\s+persists configuration or project state/);
+  });
+
   it('project status --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [

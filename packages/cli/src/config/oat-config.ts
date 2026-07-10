@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { lstat, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
-import { normalizeToPosixPath } from '@fs/paths';
+import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
 import { parseJsonConfig } from './json';
 
@@ -39,7 +39,12 @@ export type WorkflowReviewExecutionModel =
   | 'inline'
   | 'fresh-session';
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
-export type WorkflowCodexDispatchCeiling = 'low' | 'medium' | 'high' | 'xhigh';
+export type WorkflowCodexDispatchCeiling =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh'
+  | 'max';
 export type WorkflowClaudeDispatchCeiling =
   | 'haiku'
   | 'sonnet'
@@ -71,7 +76,19 @@ export interface DispatchRouteTargetValidation {
 }
 export type WorkflowDispatchRouteEntry = string | WorkflowDispatchRouteTarget;
 export type WorkflowDispatchRoute = WorkflowDispatchRouteEntry[];
-export type WorkflowDispatchMatrixCell = string | WorkflowDispatchRoute;
+export interface WorkflowDispatchFallbackRoute {
+  route: WorkflowDispatchRoute;
+}
+export type WorkflowDispatchCandidate =
+  | WorkflowDispatchRouteEntry
+  | WorkflowDispatchFallbackRoute;
+export interface WorkflowDispatchCandidateLadder {
+  candidates: WorkflowDispatchCandidate[];
+}
+export type WorkflowDispatchLegacyMatrixCell = string | WorkflowDispatchRoute;
+export type WorkflowDispatchMatrixCell =
+  | WorkflowDispatchCandidateLadder
+  | WorkflowDispatchLegacyMatrixCell;
 export type WorkflowDispatchProviderValue =
   | string
   | Partial<Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>>;
@@ -101,9 +118,15 @@ export interface GateConfig {
   maxAttempts?: number;
 }
 
+export interface ExecTargetInvocation {
+  model?: string | 'provider-default';
+  reasoningEffort?: string | 'provider-default';
+}
+
 export interface ExecTarget {
   runtime: string;
   baseCommand: string[];
+  invocation?: ExecTargetInvocation;
   models?: string[];
   hostDetectionCommand?: string[];
   availabilityCommand?: string[];
@@ -147,7 +170,7 @@ const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'draft',
 ];
 export const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] =
-  ['low', 'medium', 'high', 'xhigh'];
+  ['low', 'medium', 'high', 'xhigh', 'max'];
 export const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
   ['haiku', 'sonnet', 'opus', 'fable'];
 export const VALID_DISPATCH_CEILING_PRESETS: readonly WorkflowDispatchCeilingPreset[] =
@@ -168,6 +191,10 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   'codex-default': {
     runtime: 'codex',
     baseCommand: ['codex', 'exec'],
+    invocation: {
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    },
     hostDetectionCommand: [
       'sh',
       '-c',
@@ -179,6 +206,10 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   'claude-default': {
     runtime: 'claude',
     baseCommand: ['claude', '-p'],
+    invocation: {
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    },
     hostDetectionCommand: ['sh', '-c', 'test -n "$CLAUDECODE"'],
     availabilityCommand: ['claude', '--version'],
     priority: 100,
@@ -186,6 +217,10 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   'cursor-default': {
     runtime: 'cursor',
     baseCommand: ['cursor-agent', '-p'],
+    invocation: {
+      model: 'provider-default',
+      reasoningEffort: 'provider-default',
+    },
     hostDetectionCommand: ['sh', '-c', 'test -n "$CURSOR_AGENT"'],
     availabilityCommand: [
       'sh',
@@ -220,6 +255,30 @@ export function validateDispatchRouteTarget(
   }
 
   return { valid: true };
+}
+
+export function isWorkflowDispatchFallbackRoute(
+  value: unknown,
+): value is WorkflowDispatchFallbackRoute {
+  return isRecord(value) && Array.isArray(value.route);
+}
+
+export function isWorkflowDispatchCandidateLadder(
+  value: unknown,
+): value is WorkflowDispatchCandidateLadder {
+  return isRecord(value) && Array.isArray(value.candidates);
+}
+
+export function toWorkflowDispatchCandidateLadder(
+  cell: WorkflowDispatchMatrixCell,
+): WorkflowDispatchCandidateLadder {
+  if (isWorkflowDispatchCandidateLadder(cell)) {
+    return cell;
+  }
+
+  return {
+    candidates: [Array.isArray(cell) ? { route: cell } : cell],
+  };
 }
 
 function normalizeMaxAttempts(value: unknown): number {
@@ -343,15 +402,10 @@ function normalizeDispatchRouteTarget(
   return Object.keys(target).length > 0 ? target : undefined;
 }
 
-function normalizeDispatchMatrixCell(
+function normalizeDispatchRoute(
   providerKey: string,
   value: unknown,
-): WorkflowDispatchMatrixCell | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
+): WorkflowDispatchRoute | undefined {
   if (!Array.isArray(value) || value.length === 0) {
     return undefined;
   }
@@ -373,6 +427,54 @@ function normalizeDispatchMatrixCell(
   return route.length > 0 ? route : undefined;
 }
 
+function normalizeDispatchCandidate(
+  providerKey: string,
+  value: unknown,
+): WorkflowDispatchCandidate | undefined {
+  const bareValue = normalizeProviderBareValue(providerKey, value);
+  if (bareValue !== undefined) {
+    return bareValue;
+  }
+
+  if (isRecord(value) && Object.hasOwn(value, 'route')) {
+    const route = normalizeDispatchRoute(providerKey, value.route);
+    return route ? { route } : undefined;
+  }
+
+  return normalizeDispatchRouteTarget(value);
+}
+
+function normalizeDispatchMatrixCell(
+  providerKey: string,
+  value: unknown,
+): WorkflowDispatchCandidateLadder | undefined {
+  const bareValue = normalizeProviderBareValue(providerKey, value);
+  if (bareValue !== undefined) {
+    return { candidates: [bareValue] };
+  }
+
+  if (isWorkflowDispatchCandidateLadder(value)) {
+    const candidates: WorkflowDispatchCandidate[] = [];
+    for (const candidate of value.candidates) {
+      const normalized = normalizeDispatchCandidate(providerKey, candidate);
+      if (normalized !== undefined) {
+        candidates.push(normalized);
+      }
+    }
+
+    return candidates.length > 0 ? { candidates } : undefined;
+  }
+
+  const directTarget = normalizeDispatchRouteTarget(value);
+  if (directTarget !== undefined) {
+    return { candidates: [directTarget] };
+  }
+
+  const route = normalizeDispatchRoute(providerKey, value);
+
+  return route ? { candidates: [{ route }] } : undefined;
+}
+
 function normalizeDispatchProviderValue(
   providerKey: string,
   value: unknown,
@@ -387,7 +489,7 @@ function normalizeDispatchProviderValue(
   }
 
   const tierMap: Partial<
-    Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
+    Record<WorkflowDispatchMatrixTier, WorkflowDispatchCandidateLadder>
   > = {};
   for (const [tier, rawCell] of Object.entries(value)) {
     if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {
@@ -423,6 +525,19 @@ function normalizeExecTarget(
   const baseCommand = normalizeArgv(value.baseCommand);
   if (baseCommand !== undefined) {
     target.baseCommand = baseCommand;
+  }
+
+  if (isRecord(value.invocation)) {
+    const model = trimNonEmptyString(value.invocation.model);
+    const reasoningEffort = trimNonEmptyString(
+      value.invocation.reasoningEffort,
+    );
+    if (model !== undefined || reasoningEffort !== undefined) {
+      target.invocation = {
+        ...(model !== undefined ? { model } : {}),
+        ...(reasoningEffort !== undefined ? { reasoningEffort } : {}),
+      };
+    }
   }
 
   const models = normalizeStringList(value.models);
@@ -746,7 +861,7 @@ function normalizeKnownStrays(value: unknown): string[] | undefined {
   return normalized.length > 0 ? [...new Set(normalized)].sort() : undefined;
 }
 
-function normalizeProjectPath(
+export function normalizeProjectPath(
   repoRoot: string,
   pathValue: string | null | undefined,
 ): string | null {
@@ -759,30 +874,48 @@ function normalizeProjectPath(
     return null;
   }
 
-  if (!isAbsolute(trimmed)) {
-    const normalizedRelative = trimPathValue(normalizeToPosixPath(trimmed));
-    return normalizedRelative && normalizedRelative !== '.'
-      ? normalizedRelative
-      : null;
-  }
-
   const repoRootResolved = resolve(repoRoot);
-  const absoluteResolved = resolve(trimmed);
+  const absoluteResolved = resolve(repoRootResolved, trimmed);
+  const relativePath = relative(repoRootResolved, absoluteResolved);
   const isInsideRepo =
-    absoluteResolved === repoRootResolved ||
-    absoluteResolved.startsWith(`${repoRootResolved}${sep}`);
+    !isAbsolute(relativePath) &&
+    relativePath !== '..' &&
+    !relativePath.startsWith(`..${sep}`);
 
   if (!isInsideRepo) {
     return null;
   }
 
-  const relativePath = normalizeToPosixPath(
-    relative(repoRootResolved, absoluteResolved),
-  );
-  const normalizedRelative = trimPathValue(relativePath);
+  const normalizedRelative = trimPathValue(normalizeToPosixPath(relativePath));
   return normalizedRelative && normalizedRelative !== '.'
     ? normalizedRelative
     : null;
+}
+
+async function normalizeReadableProjectPath(
+  repoRoot: string,
+  pathValue: string | null | undefined,
+): Promise<string | null> {
+  const normalizedPath = normalizeProjectPath(repoRoot, pathValue);
+  if (!normalizedPath) {
+    return null;
+  }
+
+  const absolutePath = join(repoRoot, normalizedPath);
+  try {
+    await lstat(absolutePath);
+  } catch (error) {
+    return isMissingFileError(error) ? normalizedPath : null;
+  }
+
+  try {
+    const validated = await validateRealPathWithinScope(absolutePath, repoRoot);
+    return (await dirExists(validated.realPath))
+      ? normalizeProjectPath(validated.realScopeRoot, validated.realPath)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function normalizeOatConfig(parsed: unknown): OatConfig {
@@ -1007,7 +1140,17 @@ export async function readOatLocalConfig(
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatLocalConfig(repoRoot, parseJsonConfig(raw, configPath));
+    const normalized = normalizeOatLocalConfig(
+      repoRoot,
+      parseJsonConfig(raw, configPath),
+    );
+    if (normalized.activeProject !== undefined) {
+      normalized.activeProject = await normalizeReadableProjectPath(
+        repoRoot,
+        normalized.activeProject,
+      );
+    }
+    return normalized;
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_LOCAL_CONFIG };
@@ -1045,14 +1188,36 @@ export async function resolveActiveProject(
     return { name: null, path: null, status: 'unset' };
   }
 
-  const absoluteProjectPath = join(repoRoot, projectPath);
+  let resolvedProjectPath = projectPath;
+  let absoluteProjectPath = join(repoRoot, projectPath);
+  try {
+    const validated = await validateRealPathWithinScope(
+      absoluteProjectPath,
+      repoRoot,
+    );
+    const canonicalProjectPath = normalizeProjectPath(
+      validated.realScopeRoot,
+      validated.realPath,
+    );
+    if (!canonicalProjectPath) {
+      throw new Error('Project path resolves to the repository root.');
+    }
+    resolvedProjectPath = canonicalProjectPath;
+    absoluteProjectPath = validated.realPath;
+  } catch {
+    return {
+      name: basename(absoluteProjectPath),
+      path: projectPath,
+      status: 'missing',
+    };
+  }
   const statePath = join(absoluteProjectPath, 'state.md');
   const isValid =
     (await dirExists(absoluteProjectPath)) && (await fileExists(statePath));
 
   return {
     name: basename(absoluteProjectPath),
-    path: projectPath,
+    path: resolvedProjectPath,
     status: isValid ? 'active' : 'missing',
   };
 }
@@ -1068,10 +1233,30 @@ export async function setActiveProject(
     );
   }
 
+  let canonicalPath: string;
+  try {
+    const validated = await validateRealPathWithinScope(
+      join(repoRoot, normalizedPath),
+      repoRoot,
+    );
+    const canonicalProjectPath = normalizeProjectPath(
+      validated.realScopeRoot,
+      validated.realPath,
+    );
+    if (!canonicalProjectPath || !(await dirExists(validated.realPath))) {
+      throw new Error('Project directory is missing.');
+    }
+    canonicalPath = canonicalProjectPath;
+  } catch {
+    throw new Error(
+      `Active project path must be repo-relative or inside repo root: ${projectRelativePath}`,
+    );
+  }
+
   const localConfig = await readOatLocalConfig(repoRoot);
   await writeOatLocalConfig(repoRoot, {
     ...localConfig,
-    activeProject: normalizedPath,
+    activeProject: canonicalPath,
   });
 }
 
