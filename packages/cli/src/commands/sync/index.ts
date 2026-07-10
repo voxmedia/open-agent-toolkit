@@ -18,7 +18,12 @@ import {
   type SyncConfig,
   saveSyncConfig,
 } from '@config/index';
-import { computeSyncPlan, executeSyncPlan, scanCanonical } from '@engine/index';
+import {
+  computeSyncPlan,
+  executeSyncPlan,
+  scanBundledManagedCodexAgents,
+  scanCanonical,
+} from '@engine/index';
 import { CliError } from '@errors/index';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
@@ -63,6 +68,7 @@ function defaultDependencies(): SyncCommandDependencies {
     },
     saveSyncConfig,
     scanCanonical,
+    scanBundledManagedCodexAgents,
     getAdapters() {
       return [
         claudeAdapter,
@@ -269,9 +275,16 @@ async function computePlans(
       (adapter) => adapter.name,
     );
     if (activeAdapterNames.includes('codex')) {
+      const codexCanonical =
+        scope === 'user'
+          ? [
+              ...canonical,
+              ...(await dependencies.scanBundledManagedCodexAgents()),
+            ]
+          : canonical;
       codexExtensionPlan = await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
-        canonical,
+        codexCanonical,
         allowedCanonicalPaths,
         { userConfigDir: join(context.home, '.oat') },
       );

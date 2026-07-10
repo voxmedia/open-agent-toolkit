@@ -74,7 +74,9 @@ async function readEntries(dirPath: string): Promise<ScannedEntry[]> {
   }
 }
 
-async function scanBundledManagedUserAgents(): Promise<CanonicalEntry[]> {
+export async function scanBundledManagedCodexAgents(): Promise<
+  CanonicalEntry[]
+> {
   const agentsDir = join(await resolveAssetsRoot(), 'agents');
   const entries = await readEntries(agentsDir);
   const available = new Set(
@@ -125,10 +127,6 @@ export async function scanCanonical(
         isFile: scannedEntry.isFile,
       });
     }
-  }
-
-  if (scope === 'user') {
-    entries.push(...(await scanBundledManagedUserAgents()));
   }
 
   return entries;

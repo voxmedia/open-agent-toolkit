@@ -31,4 +31,4 @@ export {
   writeDirectorySentinel,
 } from './markers';
 export type { CanonicalEntry } from './scanner';
-export { scanCanonical } from './scanner';
+export { scanBundledManagedCodexAgents, scanCanonical } from './scanner';

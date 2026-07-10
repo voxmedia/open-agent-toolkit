@@ -9,6 +9,7 @@ import {
 } from '@commands/__tests__/helpers';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import {
+  scanBundledManagedCodexAgents as scanBundledManagedCodexAgentsFromDisk,
   scanCanonical as scanCanonicalFromDisk,
   type CanonicalEntry,
   type SyncPlan,
@@ -51,6 +52,7 @@ interface HarnessOptions {
   home?: string;
   useDiskCodexExtension?: boolean;
   useDiskScanner?: boolean;
+  useDiskBundledCodexAgents?: boolean;
 }
 
 interface RunSyncArgs {
@@ -288,6 +290,9 @@ function createHarness(options: HarnessOptions = {}): {
     scanCanonical: options.useDiskScanner
       ? vi.fn(scanCanonicalFromDisk)
       : vi.fn(async () => options.canonicalEntries ?? [createCanonicalEntry()]),
+    scanBundledManagedCodexAgents: options.useDiskBundledCodexAgents
+      ? vi.fn(scanBundledManagedCodexAgentsFromDisk)
+      : vi.fn(async () => []),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     selectProvidersWithAbort,
@@ -995,6 +1000,7 @@ describe('createSyncCommand', () => {
           home,
           useDiskCodexExtension: true,
           useDiskScanner: true,
+          useDiskBundledCodexAgents: true,
         });
         await runSyncCommand(harness.command, {
           globalArgs: ['--scope', 'user'],
@@ -1014,6 +1020,13 @@ describe('createSyncCommand', () => {
         ]),
         undefined,
         { userConfigDir: join(home, '.oat') },
+      );
+      expect(first.computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          canonical: expect.not.arrayContaining([
+            expect.objectContaining({ type: 'agent' }),
+          ]),
+        }),
       );
 
       const generatedRoles = [
