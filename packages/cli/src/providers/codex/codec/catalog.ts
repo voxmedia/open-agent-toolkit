@@ -1,25 +1,11 @@
 import { buildCodexMaterializedRoleName } from './materialize';
+import { SUPPORTED_CODEX_ROLE_TARGETS } from './shared';
+
+export { SUPPORTED_CODEX_ROLE_TARGETS } from './shared';
 
 export const SUPPORTED_CODEX_BASE_ROLES = [
   'oat-phase-implementer',
   'oat-reviewer',
-] as const;
-
-const STANDARD_EFFORTS = ['low', 'medium', 'high', 'xhigh'] as const;
-
-export const SUPPORTED_CODEX_ROLE_TARGETS = [
-  ...STANDARD_EFFORTS.map((effort) => ({
-    model: 'gpt-5.6-luna',
-    effort,
-  })),
-  ...STANDARD_EFFORTS.map((effort) => ({
-    model: 'gpt-5.6-terra',
-    effort,
-  })),
-  ...[...STANDARD_EFFORTS, 'max'].map((effort) => ({
-    model: 'gpt-5.6-sol',
-    effort,
-  })),
 ] as const;
 
 export interface SupportedCodexRoleCatalogueEntry {

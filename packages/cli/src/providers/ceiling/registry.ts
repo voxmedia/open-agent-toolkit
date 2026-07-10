@@ -2,7 +2,7 @@ import {
   VALID_CLAUDE_DISPATCH_CEILINGS,
   VALID_CODEX_DISPATCH_CEILINGS,
 } from '@config/oat-config';
-import { buildCodexMaterializedRoleName } from '@providers/codex/codec/materialize';
+import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 
 /**
  * Provider ceiling adapter registry.
@@ -87,7 +87,7 @@ const codexAdapter: ProviderCeilingAdapter = {
     const baseRole =
       role === 'reviewer' ? CODEX_REVIEWER_ROLE : CODEX_IMPLEMENTER_ROLE;
     return {
-      variant: buildCodexMaterializedRoleName({
+      variant: buildCodexMaterializedTargetRoleName({
         agentName: baseRole,
         model: target.model,
         effort: target.effort,

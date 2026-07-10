@@ -53,6 +53,36 @@ describe('provider ceiling adapters', () => {
       });
     });
 
+    it.each([
+      [
+        'vendor/model.x',
+        'vendor.model.x',
+        'oat-reviewer-vendor-model-x-high-5330f8196e',
+        'oat-reviewer-vendor-model-x-high-ff27ce33ce',
+      ],
+      [
+        'Vendor.Model.X',
+        'vendor.model.x',
+        'oat-reviewer-vendor-model-x-high-91728b819f',
+        'oat-reviewer-vendor-model-x-high-ff27ce33ce',
+      ],
+    ])(
+      'deterministically disambiguates custom targets %s and %s that normalize to the same role slug',
+      (leftModel, rightModel, leftVariant, rightVariant) => {
+        const compile = (model: string) =>
+          codex.compileToDispatchArgs('high', 'reviewer', {
+            target: { model, effort: 'high' },
+          });
+
+        const left = compile(leftModel);
+        const right = compile(rightModel);
+        expect(left).toEqual({ variant: leftVariant });
+        expect(right).toEqual({ variant: rightVariant });
+        expect(compile(leftModel)).toEqual(left);
+        expect(compile(rightModel)).toEqual(right);
+      },
+    );
+
     it('does not compile bare legacy effort values to deterministic dispatch args', () => {
       expect(codex.compileToDispatchArgs('high', 'implementer', {})).toBeNull();
     });

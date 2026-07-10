@@ -15,6 +15,7 @@ import {
   type SyncResult,
 } from '@engine/index';
 import type { Manifest } from '@manifest/index';
+import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import type {
   CodexExtensionApplyResult,
   CodexExtensionPlan,
@@ -944,8 +945,13 @@ describe('createSyncCommand', () => {
         'utf8',
       );
 
+      const existingUserRole = buildCodexMaterializedTargetRoleName({
+        agentName: 'oat-reviewer',
+        model: 'gpt-5.7-user-custom',
+        effort: 'high',
+      });
       const preservedRoles = [
-        ['oat-reviewer-gpt-5-7-user-custom-high', 'user-config'],
+        [existingUserRole, 'user-config'],
         ['keep-project', 'project-config'],
         ['keep-supported', 'supported-catalogue'],
         ['keep-unrelated', null],
@@ -1011,8 +1017,12 @@ describe('createSyncCommand', () => {
       );
 
       const generatedRoles = [
-        'oat-phase-implementer-gpt-5-7-user-custom-high',
-        'oat-reviewer-gpt-5-7-user-custom-high',
+        buildCodexMaterializedTargetRoleName({
+          agentName: 'oat-phase-implementer',
+          model: 'gpt-5.7-user-custom',
+          effort: 'high',
+        }),
+        existingUserRole,
       ];
       for (const role of generatedRoles) {
         await expect(

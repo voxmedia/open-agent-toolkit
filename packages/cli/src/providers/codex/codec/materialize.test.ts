@@ -38,7 +38,7 @@ describe('materializeCodexRole', () => {
         model: 'gpt-5.6/sol@preview',
         effort: 'xhigh',
       }),
-    ).toBe('custom-agent-gpt-5-6-sol-preview-xhigh');
+    ).toBe('custom-agent-gpt-5-6-sol-preview-xhigh-72897c3c6a');
   });
 
   it('throws CliError when model or effort is missing', () => {

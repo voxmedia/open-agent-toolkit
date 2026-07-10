@@ -5,7 +5,10 @@ import {
   type CodexRoleExport,
   exportCanonicalAgentToCodexRole,
 } from './export-to-codex';
-import { normalizeCodexRoleName, sanitizeCodexRoleName } from './shared';
+import {
+  buildCodexMaterializedTargetRoleName,
+  sanitizeCodexRoleName,
+} from './shared';
 
 export interface CodexMaterializeRoleOptions {
   agent: CanonicalAgentDocument;
@@ -33,12 +36,11 @@ export function buildCodexMaterializedRoleName({
   model,
   effort,
 }: CodexMaterializedRoleNameOptions): string {
-  const normalizedAgentName = sanitizeCodexRoleName(agentName);
-  const normalizedModel = normalizeCodexRoleName(model);
-  const normalizedEffort = normalizeCodexRoleName(effort);
-  const roleName = normalizeCodexRoleName(
-    `${normalizedAgentName}-${normalizedModel}-${normalizedEffort}`,
-  );
+  const roleName = buildCodexMaterializedTargetRoleName({
+    agentName,
+    model,
+    effort,
+  });
 
   if (!roleName) {
     throw new CliError('Cannot materialize Codex role: missing role name.');

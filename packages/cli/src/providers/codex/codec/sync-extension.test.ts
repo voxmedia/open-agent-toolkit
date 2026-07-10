@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import type { CanonicalEntry } from '@engine/index';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { buildCodexMaterializedRoleName } from './materialize';
 import {
   applyCodexProjectExtensionPlan,
   computeCodexProjectExtensionPlan,
@@ -573,18 +574,99 @@ describe('codex sync extension', () => {
       { userConfigDir: join(home, '.oat') },
     );
 
-    expect(plan.managedRoles).toContain(
-      'oat-reviewer-gpt-5-7-project-custom-high',
-    );
-    expect(plan.managedRoles).not.toContain(
-      'oat-reviewer-gpt-5-7-user-custom-high',
-    );
+    const projectRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-reviewer',
+      model: 'gpt-5.7-project-custom',
+      effort: 'high',
+    });
+    const userRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-reviewer',
+      model: 'gpt-5.7-user-custom',
+      effort: 'high',
+    });
+    expect(plan.managedRoles).toContain(projectRole);
+    expect(plan.managedRoles).not.toContain(userRole);
     expect(
-      plan.operations.find(
-        (operation) =>
-          operation.roleName === 'oat-reviewer-gpt-5-7-project-custom-high',
-      )?.content,
+      plan.operations.find((operation) => operation.roleName === projectRole)
+        ?.content,
     ).toContain('# oat-owner: project-config');
+  });
+
+  it('writes distinct deterministic roles for punctuation-equivalent custom targets', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'vendor/model.x',
+                    effort: 'high',
+                  },
+                  {
+                    harness: 'codex',
+                    model: 'vendor.model.x',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalPath = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalPath, canonicalAgentFileContent('oat-reviewer'));
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath,
+        isFile: true,
+      },
+    ];
+
+    const first = await computeCodexProjectExtensionPlan(
+      root,
+      canonicalEntries,
+    );
+    const customRoles = first.managedRoles.filter((role) =>
+      role.startsWith('oat-reviewer-vendor-model-x'),
+    );
+    expect(customRoles).toHaveLength(2);
+    expect(new Set(customRoles).size).toBe(2);
+    const customWrites = first.operations.filter(
+      (operation) =>
+        operation.target === 'role' &&
+        customRoles.includes(operation.roleName ?? ''),
+    );
+    expect(customWrites).toHaveLength(2);
+    expect(customWrites.map((operation) => operation.content)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('model = "vendor/model.x"'),
+        expect.stringContaining('model = "vendor.model.x"'),
+      ]),
+    );
+
+    await applyCodexProjectExtensionPlan(root, first);
+    const second = await computeCodexProjectExtensionPlan(
+      root,
+      canonicalEntries,
+    );
+    expect(second.managedRoles).toEqual(first.managedRoles);
+    expect(
+      second.operations.every((operation) => operation.action === 'skip'),
+    ).toBe(true);
   });
 
   it('materializes user-config custom targets only in the user view', async () => {
@@ -635,17 +717,18 @@ describe('codex sync extension', () => {
       { userConfigDir: join(home, '.oat') },
     );
 
-    expect(plan.managedRoles).toContain(
-      'oat-reviewer-gpt-5-7-user-custom-high',
-    );
+    const userRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-reviewer',
+      model: 'gpt-5.7-user-custom',
+      effort: 'high',
+    });
+    expect(plan.managedRoles).toContain(userRole);
     expect(
       plan.managedRoles.some((role) => role.includes('gpt-5-6-sol-max')),
     ).toBe(false);
     expect(
-      plan.operations.find(
-        (operation) =>
-          operation.roleName === 'oat-reviewer-gpt-5-7-user-custom-high',
-      )?.content,
+      plan.operations.find((operation) => operation.roleName === userRole)
+        ?.content,
     ).toContain('# oat-owner: user-config');
   });
 

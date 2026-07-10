@@ -179,6 +179,17 @@ async function desiredRolesFromCanonical(
     }
   }
 
+  const roleContents = new Map<string, string>();
+  for (const role of roles) {
+    const existing = roleContents.get(role.roleName);
+    if (existing !== undefined && existing !== role.content) {
+      throw new CliError(
+        `Distinct Codex targets produced the same role name ${role.roleName}. Refusing ambiguous role writes.`,
+      );
+    }
+    roleContents.set(role.roleName, role.content);
+  }
+
   return roles.sort((left, right) =>
     left.roleName.localeCompare(right.roleName),
   );

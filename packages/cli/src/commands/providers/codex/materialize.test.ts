@@ -319,7 +319,7 @@ describe('oat providers codex materialize', () => {
         home,
         '.codex',
         'agents',
-        'oat-reviewer-gpt-5-7-user-custom-high.toml',
+        'oat-reviewer-gpt-5-7-user-custom-high-c5aa99594b.toml',
       ),
       'utf8',
     );
