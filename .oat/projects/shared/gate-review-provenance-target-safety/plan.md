@@ -1108,7 +1108,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t12: (final review) Keep artifact reviews on the resolved target
 
-**Status:** pending
+**Status:** completed (`9328b327`)
 
 **Files:**
 
