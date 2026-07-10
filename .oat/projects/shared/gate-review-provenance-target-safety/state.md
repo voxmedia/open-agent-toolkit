@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t16
-oat_last_commit: 488c0c85
+oat_last_commit: 9e3cd6b2
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260707-record-gate-review-model }
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T12:31:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T12:58:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -167,8 +167,8 @@ Implementation - 38 of 42 planned tasks are complete; p04 is 15/19. The latest f
 - ✓ Final-review fix wave 1 combined verification passed with 313/313 affected assertions
 - ✓ Independent final review cycle 2 plus parallel audit found 4 Important, 1 Medium, and 2 Minor findings
 - ✓ All cycle-2 findings were converted or resolved with no deferrals
-- ✓ `p04-t15` evaluates one immutable correlated artifact snapshot and rejects concurrent project, invocation, scope, or findings mutation
-- ✓ p04-t15 RED/GREEN verification passed 142 focused gate/parser assertions and CLI type-check
+- ✓ `p04-t15` evaluates one immutable correlated artifact snapshot, rejects concurrent project/invocation/scope/findings mutation, and normalizes gate snapshots only in memory
+- ✓ p04-t15 RED/GREEN verification passed 143 focused gate/parser assertions and CLI type-check
 - ⧗ Execute `p04-t16` through `p04-t19`, then run final review cycle 3
 
 ## Blockers

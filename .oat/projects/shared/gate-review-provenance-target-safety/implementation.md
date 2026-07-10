@@ -304,11 +304,11 @@ oat_generated: false
 ### Task p04-t15: (final review) Evaluate one immutable gate artifact snapshot
 
 **Status:** completed
-**Commit:** `488c0c85`
+**Commits:** `488c0c85`, `9e3cd6b2`
 
 - Candidate correlation and verdict evaluation now use the same immutable artifact content snapshot, with signature checks before and after semantic evaluation.
-- Controlled empty-section normalization verifies the source snapshot before writing and verifies the normalized postimage afterward; rejected artifacts explicitly remain non-receive-eligible with no handoff.
-- RED reproduced a false-green `ok` result after concurrent project, scope, invocation-model, and Important-count mutation. GREEN passed 142 focused gate/parser assertions and CLI type-check.
+- Gate-snapshot empty-section normalization is in-memory and reports `persisted: false`, leaving the correlated source byte-identical and eliminating the check-then-write overwrite window. Direct parser calls retain guarded legacy persistence and report `persisted: true`.
+- Rejected artifacts explicitly remain non-receive-eligible with no handoff. RED reproduced both the false-green mutation and unsafe snapshot persistence; GREEN passed 143 focused gate/parser assertions and CLI type-check.
 
 ### Task p04-t16: (final review) Contain active project materialization paths
 
