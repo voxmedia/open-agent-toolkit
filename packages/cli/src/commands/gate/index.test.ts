@@ -3522,6 +3522,109 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('stamps the exact model already pinned in the target command', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-pinned': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p', '--model', 'composer-2.5'],
+                invocation: { reasoningEffort: 'provider-default' },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'cursor-pinned', 'Review'],
+    });
+
+    const executeCall = runner.calls.find((call) => call.purpose === 'execute');
+    expect(executeCall).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+    });
+    expect(
+      executeCall?.args.filter((argument) => argument === '--model'),
+    ).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      gateInvocation: {
+        model: 'composer-2.5',
+        reasoningEffort: 'provider-default',
+        source: 'exec-target-config',
+      },
+      corroboration: { invocation: 'matched' },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects invocation metadata that contradicts a model pinned in the command', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'cursor-pinned': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p', '--model', 'composer-2.5'],
+                invocation: {
+                  model: 'gpt-5.5',
+                  reasoningEffort: 'provider-default',
+                },
+                priority: 200,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'cursor-pinned', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(
+        /invocation model gpt-5\.5.*selected model composer-2\.5/i,
+      ),
+    });
+    expect(runner.calls.filter((call) => call.purpose === 'execute')).toEqual(
+      [],
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it.each([
     {
       label: 'numeric-like',

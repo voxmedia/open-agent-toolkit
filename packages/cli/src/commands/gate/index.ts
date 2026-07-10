@@ -332,18 +332,15 @@ function createGateInvocationMetadata(
   selected: SelectedExecTarget,
 ): GateInvocationMetadata {
   const configuredInvocation = normalizedTargetInvocation(selected.target);
-  const appendedModel =
-    selected.model && !findPinnedModelArg(selected.target.baseCommand)
-      ? selected.model
-      : undefined;
+  const selectedModel = selected.model;
   const configuredModel = selected.target.invocation?.model;
   if (
-    appendedModel &&
+    selectedModel &&
     configuredModel !== undefined &&
-    configuredModel !== appendedModel
+    configuredModel !== selectedModel
   ) {
     throw new Error(
-      `Exec target "${selected.id}" configures invocation model ${configuredModel}, but selected model ${appendedModel} would be executed.`,
+      `Exec target "${selected.id}" configures invocation model ${configuredModel}, but selected model ${selectedModel} would be executed.`,
     );
   }
 
@@ -352,8 +349,8 @@ function createGateInvocationMetadata(
     targetId: selected.id,
     runtime: selected.target.runtime,
     ...configuredInvocation,
-    ...(appendedModel
-      ? { model: appendedModel, source: 'exec-target-config' as const }
+    ...(selectedModel
+      ? { model: selectedModel, source: 'exec-target-config' as const }
       : {}),
   });
 }
