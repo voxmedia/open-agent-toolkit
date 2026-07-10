@@ -1341,4 +1341,123 @@ describe('resolveExecTargets', () => {
       },
     });
   });
+
+  it('re-enables a tombstoned target only from a complete higher-layer definition', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'user-runtime',
+                baseCommand: ['user-review'],
+                invocation: { model: 'user-model' },
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'local-runtime',
+                baseCommand: ['local-review'],
+                invocation: { reasoningEffort: 'high' },
+                priority: 10,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)['custom-target']).toEqual({
+      runtime: 'local-runtime',
+      baseCommand: ['local-review'],
+      invocation: { reasoningEffort: 'high' },
+      priority: 10,
+    });
+    expect(resolveExecTargetViews(effective)['custom-target']).toEqual({
+      target: {
+        runtime: 'local-runtime',
+        baseCommand: ['local-review'],
+        invocation: { reasoningEffort: 'high' },
+        priority: 10,
+      },
+      origin: 'local',
+      explicitlyConfigured: true,
+      enabled: true,
+    });
+  });
+
+  it('does not resurrect a tombstoned target from a partial higher-layer override', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                runtime: 'user-runtime',
+                baseCommand: ['user-review'],
+                invocation: { model: 'user-model' },
+                priority: 5,
+              },
+            },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': null,
+            },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'custom-target': {
+                invocation: { reasoningEffort: 'high' },
+                priority: 10,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)).not.toHaveProperty('custom-target');
+    expect(resolveExecTargetViews(effective)['custom-target']).toEqual({
+      target: {
+        runtime: 'user-runtime',
+        baseCommand: ['user-review'],
+        invocation: { model: 'user-model' },
+        priority: 5,
+      },
+      origin: 'shared',
+      explicitlyConfigured: true,
+      enabled: false,
+    });
+  });
 });
