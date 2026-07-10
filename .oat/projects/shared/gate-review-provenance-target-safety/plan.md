@@ -45,6 +45,8 @@ The plan is sequential. Phase 0 must land first because it makes managed Codex p
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
+**Implementation Status:** completed; independent code review pending
+
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
 **Status:** completed (`0129dd3d`)
@@ -135,6 +137,8 @@ pnpm --filter @open-agent-toolkit/cli type-check
 ### Task p00-t03: Use deterministic pinned dispatch across workflow reviews
 
 **Status:** completed (`50a88a61`)
+
+**Formatting follow-up:** `51f76054`
 
 **Files:**
 
@@ -528,7 +532,8 @@ git status --short
 
 **Total: 14 tasks**
 
-Ready for implementation after the revised plan artifact review passes.
+Phase 0 implementation is complete. Its independent code review remains pending
+before Phase 1 implementation begins.
 
 ## References
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: null
+oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
@@ -16,19 +16,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p00   | in_progress | 3     | 3/3       |
-| p01   | pending     | 4     | 0/4       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p00   | completed | 3     | 3/3       |
+| p01   | pending   | 4     | 0/4       |
+| p02   | pending   | 3     | 0/3       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 3     | 0/3       |
 
 **Total:** 3/14 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
-**Status:** in_progress
+**Status:** completed
 
 ### Task p00-t01: Fail closed and retain the selected Codex target
 
@@ -174,6 +174,10 @@ oat_generated: false
 - Focused t03 verification passed 76 tests and validated all 53 bundled OAT skills. After installing the missing Playwright Chromium verifier runtime, docs link checking crawled 52 pages and checked 532 links with zero broken links.
 - `oat:validate-skills` regenerated the tracked packaged recommendation mirror at `packages/cli/assets/config/dispatch-matrix-recommendation.json`; it was committed with t03 so the bundled asset matches the t02 source recommendation.
 - The t03 commit hook reported a malformed empty-target `oxfmt --write` invocation but did not block the commit. Direct `git diff --check` and the exact task verification remain clean; final p00 verification will rerun the required checks from the committed tree.
+- Formatting follow-up `51f76054` normalized the new skill-contract test after the broad format check caught the hook omission.
+- Final p00 verification passed all three planned suites (156, 262, and 76 assertions), CLI type-check, four live enforced resolver probes, 53-skill validation, project sync dry-run with zero planned operations, root lint, root format, and the 532-link docs crawl.
+- The generated project Codex catalogue is idempotent and complete: 26 supported-catalogue role files, 26 config registrations, and exactly two Sol/max roles (implementer and reviewer).
+- Phase-wide self-review found no correctness, scope, or ownership issues. The p00 code-review row remains pending for the orchestrator's independent review; no p01 work was started.
 
 ## Deviations from Plan / Design
 
@@ -184,11 +188,12 @@ oat_generated: false
 
 ## Test Results
 
-| Phase   | Tests Run                                                                               | Passed | Failed | Coverage                                                    |
-| ------- | --------------------------------------------------------------------------------------- | ------ | ------ | ----------------------------------------------------------- |
-| p00-t01 | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes       | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight        |
-| p00-t02 | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption  |
-| p00-t03 | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl              | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths |
+| Phase     | Tests Run                                                                               | Passed | Failed | Coverage                                                    |
+| --------- | --------------------------------------------------------------------------------------- | ------ | ------ | ----------------------------------------------------------- |
+| p00-t01   | 156 focused resolver/config/adapter tests; CLI type-check; 4 live resolver probes       | 161    | 0      | Cursor opacity, Codex max/capping, managed preflight        |
+| p00-t02   | 262 focused catalogue/config/sync/status tests; CLI type-check; idempotent project sync | 264    | 0      | 26-role catalogue, scoped ownership, fill-missing adoption  |
+| p00-t03   | 76 focused sync/skill-contract tests; 53-skill validation; docs link crawl              | 78     | 0      | Exact/fresh-child dispatch across all planning/review paths |
+| p00 final | 494 planned focused assertions; type-check; 4 live probes; lint; format; sync; docs     | 494    | 0      | Committed-tree phase verification and self-review           |
 
 ## Final Summary (for PR/docs)
 
