@@ -13,10 +13,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -35,7 +35,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T17:57:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T18:08:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -47,7 +47,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptive-dispatch extension passed final review with no findings; explicit p04 HiLL approval is required before the phase gate.
+Implementation complete - all 54 planned tasks are complete and p04 is 31/31. The adaptive-dispatch extension passed final review with no findings, and the approved p04 HiLL final code-review gate passed via Claude Fable.
 
 ## Artifacts
 
@@ -55,7 +55,7 @@ Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptiv
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (54/54 tasks complete; p04 HiLL approval pending)
+- **Implementation:** `implementation.md` (54/54 tasks complete; p04 HiLL gate passed; ready for project closeout)
 
 ## Progress
 
@@ -77,6 +77,7 @@ Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptiv
 - ✓ User confirmed user-config roles belong in user scope and project-config roles belong in tracked project scope
 - ✓ User confirmed workflow correctness must not require provider restart or hot reload
 - ✓ Adaptive-dispatch final review passed with no findings
+- ✓ p04 HiLL final code-review gate passed via Claude Fable with no findings
 - ✓ Revised static-catalogue plan artifact gate passed with no blocking findings
 - ✓ Three minor plan findings resolved and dispositioned
 - ✓ `p00-t01` fail-closed managed dispatch and Codex `max` support completed
@@ -204,7 +205,7 @@ Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptiv
 - ✓ p04-t31 verification passed 67 skill contracts, 22 bundle assertions, 532 links, format, and five-package release validation
 - ✓ All 54/54 tasks complete; p04 is 31/31
 - ✓ Final review for `p04-t26` through `p04-t31` passed with no findings
-- ⧗ Request explicit p04 HiLL approval before running the phase gate
+- ✓ p04 HiLL approval and target-neutral Claude Fable final gate completed
 
 ## Blockers
 
@@ -212,4 +213,5 @@ None
 
 ## Next Milestone
 
-Request explicit p04 HiLL approval, then run the configured phase gate.
+Close the completed project through `oat-project-complete` (archive, summary,
+and PR choices require confirmation).
