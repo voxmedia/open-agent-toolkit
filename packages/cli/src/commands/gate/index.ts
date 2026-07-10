@@ -53,6 +53,7 @@ import {
 } from '@providers/identity/provenance';
 import { parseDispatchStamps } from '@providers/identity/stamp';
 import { Command } from 'commander';
+import YAML from 'yaml';
 
 import {
   parseReviewGateVerdict,
@@ -299,14 +300,17 @@ function createGateInvocationMetadata(
 function gateInvocationPromptContext(
   invocation: GateInvocationMetadata,
 ): string {
+  const frontmatter = YAML.stringify({
+    oat_gate_run_id: invocation.runId,
+    oat_gate_target: invocation.targetId,
+    oat_gate_runtime: invocation.runtime,
+    oat_invocation_model: invocation.model,
+    oat_invocation_reasoning_effort: invocation.reasoningEffort,
+    oat_invocation_source: invocation.source,
+  }).trimEnd();
   return [
     'Gate invocation metadata (copy these exact values into the gate review artifact frontmatter):',
-    `oat_gate_run_id: ${invocation.runId}`,
-    `oat_gate_target: ${invocation.targetId}`,
-    `oat_gate_runtime: ${invocation.runtime}`,
-    `oat_invocation_model: ${invocation.model}`,
-    `oat_invocation_reasoning_effort: ${invocation.reasoningEffort}`,
-    `oat_invocation_source: ${invocation.source}`,
+    frontmatter,
   ].join('\n');
 }
 

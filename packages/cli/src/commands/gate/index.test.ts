@@ -392,15 +392,22 @@ describe('oat gate', () => {
       'oat_invocation_reasoning_effort',
       'oat_invocation_source',
     ] as const;
+    const promptGateInvocationLines = lastExecutePrompt
+      .match(
+        /Gate invocation metadata \(copy these exact values into the gate review artifact frontmatter\):\n([\s\S]*?)\n\n(?=Review(?: type:| scope:|\s|$))/,
+      )?.[1]
+      ?.split('\n');
     const gateInvocationLines = options.omitGateInvocation
       ? []
-      : gateInvocationKeys.map((key) => {
-          const override = options.gateInvocationOverrides?.[key];
-          const promptValue = lastExecutePrompt.match(
-            new RegExp(`^${key}: (.+)$`, 'm'),
-          )?.[1];
-          return `${key}: ${override ?? promptValue ?? 'unknown'}`;
-        });
+      : !options.gateInvocationOverrides && promptGateInvocationLines
+        ? promptGateInvocationLines
+        : gateInvocationKeys.map((key) => {
+            const override = options.gateInvocationOverrides?.[key];
+            const promptValue = lastExecutePrompt.match(
+              new RegExp(`^${key}: (.+)$`, 'm'),
+            )?.[1];
+            return `${key}: ${override ?? promptValue ?? 'unknown'}`;
+          });
     await writeFile(
       join(options.root, relativePath),
       [
@@ -2925,6 +2932,115 @@ describe('oat gate', () => {
         `oat_invocation_reasoning_effort: ${expected.reasoningEffort}`,
       );
       expect(prompt).toContain(`oat_invocation_source: ${expected.source}`);
+    },
+  );
+
+  it.each([
+    {
+      label: 'numeric-like',
+      target: '123',
+      runtime: '456',
+      model: '789',
+      effort: '1011',
+    },
+    {
+      label: 'boolean-like',
+      target: 'true',
+      runtime: 'false',
+      model: 'TRUE',
+      effort: 'False',
+    },
+    {
+      label: 'null-like',
+      target: 'null',
+      runtime: 'Null',
+      model: 'NULL',
+      effort: '~',
+    },
+    {
+      label: 'colon-containing',
+      target: 'target: reviewer',
+      runtime: 'runtime: custom',
+      model: 'model: canary',
+      effort: 'effort: max',
+    },
+    {
+      label: 'hash-containing',
+      target: 'target # canary',
+      runtime: 'runtime # custom',
+      model: 'model # canary',
+      effort: 'effort # max',
+    },
+    {
+      label: 'quote-like',
+      target: '"target"',
+      runtime: "'runtime'",
+      model: '"model"',
+      effort: "'effort'",
+    },
+    {
+      label: 'newline-like',
+      target: 'target\nreviewer',
+      runtime: 'runtime\ncustom',
+      model: 'model\ncanary',
+      effort: 'effort\nmax',
+    },
+  ])(
+    'round-trips $label configured invocation strings through gate YAML',
+    async ({ target, runtime, model, effort }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                [target]: {
+                  runtime,
+                  baseCommand: ['custom-review'],
+                  invocation: {
+                    model,
+                    reasoningEffort: effort,
+                  },
+                  priority: 200,
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', target, 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        gateInvocation: {
+          targetId: target,
+          runtime,
+          model,
+          reasoningEffort: effort,
+          source: 'exec-target-config',
+        },
+        corroboration: {
+          run: 'matched',
+          invocation: 'matched',
+        },
+      });
+      expect(process.exitCode).toBe(0);
     },
   );
 
