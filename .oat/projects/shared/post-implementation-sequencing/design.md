@@ -216,7 +216,46 @@ snapshots remain in state for auditability, while routing ignores them.
 
 ## API Design
 
-_Pending collaborative review._
+This project adds no HTTP interface. Its public interface is the existing
+configuration CLI plus lifecycle-skill handoffs.
+
+### Configuration CLI
+
+Structured values use JSON with the existing command:
+
+```bash
+oat config set workflow.postImplementSequence \
+  '{"preApproval":["summary","document","pr"],"postApproval":[]}' \
+  --shared
+```
+
+Legacy usage remains unchanged:
+
+```bash
+oat config set workflow.postImplementSequence docs-pr --shared
+```
+
+**Retrieval Contracts:**
+
+- Plain `oat config get` returns legacy strings unchanged.
+- Plain output for structured values is compact JSON.
+- `oat config get ... --json` returns `value` as the actual string or object,
+  plus its resolved source.
+- `oat config describe` documents both forms, allowed steps, validation rules,
+  mappings, timing, and an escaped JSON example.
+- Layer flags and precedence remain unchanged.
+
+### Lifecycle Skill Interfaces
+
+- `oat-project-implement` reads the effective value and normalizes it before
+  creating the durable snapshot.
+- Step dispatch includes the current sequence boundary and snapshot context.
+- `oat-project-pr-final` consults the snapshot before regenerating a summary; an
+  already completed `summary` step is reused.
+- `oat-project-next` checks for an incomplete
+  `oat_post_implement_sequence` before evaluating `oat_phase_status` or
+  `oat_pr_status`.
+- No new standalone lifecycle command is introduced.
 
 ## Error Handling
 
