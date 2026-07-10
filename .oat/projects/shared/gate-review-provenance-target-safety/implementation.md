@@ -1061,6 +1061,31 @@ oat_generated: false
 
 **Next:** The final-review waiver resolves the cycle cap. Await explicit p04 HiLL approval; the final review remains `fixes_completed` rather than `passed`.
 
+### Review Received: final (adaptive dispatch)
+
+**Date:** 2026-07-10
+**Review artifact:** `reviews/archived/final-review-2026-07-10T174200Z.md`
+**Invocation:** `manual`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None. The adaptive-dispatch extension passed independent
+final review without findings. The deferred-medium ledger is empty and no minor
+finding required a user disposition.
+
+**Review outcome:** Passed. The final review row now represents the current
+six-task adaptive-dispatch scope; the earlier final-review waiver remains a
+historical record for the original 48-task scope. Two earlier preliminary
+manual review drafts were archived as superseded by this later exact-target
+review result.
+
+**Next:** Await explicit p04 HiLL approval before running the phase gate.
+
 ## Deviations from Plan / Design
 
 | Task / Review            | Source Artifact           | Planned / Documented                                                              | Actual / Accepted                                                                                                     | Reason                                                                                           | Source of Truth           | Follow-up                                |
@@ -1169,5 +1194,5 @@ The adaptive-dispatch extension `p04-t26` through `p04-t31` is also complete.
 It adds ordered provider candidates, exact cumulative selection under named
 maxima, owning-scope Codex materialization, plan-time adoption, invocation-only
 task ceilings, serial exact task workers, and matching public documentation.
-All 54 tasks are complete and p04 is 31/31. A final review disposition for this
-new six-task scope remains required before explicit p04 HiLL approval.
+All 54 tasks are complete and p04 is 31/31. An independent final review passed
+with no findings; only explicit p04 HiLL approval remains before the phase gate.

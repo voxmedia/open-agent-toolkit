@@ -35,7 +35,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T17:34:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T17:57:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -47,7 +47,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptive-dispatch extension is implemented and verified; a final review disposition is required before p04 HiLL approval.
+Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptive-dispatch extension passed final review with no findings; explicit p04 HiLL approval is required before the phase gate.
 
 ## Artifacts
 
@@ -55,7 +55,7 @@ Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptiv
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (54/54 tasks complete; final review disposition pending)
+- **Implementation:** `implementation.md` (54/54 tasks complete; p04 HiLL approval pending)
 
 ## Progress
 
@@ -76,6 +76,7 @@ Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptiv
 - ✓ User confirmed a finite committed supported Codex catalogue instead of runtime-only selected-role generation
 - ✓ User confirmed user-config roles belong in user scope and project-config roles belong in tracked project scope
 - ✓ User confirmed workflow correctness must not require provider restart or hot reload
+- ✓ Adaptive-dispatch final review passed with no findings
 - ✓ Revised static-catalogue plan artifact gate passed with no blocking findings
 - ✓ Three minor plan findings resolved and dispositioned
 - ✓ `p00-t01` fail-closed managed dispatch and Codex `max` support completed
@@ -202,7 +203,8 @@ Implementation - all 54 planned tasks are complete and p04 is 31/31. The adaptiv
 - ✓ `p04-t31` documents named maxima, explicit adoption ownership, materialized Codex roles, exact provider payloads, and coordinator/task-worker execution
 - ✓ p04-t31 verification passed 67 skill contracts, 22 bundle assertions, 532 links, format, and five-package release validation
 - ✓ All 54/54 tasks complete; p04 is 31/31
-- ⧗ Obtain a final review disposition for `p04-t26` through `p04-t31`, then request explicit p04 HiLL approval
+- ✓ Final review for `p04-t26` through `p04-t31` passed with no findings
+- ⧗ Request explicit p04 HiLL approval before running the phase gate
 
 ## Blockers
 
@@ -210,4 +212,4 @@ None
 
 ## Next Milestone
 
-Run the final code review for adaptive dispatch tasks `p04-t26` through `p04-t31`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending until review disposition.
+Request explicit p04 HiLL approval, then run the configured phase gate.

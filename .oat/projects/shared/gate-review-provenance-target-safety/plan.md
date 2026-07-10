@@ -1722,7 +1722,7 @@ pnpm release:validate
 | p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
 | p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
 | p04    | code     | fixes_added | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T134214Z.md         |
+| final  | code     | passed      | 2026-07-10 | reviews/archived/final-review-2026-07-10T174200Z.md         |
 | spec   | artifact | pending     | -          | -                                                           |
 | design | artifact | pending     | -          | -                                                           |
 | plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
@@ -1744,9 +1744,9 @@ pnpm release:validate
 **Total: 54 tasks**
 
 Phase 0 through Phase 3 reviews have passed, and all 54 implementation tasks are
-complete. The previous final-review waiver applies only to the prior 48-task
-scope. Obtain a final review disposition for adaptive dispatch tasks `p04-t26`
-through `p04-t31` before explicit p04 HiLL approval.
+complete. The adaptive-dispatch final review for `p04-t26` through `p04-t31`
+passed with no findings. The remaining lifecycle checkpoint is explicit p04
+HiLL approval.
 
 ## References
 
