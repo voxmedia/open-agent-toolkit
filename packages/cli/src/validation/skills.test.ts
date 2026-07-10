@@ -1498,6 +1498,112 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('keeps quick and imported plans non-ready until review disposition is durable', async () => {
+    const quick = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const imported = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+    const next = await readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+
+    const paths = [
+      {
+        name: 'quick-start',
+        content: quick,
+        draftStart: '### Step 3: Generate Plan Directly',
+        reviewStart: '### Step 3.6: Run Plan Artifact Review Loop',
+        completionEnd: '### Step 4: Sync Project State',
+      },
+      {
+        name: 'import-plan',
+        content: imported,
+        draftStart: '### Step 4: Update Plan Metadata',
+        reviewStart: '### Step 4.5: Run Import-Aware Plan Artifact Review Loop',
+        completionEnd: '### Step 5: Update Project State',
+      },
+    ] as const;
+
+    for (const {
+      name,
+      content,
+      draftStart,
+      reviewStart,
+      completionEnd,
+    } of paths) {
+      const draftStartIndex = content.indexOf(draftStart);
+      const reviewStartIndex = content.indexOf(reviewStart);
+      const completionEndIndex = content.indexOf(
+        completionEnd,
+        reviewStartIndex,
+      );
+      const draft = content.slice(draftStartIndex, reviewStartIndex);
+      const completion = content.slice(reviewStartIndex, completionEndIndex);
+
+      expect(draftStartIndex, `${name} draft boundary`).toBeGreaterThanOrEqual(
+        0,
+      );
+      expect(reviewStartIndex, `${name} review boundary`).toBeGreaterThan(
+        draftStartIndex,
+      );
+      expect(completionEndIndex, `${name} completion boundary`).toBeGreaterThan(
+        reviewStartIndex,
+      );
+      expect(draft, `${name} draft status`).toContain(
+        '`oat_status: in_progress`',
+      );
+      expect(draft, `${name} draft readiness`).toContain(
+        '`oat_ready_for: null`',
+      );
+      expect(draft, `${name} current-phase marker`).toContain(
+        '`oat_template: true`',
+      );
+      expect(draft, `${name} interrupted routing`).toMatch(
+        /oat-project-next[\s\S]{0,260}(?:current|same)[\s\S]{0,120}(?:plan|planning)[\s\S]{0,180}(?:must not|cannot)[\s\S]{0,120}(?:implement|advance)/i,
+      );
+
+      const outcomeIndex = completion.search(
+        /durably record[\s\S]{0,160}(?:review (?:outcome|disposition)|explicit skip)/i,
+      );
+      const readyIndex = completion.indexOf(
+        '`oat_ready_for: oat-project-implement`',
+        outcomeIndex,
+      );
+      const completeIndex = completion.indexOf(
+        '`oat_status: complete`',
+        outcomeIndex,
+      );
+      const nonTemplateIndex = completion.indexOf(
+        '`oat_template: false`',
+        outcomeIndex,
+      );
+
+      expect(
+        outcomeIndex,
+        `${name} durable review disposition`,
+      ).toBeGreaterThanOrEqual(0);
+      expect(readyIndex, `${name} final readiness`).toBeGreaterThan(
+        outcomeIndex,
+      );
+      expect(completeIndex, `${name} final status`).toBeGreaterThan(
+        outcomeIndex,
+      );
+      expect(nonTemplateIndex, `${name} final template marker`).toBeGreaterThan(
+        outcomeIndex,
+      );
+      expect(completion, `${name} no output-only disposition`).toMatch(
+        /(?:review row|Reviews section)[\s\S]{0,260}plan\.md/i,
+      );
+    }
+
+    expect(next).toMatch(
+      /oat_template\s*==\s*true[\s\S]{0,220}(?:CURRENT|current) phase/i,
+    );
+    expect(imported).toMatch(
+      /provider-plan-via-import[\s\S]{0,520}inherits[\s\S]{0,220}(?:readiness|completion)[\s\S]{0,220}(?:review|disposition)/i,
+    );
+  });
+
   it('documents phase-review setup across project workflow references', async () => {
     const artifacts = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/artifacts.md',

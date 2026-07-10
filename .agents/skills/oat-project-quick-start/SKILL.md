@@ -466,14 +466,22 @@ one before the shared setup contract runs.
 
 Required frontmatter updates:
 
-- `oat_status: complete`
-- `oat_ready_for: oat-project-implement`
+- `oat_status: in_progress`
+- `oat_ready_for: null`
 - `oat_phase: plan`
-- `oat_phase_status: complete`
+- `oat_phase_status: in_progress`
 - `oat_plan_source: quick`
 - `oat_import_reference: null`
 - `oat_import_source_path: null`
 - `oat_import_provider: null`
+- `oat_template: true`
+
+These values are the interruption-safe pre-review state. Here,
+`oat_template: true` marks the generated plan as still owned by the current
+planning workflow even after its substantive content has been written. If the
+skill pauses, is interrupted, or cannot resolve dispatch before Step 3.7,
+persist and commit this state. `oat-project-next` must route it back to the
+current planning workflow and cannot advance it to implementation.
 
 Plan requirements — apply `oat-project-plan-writing` canonical format invariants:
 
@@ -663,6 +671,33 @@ Apply the shared loop exactly:
 - Apply Critical and Important artifact-local fixes when unambiguous; offer Medium and Minor fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
+
+### Step 3.7: Record Review Disposition and Mark Plan Complete
+
+Before changing readiness, durably record the review outcome in `plan.md`:
+
+- When review ran, update the `plan` review row in the `## Reviews` section to
+  the outcome reached by Step 3.6. Use `passed` only for a clean result. If
+  residual findings remain, retain their actual non-passed status and add a
+  concise residual-finding disposition in the same section.
+- When `workflow.autoArtifactReview.plan` is explicitly `false`, record the
+  explicit skip in the `## Reviews` section as
+  `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`.
+  Do not claim that the plan passed review.
+
+The review row or explicit skip must be written to `plan.md`; chat or status
+output alone is not durable. Only after that write succeeds, atomically update
+the plan frontmatter:
+
+- `oat_status: complete`
+- `oat_ready_for: oat-project-implement`
+- `oat_phase_status: complete`
+- `oat_template: false`
+
+If dispatch remains unresolved, review execution fails closed, or the outcome
+cannot be recorded, leave the Step 3 pre-review values unchanged and commit
+them before stopping. Never expose a partially reviewed quick plan to
+`oat-project-implement`.
 
 ### Step 4: Sync Project State
 

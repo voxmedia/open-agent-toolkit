@@ -16,7 +16,8 @@ Import a markdown plan from an external coding provider and normalize it into OA
 Provider native plan mode uses this same path: provider-plan-via-import
 preserves the provider plan first, and provider plan dispatch readiness
 inherits the import workflow contract below, including the `Shared Phase-Review
-Setup Contract`. It does not add a separate provider-plan prompt.
+Setup Contract` and the rule that readiness and completion follow only after a
+durable review disposition. It does not add a separate provider-plan prompt.
 
 ## Prerequisites
 
@@ -218,14 +219,22 @@ Dispatch Profile import handling:
 
 Set frontmatter in `"$PROJECT_PATH/plan.md"`:
 
-- `oat_status: complete`
-- `oat_ready_for: null` (Step 4.5 sets this after the import-aware plan review)
+- `oat_status: in_progress`
+- `oat_ready_for: null`
 - `oat_phase: plan`
-- `oat_phase_status: complete`
+- `oat_phase_status: in_progress`
 - `oat_plan_source: imported`
 - `oat_import_reference: references/imported-plan.md`
 - `oat_import_source_path: {source-path}`
 - `oat_import_provider: {codex|cursor|claude|null}`
+- `oat_template: true`
+
+These values are the interruption-safe pre-review state. Here,
+`oat_template: true` keeps the normalized plan owned by the current import
+workflow until its review disposition is durable. If the skill pauses, is
+interrupted, or cannot resolve dispatch before Step 4.6, persist and commit this
+state. `oat-project-next` must route it back to the same planning workflow and
+cannot advance it to implementation.
 
 ### Step 4.25: Configure Optional Phase Review
 
@@ -283,9 +292,32 @@ Apply the shared loop exactly:
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
 
-After the loop completes or is explicitly skipped, set `"$PROJECT_PATH/plan.md"` frontmatter:
+### Step 4.6: Record Review Disposition and Mark Plan Complete
 
+Before changing readiness, durably record the review outcome in `plan.md`:
+
+- When review ran, update the `plan` review row in the `## Reviews` section to
+  the outcome reached by Step 4.5. Use `passed` only for a clean result. If
+  residual findings remain, retain their actual non-passed status and add a
+  concise residual-finding disposition in the same section.
+- When `workflow.autoArtifactReview.plan` is explicitly `false`, record the
+  explicit skip in the `## Reviews` section as
+  `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`.
+  Do not claim that the plan passed review.
+
+The review row or explicit skip must be written to `plan.md`; chat or status
+output alone is not durable. Only after that write succeeds, atomically update
+the plan frontmatter:
+
+- `oat_status: complete`
 - `oat_ready_for: oat-project-implement`
+- `oat_phase_status: complete`
+- `oat_template: false`
+
+If dispatch remains unresolved, review execution fails closed, or the outcome
+cannot be recorded, leave the Step 4 pre-review values unchanged and commit
+them before stopping. Never expose a partially reviewed imported plan to
+`oat-project-implement`. Provider-plan-via-import inherits this exact boundary.
 
 ### Step 5: Update Project State
 
