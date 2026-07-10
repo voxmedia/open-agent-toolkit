@@ -1404,7 +1404,7 @@ pnpm --filter @open-agent-toolkit/cli type-check
 
 ### Task p04-t22: (final review) Parse managed Codex ownership from headers only
 
-**Status:** pending
+**Status:** completed (`fa891350`)
 **Finding:** `M1` (Medium; Moderate; `code_fix_required`)
 
 **Files:**
