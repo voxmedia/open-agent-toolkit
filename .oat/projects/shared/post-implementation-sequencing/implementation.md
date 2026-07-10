@@ -202,3 +202,5 @@ configured gate rerun after these artifact corrections.
 
 - User selected `p03` as the sole plan-phase HiLL checkpoint. The run will pause
   for approval only after the final phase completes.
+- Tier 1 delegation is authorized for this run. `p01-t01` resolves to
+  `oat-phase-implementer-gpt-5-6-sol-medium` (`gpt-5.6-sol`, medium).

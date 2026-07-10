@@ -12,8 +12,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:58:56.209Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T21:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T21:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Plan - Complete and ready for implementation
+Implementation - Starting `p01-t01`
 
 ## Artifacts
 
@@ -79,6 +79,8 @@ Plan - Complete and ready for implementation
 - ✓ Delayed High artifact review found one additional ordering-contract gap
 - ✓ High managed plan re-review passed with no findings
 - ✓ Implementation HiLL checkpoint set to final phase `p03`
+- ✓ Tier 1 subagent delegation authorized for this run
+- ✓ `p01-t01` target resolved: `gpt-5.6-sol` / medium
 
 ## Blockers
 
@@ -86,4 +88,4 @@ None
 
 ## Next Milestone
 
-Start implementation at `p01-t01`
+Execute `p01-t01`: structured configuration model and atomic resolution
