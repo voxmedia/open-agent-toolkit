@@ -1056,7 +1056,7 @@ pnpm docs:check-links
 
 ### Task p04-t10: (final review) Preserve phase review on spec-plan overwrite
 
-**Status:** pending
+**Status:** completed (`380244f2`)
 
 **Files:**
 

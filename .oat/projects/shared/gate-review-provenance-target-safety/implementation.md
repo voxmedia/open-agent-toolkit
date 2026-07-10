@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t10
+oat_current_task_id: p04-t11
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 14    | 9/14      |
+| p04   | in_progress | 14    | 10/14     |
 
-**Total:** 32/37 tasks completed
+**Total:** 33/37 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -254,14 +254,23 @@ oat_generated: false
 - Targeting failures and unvalidated artifacts cannot enter review-receive; artifact validation must be corrected and successfully revalidated first.
 - Canonical skills, bundled views, contract tests, and public result-union documentation agree without another PR-scoped skill version bump.
 
+### Task p04-t10: (final review) Preserve phase review on spec-plan overwrite
+
+**Status:** completed
+**Commit:** `380244f2`
+
+- Spec-driven planning snapshots explicit `oat_phase_review_gate` key presence and its complete raw YAML entry before the Overwrite branch replaces `plan.md`.
+- The first rewritten frontmatter restores enabled, disabled, selected-phase, `null`, and malformed values exactly; an absent key remains absent until shared setup.
+- Focused RED reproduced the missing snapshot contract. GREEN passed all 55 skill-contract assertions and validation of all 53 OAT skills.
+
 ### Phase Summary
 
-- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. The first final-review fix wave also repairs user-owned Codex target expansion, custom-role collision safety, executed-model metadata, malformed-artifact correlation, and receive-eligible lifecycle routing. Tasks `p04-t10` through `p04-t14` remain.
+- **Outcome:** Every plan-producing workflow now uses one canonical phase-review setup after stable phase IDs and before plan artifact review. Spec-driven Overwrite now preserves the same complete explicit phase-review value already protected by quick/import rewrites. The first final-review fix wave also repairs user-owned Codex target expansion, custom-role collision safety, executed-model metadata, malformed-artifact correlation, and receive-eligible lifecycle routing. Tasks `p04-t11` through `p04-t14` remain.
 - **Key files touched:** `oat-project-plan-writing`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`; `packages/cli/src/validation/skills.test.ts`; `.oat/sync/manifest.json`; the artifacts/reviews/lifecycle docs; generated project Codex reviewer variants; and all five public package manifests plus bundled version metadata.
 - **Verification:** The committed wave passes 313 affected assertions across 11 test files, CLI type-check, validation of all 53 OAT skills, a 532-link crawl with zero broken links, 10 formatting tasks plus 186 Markdown files, project sync idempotence, version hygiene, and diff hygiene. Each task's focused RED/GREEN checks also passed.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review remains `fixes_added`; wave 1 completed `p04-t05` through `p04-t09`, with `p04-t10` through `p04-t14` still pending.
+- **Review status:** The independent p04 re-review closed I1 with no findings. The first final review remains `fixes_added`; `p04-t05` through `p04-t10` are complete, with `p04-t11` through `p04-t14` still pending.
 
 ## Orchestration Runs
 
@@ -801,21 +810,23 @@ oat_generated: false
 | p04-t07    | RED/GREEN selected-model metadata regressions; gate suite; CLI type-check                                             | 116    | 0      | Non-first winner execution and metadata agreement             |
 | p04-t08    | RED/GREEN malformed-correlation and timestamp regressions; gate/verdict suites; CLI type-check                        | 138    | 0      | Validation classification without spoof or duplicate drift    |
 | p04-t09    | RED/GREEN receive-eligibility contracts; 53-skill validation; 532-link crawl                                          | 55     | 0      | Status-aware lifecycle handoff and documented result union    |
+| p04-t10    | RED/GREEN spec-driven Overwrite preservation contract; 53-skill validation                                            | 57     | 0      | Raw key/value preservation before shared phase-review setup   |
 | p04 wave 1 | 11 affected test files; CLI type-check; skills; docs links; format; sync/version/diff hygiene                         | 313    | 0      | Committed-tree final-review fix-wave verification             |
 | p04 audit  | 247 focused assertions; CLI type-check; 53-skill validation; 532-link crawl; format; project sync                     | 252    | 0      | Scanner isolation, pinned models, conjunctive receive routing |
 
 ## Final Summary (for PR/docs)
 
-Phase 4 remains in progress. Final-review fix wave 1 completed `p04-t05`
-through `p04-t09`: the actual user-scope scanner can safely materialize the
+Phase 4 remains in progress. Final-review fixes `p04-t05` through `p04-t10`
+are complete: the actual user-scope scanner can safely materialize the
 finite canonical Codex roles; custom role identities cannot collide after
 normalization; gate metadata reflects the selected execution model; malformed
 run-correlated YAML is classified as artifact validation without weakening
 spoof or duplicate defenses; and lifecycle skills consume only positive,
-explicitly eligible, corroborated review handoffs.
+explicitly eligible, corroborated review handoffs. Spec-driven Overwrite also
+preserves the complete raw phase-review setting before shared setup.
 
-The project is at 32 of 37 tasks and p04 is at 9 of 14. The first final review
-remains `fixes_added`; `p04-t10` through `p04-t14` and final re-review remain
+The project is at 33 of 37 tasks and p04 is at 10 of 14. The first final review
+remains `fixes_added`; `p04-t11` through `p04-t14` and final re-review remain
 pending. User configuration was not mutated, no live user sync was run, no
 canonical skill version was bumped again, and all five public packages remain
 at `0.1.47`.
