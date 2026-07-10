@@ -68,7 +68,7 @@ selection.
 ### Component Diagram
 
 ```text
-raw local/shared/user config + sparse project state
+raw local/repo/user config + sparse project state
                          |
                          v
                dispatch matrix core
@@ -97,6 +97,8 @@ raw local/shared/user config + sparse project state
 2. Walk the canonical matrix once per layer. Each reference retains provider,
    tier, candidate index, optional fallback-route index, exact source path,
    source layer, opaque value, and structured target when present.
+   Repository-owned shared config uses `repo-config` as its structured
+   provenance value.
 3. Resolver consumers continue existing named-ceiling and exact-candidate
    selection. Named tiers bound the candidate search; they are not exact model
    preferences. Codex model/effort pairs stay atomic and Cursor values stay
@@ -155,8 +157,8 @@ interface DispatchMatrixCellRef {
   tier: WorkflowDispatchMatrixTier | null;
   candidateIndex: number | null;
   fallbackRouteIndex: number | null;
-  value: string;
-  target?: WorkflowDispatchRouteTarget;
+  value: string | null;
+  target: WorkflowDispatchRouteTarget | null;
   path: string;
   source: DispatchMatrixWalkContext['source'];
 }
@@ -184,6 +186,10 @@ function walkDispatchMatrix(
   equivalent.
 - A legacy ordered array becomes one fallback-route candidate, not multiple
   ranked candidates.
+- Exactly one of `value` and `target` is non-null. Opaque scalar candidates are
+  preserved byte-for-byte in `value`; structured route-target consumers use
+  `target` as the authoritative representation and do not synthesize a display
+  or deduplication string.
 - Provider-specific validation remains explicit: Codex materialized targets
   require model plus effort; Cursor strings remain opaque.
 
@@ -223,6 +229,21 @@ explicit.
 **Interfaces:**
 
 ```typescript
+interface CursorCatalogResult {
+  status: 'resolved' | 'unavailable' | 'failed';
+  candidates: string[];
+  sourceCommand: 'models' | 'list-models' | null;
+  diagnostic: string | null;
+}
+
+interface DispatchMatrixValidationResult {
+  ref: DispatchMatrixCellRef;
+  status: 'valid' | 'unknown-value' | 'unvalidated';
+  evidence: 'task-probe' | 'subagent-allow-list' | 'catalog-only' | 'none';
+  catalogPresence: boolean | null;
+  diagnostic: string;
+}
+
 interface DispatchValidationPassContext {
   cursorCatalog: Promise<CursorCatalogResult> | null;
 }
@@ -318,7 +339,6 @@ interface DispatchReportV1 {
     action: 'implementation' | 'fix' | 'review';
     role: 'implementer' | 'fix' | 'reviewer';
     target: string;
-    selectionBranch: string;
   };
   policy: {
     status: 'resolved' | 'unresolved' | 'blocked';
@@ -413,10 +433,17 @@ interface DispatchControlRequest {
   gate invocation source remain separate.
 - Candidate order and a selected target's fallback `routeIndex` remain
   separate semantics.
+- `selection.selectionBranch` is the sole selection-branch field; route
+  metadata does not mirror it.
+- V1 validates the workflow-action/resolver-role pairs as
+  `implementation`/`implementer`, `fix`/`fix`, and `review`/`reviewer`.
 - Gate invocation accepts `provider-default` and `unknown` as meaningful
   configured values and remains immutable.
 - Runtime identity cannot mutate or replace gate invocation or requested
   controls.
+- When `runtimeIdentity` is omitted, `buildDispatchReport` emits
+  `producer`, `model`, and `effort` as `null`, `provenance: 'unknown'`, and
+  `confidence: 'not-reported'`.
 - The JSON key order is stable and `schemaVersion` is mandatory.
 
 **Storage:** The report is transient CLI/workflow output. Live Cursor evidence
@@ -434,8 +461,10 @@ introduced.
 - Use explicit `--report-scope <scope>` and
   `--report-action <implementation|fix|review>` options rather than inferring
   those values from target names.
-- Workflow callers supply scope/action explicitly because resolver role alone
-  cannot distinguish implementation from fix or identify the project phase.
+- Workflow callers supply scope/action explicitly so the report owns stable
+  workflow semantics and project-phase scope independently of resolver inputs.
+  V1 validates the action/role mapping defined above rather than inferring
+  either field from target names.
 - Human resolver/workflow output uses `formatDispatchReport` after parity
   tests cover current output states.
 - Gate review maps its existing frozen invocation record into
