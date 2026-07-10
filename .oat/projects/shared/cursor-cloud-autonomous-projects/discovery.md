@@ -201,6 +201,7 @@ Steps owned by the operator (not agent-executable), tracked here so the project 
 - [x] **Set vox-docs marketplace installation mode to Default On** — done 2026-07-10; auto-attachment verified live (propagated into a running cloud session).
 - [ ] **Add vox-docs CI indexing for missing repos** — `bruno`, `pntr`, `open-agent-toolkit`, and `cloud-agent-env-node` are not indexed (most other repos are; indexing is CI-driven). Needed so autonomous runs can research these repos without local checkouts.
 - [ ] **Provision `CURSOR_API_KEY` as a Cloud Agents secret** — required for headless `cursor-agent` gate execution once the environment-setup work lands.
+- [ ] **Grant the cloud AWS profile S3 access to the archive bucket** — archive-on-complete sync stays enabled in cloud; the VM's AWS profile needs credentials for the summary/archive bucket.
 - [ ] **Publish / set installation mode for the `internal-docs-mcp` plugin** — once the skill-only plugin exists in pntr, add it to the team marketplace and choose Default On vs. Required.
 
 ## Next Steps
