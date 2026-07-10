@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p04-t19
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | p01   | completed   | 9     | 9/9       |
 | p02   | completed   | 6     | 6/6       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 19    | 18/19     |
+| p04   | in_progress | 19    | 19/19     |
 
-**Total:** 41/42 tasks completed
+**Total:** 42/42 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -187,7 +187,7 @@ oat_generated: false
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Status:** supplemental final-review fixes in progress (18/19)
+**Status:** supplemental final-review fixes completed; awaiting final review cycle 3 and explicit p04 HiLL approval (19/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -341,10 +341,11 @@ oat_generated: false
 
 ### Task p04-t19: (final review) Repair final-review dispatch stamps
 
-**Status:** pending
+**Status:** completed
 
-- Normalize three p04 review-fix run records to `action=fix role=fix` so final/range aggregation counts them.
-- Align final tracking after all supplemental fixes, then hand off to re-review and explicit p04 HiLL approval.
+- Three p04 review-fix run records now use canonical `action=fix role=fix` grammar while retaining their exact scope, unknown producer provenance, Sol/high model axes, dispatch policy, ceiling, and target identity.
+- Identity parsing now recognizes 12 final-scope contributor stamps, including all four p04 implementation/fix stamps.
+- All 42 planned tasks and all 19 p04 tasks are complete. Final review cycle 3 and explicit p04 HiLL approval remain pending.
 
 ### Phase Summary
 
@@ -353,7 +354,7 @@ oat_generated: false
 - **Verification:** Final verification passes 129 affected assertions, CLI type-check, validation of all 53 OAT skills, the 532-link crawl, zero-op project/user sync dry-runs, 2,561 workspace assertions, format, lint, workspace type-check, package build, docs build, and release validation for all five public packages at `0.1.47`.
 - **Ownership:** Project config and all generated project reviewer variants remain tracked repository state. User config and user-scoped materialization remain under the user home. No ignore rule was added or changed.
 - **Resolution:** Live Codex Frontier resolves exactly to `gpt-5.6-sol/max`; the four configured Cursor model strings resolve byte-for-byte without normalization loss. The five public packages are `0.1.47`; lockfile refresh completed with no textual lockfile change because workspace packages are linked entries.
-- **Review status:** The latest final review is `fixes_added`. Execute `p04-t19`, then run one final re-review before explicit p04 HiLL approval.
+- **Review status:** The latest final review is `fixes_completed`. Run final review cycle 3 before explicit p04 HiLL approval.
 
 ## Orchestration Runs
 
@@ -463,7 +464,7 @@ oat_generated: false
 - Policy source: user config
 - Provider default effort: `max`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
-- Dispatch: scope=p04 action=review-fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run c0e3652a-ac5d-4b7d-b37d-83fa725afb27
 
@@ -477,7 +478,7 @@ oat_generated: false
 - Provider default effort: `max`
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Commits: `37b6defc`, `bfefac9f`, `af22da66`, `55ac0b9f`, `a0ea5aa4`
-- Dispatch: scope=p04 action=final-review-fix-wave-1 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run a9a520ad-02bb-4bce-949f-74c7688b3631
 
@@ -492,7 +493,7 @@ oat_generated: false
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — exact pinned implementer)
 - Implementation commits: `380244f2`, `b9568c53`, `9328b327`, `a8806887`; p04-t14 is external-state-only.
 - Prior root follow-up commits retained in task records: `a1eb5e93`, `bc605764`, `dc71840f`.
-- Dispatch: scope=p04 action=final-review-fix-wave-2 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -886,7 +887,7 @@ oat_generated: false
 
 **Deferred Findings Ledger:** None. Automatic disposition converted or resolved every finding.
 
-**Next:** Execute `p04-t15` through `p04-t19`, mark the final review `fixes_completed`, and run the final review cycle before explicit p04 HiLL approval.
+**Next:** Supplemental fixes `p04-t15` through `p04-t19` are complete and the final review is `fixes_completed`. Run final review cycle 3 before explicit p04 HiLL approval.
 
 ## Deviations from Plan / Design
 
@@ -963,7 +964,7 @@ ownership references now match shipped behavior. Live lifecycle gate commands
 declare the project, carry exact configured invocation metadata, and produce an
 idempotent user Codex role surface before the next provider session starts.
 
-The project is at 39 of 42 tasks and p04 is at 16 of 19. The latest final review
-is `fixes_added`; three supplemental fixes, one final review cycle, and explicit
-p04 HiLL approval remain pending. No canonical skill received another version
-bump, and all five public packages remain at `0.1.47`.
+All 42 planned tasks are complete and p04 is at 19 of 19. The latest final
+review is `fixes_completed`; final review cycle 3 and explicit p04 HiLL approval
+remain pending. No canonical skill received another version bump, and all five
+public packages remain at `0.1.47`.

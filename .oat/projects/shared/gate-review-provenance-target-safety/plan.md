@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** supplemental final-review fixes in progress (18/19)
+**Implementation Status:** all tasks complete; awaiting final review cycle 3 and explicit p04 HiLL approval (19/19)
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -1314,7 +1314,7 @@ pnpm release:validate
 
 ### Task p04-t19: (final review) Repair final-review dispatch stamps
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1344,19 +1344,19 @@ Expected: the `rg` command has no matches and all focused tests pass.
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | passed      | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
-| final  | code     | fixes_added | 2026-07-10 | reviews/archived/final-review-2026-07-10T121358Z.md         |
-| spec   | artifact | pending     | -          | -                                                           |
-| design | artifact | pending     | -          | -                                                           |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed          | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed          | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | passed          | 2026-07-10 | reviews/archived/p04-re-review-2026-07-10T102633Z.md        |
+| final  | code     | fixes_completed | 2026-07-10 | reviews/archived/final-review-2026-07-10T121358Z.md         |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -1373,8 +1373,9 @@ Expected: the `rg` command has no matches and all focused tests pass.
 **Total: 42 tasks**
 
 Phase 0 through Phase 4 reviews have passed. The first final review added ten
-fix tasks; the latest final re-review added five supplemental fix tasks. Re-review
-and explicit p04 HiLL approval remain pending.
+fix tasks; the latest final re-review added five supplemental fix tasks. All
+fixes are complete; final review cycle 3 and explicit p04 HiLL approval remain
+pending.
 
 ## References
 
