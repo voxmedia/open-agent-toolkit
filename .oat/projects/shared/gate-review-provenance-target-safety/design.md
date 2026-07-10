@@ -371,4 +371,41 @@ This procedure is called by spec-driven planning, quick-start planning, and impo
 
 ## Testing Strategy
 
-_Pending collaborative validation._
+### Unit Tests
+
+- **Config model and normalization:** Explicit model/effort, `provider-default`, omitted/unknown values, malformed values, target tombstones, and partial layered invocation overrides.
+- **Target selection and cloning:** Invocation metadata survives built-in/config resolution, candidate expansion, selection, and both clone paths without changing provider-neutral selection.
+- **Project resolution:** Declared path/name, active-project fallback, single-candidate fallback, normalization, and source reporting.
+- **Artifact parsing:** Existing manual/auto artifacts remain compatible; gate artifacts parse run, project, target, runtime, model, effort, and source fields.
+- **Corroboration:** Matching records, missing fields, wrong run ID, wrong containing project, wrong `oat_project`, and wrong configured invocation values.
+- **Producer aggregation:** Exact phase behavior unchanged; final and contiguous ranges aggregate only in-scope implementer/fix stamps, deduplicate family unions, and report contributing scopes/count.
+- **Phase selection:** All, selected, disabled, invalid phase IDs, preserved resumed/imported values, and stable plan-order serialization.
+
+### CLI Integration Tests
+
+- `oat gate target set` persists explicit invocation metadata at each supported layer and preserves unrelated target fields.
+- `oat gate target list --json` distinguishes built-in-only targets from explicitly configured targets and reports enabled, available, origin, and normalized invocation values.
+- Gate prompt assembly stamps exact configured values for explicit Codex model/effort, explicit Claude model with provider-default effort, and unknown/default Cursor-style targets.
+- Gate JSON carries the same identity record on success, provider failure, artifact-validation failure, and target-corroboration failure.
+- A run-correlated artifact in the declared project passes corroboration before severity evaluation.
+- An artifact written into a sibling project, a mismatched `oat_project`, or a missing/mismatched run ID fails closed with expected/actual diagnostics and no receive-eligible handoff.
+- Ambient legacy invocation remains supported and reports its resolution source.
+- Invocation-field mismatch blocks as artifact validation; optional self-report disagreement remains separate.
+
+### Workflow Contract Tests
+
+- Spec-driven plan, quick-start, and import-plan skill text all invoke the shared phase-review setup after stable phase IDs and before plan artifact review.
+- Provider-plan import inherits the import-plan behavior.
+- Built-in-only, unavailable, or failed target probes do not prompt or enable the phase gate.
+- Qualifying configuration offers all, selected, and disabled choices and writes the existing frontmatter shape.
+- Explicit resumed/imported settings are preserved without re-prompting.
+- Lifecycle gate guidance includes `--project` substitution while continuing to prohibit reusable `--target` pins.
+- Every changed canonical skill has one PR-scoped frontmatter version bump, and provider sync/skill validation detects drift.
+
+### Regression and Release Validation
+
+- Run the exact gate/config/plan test files while iterating, followed by package-level CLI tests.
+- Run `pnpm lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and `pnpm build` after implementation integration.
+- Build the docs surface after workflow-gate, review-artifact, planning, and artifact-contract documentation updates.
+- Bump the lockstep public package set because CLI and bundled skill/docs behavior ships through published packages.
+- Run `pnpm release:validate` as the final publishable-package guardrail.
