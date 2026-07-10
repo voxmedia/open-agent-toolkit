@@ -1606,7 +1606,7 @@ pnpm run cli:source -- sync --scope project --dry-run
 
 ---
 
-### Task p04-t29: Adopt complete ladders and dispatch per task
+### Task p04-t29: Adopt complete ladders and record named ceilings
 
 **Status:** pending
 
@@ -1616,7 +1616,6 @@ pnpm run cli:source -- sync --scope project --dry-run
 - Modify: `.agents/skills/oat-project-plan/SKILL.md`
 - Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
 - Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
-- Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 - Test: `packages/cli/src/validation/skills.test.ts`
 - Regenerate: bundled skill assets
@@ -1624,9 +1623,9 @@ pnpm run cli:source -- sync --scope project --dry-run
 **Steps:**
 
 1. When setup finds no complete ladder, show the complete bundled recommendation and ask the user to adopt it in an explicit owning scope; do not persist a project-specific active policy into user configuration.
-2. Persist a project or phase named ceiling as a constraint. Require each implementation task to request a resolver-validated candidate at or below that ceiling; record the resulting exact target in the dispatch stamp.
+2. Persist a project or phase named ceiling as a constraint, never as an enduring exact model-family preference. The named tier remains the maximum candidate tier that a later orchestrator may select from the complete configured ladder.
 3. Keep reviewer and lifecycle gate rules explicit: reviewers use their configured review ceiling unless a separate reviewed contract permits a lower candidate; lifecycle gate commands remain target-neutral.
-4. Add contracts for all planning paths, lower-tier selection under a High ceiling, exact Claude/Cursor payload preservation, and fail-closed missing-candidate behavior.
+4. Add contracts for every planning path, full-recommendation adoption in the selected ownership scope, lower-tier availability under a High ceiling, exact Claude/Cursor payload preservation, and fail-closed missing-ladder behavior.
 
 **Verify:**
 
@@ -1637,11 +1636,43 @@ pnpm format
 pnpm release:validate
 ```
 
-**Commit:** `feat(workflow): dispatch tasks beneath project ceilings`
+**Commit:** `feat(workflow): configure adaptive dispatch ceilings`
 
 ---
 
-### Task p04-t30: Document adaptive dispatch ceilings
+### Task p04-t30: Coordinate phases and dispatch one pinned worker per task
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Test: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: bundled agent and skill assets
+
+**Steps:**
+
+1. Redefine the phase implementer as a phase coordinator. It reads phase artifacts once, retains dependency order, selects the exact target for each task, verifies each worker result and commit, performs phase-wide integration/self-review, and returns the phase summary. It must not implement ordinary plan tasks itself.
+2. Before each task, have the coordinator classify the bounded task and call the candidate resolver with the project or phase named ceiling. Dispatch one task worker with the resolver-returned exact Codex role, Claude model argument, or Cursor opaque model string, plus a Task Scope that names only that task, its file boundary, verification, and commit convention.
+3. Run task workers serially within a phase and worktree by default. Permit parallel work only through the existing plan-declared phase/worktree mechanism; do not fan out same-worktree tasks. The coordinator records each worker's exact target, result, and commit in the phase dispatch summary.
+4. Fail closed when a task candidate is absent, exceeds the ceiling, or cannot be invoked with its exact controls. Do not downgrade to the coordinator target, the base role, or an inferred provider default. Preserve the existing fresh pinned-child route where a native Codex role cannot be selected.
+5. Add semantic contracts proving that a High-ceiling phase can dispatch different valid lower candidates for separate tasks, that the coordinator does not execute all tasks in its own context, that each worker receives one task scope, and that exact Claude/Cursor payloads are preserved.
+
+**Verify:**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm run oat:validate-skills
+pnpm format
+pnpm release:validate
+```
+
+**Commit:** `feat(workflow): dispatch exact task workers`
+
+---
+
+### Task p04-t31: Document adaptive dispatch ceilings
 
 **Status:** pending
 
@@ -1656,9 +1687,9 @@ pnpm release:validate
 
 **Steps:**
 
-1. Explain ordered candidates and named ceilings, while project or phase state constrains the maximum named tier.
-2. Document ownership, full recommendation adoption, Codex materialization, exact Claude/Cursor invocation, opaque Cursor strings, and no direct role-name bypass.
-3. Remove wording that treats a managed policy as an enduring exact model-family selection and document migration behavior.
+1. Explain ordered candidates and named ceilings, while project or phase state constrains the maximum named tier and leaves lower configured candidates available.
+2. Document ownership, full recommendation adoption, Codex materialization, exact Claude/Cursor invocation, opaque Cursor strings, no direct role-name bypass, and no configuration-derived capability inference from Cursor strings.
+3. Document the two execution layers: a phase coordinator protects ordering and integration, while one exact target-pinned worker executes each task beneath the ceiling. Remove wording that treats a managed policy as an enduring exact model-family selection and document migration behavior.
 
 **Verify:**
 
@@ -1699,12 +1730,12 @@ pnpm release:validate
 - Phase 1: 9 tasks - configured invocation provenance plus five negative-path review fixes
 - Phase 2: 6 tasks - project resolution provenance, fail-closed target corroboration, lifecycle guidance, and three correlation review fixes
 - Phase 3: 2 tasks - explicit final/range producer aggregation provenance and exact-scope compatibility
-- Phase 4: 30 tasks - shared opt-in setup, safety/release work, final-review fixes, and adaptive provider dispatch ceilings
+- Phase 4: 31 tasks - shared opt-in setup, safety/release work, final-review fixes, and adaptive provider dispatch ceilings with task-worker execution
 
-**Total: 53 tasks**
+**Total: 54 tasks**
 
 Phase 0 through Phase 3 reviews have passed. The completed p04 review work is
-extended with adaptive dispatch tasks `p04-t26` through `p04-t30`; the previous
+extended with adaptive dispatch tasks `p04-t26` through `p04-t31`; the previous
 final-review waiver applies only to the prior 48-task scope. Implement the new
 tasks, then obtain a final review disposition before explicit p04 HiLL approval.
 

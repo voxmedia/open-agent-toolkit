@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:57:05.813Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T16:31:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T16:39:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - 51 of 53 planned tasks are complete and p04 is 28/30. Every configured Codex ladder candidate now materializes in its owning scope; execution continues at `p04-t29`.
+Implementation - 51 of 54 planned tasks are complete and p04 is 28/31. Every configured Codex ladder candidate now materializes in its owning scope; execution continues at `p04-t29`, followed by an explicit phase-coordinator/task-worker dispatch boundary.
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - 51 of 53 planned tasks are complete and p04 is 28/30. Every con
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; three plan artifact reviews passed)
-- **Implementation:** `implementation.md` (51/53 tasks complete; adaptive dispatch extension in progress)
+- **Implementation:** `implementation.md` (51/54 tasks complete; adaptive dispatch extension in progress)
 
 ## Progress
 
@@ -198,7 +198,7 @@ Implementation - 51 of 53 planned tasks are complete and p04 is 28/30. Every con
 - ✓ p04-t27 verification passed 121 focused dispatch/registry assertions and CLI type-check
 - ✓ `p04-t28` materializes every unique configured Codex ladder and fallback-route candidate in its owning scope
 - ✓ p04-t28 verification passed 46 focused sync assertions, CLI type-check, and a zero-operation project sync dry-run
-- ⧗ Implement `p04-t29` through `p04-t30`, then obtain a final review disposition before p04 HiLL approval
+- ⧗ Implement `p04-t29` through `p04-t31`, then obtain a final review disposition before p04 HiLL approval
 
 ## Blockers
 
@@ -206,4 +206,4 @@ None
 
 ## Next Milestone
 
-Adopt complete ladders and resolver-validated per-task dispatch in `p04-t29`. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
+Adopt complete ladders and record named ceilings in `p04-t29`. The subsequent `p04-t30` phase coordinator will dispatch one exact worker per task beneath that ceiling. The prior final-review waiver does not cover this new scope; p04 HiLL approval remains pending.
