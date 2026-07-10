@@ -27,7 +27,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:58:56.209Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T20:16:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-10T21:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -75,7 +75,8 @@ Plan - Refreshing against the workflow-gate and adaptive-dispatch merge
 - ✓ Obvious post-rebase plan drift incorporated
 - ✓ User-owned dispatch ladder confirmed and project named ceiling set to High
 - ✓ Phase gate review disabled by user choice
-- ⧗ Post-rebase managed plan review pending
+- ✓ High managed plan review completed; two plan findings incorporated
+- ⧗ High managed plan re-review pending
 
 ## Blockers
 
@@ -83,4 +84,4 @@ None
 
 ## Next Milestone
 
-Run the managed artifact review
+Run the managed artifact re-review

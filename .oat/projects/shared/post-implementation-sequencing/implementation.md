@@ -177,3 +177,12 @@ configured gate rerun after these artifact corrections.
   from HiLL approval and final artifact review.
 - The optional Phase gate review is disabled by user choice; the plan leaves
   `oat_phase_review_gate` absent, as required by the shared contract.
+
+### Post-Rebase Managed Plan Review
+
+**Date:** 2026-07-10
+
+- The High reviewer found two plan completeness gaps: explicit final HiLL
+  decline/failure-state coverage and staging all regenerated bundled assets.
+- Both findings were incorporated into `p02-t01` and `p03-t02`; a clean High
+  re-review is required before implementation starts.

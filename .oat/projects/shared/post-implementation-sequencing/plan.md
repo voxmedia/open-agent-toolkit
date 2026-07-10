@@ -206,6 +206,11 @@ Assert that the canonical skill:
 - commits each completed step and `awaiting_approval` state;
 - records explicit approval before post-approval work;
 - uses `not_required` only when no final checkpoint exists;
+- on a declined or deferred final HiLL response, preserves
+  `awaiting_approval`, records neither approval nor failure, and runs no
+  post-approval step;
+- on pre-approval failure, preserves a pending approval state; on post-approval
+  failure, preserves the already-recorded approval state;
 - fails fast with boundary, step, and exact resume guidance;
 - resumes from the first incomplete step without re-resolving configuration;
 - supplies the authoritative snapshot to every `summary`, `document`, and `pr`
@@ -233,6 +238,10 @@ Expected: The new contract suite fails against the current ordering.
 - Normalize the effective preference, persist the immutable snapshot after final
   review passes, and dispatch `summary`, `document`, and `pr` in order.
 - Persist success/failure/approval transitions before crossing each boundary.
+- Make the final-approval state machine explicit: decline/defer remains
+  `awaiting_approval`; a pre-approval failure remains pending approval; and a
+  post-approval failure retains recorded approval. Resume must never cross any
+  of those boundaries implicitly.
 - Instruct every child step to merge state updates without replacing
   `oat_post_implement_sequence`, then re-read state after the child returns.
 - If a child removed or altered the snapshot, restore the authoritative snapshot,
@@ -455,6 +464,8 @@ git commit -m "docs(workflow): explain approval-aware post-implementation sequen
 - Modify: `packages/docs-transforms/package.json`
 - Modify if generated: `pnpm-lock.yaml`
 - Regenerate tracked: `packages/cli/assets/public-package-versions.json`
+- Regenerate tracked: `packages/cli/assets/skills/` for every changed canonical
+  skill and `packages/cli/assets/docs/` for the updated documentation
 - Regenerate if changed: `apps/oat-docs/index.md`
 
 **Step 1: Apply release metadata and generate assets**
@@ -513,7 +524,8 @@ git add packages/cli/package.json \
   packages/docs-transforms/package.json \
   pnpm-lock.yaml \
   apps/oat-docs/index.md
-git add -f packages/cli/assets/public-package-versions.json
+git add -A packages/cli/assets
+git diff --cached --check
 git commit -m "chore(release): bump public packages to 0.1.49"
 ```
 
@@ -572,15 +584,15 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                      |
-| ------ | -------- | ------- | ---------- | --------------------------------------------- |
-| p01    | code     | pending | -          | -                                             |
-| p02    | code     | pending | -          | -                                             |
-| p03    | code     | pending | -          | -                                             |
-| final  | code     | pending | -          | -                                             |
-| spec   | artifact | passed  | 2026-07-10 | N/A (quick mode; no spec required)            |
-| design | artifact | pending | -          | -                                             |
-| plan   | artifact | pending | 2026-07-10 | re-review required after rebase onto c5190684 |
+| Scope  | Type     | Status      | Date       | Artifact                                                          |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                                 |
+| p02    | code     | pending     | -          | -                                                                 |
+| p03    | code     | pending     | -          | -                                                                 |
+| final  | code     | pending     | -          | -                                                                 |
+| spec   | artifact | passed      | 2026-07-10 | N/A (quick mode; no spec required)                                |
+| design | artifact | pending     | -          | -                                                                 |
+| plan   | artifact | fixes_added | 2026-07-10 | High structured review; C1/C2 plan fixes added; re-review pending |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` →
 `passed`
