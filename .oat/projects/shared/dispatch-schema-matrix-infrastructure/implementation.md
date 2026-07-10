@@ -24,16 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 6     | 0/6       |
+| p02   | pending     | 4     | 0/4       |
+| p03   | pending     | 6     | 0/6       |
+| p04   | pending     | 4     | 0/4       |
+| p05   | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/23 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase p01: Shared Dispatch Matrix Core
 
 **Status:** in_progress
 **Started:** 2026-07-10
@@ -57,10 +60,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add the shared matrix algebra, normalizer, and walker
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,7 +88,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Adopt shared normalization in layered configuration
 
 **Status:** pending
 **Commit:** -
@@ -96,12 +99,12 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase p02: Pass-Scoped Cursor Validation
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Separate Cursor Task probing from catalog diagnostics
 
 **Status:** pending
 **Commit:** -
