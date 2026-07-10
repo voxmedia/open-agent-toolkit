@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
-| p01   | in_progress | 9     | 4/9       |
+| p01   | in_progress | 9     | 5/9       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 10/22 tasks completed
+**Total:** 11/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -86,8 +86,8 @@ oat_generated: false
 
 ### Task p01-t05: (review) Preserve target priority on invocation updates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `5b3c8312`
 
 ### Task p01-t06: (review) Isolate target availability probe failures
 
@@ -297,6 +297,8 @@ oat_generated: false
 - Final p01 verification passed 240 focused assertions, CLI type-check, live target inspection, validation of all 53 OAT skills, and the 532-link docs crawl from implementation commit `9f8379b7`.
 - Final p01 self-review found no correctness or scope issues. The p01 code-review row remains pending for the orchestrator's independent reviewer; no p02 work was started.
 - Post-self-review hardening in `a579f4c9` added two resolver assertions that lock complete re-enablement and partial non-resurrection after an intervening exec-target tombstone.
+- `p01-t05` completed in `5b3c8312`: target mutations now omit an unspecified priority, preserving a nonzero same-layer value and untouched invocation metadata, while genuinely new targets still materialize priority `0`.
+- Focused p01-t05 verification reproduced the regression at priority `0`, then passed the focused test, all 74 gate command tests, and CLI type-check after the fix.
 
 ### Review Received: p01
 
@@ -343,6 +345,7 @@ oat_generated: false
 | p01-t03   | 72 focused gate assertions; CLI type-check                                                                       | 73     | 0      | Immutable prompt/JSON invocation provenance                  |
 | p01-t04   | 133 parser/gate/skill assertions; type-check; 53-skill validation; 532-link crawl                                | 136    | 0      | Gate artifact parsing, corroboration, guidance, docs         |
 | p01 final | 240 focused assertions; type-check; live target list; skill validation; docs links                               | 244    | 0      | Committed-tree phase verification and self-review            |
+| p01-t05   | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                | 76     | 0      | Partial target mutation preserves nonzero priority           |
 
 ## Final Summary (for PR/docs)
 
