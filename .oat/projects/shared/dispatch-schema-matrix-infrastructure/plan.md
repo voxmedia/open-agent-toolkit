@@ -43,7 +43,7 @@ Turborepo, Markdown/Fumadocs.
 - [x] Defer HiLL checkpoint confirmation to oat-project-implement
 - [x] Evaluated phases for parallelism opportunities
 - [x] Declared the disjoint p02/p03 parallel group
-- [ ] Record optional phase-review selection
+- [x] Phase review disabled by user; retain phase-boundary self-review and final gate review
 - [ ] Complete managed plan artifact review
 
 ## Parallelism
