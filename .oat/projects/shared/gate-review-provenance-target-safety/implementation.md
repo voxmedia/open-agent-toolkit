@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t07
+oat_current_task_id: p01-t08
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p00   | completed   | 6     | 6/6       |
-| p01   | in_progress | 9     | 6/9       |
+| p01   | in_progress | 9     | 7/9       |
 | p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 1     | 0/1       |
 | p04   | pending     | 3     | 0/3       |
 
-**Total:** 12/22 tasks completed
+**Total:** 13/22 tasks completed
 
 ## Phase 0: Managed Dispatch Readiness Prerequisite
 
@@ -96,8 +96,8 @@ oat_generated: false
 
 ### Task p01-t07: (review) Require the gate artifact invocation marker
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `335f15b7`
 
 ### Task p01-t08: (review) Preserve provenance on unexpected gate failures
 
@@ -301,6 +301,8 @@ oat_generated: false
 - Focused p01-t05 verification reproduced the regression at priority `0`, then passed the focused test, all 74 gate command tests, and CLI type-check after the fix.
 - `p01-t06` completed in `663fc203`: target listing now treats a rejected availability command as `available: false` for only that target and continues reporting other targets without selecting or executing reviewers.
 - Focused p01-t06 verification reproduced the top-level listing error, then passed the focused test, all 75 gate command tests, and the live source target-list probe after the fix.
+- `p01-t07` completed in `335f15b7`: the gate execution path now requires `oat_review_invocation: gate` after gate-owned field corroboration and before severity evaluation, without changing standalone manual/auto parser compatibility.
+- Focused p01-t07 verification reproduced successful acceptance for missing, manual, and auto markers, then passed all three cases, 94 combined gate/parser tests, and CLI type-check after the fix.
 
 ### Review Received: p01
 
@@ -349,6 +351,7 @@ oat_generated: false
 | p01 final | 240 focused assertions; type-check; live target list; skill validation; docs links                               | 244    | 0      | Committed-tree phase verification and self-review            |
 | p01-t05   | RED/GREEN priority regression; 74 gate assertions; CLI type-check                                                | 76     | 0      | Partial target mutation preserves nonzero priority           |
 | p01-t06   | RED/GREEN rejected probe; 75 gate assertions; live target list                                                   | 77     | 0      | Per-target availability isolation; listing remains read-only |
+| p01-t07   | RED/GREEN marker cases; 94 gate/parser assertions; CLI type-check                                                | 98     | 0      | Gate-only marker enforcement; parser compatibility retained  |
 
 ## Final Summary (for PR/docs)
 

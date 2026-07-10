@@ -260,7 +260,7 @@ pnpm exec oxfmt --check .agents/skills/oat-project-plan-writing/SKILL.md apps/oa
 
 ## Phase 1: Configured Invocation Provenance
 
-**Implementation Status:** review fixes in progress (6/9 tasks completed)
+**Implementation Status:** review fixes in progress (7/9 tasks completed)
 
 ### Task p01-t01: Add minimal exec-target invocation metadata
 
@@ -438,7 +438,7 @@ pnpm run cli:source -- --json gate target list
 
 ### Task p01-t07: (review) Require the gate artifact invocation marker
 
-**Status:** pending
+**Status:** completed (`335f15b7`)
 
 **Files:**
 
