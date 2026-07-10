@@ -73,7 +73,8 @@ type DispatchCeilingSource =
   | 'repo-config'
   | 'user-config'
   | 'env'
-  | 'project-state';
+  | 'project-state'
+  | 'invocation';
 
 type DispatchCeilingMode = 'enforced' | 'advisory' | 'unsupported';
 type ProjectDispatchMatrix = Record<string, WorkflowDispatchProviderValue>;
@@ -110,6 +111,7 @@ interface DispatchCeilingResolveOptions {
   role?: string;
   orchestratorTier?: string;
   preferred?: string;
+  ceilingTier?: string;
   candidateModel?: string;
   candidateEffort?: string;
   escalationLevel?: string;
@@ -274,6 +276,8 @@ function sourceLabel(source: DispatchCeilingSource | null): string {
       return 'environment';
     case 'project-state':
       return 'project state';
+    case 'invocation':
+      return 'explicit invocation';
     default:
       return 'none';
   }
@@ -1547,6 +1551,31 @@ function normalizePreferredValue(
   return normalized;
 }
 
+function normalizeCeilingTier(
+  value: string | undefined,
+  role: CeilingRole,
+): WorkflowDispatchMatrixTier | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (
+    !(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(normalized)
+  ) {
+    throw new Error(
+      `Invalid invocation ceiling tier "${normalized}". Valid tiers: ${VALID_DISPATCH_MATRIX_TIERS.join(', ')}.`,
+    );
+  }
+  if (role === 'reviewer') {
+    throw new Error(
+      'Invocation ceiling tiers are only supported for implementer/fix task dispatch; reviewers use the configured review ceiling.',
+    );
+  }
+
+  return normalized as WorkflowDispatchMatrixTier;
+}
+
 function normalizeRequestedCandidate(
   provider: DispatchCeilingProvider,
   role: CeilingRole,
@@ -1983,6 +2012,7 @@ async function resolveDispatchCeiling(
     options,
   );
   const preferredValue = normalizePreferredValue(provider, options.preferred);
+  const ceilingTier = normalizeCeilingTier(options.ceilingTier, role);
   const escalationLevel = normalizeEscalationLevel(options.escalationLevel);
 
   const resolvedValue = await resolveCeilingValue(
@@ -1994,6 +2024,7 @@ async function resolveDispatchCeiling(
     role,
     preferredValue,
     requestedCandidate,
+    ceilingTier,
   );
   for (const warning of resolvedValue?.warnings ?? []) {
     context.logger.warn(warning);
@@ -2111,6 +2142,7 @@ async function resolveCeilingValue(
   role: CeilingRole,
   preferredValue: DispatchCeilingValue | null,
   requestedCandidate: RequestedDispatchCandidate | null,
+  invocationCeilingTier: WorkflowDispatchMatrixTier | null,
 ): Promise<ResolvedCeilingValue | null> {
   const configCeiling = readResolvedConfigCeiling(provider, resolvedConfig);
   const projectCeiling = await resolveProjectStateCeiling(
@@ -2119,9 +2151,29 @@ async function resolveCeilingValue(
     dependencies,
   );
 
-  const baseCeiling = configCeiling ?? projectCeiling;
+  let baseCeiling = configCeiling ?? projectCeiling;
   if (!baseCeiling) {
     return null;
+  }
+
+  if (invocationCeilingTier) {
+    baseCeiling = {
+      ...baseCeiling,
+      mode: 'managed',
+      policy: invocationCeilingTier,
+      value: compiledPolicyValueForProvider(
+        provider,
+        compileDispatchPolicyPreset(invocationCeilingTier),
+      ),
+      source: 'invocation',
+      preset: invocationCeilingTier,
+      matrix: projectCeiling?.matrix ?? baseCeiling.matrix,
+      cellSource: null,
+      target: null,
+      selectionBranch: 'prompt-persisted',
+      ceilingTier: invocationCeilingTier,
+      ceilingTarget: null,
+    };
   }
 
   if (baseCeiling.mode === 'inherit') {
@@ -2482,6 +2534,12 @@ export function createProjectDispatchCeilingCommand(
       .option(
         '--preferred <value>',
         'Legacy preferred implementer/fix value before applying the resolved policy',
+      )
+      .addOption(
+        new Option(
+          '--ceiling-tier <tier>',
+          'Invocation-only named maximum tier; never persists configuration or project state',
+        ).choices([...VALID_DISPATCH_MATRIX_TIERS]),
       )
       .option(
         '--candidate-model <model>',

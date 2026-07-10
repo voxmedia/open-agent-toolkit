@@ -998,7 +998,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.32');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.33');
   });
 
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
@@ -1207,6 +1207,85 @@ describe('validateOatSkills', () => {
         /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
       );
     }
+  });
+
+  it('coordinates one exact serial task worker per plan task', async () => {
+    const agent = await readRepoFile('.agents/agents/oat-phase-implementer.md');
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.4');
+    expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
+      /phase coordinator/i,
+    );
+    expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.33');
+
+    const coordinator = agent.slice(
+      agent.indexOf('### Mode: Phase Coordinator'),
+      agent.indexOf('### Mode: Task Worker'),
+    );
+    const worker = agent.slice(agent.indexOf('### Mode: Task Worker'));
+
+    expect(coordinator).toMatch(
+      /must not implement ordinary plan tasks (?:itself|in its own context)/i,
+    );
+    expect(coordinator).toMatch(/one exact task worker at a time/i);
+    expect(coordinator).toMatch(
+      /serial(?:ly)?[\s\S]{0,180}(?:same|one) worktree/i,
+    );
+    expect(coordinator).toMatch(
+      /parallel[\s\S]{0,240}plan-declared[\s\S]{0,180}(?:phase|worktree)/i,
+    );
+    expect(coordinator).toContain('--ceiling-tier');
+    expect(coordinator).toContain('--candidate-model');
+    expect(coordinator).toContain('providers.codex.dispatchArgs.variant');
+    expect(coordinator).toContain('providers.claude.dispatchArgs.model');
+    expect(coordinator).toContain('providers.cursor.dispatchArgs.model');
+    expect(coordinator).toMatch(
+      /Cursor[\s\S]{0,260}(?:byte-for-byte|opaque)[\s\S]{0,220}(?:actual|invocation)/i,
+    );
+    expect(coordinator).toMatch(
+      /(?:missing|absent)[\s\S]{0,180}(?:above|exceeds)[\s\S]{0,220}(?:cannot|unable)[\s\S]{0,220}(?:fail closed|BLOCKED)/i,
+    );
+    expect(coordinator).toMatch(
+      /(?:do not|never)[\s\S]{0,180}(?:coordinator target|base role|provider default)[\s\S]{0,240}(?:downgrade|fallback|substitute)/i,
+    );
+    expect(coordinator).toMatch(
+      /verify[\s\S]{0,160}(?:reported )?commit[\s\S]{0,180}(?:HEAD|git)/i,
+    );
+    expect(coordinator).toMatch(
+      /Task Dispatch Summary[\s\S]{0,260}Exact target[\s\S]{0,120}Result[\s\S]{0,120}Commit/i,
+    );
+
+    for (const field of [
+      'task_id',
+      'file_boundary',
+      'verification',
+      'commit_convention',
+    ]) {
+      expect(worker, `bounded Task Scope field ${field}`).toContain(field);
+    }
+    expect(worker).toMatch(/exactly one task/i);
+    expect(worker).toMatch(
+      /must not dispatch another\s+(?:coordinator|worker)/i,
+    );
+
+    const perPhase = implement.slice(
+      implement.indexOf('### Step 5: Per-Phase Execution'),
+      implement.indexOf('### Per-Phase Review'),
+    );
+    expect(perPhase).toContain('--ceiling-tier');
+    expect(perPhase).toMatch(/project or phase named ceiling/i);
+    expect(perPhase).toMatch(/one exact task worker/i);
+    expect(perPhase).toMatch(/Task Scope[\s\S]{0,500}task_id:/i);
+    expect(perPhase).toMatch(
+      /same worktree[\s\S]{0,220}serial|serial[\s\S]{0,220}same worktree/i,
+    );
+    expect(perPhase).toMatch(
+      /(?:missing|absent|exceeds|above)[\s\S]{0,320}(?:fail closed|block)/i,
+    );
   });
 
   it('defines the canonical shared phase-review setup after stable phase IDs', async () => {

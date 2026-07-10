@@ -1480,6 +1480,216 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('applies an explicit named ceiling tier to one invocation without rewriting configuration', async () => {
+    const { root, home } = await setup();
+    const configPath = join(root, '.oat', 'config.json');
+    const statePath = join(
+      root,
+      '.oat',
+      'projects',
+      'shared',
+      'demo',
+      'state.md',
+    );
+    await writeJson(configPath, {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              economy: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-luna',
+                    effort: 'medium',
+                  },
+                ],
+              },
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+              high: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+              },
+              frontier: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'max',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      statePath,
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    const configBefore = await readFile(configPath, 'utf8');
+    const stateBefore = await readFile(statePath, 'utf8');
+
+    const explicit = createHarness({ cwd: root, home });
+    await runCommand(explicit.command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--ceiling-tier',
+      'balanced',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--json',
+    ]);
+
+    expect(explicit.capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      policy: 'balanced',
+      source: 'invocation',
+      providers: {
+        codex: {
+          cellSource: 'repo-config',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-terra-medium',
+          },
+          selection: {
+            candidateTier: 'balanced',
+            ceilingTier: 'balanced',
+            requestedCandidate: {
+              model: 'gpt-5.6-terra',
+              effort: 'medium',
+            },
+          },
+        },
+      },
+    });
+    expect(await readFile(configPath, 'utf8')).toBe(configBefore);
+    expect(await readFile(statePath, 'utf8')).toBe(stateBefore);
+
+    const inherited = createHarness({ cwd: root, home });
+    await runCommand(inherited.command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--candidate-model',
+      'gpt-5.6-sol',
+      '--candidate-effort',
+      'high',
+      '--json',
+    ]);
+    expect(inherited.capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      policy: 'high',
+      source: 'repo-config',
+      providers: {
+        codex: {
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-sol-high',
+          },
+          selection: { ceilingTier: 'high' },
+        },
+      },
+    });
+  });
+
+  it.each([
+    {
+      provider: 'claude',
+      model: 'sonnet',
+      matrix: {
+        economy: { candidates: ['haiku'] },
+        balanced: { candidates: ['sonnet'] },
+        high: { candidates: ['opus'] },
+        frontier: { candidates: ['fable'] },
+      },
+    },
+    {
+      provider: 'cursor',
+      model: 'opaque:model/balanced [v2]',
+      matrix: {
+        economy: { candidates: ['opaque:model/economy [v1]'] },
+        balanced: { candidates: ['opaque:model/balanced [v2]'] },
+        high: { candidates: ['opaque:model/high [v3]'] },
+        frontier: { candidates: ['opaque:model/frontier [v4]'] },
+      },
+    },
+  ])(
+    'preserves the exact $provider model under an explicit invocation ceiling',
+    async ({ provider, model, matrix }) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+          dispatchCeiling: { providers: { [provider]: matrix } },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        provider,
+        '--role',
+        'implementer',
+        '--ceiling-tier',
+        'high',
+        '--candidate-model',
+        model,
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        policy: 'high',
+        source: 'invocation',
+        providers: {
+          [provider]: {
+            cellSource: 'repo-config',
+            dispatchArgs: { model },
+            modelAxis: `selected:${model}`,
+            selection: {
+              ceilingTier: 'high',
+              requestedCandidate: { model },
+              target: { model },
+            },
+          },
+        },
+      });
+    },
+  );
+
   it.each([
     {
       provider: 'claude',
