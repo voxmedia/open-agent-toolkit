@@ -70,7 +70,114 @@ producer dispatch stamps --> producer resolver                   |
 
 ## Component Design
 
-_Pending collaborative validation._
+### Exec-Target Invocation Metadata
+
+**Purpose:** Extend existing gate target configuration with only the configured invocation controls needed for review provenance.
+
+**Responsibilities:**
+
+- Normalize and merge optional nested invocation metadata through user, shared, and local config layers.
+- Preserve metadata through target cloning, selection, CLI mutation, and JSON inspection.
+- Reserve explicit `provider-default` as a configured sentinel; an omitted field is `unknown` and is never inferred from an opaque command.
+
+**Interface:**
+
+```typescript
+interface ExecTargetInvocation {
+  model?: string | 'provider-default';
+  reasoningEffort?: string | 'provider-default';
+}
+
+interface ExecTarget {
+  // Existing runtime, baseCommand, detection, model-list, and priority fields.
+  invocation?: ExecTargetInvocation;
+}
+```
+
+### Gate Invocation and Project Resolution
+
+**Purpose:** Convert resolved pre-dispatch state into immutable records owned by OAT rather than the reviewer.
+
+**Responsibilities:**
+
+- Return project path plus `declared`, `active-project`, or `single-candidate` source.
+- Generate the run ID before prompt assembly.
+- Derive explicit configured invocation values and source after exec-target selection.
+- Reuse the same records in prompts and every JSON outcome.
+
+**Interfaces:**
+
+```typescript
+interface ResolvedReviewProject {
+  path: string;
+  source: 'declared' | 'active-project' | 'single-candidate';
+}
+
+interface GateInvocationMetadata {
+  runId: string;
+  targetId: string;
+  runtime: string;
+  model: string | 'provider-default' | 'unknown';
+  reasoningEffort: string | 'provider-default' | 'unknown';
+  source: 'exec-target-config' | 'unknown';
+}
+```
+
+### Review Artifact Parser and Corroborator
+
+**Purpose:** Prove that a produced artifact belongs to this gate run and faithfully carries gate-owned identity metadata.
+
+**Responsibilities:**
+
+- Extend the YAML-aware verdict parser with project, run, and invocation fields.
+- Locate the produced artifact by run ID across active project review directories; retain before/after detection only as a compatibility diagnostic, not as identity proof.
+- Compare containing project and artifact project with an explicitly declared target.
+- Compare stamped configured invocation fields with the selected invocation record.
+- Return structured expected/actual diagnostics without converting invalid artifacts into passed verdicts.
+
+**Interface:**
+
+```typescript
+interface GateCorroboration {
+  run: 'matched' | 'missing' | 'mismatched';
+  project: 'matched' | 'ambient' | 'missing' | 'mismatched';
+  invocation: 'matched' | 'missing' | 'mismatched';
+  expected: { project: string; invocation: GateInvocationMetadata };
+  actual: { containingProject?: string; artifactProject?: string };
+}
+```
+
+### Producer Identity Resolver
+
+**Purpose:** Select a diverse reviewer using producer records relevant to the requested review scope.
+
+**Responsibilities:**
+
+- Preserve explicit flag and exact-scope stamp precedence.
+- Aggregate final and contiguous-range implementer/fix stamps.
+- Keep `avoidFamilies` as the authoritative union; do not present the latest producer value as the aggregate.
+- Report `aggregated-stamps` with contributing scopes/count in JSON while leaving exact phase behavior unchanged.
+
+### Review-Target Capability Probe
+
+**Purpose:** Give planning workflows one canonical way to decide whether phase-review enablement should be offered.
+
+**Responsibilities:**
+
+- Add a read-only `oat gate target list --json` surface over resolved target config.
+- Report origin, enabled state, and availability separately so built-in definitions alone do not trigger the prompt.
+- Treat at least one explicitly configured, enabled, available target as qualifying configuration.
+
+### Shared Phase-Review Setup
+
+**Purpose:** Keep plan, quick-start, and import workflows consistent when phase gates are available.
+
+**Responsibilities:**
+
+- Live in the shared plan-writing contract and be invoked by all plan producers after phase IDs are known.
+- Offer all phases, selected phases, or disabled.
+- Validate selected IDs against the generated plan and preserve explicit imported/resumed settings.
+- Write the existing `oat_phase_review_gate` shape; do not add provider/model `--target` pins.
 
 ## Data Models
 
