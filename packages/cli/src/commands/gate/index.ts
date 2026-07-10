@@ -40,7 +40,11 @@ import {
   type ResolvedConfig,
 } from '@config/resolve';
 import { dirExists, fileExists } from '@fs/io';
-import { normalizeToPosixPath, resolveProjectRoot } from '@fs/paths';
+import {
+  normalizeToPosixPath,
+  resolveProjectRoot,
+  validateRealPathWithinScope,
+} from '@fs/paths';
 import {
   classifyModelFamily,
   type ModelFamily,
@@ -1543,16 +1547,30 @@ async function assertProjectPath(
     projectPath,
   );
   const absolutePath = join(repoRoot, normalizedPath);
+  let realProjectPath: string;
+  let canonicalPath: string;
+  try {
+    const validated = await validateRealPathWithinScope(absolutePath, repoRoot);
+    realProjectPath = validated.realPath;
+    canonicalPath = normalizeRepoRelativeProjectPath(
+      validated.realScopeRoot,
+      validated.realPath,
+    );
+  } catch {
+    throw new Error(
+      `${source} project "${projectPath}" must resolve inside the current repository through a readable real path.`,
+    );
+  }
   if (
-    !(await dirExists(absolutePath)) ||
-    !(await fileExists(join(absolutePath, 'state.md')))
+    !(await dirExists(realProjectPath)) ||
+    !(await fileExists(join(realProjectPath, 'state.md')))
   ) {
     throw new Error(
       `${source} project "${projectPath}" does not resolve to a project directory containing state.md.`,
     );
   }
 
-  return normalizedPath;
+  return canonicalPath;
 }
 
 async function resolveExplicitReviewProject(

@@ -4,6 +4,7 @@ import {
   readdir,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -4285,6 +4286,83 @@ describe('oat gate', () => {
       corroboration: {
         project: 'matched',
       },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects an explicit project symlink whose real target escapes the repo', async () => {
+    const { root, home } = await setup();
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-gate-external-project-'),
+    );
+    tempDirs.push(externalProject);
+    await writeFile(
+      join(externalProject, 'state.md'),
+      ['---', 'oat_kind: implementation', '---'].join('\n'),
+      'utf8',
+    );
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    await mkdir(projectsRoot, { recursive: true });
+    await symlink(externalProject, join(projectsRoot, 'external-link'), 'dir');
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--project',
+        '.oat/projects/shared/external-link',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(/inside.*repository|outside.*scope/i),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('accepts an explicit project symlink whose real target stays inside the repo', async () => {
+    const { root, home } = await setup();
+    const realProjectPath = await writeProject(
+      root,
+      '.oat/projects/shared/real-project',
+    );
+    await symlink(
+      'real-project',
+      join(root, '.oat', 'projects', 'shared', 'linked-project'),
+      'dir',
+    );
+    const projectPath = '.oat/projects/shared/linked-project';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: realProjectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--project', projectPath, '--target', 'codex-default', 'Review'],
+    });
+
+    expect(
+      runner.calls.find((call) => call.purpose === 'execute')?.args.at(-1),
+    ).toContain(`Resolved OAT project path: ${realProjectPath}.`);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: realProjectPath,
+      projectResolutionSource: 'declared',
     });
     expect(process.exitCode).toBe(0);
   });

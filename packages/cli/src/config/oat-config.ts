@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { lstat, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
-import { normalizeToPosixPath } from '@fs/paths';
+import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
 import { parseJsonConfig } from './json';
 
@@ -813,6 +813,32 @@ export function normalizeProjectPath(
     : null;
 }
 
+async function normalizeReadableProjectPath(
+  repoRoot: string,
+  pathValue: string | null | undefined,
+): Promise<string | null> {
+  const normalizedPath = normalizeProjectPath(repoRoot, pathValue);
+  if (!normalizedPath) {
+    return null;
+  }
+
+  const absolutePath = join(repoRoot, normalizedPath);
+  try {
+    await lstat(absolutePath);
+  } catch (error) {
+    return isMissingFileError(error) ? normalizedPath : null;
+  }
+
+  try {
+    const validated = await validateRealPathWithinScope(absolutePath, repoRoot);
+    return (await dirExists(validated.realPath))
+      ? normalizeProjectPath(validated.realScopeRoot, validated.realPath)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeOatConfig(parsed: unknown): OatConfig {
   const next: OatConfig = { ...DEFAULT_OAT_CONFIG };
   if (!isRecord(parsed)) {
@@ -1035,7 +1061,17 @@ export async function readOatLocalConfig(
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatLocalConfig(repoRoot, parseJsonConfig(raw, configPath));
+    const normalized = normalizeOatLocalConfig(
+      repoRoot,
+      parseJsonConfig(raw, configPath),
+    );
+    if (normalized.activeProject !== undefined) {
+      normalized.activeProject = await normalizeReadableProjectPath(
+        repoRoot,
+        normalized.activeProject,
+      );
+    }
+    return normalized;
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_LOCAL_CONFIG };
@@ -1073,14 +1109,36 @@ export async function resolveActiveProject(
     return { name: null, path: null, status: 'unset' };
   }
 
-  const absoluteProjectPath = join(repoRoot, projectPath);
+  let resolvedProjectPath = projectPath;
+  let absoluteProjectPath = join(repoRoot, projectPath);
+  try {
+    const validated = await validateRealPathWithinScope(
+      absoluteProjectPath,
+      repoRoot,
+    );
+    const canonicalProjectPath = normalizeProjectPath(
+      validated.realScopeRoot,
+      validated.realPath,
+    );
+    if (!canonicalProjectPath) {
+      throw new Error('Project path resolves to the repository root.');
+    }
+    resolvedProjectPath = canonicalProjectPath;
+    absoluteProjectPath = validated.realPath;
+  } catch {
+    return {
+      name: basename(absoluteProjectPath),
+      path: projectPath,
+      status: 'missing',
+    };
+  }
   const statePath = join(absoluteProjectPath, 'state.md');
   const isValid =
     (await dirExists(absoluteProjectPath)) && (await fileExists(statePath));
 
   return {
     name: basename(absoluteProjectPath),
-    path: projectPath,
+    path: resolvedProjectPath,
     status: isValid ? 'active' : 'missing',
   };
 }
@@ -1096,10 +1154,30 @@ export async function setActiveProject(
     );
   }
 
+  let canonicalPath: string;
+  try {
+    const validated = await validateRealPathWithinScope(
+      join(repoRoot, normalizedPath),
+      repoRoot,
+    );
+    const canonicalProjectPath = normalizeProjectPath(
+      validated.realScopeRoot,
+      validated.realPath,
+    );
+    if (!canonicalProjectPath || !(await dirExists(validated.realPath))) {
+      throw new Error('Project directory is missing.');
+    }
+    canonicalPath = canonicalProjectPath;
+  } catch {
+    throw new Error(
+      `Active project path must be repo-relative or inside repo root: ${projectRelativePath}`,
+    );
+  }
+
   const localConfig = await readOatLocalConfig(repoRoot);
   await writeOatLocalConfig(repoRoot, {
     ...localConfig,
-    activeProject: normalizedPath,
+    activeProject: canonicalPath,
   });
 }
 

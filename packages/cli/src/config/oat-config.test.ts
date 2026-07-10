@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
@@ -393,6 +400,62 @@ describe('oat-config', () => {
     });
     await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
       activeProject: '.oat/projects/demo',
+    });
+  });
+
+  it('rejects an activeProject symlink whose real target escapes the repo', async () => {
+    const repoRoot = await createRepoRoot();
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(externalProject);
+    await writeFile(join(externalProject, 'state.md'), '---\n---\n', 'utf8');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const linkedProject = join(projectsRoot, 'external-link');
+    await mkdir(projectsRoot, { recursive: true });
+    await symlink(externalProject, linkedProject, 'dir');
+    const projectPath = '.oat/projects/shared/external-link';
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: null,
+    });
+    await expect(resolveActiveProject(repoRoot)).resolves.toEqual({
+      name: null,
+      path: null,
+      status: 'unset',
+    });
+    await expect(setActiveProject(repoRoot, projectPath)).rejects.toThrow(
+      /inside repo root/i,
+    );
+  });
+
+  it('keeps an activeProject symlink whose real target remains inside the repo', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const realProject = join(projectsRoot, 'real-project');
+    const linkedProject = join(projectsRoot, 'linked-project');
+    await mkdir(realProject, { recursive: true });
+    await writeFile(join(realProject, 'state.md'), '---\n---\n', 'utf8');
+    await symlink('real-project', linkedProject, 'dir');
+    const projectPath = '.oat/projects/shared/linked-project';
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      activeProject: '.oat/projects/shared/real-project',
+    });
+    await expect(resolveActiveProject(repoRoot)).resolves.toEqual({
+      name: 'real-project',
+      path: '.oat/projects/shared/real-project',
+      status: 'active',
     });
   });
 

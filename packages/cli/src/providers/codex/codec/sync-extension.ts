@@ -17,6 +17,7 @@ import { resolveEffectiveConfig } from '@config/resolve';
 import type { CanonicalEntry } from '@engine/index';
 import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
+import { validateRealPathWithinScope } from '@fs/paths';
 import TOML from '@iarna/toml';
 import YAML from 'yaml';
 
@@ -352,7 +353,23 @@ async function collectProjectStateCodexTargets(
     return;
   }
 
-  const statePath = join(scopeRoot, projectPath, 'state.md');
+  let realProjectPath: string;
+  try {
+    const validated = await validateRealPathWithinScope(
+      join(scopeRoot, projectPath),
+      scopeRoot,
+    );
+    realProjectPath = validated.realPath;
+  } catch {
+    if (options.projectPath !== undefined) {
+      throw new CliError(
+        `Project-scoped Codex materialization path must be repo-relative or inside repo root: ${projectPathCandidate}`,
+      );
+    }
+    return;
+  }
+
+  const statePath = join(realProjectPath, 'state.md');
   const stateContent = await readOptionalFile(statePath);
   if (!stateContent) {
     return;

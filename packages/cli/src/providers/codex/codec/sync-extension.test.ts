@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
@@ -337,6 +344,69 @@ describe('codex sync extension', () => {
     ).resolves.not.toContain(externalRole);
   });
 
+  it('does not materialize targets through an active-project symlink outside the sync root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(root, externalProject);
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    const linkedProject = join(projectsRoot, 'external-link');
+    await mkdir(projectsRoot, { recursive: true });
+    await symlink(externalProject, linkedProject, 'dir');
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        activeProject: '.oat/projects/shared/external-link',
+      }),
+      'utf8',
+    );
+    await writeFile(
+      join(externalProject, 'state.md'),
+      [
+        '---',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    codex:',
+        '      high:',
+        '        - harness: codex',
+        '          model: gpt-5.9-symlink-state',
+        '          effort: high',
+        '---',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    const canonicalDir = join(root, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalPath = join(canonicalDir, 'oat-reviewer.md');
+    await writeFile(canonicalPath, canonicalAgentFileContent('oat-reviewer'));
+    const externalRole = buildCodexMaterializedRoleName({
+      agentName: 'oat-reviewer',
+      model: 'gpt-5.9-symlink-state',
+      effort: 'high',
+    });
+
+    const plan = await computeCodexProjectExtensionPlan(root, [
+      {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath,
+        isFile: true,
+      },
+    ]);
+
+    expect(plan.managedRoles).not.toContain(externalRole);
+    expect(
+      plan.operations.some((operation) =>
+        operation.content?.includes('gpt-5.9-symlink-state'),
+      ),
+    ).toBe(false);
+  });
+
   it.each([
     ['relative', (root: string, external: string) => relative(root, external)],
     ['absolute', (_root: string, external: string) => external],
@@ -361,6 +431,50 @@ describe('codex sync extension', () => {
       ).rejects.toThrow(/inside repo root/i);
     },
   );
+
+  it('rejects an explicit project symlink whose real target escapes the sync root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const externalProject = await mkdtemp(
+      join(tmpdir(), 'oat-external-project-'),
+    );
+    tempDirs.push(root, externalProject);
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    const linkedProject = join(projectsRoot, 'external-link');
+    await mkdir(projectsRoot, { recursive: true });
+    await symlink(externalProject, linkedProject, 'dir');
+    await writeFile(
+      join(externalProject, 'state.md'),
+      '---\noat_dispatch_policy: {}\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      computeCodexProjectExtensionPlan(root, [], undefined, {
+        projectPath: '.oat/projects/shared/external-link',
+      }),
+    ).rejects.toThrow(/inside repo root/i);
+  });
+
+  it('accepts an explicit project symlink whose real target stays inside the sync root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    const projectsRoot = join(root, '.oat', 'projects', 'shared');
+    const realProject = join(projectsRoot, 'real-project');
+    const linkedProject = join(projectsRoot, 'linked-project');
+    await mkdir(realProject, { recursive: true });
+    await symlink('real-project', linkedProject, 'dir');
+    await writeFile(
+      join(realProject, 'state.md'),
+      '---\noat_dispatch_policy: {}\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      computeCodexProjectExtensionPlan(root, [], undefined, {
+        projectPath: '.oat/projects/shared/linked-project',
+      }),
+    ).resolves.toMatchObject({ managedRoles: [] });
+  });
 
   it('generates materialized codex roles from matrix targets for oat-reviewer', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
