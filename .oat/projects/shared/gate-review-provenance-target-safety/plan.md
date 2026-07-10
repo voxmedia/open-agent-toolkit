@@ -749,7 +749,7 @@ pnpm docs:check-links
 
 ## Phase 4: Opt-In Phase Review Setup
 
-**Implementation Status:** review fixes queued
+**Implementation Status:** review fixes completed; awaiting independent re-review
 
 ### Task p04-t01: Define the shared phase-review setup contract
 
@@ -853,7 +853,7 @@ git status --short
 
 ### Task p04-t04: (review) Preserve phase-review configuration across plan rewrites
 
-**Status:** pending
+**Status:** completed (`53187b90`)
 
 **Files:**
 
@@ -910,19 +910,19 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
-| p00    | code     | passed      | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
-| p01    | code     | passed      | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
-| p02    | code     | passed      | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
-| p03    | code     | passed      | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
-| p04    | code     | fixes_added | 2026-07-10 | reviews/archived/p04-review-2026-07-10T100604Z.md           |
-| final  | code     | pending     | -          | -                                                           |
-| spec   | artifact | pending     | -          | -                                                           |
-| design | artifact | pending     | -          | -                                                           |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
-| plan   | artifact | passed      | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p00    | code     | passed          | 2026-07-10 | reviews/archived/p00-review-2026-07-10T063955Z.md           |
+| p01    | code     | passed          | 2026-07-10 | reviews/archived/p01-review-2026-07-10T074616Z.md           |
+| p02    | code     | passed          | 2026-07-10 | reviews/archived/p02-re-review-2026-07-10T084114Z.md        |
+| p03    | code     | passed          | 2026-07-10 | reviews/archived/p03-review-2026-07-10T092544Z.md           |
+| p04    | code     | fixes_completed | 2026-07-10 | reviews/archived/p04-review-2026-07-10T100604Z.md           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T014435Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T024822Z.md |
+| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T052617Z.md |
 
 **Status values:** `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
 
@@ -938,8 +938,8 @@ git commit -m "fix(plan): preserve phase review settings across rewrites"
 
 **Total: 27 tasks**
 
-Phase 0 through Phase 3 reviews have passed. Phase 4 implementation is complete
-with one review fix queued; final review remains pending.
+Phase 0 through Phase 3 reviews have passed. The Phase 4 review fix is complete
+and awaits independent p04 re-review; final review remains pending.
 
 ## References
 
