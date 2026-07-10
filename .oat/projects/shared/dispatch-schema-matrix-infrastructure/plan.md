@@ -952,7 +952,7 @@ git commit -m "chore(p05-t03): close dispatch infrastructure backlog"
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |
-| plan   | artifact | passed          | 2026-07-10 | structured review — `gpt-5.6-sol`/`high` (no artifact)        |
+| plan   | artifact | received        | 2026-07-10 | reviews/artifact-plan-review-2026-07-10T215126Z.md            |
 
 The user approved the lightweight design after all six received design-review
 findings were resolved. No formal `spec.md` exists in quick mode.
