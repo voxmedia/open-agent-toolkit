@@ -1288,6 +1288,92 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('documents adaptive named ceilings and exact task-worker dispatch', async () => {
+    const configuration = await readRepoFile(
+      'apps/oat-docs/docs/cli-utilities/configuration.md',
+    );
+    const dispatch = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+    );
+    const providers = await readRepoFile(
+      'apps/oat-docs/docs/provider-sync/providers.md',
+    );
+    const execution = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+    );
+
+    for (const [name, content] of [
+      ['configuration', configuration],
+      ['dispatch policy', dispatch],
+      ['provider sync', providers],
+      ['implementation execution', execution],
+    ] as const) {
+      expect(content, `${name} named maximum`).toMatch(
+        /named (?:tier|ceiling|maximum)[\s\S]{0,220}maximum/i,
+      );
+      expect(content, `${name} ordered candidates`).toMatch(
+        /ordered (?:provider )?candidate|candidate ladder/i,
+      );
+    }
+
+    for (const scope of ['--shared', '--local', '--user']) {
+      expect(configuration, `configuration adoption ${scope}`).toContain(
+        `oat config adopt dispatch-matrix ${scope}`,
+      );
+    }
+    expect(configuration).toMatch(
+      /project-specific[\s\S]{0,160}(?:policy|ceiling)[\s\S]{0,220}(?:must not|do not|never)[\s\S]{0,120}(?:user|~\/\.oat)/i,
+    );
+    expect(configuration).toContain('--ceiling-tier');
+    expect(configuration).toContain('source: invocation');
+    expect(configuration).toContain('cellSource');
+
+    expect(dispatch).toMatch(
+      /High[\s\S]{0,260}Economy[\s\S]{0,140}Balanced[\s\S]{0,140}High[\s\S]{0,180}(?:eligible|available)/,
+    );
+    expect(dispatch).toContain('candidates');
+    expect(dispatch).toContain('--ceiling-tier');
+    expect(dispatch).toContain('--candidate-model');
+    expect(dispatch).toContain('--candidate-effort');
+    expect(dispatch).not.toMatch(
+      /oat_dispatch_policy:[\s\S]{0,220}providers:/i,
+    );
+
+    expect(providers).toMatch(
+      /project-config[\s\S]{0,260}(?:tracked|version-controlled)[\s\S]{0,260}user-config[\s\S]{0,180}~\/\.codex/i,
+    );
+    expect(providers).toMatch(/phase coordinator[\s\S]{0,220}task worker/i);
+    expect(providers).toContain('providers.claude.dispatchArgs.model');
+    expect(providers).toContain('providers.cursor.dispatchArgs.model');
+    expect(providers).toMatch(/Cursor[\s\S]{0,220}(?:opaque|byte-for-byte)/i);
+
+    expect(execution).toMatch(/phase coordinator/i);
+    expect(execution).toMatch(/one exact task worker (?:per task|at a time)/i);
+    expect(execution).toMatch(/Task Scope[\s\S]{0,600}task_id:/i);
+    expect(execution).toMatch(
+      /serial(?:ly)?[\s\S]{0,220}(?:same|one) worktree/i,
+    );
+    expect(execution).toMatch(
+      /(?:must not|does not|never)[\s\S]{0,160}implement ordinary (?:plan )?tasks/i,
+    );
+    expect(execution).toContain('--ceiling-tier');
+    expect(execution).toContain('providers.codex.dispatchArgs.variant');
+    expect(execution).toContain('providers.claude.dispatchArgs.model');
+    expect(execution).toContain('providers.cursor.dispatchArgs.model');
+
+    for (const [name, content] of [
+      ['dispatch policy', dispatch],
+      ['implementation execution', execution],
+    ] as const) {
+      expect(content, `${name} no exact-family policy mapping`).not.toContain(
+        'min(preferred, cap)',
+      );
+      expect(content, `${name} no whole-phase executor`).not.toMatch(
+        /phase implementer executes all tasks in the phase/i,
+      );
+    }
+  });
+
   it('defines the canonical shared phase-review setup after stable phase IDs', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',

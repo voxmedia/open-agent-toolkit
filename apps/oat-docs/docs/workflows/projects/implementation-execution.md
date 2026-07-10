@@ -1,354 +1,369 @@
 ---
 title: Implementation Execution
-description: 'Phase-subagent dispatch, tier detection, runtime dispatch selection, bounded fix loop, plan-declared parallelism, and dry-run mode in oat-project-implement v2.0.'
+description: 'Phase coordination, exact task-worker dispatch, named maximum ceilings, reviews, bounded fixes, plan-declared parallel worktrees, and resumption in oat-project-implement.'
 ---
 
 # Implementation Execution
 
-This page covers how `oat-project-implement` actually runs a plan: tier selection, phase-level subagent dispatch, runtime dispatch selection, the review + fix loop, plan-declared parallelism with worktree fan-in, and dry-run.
+This page describes how `oat-project-implement` executes a plan after planning
+has established a complete ordered candidate ladder and a project named
+ceiling.
 
 ## Quick Look
 
-- **When to use:** you have a plan ready and want to understand what happens during `oat-project-implement`.
-- **Unit of dispatch:** one phase at a time (not one task). A phase implementer executes all tasks in the phase, commits per task, and returns a single summary.
-- **Two tiers, one target contract:** capability detection picks Tier 1 (native subagents) or Tier 2 (guarded execution) at start. A concrete managed target still requires its exact registered role or a fresh pinned child; inline is conditional, not a generic fallback.
-- **Dispatch policy:** implementation resolves an OAT-owned dispatch policy before work starts. Managed policies are `Economy`, `Balanced`, `High`, `Frontier`, and `Uncapped`; `Inherit Host Defaults` explicitly leaves model/effort controls to the host.
-- **Runtime dispatch:** each phase uses the lowest available model/effort/control that can confidently complete the work. Capped managed policies cap preferred selections, managed `Uncapped` uses preferred selections directly, and inherit/default mode uses no OAT-selected control.
+- **Phase boundary:** one phase coordinator owns dependency order, integration,
+  and the phase summary.
+- **Task boundary:** the coordinator dispatches one exact task worker per task.
+  Each worker receives one bounded Task Scope and creates one verified commit.
+- **Named maximum:** a project or narrower phase named ceiling is a maximum over
+  configured candidates, not an exact model-family preference.
+- **Serial worktree rule:** task workers run serially in the same worktree.
+  Parallelism is limited to plan-declared phase worktrees.
+- **Fail closed:** a missing, above-ceiling, or uninvokable managed candidate
+  blocks. OAT does not substitute the coordinator target, a base role, or a
+  provider default.
 
-## Execution model
+## Execution Layers
 
-### Tier selection
+### Orchestrator
 
-At skill start, `oat-project-implement` detects whether the host supports native subagent dispatch for `oat-phase-implementer` and `oat-reviewer`.
+The root `oat-project-implement` workflow resolves project state, chooses Tier
+1 or Tier 2 mechanics, builds the phase schedule, dispatches coordinators and
+reviewers, owns the review/fix loop, updates artifacts, and performs worktree
+fan-in.
 
-- **Claude Code / Cursor:** native subagent dispatch → Tier 1.
-- **Codex multi-agent:** Tier 1 if `spawn_agent` is allowed without authorization, or after an explicit single prompt at skill start if authorization is required. Codex subagent dispatch should use self-contained scope packets with fresh context; do not assume pinned OAT roles can also inherit the full parent thread.
-- **Authorization declined or agents do not resolve:** Tier 2 selects a sequential target-preserving route. A concrete managed target still uses its exact registered role or a fresh Codex child pinned to the resolved model and effort. Inline is allowed only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception; otherwise execution fails closed.
+### Phase coordinator
 
-The approval decision covers both phase implementation and checkpoint review for the run. The orchestrator should not drift into a mixed mode based on conversational emphasis alone; if Tier 1 was not approved, retain Tier 2 mechanics without weakening the resolved target contract unless the user explicitly requests mixed execution.
+A Phase Scope selects coordinator mode in `oat-phase-implementer`. The
+coordinator reads the phase artifacts once, retains task dependency order,
+selects one exact configured target for each task, waits for and verifies every
+worker result and commit, then performs phase-wide integration verification and
+self-review.
 
-The selected tier is reported to the user and locked for the remainder of the run:
+The coordinator must not implement ordinary plan tasks itself. Its execution
+target is not a task target and cannot be reused as a fallback.
 
-```text
-[preflight] Checking subagent availability…
-  → oat-phase-implementer + oat-reviewer: available
-  → Selected: Tier 1 — Subagents
-```
+### Task worker
 
-### Dispatch policy preflight
+A Task Scope selects worker mode in the same canonical agent instructions. The
+worker implements exactly one task, runs that task's verification, creates one
+commit, returns a compact result, and stops. It does not dispatch another worker
+or coordinate the phase.
 
-Before phase work starts, `oat-project-implement` resolves and prints the dispatch policy for the current provider. For the conceptual model and per-provider enforcement (Codex vs Claude vs unsupported), see [Dispatch Policy](dispatch-ceiling.md).
+This dual-mode contract lets every materialized Codex
+`oat-phase-implementer-<model>-<effort>` role act as either the coordinator or
+the exact bounded worker without recursive coordinator dispatch.
 
-The resolver is the source of truth. The command name remains `dispatch-ceiling` for compatibility:
+## Tier Selection
+
+At skill start, OAT detects whether the host can run the coordinator,
+task-worker, and reviewer routes:
+
+- **Tier 1:** native provider subagent dispatch.
+- **Tier 2:** guarded sequential coordinator mechanics when native role
+  selection is unavailable.
+
+Tier 2 does not authorize inline task implementation by the coordinator. A
+managed task still requires an exact registered role, an exact provider model
+argument, or a fresh Codex child pinned to the resolver-returned model and
+effort. If the current context cannot dispatch that worker, implementation
+blocks.
+
+Codex may require one explicit authorization prompt for multi-agent dispatch.
+That approval covers coordinators, task workers, and reviewers for the run. Tier
+mechanics remain locked after selection; they never change the target contract.
+
+## Dispatch Readiness
+
+Planning through spec-driven, quick-start, import-plan, or provider-plan-via-
+import performs the same readiness setup:
+
+1. Inspect the effective ordered candidate ladders.
+2. If incomplete, show the complete bundled recommendation and ask whether
+   `--shared`, `--local`, or `--user` should own adoption.
+3. Recheck after non-destructive adoption. Remaining gaps block readiness.
+4. Record the active project named maximum in project `state.md`, not user
+   config.
+5. Optionally record a narrower phase named maximum in plan Dispatch Profile.
+
+See [Dispatch Policy](dispatch-ceiling.md) for ladder shapes and ownership.
+
+Before phase work, implementation runs provider preflight:
 
 ```bash
-oat project dispatch-ceiling resolve --provider codex --preflight --json
+oat project dispatch-ceiling resolve \
+  --provider <active-provider> \
+  --preflight \
+  --json
 ```
 
-Resolution order:
+An unresolved non-interactive preflight blocks. Managed `Uncapped` and
+`Inherit Host Defaults` are explicit modes; omitted policy state is not an
+implicit fallback.
 
-1. `workflow.dispatchPolicy.mode` / `workflow.dispatchPolicy.policy` from effective config
-2. Compatibility `workflow.dispatchCeiling.providers.<provider>` from effective config
-3. `oat_dispatch_policy` in project `state.md` frontmatter
-4. Legacy `oat_dispatch_ceiling` in project `state.md` frontmatter
-5. Interactive implementation preflight prompt
-6. Non-interactive unresolved state blocks before work starts
+## Resolve the Effective Named Maximum
 
-Runtime dispatch reads the resolved policy and provider-specific selection only. If no policy is configured, the interactive preflight prompt offers the policy choices; non-interactive mode blocks.
+For each phase, the orchestrator determines the task maximum:
 
-An incomplete managed active-provider matrix is also unresolved. Planning and
-review paths show the complete recommended defaults, persist the selected
-configuration layer, and rerun the resolver before readiness or review. The
-same rule covers spec-driven plans, quick plans, imported plans, and provider
-plans routed through import.
+1. Read project `state.md:oat_dispatch_policy.policy`.
+2. Read the phase's optional Dispatch Profile row.
+3. An explicit `economy`, `balanced`, `high`, or `frontier` phase value narrows
+   the project maximum and records `task_ceiling_source: phase`.
+4. Blank, absent, or `auto` uses the project maximum and records
+   `task_ceiling_source: project`.
+5. Reject an unknown phase tier or one above the project maximum.
 
-**Policy options (interactive prompt):**
+Under a High maximum, configured Economy, Balanced, and High candidates remain
+eligible. Different tasks in the same phase can therefore use different lower
+candidates without changing project state.
 
-| Option                | Mode    | Recommended Codex target | Claude   |
-| --------------------- | ------- | ------------------------ | -------- |
-| Economy               | managed | `gpt-5.6-luna/high`      | `sonnet` |
-| Balanced              | managed | `gpt-5.6-terra/xhigh`    | `sonnet` |
-| High                  | managed | `gpt-5.6-sol/high`       | `opus`   |
-| Frontier              | managed | `gpt-5.6-sol/max`        | `fable`  |
-| Uncapped              | managed | none                     | none     |
-| Inherit Host Defaults | inherit | none                     | none     |
+## Phase Scope
 
-For Codex, provider default effort is displayed when available but is not treated as managed `Uncapped` or as a cap. Provider defaults apply only to explicit inherit/default behavior or base/unpinned fallback paths.
+The orchestrator sends one coordinator a Phase Scope:
 
-```text
-Dispatch policy: balanced (codex, managed capped — materialized-role)
-Resolved cap: high
-Source: project state
-Provider default effort: medium
-Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only on fallback paths.
+```yaml
+project: .oat/projects/shared/example
+phase: p02
+mode: implement
+artifact_paths:
+  plan: .oat/projects/shared/example/plan.md
+  design: .oat/projects/shared/example/design.md
+  implementation: .oat/projects/shared/example/implementation.md
+workflow_mode: quick
+active_provider: codex
+project_ceiling_tier: high
+phase_ceiling_tier: balanced
+task_ceiling_tier: balanced
+task_ceiling_source: phase
+commit_convention: 'feat({scope}): {description}'
+coordinator_target: oat-phase-implementer-gpt-5-6-terra-high
 ```
 
-**Enforcement modes** (from resolver):
+The coordinator target starts the coordinator only. It is never inherited by a
+task.
 
-- `enforced` — the adapter compiled concrete dispatch args and the provider accepted them (Codex: materialized model+effort roles; Claude: Task `model` parameter).
-- `advisory` — the provider is supported but no value resolved, or an upgrade request was not honored by the provider.
-- `unsupported` — the provider has no registered adapter; the policy is informational only. Dispatch follows provider behavior.
+## Per-Task Selection
 
-Cursor model identifiers are opaque strings. Configured Cursor cells resolve as
-`enforced` model args and round-trip unchanged; OAT does not parse Codex-style
-family or effort suffixes from values such as `gpt-5.6-sol-max`.
+For every task in dependency order, the coordinator classifies only that
+bounded task, chooses one exact candidate at or below the named maximum, and
+calls the resolver with invocation-only `--ceiling-tier`.
 
-In non-interactive mode, an unresolved policy blocks before any implementation work:
+```bash
+# Codex
+oat project dispatch-ceiling resolve \
+  --provider codex \
+  --role implementer \
+  --ceiling-tier balanced \
+  --candidate-model gpt-5.6-terra \
+  --candidate-effort medium \
+  --project-path .oat/projects/shared/example \
+  --json
 
-```text
-BLOCKED: Codex dispatch policy is unresolved in non-interactive mode.
-Set workflow.dispatchPolicy.mode/workflow.dispatchPolicy.policy, workflow.dispatchCeiling.providers.codex, oat_dispatch_policy, or legacy oat_dispatch_ceiling.
+# Claude
+oat project dispatch-ceiling resolve \
+  --provider claude \
+  --role implementer \
+  --ceiling-tier balanced \
+  --candidate-model sonnet \
+  --json
+
+# Cursor
+oat project dispatch-ceiling resolve \
+  --provider cursor \
+  --role implementer \
+  --ceiling-tier balanced \
+  --candidate-model 'opaque:model/balanced [v2]' \
+  --json
 ```
 
-Dry-run reports unresolved policy and planned behavior without writing project state.
+The override accepts `economy`, `balanced`, `high`, or `frontier`. It applies
+only to that resolver call and never writes config or project state. JSON
+reports `source: invocation` while `providers.<provider>.cellSource` identifies
+the config layer that owns the candidate.
 
-### Runtime dispatch selection
+The coordinator requires the requested candidate, `selection.candidateTier`,
+`selection.ceilingTier`, exact target, and dispatch arguments to agree. A
+candidate above the maximum or absent from the configured ladder blocks.
 
-Tier selection decides how OAT invokes work; it does not authorize a target downgrade. Runtime dispatch selection is separate: it decides which provider-specific model and effort controls to use for a specific phase when the host exposes those axes. Inline execution remains guarded by verified equivalent current-host controls or the explicit inherit/default and managed-uncapped reviewer exceptions.
+## Exact Provider Invocation
 
-The default rule is conservative: use the lowest available model and/or effort that can confidently complete the phase. Escalate before dispatch when the phase is high-risk, broad, cross-cutting, or when retry evidence suggests the current control is underpowered.
+Build the complete host payload before writing dispatch logs:
 
-The orchestrator considers, in order:
+- **Codex:** use `providers.codex.dispatchArgs.variant` as the actual
+  `agent_type`. If the registered role cannot be selected, launch a fresh Codex
+  child pinned to `selection.target.model` and `selection.target.effort` with
+  canonical `oat-phase-implementer` instructions and the Task Scope.
+- **Claude:** pass `providers.claude.dispatchArgs.model` as the actual Task
+  `model`. Its separate effort axis is `not-applicable`.
+- **Cursor:** pass `providers.cursor.dispatchArgs.model` byte-for-byte as the
+  actual invocation model. The string is opaque; do not normalize it or infer
+  family, effort, cost, or capability from its spelling. That opaque value is
+  the enforced model argument.
 
-1. A valid `## Dispatch Profile` override row in `plan.md`, if present and the host can honor it.
-2. The phase's files, risk, requirements, and recent review/fix-loop evidence.
-3. The host's actual control surface by axis.
+If exact controls cannot be applied, fail closed. A transient retry reuses the
+same complete provider payload. Substantive escalation re-resolves another
+configured candidate within the same named maximum and bounded retry budget.
 
-Model and effort are separate axes. Each axis logs one of these states:
+## Task Scope and Commit Verification
 
-- `selected:<value>` — the host exposes the axis and the orchestrator chose a value.
-- `provider-default` — Codex base/unpinned role follows configured/provider default effort for explicit inherit/default behavior or fallback paths.
-- `inherited` — the host exposes the axis and the orchestrator deliberately defers to the parent session.
-- `not-applicable` — this host/API has no meaningful per-dispatch concept for that axis.
-- `host-auto` — exceptional; the host uses that axis internally but the orchestrator cannot read or pin it.
+Each worker receives only one task:
 
-In Codex, implementation and fix dispatch classify a preferred effort (`low`, `medium`, `high`, `xhigh`, or `max`) and pass it to `oat project dispatch-ceiling resolve --provider codex --role implementer --preferred <effort>`. For capped managed policies, the resolver selects `min(preferred, resolved_cap)` and returns a materialized role name compiled from an explicit model+effort target. For managed `Uncapped`, the resolver selects the preferred materialized role with no cap. For inherit/default mode, it returns no materialized role and OAT uses the base/unpinned role. Reviewer dispatch targets the configured cap only when a capped managed policy exists; managed `Uncapped` and inherit/default use base `oat-reviewer` fallback.
-
-Because Codex preferred values are effort names while dispatch matrix cells are
-keyed by OAT tiers, managed `Uncapped` resolves the matching model+effort target
-from the matrix. `max` is a first-class effort and can select the Sol/max
-catalogue role; it is not treated as `xhigh`.
-
-In Claude Code, implementation and fix dispatch classify a preferred model tier (`haiku`, `sonnet`, `opus`, or `fable`) and pass it to `oat project dispatch-ceiling resolve --provider claude --role implementer --preferred <model> --orchestrator-tier <current-orchestrator-tier>`. Capped policies select `min(preferred, resolved_cap)`, managed `Uncapped` selects the preferred model, and inherit/default omits `model`. Reviewer dispatch passes a `model` only when the resolver returns one. The separate effort axis is `not-applicable`.
-
-Dispatch logs use a consistent structured block so provider behavior is comparable without flattening the model and effort axes:
-
-```text
-OAT Dispatch: Phase p01 implementation
-Host: Claude Code
-Model axis: selected:sonnet
-Effort axis: not-applicable
-Dispatch target: oat-phase-implementer
-Rationale: multi-file integration with mock wiring; sonnet is the lowest sufficient Claude model.
-
-OAT Dispatch: Phase p02 implementation
-Host: Codex
-Preferred effort: high
-Dispatch policy: economy
-Resolved cap: high
-Selected effort: high
-Policy source: repo config
-Provider default effort: high
-Selection mode: capped
-Model axis: selected:gpt-5.6-luna
-Effort axis: selected:high
-Dispatch target: oat-phase-implementer-gpt-5-6-luna-high
-Rationale: shared TypeScript/config substrate; high preferred due to integration risk, capped by configured policy.
-
-OAT Dispatch: Phase p03 review
-Host: Codex
-Dispatch policy: high
-Resolved cap: high
-Selected effort: high
-Policy source: project state
-Provider default effort: medium
-Selection mode: review-target
-Model axis: selected:gpt-5.6-sol
-Effort axis: selected:high
-Dispatch target: oat-reviewer-gpt-5-6-sol-high
-Rationale: reviewer runs at the configured policy cap for deterministic quality gate behavior.
-
-OAT Dispatch: Phase p03 implementation
-Host: Codex
-Preferred effort: xhigh
-Dispatch policy: uncapped
-Resolved cap: none
-Selected effort: xhigh
-Policy source: project state
-Provider default effort: medium
-Selection mode: uncapped
-Model axis: selected:gpt-5.6-terra
-Effort axis: selected:xhigh
-Dispatch target: oat-phase-implementer-gpt-5-6-terra-xhigh
-Rationale: high-risk phase; managed uncapped policy allows the preferred materialized target.
-
-OAT Dispatch: Phase p04 implementation
-Host: Other
-Model axis: host-auto
-Effort axis: host-auto
-Dispatch target: host default
-Rationale: host does not expose readable or pinnable dispatch controls; rationale maps to standard effort.
-
-OAT Dispatch: p02-t10 sidecar exploration
-Host: Codex
-Preferred effort: provider-default
-Dispatch policy: high
-Resolved cap: xhigh
-Selected effort: provider-default
-Policy source: project state
-Provider default effort: xhigh
-Model axis: inherited
-Effort axis: provider-default
-Dispatch target: explorer
-Rationale: read-only sidecar exploration; generic explorer payload does not pin an OAT-managed effort variant.
+```yaml
+mode: task-worker
+task_id: p02-t03
+task_name: Add correlation validation
+task_plan: |
+  Implement only p02-t03 using its RED/GREEN steps.
+file_boundary:
+  - packages/cli/src/commands/gate/index.ts
+  - packages/cli/src/commands/gate/index.test.ts
+verification:
+  - pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+commit_convention: 'feat(gate): validate correlation'
+ceiling_tier: balanced
+ceiling_source: phase
+dispatch_target: oat-phase-implementer-gpt-5-6-terra-medium
+dispatch_args:
+  agent_type: oat-phase-implementer-gpt-5-6-terra-medium
 ```
 
-Phase and review scope packets include dispatch context when the orchestrator has resolved it: `model_axis`, `effort_axis`, `dispatch_policy`, `dispatch_ceiling`, `policy_source`, `ceiling_source` as a compatibility alias, `provider_default_effort`, and `dispatch_rationale`.
+The Task Scope never contains the whole phase task list. Before dispatch, the
+coordinator records `PRE_TASK_HEAD`. After the worker returns, it verifies:
 
-Generic sidecars such as built-in `explorer` are not OAT-managed implementer, reviewer, or fix roles. If a sidecar payload does not pin a reliable effort/model control, log it as provider-default rather than classifying the task complexity as a selected effort. Sidecar results are advisory context; implementation and review/fix gates still follow the OAT-managed dispatch rules above.
+- returned task ID and terminal result
+- verification status
+- reported commit equals current `HEAD`
+- exactly one new commit follows `PRE_TASK_HEAD`
+- changed paths stay inside `file_boundary`
+- the worktree is clean
 
-### Dispatch Profile overrides
+Only then does it select the next candidate. Workers run one at a time,
+serially in the same worktree.
 
-`plan.md` should omit `## Dispatch Profile` by default. Missing dispatch rows are normal, because runtime selection has fresher phase context and host capability information at execution time.
+## Phase Integration and Review
 
-Add Dispatch Profile rows only when the user has an explicit constraint or preference, such as "use high reasoning effort for the security implementation phase" or "keep documentation-only phases on the lowest tier." Override rows should include a rationale explaining why runtime selection should not decide on its own.
+After all task commits are verified, the coordinator runs phase-wide
+verification and integration self-review without editing ordinary task files.
+Its summary records each task's exact target, result, commit, and verification.
 
-### Per-phase loop
+The root orchestrator then dispatches the phase reviewer:
 
-For each phase in the plan (whether sequential or inside a parallel group):
+- A capped managed reviewer uses the final candidate at its configured review
+  ceiling.
+- Codex uses the exact materialized reviewer role or a fresh pinned child.
+- Claude and Cursor bind the exact resolver-returned model argument.
+- Managed `Uncapped` and explicit inherit/default retain their documented base
+  reviewer behavior.
+- Timeout retries preserve the exact role or complete model payload.
 
-1. **Select runtime dispatch control** for the phase and log the chosen control plus rationale.
-2. **Dispatch the selected implementer role** with a Phase Scope block (project path, phase id, artifact paths, commit convention, workflow mode, and dispatch context when known). In Codex, use the exact resolver-returned registered role when selectable. If it is not selectable in the current session, launch a fresh Codex child pinned to the resolved model and reasoning effort with `.agents/agents/oat-phase-implementer.md` as its canonical instructions. Never silently use the managed base role.
-3. **Receive the summary:** `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED`.
-   - `BLOCKED` stops the run and surfaces the blocker to the user.
-4. **Dispatch the selected reviewer role** with a Review Scope block (phase id, commit range, optional files-changed hint, and dispatch context). The commit range is authoritative; the file list is only orientation metadata. In Codex, pass this as a self-contained packet with `fork_context: false`; use the exact resolver-returned registered reviewer role when selectable, otherwise launch a fresh Codex child pinned to the resolved model and reasoning effort with `.agents/agents/oat-reviewer.md` as canonical instructions. Base `oat-reviewer` is valid only for explicit inherit/default behavior and the documented managed-uncapped reviewer exception. Inline review requires verified equivalent current-host model and effort controls. In Claude Code, pass a review `model` only when the resolver returns one and always record `effort_axis=not-applicable`. If the reviewer times out or does not conclude on the first wait, poll once more and send a concise "return now with current findings" nudge. Then retry the same exact role or pinned child within the retry bound; if the target-preserving retry still fails, fail closed instead of downgrading inline.
-5. **Parse the verdict:** zero Critical + zero Important findings → `pass`; otherwise `fail`.
-6. **On fail, run the bounded fix loop** (see below).
-7. **Update artifacts** (`implementation.md`, `plan.md` review row, `state.md`) and make the mandatory bookkeeping commit.
-8. **Phase review gate** — when `oat_phase_review_gate` selects the phase, run the optional non-pausing external gate (`oat gate review`) after the step 7 bookkeeping commit and before the HiLL check. A passing gate continues automatically; a blocking gate is received and fixed, reusing the bounded fix loop's `oat_orchestration_retry_limit`. See [Reviews → Phase review gate](reviews.md#phase-review-gate).
-9. **HiLL checkpoint** if the phase id is listed in `oat_plan_hill_phases`.
+Inline review is allowed only with verified equivalent current-host model and
+effort controls. That exception is limited to explicit inherit or
+managed-uncapped base-role behavior; capped managed review never downgrades
+inline. If a review timeout occurs, retry once with the same exact role or
+pinned model payload. If exact dispatch still cannot conclude, fail closed and
+block.
 
-### Bounded fix loop
+The review commit range is authoritative. Zero Critical and zero Important
+findings pass; otherwise the bounded fix loop begins.
 
-On a `fail` verdict:
+## Bounded Fix Loop
 
-- Read `oat_orchestration_retry_limit` from `state.md` frontmatter (default `2`, range `0–5`).
-- For each retry: re-dispatch the implementer in `fix` mode with the review artifact and findings, then re-dispatch the reviewer.
-- On `pass` → exit the loop; the phase disposition becomes `merged` (sequential) or `merged` (parallel, after fan-in).
-- On retries exhausted:
-  - **Sequential mode:** STOP the run with phase id, unresolved findings, and review artifact path.
-  - **Parallel group mode:** mark the phase `excluded`, do not merge its worktree, continue the remaining phases in the group, and report it in Outstanding Items.
+`oat_orchestration_retry_limit` defaults to `2` and accepts `0` through `5`.
+For each retry:
 
-Tier is never silently downgraded. If a Tier 1 dispatch has a transient failure, the orchestrator retries exactly once; a second failure is treated the same as fix-loop exhaustion for that phase.
+1. Group findings into bounded one-task fix scopes.
+2. Reuse the phase coordinator in fix mode.
+3. Resolve one exact candidate per fix under the same named maximum.
+4. Dispatch and verify one fix worker at a time.
+5. Re-dispatch the reviewer over the updated range.
 
-### Escalation termini
+The coordinator does not apply fixes itself. Retry exhaustion stops sequential
+execution; in a parallel phase group, the failed phase is excluded and its
+worktree is preserved for diagnosis.
 
-When escalation re-dispatches at a stronger control, the ladder is provider-specific:
+## Plan-Declared Parallelism
 
-- **Codex:** `selected:low -> selected:medium -> selected:high -> selected:xhigh -> selected:max`, capped by the resolved managed cap when one exists. Managed `Uncapped` can select the preferred value; inherit/default mode has no OAT escalation control.
-- **Claude Code:** `selected:haiku -> selected:sonnet -> selected:opus -> selected:fable`, capped by the resolved managed cap when one exists. Managed `Uncapped` can select the preferred model; inherit/default mode has no OAT escalation control.
-
-Escalation re-dispatches still count against the bounded retry budget; escalation changes the dispatch control, it does not grant extra retry attempts.
-
-## Plan-declared parallelism
-
-Phases whose task file sets do not overlap may execute concurrently. Declare this in `plan.md` frontmatter:
+Parallelism applies across independent phases, not tasks in one worktree:
 
 ```yaml
 oat_plan_parallel_groups: [['p02', 'p03'], ['p04', 'p05']]
 ```
 
-- Each inner array is a group of phases that run concurrently — one worktree per phase.
-- Phases not listed in any group run sequentially in plan order.
-- Groups themselves run sequentially — group `[p02, p03]` merges before group `[p04, p05]` starts.
-- Empty or missing field → fully sequential, no worktrees created, behavior identical to today's `oat-project-implement`.
+- One worktree and one coordinator are created per phase.
+- Coordinators in separate declared worktrees may run concurrently.
+- Every coordinator still dispatches its task workers serially.
+- Phases outside groups run sequentially in plan order.
+- Groups themselves fan in before the next group starts.
 
-### How a parallel group runs
+### Parallel group flow
 
-1. **Bootstrap worktrees** via `oat-worktree-bootstrap-auto`, one per phase, branch name `{project-name}/{pNN}`.
-   - The bootstrap checks inherited git cleanliness before the all-scope provider sync sweep.
-   - If that sync leaves `.oat/sync/manifest.json` or provider directories dirty, bootstrap commits only existing or tracked sync-managed paths (`.oat/sync/manifest.json`, `.claude`, `.cursor`, `.codex`) as `chore: run sync` and reports `sync_commit: pass | fail | skip`.
-   - If any bootstrap fails, cancel successful worktrees and **degrade the entire group** to sequential target-preserving execution.
-2. **Concurrent dispatch** of `oat-phase-implementer` into each worktree (Tier 1 only — Tier 2 cannot run concurrently and therefore executes sequentially while retaining the exact-role, pinned-child, or guarded-inline contract).
-3. **Wait for terminal verdicts** (`pass` or `failed`) across every phase in the group.
-4. **Fan-in reconciliation in plan order:** for each passing phase, `git merge --no-ff {project-name}/{pNN}`. Integration verification (`pnpm test && pnpm lint && pnpm type-check`) runs after each merge.
-5. **Failed phases are excluded** — their worktrees are preserved and logged in `implementation.md` Outstanding Items. Passing phases still merge (partial merge-back, not atomic).
-6. **Worktree cleanup** runs for merged phases; preserved for excluded phases.
-7. **Bookkeeping commit** + HiLL checkpoint check after the group finishes.
+1. Bootstrap each worktree with `oat-worktree-bootstrap-auto` from the current
+   orchestration HEAD.
+2. Verify every worktree HEAD before dispatch. Any bootstrap/base mismatch
+   degrades the whole group to sequential target-preserving execution.
+3. Dispatch one phase coordinator per worktree.
+4. Wait for terminal phase results.
+5. Merge passing phases back in plan order with integration verification after
+   each merge.
+6. Preserve excluded worktrees and record them in Outstanding Items.
+7. Clean merged worktrees, commit bookkeeping, then evaluate HiLL checkpoints.
 
-### Merge-conflict handling
+If merge and cherry-pick both conflict, the orchestrator dispatches a bounded
+conflict-resolution subagent. It does not resolve the conflict in the root
+context. An unresolved or verification-failing conflict stops fan-in.
 
-When a merge produces a conflict:
+## Phase Review Gate and HiLL
 
-1. `git merge --no-ff` is aborted.
-2. `git cherry-pick` of the phase's commits is attempted.
-3. If cherry-pick also conflicts, an **inline conflict-resolution subagent** is dispatched via the Task tool. The orchestrator **never reads conflicted files itself** — that context belongs in a fresh subagent.
-4. The subagent reads conflicted files and project artifacts (`plan.md`, `design.md`, `spec.md`), applies a resolution, runs integration verification, and returns:
-   - `RESOLVED` → merge is committed; orchestrator proceeds.
-   - `UNRESOLVABLE` or `VERIFICATION_FAILED` → STOP the run with phase id, conflicting files, worktree path, and the subagent's reasoning summary.
+After standard review passes and bookkeeping is committed, an enabled
+`oat_phase_review_gate` may run a target-neutral external review for the phase.
+Passing artifacts are still received for durable disposition; blocking
+findings return through the bounded fix loop. Reusable lifecycle gate commands
+declare the project but do not pin a provider target.
 
-The orchestrator does not proceed past a broken merge.
+HiLL pauses remain phase boundaries. They run only after the phase or parallel
+group is integrated, reviewed, and tracked.
 
-## Validating plan metadata
-
-Before dispatching, `oat-project-implement` invokes the validator CLI:
-
-```bash
-oat project validate-plan --project-path "${PROJECT_PATH}"
-```
-
-The command enforces:
-
-- `oat_plan_parallel_groups` is either missing/empty (treated as fully sequential) or a non-empty nested array of phase ID strings.
-- Every referenced phase id exists in the plan body.
-- No phase id appears in more than one group.
-- No singleton groups (each group must contain at least 2 phases).
-- Frontmatter YAML parses cleanly — malformed frontmatter fails with exit 1.
-
-Non-zero exit stops the run. The skill does not re-implement validation in prose — the CLI is the single source of truth.
-
-## Dry-run mode
-
-Run with `--dry-run` to preview a run without dispatching anything:
+## Dry Run
 
 ```bash
 oat-project-implement --dry-run
 ```
 
-Dry-run:
-
-- Performs tier selection and plan validation.
-- Builds the execution schedule (singleton phases + parallel groups in plan order).
-- Prints the planned dispatches and worktree layout.
-- Exits 0 without dispatching subagents, creating worktrees, or modifying files.
-
-Use dry-run as a sanity check after editing `oat_plan_parallel_groups` to confirm the schedule matches your intent.
+Dry-run performs preflight and plan validation, resolves the phase schedule and
+named maxima, and prints planned coordinator/worktree routing. It does not
+dispatch coordinators or workers, create worktrees, or modify files.
 
 ## Resumption
 
-On re-invocation after a partial run:
+On re-invocation:
 
-1. Read `implementation.md` for the most recent orchestration-runs entry.
-2. Compare phase counts against the plan's phase list; phases not covered by any run are the resume targets.
-3. Read `state.md` for `oat_current_task` and cross-check with git log.
-4. If a phase committed implementer output but has no review verdict recorded, the reviewer is re-dispatched for that phase's current HEAD.
-5. If un-cleaned worktrees remain from a prior parallel group, the orchestrator lists them and asks whether to resume or clean up.
+1. Read `implementation.md`, `plan.md`, and `state.md`.
+2. Advance a stale pointer to the first incomplete task.
+3. Cross-check the latest bookkeeping commit with Git.
+4. Resume an incomplete coordinator at the next unverified task commit.
+5. Re-dispatch a missing phase reviewer for the current committed phase range.
+6. Report leftover parallel worktrees before resuming or cleaning them.
 
-First-ever invocations skip resumption detection.
+The one-task commit boundary lets resumption distinguish completed work from an
+unverified worker return without rerunning the whole phase.
 
-## State and artifact updates
+## State and Artifact Updates
 
-After each phase (or parallel group) completes, `oat-project-implement` updates:
+After a phase or parallel group completes, `oat-project-implement` updates:
 
-- `implementation.md` — appends a `### Run N` entry between the `<!-- orchestration-runs-start -->` markers with tier, dispatch rationale, phase outcomes, parallel groups, and outstanding items.
-- `plan.md` — updates the reviews table lifecycle (`pending` → `passed` or `fixes_added` → `fixes_completed` → `passed`).
-- `state.md` — updates `oat_current_task`, `oat_last_commit`, `oat_project_state_updated`, and persists `oat_orchestration_retry_limit` if the user overrode the default.
+- `implementation.md`: task outcomes, exact targets, commits, verification,
+  phase summary, review results, and deviations
+- `plan.md`: task status and review lifecycle
+- `state.md`: current task, last commit, phase status, and timestamp
 
-Legacy `oat_execution_mode: subagent-driven` in existing projects is silently ignored and removed on the next bookkeeping write.
+It creates a separate bookkeeping commit after implementation commits. Legacy
+`oat_execution_mode: subagent-driven` is ignored and removed on the next write.
 
 ## Related
 
-- [Lifecycle](lifecycle.md) — where implementation sits in the full project flow.
-- [Artifacts](artifacts.md) — `plan.md` frontmatter contract, including `oat_plan_parallel_groups`.
-- [HiLL Checkpoints](hill-checkpoints.md) — orthogonal pause semantics; fires after a phase or group completes and merges.
-- [CLI Reference](../../reference/cli-reference.md) — `oat project validate-plan` and other commands.
+- [Dispatch Policy](dispatch-ceiling.md) - candidate ladders, named maxima, and
+  exact provider resolution.
+- [Lifecycle](lifecycle.md) - implementation in the full project flow.
+- [Artifacts](artifacts.md) - plan/state shapes and parallel groups.
+- [Reviews](reviews.md) - standard and external phase reviews.
+- [HiLL Checkpoints](hill-checkpoints.md) - phase pause semantics.

@@ -170,88 +170,86 @@ oat config describe activeIdea
 
 ## Dispatch policy resolution
 
-Dispatch policy is the workflow setting that tells OAT whether to manage
-subagent model/effort selection and, if so, which managed policy to use.
+Dispatch configuration has two layers:
 
-For the full conceptual model - managed capped tiers, dispatch matrix cells,
-managed `Uncapped`, `Inherit Host Defaults`, and provider-specific enforcement - see
+1. A reusable ordered candidate ladder owned by user, shared, or repo-local
+   config.
+2. A project or phase named ceiling that acts as a maximum over that ladder.
+
+A named ceiling is a maximum constraint, not an exact model-family or effort
+preference. For the full model, see
 [Dispatch Policy](../workflows/projects/dispatch-ceiling.md).
 
 ### Config keys
 
-Preferred keys:
+| Key                                                    | Values                                                | Purpose                                                                                 |
+| ------------------------------------------------------ | ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `workflow.dispatchPolicy.mode`                         | `managed`, `inherit`                                  | `managed` lets OAT select exact candidates; `inherit` leaves controls to the host       |
+| `workflow.dispatchPolicy.policy`                       | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Default named maximum or explicit managed uncapped state                                |
+| `workflow.dispatchCeiling.providers.<provider>`        | tier map or legacy bare value                         | Reusable provider candidate column                                                      |
+| `workflow.dispatchCeiling.providers.<provider>.<tier>` | `candidates` cell, route, or legacy bare value        | One named tier in the provider ladder                                                   |
+| `workflow.dispatchCeiling.recommendationVersion`       | string                                                | Version written by `oat config adopt dispatch-matrix` for recommendation drift tracking |
+| `workflow.dispatchCeiling.preset`                      | `balanced`, `maximum`, `cost-conscious`               | Legacy policy setup alias                                                               |
 
-| Key                              | Values                                                | Purpose                                                                            |
-| -------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `workflow.dispatchPolicy.mode`   | `managed`, `inherit`                                  | `managed` lets OAT select controls; `inherit` leaves controls to the host/provider |
-| `workflow.dispatchPolicy.policy` | `economy`, `balanced`, `high`, `frontier`, `uncapped` | Managed policy. Setting this key writes `mode=managed`                             |
+### Adopt a complete ladder
 
-Managed policies compile to:
-
-| Policy     | Codex    | Claude   |
-| ---------- | -------- | -------- |
-| `economy`  | `medium` | `sonnet` |
-| `balanced` | `high`   | `sonnet` |
-| `high`     | `xhigh`  | `opus`   |
-| `frontier` | `xhigh`  | `fable`  |
-| `uncapped` | none     | none     |
-
-Dispatch matrix and legacy compatibility keys:
-
-| Key                                                    | Values                                  | Purpose                                                                                |
-| ------------------------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------- |
-| `workflow.dispatchCeiling.preset`                      | `balanced`, `maximum`, `cost-conscious` | Legacy preset alias; `maximum` maps to `high`, `cost-conscious` to `economy`           |
-| `workflow.dispatchCeiling.providers.<provider>`        | bare value or tier map                  | Provider column; bare Codex/Claude values remain legacy capped targets                 |
-| `workflow.dispatchCeiling.providers.<provider>.<tier>` | bare value or ordered route             | One matrix cell for `economy`, `balanced`, `high`, or `frontier`                       |
-| `workflow.dispatchCeiling.recommendationVersion`       | string                                  | Version stamp written by `oat config adopt dispatch-matrix`; used for drift visibility |
-
-Examples:
+Choose the owning scope explicitly:
 
 ```bash
 oat config adopt dispatch-matrix --shared
-oat config set workflow.dispatchCeiling.providers.cursor.balanced composer-2.5 --shared
-oat config set workflow.dispatchCeiling.providers.codex high --shared
-oat config set workflow.dispatchCeiling.providers.claude opus --shared
+oat config adopt dispatch-matrix --local
+oat config adopt dispatch-matrix --user
 ```
 
-`oat config adopt dispatch-matrix` fills missing provider and tier cells; it
-does not replace explicit existing values. The bundled concrete recommendation
-is Codex `economy -> gpt-5.6-luna/high`, `balanced ->
-gpt-5.6-terra/xhigh`, `high -> gpt-5.6-sol/high`, and `frontier ->
-gpt-5.6-sol/max`; Claude `economy/balanced -> sonnet`, `high -> opus`, and
-`frontier -> fable`. Cursor model strings are opaque and the bundled ladder is
-`gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
-`gpt-5.6-sol-max`.
+Adoption fills missing provider/tier cells and preserves explicit existing
+values. Planning shows the complete bundled recommendation before asking for
+this scope, then rechecks the effective ladder. If explicit cells still leave
+the ladder incomplete, readiness blocks; OAT does not overwrite them.
 
-### Reviewer target enforcement
+Scope determines ownership and Codex materialization:
 
-Reviewer resolution is complete only when the actual provider invocation binds
-the returned controls. Codex uses the exact resolver-returned reviewer variant
-or a fresh child pinned to its model and effort. Claude passes
-`providers.claude.dispatchArgs.model` as the invocation `model`; Cursor passes
-`providers.cursor.dispatchArgs.model` byte-for-byte as an opaque `model`
-argument. Timeout retries preserve the same complete payload.
+- `--shared` and `--local` are project configuration sources. Their configured
+  Codex candidates materialize into the tracked project `.codex` view.
+- `--user` writes reusable personal defaults to `~/.oat/config.json`; those
+  Codex candidates materialize under `~/.codex`.
+- Active-project sparse candidates also materialize into the tracked project
+  view.
 
-Tier 2 remains target-preserving when native subagents are unavailable; it does
-not silently substitute host defaults. Inline review is allowed only with
-verified equivalent current-host controls, or for explicit inherit/default
-behavior or the documented managed-uncapped reviewer base-role exception. If
-the host cannot apply a concrete managed reviewer model, the review blocks.
+Project-generated provider views remain visible to version control. OAT does
+not auto-ignore them. A project-specific active policy or ceiling must not be
+written into user `~/.oat/config.json`; store it in that project's `state.md`
+even when the reusable ladder is user-owned.
 
-For ordered routes, edit the config JSON so a tier cell is an array. Route
-entries are either bare slugs or objects with `harness`, `model`, and optional
-`effort`:
+### Ordered candidate cells
 
 ```json
 {
   "workflow": {
     "dispatchCeiling": {
       "providers": {
+        "codex": {
+          "balanced": {
+            "candidates": [
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-terra",
+                "effort": "low"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-terra",
+                "effort": "medium"
+              }
+            ]
+          }
+        },
+        "claude": {
+          "balanced": { "candidates": ["sonnet"] }
+        },
         "cursor": {
-          "high": [
-            "composer-2.5",
-            { "harness": "cursor", "model": "gpt-5.5-xhigh" }
-          ]
+          "balanced": {
+            "candidates": ["opaque:model/lower [v1]", "opaque:model/high [v2]"]
+          }
         }
       }
     }
@@ -259,72 +257,108 @@ entries are either bare slugs or objects with `harness`, `model`, and optional
 }
 ```
 
-`Uncapped` is explicit managed state: OAT still selects the preferred
-provider-specific dispatch target, but does not apply a maximum cap. Do not
-represent it by leaving policy state absent. To request no OAT model/effort
-selection, set:
+The bundled recommendation covers 13 Codex model/effort combinations: Luna and
+Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and
+`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. Cursor covers 13
+opaque configured strings. Cursor spelling never supplies capability metadata;
+the configured candidate position owns the tier meaning.
 
-```bash
-oat config set workflow.dispatchPolicy.mode inherit
+The corresponding pinned Codex variant catalogue includes
+`gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
+`gpt-5.6-sol-max`. Configuration selects from that materialized catalogue; it
+does not construct an unregistered role during dispatch.
+
+The final candidate in a named tier defines that tier's reviewer ceiling. For
+implementation and fix tasks, all candidates from the lowest tier through the
+named maximum remain eligible. Under High, that includes Economy, Balanced, and
+High candidates.
+
+### Record the project maximum
+
+Project state stores the named maximum without compiled provider pins:
+
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 ```
 
-If no managed policy, legacy cap, or inherit/default mode resolves during an
-implementation preflight, the policy remains unresolved. Interactive
-implementation may ask once and persist a choice; non-interactive
-implementation blocks rather than silently falling back to host defaults.
+An optional phase `Dispatch Profile` row may narrow the maximum. Blank or
+`auto` uses the project value. `Uncapped` and inherit/default remain explicit
+modes:
 
-### How enforcement works
-
-OAT applies managed policies where the provider exposes a reliable mechanism.
-Providers without an adapter receive them as advisory/unsupported.
-
-| Provider | Mechanism                            | Enforcement mode                |
-| -------- | ------------------------------------ | ------------------------------- |
-| Codex    | Materialized model+effort role names | `enforced`                      |
-| Claude   | Task `model` parameter               | `enforced`                      |
-| Cursor   | `--model` argument / Task `model`    | `enforced` when a cell resolves |
-| Others   | None (informational only)            | `advisory` / `unsupported`      |
-
-Codex managed dispatch compiles an explicit `model` plus reasoning `effort`
-target into a materialized OAT role name, for example
-`oat-phase-implementer-gpt-5-6-terra-xhigh`. OAT-managed Codex roles are not
-the old hard-coded effort-only pins; they come from resolver targets, dispatch
-matrix cells, or an explicit materialization command. Base roles such as
-`oat-phase-implementer` and `oat-reviewer` follow the provider default effort
-only for explicit inherit/default behavior and the documented managed-uncapped
-reviewer fallback. A missing managed target is unresolved at implementation
-preflight; it does not silently select a base role.
-
-Claude uses Task `model` (`haiku < sonnet < opus < fable`) and keeps
-`effort_axis=not-applicable`. Cursor and other model-arg providers use opaque
-matrix slugs; OAT validates availability when a provider oracle is available,
-but the configured matrix owns tier meaning. For Cursor subagents, validation
-checks the model can actually be used by Task subagent dispatch, not just that
-the broad `cursor-agent models` catalog lists the slug.
-
-### Codex role materialization
-
-Use `oat providers codex materialize` when you need to materialize one
-canonical agent as a Codex role outside a full sync run:
-
-```bash
-oat providers codex materialize oat-reviewer --model gpt-5.6-terra --effort xhigh --dry-run
-oat providers codex materialize oat-phase-implementer --model gpt-5.6-terra --effort high
+```yaml
+oat_dispatch_policy:
+  mode: managed
+  policy: uncapped
+  source: project-state
 ```
 
-Required inputs are the canonical agent name, `--model <model-id>`, and
-`--effort <reasoning-effort>`. The command defaults to project scope, reads
-`.agents/agents/<agent-name>.md`, writes `.codex/agents/<role>.toml`, and
-upserts `.codex/config.toml` unless `--dry-run` is present. `--agent-path` can
-point at a specific canonical agent markdown file, and `--role-name` can
-override the generated role name.
+```yaml
+oat_dispatch_policy:
+  mode: inherit
+  source: project-state
+```
 
-Project sync always regenerates the supported catalogue for both
-`oat-phase-implementer` and `oat-reviewer`: Luna and Terra at `low`, `medium`,
-`high`, and `xhigh`, plus Sol at those efforts and `max` (26 pinned variants).
-It also materializes custom targets from shared config, repo-local config, and
-active-project state into the project's tracked `.codex` view. User-config
-custom targets materialize only under `~/.codex`.
+### Exact task resolution
+
+The project-aware resolver remains the source of truth. Preflight reads layered
+config and project state without mutating either:
+
+```bash
+oat project dispatch-ceiling resolve --provider codex --preflight --json
+```
+
+For each managed capped task, the phase coordinator supplies the recorded
+project or narrower phase maximum plus one exact configured candidate:
+
+```bash
+oat project dispatch-ceiling resolve \
+  --provider codex \
+  --role implementer \
+  --ceiling-tier high \
+  --candidate-model gpt-5.6-terra \
+  --candidate-effort medium \
+  --json
+
+oat project dispatch-ceiling resolve \
+  --provider claude \
+  --role implementer \
+  --ceiling-tier high \
+  --candidate-model sonnet \
+  --json
+
+oat project dispatch-ceiling resolve \
+  --provider cursor \
+  --role implementer \
+  --ceiling-tier high \
+  --candidate-model 'opaque:model/lower [v1]' \
+  --json
+```
+
+`--ceiling-tier` is invocation-only. It accepts `economy`, `balanced`, `high`,
+or `frontier`, overrides layered active-policy ceilings for that call, and never
+writes user, shared, local, or project configuration. JSON reports top-level
+`source: invocation`; `providers.<provider>.cellSource` still identifies the
+config layer that owns the selected candidate.
+
+The resolver fails closed when a candidate is missing, above the maximum,
+ambiguous, malformed, or cannot compile exact provider controls. `--preferred`
+remains compatibility behavior for legacy scalar ceilings and managed
+`Uncapped`; it is not the exact managed task-worker path.
+
+### Provider enforcement and materialization
+
+| Provider | Exact task mechanism                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| Codex    | `providers.codex.dispatchArgs.variant` as `agent_type`, or a fresh child pinned to model plus effort |
+| Claude   | `providers.claude.dispatchArgs.model` as the actual Task `model`                                     |
+| Cursor   | `providers.cursor.dispatchArgs.model` byte-for-byte as the actual opaque invocation model            |
+
+Project sync materializes the supported Codex catalogue and every configured
+project-owned candidate for both `oat-phase-implementer` and `oat-reviewer`.
+User sync materializes user-owned candidates under `~/.codex`:
 
 ```bash
 oat sync --scope project
@@ -332,52 +366,39 @@ oat sync --scope user
 oat sync --scope all
 ```
 
-Generated role files carry an ownership marker (`supported-catalogue`,
-`project-config`, or `user-config`). Stale cleanup is limited to the owner being
-reconciled and preserves supported roles, roles owned by another config scope,
-and unrelated Codex entries. Materialization is best effort at sync/config
-boundaries; workflow correctness does not depend on provider hot reload.
+Generated roles carry `supported-catalogue`, `project-config`, or `user-config`
+ownership. Cleanup reconciles only the current owner. Materialization is best
+effort at sync boundaries; the exact fresh-child route means workflow
+correctness does not require provider restart or hot reload.
 
-**Verify-on-upgrade:** when the requested tier exceeds the current orchestrator
-tier (an upgrade request), the resolver sets `verifyOnDispatch: true`. The skill
-confirms the actual model used after dispatch. If the provider did not honor the
-upgrade, the enforcement log reads `advisory — provider did not honor upgrade;
-ran <tier>` instead of `enforced`.
+Reviewer resolution uses the final candidate at the configured review ceiling.
+Codex selects the exact reviewer variant; Claude and Cursor pass the resolver's
+exact model argument. Timeout retries preserve the same complete payload. A
+lower reviewer candidate requires a separate reviewed contract.
+
+Tier 2 remains target-preserving. Inline review is permitted only when the host
+has verified equivalent current-host controls for explicit inherit,
+managed-uncapped, or base-role behavior. Capped managed reviews still require
+the exact registered role, pinned child, or resolver-returned model argument.
 
 ### Legacy compatibility
 
-The command group and docs path still use `dispatch-ceiling` for compatibility.
-Legacy `workflow.dispatchCeiling.*` config and project `oat_dispatch_ceiling`
-frontmatter remain readable as capped managed policy input. Absent legacy state
-does not mean managed `Uncapped`.
+The command and docs path retain `dispatch-ceiling` for compatibility. Legacy
+bare provider values, `workflow.dispatchCeiling.preset`, project
+`oat_dispatch_ceiling`, and `--preferred` remain readable during migration.
+Absent policy state does not mean managed `Uncapped`.
 
-### Using the resolver
-
-Implementation workflows should use the project-aware resolver rather than
-reading config keys directly:
+For non-interactive preflight checks:
 
 ```bash
-oat project dispatch-ceiling resolve --provider codex --json
-oat project dispatch-ceiling resolve --provider codex --role implementer --preferred medium --json
-oat project dispatch-ceiling resolve --provider claude --role implementer --preferred sonnet --orchestrator-tier sonnet --json
-oat project dispatch-ceiling resolve --provider claude --orchestrator-tier sonnet --json
-oat project dispatch-ceiling resolve --provider cursor --role implementer --preferred high --escalation-level 0 --json
+oat project dispatch-ceiling resolve \
+  --provider codex \
+  --preflight \
+  --non-interactive
 ```
 
-The resolver checks effective config first, then project `state.md`
-`oat_dispatch_policy` frontmatter, including sparse `matrix` overrides, then
-legacy `oat_dispatch_ceiling`. For Codex it also reports
-`providerDefaultEffort`, which is informational only for explicit
-inherit/default behavior or base/unpinned fallback paths.
-
-For non-interactive preflight checks, use:
-
-```bash
-oat project dispatch-ceiling resolve --provider codex --preflight --non-interactive
-```
-
-If unresolved, the command exits non-zero with the same `BLOCKED:` guidance used
-by `oat-project-implement`.
+An unresolved or incomplete managed ladder exits nonzero and blocks before
+implementation work.
 
 ## Workflow preferences (`workflow.*`)
 

@@ -12,13 +12,15 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Project: `.agents/skills` -> `.claude/skills`, `.agents/agents` -> `.claude/agents`, `.agents/rules` -> `.claude/rules`
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
+    - Managed task workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Task `model`
 
 === "Cursor"
 
     - Project: `.agents/skills` -> `.cursor/skills`, `.agents/agents` -> `.cursor/agents`, `.agents/rules` -> `.cursor/rules`
     - User: `~/.agents/skills` -> `~/.cursor/skills`, `~/.agents/agents` -> `~/.cursor/agents`
     - Subagent invocation in Cursor is prompt-driven (`/name` or natural mention), not `subagent_type`
-    - OAT-controlled Cursor dispatch uses the generic `.cursor/agents/<name>.md` file plus the Task-level `model` argument selected from the dispatch matrix. A `model` frontmatter value is only a default/fallback mechanism.
+    - OAT-controlled Cursor dispatch uses the generic `.cursor/agents/<name>.md` file plus the exact `providers.cursor.dispatchArgs.model` value selected from the candidate ladder. OAT passes it byte-for-byte as the actual Task-level `model`; a `model` frontmatter value is only a default/fallback mechanism.
+    - Cursor model strings are opaque. OAT does not infer family, effort, cost, or capability from their spelling; the configured candidate position owns the named tier meaning.
     - Cursor model validation checks whether the selected model is eligible for subagent Task dispatch; the broad `cursor-agent models` catalog alone is not enough proof.
     - Rule files render as `.cursor/rules/*.mdc`
 
@@ -55,6 +57,33 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
+    - `oat-phase-implementer` is dual-mode: Phase Scope makes it a phase coordinator, while Task Scope makes the exact materialized variant a one-task worker. The coordinator does not implement ordinary tasks itself.
+
+## Managed dispatch views
+
+Reusable ordered candidate ladders live in `workflow.dispatchCeiling.providers`.
+The project or phase named ceiling is only a maximum over those candidates; it
+does not select one permanent model family for the project.
+
+Adopt the complete ladder into an explicit owning config scope before sync:
+
+```bash
+oat config adopt dispatch-matrix --shared
+oat config adopt dispatch-matrix --local
+oat config adopt dispatch-matrix --user
+```
+
+Project-config candidates materialize into the tracked, version-controlled
+project `.codex` view. User-config candidates materialize under `~/.codex`.
+OAT does not auto-ignore project output or create its Git commit; the team owns
+that repository change.
+
+At implementation time, the phase coordinator passes the recorded named
+maximum through invocation-only `--ceiling-tier`, resolves one exact candidate
+per bounded task, and dispatches one task worker at a time. Codex uses the
+resolver-returned materialized role. Claude and Cursor bind the exact model
+arguments described above. A missing or unselectable managed target blocks
+rather than falling back to the coordinator or a base role.
 
 ## Scope rules
 
