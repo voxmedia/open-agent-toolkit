@@ -39,7 +39,7 @@ Vitest, Fumadocs, pnpm workspaces, and Turborepo.
 - [x] Verification and atomic commit supplied for every task
 - [x] Release and generated-asset requirements included
 - [x] Phase dependencies and write sets evaluated
-- [ ] Complete dispatch ladder adopted and project named ceiling recorded
+- [x] Complete user-owned dispatch ladder confirmed and project named ceiling recorded
 - [ ] Optional phase-review choice recorded
 - [ ] Post-rebase managed reviewer contract resolved and plan re-reviewed
 - [ ] Implementation HiLL checkpoints confirmed at implementation preflight
@@ -325,6 +325,70 @@ git commit -m "feat(workflow): resume incomplete post-implementation sequences"
 
 ---
 
+### Task p02-t03: Clarify optional Phase gate review setup
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Add failing terminology and boundary contract tests**
+
+Assert that the canonical planning and quick-start contracts:
+
+- label the user choice **“Phase gate review”**, not the ambiguous “Phase
+  review”;
+- explain that it runs an independent configured review gate after selected
+  implementation phases, is non-pausing when it passes, and is distinct from
+  both HiLL approval and final artifact review;
+- offer the choice only when `oat_phase_review_gate` is absent and a qualifying
+  configured target exists; and
+- preserve any explicit `oat_phase_review_gate` setting without probing or
+  prompting.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts
+```
+
+Expected: The contract test fails until the terminology and explanations are
+updated consistently.
+
+**Step 2: Update the planning prompts and shared contract**
+
+- Increase each changed canonical skill version once for the PR.
+- Replace user-facing “Phase review” prompt/status language with “Phase gate
+  review” in the shared plan-writing contract and quick-start caller.
+- State the trigger and boundary at the prompt: the setup is offered only when
+  no explicit setting exists and a qualifying configured gate target is
+  available; it is not caused by an existing configured setting.
+- Retain existing serialized key names and gate behavior, including the
+  configured-target qualification and independence from HiLL.
+
+**Step 3: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts
+pnpm oat:validate-skills
+```
+
+Expected: Terminology contracts and canonical skill validation pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-plan-writing/SKILL.md \
+  .agents/skills/oat-project-quick-start/SKILL.md \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(workflow): clarify phase gate review setup"
+```
+
+---
+
 ## Phase 3: Documentation and Release Surface
 
 ### Task p03-t01: Document structured sequencing and final approval timing
@@ -348,6 +412,8 @@ Document:
 - `not_required`, failure/resume behavior, and incomplete-sequence routing;
 - the unchanged behavior of non-final checkpoints and the unset-preference
   fallback.
+- the “Phase gate review” planning choice, including its configured-target
+  eligibility and its independence from HiLL approval and artifact review.
 
 Integrate these changes into the post-`#132` docs without removing its configured
 gate provenance, complete dispatch ladder, target-first reviewer, or adaptive
@@ -524,13 +590,15 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 **Summary:**
 
 - Phase 1: 2 tasks — structured config model, resolution, and CLI
-- Phase 2: 2 tasks — final-closeout orchestration, routing, and resume safety
+- Phase 2: 3 tasks — final-closeout orchestration, routing, resume safety, and
+  Phase gate review terminology
 - Phase 3: 3 tasks — documentation, release checks, and PJM backlog closeout
 
-**Total: 3 phases, 7 tasks**
+**Total: 3 phases, 8 tasks**
 
 Ready for implementation only after the complete dispatch ladder, project named
-ceiling, optional phase-review choice, and post-rebase plan review are recorded.
+ceiling, optional Phase gate review choice, and post-rebase plan review are
+recorded.
 
 The pre-rebase gate findings were resolved directly in this artifact, and the user
 waived that configured gate rerun on 2026-07-10. The later rebase onto `c5190684`

@@ -118,6 +118,8 @@ select this shape.
   behavior.
 - Changing repository documentation requirements or the behavior of the
   individual summary, document, and PR skills beyond what sequencing needs.
+- Changing phase-gate execution semantics; this project may clarify the
+  planning prompt as “Phase gate review,” but it does not alter when gates run.
 
 ## Deferred Ideas
 

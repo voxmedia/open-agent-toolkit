@@ -20,10 +20,10 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | in_progress | 2     | 0/2       |
-| p02   | pending     | 2     | 0/2       |
+| p02   | pending     | 3     | 0/3       |
 | p03   | pending     | 3     | 0/3       |
 
-**Total:** 0/7 tasks completed
+**Total:** 0/8 tasks completed
 
 ## Phase 1: Structured Configuration Contract
 
@@ -60,6 +60,11 @@ resume routing satisfy their lifecycle contracts.
 **Commit:** -
 
 ### Task p02-t02: Preserve sequence routing across PR and resume transitions
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Clarify optional Phase gate review setup
 
 **Status:** pending
 **Commit:** -
@@ -159,3 +164,15 @@ configured gate rerun after these artifact corrections.
   post-rebase artifact review.
 - Release planning now targets `0.1.49` from the rebased `0.1.48` package set.
 - Implementation remains paused at `p01-t01` until plan readiness is restored.
+
+### Plan Refresh Decisions
+
+**Date:** 2026-07-10
+
+- Confirmed the existing user-owned candidate ladder; the custom placement of
+  Luna `xhigh` at the end of Economy remains valid.
+- Recorded the project-specific managed dispatch policy as `high`; the live
+  reviewer resolver now selects `gpt-5.6-sol` at `high` from that ladder.
+- Added `p02-t03` to clarify “Phase gate review” terminology and its boundary
+  from HiLL approval and final artifact review.
+- The optional Phase gate review selection remains pending.
