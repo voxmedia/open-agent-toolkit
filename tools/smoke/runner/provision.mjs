@@ -1,9 +1,9 @@
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { cp, mkdir, realpath, writeFile } from 'node:fs/promises';
+import { cp, mkdir, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { applyPresetToFixture } from '../fixture/presets/apply-preset.mjs';
 
@@ -12,6 +12,9 @@ const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
+const cliEntryPoint = join(repositoryRoot, 'packages/cli/src/index.ts');
+const cliTsconfig = join(repositoryRoot, 'packages/cli/tsconfig.json');
+const tsxExecutable = join(repositoryRoot, 'node_modules/.bin/tsx');
 const SMOKE_CLOSEOUT_POLICY = Object.freeze({
   preApproval: Object.freeze([]),
   postApproval: Object.freeze([]),
@@ -23,7 +26,7 @@ const SCENARIO_PRESETS = {
   'plan-review': 'pre-review',
 };
 
-const defaultFileSystem = { cp, mkdir, realpath, writeFile };
+const defaultFileSystem = { cp, mkdir, realpath, rename, rm, writeFile };
 
 async function runGit(args, { cwd } = {}) {
   const { stdout } = await execFileAsync('git', args, {
@@ -72,25 +75,71 @@ function writableRoots(harness, worktreePath, gitMetadataPath) {
   return [{ harness, roots }];
 }
 
+async function resolveCloseoutPolicy(worktreePath) {
+  const { stdout } = await execFileAsync(
+    tsxExecutable,
+    [
+      '--tsconfig',
+      cliTsconfig,
+      cliEntryPoint,
+      '--json',
+      '--cwd',
+      worktreePath,
+      'config',
+      'get',
+      'workflow.postImplementSequence',
+    ],
+    {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+      env: process.env,
+    },
+  );
+  const resolution = JSON.parse(stdout);
+
+  if (
+    resolution.status !== 'ok' ||
+    resolution.source !== 'local' ||
+    !isDeepStrictEqual(resolution.value, SMOKE_CLOSEOUT_POLICY)
+  ) {
+    throw new Error(
+      'Disposable local closeout policy did not resolve to the smoke policy.',
+    );
+  }
+
+  return {
+    source: resolution.source,
+    value: resolution.value,
+  };
+}
+
 function createManifest({
   appliedScenario,
   branch,
   harness,
   manifestPath,
   runPath,
+  sourceCommitSha,
   worktreePath,
 }) {
   return {
     appliedScenario,
+    baselineCommitSha: null,
     branch,
     createdPaths: [manifestPath, runPath],
-    effectiveCloseoutPolicy: {
+    fixtureProjectPath: join(worktreePath, '.oat/projects/smoke-fixture'),
+    harness,
+    intendedCloseoutPolicy: {
       source: 'local',
       value: SMOKE_CLOSEOUT_POLICY,
     },
-    fixtureProjectPath: join(worktreePath, '.oat/projects/smoke-fixture'),
-    harness,
     manifestPath,
+    provisioningState: 'initializing',
+    readiness: {
+      reason: 'provisioning',
+      status: 'not-ready',
+    },
+    sourceCommitSha,
     worktreePath,
     writableRoots: [],
   };
@@ -98,10 +147,17 @@ function createManifest({
 
 async function saveManifest(manifest, fileSystem) {
   await fileSystem.mkdir(dirname(manifest.manifestPath), { recursive: true });
-  await fileSystem.writeFile(
-    manifest.manifestPath,
-    `${JSON.stringify(manifest, null, 2)}\n`,
-  );
+  const temporaryPath = `${manifest.manifestPath}.${process.pid}-${randomUUID()}.tmp`;
+
+  try {
+    await fileSystem.writeFile(
+      temporaryPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+    await fileSystem.rename(temporaryPath, manifest.manifestPath);
+  } finally {
+    await fileSystem.rm(temporaryPath, { force: true }).catch(() => {});
+  }
 }
 
 export function createBranchName({
@@ -130,6 +186,7 @@ export async function provisionSmoke(
     git = runGit,
     random,
     repository = repositoryRoot,
+    resolvePolicy = resolveCloseoutPolicy,
     runsDirectory = runRoot,
   } = {},
 ) {
@@ -138,12 +195,23 @@ export async function provisionSmoke(
   const runPath = join(runsDirectory, branch);
   const worktreePath = join(runPath, 'worktree');
   const manifestPath = join(runPath, 'provisioning-manifest.json');
+  const existingBranch = await git(['branch', '--list', branch], {
+    cwd: repository,
+  });
+  if (existingBranch.trim()) {
+    throw new Error(
+      `Smoke provisioning refused existing branch collision: ${branch}`,
+    );
+  }
+
+  const sourceCommitSha = await git(['rev-parse', 'HEAD'], { cwd: repository });
   const manifest = createManifest({
     appliedScenario: scenario,
     branch,
     harness,
     manifestPath,
     runPath,
+    sourceCommitSha,
     worktreePath,
   });
 
@@ -151,9 +219,19 @@ export async function provisionSmoke(
 
   try {
     await fileSystem.mkdir(runPath, { recursive: true });
-    await git(['worktree', 'add', '-b', branch, worktreePath, 'HEAD'], {
-      cwd: repository,
-    });
+    await git(
+      ['worktree', 'add', '-b', branch, worktreePath, sourceCommitSha],
+      {
+        cwd: repository,
+      },
+    );
+    manifest.branchOwnership = {
+      baseCommitSha: sourceCommitSha,
+      branch,
+      createdByRun: true,
+      expectedTipCommitSha: sourceCommitSha,
+    };
+    manifest.provisioningState = 'worktree-created';
     manifest.createdPaths.push(worktreePath);
     await saveManifest(manifest, fileSystem);
 
@@ -176,6 +254,20 @@ export async function provisionSmoke(
     manifest.createdPaths.push(workspacePath);
     await saveManifest(manifest, fileSystem);
 
+    applyPreset(preset, manifest.fixtureProjectPath);
+    await git(['add', '--', '.oat/projects/smoke-fixture', 'workspace/logs'], {
+      cwd: worktreePath,
+    });
+    await git(['commit', '-m', 'test(smoke): establish fixture baseline'], {
+      cwd: worktreePath,
+    });
+    manifest.baselineCommitSha = await git(['rev-parse', 'HEAD'], {
+      cwd: worktreePath,
+    });
+    manifest.branchOwnership.expectedTipCommitSha = manifest.baselineCommitSha;
+    manifest.provisioningState = 'baseline-committed';
+    await saveManifest(manifest, fileSystem);
+
     const configPath = join(worktreePath, '.oat/config.local.json');
     await fileSystem.writeFile(
       configPath,
@@ -192,7 +284,34 @@ export async function provisionSmoke(
     manifest.createdPaths.push(configPath);
     await saveManifest(manifest, fileSystem);
 
-    applyPreset(preset, manifest.fixtureProjectPath);
+    const effectiveCloseoutPolicy = await resolvePolicy(worktreePath);
+    if (
+      effectiveCloseoutPolicy?.source !== 'local' ||
+      !isDeepStrictEqual(effectiveCloseoutPolicy.value, SMOKE_CLOSEOUT_POLICY)
+    ) {
+      throw new Error(
+        'Resolved closeout policy does not match the intended smoke policy.',
+      );
+    }
+    manifest.effectiveCloseoutPolicy = effectiveCloseoutPolicy;
+    manifest.provisioningState = 'config-resolved';
+    await saveManifest(manifest, fileSystem);
+
+    const worktreeStatus = await git(
+      ['status', '--short', '--untracked-files=all'],
+      {
+        cwd: worktreePath,
+      },
+    );
+    const unexpectedStatus = worktreeStatus
+      .split('\n')
+      .filter((line) => line && line !== '?? .oat/config.local.json');
+    if (unexpectedStatus.length > 0) {
+      throw new Error(
+        `Disposable fixture baseline left unexpected worktree content: ${unexpectedStatus.join(', ')}`,
+      );
+    }
+
     const commonDirectory = relativeToAbsolute(
       await git(['rev-parse', '--git-common-dir'], { cwd: worktreePath }),
       worktreePath,
@@ -202,10 +321,17 @@ export async function provisionSmoke(
       worktreePath,
       await fileSystem.realpath(commonDirectory),
     );
+    manifest.provisioningState = 'ready';
+    manifest.readiness = { status: 'ready' };
     await saveManifest(manifest, fileSystem);
 
     return manifest;
   } catch (error) {
+    manifest.provisioningState = 'failed';
+    manifest.readiness = {
+      reason: error instanceof Error ? error.message : String(error),
+      status: 'not-ready',
+    };
     await saveManifest(manifest, fileSystem);
     throw error;
   }

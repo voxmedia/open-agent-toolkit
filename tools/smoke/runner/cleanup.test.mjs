@@ -161,6 +161,69 @@ test('refuses unrecorded or out-of-root paths, branches, and worktrees', async (
   }
 });
 
+test('preserves a pre-existing smoke-named branch without ownership evidence', async () => {
+  const repository = await createRepository();
+  const runsDirectory = join(repository, '.smoke-runs');
+  const branch = 'smoke-pre-existing-collision';
+  const runPath = join(runsDirectory, branch);
+  const manifestPath = join(runPath, 'provisioning-manifest.json');
+  const worktreePath = join(runPath, 'worktree');
+  const existingTip = await git(['rev-parse', 'HEAD'], { cwd: repository });
+  await git(['branch', branch, existingTip], { cwd: repository });
+  await mkdir(runPath, { recursive: true });
+  const manifest = {
+    branch,
+    createdPaths: [manifestPath, runPath],
+    manifestPath,
+    worktreePath,
+  };
+  await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
+
+  try {
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /without explicit run ownership/,
+    );
+    assert.equal(
+      await git(['rev-parse', `refs/heads/${branch}`], { cwd: repository }),
+      existingTip,
+    );
+    assert.equal(await exists(manifestPath), true);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('fails closed when an owned branch tip no longer matches the manifest', async () => {
+  const repository = await createRepository();
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'tip-mismatch');
+    await writeFile(
+      join(manifest.worktreePath, 'unexpected.txt'),
+      'unexpected branch mutation\n',
+    );
+    await git(['add', 'unexpected.txt'], { cwd: manifest.worktreePath });
+    await git(['commit', '-m', 'test: diverge owned smoke branch'], {
+      cwd: manifest.worktreePath,
+    });
+
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /branch tip no longer corroborates run ownership/,
+    );
+    assert.equal(await exists(manifest.worktreePath), true);
+    assert.match(
+      await git(['branch', '--list', manifest.branch], { cwd: repository }),
+      new RegExp(manifest.branch),
+    );
+    assert.equal(await exists(manifest.manifestPath), true);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
 test('recovers from a manifest interrupted before created-path updates', async () => {
   const repository = await createRepository();
   const baselineWorktrees = await git(['worktree', 'list', '--porcelain'], {

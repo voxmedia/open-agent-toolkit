@@ -49,12 +49,74 @@ function requireBranch(value) {
     !/^smoke-[A-Za-z0-9-]+$/.test(value) ||
     value.includes('/')
   ) {
-    throw new CleanupRefusalError(
-      'branch must be a flat smoke-owned branch name.',
-    );
+    throw new CleanupRefusalError('branch must be a flat smoke branch name.');
   }
 
   return value;
+}
+
+function requireCommitSha(value, field) {
+  if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) {
+    throw new CleanupRefusalError(`${field} must be a full commit SHA.`);
+  }
+
+  return value;
+}
+
+function validateBranchOwnership(manifest, branch) {
+  if (manifest.branchOwnership === undefined) {
+    return null;
+  }
+
+  const ownership = manifest.branchOwnership;
+  if (
+    !ownership ||
+    typeof ownership !== 'object' ||
+    Array.isArray(ownership) ||
+    ownership.createdByRun !== true
+  ) {
+    throw new CleanupRefusalError(
+      'branchOwnership must explicitly record creation by this run.',
+    );
+  }
+  if (ownership.branch !== branch) {
+    throw new CleanupRefusalError(
+      'branchOwnership does not match the recorded branch.',
+    );
+  }
+
+  const sourceCommitSha = requireCommitSha(
+    manifest.sourceCommitSha,
+    'sourceCommitSha',
+  );
+  const baseCommitSha = requireCommitSha(
+    ownership.baseCommitSha,
+    'branchOwnership.baseCommitSha',
+  );
+  const expectedTipCommitSha = requireCommitSha(
+    ownership.expectedTipCommitSha,
+    'branchOwnership.expectedTipCommitSha',
+  );
+  if (baseCommitSha !== sourceCommitSha) {
+    throw new CleanupRefusalError(
+      'branch ownership base does not match the source commit.',
+    );
+  }
+
+  const recordedTip = manifest.baselineCommitSha ?? sourceCommitSha;
+  if (
+    requireCommitSha(recordedTip, 'recorded branch tip') !==
+    expectedTipCommitSha
+  ) {
+    throw new CleanupRefusalError(
+      'branch ownership tip does not match the recorded provisioning tip.',
+    );
+  }
+
+  return {
+    baseCommitSha,
+    expectedTipCommitSha,
+  };
 }
 
 function validateManifest(manifest, runsDirectory) {
@@ -64,6 +126,7 @@ function validateManifest(manifest, runsDirectory) {
 
   const smokeRoot = requireAbsolutePath(runsDirectory, 'runsDirectory');
   const branch = requireBranch(manifest.branch);
+  const branchOwnership = validateBranchOwnership(manifest, branch);
   const manifestPath = requireAbsolutePath(
     manifest.manifestPath,
     'manifestPath',
@@ -132,6 +195,7 @@ function validateManifest(manifest, runsDirectory) {
 
   return {
     branch,
+    branchOwnership,
     createdPaths: normalizedCreatedPaths,
     manifestPath,
     runPath,
@@ -286,6 +350,41 @@ export async function cleanupSmoke(
     );
   }
 
+  const branchOutput = await git(['branch', '--list', resources.branch], {
+    cwd: repository,
+  });
+  const branchExists = Boolean(branchOutput.trim());
+  if (
+    !resources.branchOwnership &&
+    (registeredAtPath || branchRegistrations.length > 0 || branchExists)
+  ) {
+    throw new CleanupRefusalError(
+      'branch or worktree exists without explicit run ownership.',
+    );
+  }
+
+  if (resources.branchOwnership && branchExists) {
+    const actualTipCommitSha = await git(
+      ['rev-parse', '--verify', expectedBranchRef],
+      { cwd: repository },
+    );
+    if (actualTipCommitSha !== resources.branchOwnership.expectedTipCommitSha) {
+      throw new CleanupRefusalError(
+        'recorded branch tip no longer corroborates run ownership.',
+      );
+    }
+  }
+
+  if (
+    registeredAtPath &&
+    resources.branchOwnership &&
+    registeredAtPath.HEAD !== resources.branchOwnership.expectedTipCommitSha
+  ) {
+    throw new CleanupRefusalError(
+      'recorded worktree HEAD no longer corroborates run ownership.',
+    );
+  }
+
   if (registeredAtPath) {
     await git(['worktree', 'remove', '--force', resources.worktreePath], {
       cwd: repository,
@@ -293,10 +392,7 @@ export async function cleanupSmoke(
     actions.push(`worktree:${resources.worktreePath}`);
   }
 
-  const branchOutput = await git(['branch', '--list', resources.branch], {
-    cwd: repository,
-  });
-  if (branchOutput.trim()) {
+  if (branchExists) {
     await git(['branch', '--delete', '--force', resources.branch], {
       cwd: repository,
     });

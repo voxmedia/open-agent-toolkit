@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import {
+  cp,
   mkdir,
   mkdtemp,
   readFile,
   realpath,
+  rename as renameFile,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -104,6 +106,47 @@ test('uses flat collision-resistant deterministic branch names', () => {
   );
 });
 
+test('rejects a pre-existing branch collision without claiming or deleting it', async () => {
+  const repository = await createRepository();
+  const runsDirectory = join(repository, '.smoke-runs');
+  const branch = 'smoke-2026-07-11T20-30-45-123Z-collision';
+  const manifestPath = join(
+    runsDirectory,
+    branch,
+    'provisioning-manifest.json',
+  );
+  const existingTip = await git(['rev-parse', 'HEAD'], { cwd: repository });
+  await git(['branch', branch, existingTip], { cwd: repository });
+
+  try {
+    await assert.rejects(
+      () =>
+        provisionSmoke(
+          { harness: 'codex', scenario: 'implement' },
+          {
+            clock: () => new Date('2026-07-11T20:30:45.123Z'),
+            fixture: fixturePath,
+            git,
+            random: () => 'collision',
+            repository,
+            runsDirectory,
+          },
+        ),
+      new RegExp(`existing branch collision: ${branch}`),
+    );
+    assert.equal(
+      await git(['rev-parse', `refs/heads/${branch}`], { cwd: repository }),
+      existingTip,
+    );
+    await assert.rejects(() => readFile(manifestPath), { code: 'ENOENT' });
+  } finally {
+    await git(['branch', '--delete', '--force', branch], {
+      cwd: repository,
+    }).catch(() => {});
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
 test('provisions an isolated fixture, preset, manifest, and harness roots', async () => {
   const repository = await createRepository();
   const runsDirectory = join(repository, '.smoke-runs');
@@ -111,6 +154,9 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
   await mkdir(join(repository, 'home/.oat'), { recursive: true });
   await writeFile(homeConfig, '{"personal":true}\n');
   const originalUserConfig = await readFile(homeConfig, 'utf8');
+  const sourceCommitSha = await git(['rev-parse', 'HEAD'], { cwd: repository });
+  const manifestPublishes = [];
+  let childWorktreePath;
   let manifest;
 
   try {
@@ -118,6 +164,19 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       { harness: 'codex', scenario: 'implement' },
       {
         clock: () => new Date('2026-07-11T20:30:45.123Z'),
+        fileSystem: {
+          cp,
+          mkdir,
+          realpath,
+          async rename(source, destination) {
+            if (destination.endsWith('provisioning-manifest.json')) {
+              manifestPublishes.push({ destination, source });
+            }
+            return renameFile(source, destination);
+          },
+          rm,
+          writeFile,
+        },
         fixture: fixturePath,
         git,
         random: () => 'test-run',
@@ -128,6 +187,21 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
 
     assert.equal(manifest.branch, 'smoke-2026-07-11T20-30-45-123Z-test-run');
     assert.equal(manifest.appliedScenario, 'implement');
+    assert.equal(manifest.sourceCommitSha, sourceCommitSha);
+    assert.match(manifest.baselineCommitSha, /^[0-9a-f]{40}$/);
+    assert.notEqual(manifest.baselineCommitSha, sourceCommitSha);
+    assert.deepEqual(manifest.branchOwnership, {
+      baseCommitSha: sourceCommitSha,
+      branch: manifest.branch,
+      createdByRun: true,
+      expectedTipCommitSha: manifest.baselineCommitSha,
+    });
+    assert.equal(manifest.provisioningState, 'ready');
+    assert.deepEqual(manifest.readiness, { status: 'ready' });
+    assert.deepEqual(manifest.intendedCloseoutPolicy, {
+      source: 'local',
+      value: { preApproval: [], postApproval: [] },
+    });
     assert.deepEqual(manifest.createdPaths, [
       manifest.manifestPath,
       join(runsDirectory, manifest.branch),
@@ -142,6 +216,13 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       JSON.parse(await readFile(manifest.manifestPath, 'utf8')),
       manifest,
     );
+    assert.ok(manifestPublishes.length > 1);
+    for (const { destination, source } of manifestPublishes) {
+      assert.equal(destination, manifest.manifestPath);
+      assert.equal(resolve(source, '..'), resolve(destination, '..'));
+      assert.match(source, /\.tmp$/);
+      await assert.rejects(() => readFile(source), { code: 'ENOENT' });
+    }
     assert.equal(await readFile(homeConfig, 'utf8'), originalUserConfig);
 
     const config = JSON.parse(
@@ -160,6 +241,86 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       source: 'local',
       value: { preApproval: [], postApproval: [] },
     });
+    assert.equal(
+      await git(['rev-parse', `${manifest.baselineCommitSha}^`], {
+        cwd: repository,
+      }),
+      sourceCommitSha,
+    );
+    assert.equal(
+      await git(['rev-parse', `refs/heads/${manifest.branch}`], {
+        cwd: repository,
+      }),
+      manifest.baselineCommitSha,
+    );
+    assert.deepEqual(
+      (
+        await git(
+          [
+            'diff-tree',
+            '--no-commit-id',
+            '--name-only',
+            '-r',
+            manifest.baselineCommitSha,
+          ],
+          { cwd: repository },
+        )
+      ).split('\n'),
+      [
+        '.oat/projects/smoke-fixture/design.md',
+        '.oat/projects/smoke-fixture/discovery.md',
+        '.oat/projects/smoke-fixture/implementation.md',
+        '.oat/projects/smoke-fixture/plan.md',
+        '.oat/projects/smoke-fixture/state.md',
+        'workspace/logs/p01.log',
+        'workspace/logs/p02.log',
+        'workspace/logs/p03.log',
+      ],
+    );
+    assert.equal(
+      await git(['status', '--short', '--untracked-files=all'], {
+        cwd: manifest.worktreePath,
+      }),
+      '?? .oat/config.local.json',
+    );
+    await assert.rejects(
+      () =>
+        git(
+          [
+            'cat-file',
+            '-e',
+            `${manifest.baselineCommitSha}:.oat/config.local.json`,
+          ],
+          { cwd: repository },
+        ),
+      /Command failed/,
+    );
+    childWorktreePath = join(runsDirectory, `${manifest.branch}-child`);
+    await git(
+      [
+        'worktree',
+        'add',
+        '--detach',
+        childWorktreePath,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: repository },
+    );
+    assert.match(
+      await readFile(
+        join(childWorktreePath, '.oat/projects/smoke-fixture/plan.md'),
+        'utf8',
+      ),
+      /oat_ready_for: oat-project-implement/,
+    );
+    assert.match(
+      await readFile(join(childWorktreePath, 'workspace/logs/p01.log'), 'utf8'),
+      /phase p01/,
+    );
+    await assert.rejects(
+      () => readFile(join(childWorktreePath, '.oat/config.local.json')),
+      { code: 'ENOENT' },
+    );
     assert.deepEqual(
       await resolveLocalCloseoutPolicy(
         manifest.worktreePath,
@@ -193,6 +354,11 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       },
     ]);
   } finally {
+    if (childWorktreePath) {
+      await git(['worktree', 'remove', '--force', childWorktreePath], {
+        cwd: repository,
+      }).catch(() => {});
+    }
     if (manifest) {
       await removeProvision(repository, manifest);
     }
@@ -223,6 +389,8 @@ test('preserves a partial manifest when fixture copying fails', async () => {
               },
               mkdir,
               realpath,
+              rename: renameFile,
+              rm,
               writeFile,
             },
             fixture: fixturePath,
@@ -238,9 +406,20 @@ test('preserves a partial manifest when fixture copying fails', async () => {
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     assert.equal(manifest.branch, branch);
     assert.equal(manifest.appliedScenario, 'plan-review');
-    assert.deepEqual(manifest.effectiveCloseoutPolicy, {
+    assert.deepEqual(manifest.intendedCloseoutPolicy, {
       source: 'local',
       value: { preApproval: [], postApproval: [] },
+    });
+    assert.equal(Object.hasOwn(manifest, 'effectiveCloseoutPolicy'), false);
+    assert.equal(manifest.baselineCommitSha, null);
+    assert.equal(manifest.provisioningState, 'failed');
+    assert.equal(manifest.readiness.status, 'not-ready');
+    assert.match(manifest.readiness.reason, /copy failed/);
+    assert.deepEqual(manifest.branchOwnership, {
+      baseCommitSha: manifest.sourceCommitSha,
+      branch,
+      createdByRun: true,
+      expectedTipCommitSha: manifest.sourceCommitSha,
     });
     assert.ok(manifest.createdPaths.includes(manifest.worktreePath));
     assert.ok(
