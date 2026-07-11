@@ -590,15 +590,15 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                                                                      |
-| ------ | -------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | passed  | 2026-07-10 | Clean Phase 1 review                                                                                          |
-| p02    | code     | passed  | 2026-07-11 | Native post-fix review; final-checkpoint and Phase gate review boundaries verified                            |
-| p03    | code     | passed  | 2026-07-11 | Covered by `final` review: `reviews/final-review-2026-07-11T113606Z.md`                                       |
-| final  | code     | passed  | 2026-07-11 | `reviews/final-review-2026-07-11T113606Z.md`                                                                  |
-| spec   | artifact | passed  | 2026-07-10 | N/A (quick mode; no spec required)                                                                            |
-| design | artifact | pending | -          | -                                                                                                             |
-| plan   | artifact | passed  | 2026-07-10 | `reviews/artifact-plan-review-2026-07-10T213532Z.md`; three Important findings resolved; clean High re-review |
+| Scope  | Type     | Status   | Date       | Artifact                                                                                                        |
+| ------ | -------- | -------- | ---------- | --------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | passed   | 2026-07-10 | Clean Phase 1 review                                                                                            |
+| p02    | code     | passed   | 2026-07-11 | Native post-fix review; final-checkpoint and Phase gate review boundaries verified                              |
+| p03    | code     | passed   | 2026-07-11 | Covered by `final` review: `reviews/final-review-2026-07-11T113606Z.md`                                         |
+| final  | code     | received | 2026-07-11 | `reviews/final-review-2026-07-11T114413Z.md` (gate re-review; prior pass: `final-review-2026-07-11T113606Z.md`) |
+| spec   | artifact | passed   | 2026-07-10 | N/A (quick mode; no spec required)                                                                              |
+| design | artifact | pending  | -          | -                                                                                                               |
+| plan   | artifact | passed   | 2026-07-10 | `reviews/artifact-plan-review-2026-07-10T213532Z.md`; three Important findings resolved; clean High re-review   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` →
 `passed`
