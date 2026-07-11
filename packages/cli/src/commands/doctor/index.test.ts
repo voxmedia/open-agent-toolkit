@@ -465,7 +465,7 @@ describe('createDoctorCommand', () => {
       'All configured dispatch matrix cells are available',
     );
     expect(capture.info[0]).toContain(
-      'workflow.dispatchCeiling.providers.cursor.balanced=composer-2.5 (shared config)',
+      'workflow.dispatchCeiling.providers.cursor.balanced.candidates[0]=composer-2.5 (shared config)',
     );
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
@@ -476,6 +476,7 @@ describe('createDoctorCommand', () => {
       cwd: '/tmp/workspace',
       env: {},
       detailed: true,
+      target: { model: 'gpt-5.5-high' },
     });
     expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
       cwd: '/tmp/workspace',
@@ -511,23 +512,65 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('dispatch_matrix');
     expect(capture.info[0]).toContain(
-      'workflow.dispatchCeiling.providers.codex.high[0]=gpt-5.6-terra/xhigh (shared config)',
+      'workflow.dispatchCeiling.providers.codex.high.candidates[0].route[0]=gpt-5.6-terra (shared config)',
     );
     expect(validateMatrixCell).toHaveBeenCalledTimes(1);
-    expect(validateMatrixCell).toHaveBeenCalledWith(
-      'codex',
-      'gpt-5.6-terra/xhigh',
-      {
-        cwd: '/tmp/workspace',
-        env: {},
-        detailed: true,
-        target: {
-          harness: 'codex',
-          model: 'gpt-5.6-terra',
-          effort: 'xhigh',
+    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.6-terra', {
+      cwd: '/tmp/workspace',
+      env: {},
+      detailed: true,
+      target: {
+        harness: 'codex',
+        model: 'gpt-5.6-terra',
+        effort: 'xhigh',
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('walks modern candidate ladders and nested fallback routes with canonical paths', async () => {
+    const { command, capture, validateMatrixCell } = createHarness({
+      oatConfig: {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: {
+                high: {
+                  candidates: [
+                    'modern-primary',
+                    {
+                      route: [
+                        'nested-fallback',
+                        { harness: 'claude', model: 'sonnet' },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          },
         },
       },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[0]=modern-primary (shared config)',
     );
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[1].route[0]=nested-fallback (shared config)',
+    );
+    expect(capture.info[0]).toContain(
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[1].route[1]=sonnet (shared config)',
+    );
+    expect(validateMatrixCell).toHaveBeenCalledWith('claude', 'sonnet', {
+      cwd: '/tmp/workspace',
+      env: {},
+      detailed: true,
+      target: { harness: 'claude', model: 'sonnet' },
+    });
     expect(process.exitCode).toBe(0);
   });
 
@@ -560,7 +603,7 @@ describe('createDoctorCommand', () => {
 
     await runDoctor(command);
 
-    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.5/xhigh', {
+    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.5', {
       cwd: '/tmp/workspace',
       env: {},
       detailed: true,
@@ -571,7 +614,7 @@ describe('createDoctorCommand', () => {
       },
     });
     expect(capture.info[0]).toContain('dispatch_matrix');
-    expect(capture.info[0]).toContain('gpt-5.5/xhigh');
+    expect(capture.info[0]).toContain('gpt-5.5');
     expect(capture.info[0]).toContain('Supported Codex efforts');
     expect(capture.info[0]).toContain('medium, high');
     expect(process.exitCode).toBe(1);
@@ -631,10 +674,10 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('dispatch_matrix');
     expect(capture.info[0]).toContain(
-      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high[0].model=missing-model',
+      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high.candidates[0].route[0]=missing-model',
     );
     expect(capture.info[0]).toContain(
-      'workflow.dispatchCeiling.providers.cursor.high[0].model=missing-model (shared config)',
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[0].route[0]=missing-model (shared config)',
     );
     expect(capture.info[0]).toContain(
       'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.codex=xhigh',
@@ -700,10 +743,10 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('dispatch_matrix');
     expect(capture.info[0]).toContain(
-      'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high=composer-2.5',
+      'Unvalidated dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high.candidates[0]=composer-2.5',
     );
     expect(capture.info[0]).toContain(
-      'workflow.dispatchCeiling.providers.cursor.high=composer-2.5 (shared config)',
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[0]=composer-2.5 (shared config)',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -726,7 +769,7 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('dispatch_matrix');
     expect(capture.info[0]).toContain(
-      'workflow.dispatchCeiling.providers.cursor.high=composer-2.5 (local config)',
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[0]=composer-2.5 (local config)',
     );
     expect(validateMatrixCell).toHaveBeenCalledWith('cursor', 'composer-2.5', {
       cwd: '/tmp/workspace',
@@ -755,7 +798,7 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('dispatch_matrix');
     expect(capture.info[0]).toContain(
-      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high=missing-model (user config)',
+      'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high.candidates[0]=missing-model (user config)',
     );
     expect(process.exitCode).toBe(1);
   });
