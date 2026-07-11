@@ -311,7 +311,7 @@ const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
 const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
 const GATE_CHECK_TIMEOUT_MS = 5_000;
-const GATE_EXEC_TIMEOUT_MS = 10 * 60 * 1_000;
+const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
 
 function reviewGateProjectContext(project: ResolvedReviewProject): string {
   return [
