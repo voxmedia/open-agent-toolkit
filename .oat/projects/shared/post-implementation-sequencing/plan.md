@@ -476,8 +476,8 @@ git commit -m "docs(workflow): explain approval-aware post-implementation sequen
 
 **Step 1: Apply release metadata and generate assets**
 
-- Bump all five public packages from the rebased lockstep version `0.1.48` to
-  `0.1.49`.
+- Bump all five public packages from the rebased lockstep version `0.1.51` to
+  `0.1.52`.
 - Refresh the lockfile if package metadata requires it.
 - Run bundled-asset generation once, after all canonical skill and docs edits.
 - Regenerate the docs index through the CLI source command; never hand-edit it.
@@ -532,7 +532,7 @@ git add packages/cli/package.json \
   apps/oat-docs/index.md
 git add -A packages/cli/assets
 git diff --cached --check
-git commit -m "chore(release): bump public packages to 0.1.49"
+git commit -m "chore(release): bump public packages to 0.1.52"
 ```
 
 If an optional generated file is unchanged, omit it from `git add` rather than

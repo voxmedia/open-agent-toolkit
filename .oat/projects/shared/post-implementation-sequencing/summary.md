@@ -32,7 +32,7 @@ repositories retain their established behavior.
 - Updated PR-final and project-next contracts to preserve and resume incomplete
   closeout state, and clarified Phase gate review terminology across plan paths.
 - Documented the behavior, regenerated shipped skill assets, bumped the five
-  lockstep public packages to `0.1.49`, and archived the completed backlog item.
+  lockstep public packages to `0.1.52`, and archived the completed backlog item.
 
 ## Key Decisions
 

@@ -349,3 +349,13 @@ configured gate rerun after these artifact corrections.
   standard unset-preference prompt and the completed-`wait` message are
   separate, unambiguous branches. Focused skill-contract tests and release
   validation passed afterward.
+
+### Post-PR Rebase
+
+**Date:** 2026-07-11
+
+- Rebased onto `origin/main` at `7e42377c` after the dispatch-schema and native
+  nested-Codex-role changes merged.
+- Preserved both the structured sequence contract and the new dispatch
+  infrastructure; lockstep public package release metadata now targets
+  `0.1.52`.
