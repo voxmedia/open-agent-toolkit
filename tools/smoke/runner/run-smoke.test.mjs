@@ -209,3 +209,34 @@ test('an unquiesced stage preserves resources and skips cleanup', async () => {
   assert.equal(processObject.listenerCount('SIGTERM'), startListeners);
   assert.equal(processObject.listenerCount('SIGINT'), 0);
 });
+
+test('SIGTERM during preflight prevents prepare and drive before provisioning', async () => {
+  const processObject = new EventEmitter();
+  const initialTermListeners = processObject.listenerCount('SIGTERM');
+  const calls = [];
+
+  await assert.rejects(
+    () =>
+      main(['--harness', 'codex', '--scenario', 'implement', '--dry-run'], {
+        handlers: {
+          async prepare() {
+            calls.push('prepare');
+          },
+          async drive() {
+            calls.push('drive');
+          },
+        },
+        preflight: async () => {
+          calls.push('preflight');
+          processObject.emit('SIGTERM');
+          await new Promise((resolvePromise) => setImmediate(resolvePromise));
+        },
+        processObject,
+      }),
+    SmokeInterruptedError,
+  );
+
+  assert.deepEqual(calls, ['preflight']);
+  assert.equal(processObject.listenerCount('SIGTERM'), initialTermListeners);
+  assert.equal(processObject.listenerCount('SIGINT'), 0);
+});

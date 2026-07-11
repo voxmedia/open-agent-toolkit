@@ -153,6 +153,11 @@ function waitForQuiescence(promises, gracePeriodMs) {
 }
 
 async function runStage(stage, handler, options, context, signalState) {
+  const cancellationSignal = signalState?.signal;
+  if (cancellationSignal && stage !== 'collect-recovery') {
+    await waitForQuiescence([context.cancellation], context.abortGracePeriodMs);
+    throw new SmokeInterruptedError(cancellationSignal);
+  }
   const stageResult = Promise.resolve().then(() => handler(options, context));
 
   if (!signalState || signalState.signal) {
@@ -237,7 +242,13 @@ export async function runSmoke(
 
   try {
     if (typeof preflight === 'function') {
-      results.preflight = await preflight(options);
+      results.preflight = await runStage(
+        'preflight',
+        preflight,
+        options,
+        context,
+        signalState,
+      );
     }
 
     for (const stage of options.stages) {
@@ -291,7 +302,7 @@ export async function runSmoke(
   ) {
     try {
       results.collect = await runStage(
-        'collect',
+        'collect-recovery',
         handlers.collect,
         options,
         context,

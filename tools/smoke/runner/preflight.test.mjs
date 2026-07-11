@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   chmod,
   cp,
+  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -293,6 +294,56 @@ test('runs fixture integrity validation against a corrupt copied fixture', async
   }
 });
 
+test('rejects copied fixtures with preset or dispatch-matrix defects', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-fixture-copy-'));
+
+  try {
+    for (const [name, path, replacement] of [
+      [
+        'preset',
+        join('presets', 'implementation-ready.json'),
+        '"oat_current_task": "p01-t01"',
+      ],
+      [
+        'dispatch matrix',
+        join('project', 'state.md'),
+        'fixture-cursor-opaque-high',
+      ],
+    ]) {
+      const copiedFixture = join(directory, name);
+      await cp(fixturePath, copiedFixture, { recursive: true });
+      const target = join(copiedFixture, path);
+      const source = await readFile(target, 'utf8');
+      await writeFile(
+        target,
+        source.replace(
+          replacement,
+          name === 'preset'
+            ? '"oat_current_task": "p03-t03"'
+            : 'fixture-cursor-opaque-corrupt',
+        ),
+      );
+      const probes = readyProbes();
+      delete probes.fixture;
+
+      await assert.rejects(
+        () =>
+          runPreflight(
+            { fixturePath: copiedFixture, harness: 'codex' },
+            { probes },
+          ),
+        (error) => {
+          assert.ok(error instanceof PreflightError);
+          assert.equal(error.report.fixture.result, 'invalid');
+          return true;
+        },
+      );
+    }
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+});
+
 test('executes the local dist entrypoint and rejects a stale build', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-local-cli-'));
   const localOatPath = join(directory, 'oat');
@@ -311,7 +362,10 @@ test('executes the local dist entrypoint and rejects a stale build', async () =>
 
     const report = await runPreflight(
       { harness: 'codex', localOatPath },
-      { probes },
+      {
+        env: { ...process.env, PATH: `${directory}:${process.env.PATH}` },
+        probes,
+      },
     );
     assert.equal(report.oat.result, 'local');
     assert.equal(report.oat.version, report.oat.expectedVersion);
@@ -319,11 +373,64 @@ test('executes the local dist entrypoint and rejects a stale build', async () =>
 
     await utimes(localOatPath, past, past);
     await assert.rejects(
-      () => runPreflight({ harness: 'codex', localOatPath }, { probes }),
+      () =>
+        runPreflight(
+          { harness: 'codex', localOatPath },
+          {
+            env: { ...process.env, PATH: `${directory}:${process.env.PATH}` },
+            probes,
+          },
+        ),
       (error) => {
         assert.ok(error instanceof PreflightError);
         assert.equal(error.report.oat.result, 'stale-global');
         assert.equal(error.report.oat.freshness, 'stale-dist');
+        return true;
+      },
+    );
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+});
+
+test('rejects a PATH oat executable that differs from the local dist entrypoint', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-path-oat-'));
+  const localOatPath = join(directory, 'local-oat');
+  const binDirectory = join(directory, 'bin');
+  const pathOat = join(binDirectory, 'oat');
+  const future = new Date(Date.now() + 60_000);
+
+  try {
+    await writeFile(
+      localOatPath,
+      `#!/bin/sh\n[ "$1" = "--version" ] || exit 1\necho ${packageVersion}\n`,
+    );
+    await mkdir(binDirectory);
+    await writeFile(pathOat, `#!/bin/sh\necho global\n`);
+    await Promise.all([
+      chmod(localOatPath, 0o755),
+      chmod(pathOat, 0o755),
+      utimes(localOatPath, future, future),
+    ]);
+    const probes = readyProbes();
+    delete probes.oat;
+
+    await assert.rejects(
+      () =>
+        runPreflight(
+          { harness: 'codex', localOatPath },
+          {
+            env: {
+              ...process.env,
+              PATH: `${binDirectory}:${process.env.PATH}`,
+            },
+            probes,
+          },
+        ),
+      (error) => {
+        assert.ok(error instanceof PreflightError);
+        assert.equal(error.report.oat.result, 'stale-global');
+        assert.match(error.report.oat.commandPath, /\/bin\/oat$/);
         return true;
       },
     );

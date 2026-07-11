@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { access, readFile, readdir, stat } from 'node:fs/promises';
+import { access, readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -71,14 +71,13 @@ async function runCommand(executable, args) {
   }
 }
 
-async function resolveCommand(executable) {
+async function resolveCommand(executable, env = process.env) {
   try {
-    const { stdout } = await execFileAsync('sh', [
-      '-lc',
-      'command -v -- "$1"',
+    const { stdout } = await execFileAsync(
       'sh',
-      executable,
-    ]);
+      ['-c', 'command -v -- "$1"', 'sh', executable],
+      { env },
+    );
     return stdout.trim() || null;
   } catch {
     return null;
@@ -144,6 +143,7 @@ async function latestModifiedTime(path) {
 
 async function defaultOatProbe({
   commandRunner = runCommand,
+  env = process.env,
   localOatPath = defaultLocalOatPath,
   packagePath = resolve(repositoryRoot, 'packages/cli/package.json'),
 } = {}) {
@@ -156,13 +156,19 @@ async function defaultOatProbe({
       sourceModifiedAt,
       packageModifiedAt,
       versionResult,
+      oatCommandPath,
       revisionResult,
     ] = await Promise.all([
       stat(localOatPath),
       latestModifiedTime(sourcePath),
       stat(packagePath),
       commandRunner(localOatPath, ['--version']),
+      resolveCommand('oat', env),
       commandRunner('git', ['rev-parse', 'HEAD']),
+    ]);
+    const [resolvedLocalPath, resolvedCommandPath] = await Promise.all([
+      realpath(localOatPath),
+      oatCommandPath ? realpath(oatCommandPath) : null,
     ]);
     const revision = revisionResult.stdout.trim() || null;
     const fresh =
@@ -172,10 +178,14 @@ async function defaultOatProbe({
     return {
       expectedVersion,
       freshness: fresh ? 'current-source' : 'stale-dist',
-      localPath: localOatPath,
+      commandPath: resolvedCommandPath,
+      localPath: resolvedLocalPath,
       revision,
       result:
-        versionResult.code === 0 && version === expectedVersion && fresh
+        resolvedCommandPath === resolvedLocalPath &&
+        versionResult.code === 0 &&
+        version === expectedVersion &&
+        fresh
           ? 'local'
           : 'stale-global',
       version,
@@ -248,6 +258,11 @@ function validateFixtureContract(project) {
 }
 
 async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
+  const fixtureTests = [
+    'fixture-integrity.test.mjs',
+    'fixture-format-contract.test.mjs',
+    'presets/apply-preset.test.mjs',
+  ];
   const missingPaths = [];
 
   for (const path of REQUIRED_FIXTURE_PATHS) {
@@ -261,6 +276,17 @@ async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
   if (missingPaths.length > 0) {
     return {
       reason: `Missing fixture paths: ${missingPaths.join(', ')}`,
+      result: 'invalid',
+    };
+  }
+
+  const fixtureTestResult = await runCommand(process.execPath, [
+    '--test',
+    ...fixtureTests.map((path) => resolve(defaultFixturePath, path)),
+  ]);
+  if (fixturePath === defaultFixturePath && fixtureTestResult.code !== 0) {
+    return {
+      reason: 'Repository fixture validators failed.',
       result: 'invalid',
     };
   }
@@ -280,7 +306,51 @@ async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
     ),
   );
   const reason = validateFixtureContract(project);
-  return reason ? { reason, result: 'invalid' } : { result: 'valid' };
+  if (reason) {
+    return { reason, result: 'invalid' };
+  }
+
+  try {
+    const [implementationReady, preReview, state, p01, p02, p03] =
+      await Promise.all([
+        readFile(
+          resolve(fixturePath, 'presets', 'implementation-ready.json'),
+          'utf8',
+        ),
+        readFile(resolve(fixturePath, 'presets', 'pre-review.json'), 'utf8'),
+        readFile(resolve(fixturePath, 'project', 'state.md'), 'utf8'),
+        readFile(resolve(fixturePath, 'workspace', 'logs', 'p01.log'), 'utf8'),
+        readFile(resolve(fixturePath, 'workspace', 'logs', 'p02.log'), 'utf8'),
+        readFile(resolve(fixturePath, 'workspace', 'logs', 'p03.log'), 'utf8'),
+      ]);
+    const readyPreset = JSON.parse(implementationReady);
+    const resetPreset = JSON.parse(preReview);
+    const seedLogs = [p01, p02, p03];
+
+    if (
+      readyPreset.name !== 'implementation-ready' ||
+      resetPreset.name !== 'pre-review' ||
+      readyPreset.state?.frontmatter?.oat_phase !== 'implement' ||
+      readyPreset.state?.frontmatter?.oat_current_task !== 'p01-t01' ||
+      resetPreset.state?.frontmatter?.oat_phase !== 'plan' ||
+      resetPreset.state?.frontmatter?.oat_current_task !== 'null' ||
+      !/^oat_phase: plan$/m.test(state) ||
+      seedLogs.some((log) => log.trim() !== '')
+    ) {
+      return {
+        reason:
+          'Fixture presets, inverse lifecycle state, or seed logs do not satisfy the smoke contract.',
+        result: 'invalid',
+      };
+    }
+  } catch {
+    return {
+      reason: 'Fixture presets or seed logs are invalid.',
+      result: 'invalid',
+    };
+  }
+
+  return { result: 'valid' };
 }
 
 function unavailableResult(harness) {
@@ -369,7 +439,7 @@ export async function runPreflight(
     fixture: await fixture({ fixturePath }),
     forcedUnavailable: forcedHarness ?? null,
     harnesses,
-    oat: await oat({ commandRunner, localOatPath, packagePath }),
+    oat: await oat({ commandRunner, env, localOatPath, packagePath }),
     selectedHarness: harness,
   };
   report.status = isReady(report, harness) ? 'ready' : 'blocked';
