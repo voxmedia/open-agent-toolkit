@@ -14,6 +14,14 @@ const NEGATIVE_CONTROL = 'oat-deliberately-invalid-task-model';
 const TIERS = ['economy', 'balanced', 'high', 'frontier'];
 const CREDENTIAL_KEY =
   /(?:authorization|cookie|credential|api[_-]?key|token|secret|password)/i;
+const AUTHORIZATION_HEADER =
+  /\b((?:proxy-)?authorization)\b["']?\s*[:=]\s*["']?([^\r\n,;'"`]+)/gi;
+const COOKIE_HEADER =
+  /\b((?:set-)?cookie)\b["']?\s*[:=]\s*["']?[^\r\n,'"]+/gi;
+const CREDENTIAL_ASSIGNMENT = new RegExp(
+  String.raw`\b((?:[a-z0-9_.-]*(?:credential|api[_-]?key|token|secret|password)[a-z0-9_.-]*)|api key)\b["']?\s*[:=]\s*["']?[^\s,;}'"\x60]+`,
+  'gi',
+);
 
 function fail(message) {
   throw new Error(message);
@@ -31,11 +39,15 @@ function hashIdentifier(value) {
 
 function redactString(value) {
   return value
+    .replace(AUTHORIZATION_HEADER, (_, header, rawValue) => {
+      const [scheme, credential, ...rest] = rawValue.trim().split(/\s+/);
+      return credential && rest.length === 0
+        ? `${header}: ${scheme} <redacted>`
+        : `${header}: <redacted>`;
+    })
+    .replace(COOKIE_HEADER, '$1: <redacted>')
     .replace(/\bBearer\s+[^\s,;]+/gi, 'Bearer <redacted>')
-    .replace(
-      /\b((?:[a-z0-9_]*?(?:api[_-]?key|token|secret|password))|api key)\b\s*[:=]\s*([^\s,;]+)/gi,
-      '$1=<redacted>',
-    );
+    .replace(CREDENTIAL_ASSIGNMENT, '$1=<redacted>');
 }
 
 export function redactPrivateValue(value, key = '') {

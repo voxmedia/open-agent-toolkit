@@ -399,6 +399,67 @@ test('recursively redacts credentials from private raw events without removing e
   assert.equal(value.nested.safe, 'Bearer <redacted>');
 });
 
+test('redacts every credential key family in nested private values', () => {
+  const credentialKeys = [
+    'authorization',
+    'proxyAuthorization',
+    'cookie',
+    'credential',
+    'api_key',
+    'api-key',
+    'token',
+    'secret',
+    'password',
+  ];
+  const nested = Object.fromEntries(
+    credentialKeys.map((key) => [key, 'private-value']),
+  );
+
+  assert.deepEqual(
+    redactPrivateValue({
+      session_id: sessionId,
+      request_id: requestId,
+      call_id: callId,
+      nested,
+    }),
+    {
+      session_id: sessionId,
+      request_id: requestId,
+      call_id: callId,
+      nested: Object.fromEntries(
+        credentialKeys.map((key) => [key, '<redacted>']),
+      ),
+    },
+  );
+});
+
+test('redacts common credential encodings from private stdout and stderr strings', () => {
+  const cases = [
+    ['Authorization: Basic dXNlcjpwYXNz', 'Authorization: Basic <redacted>'],
+    ['Proxy-Authorization=Digest abc123', 'Proxy-Authorization: Digest <redacted>'],
+    ['Authorization: Bearer abc123', 'Authorization: Bearer <redacted>'],
+    ['Cookie: session=abc; csrf=def', 'Cookie: <redacted>'],
+    ['Set-Cookie: session=abc; HttpOnly', 'Set-Cookie: <redacted>'],
+    ['credential=private', 'credential=<redacted>'],
+    ['cursor_api_key: private', 'cursor_api_key=<redacted>'],
+    ['access-token=private', 'access-token=<redacted>'],
+    ['client_secret: private', 'client_secret=<redacted>'],
+    ['db.password=private', 'db.password=<redacted>'],
+    ['{"credential":"private"}', '{"credential=<redacted>"}'],
+    [
+      '{"cookie":"session=abc","safe":"visible"}',
+      '{"cookie: <redacted>","safe":"visible"}',
+    ],
+  ];
+
+  for (const [input, expected] of cases) {
+    assert.equal(redactPrivateValue(input), expected, input);
+  }
+
+  const identifiers = `session_id=${sessionId} request_id=${requestId} call_id=${callId}`;
+  assert.equal(redactPrivateValue(identifiers), identifiers);
+});
+
 test('validates positive and negative controls and rejects direct public identifiers', () => {
   assert.deepEqual(
     validateStructuredCapture(captureFixture(), validationOptions),
