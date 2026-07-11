@@ -542,6 +542,31 @@ No new network API or persistent service is introduced.
 - If unavailable, record a concrete recheck date; do not guess or silently edit
   the ladder.
 
+### Approved Evidence Revision — 2026-07-11
+
+The first Cursor evidence pass established that the text-mode, 10-second
+protocol did not observe a definitive Task launch, but it did not establish
+that the candidate slugs were invalid. The approved revision adopts the same
+authority boundary used by Dispatch Report V1 and the related Codex max-depth
+design:
+
+1. OAT resolution identifies the exact configured candidate.
+2. A structured Cursor Task event establishes whether the launcher accepted or
+   rejected that exact model argument.
+3. Child completion establishes whether the accepted Task returned the
+   sentinel.
+4. Runtime model identity remains `not-reported` unless Cursor emits trusted
+   child-model telemetry or confirms it from a private request ID.
+
+The revised protocol uses stream-JSON, a 60–120-second timeout, a dynamically
+discovered known-good positive control, an intentionally invalid negative
+control, and one no-retry probe for every recommended candidate plus the
+exploratory `gpt-5.6-sol-high-fast` value surfaced by the first pass. If the
+controls cannot validate the harness, the candidate pass stops without
+claiming model outcomes. Public evidence redacts or hashes request/session IDs;
+exact IDs remain in a gitignored local companion unless the user separately
+approves publication.
+
 ### Repository Verification
 
 - Run exact Vitest files for matrix config, project dispatch resolution, config
@@ -553,6 +578,8 @@ No new network API or persistent service is introduced.
 ## References
 
 - Discovery: `discovery.md`
+- Evidence authority analysis:
+  `references/codex-max-depth-cursor-verification-analysis-gpt-5.md`
 - Completed dependency summary:
   `.oat/repo/reference/project-summaries/20260710-gate-review-provenance-target-safety.md`
 - Recommendation:

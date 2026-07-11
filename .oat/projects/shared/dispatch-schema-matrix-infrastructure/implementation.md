@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: null
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 6     | 6/6       |
-| p02   | complete | 4     | 4/4       |
-| p03   | complete | 6     | 6/6       |
-| p04   | complete | 4     | 4/4       |
-| p05   | complete | 3     | 3/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 6     | 6/6       |
+| p02   | complete    | 4     | 4/4       |
+| p03   | complete    | 6     | 6/6       |
+| p04   | complete    | 4     | 4/4       |
+| p05   | complete    | 3     | 3/3       |
+| p06   | in_progress | 4     | 0/4       |
 
-**Total:** 23/23 tasks completed
+**Total:** 23/27 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -509,7 +510,45 @@ oat_generated: false
 
 ---
 
-## Final Review Received
+## Phase p06: Structured Cursor Task Evidence Revision
+
+**Status:** in_progress
+**Started:** 2026-07-11
+
+**Revision authorization:** The user approved replacing the inconclusive
+text-mode protocol with structured Task events, controls, longer timeouts, and
+separate configured-invocation/runtime-identity evidence, then rerunning the
+live probes immediately.
+
+### Task p06-t01: Add structured Cursor probe capture and evidence validation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t02: Run controls and the second live candidate pass
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t03: Reconcile recommendation and user-facing evidence semantics
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t04: Bump release assets and run final verification
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Prior Final Review Received
 
 **Review:** `reviews/archived/final-review-2026-07-11T034130Z.md`
 

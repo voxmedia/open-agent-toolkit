@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 2924adcf
+oat_current_task: p06-t01
+oat_last_commit: 0ae2bf13
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -38,12 +38,12 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:35:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T11:57:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation and final review complete; ready for project closeout
+Implementation revision p06 approved; structured Cursor probe work pending
 
 ## Artifacts
 
@@ -102,6 +102,8 @@ Implementation and final review complete; ready for project closeout
 - ✓ Phase p05 self-review passed after project PJM closeout drift fix (`6d1cb357`)
 - ✓ All 23 implementation tasks complete
 - ✓ Implementation-end gate review passed with one Minor plan-alignment finding addressed
+- ✓ Structured Cursor evidence revision approved after cross-project provenance analysis
+- ⧗ Phase p06: structured capture, controls, live probes, reconciliation, and release verification
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -110,4 +112,4 @@ Implementation and final review complete; ready for project closeout
 
 ## Next Milestone
 
-Finalize the completed project and prepare its shipping handoff.
+Complete p06, rerun documentation sync as needed, and receive a fresh final review.

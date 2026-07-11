@@ -3,7 +3,7 @@ oat_plan_source: quick
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-10
+oat_last_updated: 2026-07-11
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p05']
@@ -20,7 +20,8 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement`. Phase p01 establishes the
 > shared contract; p02 and p03 then run in parallel; p04 and p05 converge the
-> evidence, documentation, and release work.
+> initial evidence, documentation, and release work. The approved p06 revision
+> strengthens Cursor Task evidence and reruns the live probes.
 
 **Goal:** Consolidate dispatch-matrix normalization and traversal, add a
 versioned reusable dispatch report, cache Cursor catalog validation per pass,
@@ -46,7 +47,7 @@ Turborepo, Markdown/Fumadocs.
 - [x] Evaluated phases for parallelism opportunities
 - [x] Declared the disjoint p02/p03 parallel group
 - [x] Phase review disabled by user; retain phase-boundary self-review and final gate review
-- [x] Complete managed plan artifact review
+- [x] Complete managed p06 plan artifact review
 
 ## Parallelism
 
@@ -59,6 +60,10 @@ because package assets and release validation are repository-wide.
 After folding the parallel branches back together, rerun
 `src/commands/commands.integration.test.ts` on the combined tree because p02
 changes config/doctor runtime behavior while p03 owns that integration surface.
+
+`p06` is a sequential revision after the original final review. It invalidates
+that review as the current implementation boundary and requires a fresh final
+review after its four tasks complete.
 
 ---
 
@@ -956,19 +961,292 @@ git commit -m "chore(p05-t03): close dispatch infrastructure backlog"
 
 ---
 
+## Phase p06: Structured Cursor Task Evidence Revision
+
+**Outcome:** Replace the inconclusive text-mode probe boundary with structured
+launcher evidence, validate the harness with controls, rerun every relevant
+candidate, and reconcile recommendations and documentation without conflating
+Task-model acceptance with runtime model identity.
+
+### Task p06-t01: Add structured Cursor probe capture and evidence validation
+
+**Files:**
+
+- Create: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Create: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+- Modify: `tools/verification/verify-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/verify-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Cover stream-JSON parsing, Task tool-call start/completion correlation, exact
+byte-preserved model arguments, accepted/rejected/not-observed selection,
+child completion/failure/timeout, terminal session/request IDs, recursive
+credential redaction, public ID hashing/redaction, private-ID separation,
+positive/negative controls, malformed or missing terminal events, and the
+public event projection allowlist. Prove the projection removes message text,
+prompts, non-model tool arguments, paths, account/team metadata, environment
+values, credentials, and direct identifiers.
+
+Run:
+`node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs`
+
+Expected: Tests fail because the structured capture contract does not exist.
+
+**Step 2: Implement (GREEN)**
+
+Add a dependency-free headless capture runner using
+`cursor-agent -p --force --output-format=stream-json`. Preserve direct
+exit/termination, duration, and correlation fields. Use a configurable timeout
+defaulting to 90 seconds. Keep stable availability status separate from
+`taskSelection`, `childCompletion`, and `runtimeIdentity`.
+
+The tracked record must use an explicit allowlisted projection containing only
+event type/subtype, tool name, non-reversible correlation hashes, the exact
+requested model argument, derived outcome fields, exit/termination, duration,
+and sanitizer schema version. It must not contain message text, prompts,
+non-model tool arguments, paths, account/team metadata, environment values,
+credentials, or exact request/session/tool-call IDs. Write unprojected raw
+events and exact identifiers only to an explicitly supplied local companion
+path under the gitignored `.oat/projects/local/` tree.
+
+**Step 3: Refactor**
+
+Share pure event/outcome derivation between capture and verification. Ignore
+unknown stream fields for forward compatibility, but fail closed when the
+exact Task model argument or correlated completion cannot be established.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+```
+
+Expected: Both test files pass and the historical v1 evidence remains valid.
+
+**Step 5: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+git commit -m "feat(p06-t01): capture structured cursor task evidence"
+```
+
+### Task p06-t02: Run controls and the second live candidate pass
+
+**Files:**
+
+- Modify: `.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`
+- Modify: `.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md`
+- Local-only: `.oat/projects/local/dispatch-schema-matrix-infrastructure/cursor-probe-request-ids.json`
+
+**Step 1: Validate the harness controls**
+
+Run one positive control that dynamically uses an exact model value exposed to
+the Task tool and one deliberately invalid negative control. The positive
+control must produce an accepted correlated Task and sentinel; the negative
+control must produce a structured rejection or allow-list exclusion. If either
+control is inconclusive, stop before candidate probes and record a harness or
+environment outcome instead of model outcomes.
+
+```bash
+node tools/verification/capture-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --exploratory-candidate gpt-5.6-sol-high-fast \
+  --timeout-ms 90000 \
+  --output /tmp/oat-cursor-structured-pass.json \
+  --private-output .oat/projects/local/dispatch-schema-matrix-infrastructure/cursor-probe-request-ids.json \
+  --controls-only
+```
+
+**Step 2: Run the candidate pass**
+
+If controls pass, run one 90-second no-retry probe for each of the 13
+recommendation candidates plus exploratory `gpt-5.6-sol-high-fast`. Execute
+serially to preserve clear correlation and avoid account-level concurrency
+effects. Capture the exact CLI version and sanitized auth-presence context.
+
+```bash
+node tools/verification/capture-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --exploratory-candidate gpt-5.6-sol-high-fast \
+  --timeout-ms 90000 \
+  --output /tmp/oat-cursor-structured-pass.json \
+  --private-output .oat/projects/local/dispatch-schema-matrix-infrastructure/cursor-probe-request-ids.json
+```
+
+**Step 3: Record evidence**
+
+Append a versioned second-pass section to the project and durable evidence
+records. Preserve the first pass unchanged. Public evidence contains only the
+allowlisted event projection and non-reversible ID hashes; the gitignored local
+companion contains unprojected raw events and exact request/session IDs for
+possible Cursor support escalation.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --capture /tmp/oat-cursor-structured-pass.json \
+  --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --capture /tmp/oat-cursor-structured-pass.json \
+  --evidence .oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md
+cmp \
+  .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md \
+  .oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md
+```
+
+Expected: Controls and every executed candidate record are complete,
+mechanically derived, credential-safe, and identical across tracked copies.
+
+**Step 5: Commit**
+
+```bash
+git add .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md .oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md
+git commit -m "test(p06-t02): record structured cursor task probes"
+```
+
+### Task p06-t03: Reconcile recommendation and user-facing evidence semantics
+
+**Files:**
+
+- Modify only when definitive evidence supports it: `packages/cli/config/dispatch-matrix-recommendation.json`
+- Modify only with the source recommendation: `packages/cli/assets/config/dispatch-matrix-recommendation.json`
+- Modify: `.oat/repo/pjm/backlog/items/BL-260708-verify-cursor-gpt-5-6-subagent.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
+
+**Step 1: Apply the evidence authority boundary**
+
+Classify exact Task-model acceptance separately from runtime-model identity.
+An accepted correlated Task plus sentinel establishes eligibility for that
+configured argument on this account/client; runtime identity remains
+`not-reported` without trusted Cursor telemetry. Parent prose and broad catalog
+presence remain diagnostic-only.
+
+**Step 2: Reconcile recommendation and backlog**
+
+Change recommendation candidates only from definitive structured evidence.
+Keep the backlog item open if the controls fail or required candidate
+eligibility remains unresolved. Replace the arbitrary retry cadence with a
+specific next trigger and review-by date tied to client rollout or Cursor
+support evidence.
+
+**Step 3: Update documentation**
+
+Document the second-pass protocol, control behavior, exact acceptance/runtime
+identity distinction, exploratory candidate disposition, and privacy boundary
+for request IDs. Keep tracked docs linked to the durable evidence record.
+
+**Step 4: Verify**
+
+Run:
+
+```bash
+node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/commands/config/index.test.ts \
+  src/commands/init/tools/shared/bundle-consistency.test.ts
+pnpm exec oxfmt --check \
+  apps/oat-docs/docs/cli-utilities/configuration.md \
+  apps/oat-docs/docs/provider-sync/providers.md \
+  apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+pnpm build:docs
+```
+
+Expected: Docs and assets agree with the mechanically derived outcomes and
+make no runtime-identity claim beyond evidence.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/config/dispatch-matrix-recommendation.json packages/cli/assets/config/dispatch-matrix-recommendation.json .oat/repo/pjm/backlog/items/BL-260708-verify-cursor-gpt-5-6-subagent.md apps/oat-docs/docs/cli-utilities/configuration.md apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+git diff --cached --quiet || git commit -m "docs(p06-t03): reconcile structured cursor evidence"
+```
+
+### Task p06-t04: Bump release assets and run final verification
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Regenerate: `packages/cli/assets/public-package-versions.json`
+- Modify: `pnpm-lock.yaml` if package metadata changes it
+
+**Step 1: Bump and regenerate**
+
+Advance all five public packages in lockstep from `0.1.49` to `0.1.50` and run
+the canonical CLI asset bundler.
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+```
+
+**Step 2: Run focused verification**
+
+Run:
+
+```bash
+node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --capture /tmp/oat-cursor-structured-pass.json \
+  --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/commands/config/index.test.ts \
+  src/commands/init/tools/shared/bundle-consistency.test.ts
+pnpm build:docs
+```
+
+**Step 3: Run repository and release verification**
+
+Run `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+`pnpm build:docs`, `pnpm release:validate`, and `git diff --check` sequentially.
+
+**Step 4: Review the final diff**
+
+Confirm that exact private request/session IDs are absent from tracked files,
+all evidence claims are mechanically supported, the five public versions
+match, and no unrelated generated drift is included.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
+git commit -m "chore(p06-t04): prepare structured cursor evidence release"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | passed          | 2026-07-11 | reviews/archived/code-p01-self-review-2026-07-11.md           |
-| p02    | code     | passed          | 2026-07-11 | reviews/archived/code-p02-self-review-2026-07-11.md           |
-| p03    | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
-| p04    | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
-| p05    | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| final  | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
-| spec   | artifact | pending         | -          | -                                                             |
-| design | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |
-| plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T215126Z.md   |
+| Scope         | Type     | Status          | Date       | Artifact                                                      |
+| ------------- | -------- | --------------- | ---------- | ------------------------------------------------------------- |
+| p01           | code     | passed          | 2026-07-11 | reviews/archived/code-p01-self-review-2026-07-11.md           |
+| p02           | code     | passed          | 2026-07-11 | reviews/archived/code-p02-self-review-2026-07-11.md           |
+| p03           | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
+| p04           | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
+| p05           | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
+| p06           | code     | pending         | -          | -                                                             |
+| final-pre-p06 | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
+| final         | code     | pending         | -          | -                                                             |
+| spec          | artifact | pending         | -          | -                                                             |
+| design        | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |
+| plan-pre-p06  | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T215126Z.md   |
+| plan          | artifact | passed          | 2026-07-11 | structured in-memory p06 review                               |
 
 The user approved the lightweight design after all six received design-review
 findings were resolved. No formal `spec.md` exists in quick mode.
@@ -988,8 +1266,9 @@ approval.
 - Phase p03: 6 tasks — Dispatch Report V1 and workflow integrations
 - Phase p04: 4 tasks — live evidence, recommendation, and docs
 - Phase p05: 3 tasks — release validation and backlog closeout
+- Phase p06: 4 tasks — structured Cursor controls, probes, reconciliation, and release validation
 
-**Total: 23 tasks**
+**Total: 27 tasks**
 
 Ready for implementation only after optional phase-review setup and the managed
 plan artifact review complete.
@@ -999,6 +1278,7 @@ plan artifact review complete.
 - Discovery: `discovery.md`
 - Design: `design.md`
 - Cursor evidence target: `references/cursor-gpt-5-6-subagent-verification.md`
+- Evidence authority analysis: `references/codex-max-depth-cursor-verification-analysis-gpt-5.md`
 - Completed dependency summary:
   `.oat/repo/reference/project-summaries/20260710-gate-review-provenance-target-safety.md`
 - Recommendation: `packages/cli/config/dispatch-matrix-recommendation.json`
