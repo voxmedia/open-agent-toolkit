@@ -1546,9 +1546,9 @@ git commit -m "fix(p06-t12): enforce public evidence schema"
 | p03           | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04           | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
 | p05           | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| p06           | code     | fixes_completed | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11T131443Z.md   |
+| p06           | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T140307Z.md           |
 | final-pre-p06 | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
-| final         | code     | received        | 2026-07-11 | reviews/final-review-2026-07-11T140307Z.md                    |
+| final         | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T140307Z.md           |
 | spec          | artifact | pending         | -          | -                                                             |
 | design        | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |
 | plan-pre-p06  | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T215126Z.md   |

@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 272dbe65
+oat_last_commit: 4a04394b
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -17,7 +17,7 @@ oat_hill_checkpoints: [p05] # Quick mode defers implementation phase checkpoints
 oat_hill_completed: [p05] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T13:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T14:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Manual p06 closeout complete; fresh final review pending
+Implementation and final gate complete; ready for PR handoff
 
 ## Artifacts
 
@@ -111,6 +111,8 @@ Manual p06 closeout complete; fresh final review pending
 - ✓ Third and final automated p06 review cycle completed with one Medium complete-schema finding
 - ✓ User-approved manual closeout `p06-t12` completed; no fourth p06 review cycle
 - ✓ Full repository and five-package release verification passed after manual closeout
+- ✓ Cross-runtime final gate passed with 0 findings (`1825244d-d5eb-4155-8dc6-f674ecadc1cc`)
+- ✓ Final review consumed; p06 and final review rows passed
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -119,4 +121,4 @@ Manual p06 closeout complete; fresh final review pending
 
 ## Next Milestone
 
-Receive the fresh implementation-end final review.
+Run the configured documentation/PR handoff sequence.

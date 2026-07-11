@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-07-11
 oat_current_task_id: null
@@ -821,6 +821,7 @@ Track test execution during implementation.
 | 3     | 436       | 436    | 0      | Nine focused suites; type-check, lint, and format also passed   |
 | 4     | 139       | 139    | 0      | 11 verifier and 128 targeted CLI tests; docs checks also passed |
 | 5     | 724       | 724    | 0      | 16 focused suites plus full repository and release validation   |
+| 6     | 31        | 31     | 0      | Structured evidence suites plus full repository/release checks  |
 
 ## Final Summary (for PR/docs)
 
@@ -829,15 +830,16 @@ Track test execution during implementation.
 - Shared dispatch-matrix normalization, traversal, and provenance-rich refs across config, project state, adoption, and doctor.
 - Pass-scoped Cursor Task-probe and broad-catalog validation caching.
 - Dispatch Report V1 schema, deterministic JSON/human formatters, compatibility stamp derivation, resolver/gate adapters, and workflow integration.
-- Reproducible live Cursor evidence for all 13 recommended GPT-5.6 candidates, with fail-closed machine verification and dated recheck disposition.
-- User documentation and lockstep public package release assets at `0.1.49`.
+- Reproducible Cursor evidence for all 13 recommended GPT-5.6 candidates, plus a structured control pass that fails closed when Task events are unavailable.
+- A strict public evidence schema with recommendation binding, exact Task correlation, credential/path-safe projection, and private-only raw identifiers.
+- User documentation and lockstep public package release assets at `0.1.50`.
 
 **Behavioral changes (user-facing):**
 
 - Resolver callers can request a scoped Dispatch Report V1 without changing legacy output when report context is absent.
 - Gate output separates configured invocation, matrix-cell provenance, and runtime-observed identity.
 - Config adoption and doctor reuse validation work per command pass while preserving `valid`, `unknown-value`, and `unvalidated` outcomes.
-- Recommended Cursor GPT-5.6 strings remain configured but explicitly unvalidated pending the 2026-07-18 recheck.
+- Recommended Cursor GPT-5.6 strings remain configured but explicitly unvalidated pending a Cursor client rollout or support evidence, with a 2026-08-08 review-by date.
 
 **Key files / modules:**
 
@@ -845,14 +847,15 @@ Track test execution during implementation.
 - `packages/cli/src/providers/identity/dispatch-validation.ts` - pass-scoped validation context.
 - `packages/cli/src/providers/identity/dispatch-report.ts` - report schema, builder, and formatters.
 - `tools/verification/verify-cursor-subagent-evidence.mjs` - reproducible evidence verifier.
+- `tools/verification/capture-cursor-subagent-evidence.mjs` - structured controls, capture projection, and private companion writer.
 - `.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md` - live probe evidence.
 
 **Verification performed:**
 
 - 724 focused tests across 16 suites.
 - Full formatting, lint, type-check, test, build, and docs build.
-- Five-package `0.1.49` release validation.
-- 11 evidence-verifier tests and final 13-record validation.
+- Five-package `0.1.50` release validation.
+- 31 structured/evidence-verifier tests and final 13-record plus structured-capture validation.
 - Local docs crawl: 52 pages, 549 links, 0 broken.
 
 **Design deltas (if any):**
@@ -860,8 +863,20 @@ Track test execution during implementation.
 - The planned exact phase-coordinator/task-worker topology was replaced for this project by one exact pinned phase subagent implementing each phase directly, because nested provider initialization was sandbox-blocked. Durable remediation is tracked by `BL-260711-add-root-owned-dispatch-broker`.
 - Live Cursor probes did not verify any recommended slug, so the recommendation was retained and `BL-260708-verify-cursor-gpt-5-6-subagent` remains open rather than being overstated as complete.
 
+## Final Review Received
+
+**Review:** `reviews/archived/final-review-2026-07-11T140307Z.md`
+
+**Gate:** `1825244d-d5eb-4155-8dc6-f674ecadc1cc` via the configured
+cross-runtime Claude target.
+
+**Disposition:** Passed with 0 Critical, Important, Medium, or Minor findings.
+The deferred ledger was empty, and the reviewer independently confirmed the
+user-approved manual p06 schema/privacy closeout. The final review also serves
+as the passing judgment for p06 after its bounded phase-review limit.
+
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick mode)
