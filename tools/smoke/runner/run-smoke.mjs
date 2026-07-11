@@ -28,6 +28,16 @@ export class SmokeInterruptedError extends Error {
   }
 }
 
+export class SmokeQuiescenceError extends Error {
+  constructor(signal, gracePeriodMs) {
+    super(
+      `Smoke runner could not quiesce after ${signal} within ${gracePeriodMs}ms.`,
+    );
+    this.name = 'SmokeQuiescenceError';
+    this.signal = signal;
+  }
+}
+
 async function listManifestPaths(runsDirectory) {
   let entries;
   try {
@@ -75,10 +85,77 @@ function adoptManifest(context, result) {
   }
 }
 
+// Stage handlers receive context.signal, registerAbortable(), and
+// registerSubprocess(). Registered resources must finish their abort() work
+// before recovery can mutate the run; subprocesses are terminated with SIGTERM.
+function createResourceRegistry() {
+  const resources = new Set();
+  let cancellation = null;
+
+  function registerAbortable(resource) {
+    if (!resource || typeof resource.abort !== 'function') {
+      throw new TypeError(
+        'Abortable resources must provide an abort() method.',
+      );
+    }
+    resources.add(resource);
+    if (cancellation) {
+      void resource.abort(cancellation);
+    }
+    return () => resources.delete(resource);
+  }
+
+  function registerSubprocess(child) {
+    if (!child || typeof child.kill !== 'function') {
+      throw new TypeError('Subprocess resources must provide a kill() method.');
+    }
+    let resolveExit;
+    const exited = new Promise((resolvePromise) => {
+      resolveExit = resolvePromise;
+    });
+    const finish = () => resolveExit();
+    child.once('exit', finish);
+    const unregister = registerAbortable({
+      abort() {
+        if (child.exitCode === null && child.signalCode === null) {
+          child.kill('SIGTERM');
+        }
+        return exited;
+      },
+    });
+    return () => {
+      child.off('exit', finish);
+      unregister();
+    };
+  }
+
+  return {
+    registerAbortable,
+    registerSubprocess,
+    requestCancellation(reason) {
+      cancellation ??= reason;
+      return Promise.allSettled(
+        [...resources].map((resource) => resource.abort(cancellation)),
+      );
+    },
+  };
+}
+
+function waitForQuiescence(promises, gracePeriodMs) {
+  let timeout;
+  const timedOut = new Promise((resolvePromise) => {
+    timeout = setTimeout(resolvePromise, gracePeriodMs, 'timeout');
+  });
+  return Promise.race([
+    Promise.allSettled(promises).then(() => 'quiescent'),
+    timedOut,
+  ]).finally(() => clearTimeout(timeout));
+}
+
 async function runStage(stage, handler, options, context, signalState) {
   const stageResult = Promise.resolve().then(() => handler(options, context));
 
-  if (!signalState) {
+  if (!signalState || signalState.signal) {
     return stageResult;
   }
 
@@ -91,8 +168,18 @@ async function runStage(stage, handler, options, context, signalState) {
   ]);
 
   if (outcome.type === 'signal') {
-    if (!context.manifest && typeof context.recoverManifest === 'function') {
-      context.manifest = await context.recoverManifest();
+    const quiescence = await waitForQuiescence(
+      [stageResult, context.cancellation],
+      context.abortGracePeriodMs,
+    );
+    if (quiescence !== 'quiescent') {
+      context.cleanupSafe = false;
+      const interrupted = new SmokeInterruptedError(outcome.signal);
+      interrupted.quiescenceError = new SmokeQuiescenceError(
+        outcome.signal,
+        context.abortGracePeriodMs,
+      );
+      throw interrupted;
     }
     throw new SmokeInterruptedError(outcome.signal);
   }
@@ -115,11 +202,38 @@ function isCompleteLifecycle(stages) {
 
 export async function runSmoke(
   options,
-  { cleanup, handlers = {}, preflight, signalState } = {},
+  {
+    abortGracePeriodMs = 5_000,
+    cleanup,
+    handlers = {},
+    preflight,
+    signalState,
+  } = {},
 ) {
   const results = {};
-  const context = { manifest: null, recoverManifest: null, results };
+  const abortController = new AbortController();
+  const resources = createResourceRegistry();
+  const context = {
+    abortGracePeriodMs,
+    manifest: null,
+    recoverManifest: null,
+    registerAbortable: resources.registerAbortable,
+    registerSubprocess: resources.registerSubprocess,
+    results,
+    signal: abortController.signal,
+    cleanupSafe: true,
+  };
+  context.cancellation = new Promise((resolvePromise) => {
+    context.requestCancellation = (signal) => {
+      if (!abortController.signal.aborted) {
+        abortController.abort(new SmokeInterruptedError(signal));
+      }
+      resolvePromise(resources.requestCancellation(signal));
+    };
+  }).then((result) => result);
+  signalState?.setCancellationHandler(context.requestCancellation);
   let runError = null;
+  let failedStage = null;
 
   try {
     if (typeof preflight === 'function') {
@@ -133,13 +247,18 @@ export async function runSmoke(
         throw new HandlerUnavailableError(stage);
       }
 
-      results[stage] = await runStage(
-        stage,
-        handler,
-        options,
-        context,
-        signalState,
-      );
+      try {
+        results[stage] = await runStage(
+          stage,
+          handler,
+          options,
+          context,
+          signalState,
+        );
+      } catch (error) {
+        failedStage = stage;
+        throw error;
+      }
       if (stage === 'prepare') {
         adoptManifest(context, results[stage]);
       }
@@ -148,8 +267,44 @@ export async function runSmoke(
     runError = error;
   }
 
+  let collectionError = null;
+  let manifestRecoveryError = null;
+  if (
+    runError &&
+    failedStage === 'drive' &&
+    !context.manifest &&
+    typeof context.recoverManifest === 'function'
+  ) {
+    try {
+      context.manifest = await context.recoverManifest();
+    } catch (error) {
+      manifestRecoveryError = error;
+    }
+  }
+  if (
+    runError &&
+    failedStage === 'drive' &&
+    context.manifest &&
+    context.cleanupSafe &&
+    options.stages.includes('collect') &&
+    typeof handlers.collect === 'function'
+  ) {
+    try {
+      results.collect = await runStage(
+        'collect',
+        handlers.collect,
+        options,
+        context,
+        signalState,
+      );
+    } catch (error) {
+      collectionError = error;
+    }
+  }
+
   const shouldCleanup =
     context.manifest &&
+    context.cleanupSafe &&
     !options.keep &&
     typeof cleanup === 'function' &&
     (runError !== null || isCompleteLifecycle(options.stages));
@@ -168,6 +323,12 @@ export async function runSmoke(
   }
 
   if (runError) {
+    if (manifestRecoveryError) {
+      runError.manifestRecoveryError = manifestRecoveryError;
+    }
+    if (collectionError) {
+      runError.collectionError = collectionError;
+    }
     if (cleanupError) {
       runError.cleanupError = cleanupError;
     }
@@ -184,6 +345,7 @@ export async function runSmoke(
 function createSignalState(processObject) {
   let resolveSignal;
   let signal = null;
+  let cancellationHandler = null;
   const promise = new Promise((resolvePromise) => {
     resolveSignal = resolvePromise;
   });
@@ -193,6 +355,7 @@ function createSignalState(processObject) {
     listeners[signalName] = () => {
       if (!signal) {
         signal = signalName;
+        cancellationHandler?.(signalName);
         resolveSignal(signalName);
       }
     };
@@ -209,6 +372,12 @@ function createSignalState(processObject) {
       return signal;
     },
     promise,
+    setCancellationHandler(handler) {
+      cancellationHandler = handler;
+      if (signal) {
+        cancellationHandler(signal);
+      }
+    },
   };
 }
 
@@ -229,6 +398,7 @@ export async function main(
   argv = process.argv.slice(2),
   {
     cleanup: cleanupOverride,
+    abortGracePeriodMs,
     handlers: handlerOverrides = {},
     preflight,
     processObject = process,
@@ -276,6 +446,7 @@ export async function main(
 
   try {
     return await runSmoke(options, {
+      abortGracePeriodMs,
       cleanup: (manifest, cleanupOptions) =>
         cleanup(manifest, cleanupOptions, { repository, runsDirectory }),
       handlers: { ...defaultHandlers, ...handlerOverrides },
@@ -299,6 +470,11 @@ if (invokedPath === process.argv[1]) {
     console.error(error.message);
     if (error.cleanupError) {
       console.error(`Cleanup failed: ${error.cleanupError.message}`);
+    }
+    if (error.collectionError) {
+      console.error(
+        `Evidence collection failed: ${error.collectionError.message}`,
+      );
     }
     process.exitCode = error.exitCode ?? 1;
   });
