@@ -281,6 +281,36 @@ git commit -m "feat(p01-t04): guard codex nested dispatch depth"
 
 ---
 
+### Task p01-t05: (review) Make remediation commands executable
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+Include every required direct-materialization operand in doctor and preflight
+remediation text, with matching project/user assertions.
+
+**Commit:** `46a90a86f55c2a16c1ca47a9ed0e897973b980b0`
+
+---
+
+### Task p01-t06: (review) Preserve zero-role partial sync no-op
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+Return from zero-role partial sync before reading unrelated inherited user
+Codex TOML, and cover malformed inherited configuration.
+
+**Commit:** `2803cc4c10b07b996c0b865e543baaf67f37ca40`
+
+---
+
 ## Phase 2: Native Dispatch Provenance Contract
 
 ### Task p02-t01: Make exact native dispatch the primary route
@@ -386,6 +416,52 @@ git commit -m "docs(p02-t02): clarify codex dispatch provenance"
 
 ---
 
+### Task p02-t03: (review) Align phase coordinator dispatch contract
+
+Update the canonical phase coordinator and contract tests so exact native
+`agent_type` is attempted first, launcher-owned provenance is immutable, and
+only explicit pre-start role-selection rejection permits fallback.
+
+**Commit:** `ae0724e6f52ca8a4e918c92b512c6c36cdb934eb`
+
+---
+
+### Task p02-t04: (review) Handle blocked reviewer terminals
+
+Make accepted reviewer `BLOCKED` explicitly block phase/final review, never
+trigger fallback, and never pass through absent findings.
+
+**Commit:** `0de4f40dc71ebc16c718669580fa8be5bbb04967`
+
+---
+
+### Task p02-t05: (review) Align project review dispatch semantics
+
+Apply native-first, rejection-only fallback and launcher-owned provenance to
+`oat-project-review-provide`; bump its canonical skill version once.
+
+**Commit:** `13474feb8404b9a91ceda7515b7b334072cc3e7b`
+
+---
+
+### Task p02-t06: (review) Document blocked reviewer semantics
+
+Document that accepted reviewer `BLOCKED` blocks review, cannot pass from absent
+findings, and remains subject to managed exact-target fallback guards.
+
+**Commit:** `8d5c9f1c93a2dd8c79e9c614adc1aefca62e877f`
+
+---
+
+### Task p02-t07: (review) Preserve reviewer retry route
+
+Require accepted native reviewer timeouts to retry the same native route; the
+pinned child remains eligible only after explicit pre-start rejection.
+
+**Commit:** `adbada5264c2ede9898416f36c59d9847cc15059`
+
+---
+
 ## Phase 3: Provider Surface and Release Validation
 
 ### Task p03-t01: Document and regenerate the Codex provider surface
@@ -482,8 +558,8 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 
 | Scope  | Type     | Status  | Date       | Artifact                                                    |
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
+| p01    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
+| p02    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
 | p03    | code     | pending | -          | -                                                           |
 | final  | code     | pending | -          | -                                                           |
 | spec   | artifact | pending | -          | -                                                           |
@@ -506,11 +582,13 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 
 **Summary:**
 
-- Phase 1: 4 tasks - shared depth policy, scoped sync/materialization, and doctor
-- Phase 2: 2 tasks - native dispatch instructions and provenance documentation
+- Phase 1: 6 tasks - shared depth policy, scoped sync/materialization, doctor,
+  and two review fixes
+- Phase 2: 7 tasks - native dispatch instructions, provenance documentation,
+  and five review fixes
 - Phase 3: 2 tasks - provider regeneration, package versions, and release validation
 
-**Total: 8 tasks**
+**Total: 15 tasks**
 
 Completion status will be recorded after all tasks and verification pass.
 
@@ -520,6 +598,7 @@ Completion status will be recorded after all tasks and verification pass.
 
 - Design: `design.md`
 - Discovery: `discovery.md`
+- Orchestration learnings: `references/subagent-orchestration-learnings.md`
 - Codex configuration precedence:
   `https://developers.openai.com/codex/config-basic`
 - Codex subagent configuration:

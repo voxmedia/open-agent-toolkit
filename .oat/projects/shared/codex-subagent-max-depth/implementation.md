@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-07-11
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
 # Implementation: codex-subagent-max-depth
 
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-11
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,71 +24,114 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 4     | 0/4       |
-| Phase 2 | blocked | 2     | 0/2       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | complete | 7     | 7/7       |
+| Phase 3 | pending  | 2     | 0/2       |
 
-**Total:** 0/8 tasks completed
+**Total:** 13/15 tasks completed
 
 ---
 
 ## Phase 1: Codex Depth Policy and Scope Wiring
 
-**Status:** blocked
+**Status:** complete
 **Started:** 2026-07-10
 
 ### Task p01-t01: Enforce the shared max-depth floor
 
-**Status:** blocked
-**Commit:** -
-
-**Blocker:** Native worker completed and verified the bounded diff but could
-not write the worktree Git `index.lock`; no task commit was created.
+**Status:** complete
+**Commit:** `9f254c5526b88b8c0e9122d309db27bba5250f65`
 
 ---
 
 ### Task p01-t02: Preserve inherited depth during Codex sync
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `8d4afed1c0fce658024950174d76a1eb8012f7f5`
 
 ---
 
 ### Task p01-t03: Apply scope-safe depth in direct materialization
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `d092afb062dcb7fb12fe2bf0cdfc90d35d29b316`
 
 ---
 
 ### Task p01-t04: Diagnose insufficient depth in doctor and preflight
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `92afa50e094dd898b7e19af0f4600a62211dab55`
+
+---
+
+### Task p01-t05: (review) Make remediation commands executable
+
+**Status:** complete
+**Commit:** `46a90a86f55c2a16c1ca47a9ed0e897973b980b0`
+
+---
+
+### Task p01-t06: (review) Preserve zero-role partial sync no-op
+
+**Status:** complete
+**Commit:** `2803cc4c10b07b996c0b865e543baaf67f37ca40`
 
 ---
 
 ## Phase 2: Native Dispatch Provenance Contract
 
-**Status:** blocked
+**Status:** complete
 **Started:** 2026-07-11
 
 ### Task p02-t01: Make exact native dispatch the primary route
 
-**Status:** blocked
-**Commit:** -
-
-**Blocker:** Native worker could not write the managed `.agents` skill path;
-the accepted child returned `BLOCKED`, so CLI fallback was not eligible.
+**Status:** complete
+**Commit:** `0caa61f93d069b6abdc52f99ac9f01e0c4a15d30`
 
 ---
 
 ### Task p02-t02: Document configured reviewer and worker provenance
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `8dfc57c6dc2d95b20c9dacac1f60000b92f4542d`
+
+---
+
+### Task p02-t03: (review) Align phase coordinator dispatch contract
+
+**Status:** complete
+**Commit:** `ae0724e6f52ca8a4e918c92b512c6c36cdb934eb`
+
+---
+
+### Task p02-t04: (review) Handle blocked reviewer terminals
+
+**Status:** complete
+**Commit:** `0de4f40dc71ebc16c718669580fa8be5bbb04967`
+
+---
+
+### Task p02-t05: (review) Align project review dispatch semantics
+
+**Status:** complete
+**Commit:** `13474feb8404b9a91ceda7515b7b334072cc3e7b`
+
+---
+
+### Task p02-t06: (review) Document blocked reviewer semantics
+
+**Status:** complete
+**Commit:** `8d5c9f1c93a2dd8c79e9c614adc1aefca62e877f`
+
+---
+
+### Task p02-t07: (review) Preserve reviewer retry route
+
+**Status:** complete
+**Commit:** `adbada5264c2ede9898416f36c59d9847cc15059`
 
 ---
 
@@ -170,6 +213,40 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | None          | -               | -                    | -                 | -      | -               | -         |
 
+### Run 2 — 2026-07-11 06:50
+
+**Branch:** codex-subagent-max-depth
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 2 executed, 2 passed, 0 failed, 1 pending
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p01   | complete    | passed | 2/2            | merged      |
+| p02   | complete    | passed | 2/2            | merged      |
+| p03   | pending     | -      | 0/2            | HiLL        |
+
+#### Parallel Groups
+
+- Group 1 [p01, p02]: worktree-based; reviewed and merged
+- p03: waiting at configured HiLL checkpoint
+
+#### Dispatch Notes
+
+- Native exact-role dispatch succeeded for the primary phase tasks after
+  granting scoped writable roots for shared Git metadata and `.agents`.
+- A p01 review-fix coordinator received explicit pre-start `agent_type`
+  rejection; the root-owned exact pinned worker fallback completed p01-t06.
+- Launcher-owned target/model/effort logs were preserved for coordinators,
+  workers, fixes, and reviewers.
+
+#### Outstanding Items
+
+- Execute p03 provider regeneration, lockstep version bumps, and release
+  validation after HiLL approval.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -196,25 +273,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-No implementation runs yet.
+- 2026-07-11: Recovered p01 and p02 with scoped writable roots.
+- 2026-07-11: Completed 13 implementation/review-fix tasks and merged both
+  reviewed phase branches.
+- 2026-07-11: Added
+  `references/subagent-orchestration-learnings.md` from session and artifact
+  evidence.
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason                                          | Source of Truth         | Follow-up |
+| ------------- | --------------- | -------------------- | ----------------- | ----------------------------------------------- | ----------------------- | --------- |
+| p01 review    | code review     | 4 planned tasks      | 2 review fixes    | executable remediation and zero-role no-op gaps | reviewed implementation | completed |
+| p02 review    | code review     | 2 planned tasks      | 5 review fixes    | distributed dispatch-contract drift             | reviewed implementation | completed |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
+| Phase | Tests Run                                       | Passed | Failed | Coverage                                    |
+| ----- | ----------------------------------------------- | ------ | ------ | ------------------------------------------- |
+| 1     | 211 phase tests plus 136 and 29 fix tests       | all    | 0      | merge, sync, materialize, doctor, preflight |
+| 2     | 72 skill contract tests; formatting; docs build | all    | 0      | dispatch contracts, skills, docs            |
+| 3     | -                                               | -      | -      | -                                           |
 
 ## Final Summary (for PR/docs)
 

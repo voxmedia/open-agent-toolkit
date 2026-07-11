@@ -1,16 +1,14 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
-oat_blockers:
-  - Native worker cannot write worktree Git metadata required for task commits
-  - Native worker cannot modify the managed .agents skill path
+oat_current_task: p03-t01
+oat_last_commit: 88da50cffc4cf1314b3a010aea8daad06410fd65
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: [p03] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -37,7 +35,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T23:53:07.608Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:46:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T13:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -49,7 +47,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Parallel phases `p01` and `p02` blocked
+Implementation - p01 and p02 complete; p03 HiLL checkpoint
 
 ## Artifacts
 
@@ -57,7 +55,7 @@ Implementation - Parallel phases `p01` and `p02` blocked
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
 - **Plan:** `plan.md` (complete — canonical review passed)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (13/15 tasks complete)
 
 ## Progress
 
@@ -73,18 +71,18 @@ Implementation - Parallel phases `p01` and `p02` blocked
 - ✓ In-memory plan artifact review passed
 - ✓ Canonical plan-review findings addressed
 - ✓ Canonical plan re-review passed
-- ⧗ Recovery decision required for native-worker write boundaries
+- ✓ Scoped writable-root recovery completed
+- ✓ p01 implementation and independent review passed
+- ✓ p02 implementation and independent review passed
+- ✓ p01 and p02 merged into the orchestration branch
+- ⧗ p03 HiLL approval required
 
 ## Blockers
 
-- p01: the accepted native worker completed and verified `p01-t01`, but could
-  not create the worktree Git `index.lock`; its bounded diff is preserved.
-- p02: the accepted native worker could not modify
-  `.agents/skills/oat-project-implement/SKILL.md` because `.agents` was
-  read-only.
-- Accepted children returning `BLOCKED` are task outcomes, so pinned CLI
-  fallback was intentionally not used.
+None. Execution is paused only at the configured p03 human-in-the-loop
+checkpoint.
 
 ## Next Milestone
 
-Choose a recovery design for native-worker write and commit permissions
+Approve p03 provider regeneration, lockstep package version bumps, and release
+validation.
