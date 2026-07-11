@@ -259,28 +259,54 @@ Expected: validation passes; org-identifier scan returns zero hits (NFR1).
 
 ---
 
-### Task p02-t04: CLI — workflows pack user-scope installability, direct + aggregate (TDD)
+### Task p02-t04: CLI — workflows pack user-scope installability as a split install, direct + aggregate (TDD)
+
+**Rationale (verified 2026-07-11):** the project-only guard protects repo-coupled assets, not skills. Templates install to `<root>/.oat/templates/` (read by `oat project new` strictly from the repo root), scripts to `<root>/.oat/scripts/` (repo-relative skill references), and the installer scaffolds a projects root — all nonsensical or harmful in a home directory. Skills and agents are user-scope-safe. Therefore user scope installs **skills + agents only** and skips templates, scripts, and projects-root scaffolding; project scope is unchanged.
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/init/tools/workflows/index.ts` (remove project-only guard; add user-scope install path)
-- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` (user-scope destination resolution `~/.agents/skills/`)
+- Modify: `packages/cli/src/commands/init/tools/workflows/index.ts` (replace the project-only rejection with scope-split routing)
+- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` (user-scope mode: skills + agents to user home `.agents/`; skip templates/scripts/projects-root blocks)
 - Modify: `packages/cli/src/commands/init/tools/index.ts` (aggregate installer: add workflows to the user-eligible pack set, drop the project-only label, route user-scope installs away from `projectRoot`)
 - Modify: colocated test files for both (locate with `rg -l "supports only --scope project|user-eligible|projectRoot" packages/cli/src/commands/init/tools`)
-- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (pack-scope documentation)
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (document the split-scope semantics)
 
-**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes workflows skills under a temp-home `.agents/skills/`; (b) aggregate/guided: user-scope aggregate install includes workflows and writes to the user destination, not `projectRoot`; (c) scope/removal semantics: user-scope uninstall/update paths behave like other user-eligible packs; existing project-scope tests unchanged.
+**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes skills + agents under a temp-home `.agents/`, and creates **no** `~/.oat/templates`, `~/.oat/scripts`, or projects-root artifacts; (b) aggregate/guided: user-scope aggregate install includes workflows with the same split semantics, writing nothing to `projectRoot`; (c) scope/removal semantics match other user-eligible packs; existing project-scope tests unchanged.
 
-**Step 2: Implement (GREEN)** — remove the `'currently supports only --scope project'` rejection in the subcommand; in the aggregate installer, add workflows to the user-eligible set and fix destination routing (mirror `ideas`/`brainstorm` user-scope handling).
+**Step 2: Implement (GREEN)** — scope-split routing in the subcommand; user-eligible set + destination routing in the aggregate installer (mirror `ideas`/`brainstorm` handling); split install path in `install-workflows.ts`.
 
 **Step 3: Refactor** — dedupe scope plumbing with the shared scope-option helper if trivial.
 
 **Step 4: Verify:**
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
-Expected: green; direct and aggregate fresh-home tests both prove skills under user `.agents/skills/`.
+Expected: green; direct and aggregate fresh-home tests prove skills+agents under user `.agents/` with zero repo-coupled artifacts in the home directory.
 
-**Commit:** `feat(p02-t04): user-scope installability for workflows pack (direct + aggregate)`
+**Commit:** `feat(p02-t04): split-scope user installability for workflows pack (direct + aggregate)`
+
+---
+
+### Task p02-t07: CLI — bundled-template fallback in `oat project new` (TDD)
+
+**Rationale:** a repo that never adopted OAT project-scope has no `.oat/templates/`, so `oat project new` cannot scaffold there — forcing the manual-approximation failure mode this project exists to kill. With user-scope skills installed but no repo templates, the CLI must be self-sufficient.
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/new/scaffold.ts` (template resolution: repo `.oat/templates/<file>` first — unchanged; fall back per-file to the bundled assets `templates/` via `resolveAssetsRoot()`)
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts` (fallback cases)
+
+**Step 1: Write tests (RED)** — (a) repo without `.oat/templates/`: scaffold succeeds from bundled assets, artifacts land under the repo's projects root (repo-rooted artifacts preserved); (b) repo with partial templates: repo copy wins per file, bundled fills gaps; (c) existing full-repo-templates behavior byte-identical.
+
+**Step 2: Implement (GREEN)** — per-file two-tier resolution; no new config surface.
+
+**Step 3: Refactor** — extract a `resolveTemplateSource(repoRoot, file)` helper if it clarifies.
+
+**Step 4: Verify:**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
+Expected: green; all three scenarios covered.
+
+**Commit:** `feat(p02-t07): bundled-template fallback for project scaffolding`
 
 ---
 
@@ -645,13 +671,13 @@ Expected: all green; worktree validation passes post-commit.
 **Summary:**
 
 - Phase 1: 6 tasks — autonomy contract + lifecycle amendments (OAT repo)
-- Phase 2: 6 tasks — risk retirement, new skills, user-scope installability, bundle, versions (OAT repo)
+- Phase 2: 7 tasks — risk retirement, new skills, split-scope installability, template fallback, bundle, versions (OAT repo)
 - Phase 3: 2 tasks — release readiness + publish boundary
 - Phase 4: 4 tasks — environment provisioning (env repo)
 - Phase 5: 2 tasks — org-layer plugin (pntr repo)
 - Phase 6: 7 tasks — scenario matrix, e2e validation, audits, closure
 
-**Total: 27 tasks**
+**Total: 28 tasks**
 
 Ready for implementation after plan review.
 
