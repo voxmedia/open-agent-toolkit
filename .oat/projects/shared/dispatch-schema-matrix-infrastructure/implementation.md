@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p06-t12
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 6     | 6/6       |
-| p02   | complete    | 4     | 4/4       |
-| p03   | complete    | 6     | 6/6       |
-| p04   | complete    | 4     | 4/4       |
-| p05   | complete    | 3     | 3/3       |
-| p06   | in_progress | 12    | 11/12     |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 6     | 6/6       |
+| p02   | complete | 4     | 4/4       |
+| p03   | complete | 6     | 6/6       |
+| p04   | complete | 4     | 4/4       |
+| p05   | complete | 3     | 3/3       |
+| p06   | complete | 12    | 12/12     |
 
-**Total:** 34/35 tasks completed
+**Total:** 35/35 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -512,7 +512,7 @@ oat_generated: false
 
 ## Phase p06: Structured Cursor Task Evidence Revision
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
 **Completed:** 2026-07-11
 
@@ -683,8 +683,22 @@ fourth p06 review cycle.
 
 ### Task p06-t12: Enforce the complete public evidence schema
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 272dbe65
+
+**Outcome:** Enforced exact types and finite domains across every public probe
+and event field, including boolean sentinel state, exit/duration types,
+termination signals, probe statuses, kinds, tiers, hashes, and absolute/URI
+path rejection.
+
+**Verification:** 31/31 focused evidence tests, recorded-capture verification,
+tracked-copy comparison, format, lint, type-check, full tests, package build,
+docs build, five-package `0.1.50` release validation, and diff hygiene passed.
+
+**Review-cycle disposition:** The p06 row remains `fixes_completed` because the
+three-cycle automated phase-review limit was reached. The user explicitly
+approved manual closure of the sole remaining Medium finding and direct routing
+to the fresh implementation-end final review.
 
 ---
 
