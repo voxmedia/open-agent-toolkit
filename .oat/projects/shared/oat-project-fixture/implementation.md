@@ -345,6 +345,8 @@ Chronological log of implementation progress.
 
 - Shipped the deterministic fixture project and runner/evidence contract.
 - Reproduced native-catalog drift at both root and nested dispatch boundaries.
+- Drafted the shared subagent-dispatch contract and provider verification
+  package so Codex and Claude can validate their harnesses concurrently.
 
 **Decisions:**
 
@@ -352,6 +354,9 @@ Chronological log of implementation progress.
   nested catalog rejected the exact configured candidate.
 - Preserved p01-t02 partial output after user interruption; no replacement
   worker or fallback was launched.
+- P04 will refine and promote verified draft material into a dedicated
+  internal `oat-dispatch-subagents` skill rather than authoring provider
+  contracts independently inside each lifecycle skill.
 
 **Follow-ups / TODO:**
 
@@ -382,9 +387,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review   | Source Artifact                        | Planned / Documented                                                                        | Actual / Accepted                                                                                                                                   | Reason                                                                                                                                              | Source of Truth                                               | Follow-up                                                                  |
+| --------------- | -------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| p04 preparation | `design.md` Component 5; `plan.md` p04 | Author dispatch language directly in implementation and phase-coordinator skills during p04 | Draft provider-neutral and harness contracts during p01; p04 promotes verified material into a shared internal skill with explicit consumer loading | Concurrent Codex/Claude verification can run while Cursor implementation continues, and one canonical progressive-disclosure contract reduces drift | Updated `design.md`, `plan.md`, and dispatch draft references | Collect harness reports before p04; retain unsupported/inconclusive claims |
 
 ## Test Results
 

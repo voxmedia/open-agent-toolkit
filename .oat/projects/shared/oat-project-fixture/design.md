@@ -214,15 +214,24 @@ IDE and CLI verifiably behave differently):
 ### 5. Orchestration contract updates (cross-harness native-first selection)
 
 - **Purpose:** land the discovery Decision #4 dispatch-selection contract in
-  the workflow skills themselves — the piece neither sibling project ships.
-  PR #136 (merged) provides matrix/report infrastructure; PR #137 provides the
-  Codex native depth-2 topology and fallback discipline. What remains, and
+  a shared internal skill consumed explicitly by the workflow skills — the
+  piece neither sibling project ships. PR #136 (merged) provides matrix/report
+  infrastructure; PR #137 provides the Codex native depth-2 topology and
+  fallback discipline. A provider-neutral draft, harness drafts, and
+  verification prompts live in project `references/` so concurrent Codex and
+  Claude sessions can validate claims before p04 promotion. What remains, and
   what this component owns:
+  - **Canonical progressive-disclosure contract:** promote confirmed universal
+    behavior into `.agents/skills/oat-dispatch-subagents/SKILL.md`, with
+    one-level Cursor, Codex, and Claude references. Lifecycle consumers load
+    the shared skill and exactly one active-provider reference explicitly;
+    correctness must not rely on ambient skill discovery.
   - **Coordinator full-information selection** in the phase-coordination
     contract: intersect configured ladder ∩ project ceiling ∩ the harness's
-    native catalog (read from the coordinator's own tool spec at dispatch
-    time); judge per task; substitute upward, never downward; task workers
-    never silently inherit the root model.
+    current dispatcher catalog (read from that invocation's own tool spec
+    immediately before selection); judge per task; substitute upward, never
+    downward; task workers never silently inherit the root model. Root and
+    nested catalogs are independent and may change during a conversation.
   - **Recorded pre-start CLI selection:** provider-CLI task dispatch is a
     deliberate pre-start choice recorded with reason (e.g.
     `native-catalog-unsatisfying`) and candidates considered — the dispatch
@@ -240,12 +249,16 @@ IDE and CLI verifiably behave differently):
 - **Review dispatch by phase (discovery Decision #11):** the invariant is
   "reviewer at or above ceiling." Planning-phase artifact self-reviews inherit
   the parent model (planning root already at/above ceiling); implementation-
-  phase self-reviews resolve via the dispatch ceiling and dispatch at the
-  ceiling's final candidate (tasks may run below ceiling; reviews must not
-  inherit a below-ceiling worker model); gates pin cross-family CLI exec
-  targets. The plan-writing reviewer contract's managed-pinning requirement
-  for planning-phase self-reviews is corrected as part of this component.
-- **Surfaces:** `.agents/skills/oat-project-implement/SKILL.md`,
+  phase self-reviews resolve via the dispatch ceiling and target the ceiling's
+  final candidate; when that target is not natively dispatchable, inheritance
+  is allowed only when the root is known at or above the ceiling, otherwise an
+  exact provider CLI reviewer is selected before launch. Tasks may run below
+  ceiling; reviews must not inherit a below-ceiling worker model. Gates pin
+  independent cross-family CLI exec targets. The plan-writing reviewer
+  contract's managed-pinning requirement for planning-phase self-reviews is
+  corrected as part of this component.
+- **Surfaces:** `.agents/skills/oat-dispatch-subagents/{SKILL.md,references/}`,
+  `.agents/skills/oat-project-implement/SKILL.md`,
   `.agents/skills/oat-project-plan-writing/SKILL.md`,
   `.agents/agents/oat-phase-implementer.md` (+ dispatch-language overlap in
   review-provide skills if drift checks flag it), skill contract tests,

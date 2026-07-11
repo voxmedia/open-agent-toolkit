@@ -274,24 +274,29 @@ _Sequential; depends on p01–p03 conceptually only through plan order — its w
 
 _Skill version-bump policy: one frontmatter `version:` bump per changed canonical skill in the final PR diff. Bump each skill on its first p04 edit (p04-t01); p04-t02 and p04-t03 do not bump again unless they touch a skill not already bumped in this phase._
 
-### Task p04-t01: Coordinator selection contract in workflow skills
+_Draft-first validation: the provider-neutral contract, Cursor/Codex/Claude harness drafts, and concurrent verification prompts were committed under `references/` during p01. Concurrent harness sessions may return verification reports before p04. These files are inputs, not active runtime contracts. Phase p04 refines confirmed claims and promotes them into a canonical internal skill with one-level provider references._
+
+### Task p04-t01: Promote the validated coordinator selection contract
 
 **Files:**
 
+- Create: `.agents/skills/oat-dispatch-subagents/SKILL.md`
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump)
 - Modify: `.agents/skills/oat-project-plan-writing/SKILL.md` (version bump)
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting the coordinator contract text includes: full-information selection (ladder ∩ ceiling ∩ harness-native catalog), upward-not-downward substitution, task workers never silently inheriting the root model, recorded pre-start CLI selection with reason + candidates considered, and **phase-scoped review dispatch semantics** (discovery Decision #11, invariant "reviewer at or above ceiling"): planning-phase artifact self-reviews inherit the parent model by default; implementation-phase self-reviews resolve via the dispatch ceiling and dispatch at the ceiling's final candidate; gates pin cross-family CLI exec targets; the plan-writing reviewer contract must not require managed pinning for planning-phase self-reviews. (If PR #137 relocates the skill contract tests, re-pin this path in the plan before implementing — see References.)
+**Step 1: Reconcile evidence** — read the committed dispatch drafts plus every returned Codex/Claude/Cursor verification report. Classify each provider claim as confirmed, unsupported, or inconclusive; record contradictions in `references/orchestration-execution-log.md`. Do not promote unverified provider behavior as universal.
+
+**Step 2: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting: the canonical internal dispatch skill exists; implementation, phase-coordinator, and plan-writing consumers explicitly load it; the core contract includes per-dispatch catalog snapshots, full-information selection (ladder ∩ ceiling ∩ current dispatcher native catalog), task workers never silently inheriting the root model, recorded pre-start CLI selection with reason + candidates considered, accepted-launch terminality, and **phase-scoped review dispatch semantics** (discovery Decision #11, invariant "reviewer at or above ceiling"): planning-phase artifact self-reviews inherit the parent model by default; implementation-phase self-reviews target the ceiling, allowing inheritance only when the root is known at or above it; gates pin independent cross-family CLI exec targets. (If PR #137 relocates the skill contract tests, re-pin this path in the plan before implementing — see References.)
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` — Expected: fails.
 
-**Step 2: Implement (GREEN)** — author the contract language in both surfaces; keep Codex-specific dispatch language consistent with the current merged state (post-#136, and post-#137 if merged by execution time).
+**Step 3: Implement (GREEN)** — promote the verified provider-neutral contract from `references/dispatching-subagents-draft.md` into a concise, non-user-facing `oat-dispatch-subagents` skill. Keep only non-negotiable safety invariants in consumer skills and require explicit loading before dispatch; do not rely on ambient skill discovery. Keep Codex-specific language consistent with the current merged state.
 
-**Step 3: Refactor** — run the cross-skill drift check **report-only**: verify review-provide skills do not contradict the updated contract. If drift is found, do not edit those skills in this task — record the finding in `implementation.md` and add a new monotonic p04 task (continuing the sequence, e.g. `p04-t04`) with enumerated files, its own verification, version-bump obligations, and commit message.
+**Step 4: Refactor** — run the cross-skill drift check **report-only**: verify review-provide skills do not contradict the updated contract. If drift is found, do not edit those skills in this task — record the finding in `implementation.md` and add a new monotonic p04 task (continuing the sequence, e.g. `p04-t04`) with enumerated files, its own verification, version-bump obligations, and commit message.
 
-**Step 4: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm lint && pnpm format`
+**Step 5: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm lint && pnpm format`
 
-**Step 5: Commit** — `git add .agents packages/cli && git commit -m "feat(p04-t01): add cross-harness coordinator selection contract"`
+**Step 6: Commit** — `git add .agents packages/cli && git commit -m "feat(p04-t01): promote shared subagent dispatch contract"`
 
 ---
 
@@ -299,13 +304,14 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skill
 
 **Files:**
 
+- Create: `.agents/skills/oat-dispatch-subagents/references/{cursor,codex,claude}.md`
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Write test (RED)** — extend the same contract tests: per-harness topology guidance present for Cursor (native Task; omit-model = inherit; curated catalog read from tool spec; opaque strings never normalized; **native-catalog mismatch advisory** per discovery Decision #12 — flag ladder entries not natively dispatchable, suggest natively-pinnable near-equivalents as ladder additions, never suggest removal since ladders also serve CLI dispatch) and Claude (native Task; topology to be confirmed by smoke evidence — guidance must state the confirmation obligation, not assume nesting).
+**Step 1: Write test (RED)** — extend the same contract tests: the shared skill links directly to one-level harness references; consumers read exactly the active-provider reference; per-harness guidance preserves confirmed mechanics and explicit inconclusive findings. Cursor guidance covers native Task, omit-model inheritance, per-dispatch volatile root/nested catalogs, opaque strings, deliberate pre-start CLI leaf selection, and the **native-catalog mismatch advisory** from discovery Decision #12. Codex guidance covers materialized roles, native depth, scoped writable roots, and configured-invocation evidence. Claude guidance records the topology actually observed by the concurrent verification report; if still inconclusive, it retains a confirmation obligation rather than assuming nesting.
 Run: scoped vitest as in p04-t01 — Expected: fails.
 
-**Step 2: Implement (GREEN)** — author the guidance; align vocabulary with `references/subagent-catalog-and-selection-findings.md`.
+**Step 2: Implement (GREEN)** — refine and promote `references/dispatching-subagents-{cursor,codex,claude}-draft.md`; align vocabulary with `references/subagent-catalog-and-selection-findings.md` and returned harness reports.
 
 **Step 3: Refactor** — none.
 
@@ -320,6 +326,7 @@ Run: scoped vitest as in p04-t01 — Expected: fails.
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (dispatch-notes record shape)
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
 - Modify: `tools/smoke/CONTRACT.md` (evidence contract references the same field names)
 
 **Step 1: Write test (RED)** — contract test asserting the dispatch-record shape documents `selection_reason` (e.g. `native-catalog`, `native-catalog-unsatisfying`, `pre-start-rejection`, `inherit`) and `candidates_considered`; smoke evidence assertions (p03) reference identical field names (cross-file consistency check).
@@ -616,4 +623,5 @@ Ready for code review and merge.
 - Design: `design.md` (lightweight, collaborative)
 - Discovery: `discovery.md`
 - Recon: `references/recon-codex-subagent-max-depth.md`, `references/recon-dispatch-schema-matrix-infrastructure.md`, `references/recon-archived-dispatch-projects.md`, `references/subagent-catalog-and-selection-findings.md`
+- Dispatch draft and concurrent verification: `references/dispatching-subagents-draft.md`, `references/dispatching-subagents-{cursor,codex,claude}-draft.md`, `references/dispatching-subagents-verification.md`
 - Backlog: `.oat/repo/pjm/backlog/items/BL-260711-add-live-workflow-smoke.md`

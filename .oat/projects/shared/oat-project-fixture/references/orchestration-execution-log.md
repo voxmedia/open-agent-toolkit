@@ -183,6 +183,29 @@ model_reasoning_effort=max`); gate run `262c4812`.
     accepted launch. Four untracked preset files remain as possible partial
     output; no worker process remains.
 
+### 8. Draft-first dispatch contract for concurrent harness verification
+
+- **Decision:** draft the provider-neutral dispatch contract and provider
+  references during p01 so concurrent Codex and Claude root sessions can verify
+  their own native catalogs, nesting, exact-target controls, inheritance, and
+  CLI routes while Cursor implementation continues.
+- **Draft artifacts:** `dispatching-subagents-draft.md`,
+  `dispatching-subagents-{cursor,codex,claude}-draft.md`, and
+  `dispatching-subagents-verification.md`.
+- **Safety:** the files are explicitly non-runtime validation inputs. They do
+  not alter active skill behavior and the verification prompts allow only
+  bounded read-only native/CLI sentinels.
+- **Promotion plan:** p04 now reconciles returned reports, retains unsupported
+  and inconclusive claims, and promotes verified behavior into a canonical
+  internal `oat-dispatch-subagents` skill with one-level provider references.
+  `oat-project-implement`, `oat-project-plan-writing`, and
+  `oat-phase-implementer` must load the shared contract explicitly rather than
+  depending on ambient discovery.
+- **Reason:** dispatch is a shared subsystem used by implementation,
+  coordinators, planning reviews, implementation reviews, and gates. Keeping
+  the full provider contract inside `oat-project-implement` would continue the
+  drift and context-size problem that contributed to the current confusion.
+
 ## Cross-Cutting Incidents
 
 - **Stale binaries, twice:** (a) global `oat` 0.1.48 predated the dispatch

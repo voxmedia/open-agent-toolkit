@@ -24,7 +24,7 @@ oat_dispatch_policy:
         candidates:
           - gpt-5.6-sol-low
           - gpt-5.6-sol-medium
-          - gpt-5.6-sol-high-fast
+          - gpt-5.6-sol-xhigh
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T18:31:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T19:14:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -76,6 +76,7 @@ Implementation — Phase 1 paused at p01-t02 after catalog verification
 - ✓ p01-t01 complete
 - ⧗ p01-t02 partial output preserved; implementation paused for dispatch
   strategy discussion
+- ⧗ Concurrent Codex/Claude dispatch-contract verification package ready
 
 ## Blockers
 
@@ -83,4 +84,4 @@ None
 
 ## Next Milestone
 
-Decide the p01-t02 recovery route and implementation dispatch strategy
+Run concurrent harness verification while deciding the p01-t02 recovery route
