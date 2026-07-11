@@ -497,6 +497,25 @@ corrected in this bookkeeping update.
 - p02-t05 completed that isolation with repository-local atomic-resolution
   evidence; Phase 2 is ready for self-review.
 
+**Self-review iteration 1:**
+
+- Reviewer target:
+  `gpt-5.6-sol-xhigh` at the project High ceiling.
+- Verdict: failed — 1 Critical / 6 Important / 3 Medium.
+- C1: the copied fixture/workspace are untracked, so nested phase worktrees do
+  not inherit the smoke baseline.
+- I1/I2: drive failure skips collection; signal cleanup races active stages and
+  non-atomic manifest writes.
+- I3/I4: Cursor IDE auth uses the wrong command surface; fixture preflight
+  checks existence rather than actual contract validity.
+- I5/I6: normal worktree bootstrap can replace smoke-local config and perform
+  hidden writes; cleanup can delete a pre-existing colliding branch.
+- M1/M2/M3: invalid forced-unavailable values are ignored, local build
+  freshness is not proven, and partial manifests claim an effective closeout
+  policy before resolution.
+- Fix iteration 1 is split into bounded provision/ownership,
+  runner/interruption, preflight, and nested-bootstrap scopes.
+
 ---
 
 ## Phase 3: Evidence Collector & Report
