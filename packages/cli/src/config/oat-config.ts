@@ -6,14 +6,8 @@ import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
 import {
-  VALID_DISPATCH_MATRIX_TIERS,
-  isWorkflowDispatchCandidateLadder,
-  type WorkflowDispatchCandidate,
-  type WorkflowDispatchCandidateLadder,
-  type WorkflowDispatchMatrixTier,
+  normalizeDispatchMatrix,
   type WorkflowDispatchProviderValue,
-  type WorkflowDispatchRoute,
-  type WorkflowDispatchRouteTarget,
 } from './dispatch-matrix';
 import { parseJsonConfig } from './json';
 
@@ -299,159 +293,6 @@ function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
   return gate;
 }
 
-function normalizeProviderBareValue(
-  providerKey: string,
-  value: unknown,
-): string | undefined {
-  const trimmed = trimNonEmptyString(value);
-  if (trimmed === undefined) {
-    return undefined;
-  }
-
-  if (
-    providerKey === 'codex' &&
-    !(VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(trimmed)
-  ) {
-    return undefined;
-  }
-
-  if (
-    providerKey === 'claude' &&
-    !(VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(trimmed)
-  ) {
-    return undefined;
-  }
-
-  return trimmed;
-}
-
-function normalizeDispatchRouteTarget(
-  value: unknown,
-): WorkflowDispatchRouteTarget | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const target: WorkflowDispatchRouteTarget = {};
-  const harness = trimNonEmptyString(value.harness);
-  if (harness !== undefined) {
-    target.harness = harness;
-  }
-  const model = trimNonEmptyString(value.model);
-  if (model !== undefined) {
-    target.model = model;
-  }
-  const effort = trimNonEmptyString(value.effort);
-  if (effort !== undefined) {
-    target.effort = effort;
-  }
-
-  return Object.keys(target).length > 0 ? target : undefined;
-}
-
-function normalizeDispatchRoute(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchRoute | undefined {
-  if (!Array.isArray(value) || value.length === 0) {
-    return undefined;
-  }
-
-  const route: WorkflowDispatchRoute = [];
-  for (const entry of value) {
-    const bareEntry = normalizeProviderBareValue(providerKey, entry);
-    if (bareEntry !== undefined) {
-      route.push(bareEntry);
-      continue;
-    }
-
-    const target = normalizeDispatchRouteTarget(entry);
-    if (target !== undefined) {
-      route.push(target);
-    }
-  }
-
-  return route.length > 0 ? route : undefined;
-}
-
-function normalizeDispatchCandidate(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchCandidate | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (isRecord(value) && Object.hasOwn(value, 'route')) {
-    const route = normalizeDispatchRoute(providerKey, value.route);
-    return route ? { route } : undefined;
-  }
-
-  return normalizeDispatchRouteTarget(value);
-}
-
-function normalizeDispatchMatrixCell(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchCandidateLadder | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return { candidates: [bareValue] };
-  }
-
-  if (isWorkflowDispatchCandidateLadder(value)) {
-    const candidates: WorkflowDispatchCandidate[] = [];
-    for (const candidate of value.candidates) {
-      const normalized = normalizeDispatchCandidate(providerKey, candidate);
-      if (normalized !== undefined) {
-        candidates.push(normalized);
-      }
-    }
-
-    return candidates.length > 0 ? { candidates } : undefined;
-  }
-
-  const directTarget = normalizeDispatchRouteTarget(value);
-  if (directTarget !== undefined) {
-    return { candidates: [directTarget] };
-  }
-
-  const route = normalizeDispatchRoute(providerKey, value);
-
-  return route ? { candidates: [{ route }] } : undefined;
-}
-
-function normalizeDispatchProviderValue(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchProviderValue | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const tierMap: Partial<
-    Record<WorkflowDispatchMatrixTier, WorkflowDispatchCandidateLadder>
-  > = {};
-  for (const [tier, rawCell] of Object.entries(value)) {
-    if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {
-      continue;
-    }
-
-    const normalized = normalizeDispatchMatrixCell(providerKey, rawCell);
-    if (normalized !== undefined) {
-      tierMap[tier as WorkflowDispatchMatrixTier] = normalized;
-    }
-  }
-
-  return Object.keys(tierMap).length > 0 ? tierMap : undefined;
-}
-
 function normalizeExecTarget(
   value: unknown,
 ): ExecTargetConfig | null | undefined {
@@ -655,20 +496,15 @@ function normalizeWorkflowConfig(
     }
 
     if (isRecord(parsed.dispatchCeiling.providers)) {
-      const providers: WorkflowDispatchCeiling['providers'] = {};
-      for (const [providerKey, rawProviderValue] of Object.entries(
+      const normalized = normalizeDispatchMatrix(
         parsed.dispatchCeiling.providers,
-      )) {
-        const normalized = normalizeDispatchProviderValue(
-          providerKey,
-          rawProviderValue,
-        );
-        if (normalized !== undefined) {
-          providers[providerKey] = normalized;
-        }
-      }
-      if (Object.keys(providers).length > 0) {
-        dispatchCeiling.providers = providers;
+        {
+          pathPrefix: 'workflow.dispatchCeiling.providers',
+          compatibilityMode: 'layered-config',
+        },
+      );
+      if (Object.keys(normalized.providers).length > 0) {
+        dispatchCeiling.providers = normalized.providers;
       }
     }
 

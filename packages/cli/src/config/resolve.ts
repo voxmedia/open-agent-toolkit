@@ -1,6 +1,6 @@
+import { isWorkflowDispatchCandidateLadder } from './dispatch-matrix';
 import {
   BUILTIN_EXEC_TARGETS,
-  isWorkflowDispatchCandidateLadder,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
