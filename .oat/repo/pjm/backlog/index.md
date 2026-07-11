@@ -11,6 +11,7 @@
 - The `codex-family-subagents` dispatch UX split is complete: human-facing guidance and the reusable Dispatch Report V1 schema/formatter shipped through `dispatch-schema-matrix-infrastructure`.
 - High-priority workflow follow-up now tracks structured post-implementation sequencing so final-review-passed projects can run summary/docs/PR preparation before final HiLL approval when configured, while stricter repos can defer selected actions until after approval.
 - High-priority orchestration follow-up now tracks a root-owned exact-dispatch broker and launcher-owned provenance so phase coordinators can retain phase semantics without broad permissions or nested provider initialization; root-direct execution remains a documented fallback only.
+- High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
 
 <!-- OAT BACKLOG-INDEX -->
 
@@ -20,6 +21,7 @@
 | BL-260711-add-live-workflow-smoke        | Add live workflow smoke fixture                                      | open   | high     | feature | L        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches       | open   | high     | feature | M        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews  | open   | high     | feature | M        |
+| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                  | open   | high     | feature | M        |
 | BL-260709-split-post-implementation      | Split post-implementation sequence into pre- and post-approval steps | open   | high     | feature | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs    | open   | medium   | feature | L        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                           | open   | medium   | task    | S        |

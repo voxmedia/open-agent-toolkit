@@ -21,7 +21,7 @@ These command definitions inherit the cross-cutting CLI conventions in:
 
 - What it does: defines the day-to-day provider-sync command surface for inspecting state, reconciling provider views, and changing provider enablement.
 - When to use it: after you have canonical assets in place and need to check sync state, write provider views, or change provider config.
-- Primary commands: `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`
+- Primary commands: `oat status`, `oat sync`, `oat providers list`, `oat providers inspect`, `oat providers set`, `oat providers codex materialize`
 
 ## `oat status`
 
@@ -70,6 +70,34 @@ Key behavior:
 - Modifies `.oat/sync/config.json` to toggle provider enablement
 - Options: `--enabled <providers>`, `--disabled <providers>` (comma-separated)
 - Changes take effect on next `oat sync`
+
+## `oat providers codex materialize`
+
+Purpose:
+
+- Materialize one canonical Markdown agent as a Codex TOML role and register it
+  in Codex configuration
+
+Required operands:
+
+```bash
+oat providers codex materialize <agent-name> \
+  --model <model-id> \
+  --effort <reasoning-effort>
+```
+
+Key behavior:
+
+- Project scope is the default and writes only `.codex/config.toml` plus the
+  project role file; `--scope user` writes only under `~/.codex`
+- `--agent-path` selects a specific canonical agent and `--role-name` overrides
+  the generated role name
+- Managed role registration enables multi-agent support and merges an
+  `agents.max_depth` floor of `2`
+- Project writes preserve a higher existing project depth or inherited user
+  depth without mutating user configuration; user writes do not inspect or
+  mutate project configuration
+- Existing unrelated Codex configuration and custom roles are preserved
 
 ## Notes
 

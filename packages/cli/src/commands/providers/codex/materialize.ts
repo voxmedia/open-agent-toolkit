@@ -11,7 +11,10 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
-import { mergeCodexConfigForRole } from '@providers/codex/codec/config-merge';
+import {
+  mergeCodexConfigForRole,
+  readCodexMaxDepth,
+} from '@providers/codex/codec/config-merge';
 import type { CodexRoleExport } from '@providers/codex/codec/export-to-codex';
 import { materializeCodexRole } from '@providers/codex/codec/materialize';
 import { withOatManagedCodexRoleOwner } from '@providers/codex/codec/shared';
@@ -27,8 +30,11 @@ interface CodexMaterializeOptions {
 }
 
 interface CodexMaterializePlan {
+  configChanged: boolean;
+  mergedConfigContent: string;
   result: CodexMaterializeResult;
   role: CodexRoleExport;
+  roleChanged: boolean;
 }
 
 function createDependencies(): ProvidersCodexMaterializeDependencies {
@@ -114,9 +120,35 @@ async function buildCodexMaterializePlan(
   };
   const rolePath = join(scopeRoot, '.codex', role.configFile);
   const configPath = join(scopeRoot, '.codex', 'config.toml');
+  const existingRoleContent = await readOptionalFile(rolePath);
+  const existingConfigContent = await readOptionalFile(configPath);
+  let inheritedMaxDepth: number | undefined;
+
+  if (scope === 'project') {
+    const userScopeRoot = await dependencies.resolveScopeRoot('user', context);
+    const userConfigContent = await readOptionalFile(
+      join(userScopeRoot, '.codex', 'config.toml'),
+    );
+    inheritedMaxDepth = readCodexMaxDepth(userConfigContent) ?? undefined;
+  }
+
+  const mergedConfig = mergeCodexConfigForRole({
+    existingContent: existingConfigContent,
+    role: {
+      roleName: role.roleName,
+      description: role.description,
+      configFile: role.configFile,
+    },
+    inheritedMaxDepth,
+  });
 
   return {
+    configChanged: mergedConfig.changed,
+    mergedConfigContent: mergedConfig.mergedContent,
     role,
+    roleChanged:
+      existingRoleContent === null ||
+      existingRoleContent.trimEnd() !== role.content.trimEnd(),
     result: {
       status: context.dryRun ? 'preview' : 'written',
       dryRun: context.dryRun,
@@ -140,24 +172,21 @@ async function readOptionalFile(filePath: string): Promise<string | null> {
 }
 
 async function applyCodexMaterializePlan({
+  configChanged,
+  mergedConfigContent,
   result,
   role,
+  roleChanged,
 }: CodexMaterializePlan): Promise<void> {
-  await ensureDir(dirname(result.rolePath));
-  await writeFile(result.rolePath, role.content, 'utf8');
+  if (roleChanged) {
+    await ensureDir(dirname(result.rolePath));
+    await writeFile(result.rolePath, role.content, 'utf8');
+  }
 
-  const existingConfig = await readOptionalFile(result.configPath);
-  const mergedConfig = mergeCodexConfigForRole({
-    existingContent: existingConfig,
-    role: {
-      roleName: role.roleName,
-      description: role.description,
-      configFile: role.configFile,
-    },
-  });
-
-  await ensureDir(dirname(result.configPath));
-  await writeFile(result.configPath, mergedConfig.mergedContent, 'utf8');
+  if (configChanged) {
+    await ensureDir(dirname(result.configPath));
+    await writeFile(result.configPath, mergedConfigContent, 'utf8');
+  }
 }
 
 async function runCodexMaterializeCommand(

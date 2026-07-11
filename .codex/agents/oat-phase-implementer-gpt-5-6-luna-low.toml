@@ -147,10 +147,12 @@ downgrade for a managed task.
 
 #### 4. Build the Exact Invocation Before Logging
 
-- Codex: use `providers.codex.dispatchArgs.variant` as the actual `agent_type`.
-  If the native host cannot select that registered role, launch a fresh Codex
-  child pinned to `selection.target.model` and `selection.target.effort` with
-  these canonical instructions and the Task Scope. If neither exact route is
+- Codex: use `providers.codex.dispatchArgs.variant` as the actual `agent_type`
+  and attempt the exact materialized `agent_type` first. Only explicit
+  pre-start native role-selection rejection of that exact `agent_type`, before
+  any child starts, permits a fresh pinned fallback: launch a fresh Codex child
+  pinned to `selection.target.model` and `selection.target.effort` with these
+  canonical instructions and the Task Scope. If neither exact route is
   available, block.
 - Claude: pass `providers.claude.dispatchArgs.model` as the actual Task `model`.
 - Cursor: pass `providers.cursor.dispatchArgs.model` byte-for-byte as the actual
@@ -161,6 +163,15 @@ Derive axes and the formal `Dispatch:` stamp from that complete payload. A
 transient retry must reuse the same exact role/model/effort payload. A
 substantive escalation must re-resolve another configured candidate without
 exceeding the same named maximum.
+
+The launcher-owned `target`, `model_axis`, and `effort_axis` come only from the
+resolver output and constructed invocation payload. They are immutable and
+must not be populated, replaced, or contradicted by worker self-report. Spawn
+acceptance confirms that configured invocation; worker output is only task
+outcome data. Missing telemetry, missing self-report, and accepted terminal
+results including `BLOCKED` never trigger fallback. Once a child starts, every
+terminal result is authoritative for that attempt and is not native
+role-selection rejection.
 
 #### 5. Dispatch and Verify Serially
 
