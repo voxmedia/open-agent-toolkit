@@ -1,17 +1,83 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const fixtureRoot = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(fixtureRoot, "project");
+const repoRoot = path.resolve(fixtureRoot, "../../..");
+const require = createRequire(import.meta.url);
+const tsxCli = require.resolve("tsx/cli");
+const cliEntry = path.join(repoRoot, "packages/cli/src/index.ts");
+const cliTsconfig = path.join(repoRoot, "packages/cli/tsconfig.json");
 
 function frontmatter(source) {
   const match = source.match(/^---\n(?<content>[\s\S]*?)\n---/);
 
   assert.ok(match, "fixture artifact must have YAML frontmatter");
   return match.groups.content;
+}
+
+function resolveCandidate(provider, candidate) {
+  const temporaryRoot = mkdtempSync(
+    path.join(os.tmpdir(), "oat-fixture-resolver-"),
+  );
+  const home = path.join(temporaryRoot, "home");
+
+  mkdirSync(path.join(temporaryRoot, ".git"));
+  mkdirSync(home);
+
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        tsxCli,
+        "--tsconfig",
+        cliTsconfig,
+        cliEntry,
+        "project",
+        "dispatch-ceiling",
+        "resolve",
+        "--provider",
+        provider,
+        "--role",
+        "implementer",
+        "--ceiling-tier",
+        "high",
+        "--candidate-model",
+        candidate.model,
+        ...(candidate.effort
+          ? ["--candidate-effort", candidate.effort]
+          : []),
+        "--project-path",
+        projectRoot,
+        "--json",
+      ],
+      {
+        cwd: temporaryRoot,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          HOME: home,
+          OAT_NON_INTERACTIVE: "1",
+          USERPROFILE: home,
+        },
+      },
+    );
+
+    assert.equal(
+      result.status,
+      0,
+      `${provider} resolver failed:\n${result.stderr || result.stdout}`,
+    );
+    return JSON.parse(result.stdout);
+  } finally {
+    rmSync(temporaryRoot, { force: true, recursive: true });
+  }
 }
 
 test("fixture plan preserves the canonical format contract", () => {
@@ -74,7 +140,7 @@ test("fixture plan preserves the canonical format contract", () => {
   }
 });
 
-test("fixture state preserves quick-mode lifecycle and sparse dispatch policy", () => {
+test("fixture state preserves quick-mode lifecycle and monotonic dispatch policy", () => {
   const state = readFileSync(path.join(projectRoot, "state.md"), "utf8");
   const yaml = frontmatter(state);
 
@@ -100,18 +166,22 @@ test("fixture state preserves quick-mode lifecycle and sparse dispatch policy", 
   assert.match(yaml, /^  mode: managed$/m);
   assert.match(yaml, /^  policy: high$/m);
   assert.match(yaml, /^  source: project-state$/m);
-  for (const [provider, candidate] of [
-    ["codex", "gpt-5.6-terra"],
-    ["claude", "sonnet"],
-    ["cursor", "fixture-cursor-opaque-medium"],
+  for (const [provider, lowerCandidate, highCandidate] of [
+    ["codex", "gpt-5.6-terra", "gpt-5.6-sol"],
+    ["claude", "sonnet", "opus"],
+    [
+      "cursor",
+      "fixture-cursor-opaque-medium",
+      "fixture-cursor-opaque-high",
+    ],
   ]) {
     assert.match(
       yaml,
       new RegExp(
-        `^    ${provider}:\\n      high:\\n        candidates:\\n[\\s\\S]*?${candidate}`,
+        `^    ${provider}:\\n      balanced:\\n        candidates:\\n[\\s\\S]*?${lowerCandidate}[\\s\\S]*?^      high:\\n        candidates:\\n[\\s\\S]*?${highCandidate}`,
         "m",
       ),
-      `state must retain the ${provider} sparse high-tier candidate`,
+      `state must retain monotonic ${provider} balanced and high candidates`,
     );
   }
   assert.doesNotMatch(
@@ -119,6 +189,54 @@ test("fixture state preserves quick-mode lifecycle and sparse dispatch policy", 
     /^\s*(?:selection|requestedCandidate|resolved|dispatchArgs|target):/m,
     "state must not persist compiled selection or dispatch results",
   );
+});
+
+test("fixture dispatch matrix supports exact lower candidates under High", () => {
+  const cases = [
+    {
+      provider: "codex",
+      lower: { model: "gpt-5.6-terra", effort: "medium" },
+      high: { model: "gpt-5.6-sol", effort: "high" },
+    },
+    {
+      provider: "claude",
+      lower: { model: "sonnet" },
+      high: { model: "opus" },
+    },
+    {
+      provider: "cursor",
+      lower: { model: "fixture-cursor-opaque-medium" },
+      high: { model: "fixture-cursor-opaque-high" },
+    },
+  ];
+
+  for (const { provider, lower, high } of cases) {
+    const highResolution = resolveCandidate(provider, high);
+    const highSelection = highResolution.providers[provider].selection;
+
+    assert.equal(highResolution.status, "resolved");
+    assert.equal(highResolution.source, "invocation");
+    assert.equal(highSelection.ceilingTier, "high");
+    assert.equal(highSelection.target.model, high.model);
+    assert.equal(highSelection.target.effort, high.effort);
+    assert.equal(highSelection.ceilingTarget.model, high.model);
+    assert.equal(highSelection.ceilingTarget.effort, high.effort);
+
+    const lowerResolution = resolveCandidate(provider, lower);
+    const lowerSelection = lowerResolution.providers[provider].selection;
+
+    assert.equal(lowerResolution.status, "resolved");
+    assert.equal(lowerResolution.source, "invocation");
+    assert.equal(lowerSelection.ceilingTier, "high");
+    assert.equal(lowerSelection.candidateTier, "balanced");
+    assert.equal(lowerSelection.requestedCandidate.model, lower.model);
+    assert.equal(lowerSelection.requestedCandidate.effort, lower.effort);
+    assert.equal(lowerSelection.target.model, lower.model);
+    assert.equal(lowerSelection.target.effort, lower.effort);
+    assert.equal(lowerSelection.ceilingTarget.model, high.model);
+    assert.equal(lowerSelection.ceilingTarget.effort, high.effort);
+    assert.notEqual(lowerSelection.ceilingTarget.model, lower.model);
+  }
 });
 
 test("completed fixture discovery and design are durable artifacts", () => {

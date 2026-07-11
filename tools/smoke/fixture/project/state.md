@@ -13,19 +13,30 @@ oat_dispatch_policy:
   policy: high
   matrix:
     codex:
-      high:
+      balanced:
         candidates:
           - harness: codex
             model: gpt-5.6-terra
             effort: medium
-    claude:
       high:
+        candidates:
+          - harness: codex
+            model: gpt-5.6-sol
+            effort: high
+    claude:
+      balanced:
         candidates:
           - sonnet
-    cursor:
       high:
         candidates:
+          - opus
+    cursor:
+      balanced:
+        candidates:
           - fixture-cursor-opaque-medium
+      high:
+        candidates:
+          - fixture-cursor-opaque-high
   source: project-state
 oat_workflow_mode: quick
 oat_workflow_origin: native
@@ -36,4 +47,5 @@ oat_generated: false
 
 Canonical `pre-review` state for the smoke fixture. The named `high` ceiling
 is a budget maximum. Its sparse provider matrix declares eligible lower
-candidates; launch resolution records the exact selected target separately.
+candidates and valid High-tier ceiling targets; launch resolution records the
+exact selected target separately.
