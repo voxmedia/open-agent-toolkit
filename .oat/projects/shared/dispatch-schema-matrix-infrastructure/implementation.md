@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p06-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 6     | 6/6       |
-| p02   | complete    | 4     | 4/4       |
-| p03   | complete    | 6     | 6/6       |
-| p04   | complete    | 4     | 4/4       |
-| p05   | complete    | 3     | 3/3       |
-| p06   | in_progress | 11    | 9/11      |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 6     | 6/6       |
+| p02   | complete | 4     | 4/4       |
+| p03   | complete | 6     | 6/6       |
+| p04   | complete | 4     | 4/4       |
+| p05   | complete | 3     | 3/3       |
+| p06   | complete | 11    | 11/11     |
 
-**Total:** 32/34 tasks completed
+**Total:** 34/34 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -512,7 +512,7 @@ oat_generated: false
 
 ## Phase p06: Structured Cursor Task Evidence Revision
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
 **Completed:** 2026-07-11
 
@@ -653,15 +653,20 @@ control-identity gap becomes `p06-t10`; the public value-privacy gap becomes
 
 ### Task p06-t10: Bind passed controls to exact model arguments
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** f846a52d
 
 ---
 
 ### Task p06-t11: Constrain public projection values
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 7310389b
+
+**Verification:** Syntax checks, 29/29 combined evidence tests, the recorded
+structured capture verifier, tracked evidence comparison, and diff hygiene all
+passed. The review row is `fixes_completed` pending the third and final
+automated p06 review cycle.
 
 ---
 

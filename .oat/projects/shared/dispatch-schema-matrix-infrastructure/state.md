@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t10
-oat_last_commit: 7b1b95d3
+oat_current_task: null
+oat_last_commit: 7310389b
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T13:06:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T13:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p06 re-review cycle 2 fixes queued
+Phase p06 re-review cycle 2 fixes complete; final automated p06 review pending
 
 ## Artifacts
 
@@ -105,9 +105,10 @@ Phase p06 re-review cycle 2 fixes queued
 - ✓ Structured Cursor evidence revision approved after cross-project provenance analysis
 - ✓ Phase p06 initial tasks completed: structured capture, inconclusive controls, zero candidate probes, evidence reconciliation, and `0.1.50` release verification
 - ✓ Phase p06 review fixes completed: strict re-derivation, exact correlation, private redaction, docs privacy scope, and lifecycle reconciliation
-- ✓ First 32 implementation tasks complete before re-review cycle 2
+- ✓ All 34 implementation tasks complete
 - ✓ Full p06 repository and five-package `0.1.50` release verification passed
-- ⧗ Re-review cycle 2: exact control identity and public projection value fixes queued as `p06-t10` and `p06-t11`
+- ✓ Re-review cycle 2 fixes complete: exact control identity and constrained public projection values
+- ⧗ Third and final automated p06 review cycle pending
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -116,4 +117,4 @@ Phase p06 re-review cycle 2 fixes queued
 
 ## Next Milestone
 
-Complete p06-t10 and p06-t11, pass the third and final automated p06 review cycle, then receive a fresh final review.
+Pass the third and final automated p06 review cycle, then receive a fresh final review.

@@ -1503,7 +1503,7 @@ git commit -m "fix(p06-t11): constrain public event values"
 | p03           | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04           | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
 | p05           | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| p06           | code     | fixes_added     | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11T130108Z.md   |
+| p06           | code     | fixes_completed | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11T130108Z.md   |
 | final-pre-p06 | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
 | final         | code     | pending         | -          | -                                                             |
 | spec          | artifact | pending         | -          | -                                                             |
