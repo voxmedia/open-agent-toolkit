@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -19,8 +19,8 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 2     | 1/2       |
-| p02   | pending     | 3     | 0/3       |
+| p01   | completed   | 2     | 2/2       |
+| p02   | in_progress | 3     | 0/3       |
 | p03   | pending     | 3     | 0/3       |
 
 **Total:** 0/8 tasks completed
@@ -32,7 +32,9 @@ oat_generated: false
 
 ### Phase Summary
 
-Complete after both configuration tasks pass their focused tests and review.
+Completed configuration model, atomic resolution, and CLI authoring/retrieval
+contracts. Focused config and CLI tests plus CLI type checking passed; Phase 1
+code review remains pending.
 
 ### Task p01-t01: Add the legacy-or-structured model and atomic resolution
 
@@ -48,8 +50,13 @@ passed.
 
 ### Task p01-t02: Extend config set, get, and describe for structured values
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b216e6e9
+
+**Outcome:** Added JSON authoring, raw JSON retrieval, compact plain-object
+output, and describe guidance while preserving legacy strings.
+
+**Verification:** Config CLI Vitest suite (107 tests) and CLI type check passed.
 
 ## Phase 2: Restart-Safe Final Closeout
 
@@ -140,6 +147,15 @@ Populate from completed phase summaries before final review and PR generation.
   `oat-phase-implementer-gpt-5-6-sol-medium`.
 - Focused config tests and CLI type check passed.
 - Next task: `p01-t02`.
+
+### p01-t02 Complete
+
+**Date:** 2026-07-10
+
+- Dispatch: `gpt-5.6-sol` / medium via
+  `oat-phase-implementer-gpt-5-6-sol-medium`.
+- Focused config CLI tests and CLI type check passed.
+- Phase 1 implementation is complete; code review is next.
 
 ### Artifact Review Received: plan
 
