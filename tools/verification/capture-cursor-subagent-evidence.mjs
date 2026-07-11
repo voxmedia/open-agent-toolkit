@@ -139,6 +139,7 @@ function compact(value) {
 export function projectPublicEvents(events) {
   return events.map((event) => {
     const task = findTaskCall(event);
+    const taskResult = task ? resultKind(task.result) : undefined;
     return compact({
       eventType: typeof event.type === 'string' ? event.type : 'unknown',
       subtype: typeof event.subtype === 'string' ? event.subtype : undefined,
@@ -148,6 +149,11 @@ export function projectPublicEvents(events) {
       requestHash: hashIdentifier(event.request_id),
       requestedModel:
         typeof task?.args?.model === 'string' ? task.args.model : undefined,
+      taskResult: taskResult === 'missing' ? undefined : taskResult,
+      sentinelObserved:
+        taskResult === 'success'
+          ? containsSentinel(task.result.success)
+          : undefined,
     });
   });
 }
@@ -322,21 +328,149 @@ const EVENT_KEYS = new Set([
   'sessionHash',
   'requestHash',
   'requestedModel',
+  'taskResult',
+  'sentinelObserved',
 ]);
 
-function validateProbeAllowlist(probe, label) {
-  if (!isObject(probe)) {
+const CAPTURE_KEYS = new Set([
+  'schemaVersion',
+  'sanitizerSchemaVersion',
+  'capturedAt',
+  'recommendation',
+  'environment',
+  'controls',
+  'candidates',
+  'exploratoryCandidates',
+]);
+const RECOMMENDATION_KEYS = new Set(['version', 'sha256']);
+const ENVIRONMENT_KEYS = new Set([
+  'selectedBinary',
+  'clientVersion',
+  'cursorApiKey',
+  'credentialStore',
+]);
+const CONTROLS_KEYS = new Set(['status', 'positive', 'negative']);
+const CORRELATION_KEYS = new Set([
+  'sessionHash',
+  'requestHash',
+  'toolCallHash',
+]);
+
+function requireExactKeys(value, allowed, required, label) {
+  if (!isObject(value)) {
     fail(`${label} must be an object`);
   }
-  for (const key of Object.keys(probe)) {
-    if (!PROBE_KEYS.has(key)) {
-      fail(`${label} violates the public projection allowlist: ${key}`);
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) {
+      fail(`${label} violates the public allowlist: ${key}`);
     }
   }
+  for (const key of required) {
+    if (!(key in value)) {
+      fail(`${label} is missing required field: ${key}`);
+    }
+  }
+}
+
+function sameValue(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function deriveProbeProjection(probe, label) {
+  const starts = probe.events.filter(
+    (event) =>
+      event.eventType === 'tool_call' &&
+      event.subtype === 'started' &&
+      event.toolName === 'Task',
+  );
+  if (starts.length > 1) {
+    fail(`${label} projection contains multiple Task starts`);
+  }
+  const start = starts[0] ?? null;
+  const completions = start?.correlationHash
+    ? probe.events.filter(
+        (event) =>
+          event.eventType === 'tool_call' &&
+          event.subtype === 'completed' &&
+          event.toolName === 'Task' &&
+          event.correlationHash === start.correlationHash,
+      )
+    : [];
+  if (completions.length > 1) {
+    fail(`${label} projection contains multiple correlated Task completions`);
+  }
+  const completion = completions[0] ?? null;
+  const terminals = probe.events.filter(
+    (event) => event.eventType === 'result',
+  );
+  if (terminals.length > 1) {
+    fail(`${label} projection contains multiple terminal events`);
+  }
+  const terminal = terminals[0] ?? null;
+
+  let taskSelection = 'not-observed';
+  let childCompletion =
+    start && probe.directExitStatus === null && probe.terminationSignal
+      ? 'timed-out'
+      : 'not-observed';
+  let outcomeBasis =
+    probe.streamStatus === 'malformed'
+      ? 'malformed-stream'
+      : terminal
+        ? 'no-definitive-task-evidence'
+        : 'missing-terminal-event';
+  if (completion?.taskResult === 'error') {
+    taskSelection = 'rejected';
+    childCompletion = 'not-observed';
+    outcomeBasis = 'structured-task-rejection';
+  } else if (completion?.taskResult === 'success') {
+    taskSelection = 'accepted';
+    if (completion.sentinelObserved === true) {
+      childCompletion = 'completed';
+      outcomeBasis = 'correlated-task-sentinel';
+    } else {
+      childCompletion = 'failed';
+      outcomeBasis = 'correlated-task-without-sentinel';
+    }
+  }
+  const availabilityStatus =
+    taskSelection === 'accepted' && childCompletion === 'completed'
+      ? 'valid'
+      : taskSelection === 'rejected'
+        ? 'unknown-value'
+        : 'unvalidated';
+
+  return {
+    requestedModel: start?.requestedModel ?? null,
+    availabilityStatus,
+    taskSelection,
+    childCompletion,
+    runtimeIdentity: 'not-reported',
+    outcomeBasis,
+    terminalEventObserved: terminal !== null,
+    terminalSubtype: terminal?.subtype ?? null,
+    correlation: {
+      sessionHash: terminal?.sessionHash ?? start?.sessionHash ?? null,
+      requestHash: terminal?.requestHash ?? null,
+      toolCallHash: start?.correlationHash ?? null,
+    },
+  };
+}
+
+function validateProbeAllowlist(probe, label) {
+  requireExactKeys(
+    probe,
+    PROBE_KEYS,
+    [...PROBE_KEYS].filter((key) => key !== 'tier'),
+    label,
+  );
   if (!Array.isArray(probe.events)) {
     fail(`${label}.events must be an array`);
   }
   for (const [index, event] of probe.events.entries()) {
+    if (!isObject(event)) {
+      fail(`${label}.events[${index}] must be an object`);
+    }
     for (const key of Object.keys(event)) {
       if (!EVENT_KEYS.has(key)) {
         fail(
@@ -350,9 +484,23 @@ function validateProbeAllowlist(probe, label) {
       }
     }
   }
-  for (const [key, value] of Object.entries(probe.correlation ?? {})) {
+  requireExactKeys(
+    probe.correlation,
+    CORRELATION_KEYS,
+    CORRELATION_KEYS,
+    `${label}.correlation`,
+  );
+  for (const [key, value] of Object.entries(probe.correlation)) {
     if (value !== null && !/^sha256:[a-f0-9]{64}$/.test(value)) {
       fail(`${label}.correlation.${key} must be a non-reversible hash`);
+    }
+  }
+  const derived = deriveProbeProjection(probe, label);
+  for (const [key, value] of Object.entries(derived)) {
+    if (!sameValue(probe[key], value)) {
+      fail(
+        `${label}.${key} does not match the value derived from the public projection`,
+      );
     }
   }
 }
@@ -367,16 +515,81 @@ function controlsPassed(controls) {
   );
 }
 
-export function validateStructuredCapture(capture) {
+export function validateStructuredCapture(
+  capture,
+  { recommendation, recommendationSha256 } = {},
+) {
   if (!isObject(capture) || capture.schemaVersion !== 2) {
     fail('structured capture schemaVersion must equal 2');
   }
+  requireExactKeys(
+    capture,
+    CAPTURE_KEYS,
+    [...CAPTURE_KEYS].filter((key) => key !== 'exploratoryCandidates'),
+    'structured capture',
+  );
   if (capture.sanitizerSchemaVersion !== 1) {
     fail('structured capture sanitizerSchemaVersion must equal 1');
+  }
+  if (!Number.isFinite(Date.parse(capture.capturedAt))) {
+    fail('structured capture capturedAt must be an ISO timestamp');
+  }
+  requireExactKeys(
+    capture.recommendation,
+    RECOMMENDATION_KEYS,
+    RECOMMENDATION_KEYS,
+    'structured capture recommendation',
+  );
+  if (
+    !recommendation ||
+    capture.recommendation.version !== recommendation.version
+  ) {
+    fail(
+      'structured capture recommendation version does not match recommendation',
+    );
+  }
+  if (
+    !/^[a-f0-9]{64}$/.test(capture.recommendation.sha256) ||
+    capture.recommendation.sha256 !== recommendationSha256
+  ) {
+    fail(
+      'structured capture recommendation SHA-256 does not match recommendation',
+    );
+  }
+  requireExactKeys(
+    capture.environment,
+    ENVIRONMENT_KEYS,
+    ENVIRONMENT_KEYS,
+    'structured capture environment',
+  );
+  if (capture.environment.selectedBinary !== 'cursor-agent') {
+    fail('structured capture environment selectedBinary must be cursor-agent');
+  }
+  if (
+    typeof capture.environment.clientVersion !== 'string' ||
+    !/^[A-Za-z0-9._+-]+$/.test(capture.environment.clientVersion)
+  ) {
+    fail('structured capture environment clientVersion is unsafe');
+  }
+  if (!['present', 'absent'].includes(capture.environment.cursorApiKey)) {
+    fail('structured capture environment cursorApiKey is unsafe');
+  }
+  if (
+    !['present', 'absent', 'unset'].includes(
+      capture.environment.credentialStore,
+    )
+  ) {
+    fail('structured capture environment credentialStore is unsafe');
   }
   if (!isObject(capture.controls) || !Array.isArray(capture.candidates)) {
     fail('structured capture requires controls and candidates');
   }
+  requireExactKeys(
+    capture.controls,
+    CONTROLS_KEYS,
+    CONTROLS_KEYS,
+    'structured capture controls',
+  );
   validateProbeAllowlist(capture.controls.positive, 'positive control');
   validateProbeAllowlist(capture.controls.negative, 'negative control');
   capture.candidates.forEach((probe, index) =>
@@ -399,8 +612,58 @@ export function validateStructuredCapture(capture) {
     fail('candidate probes must not execute after inconclusive controls');
   }
 
+  const exploratoryCandidates = capture.exploratoryCandidates ?? [];
+  if (
+    !Array.isArray(exploratoryCandidates) ||
+    new Set(exploratoryCandidates).size !== exploratoryCandidates.length ||
+    exploratoryCandidates.some(
+      (candidate) => typeof candidate !== 'string' || candidate.length === 0,
+    )
+  ) {
+    fail('structured capture exploratoryCandidates must be unique strings');
+  }
+  if (passed) {
+    const recommended = deriveCandidates(recommendation);
+    const recommendedNames = new Set(
+      recommended.map(({ candidate }) => candidate),
+    );
+    if (
+      exploratoryCandidates.some((candidate) => recommendedNames.has(candidate))
+    ) {
+      fail(
+        'structured capture exploratoryCandidates must not repeat recommendation candidates',
+      );
+    }
+    const expected = [
+      ...recommended,
+      ...exploratoryCandidates.map((candidate) => ({
+        candidate,
+        tier: 'exploratory',
+      })),
+    ];
+    const actual = capture.candidates.map(({ candidate, tier }) => ({
+      candidate,
+      tier,
+    }));
+    if (!sameValue(actual, expected)) {
+      fail(
+        'structured capture candidate inventory does not match recommendation plus explicit exploratory entries',
+      );
+    }
+  }
+
   const outcomes = {};
   for (const probe of capture.candidates) {
+    if (probe.kind !== 'candidate') {
+      fail(
+        'structured capture candidate inventory contains a non-candidate probe',
+      );
+    }
+    if (probe.requestedModel !== probe.candidate) {
+      fail(
+        'structured capture candidate does not match its projected requested model',
+      );
+    }
     outcomes[probe.availabilityStatus] =
       (outcomes[probe.availabilityStatus] ?? 0) + 1;
   }
@@ -638,6 +901,7 @@ async function main() {
   };
 
   const candidates = [];
+  const exploratoryCandidates = [];
   if (controls.status === 'passed' && !options.controlsOnly) {
     const inventory = deriveCandidates(recommendation);
     if (
@@ -650,6 +914,7 @@ async function main() {
         candidate: options.exploratoryCandidate,
         tier: 'exploratory',
       });
+      exploratoryCandidates.push(options.exploratoryCandidate);
     }
     for (const entry of inventory) {
       const result = await runProbe({
@@ -685,9 +950,13 @@ async function main() {
             : 'absent',
     },
     controls,
+    exploratoryCandidates,
     candidates,
   };
-  validateStructuredCapture(capture);
+  validateStructuredCapture(capture, {
+    recommendation,
+    recommendationSha256,
+  });
 
   await mkdir(dirname(options.output), { recursive: true });
   await writeFile(options.output, `${JSON.stringify(capture, null, 2)}\n`);

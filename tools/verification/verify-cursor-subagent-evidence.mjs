@@ -608,18 +608,29 @@ export function validateEvidenceDocument(
   };
 }
 
-export function validateStructuredEvidenceDocument(markdown, capture) {
+export function validateStructuredEvidenceDocument(
+  markdown,
+  capture,
+  recommendation,
+  { recommendationSha256 } = {},
+) {
   const blocks = extractBlocks(markdown, 'STRUCTURED_CAPTURE');
   if (blocks.length !== 1) {
     fail(
       `expected exactly one structured capture block; found ${blocks.length}`,
     );
   }
-  const checked = validateStructuredCapture(capture);
+  const checked = validateStructuredCapture(capture, {
+    recommendation,
+    recommendationSha256,
+  });
   if (JSON.stringify(blocks[0]) !== JSON.stringify(capture)) {
     fail('tracked structured capture does not match the checked capture file');
   }
-  validateStructuredCapture(blocks[0]);
+  validateStructuredCapture(blocks[0], {
+    recommendation,
+    recommendationSha256,
+  });
   return checked;
 }
 
@@ -666,6 +677,8 @@ async function main() {
     ? validateStructuredEvidenceDocument(
         evidence,
         JSON.parse(await readFile(options.capture, 'utf8')),
+        recommendation,
+        { recommendationSha256 },
       )
     : null;
   process.stdout.write(

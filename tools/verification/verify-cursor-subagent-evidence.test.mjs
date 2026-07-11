@@ -20,7 +20,7 @@ const recommendation = {
     },
   },
 };
-const recommendationSha256 = 'fixture-sha';
+const recommendationSha256 = 'a'.repeat(64);
 const authoritativeConfiguredCandidates = ['gpt-5.6-sol-high'];
 const validationOptions = {
   recommendationSha256,
@@ -547,15 +547,42 @@ test('validates and matches a structured capture evidence block', () => {
     candidates: [],
   };
   const markdown = block('STRUCTURED_CAPTURE', capture);
-  assert.deepEqual(validateStructuredEvidenceDocument(markdown, capture), {
-    controls: 'inconclusive',
-    candidateCount: 0,
-    outcomes: {},
-  });
+  assert.deepEqual(
+    validateStructuredEvidenceDocument(
+      markdown,
+      capture,
+      recommendation,
+      validationOptions,
+    ),
+    {
+      controls: 'inconclusive',
+      candidateCount: 0,
+      outcomes: {},
+    },
+  );
   const changed = structuredClone(capture);
   changed.environment.clientVersion = 'different';
   assert.throws(
-    () => validateStructuredEvidenceDocument(markdown, changed),
+    () =>
+      validateStructuredEvidenceDocument(
+        markdown,
+        changed,
+        recommendation,
+        validationOptions,
+      ),
     /does not match/,
+  );
+
+  const wrongRecommendation = structuredClone(capture);
+  wrongRecommendation.recommendation.sha256 = 'wrong';
+  assert.throws(
+    () =>
+      validateStructuredEvidenceDocument(
+        block('STRUCTURED_CAPTURE', wrongRecommendation),
+        wrongRecommendation,
+        recommendation,
+        validationOptions,
+      ),
+    /recommendation.*sha/i,
   );
 });

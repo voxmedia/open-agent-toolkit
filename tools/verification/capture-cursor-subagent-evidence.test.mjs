@@ -13,6 +13,16 @@ const SENTINEL = 'OAT_CURSOR_SUBAGENT_MODEL_VALID';
 const sessionId = 'session-exact-private';
 const requestId = 'request-exact-private';
 const callId = 'tool-exact-private';
+const recommendationSha256 = 'a'.repeat(64);
+const recommendation = {
+  version: 'test',
+  providers: {
+    cursor: {
+      high: { candidates: ['gpt-5.6-sol-high'] },
+    },
+  },
+};
+const validationOptions = { recommendation, recommendationSha256 };
 
 function taskEvent(subtype, model, result) {
   return {
@@ -103,11 +113,16 @@ function captureFixture(overrides = {}) {
     durationMs: 10,
     timedOut: false,
   });
+  const candidate = {
+    ...positive,
+    kind: 'candidate',
+    tier: 'high',
+  };
   return {
     schemaVersion: 2,
     sanitizerSchemaVersion: 1,
     capturedAt: '2026-07-11T12:00:00.000Z',
-    recommendation: { version: 'test', sha256: 'abc' },
+    recommendation: { version: 'test', sha256: recommendationSha256 },
     environment: {
       selectedBinary: 'cursor-agent',
       clientVersion: '2026.07.09-test',
@@ -119,7 +134,8 @@ function captureFixture(overrides = {}) {
       positive,
       negative,
     },
-    candidates: [],
+    exploratoryCandidates: [],
+    candidates: [candidate],
     ...overrides,
   };
 }
@@ -280,15 +296,18 @@ test('recursively redacts credentials from private raw events without removing e
 });
 
 test('validates positive and negative controls and rejects direct public identifiers', () => {
-  assert.deepEqual(validateStructuredCapture(captureFixture()), {
-    controls: 'passed',
-    candidateCount: 0,
-    outcomes: {},
-  });
+  assert.deepEqual(
+    validateStructuredCapture(captureFixture(), validationOptions),
+    {
+      controls: 'passed',
+      candidateCount: 1,
+      outcomes: { valid: 1 },
+    },
+  );
   const leaked = captureFixture();
   leaked.controls.positive.events[0].sessionId = sessionId;
   assert.throws(
-    () => validateStructuredCapture(leaked),
+    () => validateStructuredCapture(leaked, validationOptions),
     /allowlist|identifier/i,
   );
   const inconclusive = captureFixture({
@@ -302,7 +321,100 @@ test('validates positive and negative controls and rejects direct public identif
     },
   });
   assert.throws(
-    () => validateStructuredCapture(inconclusive),
+    () => validateStructuredCapture(inconclusive, validationOptions),
     /positive control/,
   );
+});
+
+test('re-derives asserted probe outcomes from the public event projection', () => {
+  const forged = captureFixture();
+  forged.controls.positive.events = [];
+  assert.throws(
+    () => validateStructuredCapture(forged, validationOptions),
+    /derived|projection/i,
+  );
+
+  forged.controls.positive = {
+    ...captureFixture().controls.positive,
+    taskSelection: 'rejected',
+    childCompletion: 'not-observed',
+    availabilityStatus: 'unknown-value',
+    outcomeBasis: 'structured-task-rejection',
+  };
+  assert.throws(
+    () => validateStructuredCapture(forged, validationOptions),
+    /derived|projection/i,
+  );
+});
+
+test('binds recommendation metadata and exact post-control candidate inventory', () => {
+  const wrongMetadata = captureFixture();
+  wrongMetadata.recommendation.sha256 = 'b'.repeat(64);
+  assert.throws(
+    () => validateStructuredCapture(wrongMetadata, validationOptions),
+    /recommendation.*sha/i,
+  );
+  wrongMetadata.recommendation.sha256 = recommendationSha256;
+  wrongMetadata.recommendation.version = 'wrong-version';
+  assert.throws(
+    () => validateStructuredCapture(wrongMetadata, validationOptions),
+    /recommendation.*version/i,
+  );
+
+  const missing = captureFixture({
+    exploratoryCandidates: [],
+    candidates: [],
+  });
+  assert.throws(
+    () => validateStructuredCapture(missing, validationOptions),
+    /candidate inventory/i,
+  );
+
+  const exact = captureFixture();
+  assert.deepEqual(validateStructuredCapture(exact, validationOptions), {
+    controls: 'passed',
+    candidateCount: 1,
+    outcomes: { valid: 1 },
+  });
+
+  const extra = structuredClone(exact);
+  extra.candidates.push({
+    ...deriveStructuredProbe({
+      candidate: 'unrequested-exploratory',
+      kind: 'candidate',
+      events: successEvents('unrequested-exploratory'),
+      directExitStatus: 0,
+      terminationSignal: null,
+      durationMs: 24,
+      timedOut: false,
+    }),
+    tier: 'exploratory',
+  });
+  assert.throws(
+    () => validateStructuredCapture(extra, validationOptions),
+    /candidate inventory/i,
+  );
+});
+
+test('rejects capture-level schema and environment privacy drift', () => {
+  const extra = captureFixture({ privatePath: '/Users/private' });
+  assert.throws(
+    () => validateStructuredCapture(extra, validationOptions),
+    /capture.*allowlist/i,
+  );
+
+  for (const [key, value] of [
+    ['selectedBinary', '/Users/private/cursor-agent'],
+    ['clientVersion', 'Authorization: Bearer private'],
+    ['cursorApiKey', 'private-secret'],
+    ['credentialStore', '/Users/private/keychain'],
+  ]) {
+    const unsafe = captureFixture();
+    unsafe.environment[key] = value;
+    assert.throws(
+      () => validateStructuredCapture(unsafe, validationOptions),
+      /environment/i,
+      key,
+    );
+  }
 });
