@@ -43,7 +43,7 @@ Fully sequential (`oat_plan_parallel_groups: []`). p02 consumes p01's contract d
 
 ## Phase-Boundary Review Note
 
-Per-phase code reviews during implementation dispatch as **native cross-family subagents pinned per the dispatch resolver** (project policy: managed/frontier → Cursor reviewer target `gpt-5.6-sol-max`, host-substituted to the in-ceiling `gpt-5.6-sol-xhigh` when the host cannot select the final candidate; orchestrator family is Claude, so this is cross-family). This is the FR3 tier-2 mechanism, applied at every phase boundary per user direction (2026-07-11). The external `oat_phase_review_gate` frontmatter is intentionally unset: no qualifying configured gate CLI target exists in this environment, and the setup contract forbids inventing enablement. Review provenance (mechanism, model, family) is recorded per phase in the Reviews table and implementation log.
+Per-phase code reviews during implementation dispatch as **native cross-family subagents pinned to the exact resolver-returned target** (project policy: managed/frontier; the user-scope ladder's Cursor frontier cell is explicitly `["gpt-5.6-sol-xhigh"]`, so the resolver returns `gpt-5.6-sol-xhigh` as the reviewer target — natively dispatchable in this host and cross-family against the Claude-family orchestrator). The exact target is preserved on retry/re-dispatch; if the host ever cannot apply it, the review blocks rather than downgrading. This is the FR3 tier-2 mechanism, applied at every phase boundary per user direction (2026-07-11). The external `oat_phase_review_gate` frontmatter is intentionally unset: no qualifying configured gate CLI target exists in this environment, and the setup contract forbids inventing enablement. Review provenance (mechanism, model, family) is recorded per phase in the Reviews table and implementation log.
 
 ---
 
@@ -259,27 +259,28 @@ Expected: validation passes; org-identifier scan returns zero hits (NFR1).
 
 ---
 
-### Task p02-t04: CLI — workflows pack user-scope installability (TDD)
+### Task p02-t04: CLI — workflows pack user-scope installability, direct + aggregate (TDD)
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/init/tools/workflows/index.ts` (remove project-only guard; add user-scope install path)
 - Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` (user-scope destination resolution `~/.agents/skills/`)
-- Modify: `packages/cli/src/commands/init/tools/workflows/index.test.ts` (or colocated test file — locate with `rg -l "supports only --scope project" packages/cli/src`)
-- Modify: docs page for tools/init covering pack scopes
+- Modify: `packages/cli/src/commands/init/tools/index.ts` (aggregate installer: add workflows to the user-eligible pack set, drop the project-only label, route user-scope installs away from `projectRoot`)
+- Modify: colocated test files for both (locate with `rg -l "supports only --scope project|user-eligible|projectRoot" packages/cli/src/commands/init/tools`)
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (pack-scope documentation)
 
-**Step 1: Write test (RED)** — user-scope install test: given `--scope user`, workflows skills materialize under the (temp) user home `.agents/skills/`; existing project-scope tests unchanged.
+**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes workflows skills under a temp-home `.agents/skills/`; (b) aggregate/guided: user-scope aggregate install includes workflows and writes to the user destination, not `projectRoot`; (c) scope/removal semantics: user-scope uninstall/update paths behave like other user-eligible packs; existing project-scope tests unchanged.
 
-**Step 2: Implement (GREEN)** — remove the `'currently supports only --scope project'` rejection; route user scope through the shared user-install path other packs use (mirror `ideas`/`brainstorm` pack user-scope handling).
+**Step 2: Implement (GREEN)** — remove the `'currently supports only --scope project'` rejection in the subcommand; in the aggregate installer, add workflows to the user-eligible set and fix destination routing (mirror `ideas`/`brainstorm` user-scope handling).
 
 **Step 3: Refactor** — dedupe scope plumbing with the shared scope-option helper if trivial.
 
 **Step 4: Verify:**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
-Expected: green; fresh-home test proves skills appear under user `.agents/skills/`.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
+Expected: green; direct and aggregate fresh-home tests both prove skills under user `.agents/skills/`.
 
-**Commit:** `feat(p02-t04): user-scope installability for workflows pack`
+**Commit:** `feat(p02-t04): user-scope installability for workflows pack (direct + aggregate)`
 
 ---
 
@@ -423,6 +424,7 @@ Expected: idempotent; config resolves; degraded/acceptance distinction logged.
 
 - Enumerate `.oat/config.json` keys in each mounted repo (gizmo-slack-app, open-agent-toolkit, pntr); classify cloud-safe vs needs-override (S3 sync stays enabled — bucket credentials are operator-provisioned; see Operator Dependencies).
 - Seed documented `.oat/config.local.json` overrides only where classification requires.
+- Update the README's repository file inventory to include the two new `.cursor/` files (`oat-user-config.json` from p04-t02, `oat-readiness.sh` from p04-t04) with one-line rationales — the README currently enumerates exactly four files.
 
 **Verify:**
 
@@ -471,8 +473,8 @@ Expected: boot mode green immediately; strict mode green once operator secret la
 
 **Verify:**
 
-Run (pntr repo): `pnpm type-check && pnpm build && pnpm test && pnpm lint && pnpm format`
-Expected: all green; manual skill read-through against live vox-docs tools in this session confirms tool names/flows.
+Run (pntr repo): `pnpm type-check && pnpm build && pnpm test && NO_COLOR=1 pnpm test && pnpm lint && pnpm format`
+Expected: all green; manual skill read-through against live vox-docs tools confirms tool names/flows.
 
 **Commit:** `feat(p05-t01): internal-docs-mcp skill-only plugin` (pntr repo)
 
@@ -489,10 +491,10 @@ Expected: all green; manual skill read-through against live vox-docs tools in th
 
 - Document the plugin, marketplace publication step, and installation-mode choice (operator action item; see Operator Dependencies).
 
-**Verify:**
+**Verify (full repository chain after ALL p05 changes, per pntr AGENTS.md):**
 
-Run (pntr repo): `pnpm lint && pnpm format`
-Expected: green.
+Run (pntr repo): `pnpm type-check && pnpm build && pnpm test && NO_COLOR=1 pnpm test && pnpm lint && pnpm format`, then after committing: `pnpm worktree:validate` (clean working tree).
+Expected: all green; worktree validation passes post-commit.
 
 **Commit:** `docs(p05-t02): document internal-docs-mcp plugin` (pntr repo)
 
