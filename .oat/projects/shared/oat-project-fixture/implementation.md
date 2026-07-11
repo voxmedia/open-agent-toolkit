@@ -516,6 +516,23 @@ corrected in this bookkeeping update.
 - Fix iteration 1 is split into bounded provision/ownership,
   runner/interruption, preflight, and nested-bootstrap scopes.
 
+**Fix iteration 1 completed:**
+
+- `d6a8b914` — committed child-worktree-visible fixture baseline; added
+  atomic/readiness-aware manifests and SHA-corroborated branch ownership.
+- `f40e672a` — recovery collection now follows failed/interrupted drive;
+  cancellation quiesces registered children/stages before cleanup and
+  preserves resources when quiescence cannot be proved.
+- `7f81e26a` — corrected Cursor auth argv, authenticated only the selected
+  harness, ran real fixture contracts, rejected invalid negative controls, and
+  made local-build identity/freshness evidence executable.
+- `7b7c3f8e` — added a tracked smoke-bootstrap marker and strict nested mode
+  preserving smoke config while skipping user state, hooks, S3, local-path
+  sync, and provider sync; dependency setup is offline/frozen.
+- Independent verification: 49/49 tests, direct lint/format, shell syntax, and
+  orphan inspection passed.
+- Awaiting self-review iteration 2.
+
 ---
 
 ## Phase 3: Evidence Collector & Report
