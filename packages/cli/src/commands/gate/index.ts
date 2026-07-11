@@ -395,7 +395,7 @@ function buildGateDispatchReport(
             selectionMode: 'gate-invocation',
             selectionBranch: 'gate-configured-invocation',
             target: null,
-            cellSource: invocation.source,
+            cellSource: null,
           },
         },
       },

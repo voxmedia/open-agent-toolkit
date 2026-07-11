@@ -2117,9 +2117,27 @@ describe('validateOatSkills', () => {
       expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
         expectedVersion,
       );
-      expect(content, `${skillName} report context`).toMatch(
-        /--report-scope[\s\S]{0,180}--report-action/,
-      );
+      const invocations = [
+        ...content
+          .replace(/\\\r?\n\s*/g, ' ')
+          .matchAll(
+            /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+          ),
+      ]
+        .map(([command]) => command.trim())
+        .filter((command) => command.includes('--provider'));
+      expect(
+        invocations.length,
+        `${skillName} actionable resolver invocations`,
+      ).toBeGreaterThan(0);
+      for (const invocation of invocations) {
+        expect(invocation, `${skillName} report scope`).toMatch(
+          /--report-scope\s+\S+/,
+        );
+        expect(invocation, `${skillName} literal report action`).toMatch(
+          /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+        );
+      }
       expect(content, `${skillName} versioned report`).toContain(
         'dispatchReport.schemaVersion: 1',
       );

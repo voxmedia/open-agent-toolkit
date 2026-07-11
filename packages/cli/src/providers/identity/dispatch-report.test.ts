@@ -346,32 +346,121 @@ describe('buildDispatchReport', () => {
 
 describe('dispatch report rendering', () => {
   it('serializes the V1 report with stable key order', () => {
-    const report = buildDispatchReport(input());
+    const report = buildDispatchReport(
+      input({
+        gateInvocation: {
+          runId: 'gate-run-ordering',
+          targetId: 'independent-reviewer',
+          runtime: 'claude',
+          model: 'opus',
+          reasoningEffort: 'provider-default',
+          source: 'exec-target-config',
+        },
+      }),
+    );
+    const reverseTarget = (
+      target: NonNullable<DispatchReportV1['selection']['ceilingTarget']>,
+    ) => ({
+      routeLength: target.routeLength,
+      routeIndex: target.routeIndex,
+      crossHarness: target.crossHarness,
+      effort: target.effort,
+      model: target.model,
+      harness: target.harness,
+    });
     const reordered = {
-      runtimeIdentity: report.runtimeIdentity,
-      gateInvocation: report.gateInvocation,
-      configuredDefaults: report.configuredDefaults,
-      requestedControls: report.requestedControls,
+      runtimeIdentity: {
+        confidence: report.runtimeIdentity.confidence,
+        provenance: report.runtimeIdentity.provenance,
+        effort: report.runtimeIdentity.effort,
+        model: report.runtimeIdentity.model,
+        producer: report.runtimeIdentity.producer,
+      },
+      gateInvocation: {
+        source: report.gateInvocation!.source,
+        reasoningEffort: report.gateInvocation!.reasoningEffort,
+        model: report.gateInvocation!.model,
+        runtime: report.gateInvocation!.runtime,
+        targetId: report.gateInvocation!.targetId,
+        runId: report.gateInvocation!.runId,
+      },
+      configuredDefaults: {
+        effortSource: report.configuredDefaults.effortSource,
+        effort: report.configuredDefaults.effort,
+        modelSource: report.configuredDefaults.modelSource,
+        model: report.configuredDefaults.model,
+      },
+      requestedControls: {
+        effort: {
+          reason: report.requestedControls.effort.reason,
+          mechanism: report.requestedControls.effort.mechanism,
+          value: report.requestedControls.effort.value,
+        },
+        model: {
+          reason: report.requestedControls.model.reason,
+          mechanism: report.requestedControls.model.mechanism,
+          value: report.requestedControls.model.value,
+        },
+      },
       selection: {
         cellSource: report.selection.cellSource,
         selectionBranch: report.selection.selectionBranch,
         selectionMode: report.selection.selectionMode,
-        exactSelectedTarget: report.selection.exactSelectedTarget,
+        exactSelectedTarget: reverseTarget(
+          report.selection.exactSelectedTarget!,
+        ),
         selectedValue: report.selection.selectedValue,
-        ceilingTarget: report.selection.ceilingTarget,
+        ceilingTarget: reverseTarget(report.selection.ceilingTarget!),
         ceilingTier: report.selection.ceilingTier,
         candidateIndex: report.selection.candidateIndex,
         candidateTier: report.selection.candidateTier,
-        requestedCandidate: report.selection.requestedCandidate,
+        requestedCandidate: {
+          effort: report.selection.requestedCandidate!.effort,
+          model: report.selection.requestedCandidate!.model,
+        },
       },
-      policy: report.policy,
-      route: report.route,
+      policy: {
+        source: report.policy.source,
+        name: report.policy.name,
+        mode: report.policy.mode,
+        status: report.policy.status,
+      },
+      route: {
+        target: report.route.target,
+        role: report.route.role,
+        action: report.route.action,
+        scope: report.route.scope,
+      },
       schemaVersion: report.schemaVersion,
     } satisfies DispatchReportV1;
 
     const serialized = serializeDispatchReport(reordered);
     const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    const route = parsed['route'] as Record<string, unknown>;
+    const policy = parsed['policy'] as Record<string, unknown>;
     const selection = parsed['selection'] as Record<string, unknown>;
+    const requestedCandidate = selection['requestedCandidate'] as Record<
+      string,
+      unknown
+    >;
+    const ceilingTarget = selection['ceilingTarget'] as Record<string, unknown>;
+    const exactSelectedTarget = selection['exactSelectedTarget'] as Record<
+      string,
+      unknown
+    >;
+    const requestedControls = parsed['requestedControls'] as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const configuredDefaults = parsed['configuredDefaults'] as Record<
+      string,
+      unknown
+    >;
+    const gateInvocation = parsed['gateInvocation'] as Record<string, unknown>;
+    const runtimeIdentity = parsed['runtimeIdentity'] as Record<
+      string,
+      unknown
+    >;
 
     expect(serialized).toBe(serializeDispatchReport(report));
     expect(Object.keys(parsed)).toEqual([
@@ -384,6 +473,8 @@ describe('dispatch report rendering', () => {
       'gateInvocation',
       'runtimeIdentity',
     ]);
+    expect(Object.keys(route)).toEqual(['scope', 'action', 'role', 'target']);
+    expect(Object.keys(policy)).toEqual(['status', 'mode', 'name', 'source']);
     expect(Object.keys(selection)).toEqual([
       'requestedCandidate',
       'candidateTier',
@@ -395,6 +486,45 @@ describe('dispatch report rendering', () => {
       'selectionMode',
       'selectionBranch',
       'cellSource',
+    ]);
+    expect(Object.keys(requestedCandidate)).toEqual(['model', 'effort']);
+    for (const target of [ceilingTarget, exactSelectedTarget]) {
+      expect(Object.keys(target)).toEqual([
+        'harness',
+        'model',
+        'effort',
+        'crossHarness',
+        'routeIndex',
+        'routeLength',
+      ]);
+    }
+    expect(Object.keys(requestedControls)).toEqual(['model', 'effort']);
+    for (const control of [
+      requestedControls['model']!,
+      requestedControls['effort']!,
+    ]) {
+      expect(Object.keys(control)).toEqual(['value', 'mechanism', 'reason']);
+    }
+    expect(Object.keys(configuredDefaults)).toEqual([
+      'model',
+      'modelSource',
+      'effort',
+      'effortSource',
+    ]);
+    expect(Object.keys(gateInvocation)).toEqual([
+      'runId',
+      'targetId',
+      'runtime',
+      'model',
+      'reasoningEffort',
+      'source',
+    ]);
+    expect(Object.keys(runtimeIdentity)).toEqual([
+      'producer',
+      'model',
+      'effort',
+      'provenance',
+      'confidence',
     ]);
   });
 

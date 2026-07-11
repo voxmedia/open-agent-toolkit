@@ -2467,10 +2467,15 @@ function buildResolutionReport(
       model: null,
       modelSource: null,
       effort:
-        resolution.provider === 'codex'
+        resolution.provider === 'codex' &&
+        resolution.providerDefaultEffort !== 'unknown'
           ? resolution.providerDefaultEffort
           : null,
-      effortSource: resolution.provider === 'codex' ? 'codex-config' : null,
+      effortSource:
+        resolution.provider === 'codex' &&
+        resolution.providerDefaultEffort !== 'unknown'
+          ? 'codex-config'
+          : null,
     },
   });
 }

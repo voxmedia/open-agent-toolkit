@@ -416,10 +416,27 @@ describe('bundle-assets.sh consistency', () => {
             join(assetsRoot, 'skills', skill, 'SKILL.md'),
             'utf8',
           );
-          expect(content, `${skill} report scope`).toContain('--report-scope');
-          expect(content, `${skill} report action`).toContain(
-            '--report-action',
-          );
+          const invocations = [
+            ...content
+              .replace(/\\\r?\n\s*/g, ' ')
+              .matchAll(
+                /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+              ),
+          ]
+            .map(([command]) => command.trim())
+            .filter((command) => command.includes('--provider'));
+          expect(
+            invocations.length,
+            `${skill} actionable resolver invocations`,
+          ).toBeGreaterThan(0);
+          for (const invocation of invocations) {
+            expect(invocation, `${skill} report scope`).toMatch(
+              /--report-scope\s+\S+/,
+            );
+            expect(invocation, `${skill} literal report action`).toMatch(
+              /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+            );
+          }
           expect(content, `${skill} versioned report`).toContain(
             'dispatchReport.schemaVersion: 1',
           );

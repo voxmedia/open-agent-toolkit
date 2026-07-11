@@ -11,6 +11,30 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(repoFilePath(relativePath), 'utf8');
 }
 
+function actionableResolverInvocations(content: string): string[] {
+  const normalized = content.replace(/\\\r?\n\s*/g, ' ');
+  return [
+    ...normalized.matchAll(
+      /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+    ),
+  ]
+    .map(([command]) => command.trim())
+    .filter((command) => command.includes('--provider'));
+}
+
+function expectValidReportContext(command: string): void {
+  expect(command).toMatch(/--report-scope\s+\S+/);
+  expect(command).toMatch(
+    /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+  );
+  if (/--role\s+reviewer/.test(command)) {
+    expect(command).toMatch(/--report-action\s+review(?:\s|$)/);
+  }
+  if (/--role\s+implementer/.test(command)) {
+    expect(command).toMatch(/--report-action\s+(?:implementation|fix)(?:\s|$)/);
+  }
+}
+
 describe('review skill contracts', () => {
   it('keeps the model-invokable project workflow skills gated by explicit asks', () => {
     const skills = [
@@ -184,8 +208,14 @@ describe('review skill contracts', () => {
 
     for (const path of skillPaths) {
       const content = readRepoFile(path);
-      expect(content, `${path} report scope`).toContain('--report-scope');
-      expect(content, `${path} report action`).toContain('--report-action');
+      const invocations = actionableResolverInvocations(content);
+      expect(
+        invocations.length,
+        `${path} actionable resolver invocations`,
+      ).toBeGreaterThan(0);
+      for (const invocation of invocations) {
+        expectValidReportContext(invocation);
+      }
       expect(content, `${path} schema version`).toContain(
         'dispatchReport.schemaVersion: 1',
       );

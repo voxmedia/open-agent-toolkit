@@ -3527,6 +3527,9 @@ describe('oat gate', () => {
             reasoningEffort: string;
             source: string;
           };
+          selection: {
+            cellSource: string | null;
+          };
           runtimeIdentity: {
             producer: string | null;
             confidence: string;
@@ -3541,6 +3544,10 @@ describe('oat gate', () => {
       });
       expect(payload.dispatchReport.gateInvocation).toEqual(
         payload.gateInvocation,
+      );
+      expect(payload.dispatchReport.selection.cellSource).toBeNull();
+      expect(payload.dispatchReport.gateInvocation.source).toBe(
+        expected.source,
       );
       expect(payload.dispatchReport.runtimeIdentity).toMatchObject({
         producer: null,

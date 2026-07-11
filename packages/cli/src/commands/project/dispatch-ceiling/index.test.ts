@@ -1737,6 +1737,10 @@ describe('oat project dispatch-ceiling resolve', () => {
             mechanism: 'materialized-role',
           },
         },
+        configuredDefaults: {
+          effort: null,
+          effortSource: null,
+        },
         runtimeIdentity: {
           producer: null,
           provenance: 'unknown',
@@ -1756,15 +1760,104 @@ describe('oat project dispatch-ceiling resolve', () => {
 
     const jsonHarness = createHarness({ cwd: root, home });
     await runCommand(jsonHarness.command, ['--provider', 'codex', '--json']);
-    expect(jsonHarness.capture.jsonPayloads[0]).not.toHaveProperty(
-      'dispatchReport',
-    );
+    expect({
+      ...(jsonHarness.capture.jsonPayloads[0] as Record<string, unknown>),
+      projectPath: '<project-path>',
+    }).toMatchInlineSnapshot(`
+      {
+        "matrix": null,
+        "policy": null,
+        "policyMode": "inherit",
+        "preset": null,
+        "projectPath": "<project-path>",
+        "provider": "codex",
+        "providerDefaultEffort": "unknown",
+        "providers": {
+          "codex": {
+            "cellSource": null,
+            "dispatchArgs": null,
+            "effortAxis": "provider-default",
+            "mechanism": "pinned-variant",
+            "mode": "advisory",
+            "modelAxis": "inherited",
+            "selection": {
+              "candidateIndex": null,
+              "candidateTier": null,
+              "capped": false,
+              "ceilingTarget": null,
+              "ceilingTier": null,
+              "cellSource": null,
+              "family": "unknown",
+              "policy": null,
+              "policyMode": "inherit",
+              "preferredValue": null,
+              "requestedCandidate": null,
+              "role": "implementer",
+              "selectedValue": null,
+              "selectionBranch": "inherit",
+              "selectionMode": "inherit-default",
+              "target": null,
+            },
+            "target": null,
+            "value": null,
+            "verifyOnDispatch": false,
+          },
+        },
+        "source": "repo-config",
+        "status": "resolved",
+        "unresolved": false,
+        "value": null,
+      }
+    `);
 
     const humanHarness = createHarness({ cwd: root, home });
     await runCommand(humanHarness.command, ['--provider', 'codex']);
-    expect(humanHarness.capture.info.join('\n')).not.toContain(
-      'Dispatch Report V1',
+    expect(humanHarness.capture.info.join('\n')).toMatchInlineSnapshot(`
+      "Codex dispatch policy: inherit host defaults
+      Resolved cap: none
+      Source: repo config
+      Mode: advisory (pinned-variant)
+      Selection: inherit-default
+      Codex provider default effort: unknown
+      Note: OAT will not select a Codex effort; base/unpinned roles resolve through the provider default."
+    `);
+  });
+
+  it('reports the Codex config source only when the configured default effort is known', async () => {
+    const { root, home } = await setup();
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      'model_reasoning_effort = "high"\n',
+      'utf8',
     );
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providerDefaultEffort: 'high',
+      dispatchReport: {
+        configuredDefaults: {
+          effort: 'high',
+          effortSource: 'codex-config',
+        },
+      },
+    });
   });
 
   it('prints formatted human report output after the existing resolver output', async () => {

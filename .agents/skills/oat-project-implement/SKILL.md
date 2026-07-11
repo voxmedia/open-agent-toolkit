@@ -448,7 +448,7 @@ fallback.
 3. For capped managed implementer/fix work, selected effort is `min(preferred, resolved_cap)`.
 4. For managed `Uncapped` implementer/fix work, selected effort is the preferred effort with no cap.
 5. For inherit/default mode, the resolver returns no selected dispatch args. Use the base/unpinned Codex role, log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as managed uncapped behavior.
-6. For managed capped task-worker/fix dispatch, choose an exact configured candidate and call `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <task-id> --report-action <implementation|fix> --json`. Read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`; never reuse the coordinator role or a cap-only variant. `--preferred` remains compatibility behavior outside the exact task-worker path.
+6. For managed capped task-worker/fix dispatch, choose an exact configured candidate. For implementation, call `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <task-id> --report-action implementation --json`. For a bounded fix, use `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <task-id> --report-action fix --json`. Read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`; never reuse the coordinator role or a cap-only variant. `--preferred` remains compatibility behavior outside the exact task-worker path.
 7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer --report-scope <phase-or-review-scope> --report-action review --json`; read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
@@ -466,7 +466,7 @@ Claude rules:
 - Review dispatch:
   - Capped managed policy: target the configured policy cap directly.
   - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.
-- For managed capped task-worker/fix dispatch, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <task-id> --report-action <implementation|fix> --json`; for review dispatch, call the resolver with `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json` and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it exactly on the actual Task invocation.
+- For managed capped task-worker/fix dispatch, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <task-id> --report-action implementation --json` for implementation. For a bounded fix, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <task-id> --report-action fix --json`. For review dispatch, call the resolver with `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json` and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it exactly on the actual Task invocation.
 - Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
 - Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
 
@@ -474,10 +474,10 @@ Cursor rules:
 
 - Treat every configured Cursor candidate string as opaque. Do not normalize it
   or infer capability from its spelling.
-- For managed capped task-worker/fix dispatch, call the resolver with
-  `--provider cursor --role implementer --ceiling-tier
-<project-or-phase-tier> --candidate-model <opaque-model> --report-scope
-<task-id> --report-action <implementation|fix> --json`.
+- For managed capped task-worker/fix dispatch, call
+  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <task-id> --report-action implementation --json`
+  for implementation. For a bounded fix, call
+  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <task-id> --report-action fix --json`.
 - Require `providers.cursor.dispatchArgs.model` and pass that exact byte-for-byte
   string as the actual Cursor invocation model. If the host cannot apply it,
   fail closed.
@@ -1093,7 +1093,7 @@ For each task in dependency order, the coordinator must:
      --ceiling-tier <project-or-phase-named-tier> \
      --candidate-model <exact-model> \
      --report-scope <task-id> \
-     --report-action <literal-implementation-or-fix> \
+     --report-action implementation \
      --project-path "$PROJECT_PATH" \
      --json
    ```
