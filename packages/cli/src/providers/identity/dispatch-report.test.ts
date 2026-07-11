@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildDispatchReport,
+  formatDispatchReport,
+  serializeDispatchReport,
   type DispatchReportInput,
   type DispatchReportResolution,
+  type DispatchReportV1,
 } from './dispatch-report';
 
 function resolution(
@@ -87,6 +90,82 @@ function input(
   };
 }
 
+function inheritInput(): DispatchReportInput {
+  return input({
+    action: 'review',
+    role: 'reviewer',
+    resolution: resolution({
+      value: null,
+      policyMode: 'inherit',
+      policy: null,
+      source: 'project-state',
+      providers: {
+        codex: {
+          dispatchArgs: null,
+          selection: {
+            role: 'reviewer',
+            requestedCandidate: null,
+            candidateTier: null,
+            candidateIndex: null,
+            ceilingTier: null,
+            ceilingTarget: null,
+            selectedValue: null,
+            selectionMode: 'inherit-default',
+            selectionBranch: 'inherit',
+            target: null,
+            cellSource: null,
+          },
+        },
+      },
+    }),
+    requestedControls: {
+      model: {
+        value: null,
+        mechanism: 'host-inherited',
+        reason: 'The host owns model selection.',
+      },
+      effort: {
+        value: null,
+        mechanism: 'provider-default',
+        reason: 'The provider default applies.',
+      },
+    },
+  });
+}
+
+function blockedInput(): DispatchReportInput {
+  return input({
+    resolution: resolution({
+      status: 'blocked',
+      value: null,
+      policyMode: 'managed',
+      policy: 'high',
+      source: 'project-state',
+      providers: {
+        codex: {
+          dispatchArgs: null,
+          selection: {
+            role: 'implementer',
+            requestedCandidate: {
+              model: 'gpt-5.6-sol',
+              effort: 'high',
+            },
+            candidateTier: 'high',
+            candidateIndex: 1,
+            ceilingTier: 'high',
+            ceilingTarget: null,
+            selectedValue: null,
+            selectionMode: 'unresolved',
+            selectionBranch: 'candidate-requested',
+            target: null,
+            cellSource: 'repo-config',
+          },
+        },
+      },
+    }),
+  });
+}
+
 describe('buildDispatchReport', () => {
   it('copies a managed exact selection without reconstructing its branch, target, or candidate index', () => {
     const report = buildDispatchReport(input());
@@ -148,50 +227,7 @@ describe('buildDispatchReport', () => {
   });
 
   it('preserves inherit/default as distinct from managed uncapped', () => {
-    const inheritResolution = resolution({
-      value: null,
-      policyMode: 'inherit',
-      policy: null,
-      source: 'project-state',
-      providers: {
-        codex: {
-          dispatchArgs: null,
-          selection: {
-            role: 'reviewer',
-            requestedCandidate: null,
-            candidateTier: null,
-            candidateIndex: null,
-            ceilingTier: null,
-            ceilingTarget: null,
-            selectedValue: null,
-            selectionMode: 'inherit-default',
-            selectionBranch: 'inherit',
-            target: null,
-            cellSource: null,
-          },
-        },
-      },
-    });
-
-    const report = buildDispatchReport(
-      input({
-        action: 'review',
-        role: 'reviewer',
-        resolution: inheritResolution,
-        requestedControls: {
-          model: {
-            value: null,
-            mechanism: 'host-inherited',
-            reason: 'The host owns model selection.',
-          },
-          effort: {
-            value: null,
-            mechanism: 'provider-default',
-            reason: 'The provider default applies.',
-          },
-        },
-      }),
-    );
+    const report = buildDispatchReport(inheritInput());
 
     expect(report.policy).toEqual({
       status: 'resolved',
@@ -304,5 +340,202 @@ describe('buildDispatchReport', () => {
     expect(() => buildDispatchReport(input({ action, role }))).toThrow(
       `Invalid dispatch report action/role pair: ${action}/${role}`,
     );
+  });
+});
+
+describe('dispatch report rendering', () => {
+  it('serializes the V1 report with stable key order', () => {
+    const report = buildDispatchReport(input());
+    const reordered = {
+      runtimeIdentity: report.runtimeIdentity,
+      gateInvocation: report.gateInvocation,
+      configuredDefaults: report.configuredDefaults,
+      requestedControls: report.requestedControls,
+      selection: {
+        cellSource: report.selection.cellSource,
+        selectionBranch: report.selection.selectionBranch,
+        selectionMode: report.selection.selectionMode,
+        exactSelectedTarget: report.selection.exactSelectedTarget,
+        selectedValue: report.selection.selectedValue,
+        ceilingTarget: report.selection.ceilingTarget,
+        ceilingTier: report.selection.ceilingTier,
+        candidateIndex: report.selection.candidateIndex,
+        candidateTier: report.selection.candidateTier,
+        requestedCandidate: report.selection.requestedCandidate,
+      },
+      policy: report.policy,
+      route: report.route,
+      schemaVersion: report.schemaVersion,
+    } satisfies DispatchReportV1;
+
+    const serialized = serializeDispatchReport(reordered);
+    const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    const selection = parsed['selection'] as Record<string, unknown>;
+
+    expect(serialized).toBe(serializeDispatchReport(report));
+    expect(Object.keys(parsed)).toEqual([
+      'schemaVersion',
+      'route',
+      'policy',
+      'selection',
+      'requestedControls',
+      'configuredDefaults',
+      'gateInvocation',
+      'runtimeIdentity',
+    ]);
+    expect(Object.keys(selection)).toEqual([
+      'requestedCandidate',
+      'candidateTier',
+      'candidateIndex',
+      'ceilingTier',
+      'ceilingTarget',
+      'selectedValue',
+      'exactSelectedTarget',
+      'selectionMode',
+      'selectionBranch',
+      'cellSource',
+    ]);
+  });
+
+  it('formats an exact selection without treating configured defaults as runtime identity', () => {
+    const report = buildDispatchReport(
+      input({
+        runtimeIdentity: {
+          producer: 'gpt-5.6-sol',
+          model: 'gpt-5.6-sol',
+          effort: 'high',
+          provenance: 'observed',
+          confidence: 'high',
+        },
+      }),
+    );
+
+    expect(formatDispatchReport(report)).toMatchInlineSnapshot(`
+      "Dispatch Report V1
+      Route
+        Scope: p03-t01
+        Action / role: implementation / implementer
+        Invocation target: oat-phase-implementer-gpt-5-6-sol-high
+      Policy
+        Status: resolved
+        Mode / name: managed / high
+        Source: invocation
+      Selection
+        Requested candidate: model=gpt-5.6-sol effort=high
+        Candidate tier / index: high / 1
+        Ceiling tier: high
+        Ceiling target: harness=codex model=gpt-5.6-sol effort=high crossHarness=false routeIndex=0 routeLength=1
+        Selected value: high
+        Exact selected target: harness=codex model=gpt-5.6-sol effort=high crossHarness=false routeIndex=0 routeLength=1
+        Mode / branch: candidate / candidate-requested
+        Cell source: repo-config
+      Requested controls
+        Model: gpt-5.6-sol (materialized-role) — Exact managed candidate selected by the resolver.
+        Effort: high (materialized-role) — Exact managed candidate selected by the resolver.
+      Configured defaults (not runtime observations)
+        Model: none
+        Model source: none
+        Effort: medium
+        Effort source: provider-config
+      Gate invocation (configured, immutable)
+        Not configured
+      Runtime identity (observed/reported separately)
+        Producer: gpt-5.6-sol
+        Model: gpt-5.6-sol
+        Effort: high
+        Provenance: observed
+        Confidence: high"
+    `);
+  });
+
+  it('formats inherited dispatch without implying a selected or observed target', () => {
+    expect(formatDispatchReport(buildDispatchReport(inheritInput())))
+      .toMatchInlineSnapshot(`
+        "Dispatch Report V1
+        Route
+          Scope: p03-t01
+          Action / role: review / reviewer
+          Invocation target: unknown
+        Policy
+          Status: resolved
+          Mode / name: inherit / none
+          Source: project-state
+        Selection
+          Requested candidate: none
+          Candidate tier / index: none / none
+          Ceiling tier: none
+          Ceiling target: none
+          Selected value: none
+          Exact selected target: none
+          Mode / branch: inherit-default / inherit
+          Cell source: none
+        Requested controls
+          Model: none (host-inherited) — The host owns model selection.
+          Effort: none (provider-default) — The provider default applies.
+        Configured defaults (not runtime observations)
+          Model: none
+          Model source: none
+          Effort: medium
+          Effort source: provider-config
+        Gate invocation (configured, immutable)
+          Not configured
+        Runtime identity (observed/reported separately)
+          Runtime identity was not reported.
+          Producer: not reported
+          Model: not reported
+          Effort: not reported
+          Provenance: unknown
+          Confidence: not-reported"
+      `);
+  });
+
+  it('formats blocked dispatch as policy state rather than runtime failure evidence', () => {
+    expect(formatDispatchReport(buildDispatchReport(blockedInput())))
+      .toMatchInlineSnapshot(`
+        "Dispatch Report V1
+        Route
+          Scope: p03-t01
+          Action / role: implementation / implementer
+          Invocation target: unknown
+        Policy
+          Status: blocked
+          Mode / name: managed / high
+          Source: project-state
+        Selection
+          Requested candidate: model=gpt-5.6-sol effort=high
+          Candidate tier / index: high / 1
+          Ceiling tier: high
+          Ceiling target: none
+          Selected value: none
+          Exact selected target: none
+          Mode / branch: unresolved / candidate-requested
+          Cell source: repo-config
+        Requested controls
+          Model: gpt-5.6-sol (materialized-role) — Exact managed candidate selected by the resolver.
+          Effort: high (materialized-role) — Exact managed candidate selected by the resolver.
+        Configured defaults (not runtime observations)
+          Model: none
+          Model source: none
+          Effort: medium
+          Effort source: provider-config
+        Gate invocation (configured, immutable)
+          Not configured
+        Runtime identity (observed/reported separately)
+          Runtime identity was not reported.
+          Producer: not reported
+          Model: not reported
+          Effort: not reported
+          Provenance: unknown
+          Confidence: not-reported"
+      `);
+  });
+
+  it('uses accurate not-reported language when runtime identity is absent', () => {
+    const output = formatDispatchReport(buildDispatchReport(input()));
+
+    expect(output).toContain('Runtime identity was not reported.');
+    expect(output).toContain('Producer: not reported');
+    expect(output).not.toContain('Producer: gpt-5.6-sol');
+    expect(output).not.toContain('Runtime model: medium');
   });
 });

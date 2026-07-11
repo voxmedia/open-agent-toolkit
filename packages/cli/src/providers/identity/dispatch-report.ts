@@ -162,6 +162,132 @@ function assertActionRole(action: DispatchAction, role: DispatchRole): void {
   }
 }
 
+function orderedTarget(
+  target: ResolvedDispatchTargetReport | null,
+): ResolvedDispatchTargetReport | null {
+  if (!target) {
+    return null;
+  }
+  return {
+    harness: target.harness,
+    ...(target.model === undefined ? {} : { model: target.model }),
+    ...(target.effort === undefined ? {} : { effort: target.effort }),
+    crossHarness: target.crossHarness,
+    routeIndex: target.routeIndex,
+    routeLength: target.routeLength,
+  };
+}
+
+function orderedReport(report: DispatchReportV1): DispatchReportV1 {
+  return {
+    schemaVersion: 1,
+    route: {
+      scope: report.route.scope,
+      action: report.route.action,
+      role: report.route.role,
+      target: report.route.target,
+    },
+    policy: {
+      status: report.policy.status,
+      mode: report.policy.mode,
+      name: report.policy.name,
+      source: report.policy.source,
+    },
+    selection: {
+      requestedCandidate: report.selection.requestedCandidate
+        ? {
+            model: report.selection.requestedCandidate.model,
+            ...(report.selection.requestedCandidate.effort === undefined
+              ? {}
+              : { effort: report.selection.requestedCandidate.effort }),
+          }
+        : null,
+      candidateTier: report.selection.candidateTier,
+      candidateIndex: report.selection.candidateIndex,
+      ceilingTier: report.selection.ceilingTier,
+      ceilingTarget: orderedTarget(report.selection.ceilingTarget),
+      selectedValue: report.selection.selectedValue,
+      exactSelectedTarget: orderedTarget(report.selection.exactSelectedTarget),
+      selectionMode: report.selection.selectionMode,
+      selectionBranch: report.selection.selectionBranch,
+      cellSource: report.selection.cellSource,
+    },
+    requestedControls: {
+      model: {
+        value: report.requestedControls.model.value,
+        mechanism: report.requestedControls.model.mechanism,
+        reason: report.requestedControls.model.reason,
+      },
+      effort: {
+        value: report.requestedControls.effort.value,
+        mechanism: report.requestedControls.effort.mechanism,
+        reason: report.requestedControls.effort.reason,
+      },
+    },
+    configuredDefaults: {
+      model: report.configuredDefaults.model,
+      modelSource: report.configuredDefaults.modelSource,
+      effort: report.configuredDefaults.effort,
+      effortSource: report.configuredDefaults.effortSource,
+    },
+    gateInvocation: report.gateInvocation
+      ? {
+          runId: report.gateInvocation.runId,
+          targetId: report.gateInvocation.targetId,
+          runtime: report.gateInvocation.runtime,
+          model: report.gateInvocation.model,
+          reasoningEffort: report.gateInvocation.reasoningEffort,
+          source: report.gateInvocation.source,
+        }
+      : null,
+    runtimeIdentity: {
+      producer: report.runtimeIdentity.producer,
+      model: report.runtimeIdentity.model,
+      effort: report.runtimeIdentity.effort,
+      provenance: report.runtimeIdentity.provenance,
+      confidence: report.runtimeIdentity.confidence,
+    },
+  };
+}
+
+function display(value: string | number | null): string {
+  return value === null ? 'none' : String(value);
+}
+
+function formatTarget(target: ResolvedDispatchTargetReport | null): string {
+  if (!target) {
+    return 'none';
+  }
+  return [
+    `harness=${target.harness}`,
+    target.model === undefined ? null : `model=${target.model}`,
+    target.effort === undefined ? null : `effort=${target.effort}`,
+    `crossHarness=${String(target.crossHarness)}`,
+    `routeIndex=${target.routeIndex}`,
+    `routeLength=${target.routeLength}`,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' ');
+}
+
+function formatCandidate(
+  candidate: DispatchReportV1['selection']['requestedCandidate'],
+): string {
+  if (!candidate) {
+    return 'none';
+  }
+  return [
+    `model=${candidate.model}`,
+    candidate.effort === undefined ? null : `effort=${candidate.effort}`,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' ');
+}
+
+function formatControl(name: string, control: DispatchControlRequest): string {
+  return `  ${name}: ${display(control.value)} (${control.mechanism}) — ${control.reason}`;
+}
+
 export function buildDispatchReport(
   input: DispatchReportInput,
 ): DispatchReportV1 {
@@ -217,4 +343,66 @@ export function buildDispatchReport(
       ? { ...input.runtimeIdentity }
       : { ...NOT_REPORTED_RUNTIME_IDENTITY },
   };
+}
+
+export function serializeDispatchReport(report: DispatchReportV1): string {
+  return JSON.stringify(orderedReport(report), null, 2);
+}
+
+export function formatDispatchReport(report: DispatchReportV1): string {
+  const runtimeNotReported =
+    report.runtimeIdentity.producer === null &&
+    report.runtimeIdentity.model === null &&
+    report.runtimeIdentity.effort === null &&
+    report.runtimeIdentity.confidence === 'not-reported';
+  const runtimeValue = (value: string | null): string =>
+    value === null ? 'not reported' : value;
+  const gateLines = report.gateInvocation
+    ? [
+        `  Run ID: ${report.gateInvocation.runId}`,
+        `  Target ID: ${report.gateInvocation.targetId}`,
+        `  Runtime: ${report.gateInvocation.runtime}`,
+        `  Model: ${report.gateInvocation.model}`,
+        `  Reasoning effort: ${report.gateInvocation.reasoningEffort}`,
+        `  Source: ${report.gateInvocation.source}`,
+      ]
+    : ['  Not configured'];
+
+  return [
+    'Dispatch Report V1',
+    'Route',
+    `  Scope: ${report.route.scope}`,
+    `  Action / role: ${report.route.action} / ${report.route.role}`,
+    `  Invocation target: ${report.route.target}`,
+    'Policy',
+    `  Status: ${report.policy.status}`,
+    `  Mode / name: ${display(report.policy.mode)} / ${display(report.policy.name)}`,
+    `  Source: ${display(report.policy.source)}`,
+    'Selection',
+    `  Requested candidate: ${formatCandidate(report.selection.requestedCandidate)}`,
+    `  Candidate tier / index: ${display(report.selection.candidateTier)} / ${display(report.selection.candidateIndex)}`,
+    `  Ceiling tier: ${display(report.selection.ceilingTier)}`,
+    `  Ceiling target: ${formatTarget(report.selection.ceilingTarget)}`,
+    `  Selected value: ${display(report.selection.selectedValue)}`,
+    `  Exact selected target: ${formatTarget(report.selection.exactSelectedTarget)}`,
+    `  Mode / branch: ${report.selection.selectionMode} / ${report.selection.selectionBranch}`,
+    `  Cell source: ${display(report.selection.cellSource)}`,
+    'Requested controls',
+    formatControl('Model', report.requestedControls.model),
+    formatControl('Effort', report.requestedControls.effort),
+    'Configured defaults (not runtime observations)',
+    `  Model: ${display(report.configuredDefaults.model)}`,
+    `  Model source: ${display(report.configuredDefaults.modelSource)}`,
+    `  Effort: ${display(report.configuredDefaults.effort)}`,
+    `  Effort source: ${display(report.configuredDefaults.effortSource)}`,
+    'Gate invocation (configured, immutable)',
+    ...gateLines,
+    'Runtime identity (observed/reported separately)',
+    ...(runtimeNotReported ? ['  Runtime identity was not reported.'] : []),
+    `  Producer: ${runtimeValue(report.runtimeIdentity.producer)}`,
+    `  Model: ${runtimeValue(report.runtimeIdentity.model)}`,
+    `  Effort: ${runtimeValue(report.runtimeIdentity.effort)}`,
+    `  Provenance: ${report.runtimeIdentity.provenance}`,
+    `  Confidence: ${report.runtimeIdentity.confidence}`,
+  ].join('\n');
 }
