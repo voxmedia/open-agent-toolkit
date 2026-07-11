@@ -84,6 +84,139 @@ describe('codex sync extension', () => {
     );
   });
 
+  it('inherits a higher user max depth into project config without mutating user config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(root, home);
+
+    await mkdir(join(home, '.codex'), { recursive: true });
+    const userConfigPath = join(home, '.codex', 'config.toml');
+    const userConfig = '[agents]\nmax_depth = 5\n';
+    await writeFile(userConfigPath, userConfig);
+
+    const firstPlan = await computeCodexProjectExtensionPlan(
+      root,
+      [],
+      undefined,
+      { userConfigDir: join(home, '.oat') },
+    );
+    const firstConfigOperation = firstPlan.operations.find(
+      (operation) => operation.target === 'config',
+    );
+
+    expect(firstConfigOperation).toMatchObject({
+      action: 'create',
+      path: '.codex/config.toml',
+    });
+    expect(firstConfigOperation?.content).toContain('max_depth = 5');
+    await expect(
+      readFile(join(root, '.codex', 'config.toml'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(readFile(userConfigPath, 'utf8')).resolves.toBe(userConfig);
+
+    await applyCodexProjectExtensionPlan(root, firstPlan);
+    await expect(readFile(userConfigPath, 'utf8')).resolves.toBe(userConfig);
+
+    const secondPlan = await computeCodexProjectExtensionPlan(
+      root,
+      [],
+      undefined,
+      { userConfigDir: join(home, '.oat') },
+    );
+    expect(
+      secondPlan.operations.find((operation) => operation.target === 'config'),
+    ).toMatchObject({ action: 'skip' });
+    expect(secondPlan.aggregateConfigHash).toBe(firstPlan.aggregateConfigHash);
+  });
+
+  it('updates project config to the higher inherited user max depth', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(root, home);
+
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 2\n',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 4\n',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, [], undefined, {
+      userConfigDir: join(home, '.oat'),
+    });
+    const configOperation = plan.operations.find(
+      (operation) => operation.target === 'config',
+    );
+
+    expect(configOperation).toMatchObject({ action: 'update' });
+    expect(configOperation?.content).toContain('max_depth = 4');
+  });
+
+  it.each([
+    ['missing', null],
+    ['lower', '[agents]\nmax_depth = 1\n'],
+  ])(
+    'ignores %s inherited user depth when project config already meets the floor',
+    async (_label, userConfig) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+      const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+      tempDirs.push(root, home);
+
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 2\n',
+      );
+      if (userConfig !== null) {
+        await mkdir(join(home, '.codex'), { recursive: true });
+        await writeFile(join(home, '.codex', 'config.toml'), userConfig);
+      }
+
+      const plan = await computeCodexProjectExtensionPlan(root, [], undefined, {
+        userConfigDir: join(home, '.oat'),
+      });
+
+      expect(
+        plan.operations.find((operation) => operation.target === 'config'),
+      ).toMatchObject({ action: 'skip' });
+    },
+  );
+
+  it('keeps user-scope depth isolated from project config', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    const project = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(home, project);
+
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await mkdir(join(project, '.codex'), { recursive: true });
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 1\n',
+    );
+    const projectConfig = '[agents]\nmax_depth = 8\n';
+    const projectConfigPath = join(project, '.codex', 'config.toml');
+    await writeFile(projectConfigPath, projectConfig);
+
+    const plan = await computeCodexProjectExtensionPlan(home, [], undefined, {
+      userConfigDir: join(home, '.oat'),
+    });
+    const configOperation = plan.operations.find(
+      (operation) => operation.target === 'config',
+    );
+
+    expect(configOperation).toMatchObject({ action: 'update' });
+    expect(configOperation?.content).toContain('max_depth = 2');
+    expect(configOperation?.content).not.toContain('max_depth = 8');
+    await applyCodexProjectExtensionPlan(home, plan);
+    await expect(readFile(projectConfigPath, 'utf8')).resolves.toBe(
+      projectConfig,
+    );
+  });
+
   it('generates materialized codex roles from matrix targets for oat-phase-implementer', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);

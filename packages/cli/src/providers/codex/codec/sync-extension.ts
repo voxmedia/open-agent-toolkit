@@ -27,7 +27,11 @@ import {
   SUPPORTED_CODEX_BASE_ROLES,
   SUPPORTED_CODEX_ROLE_TARGETS,
 } from './catalog';
-import { type CodexManagedRoleConfig, mergeCodexConfig } from './config-merge';
+import {
+  type CodexManagedRoleConfig,
+  mergeCodexConfig,
+  readCodexMaxDepth,
+} from './config-merge';
 import { exportCanonicalAgentToCodexRole } from './export-to-codex';
 import { materializeCodexRole } from './materialize';
 import {
@@ -461,6 +465,19 @@ function isUserCodexScope(
   return resolve(scopeRoot) === resolve(options.userConfigDir, '..');
 }
 
+async function readInheritedCodexMaxDepth(
+  scopeRoot: string,
+  options: CodexMaterializationTargetOptions,
+): Promise<number | undefined> {
+  if (!options.userConfigDir || isUserCodexScope(scopeRoot, options)) {
+    return undefined;
+  }
+
+  const userScopeRoot = resolve(options.userConfigDir, '..');
+  const userConfigContent = await readOptionalFile(configPath(userScopeRoot));
+  return readCodexMaxDepth(userConfigContent) ?? undefined;
+}
+
 async function readCodexMaterializationTargets(
   scopeRoot: string,
   options: CodexMaterializationTargetOptions = {},
@@ -659,6 +676,10 @@ export async function computeCodexProjectExtensionPlan(
   const desiredRoleNames = new Set(desiredRoles.map((role) => role.roleName));
   const existingConfigPath = configPath(scopeRoot);
   const existingConfigContent = await readOptionalFile(existingConfigPath);
+  const inheritedMaxDepth = await readInheritedCodexMaxDepth(
+    scopeRoot,
+    options,
+  );
   const staleRoles = isPartialSync
     ? []
     : await collectStaleManagedRoles(
@@ -741,6 +762,7 @@ export async function computeCodexProjectExtensionPlan(
     existingContent: existingConfigContent,
     desiredRoles: normalizeManagedRolesConfig(desiredRoles),
     staleManagedRoles: staleRoles,
+    inheritedMaxDepth,
   });
 
   operations.push({
