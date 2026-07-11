@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: null
+oat_last_commit: f2b30127
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -11,7 +11,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -34,33 +34,34 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: "2026-07-10T21:41:51.815Z" # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-07-10T21:41:51.815Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-07-11T02:30:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-cloud-autonomous-projects
 
-**Status:** Discovery complete — ready for design
+**Status:** Design complete — ready for implementation planning
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-11
 
 ## Current Phase
 
-Discovery - Complete (seeded from `/oat-brainstorm` session, 2026-07-10). Ready for `oat-project-design`.
+Design - Ready for implementation planning
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
-- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
-- **Design:** `design.md` (scaffolded template — not started)
+- **Spec:** `spec.md` (complete — requirements confirmed collaboratively)
+- **Design:** `design.md` (complete — all 12 sections approved collaboratively)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Downstream lifecycle files scaffolded
-- ✓ Discovery completed (seeded from brainstorm synthesis)
+- ✓ Discovery complete (seeded from brainstorm synthesis)
+- ✓ Specification complete (folded into design)
+- ✓ Design complete
+- ⧗ Awaiting implementation plan
 
 ## Blockers
 
@@ -68,4 +69,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-design` to confirm requirements and produce `spec.md` + `design.md`
+Create the implementation plan with `oat-project-plan`
