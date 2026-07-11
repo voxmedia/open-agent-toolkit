@@ -12,7 +12,9 @@
    dispatch-contract material this conversation. If it is not fresh, the run
    MUST be labeled `pilot/noncanonical` and the prompt's `run_type` line
    edited accordingly.
-2. Confirm the worktree is clean and note `git rev-parse HEAD`.
+2. Open the session in the intended verification worktree. Confirm that
+   `pwd` identifies that worktree, the worktree is clean, and note
+   `git rev-parse HEAD`.
 3. Choose the declared scope (`native-capability`, `cli-capability`, or
    `combined-capability`) and edit the prompt's `scope` line if not using the
    default (`combined-capability`).
@@ -22,8 +24,9 @@
 
 ## Path Maintenance
 
-Every prompt pins exact input paths. Until the flat-to-hierarchical move
-lands, the authoritative provider drafts are the flat
+Every prompt resolves the repository from the fresh session's current working
+directory and requires every probe to use that same worktree. Until the
+flat-to-hierarchical move lands, the authoritative provider drafts are the flat
 `references/dispatching-subagents-*-draft.md` files, and that is what the
 prompts below reference. **The move commit MUST rewrite the `Read:` block in
 all four prompts atomically** (four occurrences; search for
@@ -67,7 +70,9 @@ scope: combined-capability     # native-capability | cli-capability | combined-c
 harness: claude
 
 Repository:
-/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture
+Use this fresh session's current working directory as the repository root.
+Record its absolute `pwd` before reading inputs. Run every native and CLI probe
+from that same root; do not switch to or record a different checkout.
 
 Read (in this order, nothing else from references/):
 - .oat/projects/shared/oat-project-fixture/references/dispatching-subagents/verification/claims.md
@@ -151,7 +156,9 @@ scope: combined-capability     # native-capability | cli-capability | combined-c
 harness: codex
 
 Repository:
-/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture
+Use this fresh session's current working directory as the repository root.
+Record its absolute `pwd` before reading inputs. Run every native and CLI probe
+from that same root; do not switch to or record a different checkout.
 
 Read (in this order, nothing else from references/):
 - .oat/projects/shared/oat-project-fixture/references/dispatching-subagents/verification/claims.md
@@ -235,7 +242,9 @@ harness: cursor
 flavor: ide                    # record this value in evidence.json run.flavor
 
 Repository:
-/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture
+Use this fresh session's current working directory as the repository root.
+Record its absolute `pwd` before reading inputs. Run every native and CLI probe
+from that same root; do not switch to or record a different checkout.
 
 Read (in this order, nothing else from references/):
 - .oat/projects/shared/oat-project-fixture/references/dispatching-subagents/verification/claims.md
@@ -322,7 +331,9 @@ harness: cursor
 flavor: cli                    # record this value in evidence.json run.flavor
 
 Repository:
-/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture
+Use this fresh session's current working directory as the repository root.
+Record its absolute `pwd` before reading inputs. Run every native and CLI probe
+from that same root; do not switch to or record a different checkout.
 
 Read (in this order, nothing else from references/):
 - .oat/projects/shared/oat-project-fixture/references/dispatching-subagents/verification/claims.md
