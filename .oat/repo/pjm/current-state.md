@@ -41,6 +41,11 @@ copying their content here. -->
 - Config adoption and doctor share pass-scoped Cursor validation: each distinct
   candidate receives one Task probe and broad catalog retrieval is memoized for
   the command pass without treating catalog presence as eligibility evidence.
+- Cursor GPT-5.6 verification now has a strict structured evidence schema,
+  exact Task correlation, control-gated candidate execution, and private-only
+  raw identifiers. The current headless client exposed no Task events, so the
+  controls were inconclusive and the configured recommendation remains
+  explicitly unvalidated.
 
 ## What's Next
 
@@ -49,6 +54,8 @@ Track concrete items in pjm/backlog/ and sequencing in pjm/roadmap.md; keep this
 section to a short narrative pointer. -->
 
 Continue the remaining dispatch work through the active backlog: recheck live
-GPT-5.6 Cursor Task/subagent eligibility after 2026-07-18, add root-owned exact
-dispatch with launcher-owned provenance, enable reviewer reconnaissance
-subagents, and structure post-implementation sequencing.
+GPT-5.6 Cursor Task/subagent eligibility after a client rollout exposes Task in
+headless mode or Cursor support confirms the private requests (review by
+2026-08-08), add root-owned exact dispatch with launcher-owned provenance,
+enable reviewer reconnaissance subagents, and structure post-implementation
+sequencing.
