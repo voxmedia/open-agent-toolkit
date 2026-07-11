@@ -1572,20 +1572,16 @@ describe('oat config', () => {
         },
       });
       expect(validateMatrixCell).toHaveBeenCalledTimes(1);
-      expect(validateMatrixCell).toHaveBeenCalledWith(
-        'codex',
-        'gpt-5.5/xhigh',
-        {
-          cwd: root,
-          env: {},
-          detailed: true,
-          target: {
-            harness: 'codex',
-            model: 'gpt-5.5',
-            effort: 'xhigh',
-          },
+      expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.5', {
+        cwd: root,
+        env: {},
+        detailed: true,
+        target: {
+          harness: 'codex',
+          model: 'gpt-5.5',
+          effort: 'xhigh',
         },
-      );
+      });
       expect(capture.warn).toHaveLength(0);
       expect(process.exitCode).toBe(0);
     });
@@ -1616,7 +1612,7 @@ describe('oat config', () => {
       await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
 
       expect(capture.warn.join('\n')).toContain(
-        'workflow.dispatchCeiling.providers.cursor.high[0].model',
+        'workflow.dispatchCeiling.providers.cursor.high.candidates[0].route[0]',
       );
       expect(capture.warn.join('\n')).toContain('missing-model');
       expect(capture.warn.join('\n')).toContain('not recognized');
@@ -1624,6 +1620,44 @@ describe('oat config', () => {
         'workflow.dispatchCeiling.providers.cursor.frontier',
       );
       expect(capture.warn.join('\n')).toContain('could not be validated');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports canonical scalar, candidate, and nested fallback availability paths', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'unvalidated' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                cursor: 'scalar-model',
+                claude: { high: { candidates: ['opus'] } },
+                custom: {
+                  frontier: {
+                    candidates: [{ route: ['fallback-model'] }],
+                  },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.cursor value',
+      );
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.claude.high.candidates[0] value',
+      );
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.custom.frontier.candidates[0].route[0] value',
+      );
+      expect(validateMatrixCell).toHaveBeenCalledTimes(3);
       expect(process.exitCode).toBe(0);
     });
 

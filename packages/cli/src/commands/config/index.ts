@@ -10,6 +10,13 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { compileDispatchCeilingPreset } from '@config/dispatch-ceiling-preset';
 import {
+  normalizeDispatchMatrix,
+  validateDispatchRouteTarget,
+  walkDispatchMatrix,
+  type DispatchMatrixCellRef,
+  type DispatchMatrixNormalizationIssue,
+} from '@config/dispatch-matrix';
+import {
   dispatchPolicyModeDescription,
   dispatchPolicyPolicyDescription,
   managedDispatchPolicyValueList,
@@ -17,18 +24,13 @@ import {
 import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
-  isCodexMaterializedRouteTarget,
-  isWorkflowDispatchCandidateLadder,
-  isWorkflowDispatchFallbackRoute,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
   type OatWorkflowConfig,
   type UserConfig,
-  type WorkflowDispatchMatrixCell,
   type WorkflowDispatchMatrixTier,
   type WorkflowDispatchProviderValue,
-  type WorkflowDispatchRouteEntry,
   type WorkflowDispatchRouteTarget,
   type WorkflowDispatchCeilingPreset,
   type WorkflowDispatchPolicyMode,
@@ -36,7 +38,6 @@ import {
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
-  validateDispatchRouteTarget,
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
@@ -1011,9 +1012,10 @@ const DISPATCH_MATRIX_RECOMMENDATION_ASSET = join(
 interface DispatchMatrixRecommendation {
   version: string;
   providers: Record<string, WorkflowDispatchProviderValue>;
+  issues: DispatchMatrixNormalizationIssue[];
 }
 
-interface DispatchMatrixCellRef {
+interface DispatchMatrixAvailabilityRef {
   provider: string;
   value: string;
   path: string;
@@ -1064,171 +1066,77 @@ function parseDispatchMatrixRecommendation(
     );
   }
 
+  const normalized = normalizeDispatchMatrix(parsed.providers, {
+    pathPrefix: 'workflow.dispatchCeiling.providers',
+    compatibilityMode: 'layered-config',
+  });
+
   return {
     version,
-    providers: parsed.providers as Record<
-      string,
-      WorkflowDispatchProviderValue
-    >,
+    providers: normalized.providers,
+    issues: normalized.issues,
   };
-}
-
-function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
-  return isRecord(entry);
-}
-
-function formatRouteTargetValue(entry: WorkflowDispatchRouteTarget): string {
-  return [entry.model, entry.effort].filter(Boolean).join('/');
-}
-
-function addDispatchMatrixCellRefs(
-  refs: DispatchMatrixCellRef[],
-  provider: string,
-  path: string,
-  cell: WorkflowDispatchMatrixCell,
-): void {
-  if (typeof cell === 'string') {
-    refs.push({ provider, value: cell, path });
-    return;
-  }
-
-  const addEntry = (entry: WorkflowDispatchRouteEntry, entryPath: string) => {
-    if (typeof entry === 'string') {
-      refs.push({ provider, value: entry, path: entryPath });
-      return;
-    }
-
-    if (!isRouteTarget(entry)) {
-      return;
-    }
-
-    const targetProvider = entry.harness ?? provider;
-    if (isCodexMaterializedRouteTarget(provider, entry)) {
-      if (entry.model && entry.effort) {
-        refs.push({
-          provider: targetProvider,
-          value: formatRouteTargetValue(entry),
-          path: entryPath,
-          target: entry,
-        });
-        return;
-      }
-    }
-
-    if (entry.model) {
-      refs.push({
-        provider: targetProvider,
-        value: entry.model,
-        path: `${entryPath}.model`,
-      });
-    }
-    if (entry.effort) {
-      refs.push({
-        provider: targetProvider,
-        value: entry.effort,
-        path: `${entryPath}.effort`,
-      });
-    }
-  };
-
-  if (isWorkflowDispatchCandidateLadder(cell)) {
-    for (const [candidateIndex, candidate] of cell.candidates.entries()) {
-      const candidatePath = `${path}.candidates[${candidateIndex}]`;
-      if (isWorkflowDispatchFallbackRoute(candidate)) {
-        for (const [routeIndex, entry] of candidate.route.entries()) {
-          addEntry(entry, `${candidatePath}.route[${routeIndex}]`);
-        }
-        continue;
-      }
-      addEntry(candidate, candidatePath);
-    }
-    return;
-  }
-
-  for (const [index, entry] of cell.entries()) {
-    addEntry(entry, `${path}[${index}]`);
-  }
 }
 
 function collectDispatchMatrixCellRefs(
   providers: Record<string, WorkflowDispatchProviderValue>,
 ): DispatchMatrixCellRef[] {
-  const refs: DispatchMatrixCellRef[] = [];
-
-  for (const [provider, providerValue] of Object.entries(providers)) {
-    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
-    if (typeof providerValue === 'string') {
-      refs.push({ provider, value: providerValue, path: providerPath });
-      continue;
-    }
-
-    for (const [tier, cell] of Object.entries(providerValue)) {
-      if (cell === undefined) {
-        continue;
-      }
-      addDispatchMatrixCellRefs(
-        refs,
-        provider,
-        `${providerPath}.${tier}`,
-        cell,
-      );
-    }
-  }
-
-  return refs;
+  return walkDispatchMatrix(providers, {
+    source: 'repo-config',
+    pathPrefix: 'workflow.dispatchCeiling.providers',
+  });
 }
 
 function collectDispatchMatrixTargetValidationErrors(
-  providers: Record<string, WorkflowDispatchProviderValue>,
+  refs: DispatchMatrixCellRef[],
+  issues: DispatchMatrixNormalizationIssue[],
 ): string[] {
-  const errors: string[] = [];
-
-  for (const [provider, providerValue] of Object.entries(providers)) {
-    if (typeof providerValue === 'string') {
+  const errors = issues.map((issue) => {
+    const relativePath = issue.path.startsWith(
+      DISPATCH_CEILING_PROVIDER_KEY_PREFIX,
+    )
+      ? issue.path.slice(DISPATCH_CEILING_PROVIDER_KEY_PREFIX.length)
+      : '';
+    const provider = relativePath.split(/[.[]/, 1)[0] ?? '';
+    const closedValues = closedDispatchProviderValues(provider);
+    if (typeof issue.value === 'string' && closedValues) {
+      return `Invalid value for ${issue.path}: expected one of ${closedValues.join(' | ')}, got '${issue.value}'`;
+    }
+    return `${issue.path}: malformed dispatch matrix entry (${issue.kind}).`;
+  });
+  for (const ref of refs) {
+    if (ref.target === null) {
       continue;
     }
-
-    const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
-    for (const [tier, cell] of Object.entries(providerValue)) {
-      if (cell === undefined || typeof cell === 'string') {
-        continue;
-      }
-
-      const validateEntry = (
-        entry: WorkflowDispatchRouteEntry,
-        entryPath: string,
-      ) => {
-        if (!isRouteTarget(entry)) {
-          return;
-        }
-
-        const validation = validateDispatchRouteTarget(provider, entry);
-        if (!validation.valid) {
-          errors.push(`${entryPath}: ${validation.reason}`);
-        }
-      };
-
-      if (isWorkflowDispatchCandidateLadder(cell)) {
-        for (const [candidateIndex, candidate] of cell.candidates.entries()) {
-          const candidatePath = `${providerPath}.${tier}.candidates[${candidateIndex}]`;
-          if (isWorkflowDispatchFallbackRoute(candidate)) {
-            for (const [routeIndex, entry] of candidate.route.entries()) {
-              validateEntry(entry, `${candidatePath}.route[${routeIndex}]`);
-            }
-            continue;
-          }
-          validateEntry(candidate, candidatePath);
-        }
-        continue;
-      }
-
-      for (const [index, entry] of cell.entries()) {
-        validateEntry(entry, `${providerPath}.${tier}[${index}]`);
-      }
+    const validation = validateDispatchRouteTarget(ref.provider, ref.target);
+    if (!validation.valid) {
+      errors.push(`${ref.path}: ${validation.reason}`);
     }
   }
 
   return errors;
+}
+
+function toAvailabilityRef(
+  ref: DispatchMatrixCellRef,
+): DispatchMatrixAvailabilityRef | null {
+  if (ref.value !== null) {
+    return { provider: ref.provider, value: ref.value, path: ref.path };
+  }
+  if (ref.target === null) {
+    return null;
+  }
+
+  const value = ref.target.model ?? ref.target.effort;
+  if (!value) {
+    return null;
+  }
+  return {
+    provider: ref.target.harness ?? ref.provider,
+    value,
+    path: ref.path,
+    target: ref.target,
+  };
 }
 
 function applyWorkflowValue(
@@ -1688,14 +1596,20 @@ async function validateRecommendationCells(
   dependencies: ConfigCommandDependencies,
   warn: (message: string) => void,
 ): Promise<void> {
+  const refs = collectDispatchMatrixCellRefs(recommendation.providers);
   const targetErrors = collectDispatchMatrixTargetValidationErrors(
-    recommendation.providers,
+    refs,
+    recommendation.issues,
   );
   if (targetErrors.length > 0) {
     throw new Error(targetErrors.join('\n'));
   }
 
-  for (const ref of collectDispatchMatrixCellRefs(recommendation.providers)) {
+  for (const matrixRef of refs) {
+    const ref = toAvailabilityRef(matrixRef);
+    if (ref === null) {
+      continue;
+    }
     const closedValues = closedDispatchProviderValues(ref.provider);
     if (!ref.target && closedValues && !closedValues.includes(ref.value)) {
       throw new Error(
