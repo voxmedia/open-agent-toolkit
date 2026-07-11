@@ -263,6 +263,17 @@ and adds resolver-backed coverage.
 - Full fixture suite passes 10/10.
 - Dispatch: `Dispatch: scope=p01-t01 action=fix role=fix producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
 
+### Phase 1 Final Self-Review
+
+**Verdict:** pass — 0 Critical, 0 Important, 1 Medium, 1 Minor.
+
+All prior blocking findings are fixed. Before the external gate, a
+non-substantive cleanup will directly format/lint the four smoke MJS files. The
+root scripts do not currently include that path. The stale state summary is
+corrected in this bookkeeping update.
+
+**Review dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
+
 ---
 
 ## Phase 2: Smoke Runner Core

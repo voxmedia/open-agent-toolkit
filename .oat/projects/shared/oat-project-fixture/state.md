@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T19:55:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T20:00:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 iteration 2 complete; awaiting re-review
+Implementation — Phase 1 self-review passed; advisory cleanup
 
 ## Artifacts
 
@@ -65,8 +65,8 @@ Implementation — Phase 1 iteration 2 complete; awaiting re-review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 22 tasks)
-- **Implementation:** `implementation.md` (in progress — p01-t01 complete;
-  p01-t02 interrupted after accepted launch)
+- **Implementation:** `implementation.md` (in progress — Phase 1 tasks complete
+  and self-review passed)
 
 ## Progress
 
@@ -79,7 +79,8 @@ Implementation — Phase 1 iteration 2 complete; awaiting re-review
 - ⧗ Concurrent Codex/Claude dispatch-contract verification package ready
 - ✓ Phase 1 self-review fixes complete (iteration 1)
 - ✓ Phase 1 dispatch-matrix blocker fixed with resolver-backed coverage
-- ⧗ Final p01 self-review next
+- ✓ Final p01 self-review passed (0 Critical / 0 Important)
+- ⧗ Direct smoke-tool lint/format cleanup before external gate
 
 ## Blockers
 
@@ -87,4 +88,4 @@ None
 
 ## Next Milestone
 
-Pass final p01 self-review and external phase gate
+Complete advisory cleanup and pass external Phase 1 gate
