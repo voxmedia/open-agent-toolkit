@@ -288,6 +288,7 @@ should treat them as pending recheck, not as inferred capabilities.
 ```
 
 <!-- OAT_CURSOR_EVIDENCE_RECORD_END -->
+
 <!-- OAT_CURSOR_EVIDENCE_RECORD_START -->
 
 ```json
@@ -791,3 +792,129 @@ should treat them as pending recheck, not as inferred capabilities.
 ```
 
 <!-- OAT_CURSOR_EVIDENCE_RECORD_END -->
+
+## Structured second pass — 2026-07-11
+
+The stream-JSON harness ran its positive and negative controls before any
+candidate probe. Both controls reached successful terminal parent events, but
+neither emitted a Task tool-call start or completion. The controls are therefore
+`inconclusive`: the run establishes an account, client, or harness boundary, not
+candidate acceptance or rejection. In accordance with the approved stop rule,
+zero recommendation or exploratory candidates were executed.
+
+The public projection below contains only allowlisted event structure, derived
+outcomes, sanitized environment presence, and non-reversible identifier hashes.
+Exact request, session, and tool-call identifiers and credential-redacted raw
+streams remain only in the gitignored local project companion.
+
+<!-- OAT_CURSOR_STRUCTURED_CAPTURE_START -->
+
+```json
+{
+  "schemaVersion": 2,
+  "sanitizerSchemaVersion": 1,
+  "capturedAt": "2026-07-11T12:21:57.968Z",
+  "recommendation": {
+    "version": "2026-07-10.2",
+    "sha256": "01cc3d6c1c451090a1a1439d4fbaa359e25f8e6edb93bb022558607f57234527"
+  },
+  "environment": {
+    "selectedBinary": "cursor-agent",
+    "clientVersion": "2026.07.09-a3815c0",
+    "cursorApiKey": "present",
+    "credentialStore": "unset"
+  },
+  "controls": {
+    "status": "inconclusive",
+    "positive": {
+      "kind": "positive-control",
+      "candidate": null,
+      "requestedModel": null,
+      "availabilityStatus": "unvalidated",
+      "taskSelection": "not-observed",
+      "childCompletion": "not-observed",
+      "runtimeIdentity": "not-reported",
+      "outcomeBasis": "no-definitive-task-evidence",
+      "terminalEventObserved": true,
+      "terminalSubtype": "success",
+      "directExitStatus": 0,
+      "terminationSignal": null,
+      "durationMs": 8876,
+      "streamStatus": "valid",
+      "sanitizerSchemaVersion": 1,
+      "correlation": {
+        "sessionHash": "sha256:e6bdeb45fb2afa6487b57880fd5950d2126bdd866806fad6defed51e55201461",
+        "requestHash": "sha256:9ac6371a3e0aa2e6d2684463c3d8a6a92ae515a6243b5b209daf0dc6cface44b",
+        "toolCallHash": null
+      },
+      "events": [
+        {
+          "eventType": "system",
+          "subtype": "init",
+          "sessionHash": "sha256:e6bdeb45fb2afa6487b57880fd5950d2126bdd866806fad6defed51e55201461"
+        },
+        {
+          "eventType": "user",
+          "sessionHash": "sha256:e6bdeb45fb2afa6487b57880fd5950d2126bdd866806fad6defed51e55201461"
+        },
+        {
+          "eventType": "assistant",
+          "sessionHash": "sha256:e6bdeb45fb2afa6487b57880fd5950d2126bdd866806fad6defed51e55201461"
+        },
+        {
+          "eventType": "result",
+          "subtype": "success",
+          "sessionHash": "sha256:e6bdeb45fb2afa6487b57880fd5950d2126bdd866806fad6defed51e55201461",
+          "requestHash": "sha256:9ac6371a3e0aa2e6d2684463c3d8a6a92ae515a6243b5b209daf0dc6cface44b"
+        }
+      ]
+    },
+    "negative": {
+      "kind": "negative-control",
+      "candidate": "oat-deliberately-invalid-task-model",
+      "requestedModel": null,
+      "availabilityStatus": "unvalidated",
+      "taskSelection": "not-observed",
+      "childCompletion": "not-observed",
+      "runtimeIdentity": "not-reported",
+      "outcomeBasis": "no-definitive-task-evidence",
+      "terminalEventObserved": true,
+      "terminalSubtype": "success",
+      "directExitStatus": 0,
+      "terminationSignal": null,
+      "durationMs": 7839,
+      "streamStatus": "valid",
+      "sanitizerSchemaVersion": 1,
+      "correlation": {
+        "sessionHash": "sha256:f23e3b93e10fa5a691fb0de7cf9fb12c462884dc5fcd39c3a1fedbcf7cf9c7ea",
+        "requestHash": "sha256:4a5bda818852dbe145bf49b82010db6f6e4fc556d158e6775a568e35dd3ed9c6",
+        "toolCallHash": null
+      },
+      "events": [
+        {
+          "eventType": "system",
+          "subtype": "init",
+          "sessionHash": "sha256:f23e3b93e10fa5a691fb0de7cf9fb12c462884dc5fcd39c3a1fedbcf7cf9c7ea"
+        },
+        {
+          "eventType": "user",
+          "sessionHash": "sha256:f23e3b93e10fa5a691fb0de7cf9fb12c462884dc5fcd39c3a1fedbcf7cf9c7ea"
+        },
+        {
+          "eventType": "assistant",
+          "sessionHash": "sha256:f23e3b93e10fa5a691fb0de7cf9fb12c462884dc5fcd39c3a1fedbcf7cf9c7ea"
+        },
+        {
+          "eventType": "result",
+          "subtype": "success",
+          "sessionHash": "sha256:f23e3b93e10fa5a691fb0de7cf9fb12c462884dc5fcd39c3a1fedbcf7cf9c7ea",
+          "requestHash": "sha256:4a5bda818852dbe145bf49b82010db6f6e4fc556d158e6775a568e35dd3ed9c6"
+        }
+      ]
+    }
+  },
+  "candidates": []
+}
+```
+
+<!-- OAT_CURSOR_STRUCTURED_CAPTURE_END -->
