@@ -1492,6 +1492,49 @@ git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verificati
 git commit -m "fix(p06-t11): constrain public event values"
 ```
 
+### Task p06-t12: (manual review closeout) Enforce the complete public evidence schema
+
+**Files:**
+
+- Modify: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Understand the issue**
+
+The third and final automated p06 review found that nominally typed public
+fields such as `sentinelObserved` and `terminationSignal` can still carry
+arbitrary strings, including prose or path-shaped values.
+
+**Step 2: Implement fix**
+
+Enforce exact types and finite domains for every public probe and event field:
+boolean-only sentinel state, numeric/null exit and duration fields,
+finite/null termination signals, finite probe status/kind fields, strict hash
+objects, and bounded model strings. Reject path/URI material independently of a
+short root-name denylist.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --capture /tmp/oat-cursor-structured-pass.json \
+  --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+```
+
+Expected: arbitrary strings and `/workspace`, `/root`, and `file://` paths in
+nominally typed public fields fail closed; recorded evidence remains valid.
+
+**Step 4: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs
+git commit -m "fix(p06-t12): enforce public evidence schema"
+```
+
 ---
 
 ## Reviews
@@ -1503,7 +1546,7 @@ git commit -m "fix(p06-t11): constrain public event values"
 | p03           | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04           | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
 | p05           | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| p06           | code     | fixes_completed | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11T130108Z.md   |
+| p06           | code     | fixes_added     | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11T131443Z.md   |
 | final-pre-p06 | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
 | final         | code     | pending         | -          | -                                                             |
 | spec          | artifact | pending         | -          | -                                                             |
@@ -1529,9 +1572,9 @@ approval.
 - Phase p03: 6 tasks — Dispatch Report V1 and workflow integrations
 - Phase p04: 4 tasks — live evidence, recommendation, and docs
 - Phase p05: 3 tasks — release validation and backlog closeout
-- Phase p06: 11 tasks — structured Cursor controls, probes, reconciliation, review fixes, and release validation
+- Phase p06: 12 tasks — structured Cursor controls, probes, reconciliation, review fixes, and release validation
 
-**Total: 34 tasks**
+**Total: 35 tasks**
 
 Ready for implementation only after optional phase-review setup and the managed
 plan artifact review complete.

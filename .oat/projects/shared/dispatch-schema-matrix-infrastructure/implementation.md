@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: null
+oat_current_task_id: p06-t12
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 6     | 6/6       |
-| p02   | complete | 4     | 4/4       |
-| p03   | complete | 6     | 6/6       |
-| p04   | complete | 4     | 4/4       |
-| p05   | complete | 3     | 3/3       |
-| p06   | complete | 11    | 11/11     |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 6     | 6/6       |
+| p02   | complete    | 4     | 4/4       |
+| p03   | complete    | 6     | 6/6       |
+| p04   | complete    | 4     | 4/4       |
+| p05   | complete    | 3     | 3/3       |
+| p06   | in_progress | 12    | 11/12     |
 
-**Total:** 34/34 tasks completed
+**Total:** 34/35 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -512,7 +512,7 @@ oat_generated: false
 
 ## Phase p06: Structured Cursor Task Evidence Revision
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-11
 **Completed:** 2026-07-11
 
@@ -667,6 +667,24 @@ control-identity gap becomes `p06-t10`; the public value-privacy gap becomes
 structured capture verifier, tracked evidence comparison, and diff hygiene all
 passed. The review row is `fixes_completed` pending the third and final
 automated p06 review cycle.
+
+---
+
+### Third p06 Review Received
+
+**Review artifact:** `reviews/archived/code-p06-self-review-2026-07-11T131443Z.md`
+
+**Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor.
+
+**Disposition:** The bounded three-cycle automated p06 review limit was
+reached. The user approved addressing the remaining complete-schema/privacy
+gap manually as `p06-t12`, then proceeding to the fresh final review without a
+fourth p06 review cycle.
+
+### Task p06-t12: Enforce the complete public evidence schema
+
+**Status:** pending
+**Commit:** -
 
 ---
 
