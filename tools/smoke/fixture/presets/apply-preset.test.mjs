@@ -9,6 +9,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -21,6 +22,11 @@ const fixtureRoot = path.dirname(presetsRoot);
 const fixtureProjectRoot = path.join(fixtureRoot, 'project');
 const applierPath = path.join(presetsRoot, 'apply-preset.mjs');
 const artifactNames = ['state.md', 'plan.md', 'implementation.md'];
+const repoRoot = path.resolve(fixtureRoot, '../../..');
+const require = createRequire(import.meta.url);
+const tsxCli = require.resolve('tsx/cli');
+const cliEntry = path.join(repoRoot, 'packages/cli/src/index.ts');
+const cliTsconfig = path.join(repoRoot, 'packages/cli/tsconfig.json');
 
 function createFixtureCopy() {
   const temporaryRoot = mkdtempSync(path.join(os.tmpdir(), 'oat-fixture-'));
@@ -35,6 +41,27 @@ function runPreset(presetName, projectRoot) {
   return spawnSync(process.execPath, [applierPath, presetName, projectRoot], {
     encoding: 'utf8',
   });
+}
+
+function readProjectStatus(projectRoot) {
+  const result = spawnSync(
+    process.execPath,
+    [
+      tsxCli,
+      '--tsconfig',
+      cliTsconfig,
+      cliEntry,
+      'project',
+      'status',
+      '--project-path',
+      projectRoot,
+      '--json',
+    ],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return JSON.parse(result.stdout);
 }
 
 test('implementation-ready produces implementation-ready frontmatter', (t) => {
@@ -57,7 +84,18 @@ test('implementation-ready produces implementation-ready frontmatter', (t) => {
   assert.match(state, /^oat_phase: implement$/m);
   assert.match(state, /^oat_phase_status: in_progress$/m);
   assert.match(state, /^oat_current_task: p01-t01$/m);
+  assert.match(state, /^oat_template: false$/m);
   assert.match(implementation, /^oat_current_task_id: p01-t01$/m);
+  assert.match(implementation, /^oat_template: false$/m);
+  const status = readProjectStatus(projectRoot);
+  assert.equal(status.status, 'ok');
+  assert.equal(
+    status.project.artifacts.find(
+      (artifact) => artifact.type === 'implementation',
+    ).isTemplate,
+    false,
+  );
+  assert.equal(status.project.recommendation.skill, 'oat-project-implement');
   assert.deepEqual(
     readdirSync(projectRoot).filter((entry) => entry.includes('.preset-')),
     [],
