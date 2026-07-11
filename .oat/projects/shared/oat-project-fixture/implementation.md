@@ -201,6 +201,24 @@ oat_generated: false
 - Implementation: `Dispatch: scope=p01-t03 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 - Fix: `Dispatch: scope=p01-t03 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 
+### Phase 1 Self-Review — Fix Iteration 1
+
+**Reviewer:** native root Task, `gpt-5.6-sol-xhigh`
+
+**Verdict:** fail — 0 Critical, 3 Important, 2 Medium, 0 Minor.
+
+**Blocking scopes:**
+
+- Fixture lifecycle metadata, local dispatch matrix, runnable task scopes, and
+  canonical review table.
+- Preset coverage for state plus atomic multi-artifact writes and rollback.
+
+**Advisory scope included in fixes:**
+
+- Align byte-stable fixture logs with launcher-owned target evidence.
+
+**Review dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
+
 ---
 
 ## Phase 2: Smoke Runner Core
