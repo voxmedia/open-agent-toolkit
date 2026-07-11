@@ -134,7 +134,7 @@ The Auto Artifact-Review Loop below consumes this reviewer dispatch contract.
 Tier selection happens only after the target-preserving route is known and
 changes execution mechanics, not the resolved model/effort contract.
 
-## Shared Phase-Review Setup Contract
+## Shared Phase Gate Review Setup Contract
 
 Every plan-producing workflow invokes this procedure after the complete plan
 has stable phase IDs and before the plan artifact review begins. The calling

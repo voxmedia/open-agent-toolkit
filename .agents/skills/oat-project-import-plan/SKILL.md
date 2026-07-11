@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.4
+version: 1.4.5
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -16,7 +16,7 @@ Import a markdown plan from an external coding provider and normalize it into OA
 Provider native plan mode uses this same path: provider-plan-via-import
 preserves the provider plan first, and provider plan dispatch readiness
 inherits the same import workflow contract below, including complete ladder
-adoption, the project named ceiling, the `Shared Phase-Review Setup Contract`,
+adoption, the project named ceiling, the `Shared Phase Gate Review Setup Contract`,
 and the rule that readiness and completion follow only after a durable review
 disposition. It does not add a separate provider-plan prompt.
 
@@ -277,10 +277,10 @@ maximum. Use the canonical
 project ceiling resolves. `Uncapped` and `Inherit Host Defaults` remain
 explicit modes; `Leave Unresolved` is not implementation-ready.
 
-### Step 4.25: Configure Optional Phase Review
+### Step 4.25: Configure Optional Phase Gate Review
 
 After normalization has produced stable phase IDs and before Step 4.5 starts
-the import-aware plan artifact review, invoke the `Shared Phase-Review Setup
+the import-aware plan artifact review, invoke the `Shared Phase Gate Review Setup
 Contract` from `oat-project-plan-writing`. Provider native plan mode uses this
 same import step and inherits its result.
 
@@ -289,10 +289,10 @@ through the shared contract without probing, prompting, or mutation. Resumed or
 imported explicit values remain authoritative without re-prompting. Otherwise
 let the contract probe qualifying targets and offer all phases, selected
 phases, or disabled. If the probe fails, no target qualifies, or the user
-declines, leave phase review disabled and continue with the contract's concise
+declines, leave Phase gate review disabled and continue with the contract's concise
 status output.
 
-This phase-review setup is independent from HiLL checkpoints. Do not read or
+This Phase gate review setup is independent from HiLL checkpoints. Do not read or
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 

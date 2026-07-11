@@ -2,39 +2,39 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-10
-oat_current_task_id: p02-t01
+oat_last_updated: 2026-07-11
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: post-implementation-sequencing
 
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-11
 
 > Resume at the task named by `oat_current_task_id`. Reviews are tracked in
 > `plan.md`; this file records implementation outcomes and orchestration runs.
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 2     | 2/2       |
-| p02   | completed   | 3     | 3/3       |
-| p03   | in_progress | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 2     | 2/2       |
+| p02   | completed | 3     | 3/3       |
+| p03   | completed | 3     | 3/3       |
 
-**Total:** 5/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ## Phase 1: Structured Configuration Contract
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-10
 
 ### Phase Summary
 
 Completed configuration model, atomic resolution, and CLI authoring/retrieval
-contracts. Focused config and CLI tests plus CLI type checking passed; Phase 1
-code review remains pending.
+contracts. Focused config and CLI tests plus CLI type checking passed; the
+Phase 1 review passed cleanly.
 
 ### Task p01-t01: Add the legacy-or-structured model and atomic resolution
 
@@ -60,13 +60,14 @@ output, and describe guidance while preserving legacy strings.
 
 ## Phase 2: Restart-Safe Final Closeout
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-10
 
 ### Phase Summary
 
-Complete after final sequencing, approval persistence, PR integration, and
-resume routing satisfy their lifecycle contracts.
+Completed final-closeout sequencing, approval persistence, PR integration,
+resume routing, and Phase gate review terminology. The post-fix phase review
+confirmed the final-checkpoint and wording boundaries.
 
 ### Task p02-t01: Reorder final review, sequence steps, and approval
 
@@ -85,28 +86,29 @@ resume routing satisfy their lifecycle contracts.
 
 ## Phase 3: Documentation and Release Surface
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-10
 
 ### Phase Summary
 
-Complete after docs, bundled assets, lockstep versions, release validation, and
-the shipped backlog item closeout match the delivered behavior.
+Completed documentation, bundled assets, lockstep versioning, release
+validation, and shipped-backlog closeout. Final workspace verification passed;
+only final review remains.
 
 ### Task p03-t01: Document structured sequencing and final approval timing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0e7dd20b
 
 ### Task p03-t02: Bump lockstep packages, regenerate assets, and validate release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b54a206a
 
 ### Task p03-t03: Archive the shipped backlog item and verify PJM state
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 37aea685
 
 ## Orchestration Runs
 
@@ -125,7 +127,18 @@ No deviations recorded.
 
 ## Final Summary (for PR/docs)
 
-Populate from completed phase summaries before final review and PR generation.
+- Shipped structured `workflow.postImplementSequence` support with ordered
+  `preApproval` and `postApproval` arrays, while retaining the legacy string
+  values unchanged in configuration retrieval.
+- Updated final-closeout skill contracts so final review precedes pre-approval
+  steps, final HiLL approval separates the two boundaries, and incomplete
+  snapshots resume safely.
+- Clarified Phase gate review terminology across planning paths and documented
+  the approval-aware lifecycle.
+- Updated CLI configuration tests, lifecycle contract tests, bundled assets,
+  and lockstep public package release metadata.
+- Verification: `pnpm test`, `pnpm lint`, `pnpm type-check`, `pnpm build`, and
+  `pnpm release:validate` all passed on 2026-07-11.
 
 ## Implementation Log
 
@@ -243,3 +256,12 @@ configured gate rerun after these artifact corrections.
   for approval only after the final phase completes.
 - Tier 1 delegation is authorized for this run. `p01-t01` resolves to
   `oat-phase-implementer-gpt-5-6-sol-medium` (`gpt-5.6-sol`, medium).
+
+### Completion Reconciliation
+
+**Date:** 2026-07-11
+
+- Reconciled the tracker with completed Phase 2 and Phase 3 commits.
+- The Phase 2 post-fix review confirmed final-checkpoint empty-list handling
+  and the Phase gate review boundary wording.
+- Full workspace and release validation passed; final code review is next.

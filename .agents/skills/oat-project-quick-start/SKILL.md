@@ -566,7 +566,7 @@ non-interactive unresolved state are not implementation-ready.
 ### Step 3.55: Configure Optional Phase Gate Review
 
 After the generated quick plan has stable phase IDs and before Step 3.6 starts
-the plan artifact review, invoke the `Shared Phase-Review Setup Contract` from
+the plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
 `oat-project-plan-writing`.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
