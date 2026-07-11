@@ -274,6 +274,14 @@ corrected in this bookkeeping update.
 
 **Review dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
 
+**Advisory cleanup:**
+
+- Commit: `3e2d034f47fa17f2d769198e5c61f4b7bdf8579c`
+- Direct `oxlint` and `oxfmt` now pass for all smoke MJS files; caught errors
+  preserve their causes.
+- Fixture suite remains 10/10.
+- Dispatch: `Dispatch: scope=p01-t03 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+
 ---
 
 ## Phase 2: Smoke Runner Core
