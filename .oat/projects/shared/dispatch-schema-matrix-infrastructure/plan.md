@@ -960,7 +960,7 @@ git commit -m "chore(p05-t03): close dispatch infrastructure backlog"
 | p02    | code     | passed          | 2026-07-11 | reviews/archived/code-p02-self-review-2026-07-11.md           |
 | p03    | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04    | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
-| p05    | code     | pending         | -          | -                                                             |
+| p05    | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | p02   | complete | 4     | 4/4       |
 | p03   | complete | 6     | 6/6       |
 | p04   | complete | 4     | 4/4       |
-| p05   | pending  | 3     | 0/3       |
+| p05   | complete | 3     | 3/3       |
 
-**Total:** 20/23 tasks completed
+**Total:** 23/23 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -436,6 +436,79 @@ oat_generated: false
 
 ---
 
+## Phase p05: Release and Backlog Closeout
+
+**Status:** complete
+**Started:** 2026-07-11
+**Completed:** 2026-07-11
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Bumped all five public packages in lockstep from `0.1.48` to `0.1.49` and regenerated shipped CLI assets through the canonical bundler.
+- Completed focused, repository, documentation, build, and public-package release validation without project-caused repair drift.
+- Archived the dispatch report schema, shared matrix consolidation, and Cursor catalog-cache backlog items with implementation evidence.
+- Kept GPT-5.6 Cursor slug verification open because all 13 live results remain `unvalidated`, with the next recheck after 2026-07-18.
+- Preserved the detailed root-owned dispatch broker follow-up as an active item and removed its project-created template markers.
+
+**Key files touched:**
+
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` - lockstep `0.1.49` versions.
+- `packages/cli/assets/public-package-versions.json` - regenerated shipped package map.
+- `.oat/repo/pjm/backlog/{items,archived,completed.md,index.md}` - evidence-based closeout and retained follow-ups.
+
+**Verification:**
+
+- Run: 16 focused matrix, validation, report, gate, workflow, and bundle suites.
+- Result: Pass - 724/724 tests.
+- Run: formatting, lint, type-check, full tests, build, and docs build sequentially.
+- Result: Pass.
+- Run: version check, bundle consistency, frozen lockfile install, and `pnpm release:validate`.
+- Result: Pass - all five `0.1.49` packages packed and validated.
+
+**Notes / Decisions:**
+
+- No p05-t02 repair commit was needed because verification produced no project-scoped drift.
+- PJM doctor retains failures/warnings from files that predate this project; every project-caused backlog lifecycle check passes.
+- The default remote docs crawl still targets pre-deployment HTML; the current local export has 549 links and zero broken.
+- One exact pinned phase subagent implemented all three tasks and the bounded review/fix loop directly; no nested task workers were launched.
+
+### Task p05-t01: Bump lockstep public packages and regenerate assets
+
+**Status:** complete
+**Commit:** 28865256
+
+**Outcome:**
+
+- Bumped the five public packages to `0.1.49` and regenerated public-version and bundled assets.
+
+---
+
+### Task p05-t02: Run the full repository and release verification
+
+**Status:** complete
+**Commit:** none required
+
+**Outcome:**
+
+- All focused, repository, documentation, build, and release checks passed without project-caused drift.
+
+---
+
+### Task p05-t03: Close associated backlog items with evidence
+
+**Status:** complete
+**Commit:** f4d69ae6
+
+**Outcome:**
+
+- Archived three completed infrastructure items and retained GPT-5.6 eligibility verification with exact evidence and recheck state.
+
+**Review fix:** `6d1cb357` removes project-created PJM template drift and aligns the curated backlog overview with completed and active state.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -539,29 +612,45 @@ Track test execution during implementation.
 | 2     | 165       | 165    | 0      | Four focused suites; type-check, lint, and format also passed   |
 | 3     | 436       | 436    | 0      | Nine focused suites; type-check, lint, and format also passed   |
 | 4     | 139       | 139    | 0      | 11 verifier and 128 targeted CLI tests; docs checks also passed |
+| 5     | 724       | 724    | 0      | 16 focused suites plus full repository and release validation   |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Shared dispatch-matrix normalization, traversal, and provenance-rich refs across config, project state, adoption, and doctor.
+- Pass-scoped Cursor Task-probe and broad-catalog validation caching.
+- Dispatch Report V1 schema, deterministic JSON/human formatters, compatibility stamp derivation, resolver/gate adapters, and workflow integration.
+- Reproducible live Cursor evidence for all 13 recommended GPT-5.6 candidates, with fail-closed machine verification and dated recheck disposition.
+- User documentation and lockstep public package release assets at `0.1.49`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Resolver callers can request a scoped Dispatch Report V1 without changing legacy output when report context is absent.
+- Gate output separates configured invocation, matrix-cell provenance, and runtime-observed identity.
+- Config adoption and doctor reuse validation work per command pass while preserving `valid`, `unknown-value`, and `unvalidated` outcomes.
+- Recommended Cursor GPT-5.6 strings remain configured but explicitly unvalidated pending the 2026-07-18 recheck.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/config/dispatch-matrix.ts` - shared matrix algebra and traversal.
+- `packages/cli/src/providers/identity/dispatch-validation.ts` - pass-scoped validation context.
+- `packages/cli/src/providers/identity/dispatch-report.ts` - report schema, builder, and formatters.
+- `tools/verification/verify-cursor-subagent-evidence.mjs` - reproducible evidence verifier.
+- `.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md` - live probe evidence.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 724 focused tests across 16 suites.
+- Full formatting, lint, type-check, test, build, and docs build.
+- Five-package `0.1.49` release validation.
+- 11 evidence-verifier tests and final 13-record validation.
+- Local docs crawl: 52 pages, 549 links, 0 broken.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The planned exact phase-coordinator/task-worker topology was replaced for this project by one exact pinned phase subagent implementing each phase directly, because nested provider initialization was sandbox-blocked. Durable remediation is tracked by `BL-260711-add-root-owned-dispatch-broker`.
+- Live Cursor probes did not verify any recommended slug, so the recommendation was retained and `BL-260708-verify-cursor-gpt-5-6-subagent` remains open rather than being overstated as complete.
 
 ## References
 

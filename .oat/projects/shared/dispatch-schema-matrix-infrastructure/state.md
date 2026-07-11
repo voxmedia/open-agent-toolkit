@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: f2122197
+oat_current_task: null
+oat_last_commit: 6d1cb357
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -38,12 +38,12 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T03:20:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T03:35:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase p04 passed; p05 HiLL checkpoint approved and ready for dispatch
+Implementation tasks complete; implementation-end gate review pending
 
 ## Artifacts
 
@@ -98,6 +98,10 @@ Implementation - Phase p04 passed; p05 HiLL checkpoint approved and ready for di
 - ✓ Phase p04 verification passed: 11 verifier tests, 128 targeted CLI tests, docs build/lint, and a clean 549-link local crawl
 - ✓ Phase p05 HiLL checkpoint reached before final release/backlog dispatch
 - ✓ Phase p05 HiLL checkpoint approved by the user
+- ✓ Phase p05 completed: lockstep `0.1.49` release assets, full verification, and evidence-based backlog closeout
+- ✓ Phase p05 self-review passed after project PJM closeout drift fix (`6d1cb357`)
+- ✓ All 23 implementation tasks complete
+- ⧗ Implementation-end gate review pending
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -106,4 +110,4 @@ Implementation - Phase p04 passed; p05 HiLL checkpoint approved and ready for di
 
 ## Next Milestone
 
-Dispatch one exact p05 phase subagent at `p05-t01`; it implements the phase tasks sequentially without nested workers and returns for root verification, final phase self-review, implementation-end gate review, and bookkeeping.
+Run the configured implementation-end gate review over the completed project, process any findings, and finalize implementation bookkeeping.
