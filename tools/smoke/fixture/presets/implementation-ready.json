@@ -1,0 +1,16 @@
+{
+  "name": "implementation-ready",
+  "plan": {
+    "frontmatter": {
+      "oat_status": "complete",
+      "oat_ready_for": "oat-project-implement",
+      "oat_template": "false"
+    },
+    "planReviewRow": "| plan  | artifact | passed  | -        |"
+  },
+  "implementation": {
+    "frontmatter": {
+      "oat_current_task_id": "p01-t01"
+    }
+  }
+}
