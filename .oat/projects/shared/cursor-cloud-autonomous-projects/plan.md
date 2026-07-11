@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-11
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
@@ -493,7 +493,7 @@ Expected: all green; manual skill read-through against live vox-docs tools confi
 
 **Verify (full repository chain after ALL p05 changes, per pntr AGENTS.md):**
 
-Run (pntr repo): `pnpm type-check && pnpm build && pnpm test && NO_COLOR=1 pnpm test && pnpm lint && pnpm format`, then after committing: `pnpm worktree:validate` (clean working tree).
+Run (pntr repo): `pnpm install && pnpm type-check && pnpm build && pnpm test && NO_COLOR=1 pnpm test && pnpm lint && pnpm format`, then after committing: `pnpm worktree:validate` (clean working tree).
 Expected: all green; worktree validation passes post-commit.
 
 **Commit:** `docs(p05-t02): document internal-docs-mcp plugin` (pntr repo)
@@ -634,7 +634,7 @@ Expected: all green; worktree validation passes post-commit.
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| plan   | artifact | passed  | 2026-07-11 | structured (in-memory; reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; 3 rounds, final fix applied verbatim) |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
