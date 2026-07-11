@@ -1001,6 +1001,38 @@ describe('validateOatSkills', () => {
     expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
   });
 
+  it('makes native Codex dispatch and launcher-owned provenance authoritative', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /resolver-returned Codex variant[\s\S]{0,240}first[\s\S]{0,160}native[\s\S]{0,80}`agent_type`/i,
+    );
+    expect(content).toMatch(
+      /spawn acceptance[\s\S]{0,180}launcher payload[\s\S]{0,180}configured invocation evidence/i,
+    );
+    expect(content).toMatch(
+      /For every coordinator, task-worker, fix, and review launch,[\s\S]{0,100}record `target`,\s*`model_axis`, and `effort_axis` from resolver output and the actual launcher\s+payload after payload construction/i,
+    );
+    expect(content).toMatch(
+      /missing (?:runtime )?telemetry[\s\S]{0,160}(?:missing )?(?:agent )?self-report[\s\S]{0,200}not[\s\S]{0,100}(?:role )?unavailability/i,
+    );
+    expect(content).toMatch(
+      /self-report[\s\S]{0,180}(?:cannot|must not)[\s\S]{0,180}(?:populate|overwrite)[\s\S]{0,260}launcher-owned/i,
+    );
+    expect(content).toMatch(
+      /native role-selection rejection[\s\S]{0,500}explicit[\s\S]{0,220}`agent_type`[\s\S]{0,220}before[\s\S]{0,120}(?:child|agent)[\s\S]{0,80}start/i,
+    );
+    expect(content).toMatch(
+      /fresh\s+(?:pinned\s+)?(?:Codex\s+)?child[\s\S]{0,260}only after[\s\S]{0,240}native role-selection rejection/i,
+    );
+    expect(content).toMatch(
+      /accepted child[\s\S]{0,220}`BLOCKED`[\s\S]{0,260}(?:cannot|must not)[\s\S]{0,180}(?:fallback|fresh child)/i,
+    );
+    expect(content).toMatch(/launcher-selected\/config-declared/i);
+  });
+
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
@@ -1485,7 +1517,7 @@ describe('validateOatSkills', () => {
         /concrete managed Codex target[\s\S]{0,500}(?:before|takes precedence over)[\s\S]{0,200}(?:tier|availability)/i,
       );
       expect(content, `${skillName} unavailable-role route`).toMatch(
-        /(?:unavailable|cannot select)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
+        /(?:unavailable|cannot select|native role-selection rejection)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
       );
       expect(content, `${skillName} inline control guard`).toMatch(
         /inline[\s\S]{0,300}verified equivalent current-host[\s\S]{0,300}(?:model|controls)/i,

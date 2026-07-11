@@ -107,16 +107,21 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 **Mandatory target-first order:** Complete Dispatch Policy Preflight and resolve
 the concrete managed Codex target before probing generic agent availability or
 locking Tier 1/Tier 2. A concrete target takes precedence over tier selection:
-use the exact registered role, or an explicitly pinned fresh Codex child when
-that role is unavailable. If neither route is possible, inline execution is
-allowed only with verified equivalent current-host model and effort controls;
-otherwise block before work starts. Explicit inherit/default and documented
-managed-uncapped reviewer behavior remain the only base-role exceptions.
+first send the exact registered role through native dispatch. Only a native
+role-selection rejection permits an explicitly pinned fresh Codex child. If
+neither exact route is possible, inline execution is allowed only with verified
+equivalent current-host model and effort controls; otherwise block before work
+starts. Explicit inherit/default and documented managed-uncapped reviewer
+behavior remain the only base-role exceptions.
 
-When a concrete managed Codex role is unavailable or the host cannot select
-it, launch a fresh Codex child pinned to the resolver-returned model and effort
-with canonical role instructions. If that fresh child cannot be launched, fail
-closed and block; never substitute the coordinator or base role.
+For a concrete managed Codex role, first send the resolver-returned Codex
+variant through the native spawn API as `agent_type`. Spawn acceptance plus the
+constructed launcher payload is configured invocation evidence; independent
+runtime telemetry or agent self-report is not required. Launch a fresh Codex
+child pinned to the resolver-returned model and effort with canonical role
+instructions only after a native role-selection rejection as defined below. If
+that fresh child cannot be launched, fail closed and block; never substitute
+the coordinator or base role.
 
 Use base `oat-phase-implementer` only for the allowed exceptions above:
 explicit inherit/default behavior. It is never a managed task-worker fallback.
@@ -142,9 +147,9 @@ Detection logic:
     - Declined → Tier 2.
 
 - If the host does not resolve either generic agent, first attempt the exact
-  registered role or explicitly pinned fresh-child route for any concrete
-  managed target. Select Tier 2 only when inline execution is allowed by the
-  target-first rule above.
+  registered role natively for any concrete managed target. Use the explicitly
+  pinned fresh-child route only after a native role-selection rejection. Select
+  Tier 2 only when inline execution is allowed by the target-first rule above.
 
 **Approval scope rule:** this Tier selection applies to both phase implementation and checkpoint review. Do not infer a mixed mode from conversational emphasis on review checkpoints. If the user has not explicitly approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid when the user explicitly requests it.
 
@@ -180,6 +185,16 @@ Expected: ask "This OAT implementation skill normally delegates phase implementa
 If approved: Selected: Tier 1 — Subagents
 Forbidden: Selected: Tier 2 — Inline because the user did not separately mention subagents.
 ```
+
+**Native role-selection rejection:** This means the native host explicitly
+reports that the requested `agent_type` is unsupported, unknown, unregistered,
+or rejected before the child or agent starts. Missing runtime telemetry,
+missing agent self-report, a timeout after spawn acceptance, or any terminal
+result from an accepted child — including `BLOCKED` — is not role
+unavailability and is not a native role-selection rejection. Self-report is
+optional diagnostic data and cannot populate or overwrite launcher-owned
+`target`, `model_axis`, or `effort_axis` fields. An accepted child cannot
+trigger the fresh pinned-child or CLI fallback.
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
@@ -427,14 +442,19 @@ Axis states:
 Codex rules:
 
 **Managed Codex execution invariant:** When the resolver returns a model+effort
-target, prefer the exact registered role or variant from
-`providers.codex.dispatchArgs.variant`. If the current host cannot select that
-exact registered target, launch a fresh Codex child with the resolver target's
-explicit model, reasoning effort, and canonical role instructions from
+target, the resolver-returned Codex variant from
+`providers.codex.dispatchArgs.variant` must first be sent through the native
+spawn API as `agent_type`. Spawn acceptance plus the launcher payload is
+configured invocation evidence with launcher-selected/config-declared
+provenance. If and only if the host returns a native role-selection rejection,
+launch a fresh Codex child with the resolver target's explicit model, reasoning
+effort, and canonical role instructions from
 `.agents/agents/oat-phase-implementer.md` or
-`.agents/agents/oat-reviewer.md`. Workflow correctness must not require provider
-restart or hot reload. A managed base role is forbidden when a concrete target
-was requested; never silently downgrade to it. Base roles remain valid only for
+`.agents/agents/oat-reviewer.md`. Missing runtime telemetry or agent self-report
+is not role unavailability, and an accepted child result such as `BLOCKED`
+cannot trigger fallback. Workflow correctness must not require provider restart
+or hot reload. A managed base role is forbidden when a concrete target was
+requested; never silently downgrade to it. Base roles remain valid only for
 explicit inherit/default behavior and the documented managed-uncapped reviewer
 fallback.
 
@@ -453,7 +473,7 @@ fallback.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
-8. Codex payload-first assertion applies whenever the resolver returns a materialized model+effort target. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST use it as `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. If a concrete managed target has no usable variant, use the explicitly pinned fresh-child route or block. Use the base role and log provider-default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing.
+8. Codex payload-first assertion applies whenever the resolver returns a materialized model+effort target. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST first use it as native `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output and the constructed launcher payload. Spawn acceptance is sufficient configured invocation evidence. Missing telemetry or self-report does not make the variant unusable. If native role selection explicitly rejects the variant, use the explicitly pinned fresh-child route or block. Use the base role and log provider-default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing or agent self-report.
 9. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
 
 Claude rules:
@@ -486,6 +506,11 @@ Payload-first invariant:
 
 - Build the actual host dispatch argument map before logging.
 - Do not emit `selected:<value>` unless the host invocation contains the corresponding role/model selection.
+- For every coordinator, task-worker, fix, and review launch, record `target`,
+  `model_axis`, and `effort_axis` from resolver output and the actual launcher
+  payload after payload construction.
+- Those fields are launcher-owned. Agent self-report cannot populate or
+  overwrite them; it may only be retained separately as optional diagnostics.
 - Derive `Dispatch target` and `Effort axis` / `Model axis` from the payload.
 - After the payload is built, append the compatibility stamp returned from
   `formatDispatchStamp(dispatchReport)` to Dispatch Notes for every
@@ -1068,10 +1093,15 @@ coordinator_target: {resolver-selected coordinator target}
 
 Tier 1 uses the already resolved exact coordinator role/model payload and sends
 the Phase Scope. A concrete Codex coordinator uses
-`providers.codex.dispatchArgs.variant`; when the registered role cannot be
-selected, use the fresh child pinned to the resolver's model and effort with
-canonical coordinator instructions. Claude and Cursor coordinator calls pass
-their exact resolver model argument.
+`providers.codex.dispatchArgs.variant` first as native `agent_type`. After the
+host accepts the spawn, record the coordinator `target`, `model_axis`, and
+`effort_axis` from resolver output and that constructed launcher payload; do not
+wait for or accept a coordinator self-report as proof. Only an actual native
+role-selection rejection permits the fresh child pinned to the resolver's model
+and effort with canonical coordinator instructions. An accepted coordinator
+that later returns `BLOCKED` has produced a coordinator outcome and cannot
+trigger fallback. Claude and Cursor coordinator calls pass their exact resolver
+model argument.
 
 Tier 2 may run the coordinator instructions in the current context only when
 that context can still dispatch every exact task worker. Tier 2 never permits
@@ -1104,14 +1134,19 @@ For each task in dependency order, the coordinator must:
    is read-only and must never persist its override.
 
 3. Build the actual provider invocation before logging:
-   - Codex uses `providers.codex.dispatchArgs.variant` as `agent_type`, or the
-     exact fresh pinned-child model/effort route when native role selection is
-     unavailable.
+   - Codex first uses `providers.codex.dispatchArgs.variant` as native
+     `agent_type`. Spawn acceptance establishes the configured invocation; only
+     a native role-selection rejection permits the exact fresh pinned-child
+     model/effort route.
    - Claude passes `providers.claude.dispatchArgs.model` as the actual Task
      `model`.
    - Cursor passes `providers.cursor.dispatchArgs.model` byte-for-byte as the
      actual invocation model. Treat the string as opaque and never normalize or
      infer capability from it.
+   - After construction, record the task-worker `target`, `model_axis`, and
+     `effort_axis` from resolver output and the launcher payload. Missing worker
+     telemetry or self-report is not unavailability, and self-report cannot
+     replace those launcher-owned values.
 4. Send one bounded Task Scope, never the full phase task list:
 
    ```yaml
@@ -1162,8 +1197,8 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
 **Dispatch:**
 
 - Use the same tier that was selected at start.
-- For Codex with a capped managed policy, dispatch the materialized reviewer role returned in `providers.codex.dispatchArgs.variant` for deterministic quality gates.
-- If that exact registered reviewer role is not selectable in the current host session, launch a fresh Codex child with explicit model, reasoning effort, and canonical role instructions from `.agents/agents/oat-reviewer.md`; never substitute the managed base role and never require restart/hot reload.
+- For Codex with a capped managed policy, first dispatch the materialized reviewer role returned in `providers.codex.dispatchArgs.variant` as native `agent_type` for deterministic quality gates. After spawn acceptance, record the review `target`, `model_axis`, and `effort_axis` from resolver output and the constructed launcher payload; reviewer self-report cannot populate or overwrite them.
+- Only if the exact registered reviewer role receives a native role-selection rejection may the launcher start a fresh Codex child with explicit model, reasoning effort, and canonical role instructions from `.agents/agents/oat-reviewer.md`; never substitute the managed base role and never require restart/hot reload. Missing reviewer telemetry or self-report is not a rejection, and an accepted reviewer that later returns `BLOCKED` cannot trigger fallback.
 - For Codex with managed `Uncapped` or inherit/default mode, no reviewer target exists; use base `oat-reviewer`, log `effort_axis=provider-default`, and explain that the base role follows the provider default.
 - For Claude Code with a capped managed policy, require `providers.claude.dispatchArgs.model` and pass that exact value as the review `model`; managed `Uncapped` or inherit/default mode omits `model` because no reviewer target exists. Always keep `effort_axis=not-applicable`.
 - For Cursor with a concrete managed reviewer target, require `providers.cursor.dispatchArgs.model` and pass that exact opaque, unnormalized string as the actual review invocation's `model` argument.
@@ -1212,7 +1247,7 @@ On reviewer verdict `fail`, run a bounded fix loop.
 1. Read `oat_orchestration_retry_limit` from `state.md` frontmatter (default: `2`, range 0–5).
 2. For each retry (up to the limit):
    a. Convert Critical/Important findings into bounded fix scopes associated with one planned task/file boundary at a time. Do not hand one worker the full phase finding list.
-   b. Reuse the phase coordinator in `fix` mode. It selects an exact candidate under the same project or phase named ceiling with `--ceiling-tier`, then emits one Task Scope per bounded fix. Codex uses `providers.codex.dispatchArgs.variant`; Claude and Cursor pass their exact `providers.<provider>.dispatchArgs.model` value on the actual invocation. Every fix worker writes the formal `Dispatch: scope=<phase-or-task> action=fix role=fix producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>` stamp before execution.
+   b. Reuse the phase coordinator in `fix` mode. It selects an exact candidate under the same project or phase named ceiling with `--ceiling-tier`, then emits one Task Scope per bounded fix. Codex first uses `providers.codex.dispatchArgs.variant` as native `agent_type`; only a native role-selection rejection permits the exact fresh-child fallback. Claude and Cursor pass their exact `providers.<provider>.dispatchArgs.model` value on the actual invocation. After constructing the launcher payload, record the fix `target`, `model_axis`, and `effort_axis` from that payload and resolver output. Missing fix-worker telemetry or self-report is not unavailability, and an accepted fix worker — including one that returns `BLOCKED` — cannot trigger fallback. Every fix worker writes the formal `Dispatch: scope=<phase-or-task> action=fix role=fix producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>` stamp before execution.
    c. Receive and verify each fix result and commit. The coordinator must not apply fixes itself, and Tier 2 does not authorize inline task edits.
    d. Re-dispatch the reviewer with the updated commit range.
    e. Parse the new verdict.
@@ -1681,9 +1716,15 @@ echo "$FINAL_ROW"
 **Workflow preference check (before prompting):**
 
 First resolve the final reviewer target with the same target-first contract as
-per-phase review. A concrete managed Codex target must use its exact registered
-reviewer or an explicitly pinned fresh child. A concrete managed Claude or
-Cursor target must put `providers.claude.dispatchArgs.model` or
+per-phase review. A concrete managed Codex target must first send its exact
+registered reviewer as native `agent_type`; only a native role-selection
+rejection permits an explicitly pinned fresh child. Spawn acceptance plus the
+launcher payload supplies configured invocation evidence, so missing telemetry,
+missing self-report, or a later `BLOCKED` result cannot trigger fallback. Record
+the final review `target`, `model_axis`, and `effort_axis` from resolver output
+and the constructed launcher payload, never from reviewer self-report. A
+concrete managed Claude or Cursor target must put
+`providers.claude.dispatchArgs.model` or
 `providers.cursor.dispatchArgs.model` respectively into the actual provider
 invocation as the exact `model` argument; Cursor strings remain opaque. On
 timeout or retry, preserve the same exact role or complete invocation payload,
