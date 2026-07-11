@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: null
+oat_current_task_id: p06-t10
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 6     | 6/6       |
-| p02   | complete | 4     | 4/4       |
-| p03   | complete | 6     | 6/6       |
-| p04   | complete | 4     | 4/4       |
-| p05   | complete | 3     | 3/3       |
-| p06   | complete | 9     | 9/9       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 6     | 6/6       |
+| p02   | complete    | 4     | 4/4       |
+| p03   | complete    | 6     | 6/6       |
+| p04   | complete    | 4     | 4/4       |
+| p05   | complete    | 3     | 3/3       |
+| p06   | in_progress | 11    | 9/11      |
 
-**Total:** 32/32 tasks completed
+**Total:** 32/34 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -512,7 +512,7 @@ oat_generated: false
 
 ## Phase p06: Structured Cursor Task Evidence Revision
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-11
 **Completed:** 2026-07-11
 
@@ -637,6 +637,31 @@ implementation fixes and full verification complete.
 **Outcome:** Recorded all p06 task commits and the passing full
 repository/release verification. The p06 review row is `fixes_completed`
 pending a fresh independent re-review.
+
+---
+
+### Review Re-received: p06
+
+**Date:** 2026-07-11
+**Review artifact:** `reviews/archived/code-p06-self-review-2026-07-11T130108Z.md`
+
+**Findings:** 1 Critical, 0 Important, 1 Medium, 0 Minor.
+
+**Disposition:** I1, I2, the prior M1, and M2 are resolved. The remaining C1
+control-identity gap becomes `p06-t10`; the public value-privacy gap becomes
+`p06-t11`. Both are accepted for immediate repair in auto-review cycle 2.
+
+### Task p06-t10: Bind passed controls to exact model arguments
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t11: Constrain public projection values
+
+**Status:** pending
+**Commit:** -
 
 ---
 

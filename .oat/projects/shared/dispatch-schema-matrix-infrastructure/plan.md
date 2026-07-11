@@ -1416,6 +1416,82 @@ git add .oat/projects/shared/dispatch-schema-matrix-infrastructure/plan.md .oat/
 git commit -m "chore(oat): reconcile p06 review fixes"
 ```
 
+### Task p06-t10: (review) Bind passed controls to exact model arguments
+
+**Files:**
+
+- Modify: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Understand the issue**
+
+Re-review finding C1: derived control outcomes can still validate as passed
+when the positive model is absent or the negative model does not byte-match the
+canonical deliberately invalid value.
+
+**Step 2: Implement fix**
+
+Require the positive Task start to project a non-empty opaque model string.
+Require the negative probe candidate, Task start, and any completion model to
+byte-match the canonical negative-control value. Reject missing, replaced, or
+mismatched control identity fields before controls can pass.
+
+**Step 3: Verify**
+
+Run:
+`node --test tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+Expected: removing, replacing, or mismatching either control model fails
+closed, while the recorded inconclusive controls remain valid.
+
+**Step 4: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs
+git commit -m "fix(p06-t10): bind cursor control identities"
+```
+
+### Task p06-t11: (review) Constrain public projection values
+
+**Files:**
+
+- Modify: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Understand the issue**
+
+Re-review finding M1: public event keys are allowlisted but their free-form
+string values can still carry credentials or local paths.
+
+**Step 2: Implement fix**
+
+Use finite structural values for event type, subtype, tool name, and Task
+result. Drop or reject unrelated/unknown structural values, validate opaque
+model strings against a bounded safe shape, and run credential/path leak checks
+before writing or accepting the public capture.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --capture /tmp/oat-cursor-structured-pass.json \
+  --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+```
+
+Expected: secrets and paths in every public string-valued event field fail
+closed; the recorded evidence remains valid.
+
+**Step 4: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs
+git commit -m "fix(p06-t11): constrain public event values"
+```
+
 ---
 
 ## Reviews
@@ -1427,7 +1503,7 @@ git commit -m "chore(oat): reconcile p06 review fixes"
 | p03           | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04           | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
 | p05           | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| p06           | code     | fixes_completed | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11.md           |
+| p06           | code     | fixes_added     | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11T130108Z.md   |
 | final-pre-p06 | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
 | final         | code     | pending         | -          | -                                                             |
 | spec          | artifact | pending         | -          | -                                                             |
@@ -1453,9 +1529,9 @@ approval.
 - Phase p03: 6 tasks — Dispatch Report V1 and workflow integrations
 - Phase p04: 4 tasks — live evidence, recommendation, and docs
 - Phase p05: 3 tasks — release validation and backlog closeout
-- Phase p06: 9 tasks — structured Cursor controls, probes, reconciliation, review fixes, and release validation
+- Phase p06: 11 tasks — structured Cursor controls, probes, reconciliation, review fixes, and release validation
 
-**Total: 32 tasks**
+**Total: 34 tasks**
 
 Ready for implementation only after optional phase-review setup and the managed
 plan artifact review complete.
