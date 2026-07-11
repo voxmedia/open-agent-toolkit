@@ -294,8 +294,8 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 | FR4   | Gate hooks for discover/design skills                      | P1       | manual: configured-gate exercise at skill exit                  | p01-t03, p06-t06                            |
 | FR5   | Quick-start gate covers artifact bundle                    | P1       | manual: gate prompt scope inspection on quick project           | p01-t04, p06-t06                            |
 | FR6   | Non-interactive HiLL resolution (final + auto-review)      | P0       | manual: autonomous run writes explicit value; interactive pause | p01-t02, p01-t06, p06-t05                   |
-| FR7   | Cursor Cloud orientation skill                             | P0       | e2e: fresh multi-repo + single-repo cloud sessions              | p02-t03, p06-t01, p06-t02                   |
-| FR8   | Environment provisioning (CLI, packs, config, harness)     | P0       | e2e: fresh-VM readiness check                                   | p02-t04, p02-t07, p04-t01, p04-t02, p04-t03, p04-t04 |
+| FR7   | Cursor Cloud orientation skill                             | P0       | e2e: fresh multi-repo + single-repo cloud sessions              | p02-t03, p02-t05, p06-t01, p06-t02          |
+| FR8   | Environment provisioning (CLI, packs, config, harness)     | P0       | e2e: fresh-VM readiness check                                   | p02-t04, p02-t07, p03-t02, p04-t01, p04-t02, p04-t03, p04-t04, p06-t06 |
 | FR9   | External-integration research mandate (mechanism-agnostic) | P1       | manual: autonomous evidence-gathering with/without org layer    | p02-t02, p06-t04, p06-t06                   |
 | FR10  | internal-docs-mcp skill-only plugin (org layer)            | P1       | manual: coverage-check + fallback behavior in cloud session     | p05-t01, p05-t02, p06-t06                   |
 | FR11  | Append-only execution learnings log                        | P1       | manual: log presence/categorization after autonomous run        | p02-t02, p06-t04                            |

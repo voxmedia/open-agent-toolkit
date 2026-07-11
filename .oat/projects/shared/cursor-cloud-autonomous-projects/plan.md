@@ -19,7 +19,7 @@ oat_generated: false
 
 **Goal:** Enable OAT projects to run end-to-end in Cursor Cloud environments — resume-and-run and goal-to-PR autonomous — via an autonomy policy layer, two new OAT skills, lifecycle skill amendments, environment provisioning, and an org-layer docs-research plugin.
 
-**Architecture:** Three-layer skill architecture (OAT / harness / org) bound at runtime via skill discovery; session-scoped autonomy signal (`OAT_AUTONOMOUS=1` implies `OAT_NON_INTERACTIVE=1`); thin orchestrator that chains existing lifecycle skills without bypassing their gates. One existing-installer CLI change: the workflows pack gains user-scope installability (no new commands or engine subsystems).
+**Architecture:** Three-layer skill architecture (OAT / harness / org) bound at runtime via skill discovery; session-scoped autonomy signal (`OAT_AUTONOMOUS=1` implies `OAT_NON_INTERACTIVE=1`); thin orchestrator that chains existing lifecycle skills without bypassing their gates. Two bounded existing-code CLI amendments (no new commands or engine subsystems): user-scope workflows-pack installability (full asset set, incl. update/removal paths — p02-t04) and user-first template resolution in project scaffolding (p02-t07).
 
 **Tech Stack:** OAT skill prose (Markdown, Agent Skills standard), OAT CLI monorepo (TypeScript ESM, vitest, oxlint/oxfmt), Docker + bash (env repo), Cursor plugin layout (pntr).
 
@@ -223,6 +223,7 @@ Probe skill discoverable in fresh context (or contingency wording adopted in p02
 
 **Steps:**
 
+- **First, read both authoring contracts and follow them throughout:** `.agents/skills/create-agnostic-skill/SKILL.md` (baseline: routing-first `Use when…` description formula, progressive disclosure with SKILL.md <500 lines, frontmatter/versioning rules, delegation capability model, examples in both invocation styles) and `.agents/skills/create-oat-skill/SKILL.md` (OAT specialization: mode assertion, progress banners, `{PROJECTS_ROOT}`/local-config resolution, OAT-safe bash patterns).
 - Frontmatter: `version: 1.0.0`, `disable-model-invocation: true`, routing-first description ("Use when a user explicitly asks to run an OAT project autonomously end-to-end…").
 - Mode assertion (blocked: bypassing skill-owned gates, persisting autonomy state, approximating artifacts without CLI; allowed: policy activation, state detection, lifecycle chaining, boundary stops).
 - Workflow steps: activate signal pair → resolve project home (defer to harness skill in cloud) → entry-state detection from `state.md`/plan frontmatter → mode selection via review-density rule (FR13, rationale recorded) → external-research mandate (FR9, mechanism-agnostic) → learnings log creation (FR11, category taxonomy) → per-phase lifecycle invocation with review contract (FR3 ladder, stated abstractly) → PR topology defaults (FR12) → tail chaining (document → summary → pr-final) → phase-boundary commit+push → structured run report / boundary blocker report → restart-resume rule (deliberate re-invocation resumes from persisted state).
@@ -246,8 +247,9 @@ Expected: pass; body <500 lines (inventory in references).
 
 **Steps:**
 
+- **First, read both authoring contracts and follow them throughout** (same contracts as p02-t02: `create-agnostic-skill` baseline + `create-oat-skill` specialization).
 - Frontmatter: model-invocable (auto-surface), description keyed to "OAT + Cursor Cloud environment" triggers.
-- Body: cloud detection (env markers, `cursor-cloud` MCP `run-info`/`environment-info`); project-home resolution (multi-repo + single-repo); **asset-precedence rule: user scope always wins** (all asset classes — skills, templates, scripts; the user tier is installed from `@latest` at env boot and repo copies are never customized, only stale). For skills, per-skill frontmatter `version:` comparison runs as **verification, not arbitration**: user ≥ repo is the expected invariant; if a repo copy is ever higher, treat it as an environment anomaly — use the higher copy for that read, log it to the learnings file, and flag that the user tier needs refresh (`oat tools update` / env rebuild). Absolute-path reads — primary or fallback per p02-t01 outcome; CLI availability contract (verify `oat`, install via npm if missing, never approximate artifacts); awareness pointers (autonomous skill, org-layer context skills).
+- Body: cloud detection (env markers, `cursor-cloud` MCP `run-info`/`environment-info`); project-home resolution (multi-repo + single-repo); **asset-precedence rule: user scope always wins** (all asset classes — skills, templates, scripts; the user tier is installed from `@latest` at env boot and repo copies are never customized, only stale). For skills, per-skill frontmatter `version:` comparison runs as **verification, not arbitration**: user ≥ repo is the expected invariant; if a repo copy is ever higher, the **user copy remains the execution source** — log the anomaly to the learnings file and flag the user tier for refresh (`oat tools update` / environment rebuild) before continuing when freshness is safety-critical. The comparison never switches the source (FR7). Absolute-path reads — primary or fallback per p02-t01 outcome; CLI availability contract (verify `oat`, install via npm if missing, never approximate artifacts); awareness pointers (autonomous skill, org-layer context skills).
 - References file: deterministic family identity (`run-info` → `originalModelName` → family map), pinned-slug subagent dispatch guidance, degraded-tier logging shape.
 
 **Verify:**
@@ -268,12 +270,13 @@ Expected: validation passes; org-identifier scan returns zero hits (NFR1).
 - Modify: `packages/cli/src/commands/init/tools/workflows/index.ts` (replace the project-only rejection with scope routing)
 - Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` (user-scope mode: skills/agents → user `.agents/`; templates → `~/.oat/templates/`; scripts → `~/.oat/scripts/`; skip projects-root block)
 - Modify: `packages/cli/src/commands/init/tools/index.ts` (aggregate installer: add workflows to the user-eligible pack set, drop the project-only label, route user-scope installs away from `projectRoot`)
-- Modify: colocated test files for both (locate with `rg -l "supports only --scope project|user-eligible|projectRoot" packages/cli/src/commands/init/tools`)
+- Modify: `packages/cli/src/commands/tools/update/index.ts` (+ colocated tests): user-scope update path refreshes all four workflows asset classes at their user destinations
+- Modify: colocated test files for the installers (locate with `rg -l "supports only --scope project|user-eligible|projectRoot" packages/cli/src/commands/init/tools`)
 - Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (document user-scope semantics and asset destinations)
 
-**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes skills + agents under temp-home `.agents/`, templates under temp-home `.oat/templates/`, scripts under temp-home `.oat/scripts/` (executable bit preserved), and creates **no** projects-root artifacts; (b) aggregate/guided: user-scope aggregate install includes workflows with identical destinations, writing nothing to `projectRoot`; (c) scope/removal/update semantics match other user-eligible packs; existing project-scope tests unchanged.
+**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes skills + agents under temp-home `.agents/`, templates under temp-home `.oat/templates/`, scripts under temp-home `.oat/scripts/` (executable bit preserved), and creates **no** projects-root artifacts; (b) aggregate/guided: user-scope aggregate install includes workflows with identical destinations, writing nothing to `projectRoot`; (c) update: `oat tools update` at user scope refreshes all four asset classes in place (stale user copies replaced; version-checked skills report updated); (d) removal semantics match other user-eligible packs across all four classes; existing project-scope tests unchanged.
 
-**Step 2: Implement (GREEN)** — scope routing in the subcommand; user-eligible set + destination routing in the aggregate installer (mirror `ideas`/`brainstorm` handling); user-destination install path in `install-workflows.ts`.
+**Step 2: Implement (GREEN)** — scope routing in the subcommand; user-eligible set + destination routing in the aggregate installer (mirror `ideas`/`brainstorm` handling); user-destination install path in `install-workflows.ts`; user-scope refresh path in `tools update`.
 
 **Step 3: Refactor** — dedupe scope plumbing with the shared scope-option helper if trivial.
 
@@ -283,30 +286,6 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/to
 Expected: green; direct and aggregate fresh-home tests prove the full asset set at user paths with zero projects-root artifacts in the home directory.
 
 **Commit:** `feat(p02-t04): full-asset user-scope installability for workflows pack (direct + aggregate)`
-
----
-
-### Task p02-t07: CLI — user-first template/script resolution in consumers (TDD)
-
-**Rationale:** repo copies are never customized — a differing repo copy is only stale — so the freshest tier wins. Resolution order for templates (and the instruction-level rule for scripts): **user (`~/.oat/templates/`, refreshed to latest at env boot) → repo (`.oat/templates/`) → bundled assets** (the `npx`-no-install floor). This simultaneously fixes the un-adopted-repo case (no repo templates at all — the Bruno manual-approximation trigger) and the stale-repo case. Artifacts still land in the repo's projects root regardless of template source.
-
-**Files:**
-
-- Modify: `packages/cli/src/commands/project/new/scaffold.ts` (per-file three-tier resolution: user → repo → bundled via `resolveAssetsRoot()`)
-- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts` (resolution cases)
-
-**Step 1: Write tests (RED)** — (a) user templates present: user copy wins over differing repo copy; (b) no user install, repo present: repo copy used (today's behavior); (c) neither: bundled assets used, scaffold succeeds, artifacts land under the repo's projects root; (d) partial tiers: per-file resolution (user copy for one file, repo for another, bundled fills gaps).
-
-**Step 2: Implement (GREEN)** — per-file three-tier resolution helper; no new config surface.
-
-**Step 3: Refactor** — extract `resolveTemplateSource(userOatRoot, repoRoot, file)` if it clarifies.
-
-**Step 4: Verify:**
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
-Expected: green; all four scenarios covered.
-
-**Commit:** `feat(p02-t07): user-first template resolution for project scaffolding`
 
 ---
 
@@ -346,6 +325,32 @@ Run: `pnpm release:validate`
 Expected: pass.
 
 **Commit:** `chore(p02-t06): lockstep version bump for autonomy + cloud skills`
+
+---
+
+### Task p02-t07: CLI — user-first template resolution in `oat project new` (TDD)
+
+**Rationale:** repo copies are never customized — a differing repo copy is only stale — so the freshest tier wins. Resolution order for templates: **user (`~/.oat/templates/`, refreshed to latest at env boot) → repo (`.oat/templates/`) → bundled assets** (the `npx`-no-install floor). This simultaneously fixes the un-adopted-repo case (no repo templates at all — the Bruno manual-approximation trigger) and the stale-repo case. Artifacts still land in the repo's projects root regardless of template source.
+
+**Consumer boundary (intentional):** the scaffolder is the only **CLI-level** consumer of templates, so code-level resolution lives here alone. Every other template/script consumer is skill prose (skills copy templates and invoke scripts by path), and those are governed by the orientation skill's instruction-level asset-precedence rule (p02-t03). No other CLI consumer resolution is planned, by design.
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/new/scaffold.ts` (per-file three-tier resolution: user → repo → bundled via `resolveAssetsRoot()`)
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts` (resolution cases)
+
+**Step 1: Write tests (RED)** — (a) user templates present: user copy wins over differing repo copy; (b) no user install, repo present: repo copy used (today's behavior); (c) neither: bundled assets used, scaffold succeeds, artifacts land under the repo's projects root; (d) partial tiers: per-file resolution (user copy for one file, repo for another, bundled fills gaps).
+
+**Step 2: Implement (GREEN)** — per-file three-tier resolution helper; no new config surface.
+
+**Step 3: Refactor** — extract `resolveTemplateSource(userOatRoot, repoRoot, file)` if it clarifies.
+
+**Step 4: Verify (includes release re-validation, since this task lands after p02-t06's bump):**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint && pnpm release:validate`
+Expected: green; all four scenarios covered; release validation passes with this task's changes included.
+
+**Commit:** `feat(p02-t07): user-first template resolution for project scaffolding`
 
 ---
 
@@ -623,6 +628,7 @@ Expected: all green; worktree validation passes post-commit.
 - **FR12:** stacked-PR-requested fixture plan carries Stacked PR Strategy fields + parallel-group base-readiness statements.
 - **FR14:** summary generation with learnings file (section present, categorized, both entry paths: standalone summary and pr-final) and without (inert).
 - **NFR4:** simulated missing CLI / missing MCP / missing secret each produce the documented fallback + log entry.
+- **FR8 asset lifecycle (fresh HOME):** in a clean temp-HOME: user-scope install → verify all four asset classes at user paths → `oat tools update` refreshes them → `oat project new` in a repo without `.oat/templates` scaffolds from the user tier → a skill-prose consumer (template copy + script invocation per the orientation rule) resolves user-scope copies.
 
 **Verify:** Matrix table in implementation.md, one row per scenario, all green or environment-limited with reason.
 
@@ -660,7 +666,7 @@ Expected: all green; worktree validation passes post-commit.
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
-| plan   | artifact | received | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T111711Z.md (reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; supersedes the earlier 3-round in-memory structured pass, which predated the user-scope asset revisions) |
+| plan   | artifact | fixes_completed | 2026-07-11 | reviews/archived/artifact-plan-review-2026-07-11T111711Z.md (reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; 0C/2I/3M/1m — all dispositioned resolve_in_artifact and applied; supersedes the earlier 3-round in-memory structured pass) |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
