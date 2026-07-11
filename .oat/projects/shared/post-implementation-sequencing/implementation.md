@@ -329,3 +329,23 @@ configured gate rerun after these artifact corrections.
   post-approval boundary.
 - Project implementation is complete; PR #135 is open for normal review and
   revision handling.
+
+### Gate Review Received: final
+
+**Date:** 2026-07-11
+**Review artifact:**
+`reviews/archived/final-review-2026-07-11T114413Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**Disposition:**
+
+- m1 → `address_now`: clarified the configured `wait` closeout wording so the
+  standard unset-preference prompt and the completed-`wait` message are
+  separate, unambiguous branches. Focused skill-contract tests and release
+  validation passed afterward.
