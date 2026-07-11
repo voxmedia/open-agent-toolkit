@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 2005e625b57b661ba7b7d2e005e3d52e205986d7
+oat_last_commit: 939aae6d3b8ea935c774bd97313d952c1f817608
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T19:34:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T19:41:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 self-review fixes, iteration 1
+Implementation — Phase 1 fixes complete; awaiting re-review
 
 ## Artifacts
 
@@ -77,7 +77,8 @@ Implementation — Phase 1 self-review fixes, iteration 1
 - ✓ p01-t02 complete through operator-authorized native root recovery
 - ✓ p01-t03 complete after one integration-verification fix
 - ⧗ Concurrent Codex/Claude dispatch-contract verification package ready
-- ⧗ Phase 1 self-review: 3 Important + 2 Medium; bounded fixes in progress
+- ✓ Phase 1 self-review fixes complete (iteration 1)
+- ⧗ Phase 1 re-review next
 
 ## Blockers
 
@@ -85,4 +86,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 fix iteration 1 and re-review
+Pass Phase 1 re-review and external phase gate

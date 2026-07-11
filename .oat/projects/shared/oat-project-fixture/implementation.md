@@ -227,6 +227,16 @@ oat_generated: false
 - Focused integrity/format tests plus lint/format pass.
 - Dispatch: `Dispatch: scope=p01-t01 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 
+**Fix 1B — state-complete atomic presets:**
+
+- Commit: `939aae6d3b8ea935c774bd97313d952c1f817608`
+- Presets now cover state, plan, and implementation coherently; staged
+  publishing rolls every artifact back after an injected later-write failure.
+- Full fixture suite passes 9/9 before and after formatting.
+- The first scope packet omitted `task_id`; the same accepted child was resumed
+  with `task_id=p01-t02` rather than launching a replacement.
+- Dispatch: `Dispatch: scope=p01-t02 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+
 ---
 
 ## Phase 2: Smoke Runner Core
