@@ -199,8 +199,11 @@ When at least one target qualifies and an interactive user-response channel is
 available, offer exactly these outcomes:
 
 1. **All phases** - enable the independent Phase gate review after every implementation phase.
-2. **Selected phases** - enable review only for chosen stable phase IDs.
-3. **Disabled** - leave phase review disabled.
+2. **Selected phases** - enable the independent Phase gate review only after chosen stable phase IDs.
+3. **Disabled** - leave Phase gate review disabled.
+
+Phase gate review is non-pausing when it passes and is distinct from both HiLL
+approval and final artifact review.
 
 For all phases, write the existing plan frontmatter shape:
 

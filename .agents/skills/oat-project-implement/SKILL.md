@@ -1723,6 +1723,7 @@ echo "$FINAL_ROW"
 - Example row:
   - `| final | code | passed | 2026-01-28 | reviews/final-review-2026-01-28T140322Z.md |`
 - Check:
+
   ```bash
   echo "$FINAL_ROW" | grep -qE "^\\|\\s*final\\s*\\|.*\\|\\s*passed\\s*\\|" && echo "passed"
   ```
@@ -1828,9 +1829,9 @@ coordinator has finished. Do not move lifecycle sequencing into task workers or
 weaken exact target selection for child dispatches.
 
 Identify the final implementation phase from the plan. A final HiLL checkpoint
-exists only when that phase ID is present in `oat_plan_hill_phases`. Defer only
-a checkpoint on the final implementation phase; non-final checkpoint behavior
-remains unchanged.
+exists when `oat_plan_hill_phases` is `[]` (every phase) or when it explicitly
+contains that final phase ID. Defer only a checkpoint on the final implementation
+phase; non-final checkpoint behavior remains unchanged.
 
 Run final verification (Step 13). Final review must be `passed` before any
 pre-approval dispatch. If final checkpoint auto-review is enabled, Step 8 has
