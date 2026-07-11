@@ -6,10 +6,17 @@ import {
 import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import type {
+  AvailabilityOracleDependencies,
   MatrixCellAvailability,
   MatrixCellAvailabilityResult,
   ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import {
+  createDispatchValidationPassContext,
+  type DispatchMatrixValidationResult,
+  type DispatchValidationPassContext,
+  type DispatchValidationPassOptions,
+} from '@providers/identity/dispatch-validation';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -61,6 +68,7 @@ interface HarnessOptions {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
+  availabilityDependencies?: Partial<AvailabilityOracleDependencies>;
 }
 
 interface RunDoctorArgs {
@@ -125,6 +133,55 @@ function createHarness(options: HarnessOptions = {}): {
     options.validateMatrixCell ??
       (async () => 'valid' satisfies MatrixCellAvailability),
   );
+  const validationOverrides: Parameters<typeof createDoctorCommand>[0] =
+    options.availabilityDependencies
+      ? {
+          createDispatchValidationPassContext: (
+            passOptions: DispatchValidationPassOptions,
+          ) =>
+            createDispatchValidationPassContext({
+              ...passOptions,
+              dependencies: options.availabilityDependencies,
+            }),
+        }
+      : {
+          validateDispatchMatrixRefs: async (
+            refs,
+            context: DispatchValidationPassContext,
+          ): Promise<DispatchMatrixValidationResult[]> =>
+            Promise.all(
+              refs.map(async (ref) => {
+                const target = ref.target;
+                const provider = target?.harness ?? ref.provider;
+                const value =
+                  ref.value ?? target?.model ?? target?.effort ?? '';
+                let availability:
+                  | MatrixCellAvailability
+                  | MatrixCellAvailabilityResult;
+                try {
+                  availability = await validateMatrixCell(provider, value, {
+                    cwd: context.options.cwd,
+                    env: context.options.env,
+                    detailed: true,
+                    ...(target ? { target } : {}),
+                  });
+                } catch {
+                  availability = 'unvalidated';
+                }
+                const result =
+                  typeof availability === 'string'
+                    ? { availability }
+                    : availability;
+                return {
+                  ref,
+                  status: result.availability,
+                  evidence: 'none',
+                  catalogPresence: null,
+                  diagnostic: result.message ?? '',
+                };
+              }),
+            ),
+        };
   const command = createDoctorCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? scope) as Scope,
@@ -182,6 +239,7 @@ function createHarness(options: HarnessOptions = {}): {
     runPjmDoctorChecks,
     validateMatrixCell,
     processEnv: {},
+    ...validationOverrides,
   });
 
   return {
@@ -800,6 +858,69 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain(
       'Unknown dispatch matrix cells: workflow.dispatchCeiling.providers.cursor.high.candidates[0]=missing-model (user config)',
     );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('shares Cursor validation work across config layers while retaining exact paths and provenance', async () => {
+    const duplicate = 'gpt-5.6-terra-xhigh';
+    const distinct = 'gpt-5.6-sol-high';
+    const runCursorAgent = vi.fn(async (args: string[]) => {
+      if (args.includes('models')) {
+        return {
+          ok: true,
+          stdout: `${duplicate} - Terra XHigh\n${distinct} - Sol High\n`,
+          stderr: '',
+        };
+      }
+      return {
+        ok: false,
+        stdout: '',
+        stderr: 'Task probe was inconclusive',
+      };
+    });
+    const cursorHigh = (candidates: string[]) => ({
+      version: 1 as const,
+      workflow: {
+        dispatchCeiling: {
+          providers: { cursor: { high: { candidates } } },
+        },
+      },
+    });
+    const { command, capture } = createHarness({
+      userConfig: cursorHigh([duplicate]),
+      oatConfig: cursorHigh([duplicate]),
+      oatLocalConfig: cursorHigh([duplicate, distinct]),
+      availabilityDependencies: {
+        pathExists: vi.fn(async () => false),
+        runCursorAgent,
+        runCodex: vi.fn(async () => ({
+          ok: false,
+          stdout: '',
+          stderr: 'not used',
+        })),
+        env: {},
+      },
+    });
+
+    await runDoctor(command);
+
+    const calls = runCursorAgent.mock.calls.map(([args]) => args);
+    expect(calls.filter((args) => args.includes('-p'))).toHaveLength(2);
+    expect(calls.filter((args) => args.includes('models'))).toHaveLength(1);
+    expect(calls.filter((args) => args.includes('--list-models'))).toHaveLength(
+      0,
+    );
+
+    const output = capture.info[0] ?? '';
+    const duplicatePath =
+      'workflow.dispatchCeiling.providers.cursor.high.candidates[0]';
+    expect(output).toContain(`${duplicatePath}=${duplicate} (user config)`);
+    expect(output).toContain(`${duplicatePath}=${duplicate} (shared config)`);
+    expect(output).toContain(`${duplicatePath}=${duplicate} (local config)`);
+    expect(output).toContain(
+      `workflow.dispatchCeiling.providers.cursor.high.candidates[1]=${distinct} (local config)`,
+    );
+    expect(output).toContain('Unvalidated dispatch matrix cells');
     expect(process.exitCode).toBe(1);
   });
 

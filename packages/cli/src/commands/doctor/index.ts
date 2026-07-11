@@ -50,12 +50,15 @@ import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
 import {
-  normalizeMatrixCellAvailability,
   validateMatrixCell,
   type MatrixCellAvailability,
   type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import {
+  createDispatchValidationPassContext,
+  validateDispatchMatrixRefs,
+} from '@providers/identity/dispatch-validation';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
@@ -84,6 +87,8 @@ interface DoctorDependencies {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailabilityResponse>;
+  createDispatchValidationPassContext: typeof createDispatchValidationPassContext;
+  validateDispatchMatrixRefs: typeof validateDispatchMatrixRefs;
   processEnv: NodeJS.ProcessEnv;
   runPjmDoctorChecks: (
     repoRoot: string,
@@ -261,6 +266,8 @@ function createDependencies(): DoctorDependencies {
     readOatLocalConfig,
     readUserConfig,
     validateMatrixCell,
+    createDispatchValidationPassContext,
+    validateDispatchMatrixRefs,
     processEnv: process.env,
     runPjmDoctorChecks,
     // Default binding remains self-contained, but still honors the caller-
@@ -357,34 +364,20 @@ async function createDispatchMatrixDoctorCheck(
     };
   }
 
-  const issues: DispatchMatrixCellIssue[] = [];
-  for (const ref of refs) {
-    const availabilityRef = dispatchMatrixAvailabilityRef(ref)!;
-    let result: ReturnType<typeof normalizeMatrixCellAvailability>;
-    try {
-      result = normalizeMatrixCellAvailability(
-        await dependencies.validateMatrixCell(
-          availabilityRef.provider,
-          availabilityRef.value,
-          {
-            cwd: scopeRoot,
-            env: dependencies.processEnv,
-            detailed: true,
-            ...(availabilityRef.target
-              ? { target: availabilityRef.target }
-              : {}),
-          },
-        ),
-      );
-    } catch {
-      result = { availability: 'unvalidated' };
-    }
+  const pass = dependencies.createDispatchValidationPassContext({
+    cwd: scopeRoot,
+    env: dependencies.processEnv,
+    validateMatrixCell: dependencies.validateMatrixCell,
+  });
+  const results = await dependencies.validateDispatchMatrixRefs(refs, pass);
 
-    if (result.availability !== 'valid') {
+  const issues: DispatchMatrixCellIssue[] = [];
+  for (const result of results) {
+    if (result.status !== 'valid') {
       issues.push({
-        ...ref,
-        availability: result.availability,
-        ...(result.message ? { message: result.message } : {}),
+        ...result.ref,
+        availability: result.status,
+        ...(result.diagnostic ? { message: result.diagnostic } : {}),
       });
     }
   }
