@@ -111,6 +111,18 @@ mechanism for cross-cutting workflow changes.
    allowed to be `not-reported`).
 7. **Recon durability:** session recon lives in `references/`, keeping
    discovery lean while preserving merge-order analysis and evidence.
+8. **Cursor is two harness flavors:** the IDE harness and the `cursor-agent`
+   CLI behave differently (live-verified: exact Task pinning accepted in IDE;
+   headless probes observed zero Task events even for controls). Smoke runs
+   and evidence treat them as separate targets.
+9. **Documentation deliverable:** the project ships high-quality OAT docs on
+   orchestration/subagents/programmatic execution, including mermaid diagrams
+   (topology, dispatch selection, evidence layers, smoke flow).
+10. **Durable knowledge capture (Vault):** findings are mirrored into the
+    user's Vault — `04 - Resources/Programmatic Agent Execution/Harnesses/`
+    (per-harness dossiers created 2026-07-11) and
+    `02 - Projects/Programmatic Cursor/` (change-log entry). A closing pass at
+    project end adds smoke evidence learnings and selected mermaid diagrams.
 
 ## Constraints
 
@@ -144,9 +156,15 @@ mechanism for cross-cutting workflow changes.
 - The smoke run demonstrates the dispatch-selection contract, including a
   below-ceiling exact candidate and (when Cursor is available) an opaque
   Cursor model argument.
-- Live smoke evidence recorded from this worktree for each harness: Codex,
-  Cursor, Claude — demonstrating the native-first orchestration model (nested
-  native dispatch where the harness supports it).
+- Live smoke evidence recorded from this worktree for each harness target:
+  Codex, Cursor IDE, Cursor CLI, Claude — demonstrating the native-first
+  orchestration model (nested native dispatch where the harness supports it)
+  and recording each harness's sanctioned topology.
+- OAT documentation updated with an orchestration/subagents/programmatic
+  execution section including mermaid diagrams; selected diagrams mirrored to
+  the Vault.
+- Vault capture passes completed at project start (done 2026-07-11) and
+  project end.
 - Preflight reports unavailable runtimes/targets and exits cleanly; cleanup is
   safe for interrupted runs.
 - Runner documented as manual/release-validation smoke, not default CI.

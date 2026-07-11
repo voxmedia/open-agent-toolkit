@@ -134,7 +134,101 @@ out of scope; documented as a possible future variant.
 
 ## Component Design
 
-_(pending)_
+### 1. Fixture project template
+
+- **Purpose:** the deterministic project-under-test.
+- **Contents:** a complete quick-mode project artifact set (`state.md`,
+  `discovery.md`, minimal `design.md`, `plan.md`, `implementation.md`) plus a
+  tiny work surface: three fixture log files (`logs/p01.log`, `logs/p02.log`,
+  `logs/p03.log`) giving the parallel phases provably disjoint write sets.
+  Every task = one bounded append with a stable, assertable line format
+  (task ID + timestamp + worker-declared target).
+- **Dispatch policy:** fixture `state.md` declares a named ceiling (e.g.
+  `high`) with a sparse matrix override providing lower exact candidates per
+  provider — including a Cursor opaque model argument — so evidence can show a
+  below-ceiling exact selection.
+- **State presets:** canonical shipped state is `pre-review`; an
+  `implementation-ready` frontmatter overlay (small patch applied at
+  provisioning) flips plan/implementation state. One canonical fixture; no
+  duplicated artifact trees to drift.
+- **Location:** versioned in-repo (e.g. `tools/smoke/fixture/`), explicitly
+  outside `.oat/projects/` so the repo's own project machinery never mistakes
+  it for a live project.
+
+### 2. Smoke runner
+
+- **Purpose:** provision, drive, and tear down a smoke run without touching
+  user state.
+- **Shape:** documented runner script (consistent with the existing
+  `tools/verification/` pattern) rather than a new `oat` CLI surface for now;
+  promotable to `oat smoke` later if it earns it.
+- **Responsibilities:**
+  1. **Preflight** — per-provider auth/runtime checks; verify the local built
+     binary is the one on PATH (stale-global guard); verify fixture
+     integrity; exit with a readiness report; never start a partial workflow.
+  2. **Provision** — create disposable worktree, copy fixture into
+     `.oat/projects/`, write isolated `config.local`, apply the scenario's
+     state preset, write a provisioning manifest (basis for safe cleanup).
+  3. **Drive** — per-harness protocol (below); prints the canned root prompt
+     or invokes the headless root where reliable.
+  4. **Collect** — always runs, even after failure/interrupt.
+  5. **Cleanup** — removes only what the provisioning manifest records;
+     interrupt-safe by construction.
+
+### 3. Evidence collector & report
+
+- **Inputs:** Dispatch Report V1 output / launcher-owned dispatch records,
+  `implementation.md` orchestration-run entries, review artifact frontmatter
+  (gate target, run ID, corroboration fields), fixture logs, disposable
+  worktree git history (flat phase branch names, per-task commits, fan-in
+  merge).
+- **Output:** per-run report (markdown + JSON) with a machine-checkable
+  assertion table: phases/tasks dispatched; exact selected target per launch
+  (below ceiling); parallel isolation proven (disjoint writes, separate
+  worktrees); fan-in reconciliation completed; review/gate rows durable and
+  corroborated; runtime identity recorded or `not-reported`. Reports land
+  outside the disposable worktree so they survive cleanup.
+
+### 4. Per-harness drive protocols
+
+Each protocol is a short doc + canned root prompt; the runner prints the
+right one at drive time. **Four harness targets** (Cursor counts twice —
+IDE and CLI verifiably behave differently):
+
+- **Codex:** native `spawn_agent` topology (root → coordinator → exact
+  materialized workers), `agents.max_depth >= 2`, scoped writable roots per
+  the max-depth learnings; headless root invocation acceptable.
+- **Claude:** native Task subagents; whether coordinator→worker nesting is
+  supported is an open question the first run answers and records — the
+  protocol documents the sanctioned topology once observed.
+- **Cursor IDE:** root session started manually with a canned prompt;
+  coordinator applies the full-information selection contract against its
+  native catalog; any CLI task dispatch must appear in evidence as a recorded
+  pre-start selection.
+- **Cursor CLI (`cursor-agent`):** same fixture driven through the headless
+  CLI flavor; known open question whether Task events are observable at all
+  in this flavor (prior structured probes saw none, even for controls) — the
+  smoke run either produces the first positive evidence or documents the
+  flavor's actual sanctioned topology.
+
+### 5. Documentation & knowledge capture
+
+- **OAT docs deliverable:** an orchestration/subagents/programmatic-execution
+  documentation section in `apps/oat-docs`, covering the native-first
+  dispatch model, coordinator/worker topology per harness, the
+  dispatch-selection contract, the three-layer evidence model, and the smoke
+  workflow — with mermaid diagrams (topology, selection flow, evidence
+  layers, smoke data flow).
+- **Vault capture:** start-of-project pass done 2026-07-11 (per-harness
+  dossiers under `04 - Resources/Programmatic Agent Execution/Harnesses/`,
+  Programmatic Cursor change-log entry). Closing pass at project end mirrors
+  selected mermaid diagrams and smoke-evidence learnings into the Vault.
+
+### Error handling (folded)
+
+Preflight fails closed before provisioning; the provisioning manifest makes
+cleanup safe after interrupts; evidence collection runs unconditionally so
+failed runs still produce diagnosable reports.
 
 ## Testing Strategy
 
