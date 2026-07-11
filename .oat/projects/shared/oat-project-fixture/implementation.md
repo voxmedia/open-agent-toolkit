@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -54,14 +54,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 2/3       |
+| Phase 1 | in_progress | 3     | 3/3       |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 2/22 tasks completed
+**Total:** 3/22 tasks completed
 
 ---
 
@@ -74,20 +74,32 @@ oat_generated: false
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added a deterministic three-phase, nine-task quick-mode project fixture with
+  parallel p01/p02 work and p03 fan-in.
+- Added reversible pre-review and implementation-ready state presets.
+- Added structural integrity and format contracts for stable task IDs, review
+  rows, dispatch policy, and task write boundaries.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `tools/smoke/fixture/project/` - canonical project artifacts.
+- `tools/smoke/fixture/presets/` - reversible scenario state overlays.
+- `tools/smoke/fixture/*.test.mjs` - integrity and format contracts.
+- `tools/smoke/CONTRACT.md` - runner/evidence exchange contract.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `node --test 'tools/smoke/fixture/**/*.test.mjs'`
+- Run: `pnpm lint && pnpm format`
+- Result: 7/7 fixture tests pass; lint and formatting pass.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Root-owned exact task dispatch was used after Cursor nested catalogs exposed
+  no eligible configured worker. This temporary topology is user-authorized
+  and preserved as dispatch evidence.
+- Root integration verification caught whitespace-fragile contract assertions
+  after p01-t03; one bounded fix worker stabilized the tests.
 
 ### Task p01-t01: Scaffold the fixture project template
 
@@ -168,8 +180,26 @@ oat_generated: false
 
 ### Task p01-t03: Fixture format contract test
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commits:**
+
+- `3dd7716460ae40e954d4f7096fdeab8656e46478` — contract test and fixture gaps.
+- `1963c70b63fc58305c29f5a299c73b597e6b57dd` — integration-verification fix.
+
+**Outcome:**
+
+- Fixture review rows and dispatch-policy state are validated structurally.
+- Tests tolerate Markdown padding while preserving exact preset inversion.
+
+**Verification:**
+
+- `node --test 'tools/smoke/fixture/**/*.test.mjs'` — 7/7 passed.
+- `pnpm lint && pnpm format` — passed.
+
+**Dispatch:**
+
+- Implementation: `Dispatch: scope=p01-t03 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+- Fix: `Dispatch: scope=p01-t03 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 
 ---
 
