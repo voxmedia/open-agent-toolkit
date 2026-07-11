@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.12
+version: 1.3.13
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -523,8 +523,24 @@ Before capability-tier selection, resolve the same reviewer contract used by
 plan artifact review and implementation phase/final review:
 
 ```bash
-oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --report-scope "$SCOPE_TOKEN" --report-action review --json
 ```
+
+Require `dispatchReport.schemaVersion: 1`. Render/consume the resolver's
+versioned report using `formatDispatchReport(dispatchReport)` semantics, and
+derive the formal compatibility line only with
+`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
+Include that derived line in the review dispatch audit metadata; do not
+hand-assemble `Dispatch:` fields from a role name or model string.
+
+The exact managed provider target still comes from
+`providers.<provider>.dispatchArgs` plus
+`providers.<provider>.selection.target`, and the actual reviewer invocation
+must retain it byte-for-byte. The report is an audit/rendering surface, not a
+selection fallback. Configured invocation (including gate-owned immutable
+metadata), work-producer diversity, and independently observed reviewer runtime identity are distinct. Do not promote producer stamps, configured defaults, or
+reviewer self-report into `dispatchReport.runtimeIdentity`; leave it
+`not-reported` unless an independent observation exists.
 
 The reviewer resolver selects the final candidate of the configured review
 ceiling. Do not supply ephemeral implementer candidate requests for artifact,

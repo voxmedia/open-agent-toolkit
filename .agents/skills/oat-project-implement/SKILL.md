@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.33
+version: 2.0.34
 description: Use when plan.md is ready for execution. Dispatches phase coordinators that select one exact target-pinned worker per task; supports bounded fix loops and plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -193,13 +193,13 @@ Use the CLI resolver as the source of truth. The command name remains
 policy:
 
 ```bash
-oat project dispatch-ceiling resolve --provider <active-provider> --preflight --json
+oat project dispatch-ceiling resolve --provider <active-provider> --preflight --report-scope implementation-preflight --report-action implementation --json
 ```
 
 If `oat` is not in PATH, use:
 
 ```bash
-pnpm run cli -- project dispatch-ceiling resolve --provider <active-provider> --preflight --json
+pnpm run cli -- project dispatch-ceiling resolve --provider <active-provider> --preflight --report-scope implementation-preflight --report-action implementation --json
 ```
 
 Resolution order:
@@ -345,7 +345,7 @@ exists, rerun the resolver with non-interactive behavior and stop before work
 starts if it blocks:
 
 ```bash
-oat project dispatch-ceiling resolve --provider <active-provider> --preflight --non-interactive
+oat project dispatch-ceiling resolve --provider <active-provider> --preflight --non-interactive --report-scope implementation-preflight --report-action implementation
 ```
 
 ```text
@@ -390,6 +390,32 @@ an ordered matrix route:
   entry before retrying, up to the last available route entry and within
   `oat_orchestration_retry_limit`.
 
+#### Dispatch Report V1 contract
+
+Every implementation, fix, and review resolver invocation MUST pass explicit
+report context:
+
+- implementation: `--report-scope <phase-or-task> --report-action implementation`
+- fix: `--report-scope <phase-or-task> --report-action fix`
+- review: `--report-scope <phase-or-review-scope> --report-action review`
+
+Require `dispatchReport.schemaVersion: 1` in the completed resolver JSON before
+dispatch. Consume the report as the human/audit source: render the versioned
+block with `formatDispatchReport(dispatchReport)` semantics, and derive the
+formal compatibility line only through
+`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
+Never hand-assemble a second `Dispatch:` schema from policy labels, role names,
+candidate strings, or target names.
+
+The exact provider invocation remains authoritative in
+`providers.<provider>.dispatchArgs` and `providers.<provider>.selection.target`;
+the report does not replace or weaken target-pinned dispatch. Add independently
+observed runtime identity to `dispatchReport.runtimeIdentity` only when such an
+observation exists. Requested/configured controls are not runtime observation.
+For gate-originated review, keep `dispatchReport.gateInvocation`, existing
+work-producer `diversity`, and reviewer `runtimeIdentity` as three distinct
+facts; producer stamps or self-report never overwrite configured invocation.
+
 Axis states:
 
 - `selected:<value>` - host exposes the axis and the orchestrator chose a value.
@@ -422,8 +448,8 @@ fallback.
 3. For capped managed implementer/fix work, selected effort is `min(preferred, resolved_cap)`.
 4. For managed `Uncapped` implementer/fix work, selected effort is the preferred effort with no cap.
 5. For inherit/default mode, the resolver returns no selected dispatch args. Use the base/unpinned Codex role, log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as managed uncapped behavior.
-6. For managed capped task-worker/fix dispatch, choose an exact configured candidate and call `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --json`. Read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`; never reuse the coordinator role or a cap-only variant. `--preferred` remains compatibility behavior outside the exact task-worker path.
-7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer`; read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`.
+6. For managed capped task-worker/fix dispatch, choose an exact configured candidate and call `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <task-id> --report-action <implementation|fix> --json`. Read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`; never reuse the coordinator role or a cap-only variant. `--preferred` remains compatibility behavior outside the exact task-worker path.
+7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer --report-scope <phase-or-review-scope> --report-action review --json`; read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
@@ -440,7 +466,7 @@ Claude rules:
 - Review dispatch:
   - Capped managed policy: target the configured policy cap directly.
   - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.
-- For managed capped task-worker/fix dispatch, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --json`; for review dispatch, call the resolver with `--role reviewer` and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it exactly on the actual Task invocation.
+- For managed capped task-worker/fix dispatch, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <task-id> --report-action <implementation|fix> --json`; for review dispatch, call the resolver with `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json` and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it exactly on the actual Task invocation.
 - Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
 - Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
 
@@ -450,7 +476,8 @@ Cursor rules:
   or infer capability from its spelling.
 - For managed capped task-worker/fix dispatch, call the resolver with
   `--provider cursor --role implementer --ceiling-tier
-<project-or-phase-tier> --candidate-model <opaque-model> --json`.
+<project-or-phase-tier> --candidate-model <opaque-model> --report-scope
+<task-id> --report-action <implementation|fix> --json`.
 - Require `providers.cursor.dispatchArgs.model` and pass that exact byte-for-byte
   string as the actual Cursor invocation model. If the host cannot apply it,
   fail closed.
@@ -460,19 +487,17 @@ Payload-first invariant:
 - Build the actual host dispatch argument map before logging.
 - Do not emit `selected:<value>` unless the host invocation contains the corresponding role/model selection.
 - Derive `Dispatch target` and `Effort axis` / `Model axis` from the payload.
-- After the payload is built, append a formal dispatch stamp to Dispatch Notes
-  for every implementation, fix, and review dispatch. Use the p01 grammar
-  exactly:
+- After the payload is built, append the compatibility stamp returned from
+  `formatDispatchStamp(dispatchReport)` to Dispatch Notes for every
+  implementation, fix, and review dispatch. The derived line retains the p01
+  grammar exactly:
   `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
-  Derive `producer` and `provenance` from the resolver payload and actual host
-  arguments. Only concrete model arguments, including same-harness route model
-  args for model-arg providers, declare producer identity. Codex materialized
-  model+effort variants declare `model_axis=selected:<model>` and
-  `effort_axis=selected:<effort>` from resolver output, but keep
-  `producer=unknown provenance=unknown` unless an observed/inferred model
-  identity is available. Base/unpinned or deferred cross-harness paths are also
-  `producer=unknown provenance=unknown` unless an observed/inferred identity is
-  available. Do not write prose-only or legacy comma-separated stamp forms.
+  Populate the report from the completed resolver and actual host arguments.
+  Only independently observed or otherwise supported runtime evidence may
+  populate runtime producer identity. Codex materialized model+effort variants
+  retain selected model/effort controls while keeping runtime identity
+  not-reported unless evidence exists. Do not write prose-only, hand-built, or
+  legacy comma-separated stamp forms.
 
 Human-facing dispatch display rules:
 
@@ -1067,6 +1092,8 @@ For each task in dependency order, the coordinator must:
      --role implementer \
      --ceiling-tier <project-or-phase-named-tier> \
      --candidate-model <exact-model> \
+     --report-scope <task-id> \
+     --report-action <literal-implementation-or-fix> \
      --project-path "$PROJECT_PATH" \
      --json
    ```

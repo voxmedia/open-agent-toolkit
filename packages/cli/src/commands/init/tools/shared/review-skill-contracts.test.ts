@@ -175,6 +175,51 @@ describe('review skill contracts', () => {
     expect(content).not.toContain('Producer: {slug | unknown}');
   });
 
+  it('requires implementation and review workflows to consume Dispatch Report V1', () => {
+    const skillPaths = [
+      '.agents/skills/oat-project-implement/SKILL.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    ];
+
+    for (const path of skillPaths) {
+      const content = readRepoFile(path);
+      expect(content, `${path} report scope`).toContain('--report-scope');
+      expect(content, `${path} report action`).toContain('--report-action');
+      expect(content, `${path} schema version`).toContain(
+        'dispatchReport.schemaVersion: 1',
+      );
+      expect(content, `${path} human renderer`).toContain(
+        'formatDispatchReport(dispatchReport)',
+      );
+      expect(content, `${path} derived stamp`).toContain(
+        'formatDispatchStamp(dispatchReport)',
+      );
+      expect(content, `${path} stamp adapter`).toContain(
+        'toDispatchStampRecord(dispatchReport)',
+      );
+      expect(content, `${path} exact provider payload`).toContain(
+        'providers.<provider>.dispatchArgs',
+      );
+      expect(content, `${path} exact selected target`).toContain(
+        'providers.<provider>.selection.target',
+      );
+      expect(content, `${path} runtime identity field`).toContain(
+        'dispatchReport.runtimeIdentity',
+      );
+      expect(content, `${path} runtime identity default`).toContain(
+        'not-reported',
+      );
+    }
+
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+    expect(remote).toMatch(
+      /oat gate[\s\S]{0,160}must not contain or add[\s\S]{0,120}--target/i,
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
