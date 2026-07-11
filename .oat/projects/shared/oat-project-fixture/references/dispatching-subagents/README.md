@@ -17,6 +17,7 @@ in one atomic follow-up change after the gate bookkeeping lands.
 - `providers/` — Cursor, Codex, and Claude draft harness references.
 - `verification/protocol.md` — bounded cross-harness verification protocol.
 - `verification/claims.md` — stable claim IDs and required probes.
+- `verification/prompts.md` — copy-paste prompts for fresh root sessions.
 - `verification/summary.md` — reconciled verdicts and promotion readiness.
 - `verification/runs/` — immutable timestamped evidence packets by harness.
 

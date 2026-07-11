@@ -48,8 +48,11 @@ catalog snapshots.
 6. If a leaf/fix target is unavailable or the native intersection is
    unsatisfactory, choose an exact Cursor CLI target before launch.
 7. If an implementation reviewer cannot be pinned natively, inherit only when
-   the root is known at or above the review ceiling; otherwise choose an exact
-   CLI reviewer.
+   the review-owning dispatcher is known at or above the review ceiling.
+   When a phase coordinator owns self-review, its nested catalog is the
+   relevant catalog. If that coordinator is below the ceiling and its nested
+   catalog lacks the ceiling target, it must choose an exact CLI reviewer
+   before launch; the outer root catalog is irrelevant to that selection.
 8. An accepted native or CLI child is terminal for fallback eligibility.
 
 ## Expected Cursor Topologies
@@ -61,7 +64,7 @@ flowchart LR
   R[Cursor root] -->|native exact/inherited| C[Phase coordinator]
   C -->|native exact| T1[Task worker]
   C -->|native exact| T2[Task worker]
-  R -->|native ceiling target| V[Implementation reviewer]
+  C -->|native ceiling target| V[Implementation reviewer]
 ```
 
 Current sanctioned hybrid when the nested catalog is insufficient:
@@ -71,7 +74,7 @@ flowchart LR
   R[Cursor root] -->|native exact/inherited| C[Phase coordinator]
   C -->|pre-start exact cursor-agent model| T1[CLI task worker]
   C -->|pre-start exact cursor-agent model| T2[CLI task worker]
-  R -->|native exact or qualified inherit| V[Implementation reviewer]
+  C -->|pre-start exact cursor-agent ceiling model| V[CLI implementation reviewer]
 ```
 
 ## Cursor CLI Route

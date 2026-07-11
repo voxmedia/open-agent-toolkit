@@ -14,14 +14,14 @@ catalog, nesting behavior, or invocation controls.
 
 ## Role Decision Table
 
-| Role                       | Preferred dispatch                                                            | When the preferred native target is unavailable                                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Phase coordinator          | Native subagent, pinned to a suitable candidate at or below the named ceiling | Native inheritance from the root when the root is suitable; otherwise make a recorded pre-start exact external selection or block |
-| Task / leaf worker         | Native exact candidate selected from the current dispatcher's catalog         | Select an exact provider CLI child before launch; never silently inherit the root                                                 |
-| Planning self-review       | Native subagent inheriting the planning root                                  | Continue inherited execution; the planning root is expected to satisfy the review quality floor                                   |
-| Implementation self-review | Native exact reviewer at the named ceiling                                    | Inherit only when the root is known at or above the ceiling; otherwise select the exact provider CLI reviewer before launch       |
-| Phase review gate          | Configured gate target                                                        | Fail closed when the configured target cannot be launched or corroborated                                                         |
-| Lifecycle gate             | Independent cross-family/cross-runtime CLI target                             | Fail closed; do not replace it with a same-context self-review                                                                    |
+| Role                       | Preferred dispatch                                                            | When the preferred native target is unavailable                                                                                                 |
+| -------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase coordinator          | Native subagent, pinned to a suitable candidate at or below the named ceiling | Native inheritance from the root when the root is suitable; otherwise make a recorded pre-start exact external selection or block               |
+| Task / leaf worker         | Native exact candidate selected from the current dispatcher's catalog         | Select an exact provider CLI child before launch; never silently inherit the root                                                               |
+| Planning self-review       | Native subagent inheriting the planning root                                  | Continue inherited execution; the planning root is expected to satisfy the review quality floor                                                 |
+| Implementation self-review | Native exact reviewer at the named ceiling                                    | Inherit only when the review-owning dispatcher is known at or above the ceiling; otherwise select the exact provider CLI reviewer before launch |
+| Phase review gate          | Configured gate target                                                        | Fail closed when the configured target cannot be launched or corroborated                                                                       |
+| Lifecycle gate             | Independent cross-family/cross-runtime CLI target                             | Fail closed; do not replace it with a same-context self-review                                                                                  |
 
 ## Dispatch Contexts
 
@@ -64,7 +64,7 @@ flowchart TD
   F -->|Yes| G[Build native inherited payload]
   F -->|No| H[Recorded pre-start exact external route or block]
   D -->|No: leaf/fix| I[Recorded pre-start exact provider CLI route]
-  D -->|No: implementation review| J{Root known at or above ceiling?}
+  D -->|No: implementation review| J{Review dispatcher known at or above ceiling?}
   J -->|Yes| G
   J -->|No| I
   E --> K[Log payload and launch once]
@@ -111,7 +111,11 @@ When mismatch occurs:
   exact native or exact CLI candidate.
 - Planning self-reviews inherit by default.
 - Implementation self-reviews must run at or above the named ceiling. Inherit
-  only when the root's declared tier satisfies that invariant.
+  only when the review-owning dispatcher's declared tier satisfies that
+  invariant. A phase coordinator below the ceiling must select an exact
+  provider CLI reviewer before launch when its nested native catalog lacks the
+  ceiling target; the outer root's catalog does not satisfy that nested
+  selection.
 - External gates never inherit the producer context.
 
 ## Acceptance Boundary

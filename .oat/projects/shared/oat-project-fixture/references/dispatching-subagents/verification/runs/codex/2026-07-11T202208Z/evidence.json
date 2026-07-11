@@ -1,0 +1,334 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "runId": "codex-2026-07-11T202208Z",
+    "runType": "pilot/noncanonical",
+    "scope": "combined-capability",
+    "harness": "codex",
+    "freshSession": false,
+    "contamination": [
+      "claims.md authoring",
+      "protocol.md authoring",
+      "Claude pilot review",
+      "cross-harness collaboration"
+    ],
+    "capturedAt": "2026-07-11T20:22:08Z",
+    "workingDirectory": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture",
+    "repositoryCommit": "101075cacae15591a0c1b2b1735dc12ab8d224a0",
+    "inputHashes": {
+      "claims.md": "4e7fbd7c1bad71d0e2781e1c32e5c55e67ed8efbb894187157a653e2119e9557",
+      "protocol.md": "0c0b57747f27121af7162a071009f94e60dd2288f72eb184573fcd473a6490cd",
+      "provider-draft.md": "b811d1d769194b5db6ae278da22290e623a0c41980578cfe470914d3569103a0"
+    },
+    "runtime": {
+      "rootModel": "configured:gpt-5.6-sol",
+      "rootReasoningEffort": "configured:high",
+      "versions": {
+        "codexCli": "0.144.1"
+      }
+    },
+    "redactionStatus": "reviewed"
+  },
+  "catalogSnapshots": [
+    {
+      "snapshotId": "root-native-1",
+      "dispatchContext": "root-native",
+      "source": "tool-schema",
+      "observedAt": "2026-07-11T20:20:00Z",
+      "roles": [
+        "default",
+        "explorer",
+        "worker",
+        "skeptical-evaluator",
+        "oat-codebase-mapper",
+        "oat-phase-implementer",
+        "oat-phase-implementer-gpt-5-6-luna-high",
+        "oat-phase-implementer-gpt-5-6-luna-low",
+        "oat-phase-implementer-gpt-5-6-luna-medium",
+        "oat-phase-implementer-gpt-5-6-luna-xhigh",
+        "oat-phase-implementer-gpt-5-6-sol-high",
+        "oat-phase-implementer-gpt-5-6-sol-low",
+        "oat-phase-implementer-gpt-5-6-sol-max",
+        "oat-phase-implementer-gpt-5-6-sol-medium",
+        "oat-phase-implementer-gpt-5-6-sol-xhigh",
+        "oat-phase-implementer-gpt-5-6-terra-high",
+        "oat-phase-implementer-gpt-5-6-terra-low",
+        "oat-phase-implementer-gpt-5-6-terra-medium",
+        "oat-phase-implementer-gpt-5-6-terra-xhigh",
+        "oat-reviewer",
+        "oat-reviewer-gpt-5-6-luna-high",
+        "oat-reviewer-gpt-5-6-luna-low",
+        "oat-reviewer-gpt-5-6-luna-medium",
+        "oat-reviewer-gpt-5-6-luna-xhigh",
+        "oat-reviewer-gpt-5-6-sol-high",
+        "oat-reviewer-gpt-5-6-sol-low",
+        "oat-reviewer-gpt-5-6-sol-max",
+        "oat-reviewer-gpt-5-6-sol-medium",
+        "oat-reviewer-gpt-5-6-sol-xhigh",
+        "oat-reviewer-gpt-5-6-terra-high",
+        "oat-reviewer-gpt-5-6-terra-low",
+        "oat-reviewer-gpt-5-6-terra-medium",
+        "oat-reviewer-gpt-5-6-terra-xhigh"
+      ],
+      "models": [
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
+        "gpt-5.5",
+        "gpt-5.4"
+      ],
+      "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"],
+      "inheritance": "omitted model, effort, and service tier inherit from parent"
+    },
+    {
+      "snapshotId": "nested-native-1",
+      "dispatchContext": "nested-native",
+      "source": "runtime-report",
+      "observedAt": "2026-07-11T20:20:00Z",
+      "roles": [],
+      "models": [
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
+        "gpt-5.5",
+        "gpt-5.4"
+      ],
+      "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"],
+      "inheritance": "child reported parent inheritance when overrides are omitted",
+      "diagnostics": [
+        "Pilot child compressed nested role families; exact verbatim role strings were not captured"
+      ]
+    }
+  ],
+  "launches": [
+    {
+      "probeId": "native-topology",
+      "verificationScope": "native-capability",
+      "role": "default",
+      "agentDefinition": "default",
+      "forkTurns": "none",
+      "modelSelector": "gpt-5.6-terra",
+      "modelSelectorGranularity": "opaque",
+      "effortSelector": "low",
+      "selectionSource": "explicit-call",
+      "catalogSnapshotId": "root-native-1",
+      "deadlineSeconds": 300,
+      "payload": {
+        "task_name": "codex_topology_probe",
+        "fork_turns": "none",
+        "agent_type": "default",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "low"
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "task_name=/root/codex_topology_probe",
+        "nickname=Popper"
+      ],
+      "diagnostics": [
+        "Nested role families were returned as shorthand rather than verbatim strings"
+      ],
+      "runtimeConfirmation": "not-reported",
+      "result": "Structured topology report",
+      "continuationEvents": []
+    },
+    {
+      "probeId": "native-leaf",
+      "verificationScope": "native-capability",
+      "role": "default",
+      "agentDefinition": "default",
+      "forkTurns": "none",
+      "modelSelector": "gpt-5.6-luna",
+      "modelSelectorGranularity": "opaque",
+      "effortSelector": "low",
+      "selectionSource": "explicit-call",
+      "catalogSnapshotId": "nested-native-1",
+      "deadlineSeconds": 300,
+      "payload": {
+        "task_name": "codex_nested_sentinel",
+        "fork_turns": "none",
+        "agent_type": "default",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "low",
+        "message": "Reply exactly OAT_CODEX_NESTED_SENTINEL_OK without tools."
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "task_name=/root/codex_topology_probe/codex_nested_sentinel",
+        "nickname=Planck"
+      ],
+      "diagnostics": [],
+      "runtimeConfirmation": "not-reported",
+      "result": "OAT_CODEX_NESTED_SENTINEL_OK",
+      "continuationEvents": []
+    },
+    {
+      "probeId": "cli-sentinel",
+      "verificationScope": "cli-capability",
+      "role": "none",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "gpt-5.6-luna",
+      "modelSelectorGranularity": "opaque",
+      "effortSelector": "low",
+      "selectionSource": "cli",
+      "catalogSnapshotId": "none",
+      "deadlineSeconds": 300,
+      "payload": {
+        "command": "codex exec --ephemeral --skip-git-repo-check --ignore-rules --sandbox read-only --json --model gpt-5.6-luna -c model_reasoning_effort=low",
+        "working_directory": "/tmp"
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "thread_id=019f52d7-df7c-7a43-857b-1793ea23cb68",
+        "turn.completed input_tokens=22248 cached_input_tokens=8960 output_tokens=14"
+      ],
+      "diagnostics": [
+        "One MCP transport emitted AuthorizationRequired; the sentinel turn still completed successfully"
+      ],
+      "runtimeConfirmation": "not-reported",
+      "result": "OAT_CODEX_CLI_SENTINEL_OK",
+      "continuationEvents": []
+    }
+  ],
+  "claims": [
+    {
+      "claimId": "U-M01",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["catalogSnapshots"],
+      "rationale": "Root and nested catalogs were separate observations."
+    },
+    {
+      "claimId": "U-M02",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["launches"],
+      "rationale": "Native and CLI acceptance were observable."
+    },
+    {
+      "claimId": "U-M03",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "runtime-report",
+      "evidenceRefs": ["launches"],
+      "rationale": "Missing runtime identity did not negate acceptance."
+    },
+    {
+      "claimId": "U-P05",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["cli-sentinel"],
+      "rationale": "The CLI control was declared independent, not fallback."
+    },
+    {
+      "claimId": "U-P06",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["launches"],
+      "rationale": "No alternate route followed acceptance."
+    },
+    {
+      "claimId": "U-P09",
+      "probeStatus": "not_run",
+      "verdict": "inconclusive",
+      "observationKind": "policy",
+      "evidenceMode": "schema",
+      "evidenceRefs": [],
+      "rationale": "No continuation was exercised."
+    },
+    {
+      "claimId": "COD-M01",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1"],
+      "rationale": "Root selectors were transcribed verbatim."
+    },
+    {
+      "claimId": "COD-M02",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology"],
+      "rationale": "The generic topology payload was accepted."
+    },
+    {
+      "claimId": "COD-M03",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "config",
+      "evidenceRefs": ["runtime.agents.max_depth"],
+      "rationale": "Effective maximum depth was 3."
+    },
+    {
+      "claimId": "COD-M04",
+      "probeStatus": "executed",
+      "verdict": "inconclusive",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-leaf", "nested-native-1"],
+      "rationale": "Leaf succeeded, but the nested role inventory was compressed."
+    },
+    {
+      "claimId": "COD-M05",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "config",
+      "evidenceRefs": ["runtime", "native-topology"],
+      "rationale": "Depth and sandbox/write controls are independent."
+    },
+    {
+      "claimId": "COD-M06",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Accepted children did not need identity self-report."
+    },
+    {
+      "claimId": "COD-M07",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "help",
+      "evidenceRefs": ["cli-sentinel"],
+      "rationale": "Explicit CLI model and effort control succeeded."
+    },
+    {
+      "claimId": "COD-M08",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Exact overrides were accepted with fork_turns none."
+    },
+    {
+      "claimId": "COD-S01",
+      "probeStatus": "executed",
+      "verdict": "inconclusive",
+      "observationKind": "snapshot",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["catalogSnapshots"],
+      "rationale": "Root was exact; nested role snapshot was incomplete."
+    }
+  ]
+}

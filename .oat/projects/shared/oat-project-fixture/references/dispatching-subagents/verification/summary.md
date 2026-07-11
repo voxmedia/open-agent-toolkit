@@ -4,11 +4,12 @@
 
 ## Readiness Matrix
 
-| Harness | Latest evidence                                       | Status            | Promotion eligible | Next action                       |
-| ------- | ----------------------------------------------------- | ----------------- | ------------------ | --------------------------------- |
-| Claude  | `runs/claude/2026-07-11T201120Z/`                     | Pilot complete    | No                 | Fresh canonical run against v2    |
-| Codex   | Legacy draft only                                     | Pending           | No                 | Pilot, then fresh canonical run   |
-| Cursor  | Flat execution log and catalog findings; no v2 packet | Baseline evidence | No                 | Normalize or run supplementary v2 |
+| Harness    | Latest evidence                                       | Status            | Promotion eligible | Next action                    |
+| ---------- | ----------------------------------------------------- | ----------------- | ------------------ | ------------------------------ |
+| Claude     | `runs/claude/2026-07-11T201120Z/`                     | Pilot complete    | No                 | Fresh canonical run against v2 |
+| Codex      | `runs/codex/2026-07-11T202208Z/`                      | Pilot complete    | No                 | Fresh canonical run against v2 |
+| Cursor IDE | Flat execution log and catalog findings; no v2 packet | Baseline evidence | No                 | Fresh canonical run against v2 |
+| Cursor CLI | Prior probes only; no v2 packet                       | Baseline evidence | No                 | Fresh canonical run against v2 |
 
 ## Claude Pilot
 
@@ -53,14 +54,41 @@ The pilot intentionally exposed incompatibilities that v2 corrects:
    one "exact model" field.
 5. Continuation events need explicit representation.
 
+## Codex Pilot
+
+The Codex packet is also `pilot/noncanonical`: the root session authored v2 and
+therefore was not fresh. It used committed v2 inputs at `101075ca`.
+
+Key findings:
+
+- A generic depth-1 topology child launched with explicit Terra/low controls;
+  its explicit Luna/low depth-2 leaf returned
+  `OAT_CODEX_NESTED_SENTINEL_OK`.
+- Agent type, model, reasoning effort, service tier, and fork context are
+  independent payload fields. Full-history fork compatibility must be recorded
+  rather than assumed (`COD-M08`).
+- Effective `agents.max_depth` was 3, sufficient for the tested depth-2 path.
+- The ephemeral read-only `codex exec` sentinel returned
+  `OAT_CODEX_CLI_SENTINEL_OK`. JSON output did not independently corroborate
+  runtime model identity.
+- A nonfatal MCP authorization diagnostic appeared during the successful CLI
+  control; diagnostics therefore remain separate from launch status and child
+  outcome.
+- The topology child compressed role families in its report. Canonical prompts
+  now forbid shorthand and require verbatim selector arrays.
+
+Pilot artifacts:
+
+- `runs/codex/2026-07-11T202208Z/report.md`
+- `runs/codex/2026-07-11T202208Z/evidence.json`
+
 ## Next Promotion Steps
 
 1. Review protocol v2 and the stable claims ledger against the Claude pilot.
-2. Run a Codex pilot to stress the same schema from a materially different
-   role/model/effort surface.
-3. Revise v2 once from both pilot results.
-4. Run fresh canonical Claude and Codex sessions against immutable v2 inputs.
-5. Normalize the existing Cursor evidence into claim IDs or run a bounded
-   supplementary recheck.
-6. Promote only confirmed mechanisms; retain snapshots, contradictions, and
+2. Review the final v2 amendments derived from both pilots.
+3. Run fresh canonical Claude and Codex sessions against immutable v2 inputs.
+4. Run separate fresh Cursor IDE and Cursor CLI sessions against their distinct
+   v2 prompts, retaining inconclusive CLI-native results when structured Task
+   evidence remains unavailable.
+5. Promote only confirmed mechanisms; retain snapshots, contradictions, and
    inconclusive claims in provider references.

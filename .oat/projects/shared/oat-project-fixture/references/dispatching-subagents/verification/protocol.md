@@ -14,6 +14,9 @@ It is not a live workflow smoke test and does not validate review-routing policy
 Read `claims.md` before launching probes. A canonical report returns one row for
 every claim in its declared scope.
 
+Use the harness-specific copy-paste instructions in `prompts.md`; do not
+recompose a canonical run from memory.
+
 ## Run Types
 
 | Type                 | Use                                                            | Promotion eligible |
@@ -24,8 +27,10 @@ every claim in its declared scope.
 
 ## Safety Boundary
 
-- Read-only probes only. Do not modify repository files, user configuration,
-  provider configuration, or generated agent assets.
+- Probe actions are read-only. After all probes finish, the root verifier may
+  create only its new designated `report.md` and `evidence.json` run-packet
+  files. Do not modify any existing repository file, user configuration,
+  provider configuration, or generated agent asset.
 - Do not start an OAT project workflow.
 - Declare and record a deadline before every child launch. No probe may be
   unbounded.
@@ -112,7 +117,9 @@ must be a positive integer declared before launch.
     "runType": "pilot/noncanonical | canonical | supplementary",
     "scope": "native-capability | cli-capability | combined-capability | supplementary",
     "harness": "claude | codex | cursor",
+    "flavor": "ide | cli | not-applicable",
     "freshSession": true,
+    "contamination": [],
     "capturedAt": "<ISO-8601 UTC>",
     "workingDirectory": "<absolute path>",
     "repositoryCommit": "<full SHA>",
@@ -145,6 +152,7 @@ must be a positive integer declared before launch.
       "verificationScope": "native-capability | cli-capability",
       "role": "<named role or none>",
       "agentDefinition": "<named definition or none>",
+      "forkTurns": "none | all | <positive integer> | not-applicable",
       "modelSelector": "<opaque selector, inherited, or none>",
       "modelSelectorGranularity": "tier-alias | exact-model-id | opaque | inherited | none",
       "effortSelector": "<opaque selector, inherited, not-exposed, or none>",
@@ -155,6 +163,7 @@ must be a positive integer declared before launch.
       "launchStatus": "accepted | rejected-before-start | not-launched",
       "childOutcome": "completed | failed | timeout | interrupted | blocked | contract-refusal | not-observed",
       "configuredInvocationEvidence": [],
+      "diagnostics": [],
       "runtimeConfirmation": "<observed selector or not-reported>",
       "result": "<fixed result or structured topology summary>",
       "continuationEvents": []
@@ -196,12 +205,18 @@ reference the existing probe and must not change its role, model, or route.
 Do not collapse role, agent definition, model, effort, inheritance, and runtime
 identity into one field.
 
+Catalog arrays MUST contain verbatim selector strings. Do not compress role or
+model families into brace expressions, ranges, wildcards, or prose summaries.
+
 ## Harness Requirements
 
 ### Codex
 
 - Record effective `agents.max_depth` and its source.
 - Distinguish registered agent type from model and reasoning-effort selectors.
+- Record `fork_turns` and any incompatibility between full-history forks and
+  explicit role/model overrides. Use the self-contained mode required by the
+  live schema rather than retrying after rejection.
 - Use `OAT_CODEX_NESTED_SENTINEL_OK` for the leaf result.
 - Inspect current `codex exec` model and effort controls for the independent CLI
   scope.
@@ -214,6 +229,8 @@ identity into one field.
   inheritance.
 - Use a generic agent type for the topology probe; production OAT roles may
   correctly reject unrelated schema-transcription work.
+- Omit the generic topology probe's model selector to exercise the inheritance
+  path once; use the explicit-model leaf sentinel to exercise native pinning.
 - Record whether the generic topology probe receives nested Agent/Task.
 - Use `OAT_CLAUDE_NESTED_SENTINEL_OK` for the leaf result.
 - Observe Workflow model/effort controls separately; do not launch Workflow
