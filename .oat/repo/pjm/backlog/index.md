@@ -19,9 +19,6 @@
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches       | open   | high     | feature | M        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews  | open   | high     | feature | M        |
 | BL-260709-split-post-implementation      | Split post-implementation sequence into pre- and post-approval steps | open   | high     | feature | M        |
-| BL-260709-add-dispatch-machine-schema    | Add dispatch machine schema and formatter                            | open   | medium   | feature | M        |
-| BL-260707-cache-cursor-model-catalog     | Cache Cursor model catalog during matrix validation                  | open   | medium   | task    | S        |
-| BL-260707-consolidate-dispatch-matrix    | Consolidate dispatch matrix normalization and traversal              | open   | medium   | task    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs    | open   | medium   | feature | L        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                           | open   | medium   | task    | S        |
 
