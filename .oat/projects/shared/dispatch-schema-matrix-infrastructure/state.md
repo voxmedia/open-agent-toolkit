@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 6d1cb357
+oat_last_commit: 2924adcf
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T03:35:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T11:26:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation tasks complete; implementation-end gate review pending
+Implementation and final review complete; ready for project closeout
 
 ## Artifacts
 
@@ -101,7 +101,7 @@ Implementation tasks complete; implementation-end gate review pending
 - ✓ Phase p05 completed: lockstep `0.1.49` release assets, full verification, and evidence-based backlog closeout
 - ✓ Phase p05 self-review passed after project PJM closeout drift fix (`6d1cb357`)
 - ✓ All 23 implementation tasks complete
-- ⧗ Implementation-end gate review pending
+- ✓ Implementation-end gate review passed with one Minor plan-alignment finding addressed
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -110,4 +110,4 @@ Implementation tasks complete; implementation-end gate review pending
 
 ## Next Milestone
 
-Run the configured implementation-end gate review over the completed project, process any findings, and finalize implementation bookkeeping.
+Finalize the completed project and prepare its shipping handoff.

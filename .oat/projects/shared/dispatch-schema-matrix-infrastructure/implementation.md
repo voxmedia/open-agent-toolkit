@@ -509,6 +509,21 @@ oat_generated: false
 
 ---
 
+## Final Review Received
+
+**Review:** `reviews/archived/final-review-2026-07-11T034130Z.md`
+
+**Disposition:** Passed after addressing the sole Minor finding.
+
+- `m1` — addressed now: clarified in p05-t03 that archiving
+  `BL-260708-verify-cursor-gpt-5-6-subagent` is conditional on successful live
+  Task/subagent eligibility evidence. The evidence-based implementation and
+  retained backlog item remain unchanged.
+- Findings: 0 Critical, 0 Important, 0 Medium, 1 Minor.
+- Deferred Medium findings: none.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

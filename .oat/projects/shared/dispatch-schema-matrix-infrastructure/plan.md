@@ -925,7 +925,11 @@ incomplete item active with an evidence/recheck note rather than archiving it.
 
 **Step 3: Refactor**
 
-Use these command shapes for the items that satisfy acceptance:
+Use these command shapes for the items that satisfy acceptance. The
+`BL-260708-verify-cursor-gpt-5-6-subagent` archive command is conditional on
+live Task/subagent evidence verifying eligibility for the recommended Cursor
+candidate set; if that evidence remains incomplete, retain the item with its
+evidence and dated recheck instead.
 
 ```bash
 pnpm run cli -- backlog archive BL-260709-add-dispatch-machine-schema --summary "Delivered Dispatch Report V1 schema, formatters, and workflow integration." --json
@@ -961,7 +965,7 @@ git commit -m "chore(p05-t03): close dispatch infrastructure backlog"
 | p03    | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04    | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
 | p05    | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| final  | code     | received        | 2026-07-11 | reviews/final-review-2026-07-11T034130Z.md                    |
+| final  | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-10 | reviews/archived/artifact-design-review-2026-07-10T200942Z.md |
 | plan   | artifact | passed          | 2026-07-10 | reviews/archived/artifact-plan-review-2026-07-10T215126Z.md   |
