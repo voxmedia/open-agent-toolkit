@@ -2848,7 +2848,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(
         (capture.jsonPayloads[0] as { message?: string }).message,
       ).toContain(
-        'oat providers codex materialize <agent-name> --scope project',
+        'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope project',
       );
       expect(process.exitCode).toBe(1);
     },
@@ -3067,7 +3067,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       'oat sync --scope user',
     );
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'oat providers codex materialize <agent-name> --scope user',
+      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope user',
     );
     expect(process.exitCode).toBe(1);
   });

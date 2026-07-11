@@ -1054,7 +1054,7 @@ config_file = "agents/reviewer.toml"
     );
     expect(capture.info[0]).toContain('oat sync --scope project');
     expect(capture.info[0]).toContain(
-      'oat providers codex materialize <agent-name> --scope project',
+      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope project',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -1147,7 +1147,7 @@ config_file = "agents/reviewer.toml"
     expect(capture.info[0]).toContain('user:codex_max_depth');
     expect(capture.info[0]).toContain('oat sync --scope user');
     expect(capture.info[0]).toContain(
-      'oat providers codex materialize <agent-name> --scope user',
+      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope user',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -1284,7 +1284,9 @@ config_file = "agents/${roleName}.toml"
       `Missing codex role files: agents/${roleName}.toml`,
     );
     expect(capture.info[0]).toContain('oat sync --scope project');
-    expect(capture.info[0]).toContain('oat providers codex materialize');
+    expect(capture.info[0]).toContain(
+      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope project',
+    );
     expect(process.exitCode).toBe(1);
   });
 });

@@ -552,7 +552,7 @@ function createCodexMaxDepthCheck(
       : `${state}; OAT managed implementation requires ${topology}.`,
     fix: sufficient
       ? undefined
-      : `Run \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --scope ${scope}\`.`,
+      : `Run \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope ${scope}\`.`,
   };
 }
 
@@ -672,7 +672,7 @@ async function runCodexChecksForScope(
     fix:
       missingRoleFiles.length === 0
         ? undefined
-        : `Regenerate codex roles with \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --scope ${scope}\`.`,
+        : `Regenerate codex roles with \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope ${scope}\`.`,
   });
 
   return checks;
