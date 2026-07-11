@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: f81dceb3
+oat_last_commit: b9a7ad12
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p03] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p03] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -31,23 +31,23 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/137 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T23:53:07.608Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T15:26:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T15:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: codex-subagent-max-depth
 
-**Status:** Implementation complete
+**Status:** PR open
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-11
 
 ## Current Phase
 
-Implementation complete - ready for final PR
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -82,6 +82,8 @@ Implementation complete - ready for final PR
 - ✓ Final project code review completed
 - ✓ Bookkeeping-only finding fixed and re-review waived by user
 - ✓ Project reconciled for final PR
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -89,4 +91,7 @@ None.
 
 ## Next Milestone
 
-Open the final project pull request.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
