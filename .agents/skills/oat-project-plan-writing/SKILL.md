@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.8
+version: 1.2.9
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -134,7 +134,7 @@ The Auto Artifact-Review Loop below consumes this reviewer dispatch contract.
 Tier selection happens only after the target-preserving route is known and
 changes execution mechanics, not the resolved model/effort contract.
 
-## Shared Phase-Review Setup Contract
+## Shared Phase Gate Review Setup Contract
 
 Every plan-producing workflow invokes this procedure after the complete plan
 has stable phase IDs and before the plan artifact review begins. The calling
@@ -149,7 +149,7 @@ unchanged. Do not probe targets, prompt, or mutate the setting. This applies to
 enabled, disabled, resumed, and imported explicit values. Report:
 
 ```text
-Phase review: preserved existing oat_phase_review_gate setting.
+Phase gate review: preserved existing oat_phase_review_gate setting.
 ```
 
 Implementation preflight remains responsible for rejecting a malformed
@@ -182,13 +182,13 @@ If the probe fails, emit exactly this concise warning and continue planning
 without adding the setting:
 
 ```text
-Warning: phase review target probe failed; phase review remains disabled.
+Warning: Phase gate review target probe failed; Phase gate review remains disabled.
 ```
 
 If no qualifying target exists, emit:
 
 ```text
-Phase review: disabled (no qualifying target); phase review remains disabled.
+Phase gate review: disabled (no qualifying target); Phase gate review remains disabled.
 ```
 
 Do not invent enablement in either branch.
@@ -198,9 +198,12 @@ Do not invent enablement in either branch.
 When at least one target qualifies and an interactive user-response channel is
 available, offer exactly these outcomes:
 
-1. **All phases** - enable review for every implementation phase.
-2. **Selected phases** - enable review only for chosen stable phase IDs.
-3. **Disabled** - leave phase review disabled.
+1. **All phases** - enable the independent Phase gate review after every implementation phase.
+2. **Selected phases** - enable the independent Phase gate review only after chosen stable phase IDs.
+3. **Disabled** - leave Phase gate review disabled.
+
+Phase gate review is non-pausing when it passes and is distinct from both HiLL
+approval and final artifact review.
 
 For all phases, write the existing plan frontmatter shape:
 
@@ -222,7 +225,7 @@ If the user declines or chooses Disabled, do not add
 `oat_phase_review_gate`; emit:
 
 ```text
-Phase review: disabled (user declined); phase review remains disabled.
+Phase gate review: disabled (user declined); Phase gate review remains disabled.
 ```
 
 ### 4. Handle non-interactive planning
@@ -233,7 +236,7 @@ a qualifying target, do not guess all phases or selected phases and do not
 invent enablement. Leave the setting absent and emit:
 
 ```text
-Phase review: disabled (non-interactive; no selection recorded); phase review remains disabled.
+Phase gate review: disabled (non-interactive; no selection recorded); Phase gate review remains disabled.
 ```
 
 ### 5. Keep review gates independent from HiLL

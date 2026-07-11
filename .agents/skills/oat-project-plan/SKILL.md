@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.12
+version: 1.3.13
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -203,7 +203,7 @@ oat_template: false
 
 When Overwrite restored an explicit phase-review snapshot, keep that exact
 entry in this first rewritten frontmatter. Do not let the generic frontmatter
-update remove or replace it. The shared phase-review setup in Step 12.25 must
+update remove or replace it. The shared Phase gate review setup in Step 12.25 must
 observe the restored key and preserve it without probing, prompting, or
 mutation. When the key was absent from the overwritten plan, do not invent it
 before the shared setup contract runs.
@@ -417,20 +417,20 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
-### Step 12.25: Configure Optional Phase Review
+### Step 12.25: Configure Optional Phase Gate Review
 
 After the confirmed plan has stable phase IDs and before Step 12.5 starts the
-plan artifact review, invoke the `Shared Phase-Review Setup Contract` from
+plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
 `oat-project-plan-writing`.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
 through the shared contract without probing, prompting, or mutation. Otherwise
 let the contract probe qualifying targets and offer all phases, selected
 phases, or disabled. If the probe fails, no target qualifies, or the user
-declines, leave phase review disabled and continue with the contract's concise
+declines, leave Phase gate review disabled and continue with the contract's concise
 status output.
 
-This phase-review setup is independent from HiLL checkpoints. Do not read or
+This Phase gate review setup is independent from HiLL checkpoints. Do not read or
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 

@@ -53,11 +53,19 @@ export interface OatArchiveConfig {
 }
 
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
-export type WorkflowPostImplementSequence =
+export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr';
+export type WorkflowPostImplementLegacySequence =
   | 'wait'
   | 'summary'
   | 'pr'
   | 'docs-pr';
+export interface WorkflowPostImplementStructuredSequence {
+  preApproval: WorkflowPostImplementStep[];
+  postApproval: WorkflowPostImplementStep[];
+}
+export type WorkflowPostImplementSequence =
+  | WorkflowPostImplementLegacySequence
+  | WorkflowPostImplementStructuredSequence;
 export type WorkflowReviewExecutionModel =
   | 'subagent'
   | 'inline'
@@ -150,8 +158,27 @@ export interface OatWorkflowConfig {
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
   ['every', 'final'];
-const VALID_POST_IMPLEMENT_SEQUENCES: readonly WorkflowPostImplementSequence[] =
+const VALID_POST_IMPLEMENT_LEGACY_SEQUENCES: readonly WorkflowPostImplementLegacySequence[] =
   ['wait', 'summary', 'pr', 'docs-pr'];
+const VALID_POST_IMPLEMENT_STEPS: readonly WorkflowPostImplementStep[] = [
+  'summary',
+  'document',
+  'pr',
+];
+const LEGACY_POST_IMPLEMENT_SEQUENCES: Readonly<
+  Record<
+    WorkflowPostImplementLegacySequence,
+    WorkflowPostImplementStructuredSequence
+  >
+> = {
+  wait: { preApproval: [], postApproval: [] },
+  summary: { preApproval: ['summary'], postApproval: [] },
+  pr: { preApproval: ['summary', 'pr'], postApproval: [] },
+  'docs-pr': {
+    preApproval: ['summary', 'document', 'pr'],
+    postApproval: [],
+  },
+};
 const VALID_REVIEW_EXECUTION_MODELS: readonly WorkflowReviewExecutionModel[] = [
   'subagent',
   'inline',
@@ -222,6 +249,64 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
   },
 };
 
+export function normalizeWorkflowPostImplementSequence(
+  value: unknown,
+): WorkflowPostImplementStructuredSequence | undefined {
+  if (
+    typeof value === 'string' &&
+    (VALID_POST_IMPLEMENT_LEGACY_SEQUENCES as readonly string[]).includes(value)
+  ) {
+    const legacy =
+      LEGACY_POST_IMPLEMENT_SEQUENCES[
+        value as WorkflowPostImplementLegacySequence
+      ];
+    return {
+      preApproval: [...legacy.preApproval],
+      postApproval: [...legacy.postApproval],
+    };
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const keys = Object.keys(value);
+  if (
+    keys.length !== 2 ||
+    !keys.includes('preApproval') ||
+    !keys.includes('postApproval') ||
+    !Array.isArray(value.preApproval) ||
+    !Array.isArray(value.postApproval)
+  ) {
+    return undefined;
+  }
+
+  const steps = [...value.preApproval, ...value.postApproval];
+  if (
+    !steps.every(
+      (step): step is WorkflowPostImplementStep =>
+        typeof step === 'string' &&
+        (VALID_POST_IMPLEMENT_STEPS as readonly string[]).includes(step),
+    ) ||
+    new Set(steps).size !== steps.length
+  ) {
+    return undefined;
+  }
+
+  return {
+    preApproval: [...value.preApproval],
+    postApproval: [...value.postApproval],
+  };
+}
+
+export function isWorkflowPostImplementStructuredSequence(
+  value: unknown,
+): value is WorkflowPostImplementStructuredSequence {
+  return (
+    isRecord(value) &&
+    normalizeWorkflowPostImplementSequence(value) !== undefined
+  );
+}
 function normalizeMaxAttempts(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return 2;
@@ -400,14 +485,14 @@ function normalizeWorkflowConfig(
     next.createPrOnComplete = parsed.createPrOnComplete;
   }
 
-  if (
-    typeof parsed.postImplementSequence === 'string' &&
-    (VALID_POST_IMPLEMENT_SEQUENCES as readonly string[]).includes(
-      parsed.postImplementSequence,
-    )
-  ) {
+  const postImplementSequence = normalizeWorkflowPostImplementSequence(
+    parsed.postImplementSequence,
+  );
+  if (postImplementSequence !== undefined) {
     next.postImplementSequence =
-      parsed.postImplementSequence as WorkflowPostImplementSequence;
+      typeof parsed.postImplementSequence === 'string'
+        ? (parsed.postImplementSequence as WorkflowPostImplementLegacySequence)
+        : postImplementSequence;
   }
 
   if (
