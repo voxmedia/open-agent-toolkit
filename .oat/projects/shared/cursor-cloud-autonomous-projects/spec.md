@@ -289,24 +289,24 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 | ID    | Description                                                | Priority | Verification                                                   | Planned Tasks                              |
 | ----- | ---------------------------------------------------------- | -------- | -------------------------------------------------------------- | ------------------------------------------ |
 | FR1   | Autonomy policy: every gate has a non-interactive behavior | P0       | manual: gate-inventory walkthrough + autonomous dry run         | p01-t01, p01-t02, p01-t03, p01-t04, p01-t05 |
-| FR2   | State-detecting autonomous orchestrator skill              | P0       | e2e: goal-to-PR and resume-and-run cloud runs                   | p02-t01, p06-t03, p06-t04                   |
-| FR3   | Layered cross-family review contract                       | P0       | integration: dispatch resolution per tier; manual: provenance   | p02-t01, p02-t02                            |
-| FR4   | Gate hooks for discover/design skills                      | P1       | manual: configured-gate exercise at skill exit                  | p01-t03                                     |
-| FR5   | Quick-start gate covers artifact bundle                    | P1       | manual: gate prompt scope inspection on quick project           | p01-t04                                     |
-| FR6   | Non-interactive HiLL resolution (final + auto-review)      | P0       | manual: autonomous run writes explicit value; interactive pause | p01-t02, p01-t06                            |
-| FR7   | Cursor Cloud orientation skill                             | P0       | e2e: fresh multi-repo + single-repo cloud sessions              | p02-t02, p06-t01, p06-t02                   |
-| FR8   | Environment provisioning (CLI, packs, config, harness)     | P0       | e2e: fresh-VM readiness check                                   | p04-t02, p04-t03, p04-t04, p04-t05          |
-| FR9   | External-integration research mandate (mechanism-agnostic) | P1       | manual: autonomous evidence-gathering with/without org layer    | p02-t01, p06-t04                            |
-| FR10  | internal-docs-mcp skill-only plugin (org layer)            | P1       | manual: coverage-check + fallback behavior in cloud session     | p05-t01, p05-t02                            |
-| FR11  | Append-only execution learnings log                        | P1       | manual: log presence/categorization after autonomous run        | p02-t01, p06-t04                            |
-| FR12  | Single-PR default; first-class stacked support             | P1       | manual: plan inspection for default and stacked cases           | p02-t01                                     |
-| FR13  | Mode selection framed as review density                    | P1       | manual: autonomous mode-choice rationale in artifacts           | p01-t04, p02-t01                            |
-| FR14  | Learnings synthesis into project summary                   | P1       | integration: summary generation with/without learnings file     | p01-t05, p06-t05                            |
-| NFR1  | Org-agnostic OAT layer                                     | P0       | manual: bundle audit for org identifiers                        | p02-t02, p06-t05                            |
-| NFR2  | Zero-cleanup local takeover                                | P0       | manual: post-autonomous-run artifact inspection + local resume  | p02-t01, p06-t03                            |
+| FR2   | State-detecting autonomous orchestrator skill              | P0       | e2e: goal-to-PR and resume-and-run cloud runs                   | p02-t02, p06-t03, p06-t04                   |
+| FR3   | Layered cross-family review contract                       | P0       | integration: dispatch resolution per tier; manual: provenance   | p02-t02, p02-t03, p06-t05                   |
+| FR4   | Gate hooks for discover/design skills                      | P1       | manual: configured-gate exercise at skill exit                  | p01-t03, p06-t06                            |
+| FR5   | Quick-start gate covers artifact bundle                    | P1       | manual: gate prompt scope inspection on quick project           | p01-t04, p06-t06                            |
+| FR6   | Non-interactive HiLL resolution (final + auto-review)      | P0       | manual: autonomous run writes explicit value; interactive pause | p01-t02, p01-t06, p06-t05                   |
+| FR7   | Cursor Cloud orientation skill                             | P0       | e2e: fresh multi-repo + single-repo cloud sessions              | p02-t03, p06-t01, p06-t02                   |
+| FR8   | Environment provisioning (CLI, packs, config, harness)     | P0       | e2e: fresh-VM readiness check                                   | p02-t04, p04-t01, p04-t02, p04-t03, p04-t04 |
+| FR9   | External-integration research mandate (mechanism-agnostic) | P1       | manual: autonomous evidence-gathering with/without org layer    | p02-t02, p06-t04, p06-t06                   |
+| FR10  | internal-docs-mcp skill-only plugin (org layer)            | P1       | manual: coverage-check + fallback behavior in cloud session     | p05-t01, p05-t02, p06-t06                   |
+| FR11  | Append-only execution learnings log                        | P1       | manual: log presence/categorization after autonomous run        | p02-t02, p06-t04                            |
+| FR12  | Single-PR default; first-class stacked support             | P1       | manual: plan inspection for default and stacked cases           | p02-t02, p06-t06                            |
+| FR13  | Mode selection framed as review density                    | P1       | manual: autonomous mode-choice rationale in artifacts           | p02-t02, p06-t04                            |
+| FR14  | Learnings synthesis into project summary                   | P1       | integration: summary generation with/without learnings file     | p01-t05, p06-t06, p06-t07                   |
+| NFR1  | Org-agnostic OAT layer                                     | P0       | manual: bundle audit for org identifiers                        | p02-t03, p06-t07                            |
+| NFR2  | Zero-cleanup local takeover                                | P0       | manual: post-autonomous-run artifact inspection + local resume  | p02-t02, p06-t03                            |
 | NFR3  | No-stall guarantee                                         | P0       | e2e: autonomous runs monitored for input-waits without blockers | p01-t01, p06-t03, p06-t04                   |
-| NFR4  | Graceful degradation ladders with logging                  | P1       | integration: simulated missing CLI/MCP/secret scenarios         | p02-t01, p04-t03                            |
-| NFR5  | Single-repo environment support                            | P1       | e2e: single-repo cloud environment validation pass              | p02-t02, p04-t01, p06-t02                   |
+| NFR4  | Graceful degradation ladders with logging                  | P1       | integration: simulated missing CLI/MCP/secret scenarios         | p02-t02, p04-t02, p04-t04, p06-t06          |
+| NFR5  | Single-repo environment support                            | P1       | e2e: single-repo cloud environment validation pass              | p02-t03, p06-t02                            |
 
 **Notes:**
 

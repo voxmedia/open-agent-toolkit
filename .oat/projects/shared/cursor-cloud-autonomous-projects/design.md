@@ -24,7 +24,7 @@ Four systems change: the OAT skill set (new skills + amendments to lifecycle ski
 - **Harness layer (OAT repo, Cursor-specific, org-agnostic):** `oat-cursor-cloud-projects` — cloud detection, multi-repo project-home resolution, skill precedence, CLI availability, and the Cursor-specific review-dispatch mechanics (run-metadata identity, pinned-slug subagents).
 - **Org layer (team-distributed, may name infrastructure):** `internal-docs-mcp` in pntr — vox-docs usage. Absent in non-Vox contexts; its absence is logged, never fatal.
 
-**Boundaries of this change:** no new CLI commands or engine subsystems. The autonomy policy is a prose-level contract plus existing config/env plumbing (`OAT_NON_INTERACTIVE`, `workflow.hillCheckpointDefault`), not a new runtime. Environment provisioning is additive setup-script/Dockerfile work in the env repo. Existing interactive behavior is unchanged when autonomy is inactive.
+**Boundaries of this change:** no new CLI commands or engine subsystems. One existing-installer amendment: the workflows pack becomes installable at user scope (today it rejects `--scope user`), which FR8's user-level distribution requires. The autonomy policy is a prose-level contract plus existing config/env plumbing (`OAT_NON_INTERACTIVE`, `workflow.hillCheckpointDefault`), not a new runtime. Environment provisioning is additive setup-script/Dockerfile work in the env repo. Existing interactive behavior is unchanged when autonomy is inactive.
 
 ### Component Diagram
 
