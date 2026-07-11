@@ -390,20 +390,31 @@ the broad catalog once, with at most one `--list-models` fallback. The cache
 ends with that adopt or doctor command; it is not process-global and has no
 TTL.
 
-A sentinel-confirmed Task launch or an explicit subagent allow-list is direct
-eligibility evidence. Broad catalog presence is diagnostic-only and never
-proves that a candidate can launch a subagent Task. OAT preserves
-`unvalidated` or `unknown-value` when direct evidence is unavailable instead of
-inferring capability from the candidate spelling.
+A correlated Task start/completion pair that preserves the exact model argument
+and returns the sentinel establishes that the argument is eligible for that
+account and client. A structured rejection or exact allow-list exclusion can
+establish `unknown-value`. Neither result identifies the backend runtime model:
+`runtimeIdentity` remains `not-reported` unless trusted Cursor telemetry or
+Cursor support confirms it. Parent prose and broad catalog presence are
+diagnostic-only, so OAT preserves `unvalidated` when launcher evidence is
+absent instead of inferring capability from candidate spelling.
 
 The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
-records the exact recommendation version, sanitized client context, one probe
-per distinct candidate, direct exit status, duration, stdout/stderr, outcome
-basis, and recheck date. Its 2026-07-11 pass left all 13 recommendation
-candidates—including the four configured values—`unvalidated`, so the
-recommendation remained unchanged. Re-run the canonical probe on the recorded
-2026-07-18 recheck date; do not silently promote an unavailable result from
-catalog output or slug spelling.
+preserves the original text-mode pass and a versioned stream-JSON second pass.
+The second pass ran a dynamic positive control and deliberate invalid control
+before candidates. Both parent runs completed without a Task event, making the
+controls inconclusive; the stop rule therefore executed zero of the 13
+recommended candidates and did not execute exploratory
+`gpt-5.6-sol-high-fast`. The recommendation remains unchanged and candidate
+eligibility remains unresolved.
+
+Tracked evidence contains only allowlisted event structure, derived outcomes,
+sanitized auth-presence context, and non-reversible identifier hashes. Exact
+request/session/tool-call IDs and credential-redacted unprojected streams stay
+under gitignored `.oat/projects/local/` storage for possible Cursor support
+diagnosis. Re-run after a Cursor client rollout exposes Task in headless mode or
+Cursor support confirms the private requests; review the open verification item
+by 2026-08-08.
 
 ### Legacy compatibility
 

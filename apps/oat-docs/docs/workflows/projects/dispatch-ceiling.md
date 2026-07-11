@@ -263,6 +263,27 @@ Reviewers use the final candidate at the configured review ceiling. Managed
 reviewer behavior. A timeout retry preserves the same exact role or complete
 Claude/Cursor model payload.
 
+### Cursor evidence authority
+
+Cursor resolution and runtime evidence answer different questions. Resolution
+proves which opaque candidate OAT requested. A stream-JSON Task start and
+correlated completion prove launcher behavior only when the model argument is
+preserved byte-for-byte. An accepted Task plus the child sentinel establishes
+argument eligibility for that account and client; a structured rejection can
+establish `unknown-value`. Runtime producer identity remains `not-reported`
+unless trusted Cursor telemetry or Cursor support independently confirms it.
+
+The [2026-07-11 GPT-5.6 evidence record](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
+ran positive and negative controls before candidate probes. Neither control
+emitted a Task event, so the harness stopped without probing the 13 recommended
+arguments or exploratory `gpt-5.6-sol-high-fast`. This is a harness/account
+boundary, not model rejection, and it supports no recommendation change.
+
+Tracked evidence exposes only an allowlisted event projection and
+non-reversible identifier hashes. Exact request/session/tool-call IDs and
+credential-redacted raw streams stay in gitignored local project storage for
+support diagnosis.
+
 ## Coordinator and Worker Layers
 
 `oat-phase-implementer` has two explicit modes:
