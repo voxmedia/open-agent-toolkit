@@ -10,13 +10,13 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p03] # Progress: which HiLL checkpoints have been completed
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: post_approval
   final_phase: p03
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending
+  approval: approved
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -36,7 +36,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/135' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:58:56.209Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T11:47:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -48,7 +48,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; awaiting final HiLL approval
+Implementation — PR open; final HiLL approval recorded
 
 ## Artifacts
 
@@ -101,7 +101,7 @@ Implementation — PR open; awaiting final HiLL approval
 - ✓ Pre-approval summary generated and key decisions promoted
 - ✓ Pre-approval documentation verified current
 - ✓ Pre-approval PR created: #135
-- ⧗ Final HiLL approval pending
+- ✓ Final HiLL approval recorded
 
 ## Blockers
 
@@ -109,5 +109,5 @@ None
 
 ## Next Milestone
 
-Final HiLL approval is pending. Then run `oat-project-revise` for PR feedback,
+No post-approval steps are configured. Run `oat-project-revise` for PR feedback,
 or `oat-project-complete` when the PR is approved and merged.

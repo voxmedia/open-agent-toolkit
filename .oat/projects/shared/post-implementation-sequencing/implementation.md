@@ -311,3 +311,12 @@ configured gate rerun after these artifact corrections.
   after the summary and documentation steps completed.
 - The closeout snapshot is now awaiting the configured final HiLL approval;
   no post-approval steps are configured.
+
+### Final HiLL Approval
+
+**Date:** 2026-07-11
+
+- Applied the user's explicit final-phase approval after all configured
+  pre-approval work completed.
+- No post-approval steps are configured; the final closeout snapshot can now
+  complete without dispatching another child skill.
