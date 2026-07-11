@@ -155,6 +155,9 @@ The blocking state described above was resolved the same day:
   ran; all slugs remain explicitly `unvalidated`, fail-closed).
 - `state.md` is `pr_open`; **PR #136** is open and `MERGEABLE`
   (https://github.com/voxmedia/open-agent-toolkit/pull/136).
+- **2026-07-11 (later): PR #136 merged.** Sequencing follow-through:
+  `codex-subagent-max-depth` should now rebase onto main and reconcile the
+  shared dispatch-skill contracts before its own final review/PR.
 
 Merge posture: no known blockers remain in this project's own lifecycle. The
 phase-direct workaround and Cursor validation gaps are documented known
