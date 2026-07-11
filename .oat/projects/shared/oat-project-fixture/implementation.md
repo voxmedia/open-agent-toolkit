@@ -219,6 +219,14 @@ oat_generated: false
 
 **Review dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
 
+**Fix 1A — canonical fixture lifecycle contract:**
+
+- Commit: `2005e625b57b661ba7b7d2e005e3d52e205986d7`
+- Added quick lifecycle state, sparse provider matrices, canonical task/review
+  contracts, and byte-stable log semantics.
+- Focused integrity/format tests plus lint/format pass.
+- Dispatch: `Dispatch: scope=p01-t01 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+
 ---
 
 ## Phase 2: Smoke Runner Core
