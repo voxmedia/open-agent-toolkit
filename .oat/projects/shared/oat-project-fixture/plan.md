@@ -111,7 +111,7 @@ Run: `node --test tools/smoke/fixture/fixture-format-contract.test.mjs` — Expe
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — `node --test tools/smoke/fixture/` (all fixture tests green) and `pnpm lint`.
+**Step 4: Verify** — `node --test 'tools/smoke/fixture/**/*.test.mjs'` (all fixture tests green) and `pnpm lint`.
 
 **Step 5: Commit** — `git add tools/smoke/fixture && git commit -m "test(p01-t03): add fixture format contract test"`
 
@@ -123,7 +123,7 @@ Run: `node --test tools/smoke/fixture/fixture-format-contract.test.mjs` — Expe
 
 **Files:**
 
-- Create: `tools/smoke/runner/run-smoke.mjs` (entry: `--harness codex|claude|cursor-ide|cursor-cli`, `--scenario plan-review|implement|full`, `--dry-run`, `--keep`)
+- Create: `tools/smoke/runner/run-smoke.mjs` (entry: `--harness codex|claude|cursor-ide|cursor-cli`, `--scenario plan-review|implement|full`, `--stage prepare|drive|collect` — default runs all stages; `prepare`/`collect` support manual-session harnesses, `--dry-run`, `--keep`)
 - Create: `tools/smoke/runner/args.mjs`
 
 **Step 1: Write test (RED)** — `tools/smoke/runner/args.test.mjs`: argument parsing/validation (unknown harness/scenario fails closed with usage; defaults documented).
@@ -146,7 +146,7 @@ Run: `node --test tools/smoke/runner/args.test.mjs` — Expected: fails.
 - Create: `tools/smoke/runner/preflight.mjs`
 - Modify: `tools/smoke/runner/run-smoke.mjs` (wire preflight)
 
-**Step 1: Write test (RED)** — `tools/smoke/runner/preflight.test.mjs`: with injected probes, preflight (a) reports each provider runtime's availability, (b) fails closed when the harness under test is unavailable, (c) detects a stale global `oat` shadowing the local build (PATH resolution vs local dist), (d) validates fixture integrity before any provisioning, (e) never creates files on failure.
+**Step 1: Write test (RED)** — `tools/smoke/runner/preflight.test.mjs`: with injected probes, preflight (a) reports each provider runtime's availability, (b) fails closed when the harness under test is unavailable, (c) detects a stale global `oat` shadowing the local build (PATH resolution vs local dist), (d) validates fixture integrity before any provisioning, (e) never creates files on failure, (f) honors `OAT_SMOKE_FORCE_UNAVAILABLE=<harness>` — a scoped override that forces exactly that harness's availability probe to report unavailable, giving the live negative control a deterministic route that does not depend on any runtime actually being missing.
 Run: `node --test tools/smoke/runner/preflight.test.mjs` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — probes: `command -v` + version/identity checks per provider CLI, local binary fingerprint, fixture test invocation. Readiness report to stdout (human) + JSON.
@@ -193,7 +193,7 @@ Run: `node --test tools/smoke/runner/cleanup.test.mjs` — Expected: fails.
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — `node --test tools/smoke/runner/` and `pnpm lint && pnpm format`
+**Step 4: Verify** — `node --test 'tools/smoke/runner/**/*.test.mjs'` and `pnpm lint && pnpm format`
 
 **Step 5: Commit** — `git add tools/smoke/runner && git commit -m "feat(p02-t04): add interrupt-safe cleanup and dry-run isolation proof"`
 
@@ -226,7 +226,7 @@ Run: `node --test tools/smoke/evidence/collect.test.mjs` — Expected: fails.
 **Files:**
 
 - Create: `tools/smoke/evidence/assertions.mjs`
-- Create: `tools/smoke/evidence/report.mjs` (markdown + JSON emitters)
+- Create: `tools/smoke/evidence/report.mjs` (markdown + JSON emitters; also a check mode — `node tools/smoke/evidence/report.mjs --check <report.json>` exits 0 iff every assertion in the report passed — used as the copy-paste verification command by p05 live tasks)
 
 **Step 1: Write test (RED)** — `tools/smoke/evidence/assertions.test.mjs`: **scenario-aware assertion profiles** per design §Scenario / Entry-Point Model, selected by the scenario recorded in the bundle's provisioning manifest:
 
@@ -261,7 +261,7 @@ Run: `node --test tools/smoke/evidence/assertions.test.mjs` — Expected: fails.
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — `node --test tools/smoke/evidence/` and `pnpm lint && pnpm format`
+**Step 4: Verify** — `node --test 'tools/smoke/evidence/**/*.test.mjs'` and `pnpm lint && pnpm format`
 
 **Step 5: Commit** — `git add tools/smoke/evidence && git commit -m "feat(p03-t03): add negative-control evidence assertions"`
 
@@ -286,7 +286,7 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skill
 
 **Step 2: Implement (GREEN)** — author the contract language in both surfaces; keep Codex-specific dispatch language consistent with the current merged state (post-#136, and post-#137 if merged by execution time).
 
-**Step 3: Refactor** — run the cross-skill drift check: review-provide skills must not contradict the updated contract (fix if flagged).
+**Step 3: Refactor** — run the cross-skill drift check **report-only**: verify review-provide skills do not contradict the updated contract. If drift is found, do not edit those skills in this task — record the finding in `implementation.md` and add a new monotonic p04 task (continuing the sequence, e.g. `p04-t04`) with enumerated files, its own verification, version-bump obligations, and commit message.
 
 **Step 4: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm lint && pnpm format`
 
@@ -322,13 +322,13 @@ Run: scoped vitest as in p04-t01 — Expected: fails.
 - Modify: `tools/smoke/CONTRACT.md` (evidence contract references the same field names)
 
 **Step 1: Write test (RED)** — contract test asserting the dispatch-record shape documents `selection_reason` (e.g. `native-catalog`, `native-catalog-unsatisfying`, `pre-start-rejection`, `inherit`) and `candidates_considered`; smoke evidence assertions (p03) reference identical field names (cross-file consistency check).
-Run: scoped vitest + `node --test tools/smoke/evidence/` — Expected: fails.
+Run: scoped vitest + `node --test 'tools/smoke/evidence/**/*.test.mjs'` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — document the fields; update evidence golden fixtures if field names shift.
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — scoped vitest + `node --test tools/smoke/` + `pnpm lint && pnpm format`
+**Step 4: Verify** — scoped vitest + `node --test 'tools/smoke/**/*.test.mjs'` + `pnpm lint && pnpm format`
 
 **Step 5: Commit** — `git add .agents tools/smoke packages/cli && git commit -m "feat(p04-t03): define selection-record fields for dispatch evidence"`
 
@@ -352,7 +352,7 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — `node --test tools/smoke/` (full suite) and `pnpm lint && pnpm format`
+**Step 4: Verify** — `node --test 'tools/smoke/**/*.test.mjs'` (full suite) and `pnpm lint && pnpm format`
 
 **Step 5: Commit** — `git add tools/smoke && git commit -m "feat(p05-t01): add per-harness drive protocols and wire evidence collection"`
 
@@ -368,7 +368,7 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 2: Execute** — run `plan-review`, then `implement`, then one `full` scenario via `node tools/smoke/runner/run-smoke.mjs --harness codex --scenario <s>`.
 
-**Step 3: Verify** — the assertion profile matching each scenario passes: `plan-review` run → plan-review profile (resume discipline, review disposition, state transitions); `implement` run → implement profile (native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration); `full` run → union. `node --test tools/smoke/evidence/` still green.
+**Step 3: Verify** — the assertion profile matching each scenario passes: `plan-review` run → plan-review profile (resume discipline, review disposition, state transitions); `implement` run → implement profile (native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration); `full` run → union. `node --test 'tools/smoke/evidence/**/*.test.mjs'` still green.
 
 **Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "feat(p05-t02): record codex live smoke evidence"`
 
@@ -383,9 +383,23 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 1: Preconditions** — preflight passes for Claude.
 
-**Step 2: Execute** — `plan-review` + `implement` scenarios. (Full-workflow run deferred for Claude per design Level 3 to bound live-provider cost; deferral recorded in the evidence summary.)
+**Step 2: Execute** — exactly:
 
-**Step 3: Verify** — assertion tables pass; the nesting answer (native coordinator→worker supported or the sanctioned alternative topology) is recorded in both the report and the protocol doc.
+```bash
+node tools/smoke/runner/run-smoke.mjs --harness claude --scenario plan-review
+node tools/smoke/runner/run-smoke.mjs --harness claude --scenario implement
+```
+
+(Full-workflow run deferred for Claude per design Level 3 to bound live-provider cost; deferral recorded in the evidence summary.)
+
+**Step 3: Verify** — exactly, each expecting exit 0:
+
+```bash
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/claude/plan-review/report.json
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/claude/implement/report.json
+```
+
+The nesting answer (native coordinator→worker supported or the sanctioned alternative topology) is recorded in both the report and the protocol doc.
 
 **Step 4: Commit** — `git add tools/smoke/reports/claude tools/smoke/protocols/claude.md && git commit -m "feat(p05-t03): record claude live smoke evidence and topology"`
 
@@ -397,11 +411,26 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 - Create: `tools/smoke/reports/cursor-ide/`
 
-**Step 1: Preconditions** — preflight passes; runner prints the canned root prompt; user starts the IDE session (manual pause).
+**Step 1: Preconditions** — preflight passes for Cursor IDE tooling.
 
-**Step 2: Execute** — `plan-review` + `implement` scenarios driven by the IDE root session, plus one `full` scenario (required on Cursor IDE per design Level 3).
+**Step 2: Execute** — for each scenario `s` in `plan-review`, `implement`, `full` (full required on Cursor IDE per design Level 3), the prepare/collect stages are exact commands and the drive stage is an explicitly manual session:
 
-**Step 3: Verify** — assertion tables pass: coordinator full-information selection recorded (native catalog considered, choice + reason), any CLI task dispatch present only as recorded pre-start selection, task workers never inherit the root model silently.
+```bash
+node tools/smoke/runner/run-smoke.mjs --harness cursor-ide --scenario "$s" --stage prepare
+# MANUAL: open the disposable worktree in a Cursor IDE session and paste the
+# canned root prompt printed by the prepare stage; let the session run to completion.
+node tools/smoke/runner/run-smoke.mjs --harness cursor-ide --scenario "$s" --stage collect
+```
+
+**Step 3: Verify** — exactly, each expecting exit 0:
+
+```bash
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/cursor-ide/plan-review/report.json
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/cursor-ide/implement/report.json
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/cursor-ide/full/report.json
+```
+
+Profile assertions include: coordinator full-information selection recorded (native catalog considered, choice + reason), any CLI task dispatch present only as recorded pre-start selection, task workers never inheriting the root model silently.
 
 **Step 4: Commit** — `git add tools/smoke/reports/cursor-ide && git commit -m "feat(p05-t04): record cursor IDE live smoke evidence"`
 
@@ -416,9 +445,23 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 1: Preconditions** — preflight passes for `cursor-agent`.
 
-**Step 2: Execute** — `plan-review` scenario first; proceed to `implement` only if Task dispatch is observable in this flavor. (Full-workflow run deferred for Cursor CLI per design Level 3; deferral recorded in the evidence summary.)
+**Step 2: Execute** — exactly:
 
-**Step 3: Verify** — either positive evidence (first structured Task events recorded for the CLI flavor) or a structured inconclusive capture consistent with the prior verification tooling — both are valid recorded outcomes; the protocol doc states which one and why.
+```bash
+node tools/smoke/runner/run-smoke.mjs --harness cursor-cli --scenario plan-review
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/cursor-cli/plan-review/report.json
+# Machine-checkable gating condition for the implement run — proceed only if
+# an accepted structured Task selection was observed in this flavor:
+if rg -q '"taskSelection": *"accepted"' tools/smoke/reports/cursor-cli/plan-review/report.json; then
+  node tools/smoke/runner/run-smoke.mjs --harness cursor-cli --scenario implement
+else
+  echo "cursor-cli: no accepted Task selection observed — implement skipped, recording inconclusive"
+fi
+```
+
+(Full-workflow run deferred for Cursor CLI per design Level 3; deferral recorded in the evidence summary.)
+
+**Step 3: Verify** — `node tools/smoke/evidence/report.mjs --check tools/smoke/reports/cursor-cli/plan-review/report.json` (exit 0), plus the same check for `implement/report.json` when the gated implement run executed. Either positive evidence (first structured Task events recorded for the CLI flavor) or a structured inconclusive capture consistent with the prior verification tooling is a valid recorded outcome; the protocol doc states which one and why.
 
 **Step 4: Commit** — `git add tools/smoke/reports/cursor-cli tools/smoke/protocols/cursor-cli.md && git commit -m "feat(p05-t05): record cursor CLI live smoke evidence"`
 
@@ -429,16 +472,25 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 **Files:**
 
 - Create: `tools/smoke/reports/negative-controls/` (live unavailable-target preflight evidence)
-- Create: `tools/smoke/reports/SUMMARY.md` (per-harness topology matrix, selection-contract observations, divergences, deferrals, fixture/runner adjustments made)
-- Modify: fixture/runner files only if live runs surfaced defects (each fix keeps its phase's tests green)
+- Create: `tools/smoke/reports/SUMMARY.md` (per-harness topology matrix, selection-contract observations, divergences, deferrals, defects observed)
 
-**Step 1: Live negative control (unavailable target)** — run `node tools/smoke/runner/run-smoke.mjs --harness <deliberately-unavailable-target> --scenario plan-review`; assert it reports unavailability and exits **without provisioning** (no manifest, no worktree); commit the preflight report as evidence. Zero provider cost.
+_This task is report-only outside `tools/smoke/reports/`. If live runs surfaced fixture/runner defects, record them in SUMMARY.md and `implementation.md` and add a new monotonic p05 task (e.g. `p05-t07`) with enumerated files, verification, and its own commit — do not bundle fixes into evidence commits._
+
+**Step 1: Live negative control (unavailable target)** — run exactly:
+
+```bash
+cp ~/.oat/config.json /tmp/oat-config-before.json
+OAT_SMOKE_FORCE_UNAVAILABLE=codex node tools/smoke/runner/run-smoke.mjs --harness codex --scenario plan-review
+test $? -ne 0 && test ! -d tools/smoke/.runs && diff -q ~/.oat/config.json /tmp/oat-config-before.json
+```
+
+Assert: nonzero exit, unavailability named in the preflight report, **no provisioning occurred** (no manifest, no branch, no worktree), and the user's persisted config is byte-identical. Commit the preflight report as evidence. Zero provider cost, deterministic via the `OAT_SMOKE_FORCE_UNAVAILABLE` probe override from p02-t02.
 
 **Step 2: Failure-path control (opportunistic)** — if any p05 live run naturally produced a post-acceptance child failure, assert no-fallback-after-acceptance on its bundle (p03-t03 assertion); otherwise record `not-observed` in SUMMARY.md rather than forcing a failure.
 
 **Step 3: Synthesize** — comparative matrix across the four targets; explicit statement of the landed orchestration model per harness; record the Claude and Cursor CLI full-workflow deferrals.
 
-**Step 4: Verify** — `node --test tools/smoke/` green; every claim in SUMMARY.md links a committed evidence report.
+**Step 4: Verify** — `node --test 'tools/smoke/**/*.test.mjs'` green; every claim in SUMMARY.md links a committed evidence report.
 
 **Step 5: Commit** — `git add tools/smoke && git commit -m "docs(p05-t06): add negative controls and cross-harness smoke evidence summary"`
 
@@ -507,18 +559,18 @@ Expected: all green.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| p06    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T165003Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                                               |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| p02    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| p03    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| p04    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| p05    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| p06    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| final  | code     | pending         | -          | -                                                                                                                                                                                                                                      |
+| spec   | artifact | pending         | -          | -                                                                                                                                                                                                                                      |
+| design | artifact | pending         | -          | -                                                                                                                                                                                                                                      |
+| plan   | artifact | fixes_completed | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T165003Z.md — 2 Important + 2 Medium fixed in plan (deterministic negative-control probe, Node test globs, report-only drift/defect clauses, exact live-task commands); awaiting gate re-review |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
