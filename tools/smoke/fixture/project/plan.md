@@ -1,4 +1,5 @@
 ---
+oat_plan_source: quick
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
@@ -81,9 +82,14 @@ once.
 
 ## Reviews
 
-| Scope | Type     | Status  | Artifact |
-| ----- | -------- | ------- | -------- |
-| plan  | artifact | pending | -        |
+| Scope  | Type     | Status  | Artifact |
+| ------ | -------- | ------- | -------- |
+| p01    | code     | pending | -        |
+| p02    | code     | pending | -        |
+| p03    | code     | pending | -        |
+| spec   | artifact | pending | -        |
+| design | artifact | pending | -        |
+| plan   | artifact | pending | -        |
 
 ## Implementation Complete
 

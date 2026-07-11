@@ -5,19 +5,12 @@ oat_blockers: []
 oat_template: true
 oat_template_name: smoke-fixture
 oat_dispatch_policy:
-  ceiling: high
-  matrix:
-    codex:
-      candidates: [gpt-5.6-terra-medium]
-    claude:
-      candidates: [claude-4.6-sonnet-medium-thinking]
-    cursor:
-      candidates: [gpt-5.6-terra-medium]
-      model: cursor-opaque-terra-medium
+  mode: managed
+  policy: high
+  source: project-state
 ---
 
 # Fixture State
 
 Canonical `pre-review` state for the smoke fixture. The named `high` ceiling
-is a budget maximum; each provider has a lower, exact candidate for observable
-selection evidence.
+is a budget maximum; exact provider targets are resolved at dispatch time.
