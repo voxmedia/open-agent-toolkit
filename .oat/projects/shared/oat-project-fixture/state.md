@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t02
-oat_last_commit: 4d43b045cd112e3ed7846d9049ad7695ac0ab300
+oat_current_task: p02-t03
+oat_last_commit: d1361817c548a45ff3c2037ecb1597172ba47310
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T20:23:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T20:26:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2, p02-t02 fail-closed preflight
+Implementation — Phase 2, p02-t03 isolated provisioning
 
 ## Artifacts
 
@@ -86,7 +86,8 @@ Implementation — Phase 2, p02-t02 fail-closed preflight
 - ✓ Gate M1 addressed; M2 deferred to final with a concrete CI-enrollment
   trigger
 - ✓ p02-t01 complete
-- ⧗ p02-t02 next
+- ✓ p02-t02 complete
+- ⧗ p02-t03 next
 
 ## Blockers
 
