@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -52,16 +52,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | pending  | 4     | 0/4       |
-| Phase 3 | pending  | 3     | 0/3       |
-| Phase 4 | pending  | 3     | 0/3       |
-| Phase 5 | pending  | 6     | 0/6       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | in_progress | 4     | 1/4       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 3     | 0/3       |
+| Phase 5 | pending     | 6     | 0/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 3/22 tasks completed
+**Total:** 4/22 tasks completed
 
 ---
 
@@ -314,13 +314,34 @@ corrected in this bookkeeping update.
 
 ## Phase 2: Smoke Runner Core
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-11
 
 ### Task p02-t01: Runner skeleton and argument contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4d43b045cd112e3ed7846d9049ad7695ac0ab300
+
+**Outcome:**
+
+- Added fail-closed parsing for harness, scenario, stage, dry-run, and keep
+  options.
+- Added an injectable staged runner skeleton without prematurely implementing
+  later phase handlers.
+
+**Verification:**
+
+- `node --test tools/smoke/runner/args.test.mjs` — passed.
+- Full smoke suite — 17/17 passed.
+- Direct smoke-runner lint/format — passed.
+
+**Notes:**
+
+- A concurrent session advanced HEAD with the non-overlapping dispatch
+  verification workspace. The accepted worker returned `BLOCKED` before
+  commit, then the same child session was resumed against the verified new
+  baseline and committed exactly its three-file boundary.
+- Dispatch: `Dispatch: scope=p02-t01 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 
 ---
 
