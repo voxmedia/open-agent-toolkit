@@ -121,4 +121,27 @@ describe('post-implementation sequence contracts', () => {
       'When the preference is unset, retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
     );
   });
+
+  it('preserves incomplete sequence routing and PR state integration', () => {
+    const next = readFileSync(
+      join(
+        import.meta.dirname,
+        '../../../../../../../.agents/skills/oat-project-next/SKILL.md',
+      ),
+      'utf8',
+    );
+    const prFinal = readFileSync(
+      join(
+        import.meta.dirname,
+        '../../../../../../../.agents/skills/oat-project-pr-final/SKILL.md',
+      ),
+      'utf8',
+    );
+    expect(next).toContain(
+      'Incomplete approval-aware post-implementation sequence',
+    );
+    expect(next).toContain('route to\n`oat-project-implement`');
+    expect(prFinal).toContain('Reuse a\ncompleted `summary` step');
+    expect(prFinal).toContain('merge with, never replace');
+  });
 });

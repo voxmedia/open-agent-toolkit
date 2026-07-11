@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.4.1
+version: 1.4.2
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -167,6 +167,13 @@ If `FINAL_ROW` is missing or does not contain `passed`:
   - If the status is `fixes_completed`: fixes were implemented but the re-review hasn't been run/recorded yet; re-run the `oat-project-review-provide` skill with `code final` then the `oat-project-review-receive` skill to reach `passed`.
 
 ### Step 3: Collect Project Summary
+
+Before generating a summary, inspect `oat_post_implement_sequence`. Reuse a
+completed `summary` step instead of regenerating it; when no completed sequence
+summary exists, retain normal summary generation. Every state update in this
+skill must merge with, never replace, `oat_post_implement_sequence`. If a PR
+was partially created, reconcile the durable PR state before retrying its `pr`
+sequence step.
 
 **Step 3.0: Check for summary.md**
 
