@@ -408,13 +408,19 @@ recommended candidates and did not execute exploratory
 `gpt-5.6-sol-high-fast`. The recommendation remains unchanged and candidate
 eligibility remains unresolved.
 
-Tracked evidence contains only allowlisted event structure, derived outcomes,
-sanitized auth-presence context, and non-reversible identifier hashes. Exact
-request/session/tool-call IDs and credential-redacted unprojected streams stay
-under gitignored `.oat/projects/local/` storage for possible Cursor support
-diagnosis. Re-run after a Cursor client rollout exposes Task in headless mode or
-Cursor support confirms the private requests; review the open verification item
-by 2026-08-08.
+The tracked artifact's structured second-pass block contains only allowlisted
+event structure, derived outcomes, sanitized auth-presence context, and
+non-reversible identifier hashes. Exact request/session/tool-call IDs and
+credential-redacted unprojected streams from that pass stay under gitignored
+`.oat/projects/local/` storage for possible Cursor support diagnosis.
+
+The same public artifact intentionally retains the sanitized historical v1
+text-mode record for provenance. That older section includes command arguments
+and prompts, stdout and stderr, exit and duration data, and capture-environment
+details such as user-specific binary paths; it is not limited to the structured
+second-pass allowlist. Re-run after a Cursor client rollout exposes Task in
+headless mode or Cursor support confirms the private requests; review the open
+verification item by 2026-08-08.
 
 ### Legacy compatibility
 

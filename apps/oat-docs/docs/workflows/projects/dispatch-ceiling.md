@@ -279,10 +279,16 @@ emitted a Task event, so the harness stopped without probing the 13 recommended
 arguments or exploratory `gpt-5.6-sol-high-fast`. This is a harness/account
 boundary, not model rejection, and it supports no recommendation change.
 
-Tracked evidence exposes only an allowlisted event projection and
-non-reversible identifier hashes. Exact request/session/tool-call IDs and
-credential-redacted raw streams stay in gitignored local project storage for
-support diagnosis.
+The tracked artifact's structured second-pass block exposes only an allowlisted
+event projection and non-reversible identifier hashes. Exact
+request/session/tool-call IDs and credential-redacted unprojected streams from
+that pass stay in gitignored local project storage for support diagnosis.
+
+The same public artifact intentionally preserves the sanitized historical v1
+text-mode record for provenance. That older section includes command arguments
+and prompts, stdout and stderr, exit and duration data, and capture-environment
+details such as user-specific binary paths; it is not limited to the structured
+second-pass projection.
 
 ## Coordinator and Worker Layers
 
