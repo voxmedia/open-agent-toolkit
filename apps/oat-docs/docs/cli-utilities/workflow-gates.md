@@ -518,7 +518,7 @@ Gate failure behavior is owned by the gate-aware skill:
 available target. Once a target actually runs, its exit code is the gate result;
 OAT does not try another target after a failed review.
 
-Gate target execution has a child-process timeout (default 10 minutes, override
+Gate target execution has a child-process timeout (default 15 minutes, override
 with `OAT_GATE_EXEC_TIMEOUT_MS`). When a review target times out, JSON output
 reports `status: review_failed`, `outcome: review_did_not_complete`,
 `timedOut: true`, and the timeout value so automation can distinguish a hung

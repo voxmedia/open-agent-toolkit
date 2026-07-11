@@ -3040,6 +3040,7 @@ describe('oat gate', () => {
       args: ['exec', 'Review', 'the', 'current', 'project'],
       purpose: 'execute',
       stdio: 'inherit',
+      timeoutMs: 15 * 60 * 1_000,
     });
     expect(process.exitCode).toBe(7);
   });

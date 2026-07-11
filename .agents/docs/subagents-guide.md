@@ -226,7 +226,14 @@ System prompt body goes here.
 - Enable multi-agent with `[features] multi_agent = true`
 - Declare roles in `[agents.<name>]`
 - Dispatch by role name using `agent_type`
+- For OAT's native root → phase coordinator → task worker topology, set
+  `[agents] max_depth = 2` or higher
 - Use `config_file = "agents/<role>.toml"` when role-specific model/sandbox/instructions are needed
+
+`oat sync` and `oat providers codex materialize` apply that depth floor while
+preserving higher project or inherited user values. Project writes remain in
+project `.codex/config.toml`; explicit user-scope writes remain under
+`~/.codex`.
 
 See:
 

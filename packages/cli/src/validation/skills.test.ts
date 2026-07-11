@@ -998,7 +998,140 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.35');
+  });
+
+  it('makes native Codex dispatch and launcher-owned provenance authoritative', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /resolver-returned Codex variant[\s\S]{0,240}first[\s\S]{0,160}native[\s\S]{0,80}`agent_type`/i,
+    );
+    expect(content).toMatch(
+      /spawn acceptance[\s\S]{0,180}launcher payload[\s\S]{0,180}configured invocation evidence/i,
+    );
+    expect(content).toMatch(
+      /For every coordinator, task-worker, fix, and review launch,[\s\S]{0,100}record `target`,\s*`model_axis`, and `effort_axis` from resolver output and the actual launcher\s+payload after payload construction/i,
+    );
+    expect(content).toMatch(
+      /missing (?:runtime )?telemetry[\s\S]{0,160}(?:missing )?(?:agent )?self-report[\s\S]{0,200}not[\s\S]{0,100}(?:role )?unavailability/i,
+    );
+    expect(content).toMatch(
+      /self-report[\s\S]{0,180}(?:cannot|must not)[\s\S]{0,180}(?:populate|overwrite)[\s\S]{0,260}launcher-owned/i,
+    );
+    expect(content).toMatch(
+      /native role-selection rejection[\s\S]{0,500}explicit[\s\S]{0,220}`agent_type`[\s\S]{0,220}before[\s\S]{0,120}(?:child|agent)[\s\S]{0,80}start/i,
+    );
+    expect(content).toMatch(
+      /fresh\s+(?:pinned\s+)?(?:Codex\s+)?child[\s\S]{0,260}only after[\s\S]{0,240}native role-selection rejection/i,
+    );
+    expect(content).toMatch(
+      /accepted child[\s\S]{0,220}`BLOCKED`[\s\S]{0,260}(?:cannot|must not)[\s\S]{0,180}(?:fallback|fresh child)/i,
+    );
+    expect(content).toMatch(/launcher-selected\/config-declared/i);
+  });
+
+  it('keeps timed-out native reviewer retries on the accepted route', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.35');
+    expect(content).toMatch(
+      /accepted native reviewer[\s\S]{0,180}times out[\s\S]{0,180}retry the same already-selected native `agent_type` route/i,
+    );
+    expect(content).toMatch(
+      /fresh pinned-child route is eligible only when the original native attempt[\s\S]{0,160}explicit pre-start role-selection rejection/i,
+    );
+    expect(content).toMatch(
+      /original native reviewer spawn was accepted[\s\S]{0,180}retry the same already-selected native `agent_type` route[\s\S]{0,220}do not switch[\s\S]{0,160}fresh pinned child/i,
+    );
+  });
+
+  it('keeps project review dispatch native-first and launcher-owned', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.14');
+    expect(content).toMatch(
+      /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
+    );
+    expect(content).toMatch(
+      /native role-selection rejection[\s\S]{0,520}explicit[\s\S]{0,220}`agent_type`[\s\S]{0,220}before[\s\S]{0,120}(?:child|reviewer)[\s\S]{0,100}start/i,
+    );
+    expect(content).toMatch(
+      /launcher-owned\s+`target`, `model_axis`, and `effort_axis`[\s\S]{0,320}(?:immutable|must not)[\s\S]{0,240}self-report/i,
+    );
+    expect(content).toMatch(/launcher-selected\/config-declared/i);
+    expect(content).toMatch(
+      /accepted reviewer[\s\S]{0,140}`BLOCKED`[\s\S]{0,220}(?:blocks|blocking)[\s\S]{0,140}review/i,
+    );
+    expect(content).toMatch(
+      /`BLOCKED`[\s\S]{0,260}(?:does not|cannot|must not)[\s\S]{0,120}(?:invoke|trigger)[\s\S]{0,100}fallback/i,
+    );
+    expect(content).toMatch(
+      /(?:absent|no) findings[\s\S]{0,220}(?:cannot|must not)[\s\S]{0,180}(?:parse|interpret|treat)[\s\S]{0,120}pass|(?:cannot|must not)[\s\S]{0,180}(?:parse|interpret|treat)[\s\S]{0,120}pass[\s\S]{0,220}(?:absent|no) findings/i,
+    );
+  });
+
+  it('blocks accepted reviewer BLOCKED terminals without invoking fallback', async () => {
+    const coordinator = await readRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const phaseReview = implement.slice(
+      implement.indexOf('### Per-Phase Review'),
+      implement.indexOf('### Optional External Phase Review Gate'),
+    );
+    const finalReview = implement.slice(
+      implement.indexOf('### Step 14: Trigger Final Review'),
+      implement.indexOf('### Step 15: Prompt for Next Steps'),
+    );
+
+    expect(coordinator).toMatch(
+      /accepted\s+terminal\s+results[\s\S]{0,160}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
+    );
+    for (const [name, content] of [
+      ['phase reviewer', phaseReview],
+      ['final reviewer', finalReview],
+    ] as const) {
+      expect(content, `${name} BLOCKED gate`).toMatch(
+        /accepted reviewer[\s\S]{0,100}`BLOCKED`[\s\S]{0,180}(?:blocks|must block)[\s\S]{0,120}review/i,
+      );
+      expect(content, `${name} no fallback`).toMatch(
+        /`BLOCKED`[\s\S]{0,240}(?:does not|cannot|must not)[\s\S]{0,100}(?:invoke|trigger)[\s\S]{0,80}fallback/i,
+      );
+      expect(content, `${name} no absent-findings pass`).toMatch(
+        /(?:absent|no) findings[\s\S]{0,200}(?:cannot|must not)[\s\S]{0,160}(?:parse|interpret|treat)[\s\S]{0,100}pass|(?:cannot|must not)[\s\S]{0,160}(?:parse|interpret|treat)[\s\S]{0,100}pass[\s\S]{0,200}(?:absent|no) findings/i,
+      );
+    }
+  });
+
+  it('documents accepted reviewer BLOCKED outcomes as fail-closed', async () => {
+    const reviews = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/reviews.md',
+    );
+
+    expect(reviews).toMatch(
+      /accepted reviewer[\s\S]{0,100}`BLOCKED`[\s\S]{0,140}blocks the relevant review/i,
+    );
+    expect(reviews).toMatch(
+      /`BLOCKED`[\s\S]{0,180}(?:cannot|must not)[\s\S]{0,100}(?:trigger|invoke)[\s\S]{0,80}(?:pinned )?fallback/i,
+    );
+    expect(reviews).toMatch(
+      /absent findings[\s\S]{0,160}(?:cannot|must not)[\s\S]{0,100}(?:interpret|treat|parse)[\s\S]{0,80}pass/i,
+    );
+    expect(reviews).toMatch(
+      /generic fallback[\s\S]{0,120}(?:does not|cannot|must not)[\s\S]{0,100}override[\s\S]{0,120}managed exact-target\s+rules/i,
+    );
+    expect(reviews).toMatch(
+      /managed reviewer[\s\S]{0,140}cannot be launched exactly[\s\S]{0,100}blocks the review/i,
+    );
   });
 
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
@@ -1215,12 +1348,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.4');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.5');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /phase coordinator/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.35');
 
     const coordinator = agent.slice(
       agent.indexOf('### Mode: Phase Coordinator'),
@@ -1243,6 +1376,18 @@ describe('validateOatSkills', () => {
     expect(coordinator).toContain('providers.codex.dispatchArgs.variant');
     expect(coordinator).toContain('providers.claude.dispatchArgs.model');
     expect(coordinator).toContain('providers.cursor.dispatchArgs.model');
+    expect(coordinator).toMatch(
+      /Codex[\s\S]{0,180}(?:attempt|dispatch)[\s\S]{0,180}exact materialized `agent_type` first/i,
+    );
+    expect(coordinator).toMatch(
+      /only explicit\s+pre-start native role-selection rejection[\s\S]{0,260}(?:permits|allows)[\s\S]{0,160}fresh pinned fallback/i,
+    );
+    expect(coordinator).toMatch(
+      /launcher-owned `target`, `model_axis`, and `effort_axis`[\s\S]{0,260}(?:immutable|must not)[\s\S]{0,180}(?:worker )?self-report/i,
+    );
+    expect(coordinator).toMatch(
+      /missing telemetry[\s\S]{0,180}accepted\s+terminal\s+results[\s\S]{0,120}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
+    );
     expect(coordinator).toMatch(
       /Cursor[\s\S]{0,260}(?:byte-for-byte|opaque)[\s\S]{0,220}(?:actual|invocation)/i,
     );
@@ -1485,7 +1630,7 @@ describe('validateOatSkills', () => {
         /concrete managed Codex target[\s\S]{0,500}(?:before|takes precedence over)[\s\S]{0,200}(?:tier|availability)/i,
       );
       expect(content, `${skillName} unavailable-role route`).toMatch(
-        /(?:unavailable|cannot select)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
+        /(?:unavailable|cannot select|native role-selection rejection)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
       );
       expect(content, `${skillName} inline control guard`).toMatch(
         /inline[\s\S]{0,300}verified equivalent current-host[\s\S]{0,300}(?:model|controls)/i,
@@ -2090,7 +2235,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.3.12'],
       ['oat-project-quick-start', '2.1.13'],
       ['oat-project-import-plan', '1.4.4'],
-      ['oat-project-review-provide', '1.3.13'],
+      ['oat-project-review-provide', '1.3.14'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2105,8 +2250,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.0.34'],
-      ['oat-project-review-provide', '1.3.13'],
+      ['oat-project-implement', '2.0.35'],
+      ['oat-project-review-provide', '1.3.14'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 
