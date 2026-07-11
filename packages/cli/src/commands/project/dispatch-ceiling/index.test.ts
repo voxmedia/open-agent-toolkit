@@ -1580,6 +1580,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           },
           selection: {
             candidateTier: 'balanced',
+            candidateIndex: 1,
             ceilingTier: 'balanced',
           },
         },
@@ -2007,6 +2008,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         '      economy:',
         '        candidates:',
         '          - { harness: codex, model: gpt-5.6-luna, effort: low }',
+        '          - { harness: codex, model: gpt-5.6-luna, effort: medium }',
         '      high:',
         '        candidates:',
         '          - { harness: codex, model: gpt-5.6-sol, effort: high }',
@@ -2025,7 +2027,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       '--candidate-model',
       'gpt-5.6-luna',
       '--candidate-effort',
-      'low',
+      'medium',
       '--json',
     ]);
 
@@ -2035,14 +2037,15 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           dispatchArgs: {
-            variant: 'oat-phase-implementer-gpt-5-6-luna-low',
+            variant: 'oat-phase-implementer-gpt-5-6-luna-medium',
           },
           selection: {
             requestedCandidate: {
               model: 'gpt-5.6-luna',
-              effort: 'low',
+              effort: 'medium',
             },
             candidateTier: 'economy',
+            candidateIndex: 1,
             ceilingTier: 'high',
             ceilingTarget: {
               model: 'gpt-5.6-sol',
@@ -2146,6 +2149,7 @@ describe('oat project dispatch-ceiling resolve', () => {
             selectionBranch: 'escalation-target',
             requestedCandidate: { model: 'opaque-lower-target' },
             candidateTier: 'economy',
+            candidateIndex: 0,
             ceilingTier: 'high',
             selectedValue: 'sonnet',
             target: {

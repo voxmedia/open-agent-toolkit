@@ -181,6 +181,7 @@ interface DispatchSelection {
   preferredValue: DispatchCeilingValue | null;
   requestedCandidate: RequestedDispatchCandidate | null;
   candidateTier: WorkflowDispatchMatrixTier | null;
+  candidateIndex: number | null;
   ceilingTier: WorkflowDispatchMatrixTier | null;
   ceilingTarget: ResolvedDispatchRouteTarget | null;
   selectedValue: DispatchCeilingValue | null;
@@ -314,6 +315,7 @@ interface ResolvedDispatchPolicy {
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
+  candidateIndex: number | null;
   requestedCandidate?: RequestedDispatchCandidate;
   candidateTier?: WorkflowDispatchMatrixTier;
   ceilingTier?: WorkflowDispatchMatrixTier;
@@ -699,6 +701,7 @@ interface ResolvedMatrixCellDefinition {
 interface RequestedMatrixCandidateResolution {
   resolution: MatrixCellResolution;
   candidateTier: WorkflowDispatchMatrixTier;
+  candidateIndex: number;
 }
 
 function resolveProviderMatrixCellDefinition(
@@ -939,6 +942,7 @@ function resolveRequestedMatrixCandidate(
   let allowedMatch:
     | {
         tier: WorkflowDispatchMatrixTier;
+        candidateIndex: number;
         candidate: WorkflowDispatchCandidate;
         cellSource: DispatchCeilingSource;
         routeSignature: string;
@@ -988,6 +992,7 @@ function resolveRequestedMatrixCandidate(
       }
       allowedMatch ??= {
         tier,
+        candidateIndex,
         candidate,
         cellSource: definition.cellSource,
         routeSignature,
@@ -1033,6 +1038,7 @@ function resolveRequestedMatrixCandidate(
           : 'candidate-requested',
     },
     candidateTier: allowedMatch.tier,
+    candidateIndex: allowedMatch.candidateIndex,
   };
 }
 
@@ -1070,6 +1076,7 @@ function readProjectDispatchPolicy(
       cellSource: null,
       target: null,
       selectionBranch: 'inherit',
+      candidateIndex: null,
       warnings: parsedMatrix.warnings,
     };
   }
@@ -1099,6 +1106,7 @@ function readProjectDispatchPolicy(
       cellSource: null,
       target: null,
       selectionBranch: 'prompt-persisted',
+      candidateIndex: null,
       warnings: parsedMatrix.warnings,
     };
   }
@@ -1134,6 +1142,7 @@ function readProjectDispatchPolicy(
     cellSource: 'project-state',
     target: null,
     selectionBranch: 'prompt-persisted',
+    candidateIndex: null,
     warnings: parsedMatrix.warnings,
   };
 }
@@ -1171,6 +1180,7 @@ function readLegacyProjectDispatchCeiling(
     cellSource: 'project-state',
     target: null,
     selectionBranch: 'prompt-persisted',
+    candidateIndex: null,
     warnings: [],
   };
 }
@@ -1277,6 +1287,7 @@ function stripConfigCandidateSource(
     cellSource: candidate.cellSource,
     target: candidate.target,
     selectionBranch: candidate.selectionBranch,
+    candidateIndex: candidate.candidateIndex,
     warnings: candidate.warnings,
   };
 }
@@ -1307,6 +1318,7 @@ function readResolvedConfigPolicyCandidate(
       cellSource: null,
       target: null,
       selectionBranch: 'inherit',
+      candidateIndex: null,
       warnings: [],
       configSource: modeEntry.source,
     };
@@ -1339,6 +1351,7 @@ function readResolvedConfigPolicyCandidate(
       cellSource: null,
       target: null,
       selectionBranch: 'prompt-persisted',
+      candidateIndex: null,
       warnings: [],
       configSource,
     };
@@ -1379,6 +1392,7 @@ function readResolvedLegacyConfigCeilingCandidate(
     cellSource: source,
     target: null,
     selectionBranch: 'prompt-persisted',
+    candidateIndex: null,
     warnings: [],
     configSource: entry.source,
   };
@@ -1590,6 +1604,7 @@ function selectDispatchValue(
     target: policy.target,
     requestedCandidate: policy.requestedCandidate ?? null,
     candidateTier: policy.candidateTier ?? null,
+    candidateIndex: policy.candidateIndex,
     ceilingTier: policy.ceilingTier ?? policyTier(policy.policy),
     ceilingTarget: policy.ceilingTarget ?? policy.target,
   };
@@ -1793,6 +1808,7 @@ function buildProviderResolution(
         preferredValue,
         requestedCandidate: null,
         candidateTier: null,
+        candidateIndex: null,
         ceilingTier: null,
         ceilingTarget: null,
         selectedValue: null,
@@ -2036,6 +2052,7 @@ interface ResolvedCeilingValue {
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
+  candidateIndex: number | null;
   requestedCandidate?: RequestedDispatchCandidate;
   candidateTier?: WorkflowDispatchMatrixTier;
   ceilingTier?: WorkflowDispatchMatrixTier;
@@ -2139,6 +2156,7 @@ async function resolveCeilingValue(
       ],
       requestedCandidate,
       candidateTier: selected.candidateTier,
+      candidateIndex: selected.candidateIndex,
       ceilingTarget: ceilingCell?.target ?? null,
       ...(ceilingTier ? { ceilingTier } : {}),
     };
