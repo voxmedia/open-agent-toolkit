@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 3e2d034f47fa17f2d769198e5c61f4b7bdf8579c
+oat_last_commit: af996964f3723477ec65f03bd6dfdbf9bc3dd5bb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T20:03:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T20:18:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 self-review passed; external gate pending
+Implementation — Phase 2, p02-t01 runner skeleton
 
 ## Artifacts
 
@@ -81,7 +81,10 @@ Implementation — Phase 1 self-review passed; external gate pending
 - ✓ Phase 1 dispatch-matrix blocker fixed with resolver-backed coverage
 - ✓ Final p01 self-review passed (0 Critical / 0 Important)
 - ✓ Direct smoke-tool lint/format cleanup complete
-- ⧗ External Phase 1 gate next
+- ✓ External Phase 1 gate passed (0 Critical / 0 Important)
+- ✓ Gate M1 addressed; M2 deferred to final with a concrete CI-enrollment
+  trigger
+- ⧗ p02-t01 next
 
 ## Blockers
 
@@ -89,4 +92,4 @@ None
 
 ## Next Milestone
 
-Complete advisory cleanup and pass external Phase 1 gate
+Complete Phase 2 smoke runner core

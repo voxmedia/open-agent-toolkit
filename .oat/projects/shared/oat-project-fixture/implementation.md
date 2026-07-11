@@ -52,14 +52,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 3/3       |
-| Phase 2 | pending     | 4     | 0/4       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 3     | 0/3       |
-| Phase 5 | pending     | 6     | 0/6       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | pending  | 4     | 0/4       |
+| Phase 3 | pending  | 3     | 0/3       |
+| Phase 4 | pending  | 3     | 0/3       |
+| Phase 5 | pending  | 6     | 0/6       |
+| Phase 6 | pending  | 3     | 0/3       |
 
 **Total:** 3/22 tasks completed
 
@@ -67,8 +67,9 @@ oat_generated: false
 
 ## Phase 1: Fixture Project Template
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
+**Completed:** 2026-07-11
 
 ### Phase Summary (fill when phase is complete)
 
@@ -281,6 +282,33 @@ corrected in this bookkeeping update.
   preserve their causes.
 - Fixture suite remains 10/10.
 - Dispatch: `Dispatch: scope=p01-t03 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+
+### Phase 1 External Gate — Received
+
+**Artifact:** `reviews/archived/p01-review-2026-07-11T200543Z.md`
+
+**Verdict:** pass — 0 Critical, 0 Important, 2 Medium, 0 Minor.
+
+**Finding dispositions:**
+
+- `M1` implementation-ready template markers — **addressed now** in
+  `af996964f3723477ec65f03bd6dfdbf9bc3dd5bb`. State and implementation
+  artifacts now clear `oat_template`; the local project-status assertion
+  confirms implementation routing with non-template artifacts.
+- `M2` normal repository/CI enrollment — **deferred to final**. The smoke
+  surface expands through p02–p05; enrolling it once after those files exist
+  avoids repeatedly changing root verification scripts while preserving one
+  complete CI contract. Trigger: before the final review, wire all smoke tests
+  and direct smoke lint/format checks into normal root verification.
+
+**Gate dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:max dispatch_policy=high dispatch_ceiling=high target=codex-5-6-sol-max`.
+
+**Fix dispatch:** `Dispatch: scope=p01-t02 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+
+## Deferred Findings (Medium)
+
+- `p01-M2`: Enroll the complete `tools/smoke` test, lint, and format surface in
+  normal repository/CI verification after p05 and before final review.
 
 ---
 
