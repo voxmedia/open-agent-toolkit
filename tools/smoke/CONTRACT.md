@@ -11,6 +11,13 @@ The runner writes one JSON provisioning manifest before drive. It includes:
   "fixtureProjectPath": "/absolute/disposable/worktree/.oat/projects/smoke-fixture",
   "createdPaths": [],
   "branch": "flat-collision-resistant-name",
+  "effectiveCloseoutPolicy": {
+    "source": "local",
+    "value": {
+      "preApproval": [],
+      "postApproval": []
+    }
+  },
   "writableRoots": []
 }
 ```
@@ -18,6 +25,11 @@ The runner writes one JSON provisioning manifest before drive. It includes:
 `appliedScenario` is the authoritative scenario selector for evidence
 assertions. `createdPaths`, `branch`, and `worktreePath` are the cleanup
 allowlist.
+
+`effectiveCloseoutPolicy` records the approval-aware closeout policy applied
+from the disposable `.oat/config.local.json` override. Both lists are empty, so
+summary, documentation, PR, and other closeout child steps are ineligible
+without changing final verification, review, and approval ordering.
 
 ## Evidence Paths
 

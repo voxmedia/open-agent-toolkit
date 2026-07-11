@@ -32,10 +32,49 @@ async function createRepository() {
   await git(['init', '--initial-branch=main'], { cwd: directory });
   await git(['config', 'user.email', 'smoke@example.test'], { cwd: directory });
   await git(['config', 'user.name', 'Smoke Test'], { cwd: directory });
+  await mkdir(join(directory, '.oat'), { recursive: true });
+  await writeFile(
+    join(directory, '.oat/config.json'),
+    `${JSON.stringify(
+      {
+        workflow: {
+          postImplementSequence: {
+            preApproval: ['summary', 'document', 'pr'],
+            postApproval: ['summary', 'document', 'pr'],
+          },
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
   await writeFile(join(directory, 'README.md'), 'smoke fixture host\n');
-  await git(['add', 'README.md'], { cwd: directory });
+  await git(['add', '.oat/config.json', 'README.md'], { cwd: directory });
   await git(['commit', '-m', 'initial'], { cwd: directory });
   return directory;
+}
+
+async function resolveLocalCloseoutPolicy(worktreePath, home) {
+  const { stdout } = await execFileAsync(
+    join(repositoryRoot, 'node_modules/.bin/tsx'),
+    [
+      '--tsconfig',
+      join(repositoryRoot, 'packages/cli/tsconfig.json'),
+      join(repositoryRoot, 'packages/cli/src/index.ts'),
+      '--json',
+      '--cwd',
+      worktreePath,
+      'config',
+      'get',
+      'workflow.postImplementSequence',
+    ],
+    {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+      env: { ...process.env, HOME: home },
+    },
+  );
+  return JSON.parse(stdout);
 }
 
 async function removeProvision(repository, manifest) {
@@ -113,6 +152,26 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     );
     assert.equal(config.activeProject, manifest.fixtureProjectPath);
     assert.deepEqual(config.smoke, { harness: 'codex', scenario: 'implement' });
+    assert.deepEqual(config.workflow.postImplementSequence, {
+      preApproval: [],
+      postApproval: [],
+    });
+    assert.deepEqual(manifest.effectiveCloseoutPolicy, {
+      source: 'local',
+      value: { preApproval: [], postApproval: [] },
+    });
+    assert.deepEqual(
+      await resolveLocalCloseoutPolicy(
+        manifest.worktreePath,
+        join(repository, 'home'),
+      ),
+      {
+        key: 'workflow.postImplementSequence',
+        source: 'local',
+        status: 'ok',
+        value: { preApproval: [], postApproval: [] },
+      },
+    );
     assert.match(
       await readFile(join(manifest.fixtureProjectPath, 'plan.md'), 'utf8'),
       /oat_ready_for: oat-project-implement/,
@@ -179,6 +238,10 @@ test('preserves a partial manifest when fixture copying fails', async () => {
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     assert.equal(manifest.branch, branch);
     assert.equal(manifest.appliedScenario, 'plan-review');
+    assert.deepEqual(manifest.effectiveCloseoutPolicy, {
+      source: 'local',
+      value: { preApproval: [], postApproval: [] },
+    });
     assert.ok(manifest.createdPaths.includes(manifest.worktreePath));
     assert.ok(
       manifest.createdPaths.includes(

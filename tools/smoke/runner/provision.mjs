@@ -12,6 +12,10 @@ const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
+const SMOKE_CLOSEOUT_POLICY = Object.freeze({
+  preApproval: Object.freeze([]),
+  postApproval: Object.freeze([]),
+});
 
 const SCENARIO_PRESETS = {
   full: 'pre-review',
@@ -80,6 +84,10 @@ function createManifest({
     appliedScenario,
     branch,
     createdPaths: [manifestPath, runPath],
+    effectiveCloseoutPolicy: {
+      source: 'local',
+      value: SMOKE_CLOSEOUT_POLICY,
+    },
     fixtureProjectPath: join(worktreePath, '.oat/projects/smoke-fixture'),
     harness,
     manifestPath,
@@ -175,6 +183,7 @@ export async function provisionSmoke(
         {
           activeProject: manifest.fixtureProjectPath,
           smoke: { harness, scenario },
+          workflow: { postImplementSequence: SMOKE_CLOSEOUT_POLICY },
         },
         null,
         2,
