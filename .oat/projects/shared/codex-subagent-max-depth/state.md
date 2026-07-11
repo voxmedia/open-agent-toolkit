@@ -1,7 +1,9 @@
 ---
 oat_current_task: p01-t01
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - Native worker cannot write worktree Git metadata required for task commits
+  - Native worker cannot modify the managed .agents skill path
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -35,7 +37,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T23:53:07.608Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:26:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T11:46:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -47,7 +49,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Parallel phases `p01` and `p02` bootstrapping
+Implementation - Parallel phases `p01` and `p02` blocked
 
 ## Artifacts
 
@@ -71,12 +73,18 @@ Implementation - Parallel phases `p01` and `p02` bootstrapping
 - ✓ In-memory plan artifact review passed
 - ✓ Canonical plan-review findings addressed
 - ✓ Canonical plan re-review passed
-- ⧗ Implementing `p01` and `p02`
+- ⧗ Recovery decision required for native-worker write boundaries
 
 ## Blockers
 
-None
+- p01: the accepted native worker completed and verified `p01-t01`, but could
+  not create the worktree Git `index.lock`; its bounded diff is preserved.
+- p02: the accepted native worker could not modify
+  `.agents/skills/oat-project-implement/SKILL.md` because `.agents` was
+  read-only.
+- Accepted children returning `BLOCKED` are task outcomes, so pinned CLI
+  fallback was intentionally not used.
 
 ## Next Milestone
 
-Complete the `p01` and `p02` parallel schedule entry
+Choose a recovery design for native-worker write and commit permissions
