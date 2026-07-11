@@ -218,7 +218,13 @@ Final review `passed` gate requires:
     telemetry. A child accepted by the native host, including one that later
     returns `BLOCKED`, has produced a review outcome and cannot trigger the
     fallback.
-- If subagent dispatch is unavailable, follow the existing fallback path (fresh session preferred, inline reset as fallback).
+  - An accepted reviewer that returns `BLOCKED` blocks the relevant review. It
+    cannot trigger the pinned fallback, and absent findings in that blocked
+    outcome cannot be interpreted as a pass.
+- For unmanaged review dispatch, if subagent dispatch is unavailable, follow
+  the existing fallback path (fresh session preferred, inline reset as
+  fallback). This generic fallback does not override managed exact-target
+  rules: a managed reviewer that cannot be launched exactly blocks the review.
 
 ## Reference artifacts
 

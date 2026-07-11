@@ -1095,6 +1095,28 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('documents accepted reviewer BLOCKED outcomes as fail-closed', async () => {
+    const reviews = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/reviews.md',
+    );
+
+    expect(reviews).toMatch(
+      /accepted reviewer[\s\S]{0,100}`BLOCKED`[\s\S]{0,140}blocks the relevant review/i,
+    );
+    expect(reviews).toMatch(
+      /`BLOCKED`[\s\S]{0,180}(?:cannot|must not)[\s\S]{0,100}(?:trigger|invoke)[\s\S]{0,80}(?:pinned )?fallback/i,
+    );
+    expect(reviews).toMatch(
+      /absent findings[\s\S]{0,160}(?:cannot|must not)[\s\S]{0,100}(?:interpret|treat|parse)[\s\S]{0,80}pass/i,
+    );
+    expect(reviews).toMatch(
+      /generic fallback[\s\S]{0,120}(?:does not|cannot|must not)[\s\S]{0,100}override[\s\S]{0,120}managed exact-target\s+rules/i,
+    );
+    expect(reviews).toMatch(
+      /managed reviewer[\s\S]{0,140}cannot be launched exactly[\s\S]{0,100}blocks the review/i,
+    );
+  });
+
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
