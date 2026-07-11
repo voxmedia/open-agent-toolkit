@@ -381,6 +381,47 @@ has verified equivalent current-host controls for explicit inherit,
 managed-uncapped, or base-role behavior. Capped managed reviews still require
 the exact registered role, pinned child, or resolver-returned model argument.
 
+### Cursor validation pass and live evidence
+
+Config adoption and doctor validate Cursor candidates with one command-scoped
+pass context. Duplicate references to the same byte-for-byte candidate share
+one Task/subagent probe. If a decisive probe is unavailable, the pass resolves
+the broad catalog once, with at most one `--list-models` fallback. The cache
+ends with that adopt or doctor command; it is not process-global and has no
+TTL.
+
+A correlated Task start/completion pair that preserves the exact model argument
+and returns the sentinel establishes that the argument is eligible for that
+account and client. A structured rejection or exact allow-list exclusion can
+establish `unknown-value`. Neither result identifies the backend runtime model:
+`runtimeIdentity` remains `not-reported` unless trusted Cursor telemetry or
+Cursor support confirms it. Parent prose and broad catalog presence are
+diagnostic-only, so OAT preserves `unvalidated` when launcher evidence is
+absent instead of inferring capability from candidate spelling.
+
+The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
+preserves the original text-mode pass and a versioned stream-JSON second pass.
+The second pass ran a dynamic positive control and deliberate invalid control
+before candidates. Both parent runs completed without a Task event, making the
+controls inconclusive; the stop rule therefore executed zero of the 13
+recommended candidates and did not execute exploratory
+`gpt-5.6-sol-high-fast`. The recommendation remains unchanged and candidate
+eligibility remains unresolved.
+
+The tracked artifact's structured second-pass block contains only allowlisted
+event structure, derived outcomes, sanitized auth-presence context, and
+non-reversible identifier hashes. Exact request/session/tool-call IDs and
+credential-redacted unprojected streams from that pass stay under gitignored
+`.oat/projects/local/` storage for possible Cursor support diagnosis.
+
+The same public artifact intentionally retains the sanitized historical v1
+text-mode record for provenance. That older section includes command arguments
+and prompts, stdout and stderr, exit and duration data, and capture-environment
+details such as user-specific binary paths; it is not limited to the structured
+second-pass allowlist. Re-run after a Cursor client rollout exposes Task in
+headless mode or Cursor support confirms the private requests; review the open
+verification item by 2026-08-08.
+
 ### Legacy compatibility
 
 The command and docs path retain `dispatch-ceiling` for compatibility. Legacy

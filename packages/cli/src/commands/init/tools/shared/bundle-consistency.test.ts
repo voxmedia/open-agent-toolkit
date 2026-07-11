@@ -397,6 +397,64 @@ describe('bundle-assets.sh consistency', () => {
   );
 
   it(
+    'bundles workflow report and derived-stamp guidance from canonical skills',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        for (const skill of [
+          'oat-project-implement',
+          'oat-project-review-provide',
+          'oat-project-review-provide-remote',
+        ]) {
+          const content = readFileSync(
+            join(assetsRoot, 'skills', skill, 'SKILL.md'),
+            'utf8',
+          );
+          const invocations = [
+            ...content
+              .replace(/\\\r?\n\s*/g, ' ')
+              .matchAll(
+                /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+              ),
+          ]
+            .map(([command]) => command.trim())
+            .filter((command) => command.includes('--provider'));
+          expect(
+            invocations.length,
+            `${skill} actionable resolver invocations`,
+          ).toBeGreaterThan(0);
+          for (const invocation of invocations) {
+            expect(invocation, `${skill} report scope`).toMatch(
+              /--report-scope\s+\S+/,
+            );
+            expect(invocation, `${skill} literal report action`).toMatch(
+              /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+            );
+          }
+          expect(content, `${skill} versioned report`).toContain(
+            'dispatchReport.schemaVersion: 1',
+          );
+          expect(content, `${skill} report renderer`).toContain(
+            'formatDispatchReport(dispatchReport)',
+          );
+          expect(content, `${skill} derived stamp`).toContain(
+            'formatDispatchStamp(dispatchReport)',
+          );
+        }
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
     'bundles the PJM migration prompt asset',
     () => {
       const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));

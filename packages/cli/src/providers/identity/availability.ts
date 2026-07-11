@@ -64,6 +64,18 @@ export interface ValidateMatrixCellOptions {
   } | null;
 }
 
+export interface CursorTaskProbeResult extends MatrixCellAvailabilityResult {
+  decisive: boolean;
+  evidence: 'task-probe' | 'subagent-allow-list' | 'none';
+}
+
+export interface CursorCatalogResult {
+  status: 'resolved' | 'unavailable' | 'failed';
+  candidates: string[];
+  sourceCommand: 'models' | 'list-models' | null;
+  diagnostic: string | null;
+}
+
 interface CursorCatalogEntry {
   slug: string;
 }
@@ -166,19 +178,6 @@ function parseCursorCatalog(stdout: string): CursorCatalogEntry[] {
   return entries;
 }
 
-function availabilityFromCursorCatalog(
-  value: string,
-  stdout: string,
-): MatrixCellAvailability | null {
-  const entries = parseCursorCatalog(stdout);
-  if (entries.length === 0) {
-    return null;
-  }
-  return entries.some((entry) => entry.slug === value)
-    ? 'valid'
-    : 'unknown-value';
-}
-
 const CURSOR_SUBAGENT_PROBE_SENTINEL = 'OAT_CURSOR_SUBAGENT_MODEL_VALID';
 
 function hasCursorSubagentProbeSentinel(stdout: string): boolean {
@@ -262,6 +261,28 @@ function cursorCatalogContextMessage(
     return `Cursor's broad model catalog does not list '${value}'.`;
   }
   return undefined;
+}
+
+function availabilityDependencies(
+  options: ValidateMatrixCellOptions,
+): AvailabilityOracleDependencies {
+  return {
+    ...DEFAULT_DEPENDENCIES,
+    env: options.env ?? DEFAULT_DEPENDENCIES.env,
+    ...options.dependencies,
+  };
+}
+
+function cursorCatalogDiagnostic(
+  results: CursorAgentRunResult[],
+): string | null {
+  const messages = unique(
+    results
+      .flatMap((result) => [result.stderr, result.stdout])
+      .map((message) => message.trim())
+      .filter((message) => message.length > 0),
+  );
+  return messages.length > 0 ? messages.join('\n') : null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -428,15 +449,11 @@ async function validateCodexCell(
   return { availability: 'valid' };
 }
 
-export async function validateCursorSubagentModel(
+export async function probeCursorSubagentModel(
   value: string,
   options: ValidateMatrixCellOptions,
-): Promise<MatrixCellAvailabilityResult> {
-  const dependencies: AvailabilityOracleDependencies = {
-    ...DEFAULT_DEPENDENCIES,
-    env: options.env ?? DEFAULT_DEPENDENCIES.env,
-    ...options.dependencies,
-  };
+): Promise<CursorTaskProbeResult> {
+  const dependencies = availabilityDependencies(options);
   const env = dependencies.env ?? process.env;
   const runOptions = { cwd: options.cwd, env };
   const probeResult = await dependencies.runCursorAgent(
@@ -446,7 +463,11 @@ export async function validateCursorSubagentModel(
   const probeOutput = `${probeResult.stdout}\n${probeResult.stderr}`;
 
   if (probeResult.ok && hasCursorSubagentProbeSentinel(probeResult.stdout)) {
-    return { availability: 'valid' };
+    return {
+      availability: 'valid',
+      decisive: true,
+      evidence: 'task-probe',
+    };
   }
 
   const allowedValues = parseCursorAllowedSubagentModels(probeOutput);
@@ -461,23 +482,41 @@ export async function validateCursorSubagentModel(
         availability === 'valid'
           ? cursorAllowedModelsMessage(allowedValues)
           : cursorRejectedMessage(allowedValues),
+      decisive: true,
+      evidence: 'subagent-allow-list',
     };
   }
+
+  return {
+    availability: 'unvalidated',
+    decisive: false,
+    evidence: 'none',
+  };
+}
+
+export async function resolveCursorModelCatalog(
+  options: ValidateMatrixCellOptions,
+): Promise<CursorCatalogResult> {
+  const dependencies = availabilityDependencies(options);
+  const env = dependencies.env ?? process.env;
+  const runOptions = { cwd: options.cwd, env };
+  const attempts: CursorAgentRunResult[] = [];
 
   const modelsResult = await dependencies.runCursorAgent(
     [...apiKeyArgs(env), 'models'],
     runOptions,
   );
+  attempts.push(modelsResult);
   if (modelsResult.ok) {
-    const availability = availabilityFromCursorCatalog(
-      value,
-      modelsResult.stdout,
+    const candidates = parseCursorCatalog(modelsResult.stdout).map(
+      (entry) => entry.slug,
     );
-    if (availability !== null) {
+    if (candidates.length > 0) {
       return {
-        availability:
-          availability === 'valid' ? 'unvalidated' : 'unknown-value',
-        message: cursorCatalogContextMessage(value, availability),
+        status: 'resolved',
+        candidates,
+        sourceCommand: 'models',
+        diagnostic: null,
       };
     }
   }
@@ -486,18 +525,50 @@ export async function validateCursorSubagentModel(
     [...apiKeyArgs(env), '--list-models'],
     runOptions,
   );
+  attempts.push(listResult);
   if (listResult.ok) {
-    const availability = availabilityFromCursorCatalog(
-      value,
-      listResult.stdout,
+    const candidates = parseCursorCatalog(listResult.stdout).map(
+      (entry) => entry.slug,
     );
-    if (availability !== null) {
+    if (candidates.length > 0) {
       return {
-        availability:
-          availability === 'valid' ? 'unvalidated' : 'unknown-value',
-        message: cursorCatalogContextMessage(value, availability),
+        status: 'resolved',
+        candidates,
+        sourceCommand: 'list-models',
+        diagnostic: null,
       };
     }
+  }
+
+  return {
+    status: attempts.every((result) => !result.ok) ? 'unavailable' : 'failed',
+    candidates: [],
+    sourceCommand: null,
+    diagnostic: cursorCatalogDiagnostic(attempts),
+  };
+}
+
+export async function validateCursorSubagentModel(
+  value: string,
+  options: ValidateMatrixCellOptions,
+): Promise<MatrixCellAvailabilityResult> {
+  const taskProbe = await probeCursorSubagentModel(value, options);
+  if (taskProbe.decisive) {
+    const { decisive: _decisive, evidence: _evidence, ...result } = taskProbe;
+    return result;
+  }
+
+  const catalog = await resolveCursorModelCatalog(options);
+  if (catalog.status === 'resolved') {
+    const availability: MatrixCellAvailability = catalog.candidates.includes(
+      value,
+    )
+      ? 'valid'
+      : 'unknown-value';
+    return {
+      availability: availability === 'valid' ? 'unvalidated' : 'unknown-value',
+      message: cursorCatalogContextMessage(value, availability),
+    };
   }
 
   return { availability: 'unvalidated' };
@@ -516,11 +587,7 @@ export async function validateMatrixCell(
       : 'unknown-value';
   }
 
-  const dependencies: AvailabilityOracleDependencies = {
-    ...DEFAULT_DEPENDENCIES,
-    env: options.env ?? DEFAULT_DEPENDENCIES.env,
-    ...options.dependencies,
-  };
+  const dependencies = availabilityDependencies(options);
 
   if (normalizedProvider === 'claude') {
     const availability = (

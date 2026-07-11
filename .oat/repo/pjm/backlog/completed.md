@@ -8,6 +8,9 @@
 
 ## Completed Items
 
+- 2026-07-11 — BL-260707-cache-cursor-model-catalog — Cache Cursor model catalog during matrix validation — Added pass-scoped Cursor probe and broad-catalog caching for adoption and doctor.
+- 2026-07-11 — BL-260707-consolidate-dispatch-matrix — Consolidate dispatch matrix normalization and traversal — Consolidated dispatch matrix normalization and traversal behind shared adapters.
+- 2026-07-11 — BL-260709-add-dispatch-machine-schema — Add dispatch machine schema and formatter — Delivered Dispatch Report V1 schema, formatters, and workflow integration.
 - 2026-07-10 — BL-260707-ask-to-enable-phase-review — Ask to enable phase review gates when gate config exists — Plan workflows now offer opt-in phase review gates when qualifying targets exist.
 - 2026-07-10 — BL-260707-support-producer-identity — Support producer identity aggregation for final and range review gates — Final and range review gates aggregate in-scope producer provenance.
 - 2026-07-10 — BL-260707-declare-gate-review-target — Declare gate review target project — Gate review projects are explicitly declared and fail closed on artifact mismatch.

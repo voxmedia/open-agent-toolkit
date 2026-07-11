@@ -1,17 +1,15 @@
 ---
 id: BL-260707-consolidate-dispatch-matrix
 title: 'Consolidate dispatch matrix normalization and traversal'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [dispatch-matrix, maintainability, review-followup]
 assignee: null
 created: '2026-07-07T21:16:23Z'
-updated: '2026-07-07T21:16:23Z'
+updated: '2026-07-11T03:25:42Z'
 associated_issues: []
-oat_template: true
-oat_template_name: backlog-item
 ---
 
 ## Description
@@ -35,3 +33,18 @@ independently.
   dispatch matrix resolver/config/doctor test surface.
 - Use the next matrix cell-shape change, such as GPT 5.6 axis-shape work, as
   the trigger to prioritize this item if it is still open.
+
+## Completion Evidence
+
+- `97dcab1a` introduced the canonical normalizer and cell-ref walker;
+  `86900b29` and `b615abd0` adopted shared normalization in layered config and
+  project-state parsing.
+- `ec189c6c` and `6fe49d1c` moved config adoption and doctor traversal to the
+  shared refs; `2d789a92` preserved direct-target compatibility.
+- Bare values, tier maps, ordered candidate routes, malformed siblings, sparse
+  overrides, and candidate indices are covered by dispatch-matrix,
+  oat-config, resolve, resolver, config, and doctor tests.
+- The GPT-5.6 candidate-ladder work was the planned trigger and exercised the
+  shared helpers across all consuming command paths.
+- Phase p05 focused verification passed 724/724 tests, and full repository and
+  release validation passed for version `0.1.49`.

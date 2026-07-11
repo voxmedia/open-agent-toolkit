@@ -509,6 +509,79 @@ describe('CLI command integration', () => {
     expect(artifactsResult.exitCode).toBe(0);
   });
 
+  it('dispatch-ceiling resolve emits optional Dispatch Report V1 JSON', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify(
+        {
+          version: 1,
+          workflow: {
+            dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+            dispatchCeiling: {
+              providers: {
+                codex: {
+                  balanced: {
+                    candidates: [
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.6-terra',
+                        effort: 'low',
+                      },
+                      {
+                        harness: 'codex',
+                        model: 'gpt-5.6-terra',
+                        effort: 'medium',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+
+    const result = await runCli(root, [
+      'project',
+      'dispatch-ceiling',
+      'resolve',
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--report-scope',
+      'p03-t04',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.providers.codex.selection.candidateIndex).toBe(1);
+    expect(payload.dispatchReport).toMatchObject({
+      schemaVersion: 1,
+      route: {
+        scope: 'p03-t04',
+        action: 'implementation',
+        role: 'implementer',
+      },
+      selection: {
+        candidateIndex: 1,
+        selectionBranch: 'candidate-requested',
+      },
+    });
+  });
+
   it('cleanup artifacts --json emits stable contract fields', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

@@ -1,0 +1,894 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import {
+  deriveStructuredProbe,
+  parseStreamJson,
+  projectPublicEvents,
+  redactPrivateValue,
+  validateStructuredCapture,
+} from './capture-cursor-subagent-evidence.mjs';
+
+const SENTINEL = 'OAT_CURSOR_SUBAGENT_MODEL_VALID';
+const sessionId = 'session-exact-private';
+const requestId = 'request-exact-private';
+const callId = 'tool-exact-private';
+const recommendationSha256 = 'a'.repeat(64);
+const recommendation = {
+  version: 'test',
+  providers: {
+    cursor: {
+      high: { candidates: ['gpt-5.6-sol-high'] },
+    },
+  },
+};
+const validationOptions = { recommendation, recommendationSha256 };
+
+function taskEvent(subtype, model, result) {
+  return {
+    type: 'tool_call',
+    subtype,
+    call_id: callId,
+    tool_call: {
+      taskToolCall: {
+        args: {
+          model,
+          prompt: 'private child prompt',
+          description: 'private description',
+          path: '/private/path',
+        },
+        ...(result === undefined ? {} : { result }),
+      },
+    },
+    session_id: sessionId,
+    account: { id: 'private-account' },
+  };
+}
+
+function successEvents(model = 'gpt-5.6-sol-high') {
+  return [
+    {
+      type: 'system',
+      subtype: 'init',
+      session_id: sessionId,
+      cwd: '/private/path',
+      apiKeySource: 'env',
+      environment: { CURSOR_API_KEY: 'secret' },
+    },
+    {
+      type: 'user',
+      message: { content: [{ type: 'text', text: 'private parent prompt' }] },
+      session_id: sessionId,
+    },
+    taskEvent('started', model),
+    taskEvent('completed', model, {
+      success: { content: SENTINEL, path: '/another/private/path' },
+    }),
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: false,
+      duration_ms: 24,
+      result: SENTINEL,
+      session_id: sessionId,
+      request_id: requestId,
+      teamId: 'private-team',
+    },
+  ];
+}
+
+function captureFixture(overrides = {}) {
+  const positive = deriveStructuredProbe({
+    candidate: 'gpt-5.6-sol-high',
+    kind: 'positive-control',
+    events: successEvents(),
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 24,
+    timedOut: false,
+  });
+  const negativeEvents = [
+    taskEvent('started', 'oat-deliberately-invalid-task-model'),
+    taskEvent('completed', 'oat-deliberately-invalid-task-model', {
+      error: {
+        message: 'Invalid model. Allowed models: gpt-5.6-sol-high',
+      },
+    }),
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: false,
+      duration_ms: 10,
+      result: 'rejected',
+      session_id: sessionId,
+      request_id: requestId,
+    },
+  ];
+  const negative = deriveStructuredProbe({
+    candidate: 'oat-deliberately-invalid-task-model',
+    kind: 'negative-control',
+    events: negativeEvents,
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 10,
+    timedOut: false,
+  });
+  const candidate = {
+    ...positive,
+    kind: 'candidate',
+    tier: 'high',
+    events: structuredClone(positive.events),
+  };
+  return {
+    schemaVersion: 2,
+    sanitizerSchemaVersion: 1,
+    capturedAt: '2026-07-11T12:00:00.000Z',
+    recommendation: { version: 'test', sha256: recommendationSha256 },
+    environment: {
+      selectedBinary: 'cursor-agent',
+      clientVersion: '2026.07.09-test',
+      cursorApiKey: 'present',
+      credentialStore: 'unset',
+    },
+    controls: {
+      status: 'passed',
+      positive,
+      negative,
+    },
+    exploratoryCandidates: [],
+    candidates: [candidate],
+    ...overrides,
+  };
+}
+
+test('parses NDJSON and rejects malformed stream lines', () => {
+  assert.deepEqual(
+    parseStreamJson('{"type":"system"}\n\n{"type":"result"}\n'),
+    [{ type: 'system' }, { type: 'result' }],
+  );
+  assert.throws(
+    () => parseStreamJson('{"type":"system"}\nnot-json\n'),
+    /line 2/,
+  );
+});
+
+test('correlates exact byte-preserved Task start/completion and terminal IDs', () => {
+  const candidate = 'GPT-5.6-Sol-High:opaque/\u03b2';
+  const probe = deriveStructuredProbe({
+    candidate,
+    kind: 'candidate',
+    events: successEvents(candidate),
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 24,
+    timedOut: false,
+  });
+  assert.equal(probe.requestedModel, candidate);
+  assert.equal(probe.taskSelection, 'accepted');
+  assert.equal(probe.childCompletion, 'completed');
+  assert.equal(probe.runtimeIdentity, 'not-reported');
+  assert.equal(probe.availabilityStatus, 'valid');
+  assert.equal(probe.terminalEventObserved, true);
+  assert.match(probe.correlation.sessionHash, /^sha256:/);
+  assert.notEqual(probe.correlation.sessionHash, sessionId);
+});
+
+test('fails closed on missing or contradictory Task correlation identifiers', () => {
+  const cases = [
+    {
+      name: 'missing start call ID',
+      events: successEvents().map((event, index) =>
+        index === 2 ? { ...event, call_id: undefined } : event,
+      ),
+    },
+    {
+      name: 'missing completion call ID',
+      events: successEvents().map((event, index) =>
+        index === 3 ? { ...event, call_id: undefined } : event,
+      ),
+    },
+    {
+      name: 'mismatched completion call ID',
+      events: successEvents().map((event, index) =>
+        index === 3 ? { ...event, call_id: 'different-call' } : event,
+      ),
+    },
+    {
+      name: 'mismatched completion session ID',
+      events: successEvents().map((event, index) =>
+        index === 3 ? { ...event, session_id: 'different-session' } : event,
+      ),
+    },
+    {
+      name: 'mismatched terminal session ID',
+      events: successEvents().map((event, index) =>
+        index === 4 ? { ...event, session_id: 'different-session' } : event,
+      ),
+    },
+  ];
+
+  for (const { name, events } of cases) {
+    assert.throws(
+      () =>
+        deriveStructuredProbe({
+          candidate: 'gpt-5.6-sol-high',
+          kind: 'candidate',
+          events,
+          directExitStatus: 0,
+          terminationSignal: null,
+          durationMs: 24,
+          timedOut: false,
+        }),
+      /call ID|session ID|correlat/i,
+      name,
+    );
+  }
+});
+
+test('requires successful terminal and direct exit state for a valid Task', () => {
+  const cases = [
+    {
+      name: 'terminal error subtype',
+      events: successEvents().map((event, index) =>
+        index === 4 ? { ...event, subtype: 'error', is_error: true } : event,
+      ),
+      directExitStatus: 0,
+      terminationSignal: null,
+    },
+    {
+      name: 'terminal error flag',
+      events: successEvents().map((event, index) =>
+        index === 4 ? { ...event, is_error: true } : event,
+      ),
+      directExitStatus: 0,
+      terminationSignal: null,
+    },
+    {
+      name: 'nonzero direct exit',
+      events: successEvents(),
+      directExitStatus: 1,
+      terminationSignal: null,
+    },
+    {
+      name: 'termination signal',
+      events: successEvents(),
+      directExitStatus: 0,
+      terminationSignal: 'SIGTERM',
+    },
+  ];
+
+  for (const testCase of cases) {
+    const probe = deriveStructuredProbe({
+      candidate: 'gpt-5.6-sol-high',
+      kind: 'candidate',
+      events: testCase.events,
+      directExitStatus: testCase.directExitStatus,
+      terminationSignal: testCase.terminationSignal,
+      durationMs: 24,
+      timedOut: false,
+    });
+    assert.equal(probe.availabilityStatus, 'unvalidated', testCase.name);
+    assert.equal(probe.childCompletion, 'failed', testCase.name);
+    assert.equal(
+      probe.outcomeBasis,
+      'correlated-task-terminal-failure',
+      testCase.name,
+    );
+  }
+});
+
+test('derives rejection, missing Task, failure, timeout, and malformed terminal states', () => {
+  const rejected = deriveStructuredProbe({
+    candidate: 'bad',
+    kind: 'candidate',
+    events: [
+      taskEvent('started', 'bad'),
+      taskEvent('completed', 'bad', { error: { message: 'invalid model' } }),
+      { type: 'result', subtype: 'success', session_id: sessionId },
+    ],
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  assert.equal(rejected.taskSelection, 'rejected');
+  assert.equal(rejected.availabilityStatus, 'unknown-value');
+
+  const missing = deriveStructuredProbe({
+    candidate: 'missing',
+    kind: 'candidate',
+    events: [{ type: 'result', subtype: 'success', session_id: sessionId }],
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  assert.equal(missing.taskSelection, 'not-observed');
+  assert.equal(missing.childCompletion, 'not-observed');
+
+  const failed = deriveStructuredProbe({
+    candidate: 'gpt-5.6-sol-high',
+    kind: 'candidate',
+    events: [
+      taskEvent('started', 'gpt-5.6-sol-high'),
+      taskEvent('completed', 'gpt-5.6-sol-high', {
+        success: { content: 'wrong' },
+      }),
+      { type: 'result', subtype: 'success', session_id: sessionId },
+    ],
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  assert.equal(failed.taskSelection, 'accepted');
+  assert.equal(failed.childCompletion, 'failed');
+
+  const timeout = deriveStructuredProbe({
+    candidate: 'gpt-5.6-sol-high',
+    kind: 'candidate',
+    events: [taskEvent('started', 'gpt-5.6-sol-high')],
+    directExitStatus: null,
+    terminationSignal: 'SIGTERM',
+    durationMs: 90_000,
+    timedOut: true,
+  });
+  assert.equal(timeout.childCompletion, 'timed-out');
+  assert.equal(timeout.terminalEventObserved, false);
+
+  assert.throws(
+    () =>
+      deriveStructuredProbe({
+        candidate: 'gpt-5.6-sol-high',
+        kind: 'candidate',
+        events: [...successEvents(), { type: 'result', subtype: 'success' }],
+        directExitStatus: 0,
+        terminationSignal: null,
+        durationMs: 1,
+        timedOut: false,
+      }),
+    /terminal result/,
+  );
+});
+
+test('public projection is allowlisted and strips prose, paths, metadata, environment, credentials, and direct IDs', () => {
+  const projection = projectPublicEvents(successEvents());
+  const serialized = JSON.stringify(projection);
+  for (const forbidden of [
+    'private parent prompt',
+    'private child prompt',
+    'private description',
+    '/private/path',
+    '/another/private/path',
+    'private-account',
+    'private-team',
+    'secret',
+    sessionId,
+    requestId,
+    callId,
+  ]) {
+    assert.equal(serialized.includes(forbidden), false, forbidden);
+  }
+  assert.equal(projection[2].toolName, 'Task');
+  assert.equal(projection[2].requestedModel, 'gpt-5.6-sol-high');
+  assert.deepEqual(Object.keys(projection[2]).sort(), [
+    'correlationHash',
+    'eventType',
+    'requestedModel',
+    'sessionHash',
+    'subtype',
+    'toolName',
+  ]);
+});
+
+test('rejects credentials and paths in every public string-valued event field', () => {
+  const fields = [
+    ['eventType', 2],
+    ['subtype', 2],
+    ['toolName', 2],
+    ['correlationHash', 2],
+    ['sessionHash', 2],
+    ['requestHash', 4],
+    ['requestedModel', 2],
+    ['taskResult', 3],
+  ];
+  const unsafeValues = [
+    'Authorization: Bearer PUBLIC_LEAK',
+    '/Users/private/path',
+  ];
+
+  for (const [field, eventIndex] of fields) {
+    for (const unsafeValue of unsafeValues) {
+      const capture = captureFixture();
+      capture.controls.positive.events[eventIndex][field] = unsafeValue;
+      assert.throws(
+        () => validateStructuredCapture(capture, validationOptions),
+        /unsafe|credential|path|hash|structural/i,
+        `${field}: ${unsafeValue}`,
+      );
+    }
+  }
+});
+
+test('constrains public structural values and opaque model strings', () => {
+  for (const [field, value] of [
+    ['eventType', 'unknown'],
+    ['subtype', 'unexpected'],
+    ['toolName', 'Shell'],
+    ['taskResult', 'maybe'],
+  ]) {
+    const capture = captureFixture();
+    capture.controls.positive.events[2][field] = value;
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /structural|unsafe/i,
+      field,
+    );
+  }
+
+  for (const unsafeModel of [
+    '',
+    'model with spaces',
+    '/Users/private/model',
+    'C:\\Users\\private\\model',
+    'x'.repeat(129),
+  ]) {
+    const capture = captureFixture();
+    capture.controls.positive.candidate = unsafeModel;
+    capture.controls.positive.requestedModel = unsafeModel;
+    capture.controls.positive.events[2].requestedModel = unsafeModel;
+    capture.controls.positive.events[3].requestedModel = unsafeModel;
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /model.*unsafe|unsafe.*model|unsafe local path/i,
+      unsafeModel,
+    );
+  }
+});
+
+test('enforces exact types and finite domains across the public probe schema', () => {
+  const cases = [
+    [
+      'event sentinelObserved',
+      (probe) => {
+        probe.events[3].sentinelObserved = 'private parent prompt';
+      },
+    ],
+    [
+      'event terminalError',
+      (probe) => {
+        probe.events[4].terminalError = 'false';
+      },
+    ],
+    [
+      'kind',
+      (probe) => {
+        probe.kind = 'arbitrary-kind';
+      },
+    ],
+    [
+      'availabilityStatus',
+      (probe) => {
+        probe.availabilityStatus = 'arbitrary-status';
+      },
+    ],
+    [
+      'taskSelection',
+      (probe) => {
+        probe.taskSelection = 'arbitrary-selection';
+      },
+    ],
+    [
+      'childCompletion',
+      (probe) => {
+        probe.childCompletion = 'arbitrary-completion';
+      },
+    ],
+    [
+      'runtimeIdentity',
+      (probe) => {
+        probe.runtimeIdentity = 'private runtime prose';
+      },
+    ],
+    [
+      'outcomeBasis',
+      (probe) => {
+        probe.outcomeBasis = 'arbitrary-basis';
+      },
+    ],
+    [
+      'terminalEventObserved',
+      (probe) => {
+        probe.terminalEventObserved = 'true';
+      },
+    ],
+    [
+      'directExitStatus',
+      (probe) => {
+        probe.directExitStatus = '0';
+      },
+    ],
+    [
+      'terminationSignal',
+      (probe) => {
+        probe.terminationSignal = 'private signal prose';
+      },
+    ],
+    [
+      'durationMs',
+      (probe) => {
+        probe.durationMs = '24';
+      },
+    ],
+    [
+      'streamStatus',
+      (probe) => {
+        probe.streamStatus = 'arbitrary-stream';
+      },
+    ],
+    [
+      'sanitizerSchemaVersion',
+      (probe) => {
+        probe.sanitizerSchemaVersion = '1';
+      },
+    ],
+    [
+      'tier',
+      (probe) => {
+        probe.tier = 'arbitrary-tier';
+      },
+    ],
+  ];
+
+  for (const [name, mutate] of cases) {
+    const capture = captureFixture();
+    mutate(capture.candidates[0]);
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /boolean|integer|signal|structural|schema|status|kind|tier|runtime|not-reported|unsafe|derived/i,
+      name,
+    );
+  }
+});
+
+test('rejects path and URI material independent of local root names', () => {
+  for (const unsafePath of [
+    '/workspace/private/file',
+    '/root/private/file',
+    'file:///Users/private/file',
+  ]) {
+    const capture = captureFixture();
+    capture.candidates[0].terminationSignal = unsafePath;
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /path|signal|unsafe/i,
+      unsafePath,
+    );
+  }
+});
+
+test('recursively redacts credentials from private raw events without removing exact IDs', () => {
+  const value = redactPrivateValue({
+    session_id: sessionId,
+    request_id: requestId,
+    Authorization: 'Bearer top-secret',
+    nested: {
+      CURSOR_API_KEY: 'top-secret',
+      password: 'top-secret',
+      safe: 'Bearer top-secret',
+    },
+  });
+  assert.equal(value.session_id, sessionId);
+  assert.equal(value.request_id, requestId);
+  assert.equal(value.Authorization, '<redacted>');
+  assert.equal(value.nested.CURSOR_API_KEY, '<redacted>');
+  assert.equal(value.nested.password, '<redacted>');
+  assert.equal(value.nested.safe, 'Bearer <redacted>');
+});
+
+test('redacts every credential key family in nested private values', () => {
+  const credentialKeys = [
+    'authorization',
+    'proxyAuthorization',
+    'cookie',
+    'credential',
+    'api_key',
+    'api-key',
+    'token',
+    'secret',
+    'password',
+  ];
+  const nested = Object.fromEntries(
+    credentialKeys.map((key) => [key, 'private-value']),
+  );
+
+  assert.deepEqual(
+    redactPrivateValue({
+      session_id: sessionId,
+      request_id: requestId,
+      call_id: callId,
+      nested,
+    }),
+    {
+      session_id: sessionId,
+      request_id: requestId,
+      call_id: callId,
+      nested: Object.fromEntries(
+        credentialKeys.map((key) => [key, '<redacted>']),
+      ),
+    },
+  );
+});
+
+test('redacts common credential encodings from private stdout and stderr strings', () => {
+  const cases = [
+    ['Authorization: Basic dXNlcjpwYXNz', 'Authorization: Basic <redacted>'],
+    [
+      'Proxy-Authorization=Digest abc123',
+      'Proxy-Authorization: Digest <redacted>',
+    ],
+    ['Authorization: Bearer abc123', 'Authorization: Bearer <redacted>'],
+    ['Cookie: session=abc; csrf=def', 'Cookie: <redacted>'],
+    ['Set-Cookie: session=abc; HttpOnly', 'Set-Cookie: <redacted>'],
+    ['credential=private', 'credential=<redacted>'],
+    ['cursor_api_key: private', 'cursor_api_key=<redacted>'],
+    ['access-token=private', 'access-token=<redacted>'],
+    ['client_secret: private', 'client_secret=<redacted>'],
+    ['db.password=private', 'db.password=<redacted>'],
+    ['{"credential":"private"}', '{"credential=<redacted>"}'],
+    [
+      '{"cookie":"session=abc","safe":"visible"}',
+      '{"cookie: <redacted>","safe":"visible"}',
+    ],
+  ];
+
+  for (const [input, expected] of cases) {
+    assert.equal(redactPrivateValue(input), expected, input);
+  }
+
+  const identifiers = `session_id=${sessionId} request_id=${requestId} call_id=${callId}`;
+  assert.equal(redactPrivateValue(identifiers), identifiers);
+});
+
+test('validates positive and negative controls and rejects direct public identifiers', () => {
+  assert.deepEqual(
+    validateStructuredCapture(captureFixture(), validationOptions),
+    {
+      controls: 'passed',
+      candidateCount: 1,
+      outcomes: { valid: 1 },
+    },
+  );
+  const leaked = captureFixture();
+  leaked.controls.positive.events[0].sessionId = sessionId;
+  assert.throws(
+    () => validateStructuredCapture(leaked, validationOptions),
+    /allowlist|identifier/i,
+  );
+  const inconclusive = captureFixture({
+    controls: {
+      ...captureFixture().controls,
+      status: 'passed',
+      positive: {
+        ...captureFixture().controls.positive,
+        childCompletion: 'failed',
+      },
+    },
+  });
+  assert.throws(
+    () => validateStructuredCapture(inconclusive, validationOptions),
+    /positive control/,
+  );
+});
+
+test('binds passed controls to their exact requested model arguments', () => {
+  const cases = [
+    {
+      name: 'missing positive start model',
+      mutate(capture) {
+        delete capture.controls.positive.events[2].requestedModel;
+        capture.controls.positive.requestedModel = null;
+      },
+    },
+    {
+      name: 'replaced positive start model',
+      mutate(capture) {
+        capture.controls.positive.events[2].requestedModel = 'replacement';
+        capture.controls.positive.events[3].requestedModel = 'replacement';
+        capture.controls.positive.requestedModel = 'replacement';
+      },
+    },
+    {
+      name: 'mismatched positive completion model',
+      mutate(capture) {
+        capture.controls.positive.events[3].requestedModel = 'replacement';
+      },
+    },
+    {
+      name: 'replaced negative candidate',
+      mutate(capture) {
+        capture.controls.negative.candidate = 'replacement';
+      },
+    },
+    {
+      name: 'missing negative start model',
+      mutate(capture) {
+        delete capture.controls.negative.events[0].requestedModel;
+        capture.controls.negative.requestedModel = null;
+      },
+    },
+    {
+      name: 'replaced negative start model',
+      mutate(capture) {
+        capture.controls.negative.events[0].requestedModel = 'replacement';
+        capture.controls.negative.requestedModel = 'replacement';
+      },
+    },
+    {
+      name: 'mismatched negative completion model',
+      mutate(capture) {
+        capture.controls.negative.events[1].requestedModel = 'replacement';
+      },
+    },
+  ];
+
+  for (const testCase of cases) {
+    const capture = captureFixture();
+    testCase.mutate(capture);
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /control.*model|model.*control/i,
+      testCase.name,
+    );
+  }
+});
+
+test('allows inconclusive controls without observed Task model identities', () => {
+  const events = [
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: false,
+      session_id: sessionId,
+      request_id: requestId,
+    },
+  ];
+  const positive = deriveStructuredProbe({
+    candidate: null,
+    kind: 'positive-control',
+    events,
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  const negative = deriveStructuredProbe({
+    candidate: 'oat-deliberately-invalid-task-model',
+    kind: 'negative-control',
+    events,
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  const capture = captureFixture({
+    controls: { status: 'inconclusive', positive, negative },
+    candidates: [],
+  });
+
+  assert.deepEqual(validateStructuredCapture(capture, validationOptions), {
+    controls: 'inconclusive',
+    candidateCount: 0,
+    outcomes: {},
+  });
+});
+
+test('re-derives asserted probe outcomes from the public event projection', () => {
+  const forged = captureFixture();
+  forged.controls.positive.events = [];
+  assert.throws(
+    () => validateStructuredCapture(forged, validationOptions),
+    /derived|projection/i,
+  );
+
+  forged.controls.positive = {
+    ...captureFixture().controls.positive,
+    taskSelection: 'rejected',
+    childCompletion: 'not-observed',
+    availabilityStatus: 'unknown-value',
+    outcomeBasis: 'structured-task-rejection',
+  };
+  assert.throws(
+    () => validateStructuredCapture(forged, validationOptions),
+    /derived|projection/i,
+  );
+});
+
+test('binds recommendation metadata and exact post-control candidate inventory', () => {
+  const wrongMetadata = captureFixture();
+  wrongMetadata.recommendation.sha256 = 'b'.repeat(64);
+  assert.throws(
+    () => validateStructuredCapture(wrongMetadata, validationOptions),
+    /recommendation.*sha/i,
+  );
+  wrongMetadata.recommendation.sha256 = recommendationSha256;
+  wrongMetadata.recommendation.version = 'wrong-version';
+  assert.throws(
+    () => validateStructuredCapture(wrongMetadata, validationOptions),
+    /recommendation.*version/i,
+  );
+
+  const missing = captureFixture({
+    exploratoryCandidates: [],
+    candidates: [],
+  });
+  assert.throws(
+    () => validateStructuredCapture(missing, validationOptions),
+    /candidate inventory/i,
+  );
+
+  const exact = captureFixture();
+  assert.deepEqual(validateStructuredCapture(exact, validationOptions), {
+    controls: 'passed',
+    candidateCount: 1,
+    outcomes: { valid: 1 },
+  });
+
+  const extra = structuredClone(exact);
+  extra.candidates.push({
+    ...deriveStructuredProbe({
+      candidate: 'unrequested-exploratory',
+      kind: 'candidate',
+      events: successEvents('unrequested-exploratory'),
+      directExitStatus: 0,
+      terminationSignal: null,
+      durationMs: 24,
+      timedOut: false,
+    }),
+    tier: 'exploratory',
+  });
+  assert.throws(
+    () => validateStructuredCapture(extra, validationOptions),
+    /candidate inventory/i,
+  );
+});
+
+test('rejects capture-level schema and environment privacy drift', () => {
+  const extra = captureFixture({ privatePath: '/Users/private' });
+  assert.throws(
+    () => validateStructuredCapture(extra, validationOptions),
+    /capture.*(?:allowlist|unsafe local path)/i,
+  );
+
+  for (const [key, value] of [
+    ['selectedBinary', '/Users/private/cursor-agent'],
+    ['clientVersion', 'Authorization: Bearer private'],
+    ['cursorApiKey', 'private-secret'],
+    ['credentialStore', '/Users/private/keychain'],
+  ]) {
+    const unsafe = captureFixture();
+    unsafe.environment[key] = value;
+    assert.throws(
+      () => validateStructuredCapture(unsafe, validationOptions),
+      /environment/i,
+      key,
+    );
+  }
+
+  for (const unsafeValue of [
+    'Authorization: Bearer PUBLIC_LEAK',
+    '/Users/private/path',
+  ]) {
+    const unsafe = captureFixture();
+    unsafe.recommendation.version = unsafeValue;
+    assert.throws(
+      () =>
+        validateStructuredCapture(unsafe, {
+          recommendation: { ...recommendation, version: unsafeValue },
+          recommendationSha256,
+        }),
+      /credential|path/i,
+      unsafeValue,
+    );
+  }
+});

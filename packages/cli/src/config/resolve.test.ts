@@ -990,6 +990,71 @@ describe('resolveEffectiveConfig', () => {
         ],
       ).toBeUndefined();
     });
+
+    it('keeps nested fallback candidates atomic when a higher-precedence layer wins', async () => {
+      const localLadder = {
+        candidates: [
+          'local-primary',
+          {
+            route: ['local-fallback', { harness: 'claude', model: 'opus' }],
+          },
+        ],
+      };
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    cursor: {
+                      high: { candidates: ['shared-primary'] },
+                    },
+                  },
+                },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: { cursor: { high: localLadder } },
+                },
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                dispatchCeiling: {
+                  providers: {
+                    cursor: { high: { candidates: ['user-primary'] } },
+                  },
+                },
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(
+        result.resolved['workflow.dispatchCeiling.providers.cursor.high'],
+      ).toEqual({ value: localLadder, source: 'local' });
+      expect(
+        result.resolved[
+          'workflow.dispatchCeiling.providers.cursor.high.candidates'
+        ],
+      ).toBeUndefined();
+      expect(
+        result.resolved[
+          'workflow.dispatchCeiling.providers.cursor.high.candidates.1.route'
+        ],
+      ).toBeUndefined();
+    });
   });
 
   it('surfaces archive.wrapUpExportPath with source default when unset', async () => {

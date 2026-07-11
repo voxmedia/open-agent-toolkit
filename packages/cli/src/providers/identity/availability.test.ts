@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  probeCursorSubagentModel,
+  resolveCursorModelCatalog,
   validateCursorSubagentModel,
   validateMatrixCell,
   type AvailabilityOracleDependencies,
@@ -29,6 +31,184 @@ function createDependencies(
 function codexCatalog(models: unknown[]): string {
   return JSON.stringify({ models });
 }
+
+describe('probeCursorSubagentModel', () => {
+  it('accepts sentinel-confirmed Task probe success', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: true,
+      stdout: 'OAT_CURSOR_SUBAGENT_MODEL_VALID\n',
+      stderr: '',
+    }));
+
+    await expect(
+      probeCursorSubagentModel('gpt-5.6-sol-max', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      availability: 'valid',
+      decisive: true,
+      evidence: 'task-probe',
+    });
+
+    expect(runCursorAgent).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves exact Cursor strings for allow-list acceptance', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr:
+        'Invalid subagent model mystery. Allowed models: gpt-5.6-sol-max, composer-2.5',
+    }));
+
+    await expect(
+      probeCursorSubagentModel('gpt-5.6-sol-max', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      availability: 'valid',
+      allowedValues: ['gpt-5.6-sol-max', 'composer-2.5'],
+      message: 'Allowed subagent models: gpt-5.6-sol-max, composer-2.5.',
+      decisive: true,
+      evidence: 'subagent-allow-list',
+    });
+  });
+
+  it('reports explicit allow-list rejection independently of the catalog', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr:
+        'Invalid subagent model gpt-5.6-sol-max. Allowed models: gpt-5.6-sol-high, composer-2.5',
+    }));
+
+    await expect(
+      probeCursorSubagentModel('gpt-5.6-sol-max', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      availability: 'unknown-value',
+      allowedValues: ['gpt-5.6-sol-high', 'composer-2.5'],
+      message:
+        'Cursor rejected this model for subagent Task dispatch. Allowed subagent models: gpt-5.6-sol-high, composer-2.5.',
+      decisive: true,
+      evidence: 'subagent-allow-list',
+    });
+
+    expect(runCursorAgent).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns an inconclusive result when the Cursor CLI is unavailable', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr: 'command not found',
+    }));
+
+    await expect(
+      probeCursorSubagentModel('gpt-5.6-sol-max', {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      availability: 'unvalidated',
+      decisive: false,
+      evidence: 'none',
+    });
+
+    expect(runCursorAgent).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('resolveCursorModelCatalog', () => {
+  it('returns primary broad-catalog context without implying Task eligibility', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: true,
+      stdout:
+        'gpt-5.6-sol-max - GPT 5.6 Sonnet Max\ncomposer-2.5 - Composer 2.5\n',
+      stderr: '',
+    }));
+
+    await expect(
+      resolveCursorModelCatalog({
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      status: 'resolved',
+      candidates: ['gpt-5.6-sol-max', 'composer-2.5'],
+      sourceCommand: 'models',
+      diagnostic: null,
+    });
+
+    expect(runCursorAgent).toHaveBeenCalledTimes(1);
+    expect(runCursorAgent).toHaveBeenCalledWith(['models'], {
+      cwd: '/repo',
+      env: {},
+    });
+  });
+
+  it('returns fallback broad-catalog context when the primary catalog is unavailable', async () => {
+    const runCursorAgent = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        stdout: '',
+        stderr: 'models is unavailable',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        stdout: 'gpt-5.6-sol-high - GPT 5.6 Sonnet High\n',
+        stderr: '',
+      });
+
+    await expect(
+      resolveCursorModelCatalog({
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      status: 'resolved',
+      candidates: ['gpt-5.6-sol-high'],
+      sourceCommand: 'list-models',
+      diagnostic: null,
+    });
+
+    expect(runCursorAgent).toHaveBeenNthCalledWith(1, ['models'], {
+      cwd: '/repo',
+      env: {},
+    });
+    expect(runCursorAgent).toHaveBeenNthCalledWith(2, ['--list-models'], {
+      cwd: '/repo',
+      env: {},
+    });
+  });
+
+  it('reports an unavailable broad catalog when neither command can run', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: false,
+      stdout: '',
+      stderr: 'command not found',
+    }));
+
+    await expect(
+      resolveCursorModelCatalog({
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      }),
+    ).resolves.toEqual({
+      status: 'unavailable',
+      candidates: [],
+      sourceCommand: null,
+      diagnostic: 'command not found',
+    });
+
+    expect(runCursorAgent).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe('validateMatrixCell', () => {
   it('accepts known Claude model tiers and rejects unknown tiers', async () => {

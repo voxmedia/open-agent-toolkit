@@ -12,6 +12,7 @@ import {
   compileDispatchPolicyPreset,
   type DispatchPolicyCompileResult,
 } from '@config/dispatch-ceiling-preset';
+import { normalizeDispatchMatrix } from '@config/dispatch-matrix';
 import {
   getDispatchPolicyChoices,
   managedDispatchPolicyValueList,
@@ -56,9 +57,16 @@ import {
   type EnforcementMechanism,
 } from '@providers/ceiling/registry';
 import {
+  buildDispatchReport,
+  formatDispatchReport,
+  type DispatchControlRequest,
+  type DispatchReportV1,
+} from '@providers/identity/dispatch-report';
+import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
+import type { DispatchAction, DispatchRole } from '@providers/identity/stamp';
 import { Command, Option } from 'commander';
 import YAML from 'yaml';
 
@@ -118,6 +126,8 @@ interface DispatchCeilingResolveOptions {
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
+  reportScope?: string;
+  reportAction?: DispatchAction;
   json?: boolean;
 }
 
@@ -180,6 +190,7 @@ interface DispatchSelection {
   preferredValue: DispatchCeilingValue | null;
   requestedCandidate: RequestedDispatchCandidate | null;
   candidateTier: WorkflowDispatchMatrixTier | null;
+  candidateIndex: number | null;
   ceilingTier: WorkflowDispatchMatrixTier | null;
   ceilingTarget: ResolvedDispatchRouteTarget | null;
   selectedValue: DispatchCeilingValue | null;
@@ -308,10 +319,12 @@ interface ResolvedDispatchPolicy {
   source: DispatchCeilingSource;
   preset: string | null;
   matrix: ProjectDispatchMatrix | null;
+  matrixCompatibility?: ProjectDispatchMatrix | null;
   cellSource: DispatchCeilingSource | null;
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
+  candidateIndex: number | null;
   requestedCandidate?: RequestedDispatchCandidate;
   candidateTier?: WorkflowDispatchMatrixTier;
   ceilingTier?: WorkflowDispatchMatrixTier;
@@ -360,181 +373,89 @@ function invalidProjectPolicyMessage(value: unknown): string {
   return `Invalid project dispatch policy "${actual}". Valid managed policies: ${validManagedPolicyList()}. Use mode "inherit" for host defaults.`;
 }
 
-function normalizeProjectMatrixBareValue(
-  provider: DispatchCeilingProvider,
+function isProjectMatrixRecord(
   value: unknown,
-): string | undefined {
-  if (typeof value !== 'string') {
-    return undefined;
-  }
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  const order = providerValueOrder(provider);
-  if (order && !isValidProviderValue(provider, trimmed)) {
-    return undefined;
-  }
-
-  return trimmed;
+): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeProjectMatrixRouteTarget(
-  value: unknown,
-): WorkflowDispatchRouteTarget | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return undefined;
-  }
-
-  const record = value as Record<string, unknown>;
-  const target: WorkflowDispatchRouteTarget = {};
-  for (const key of ['harness', 'model', 'effort'] as const) {
-    const rawValue = record[key];
-    if (typeof rawValue === 'string' && rawValue.trim()) {
-      target[key] = rawValue.trim();
-    }
-  }
-
-  return Object.keys(target).length > 0 ? target : undefined;
-}
-
-function normalizeProjectMatrixRoute(
-  provider: DispatchCeilingProvider,
-  value: unknown,
-): WorkflowDispatchRoute | undefined {
-  if (!Array.isArray(value) || value.length === 0) {
-    return undefined;
-  }
-
-  const route: WorkflowDispatchRoute = [];
-  for (const entry of value) {
-    const bareEntry = normalizeProjectMatrixBareValue(provider, entry);
-    if (bareEntry !== undefined) {
-      route.push(bareEntry);
+function toProjectMatrixCompatibility(
+  rawMatrix: Record<string, unknown>,
+  matrix: ProjectDispatchMatrix,
+): ProjectDispatchMatrix {
+  const compatibility: ProjectDispatchMatrix = {};
+  for (const [provider, providerValue] of Object.entries(matrix)) {
+    if (typeof providerValue === 'string') {
+      compatibility[provider] = providerValue;
       continue;
     }
 
-    const target = normalizeProjectMatrixRouteTarget(entry);
-    if (target !== undefined) {
-      route.push(target);
-    }
-  }
+    const rawProvider = isProjectMatrixRecord(rawMatrix[provider])
+      ? rawMatrix[provider]
+      : {};
+    const tiers: Partial<
+      Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
+    > = {};
+    for (const [tier, cell] of Object.entries(providerValue)) {
+      const matrixTier = tier as WorkflowDispatchMatrixTier;
+      const rawCell = rawProvider[matrixTier];
+      const ladder = toWorkflowDispatchCandidateLadder(cell);
+      const firstCandidate = ladder.candidates[0];
 
-  return route.length > 0 ? route : undefined;
-}
-
-function normalizeProjectMatrixCandidate(
-  provider: DispatchCeilingProvider,
-  value: unknown,
-): WorkflowDispatchCandidate | undefined {
-  const bareValue = normalizeProjectMatrixBareValue(provider, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (isWorkflowDispatchFallbackRoute(value)) {
-    const route = normalizeProjectMatrixRoute(provider, value.route);
-    return route ? { route } : undefined;
-  }
-
-  return normalizeProjectMatrixRouteTarget(value);
-}
-
-function normalizeProjectMatrixCell(
-  provider: DispatchCeilingProvider,
-  value: unknown,
-): WorkflowDispatchMatrixCell | undefined {
-  const bareValue = normalizeProjectMatrixBareValue(provider, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (isWorkflowDispatchCandidateLadder(value)) {
-    const candidates: WorkflowDispatchCandidate[] = [];
-    for (const candidate of value.candidates) {
-      const normalized = normalizeProjectMatrixCandidate(provider, candidate);
-      if (normalized !== undefined) {
-        candidates.push(normalized);
+      if (typeof rawCell === 'string' && typeof firstCandidate === 'string') {
+        tiers[matrixTier] = firstCandidate;
+        continue;
       }
+      if (
+        Array.isArray(rawCell) &&
+        firstCandidate !== undefined &&
+        isWorkflowDispatchFallbackRoute(firstCandidate)
+      ) {
+        tiers[matrixTier] = firstCandidate.route;
+        continue;
+      }
+
+      tiers[matrixTier] = cell;
     }
-    return candidates.length > 0 ? { candidates } : undefined;
+    compatibility[provider] = tiers;
   }
 
-  return normalizeProjectMatrixRoute(provider, value);
-}
-
-function normalizeProjectMatrixProviderValue(
-  provider: DispatchCeilingProvider,
-  value: unknown,
-): WorkflowDispatchProviderValue | undefined {
-  const bareValue = normalizeProjectMatrixBareValue(provider, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return undefined;
-  }
-
-  const tierMap: Partial<
-    Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
-  > = {};
-  for (const [tier, rawCell] of Object.entries(value)) {
-    if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {
-      continue;
-    }
-
-    const normalized = normalizeProjectMatrixCell(provider, rawCell);
-    if (normalized !== undefined) {
-      tierMap[tier as WorkflowDispatchMatrixTier] = normalized;
-    }
-  }
-
-  return Object.keys(tierMap).length > 0 ? tierMap : undefined;
+  return compatibility;
 }
 
 function readProjectDispatchMatrix(value: unknown): {
   matrix: ProjectDispatchMatrix | null;
+  compatibilityMatrix: ProjectDispatchMatrix | null;
   warnings: string[];
 } {
   if (value === undefined || value === null) {
-    return { matrix: null, warnings: [] };
+    return { matrix: null, compatibilityMatrix: null, warnings: [] };
   }
 
-  if (typeof value !== 'object' || Array.isArray(value)) {
+  const normalized = normalizeDispatchMatrix(value, {
+    pathPrefix: 'oat_dispatch_policy.matrix',
+    compatibilityMode: 'project-state',
+  });
+  const matrix = Object.fromEntries(
+    Object.entries(normalized.providers).filter(([provider]) =>
+      Boolean(provider.trim()),
+    ),
+  );
+  if (!isProjectMatrixRecord(value) || Object.keys(matrix).length === 0) {
     return {
       matrix: null,
+      compatibilityMatrix: null,
       warnings: [
         'Ignoring malformed oat_dispatch_policy.matrix in project state.',
       ],
     };
   }
 
-  const matrix: ProjectDispatchMatrix = {};
-  for (const [provider, rawProviderValue] of Object.entries(value)) {
-    if (!provider.trim()) {
-      continue;
-    }
-    const normalized = normalizeProjectMatrixProviderValue(
-      provider,
-      rawProviderValue,
-    );
-    if (normalized !== undefined) {
-      matrix[provider] = normalized;
-    }
-  }
-
-  if (Object.keys(matrix).length === 0) {
-    return {
-      matrix: null,
-      warnings: [
-        'Ignoring malformed oat_dispatch_policy.matrix in project state.',
-      ],
-    };
-  }
-
-  return { matrix, warnings: [] };
+  return {
+    matrix,
+    compatibilityMatrix: toProjectMatrixCompatibility(value, matrix),
+    warnings: [],
+  };
 }
 
 function policyTier(
@@ -789,6 +710,7 @@ interface ResolvedMatrixCellDefinition {
 interface RequestedMatrixCandidateResolution {
   resolution: MatrixCellResolution;
   candidateTier: WorkflowDispatchMatrixTier;
+  candidateIndex: number;
 }
 
 function resolveProviderMatrixCellDefinition(
@@ -1029,6 +951,7 @@ function resolveRequestedMatrixCandidate(
   let allowedMatch:
     | {
         tier: WorkflowDispatchMatrixTier;
+        candidateIndex: number;
         candidate: WorkflowDispatchCandidate;
         cellSource: DispatchCeilingSource;
         routeSignature: string;
@@ -1078,6 +1001,7 @@ function resolveRequestedMatrixCandidate(
       }
       allowedMatch ??= {
         tier,
+        candidateIndex,
         candidate,
         cellSource: definition.cellSource,
         routeSignature,
@@ -1123,6 +1047,7 @@ function resolveRequestedMatrixCandidate(
           : 'candidate-requested',
     },
     candidateTier: allowedMatch.tier,
+    candidateIndex: allowedMatch.candidateIndex,
   };
 }
 
@@ -1156,9 +1081,11 @@ function readProjectDispatchPolicy(
       source: 'project-state',
       preset: null,
       matrix: parsedMatrix.matrix,
+      matrixCompatibility: parsedMatrix.compatibilityMatrix,
       cellSource: null,
       target: null,
       selectionBranch: 'inherit',
+      candidateIndex: null,
       warnings: parsedMatrix.warnings,
     };
   }
@@ -1184,9 +1111,11 @@ function readProjectDispatchPolicy(
       source: 'project-state',
       preset: policyValue,
       matrix: parsedMatrix.matrix,
+      matrixCompatibility: parsedMatrix.compatibilityMatrix,
       cellSource: null,
       target: null,
       selectionBranch: 'prompt-persisted',
+      candidateIndex: null,
       warnings: parsedMatrix.warnings,
     };
   }
@@ -1218,9 +1147,11 @@ function readProjectDispatchPolicy(
     source: 'project-state',
     preset: policyValue,
     matrix: parsedMatrix.matrix,
+    matrixCompatibility: parsedMatrix.compatibilityMatrix,
     cellSource: 'project-state',
     target: null,
     selectionBranch: 'prompt-persisted',
+    candidateIndex: null,
     warnings: parsedMatrix.warnings,
   };
 }
@@ -1258,6 +1189,7 @@ function readLegacyProjectDispatchCeiling(
     cellSource: 'project-state',
     target: null,
     selectionBranch: 'prompt-persisted',
+    candidateIndex: null,
     warnings: [],
   };
 }
@@ -1360,9 +1292,11 @@ function stripConfigCandidateSource(
     source: candidate.source,
     preset: candidate.preset,
     matrix: candidate.matrix,
+    matrixCompatibility: candidate.matrixCompatibility,
     cellSource: candidate.cellSource,
     target: candidate.target,
     selectionBranch: candidate.selectionBranch,
+    candidateIndex: candidate.candidateIndex,
     warnings: candidate.warnings,
   };
 }
@@ -1393,6 +1327,7 @@ function readResolvedConfigPolicyCandidate(
       cellSource: null,
       target: null,
       selectionBranch: 'inherit',
+      candidateIndex: null,
       warnings: [],
       configSource: modeEntry.source,
     };
@@ -1425,6 +1360,7 @@ function readResolvedConfigPolicyCandidate(
       cellSource: null,
       target: null,
       selectionBranch: 'prompt-persisted',
+      candidateIndex: null,
       warnings: [],
       configSource,
     };
@@ -1465,6 +1401,7 @@ function readResolvedLegacyConfigCeilingCandidate(
     cellSource: source,
     target: null,
     selectionBranch: 'prompt-persisted',
+    candidateIndex: null,
     warnings: [],
     configSource: entry.source,
   };
@@ -1676,6 +1613,7 @@ function selectDispatchValue(
     target: policy.target,
     requestedCandidate: policy.requestedCandidate ?? null,
     candidateTier: policy.candidateTier ?? null,
+    candidateIndex: policy.candidateIndex,
     ceilingTier: policy.ceilingTier ?? policyTier(policy.policy),
     ceilingTarget: policy.ceilingTarget ?? policy.target,
   };
@@ -1879,6 +1817,7 @@ function buildProviderResolution(
         preferredValue,
         requestedCandidate: null,
         candidateTier: null,
+        candidateIndex: null,
         ceilingTier: null,
         ceilingTarget: null,
         selectedValue: null,
@@ -2066,7 +2005,7 @@ async function resolveDispatchCeiling(
         unresolved: true,
         projectPath,
         providerDefaultEffort,
-        matrix: resolvedValue.matrix,
+        matrix: resolvedValue.matrixCompatibility ?? resolvedValue.matrix,
         providers,
         message,
       };
@@ -2083,7 +2022,7 @@ async function resolveDispatchCeiling(
       unresolved: false,
       projectPath,
       providerDefaultEffort,
-      matrix: resolvedValue.matrix,
+      matrix: resolvedValue.matrixCompatibility ?? resolvedValue.matrix,
       providers,
     };
   }
@@ -2117,10 +2056,12 @@ interface ResolvedCeilingValue {
   source: DispatchCeilingSource;
   preset: string | null;
   matrix: ProjectDispatchMatrix | null;
+  matrixCompatibility?: ProjectDispatchMatrix | null;
   cellSource: DispatchCeilingSource | null;
   target: ResolvedDispatchRouteTarget | null;
   selectionBranch: DispatchSelectionBranch;
   warnings: string[];
+  candidateIndex: number | null;
   requestedCandidate?: RequestedDispatchCandidate;
   candidateTier?: WorkflowDispatchMatrixTier;
   ceilingTier?: WorkflowDispatchMatrixTier;
@@ -2168,6 +2109,8 @@ async function resolveCeilingValue(
       source: 'invocation',
       preset: invocationCeilingTier,
       matrix: projectCeiling?.matrix ?? baseCeiling.matrix,
+      matrixCompatibility:
+        projectCeiling?.matrixCompatibility ?? baseCeiling.matrixCompatibility,
       cellSource: null,
       target: null,
       selectionBranch: 'prompt-persisted',
@@ -2222,6 +2165,7 @@ async function resolveCeilingValue(
       ],
       requestedCandidate,
       candidateTier: selected.candidateTier,
+      candidateIndex: selected.candidateIndex,
       ceilingTarget: ceilingCell?.target ?? null,
       ...(ceilingTier ? { ceilingTier } : {}),
     };
@@ -2432,6 +2376,110 @@ function writeHumanResolution(
   }
 }
 
+function reportRole(action: DispatchAction): DispatchRole {
+  if (action === 'review') {
+    return 'reviewer';
+  }
+  return action === 'fix' ? 'fix' : 'implementer';
+}
+
+function reportControl(
+  axis: string,
+  dispatchArgs: CeilingDispatchArgs,
+  reason: string,
+): DispatchControlRequest {
+  if (axis.startsWith('selected:')) {
+    return {
+      value: axis.slice('selected:'.length),
+      mechanism:
+        dispatchArgs && 'variant' in dispatchArgs
+          ? 'materialized-role'
+          : 'task-model-argument',
+      reason,
+    };
+  }
+  if (axis === 'inherited') {
+    return { value: null, mechanism: 'host-inherited', reason };
+  }
+  if (axis === 'provider-default') {
+    return { value: null, mechanism: 'provider-default', reason };
+  }
+  if (axis === 'not-applicable') {
+    return { value: null, mechanism: 'not-applicable', reason };
+  }
+  return { value: null, mechanism: 'base-role', reason };
+}
+
+function buildResolutionReport(
+  resolution: DispatchCeilingResolution,
+  options: DispatchCeilingResolveOptions,
+): DispatchReportV1 | null {
+  const hasScope = options.reportScope !== undefined;
+  const hasAction = options.reportAction !== undefined;
+  if (!hasScope && !hasAction) {
+    return null;
+  }
+  if (!hasScope || !hasAction) {
+    throw new Error(
+      '--report-scope and --report-action must be provided together.',
+    );
+  }
+
+  const scope = options.reportScope!.trim();
+  if (!scope) {
+    throw new Error('--report-scope must be a non-empty value.');
+  }
+
+  const action = options.reportAction!;
+  const role = reportRole(action);
+  const providerResolution = resolution.providers[resolution.provider];
+  if (!providerResolution) {
+    throw new Error(
+      `Dispatch report resolution is missing provider data for "${resolution.provider}".`,
+    );
+  }
+
+  const expectedResolverRole = role === 'reviewer' ? 'reviewer' : 'implementer';
+  if (providerResolution.selection.role !== expectedResolverRole) {
+    throw new Error(
+      `Invalid dispatch report action/role context: ${action}/${role} requires resolver role ${expectedResolverRole}, received ${providerResolution.selection.role}.`,
+    );
+  }
+
+  return buildDispatchReport({
+    scope,
+    action,
+    role,
+    resolution,
+    requestedControls: {
+      model: reportControl(
+        providerResolution.modelAxis,
+        providerResolution.dispatchArgs,
+        'Derived from the completed resolver model-axis result.',
+      ),
+      effort: reportControl(
+        providerResolution.effortAxis,
+        providerResolution.dispatchArgs,
+        'Derived from the completed resolver effort-axis result.',
+      ),
+    },
+    configuredDefaults: {
+      model: null,
+      modelSource: null,
+      effort:
+        resolution.provider === 'codex' &&
+        resolution.providerDefaultEffort !== 'unknown'
+          ? resolution.providerDefaultEffort
+          : null,
+      effortSource:
+        resolution.provider === 'codex' &&
+        resolution.providerDefaultEffort !== 'unknown'
+          ? 'codex-config'
+          : null,
+    },
+  });
+}
+
 async function runDispatchCeilingResolve(
   context: CommandContext,
   dependencies: DispatchCeilingDependencies,
@@ -2443,11 +2491,17 @@ async function runDispatchCeilingResolve(
       dependencies,
       options,
     );
+    const dispatchReport = buildResolutionReport(resolution, options);
 
     if (context.json) {
-      context.logger.json(resolution);
+      context.logger.json(
+        dispatchReport ? { ...resolution, dispatchReport } : resolution,
+      );
     } else {
       writeHumanResolution(context, resolution);
+      if (dispatchReport) {
+        context.logger.info(formatDispatchReport(dispatchReport));
+      }
     }
 
     process.exitCode = resolution.status === 'blocked' ? 1 : 0;
@@ -2564,6 +2618,16 @@ export function createProjectDispatchCeilingCommand(
       .option(
         '--non-interactive',
         'Force non-interactive block behavior when the ceiling is unresolved',
+      )
+      .option(
+        '--report-scope <scope>',
+        'Include Dispatch Report V1 for the explicit workflow scope',
+      )
+      .addOption(
+        new Option(
+          '--report-action <action>',
+          'Dispatch Report V1 action; must match the resolver role',
+        ).choices(['implementation', 'fix', 'review']),
       )
       .option('--json', 'Output machine-readable JSON')
       .action(async (options: DispatchCeilingResolveOptions, cmd: Command) => {

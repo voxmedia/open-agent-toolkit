@@ -8,10 +8,15 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import type {
+  AvailabilityOracleDependencies,
   MatrixCellAvailability,
   MatrixCellAvailabilityResult,
   ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import {
+  createDispatchValidationPassContext,
+  type DispatchValidationPassOptions,
+} from '@providers/identity/dispatch-validation';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -26,6 +31,7 @@ interface HarnessOptions {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
+  availabilityDependencies?: Partial<AvailabilityOracleDependencies>;
   assetFiles?: Record<string, string>;
   confirmResponses?: boolean[];
 }
@@ -64,6 +70,43 @@ function createHarness(options: HarnessOptions): {
   };
   if (options.validateMatrixCell) {
     overrides.validateMatrixCell = options.validateMatrixCell;
+  }
+  if (options.availabilityDependencies) {
+    overrides.createDispatchValidationPassContext = (
+      passOptions: DispatchValidationPassOptions,
+    ) =>
+      createDispatchValidationPassContext({
+        ...passOptions,
+        dependencies: options.availabilityDependencies,
+      });
+  } else if (options.validateMatrixCell) {
+    overrides.createDispatchValidationPassContext = (
+      passOptions: DispatchValidationPassOptions,
+    ) =>
+      createDispatchValidationPassContext({
+        ...passOptions,
+        probeCursorSubagentModel: async (value, probeOptions) => {
+          let availability:
+            | MatrixCellAvailability
+            | MatrixCellAvailabilityResult;
+          try {
+            availability = await options.validateMatrixCell!('cursor', value, {
+              cwd: probeOptions.cwd,
+              env: probeOptions.env,
+              detailed: true,
+            });
+          } catch {
+            availability = 'unvalidated';
+          }
+          const result =
+            typeof availability === 'string' ? { availability } : availability;
+          return {
+            ...result,
+            decisive: true,
+            evidence: 'none',
+          };
+        },
+      });
   }
 
   const command = createConfigCommand(overrides);
@@ -1572,20 +1615,16 @@ describe('oat config', () => {
         },
       });
       expect(validateMatrixCell).toHaveBeenCalledTimes(1);
-      expect(validateMatrixCell).toHaveBeenCalledWith(
-        'codex',
-        'gpt-5.5/xhigh',
-        {
-          cwd: root,
-          env: {},
-          detailed: true,
-          target: {
-            harness: 'codex',
-            model: 'gpt-5.5',
-            effort: 'xhigh',
-          },
+      expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.5', {
+        cwd: root,
+        env: {},
+        detailed: true,
+        target: {
+          harness: 'codex',
+          model: 'gpt-5.5',
+          effort: 'xhigh',
         },
-      );
+      });
       expect(capture.warn).toHaveLength(0);
       expect(process.exitCode).toBe(0);
     });
@@ -1616,7 +1655,7 @@ describe('oat config', () => {
       await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
 
       expect(capture.warn.join('\n')).toContain(
-        'workflow.dispatchCeiling.providers.cursor.high[0].model',
+        'workflow.dispatchCeiling.providers.cursor.high.candidates[0].route[0]',
       );
       expect(capture.warn.join('\n')).toContain('missing-model');
       expect(capture.warn.join('\n')).toContain('not recognized');
@@ -1624,6 +1663,133 @@ describe('oat config', () => {
         'workflow.dispatchCeiling.providers.cursor.frontier',
       );
       expect(capture.warn.join('\n')).toContain('could not be validated');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('shares Cursor Task probes and catalog work while fanning warnings back to exact paths', async () => {
+      const root = await createRepoRoot();
+      const runCursorAgent = vi.fn(async (args: string[]) => {
+        if (args.includes('models')) {
+          return {
+            ok: true,
+            stdout:
+              'gpt-5.6-terra-xhigh - Terra XHigh\ngpt-5.6-sol-high - Sol High\n',
+            stderr: '',
+          };
+        }
+        return {
+          ok: false,
+          stdout: '',
+          stderr: 'Task probe was inconclusive',
+        };
+      });
+      const { command, capture } = createHarness({
+        cwd: root,
+        availabilityDependencies: {
+          pathExists: vi.fn(async () => false),
+          runCursorAgent,
+          runCodex: vi.fn(async () => ({
+            ok: false,
+            stdout: '',
+            stderr: 'not used',
+          })),
+          env: {},
+        },
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                cursor: {
+                  balanced: {
+                    candidates: ['gpt-5.6-terra-xhigh', 'gpt-5.6-terra-xhigh'],
+                  },
+                  high: { candidates: ['gpt-5.6-sol-high'] },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const calls = runCursorAgent.mock.calls.map(([args]) => args);
+      expect(calls.filter((args) => args.includes('-p'))).toHaveLength(2);
+      expect(calls.filter((args) => args.includes('models'))).toHaveLength(1);
+      expect(
+        calls.filter((args) => args.includes('--list-models')),
+      ).toHaveLength(0);
+
+      const warnings = capture.warn.join('\n');
+      expect(warnings).toContain(
+        'workflow.dispatchCeiling.providers.cursor.balanced.candidates[0] value',
+      );
+      expect(warnings).toContain(
+        'workflow.dispatchCeiling.providers.cursor.balanced.candidates[1] value',
+      );
+      expect(warnings).toContain(
+        'workflow.dispatchCeiling.providers.cursor.high.candidates[0] value',
+      );
+      expect(
+        capture.warn.filter((warning) =>
+          warning.includes('gpt-5.6-terra-xhigh'),
+        ),
+      ).toHaveLength(2);
+      expect(capture.warn).toHaveLength(3);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: {
+                balanced: {
+                  candidates: ['gpt-5.6-terra-xhigh', 'gpt-5.6-terra-xhigh'],
+                },
+                high: { candidates: ['gpt-5.6-sol-high'] },
+              },
+            },
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports canonical scalar, candidate, and nested fallback availability paths', async () => {
+      const root = await createRepoRoot();
+      const validateMatrixCell = vi.fn(async () => 'unvalidated' as const);
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell,
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                cursor: 'scalar-model',
+                claude: { high: { candidates: ['opus'] } },
+                custom: {
+                  frontier: {
+                    candidates: [{ route: ['fallback-model'] }],
+                  },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.cursor value',
+      );
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.claude.high.candidates[0] value',
+      );
+      expect(capture.warn.join('\n')).toContain(
+        'workflow.dispatchCeiling.providers.custom.frontier.candidates[0].route[0] value',
+      );
+      expect(validateMatrixCell).toHaveBeenCalledTimes(3);
       expect(process.exitCode).toBe(0);
     });
 

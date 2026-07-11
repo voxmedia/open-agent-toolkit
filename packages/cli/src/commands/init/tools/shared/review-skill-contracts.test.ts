@@ -11,6 +11,30 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(repoFilePath(relativePath), 'utf8');
 }
 
+function actionableResolverInvocations(content: string): string[] {
+  const normalized = content.replace(/\\\r?\n\s*/g, ' ');
+  return [
+    ...normalized.matchAll(
+      /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+    ),
+  ]
+    .map(([command]) => command.trim())
+    .filter((command) => command.includes('--provider'));
+}
+
+function expectValidReportContext(command: string): void {
+  expect(command).toMatch(/--report-scope\s+\S+/);
+  expect(command).toMatch(
+    /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+  );
+  if (/--role\s+reviewer/.test(command)) {
+    expect(command).toMatch(/--report-action\s+review(?:\s|$)/);
+  }
+  if (/--role\s+implementer/.test(command)) {
+    expect(command).toMatch(/--report-action\s+(?:implementation|fix)(?:\s|$)/);
+  }
+}
+
 describe('review skill contracts', () => {
   it('keeps the model-invokable project workflow skills gated by explicit asks', () => {
     const skills = [
@@ -173,6 +197,57 @@ describe('review skill contracts', () => {
       'Dispatch policy: {policy}; selected={selected value | none}; cap={value | none}',
     );
     expect(content).not.toContain('Producer: {slug | unknown}');
+  });
+
+  it('requires implementation and review workflows to consume Dispatch Report V1', () => {
+    const skillPaths = [
+      '.agents/skills/oat-project-implement/SKILL.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    ];
+
+    for (const path of skillPaths) {
+      const content = readRepoFile(path);
+      const invocations = actionableResolverInvocations(content);
+      expect(
+        invocations.length,
+        `${path} actionable resolver invocations`,
+      ).toBeGreaterThan(0);
+      for (const invocation of invocations) {
+        expectValidReportContext(invocation);
+      }
+      expect(content, `${path} schema version`).toContain(
+        'dispatchReport.schemaVersion: 1',
+      );
+      expect(content, `${path} human renderer`).toContain(
+        'formatDispatchReport(dispatchReport)',
+      );
+      expect(content, `${path} derived stamp`).toContain(
+        'formatDispatchStamp(dispatchReport)',
+      );
+      expect(content, `${path} stamp adapter`).toContain(
+        'toDispatchStampRecord(dispatchReport)',
+      );
+      expect(content, `${path} exact provider payload`).toContain(
+        'providers.<provider>.dispatchArgs',
+      );
+      expect(content, `${path} exact selected target`).toContain(
+        'providers.<provider>.selection.target',
+      );
+      expect(content, `${path} runtime identity field`).toContain(
+        'dispatchReport.runtimeIdentity',
+      );
+      expect(content, `${path} runtime identity default`).toContain(
+        'not-reported',
+      );
+    }
+
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+    expect(remote).toMatch(
+      /oat gate[\s\S]{0,160}must not contain or add[\s\S]{0,120}--target/i,
+    );
   });
 
   it('documents codex dispatch through resolver-returned materialized roles', () => {

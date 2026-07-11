@@ -5,7 +5,31 @@ import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
+import {
+  normalizeDispatchMatrix,
+  type WorkflowDispatchProviderValue,
+} from './dispatch-matrix';
 import { parseJsonConfig } from './json';
+
+export {
+  VALID_DISPATCH_MATRIX_TIERS,
+  isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
+  toWorkflowDispatchCandidateLadder,
+  validateDispatchRouteTarget,
+  type DispatchRouteTargetValidation,
+  type WorkflowDispatchCandidate,
+  type WorkflowDispatchCandidateLadder,
+  type WorkflowDispatchFallbackRoute,
+  type WorkflowDispatchLegacyMatrixCell,
+  type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchMatrixTier,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRoute,
+  type WorkflowDispatchRouteEntry,
+  type WorkflowDispatchRouteTarget,
+} from './dispatch-matrix';
 
 export interface OatDocumentationConfig {
   root?: string;
@@ -61,37 +85,6 @@ export type WorkflowManagedDispatchPolicy =
   | 'high'
   | 'frontier'
   | 'uncapped';
-export type WorkflowDispatchMatrixTier = Exclude<
-  WorkflowManagedDispatchPolicy,
-  'uncapped'
->;
-export interface WorkflowDispatchRouteTarget {
-  harness?: string;
-  model?: string;
-  effort?: string;
-}
-export interface DispatchRouteTargetValidation {
-  valid: boolean;
-  reason?: string;
-}
-export type WorkflowDispatchRouteEntry = string | WorkflowDispatchRouteTarget;
-export type WorkflowDispatchRoute = WorkflowDispatchRouteEntry[];
-export interface WorkflowDispatchFallbackRoute {
-  route: WorkflowDispatchRoute;
-}
-export type WorkflowDispatchCandidate =
-  | WorkflowDispatchRouteEntry
-  | WorkflowDispatchFallbackRoute;
-export interface WorkflowDispatchCandidateLadder {
-  candidates: WorkflowDispatchCandidate[];
-}
-export type WorkflowDispatchLegacyMatrixCell = string | WorkflowDispatchRoute;
-export type WorkflowDispatchMatrixCell =
-  | WorkflowDispatchCandidateLadder
-  | WorkflowDispatchLegacyMatrixCell;
-export type WorkflowDispatchProviderValue =
-  | string
-  | Partial<Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>>;
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
 export type GateAvoid = 'same-family' | 'same-runtime' | 'none';
 
@@ -179,8 +172,6 @@ export const VALID_DISPATCH_POLICY_MODES: readonly WorkflowDispatchPolicyMode[] 
   ['managed', 'inherit'];
 export const VALID_MANAGED_DISPATCH_POLICIES: readonly WorkflowManagedDispatchPolicy[] =
   ['economy', 'balanced', 'high', 'frontier', 'uncapped'];
-export const VALID_DISPATCH_MATRIX_TIERS: readonly WorkflowDispatchMatrixTier[] =
-  ['economy', 'balanced', 'high', 'frontier'];
 const VALID_GATE_ON_FAILURES: readonly GateOnFailure[] = [
   'block',
   'prompt',
@@ -230,56 +221,6 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
     priority: 70,
   },
 };
-
-export function isCodexMaterializedRouteTarget(
-  provider: string,
-  target: WorkflowDispatchRouteTarget,
-): boolean {
-  return (target.harness ?? provider) === 'codex';
-}
-
-export function validateDispatchRouteTarget(
-  provider: string,
-  target: WorkflowDispatchRouteTarget,
-): DispatchRouteTargetValidation {
-  if (!isCodexMaterializedRouteTarget(provider, target)) {
-    return { valid: true };
-  }
-
-  if (!target.model || !target.effort) {
-    return {
-      valid: false,
-      reason:
-        'Codex materialized dispatch targets must provide both model and effort.',
-    };
-  }
-
-  return { valid: true };
-}
-
-export function isWorkflowDispatchFallbackRoute(
-  value: unknown,
-): value is WorkflowDispatchFallbackRoute {
-  return isRecord(value) && Array.isArray(value.route);
-}
-
-export function isWorkflowDispatchCandidateLadder(
-  value: unknown,
-): value is WorkflowDispatchCandidateLadder {
-  return isRecord(value) && Array.isArray(value.candidates);
-}
-
-export function toWorkflowDispatchCandidateLadder(
-  cell: WorkflowDispatchMatrixCell,
-): WorkflowDispatchCandidateLadder {
-  if (isWorkflowDispatchCandidateLadder(cell)) {
-    return cell;
-  }
-
-  return {
-    candidates: [Array.isArray(cell) ? { route: cell } : cell],
-  };
-}
 
 function normalizeMaxAttempts(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
@@ -350,159 +291,6 @@ function normalizeGateConfig(value: unknown): GateConfig | null | undefined {
   }
 
   return gate;
-}
-
-function normalizeProviderBareValue(
-  providerKey: string,
-  value: unknown,
-): string | undefined {
-  const trimmed = trimNonEmptyString(value);
-  if (trimmed === undefined) {
-    return undefined;
-  }
-
-  if (
-    providerKey === 'codex' &&
-    !(VALID_CODEX_DISPATCH_CEILINGS as readonly string[]).includes(trimmed)
-  ) {
-    return undefined;
-  }
-
-  if (
-    providerKey === 'claude' &&
-    !(VALID_CLAUDE_DISPATCH_CEILINGS as readonly string[]).includes(trimmed)
-  ) {
-    return undefined;
-  }
-
-  return trimmed;
-}
-
-function normalizeDispatchRouteTarget(
-  value: unknown,
-): WorkflowDispatchRouteTarget | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const target: WorkflowDispatchRouteTarget = {};
-  const harness = trimNonEmptyString(value.harness);
-  if (harness !== undefined) {
-    target.harness = harness;
-  }
-  const model = trimNonEmptyString(value.model);
-  if (model !== undefined) {
-    target.model = model;
-  }
-  const effort = trimNonEmptyString(value.effort);
-  if (effort !== undefined) {
-    target.effort = effort;
-  }
-
-  return Object.keys(target).length > 0 ? target : undefined;
-}
-
-function normalizeDispatchRoute(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchRoute | undefined {
-  if (!Array.isArray(value) || value.length === 0) {
-    return undefined;
-  }
-
-  const route: WorkflowDispatchRoute = [];
-  for (const entry of value) {
-    const bareEntry = normalizeProviderBareValue(providerKey, entry);
-    if (bareEntry !== undefined) {
-      route.push(bareEntry);
-      continue;
-    }
-
-    const target = normalizeDispatchRouteTarget(entry);
-    if (target !== undefined) {
-      route.push(target);
-    }
-  }
-
-  return route.length > 0 ? route : undefined;
-}
-
-function normalizeDispatchCandidate(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchCandidate | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (isRecord(value) && Object.hasOwn(value, 'route')) {
-    const route = normalizeDispatchRoute(providerKey, value.route);
-    return route ? { route } : undefined;
-  }
-
-  return normalizeDispatchRouteTarget(value);
-}
-
-function normalizeDispatchMatrixCell(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchCandidateLadder | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return { candidates: [bareValue] };
-  }
-
-  if (isWorkflowDispatchCandidateLadder(value)) {
-    const candidates: WorkflowDispatchCandidate[] = [];
-    for (const candidate of value.candidates) {
-      const normalized = normalizeDispatchCandidate(providerKey, candidate);
-      if (normalized !== undefined) {
-        candidates.push(normalized);
-      }
-    }
-
-    return candidates.length > 0 ? { candidates } : undefined;
-  }
-
-  const directTarget = normalizeDispatchRouteTarget(value);
-  if (directTarget !== undefined) {
-    return { candidates: [directTarget] };
-  }
-
-  const route = normalizeDispatchRoute(providerKey, value);
-
-  return route ? { candidates: [{ route }] } : undefined;
-}
-
-function normalizeDispatchProviderValue(
-  providerKey: string,
-  value: unknown,
-): WorkflowDispatchProviderValue | undefined {
-  const bareValue = normalizeProviderBareValue(providerKey, value);
-  if (bareValue !== undefined) {
-    return bareValue;
-  }
-
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const tierMap: Partial<
-    Record<WorkflowDispatchMatrixTier, WorkflowDispatchCandidateLadder>
-  > = {};
-  for (const [tier, rawCell] of Object.entries(value)) {
-    if (!(VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(tier)) {
-      continue;
-    }
-
-    const normalized = normalizeDispatchMatrixCell(providerKey, rawCell);
-    if (normalized !== undefined) {
-      tierMap[tier as WorkflowDispatchMatrixTier] = normalized;
-    }
-  }
-
-  return Object.keys(tierMap).length > 0 ? tierMap : undefined;
 }
 
 function normalizeExecTarget(
@@ -708,20 +496,15 @@ function normalizeWorkflowConfig(
     }
 
     if (isRecord(parsed.dispatchCeiling.providers)) {
-      const providers: WorkflowDispatchCeiling['providers'] = {};
-      for (const [providerKey, rawProviderValue] of Object.entries(
+      const normalized = normalizeDispatchMatrix(
         parsed.dispatchCeiling.providers,
-      )) {
-        const normalized = normalizeDispatchProviderValue(
-          providerKey,
-          rawProviderValue,
-        );
-        if (normalized !== undefined) {
-          providers[providerKey] = normalized;
-        }
-      }
-      if (Object.keys(providers).length > 0) {
-        dispatchCeiling.providers = providers;
+        {
+          pathPrefix: 'workflow.dispatchCeiling.providers',
+          compatibilityMode: 'layered-config',
+        },
+      );
+      if (Object.keys(normalized.providers).length > 0) {
+        dispatchCeiling.providers = normalized.providers;
       }
     }
 

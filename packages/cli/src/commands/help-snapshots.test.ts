@@ -1065,6 +1065,10 @@ describe('help output snapshots', () => {
     );
     expect(help).toMatch(/Invocation-only named maximum tier/);
     expect(help).toMatch(/never\s+persists configuration or project state/);
+    expect(help).toContain('--report-scope <scope>');
+    expect(help).toContain('--report-action <action>');
+    expect(help).toMatch(/choices: "implementation", "fix",\s+"review"/);
+    expect(help).toMatch(/Dispatch Report V1 action/);
   });
 
   it('project status --help matches snapshot', () => {

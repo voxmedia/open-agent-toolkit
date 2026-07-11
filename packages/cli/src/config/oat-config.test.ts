@@ -1686,6 +1686,64 @@ describe('oat-config', () => {
         });
       });
 
+      it('keeps valid layered candidates while silently dropping malformed siblings', async () => {
+        const repoRoot = await createRepoRoot();
+        const configPath = join(repoRoot, '.oat', 'config.json');
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: {
+                  cursor: {
+                    high: {
+                      candidates: [
+                        '  opaque-primary  ',
+                        null,
+                        {},
+                        {
+                          route: [
+                            'opaque-fallback',
+                            false,
+                            { harness: 'claude', model: 'opus' },
+                          ],
+                        },
+                      ],
+                    },
+                    unsupported: 'ignored-tier',
+                  },
+                  codex: {
+                    economy: { candidates: ['low', 'invalid-effort'] },
+                  },
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.dispatchCeiling?.providers).toEqual({
+          cursor: {
+            high: {
+              candidates: [
+                'opaque-primary',
+                {
+                  route: [
+                    'opaque-fallback',
+                    { harness: 'claude', model: 'opus' },
+                  ],
+                },
+              ],
+            },
+          },
+          codex: {
+            economy: { candidates: ['low'] },
+          },
+        });
+      });
+
       it('drops invalid preset values silently', async () => {
         const repoRoot = await createRepoRoot();
         const configPath = join(repoRoot, '.oat', 'config.json');

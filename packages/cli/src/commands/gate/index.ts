@@ -46,6 +46,10 @@ import {
   validateRealPathWithinScope,
 } from '@fs/paths';
 import {
+  buildDispatchReport,
+  type DispatchReportV1,
+} from '@providers/identity/dispatch-report';
+import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
@@ -360,6 +364,69 @@ function createGateInvocationMetadata(
       ? { model: selectedModel, source: 'exec-target-config' as const }
       : {}),
   });
+}
+
+function buildGateDispatchReport(
+  invocation: GateInvocationMetadata,
+  scope: string,
+): DispatchReportV1 {
+  const report = buildDispatchReport({
+    scope,
+    action: 'review',
+    role: 'reviewer',
+    resolution: {
+      status: 'resolved',
+      provider: invocation.runtime,
+      value: null,
+      policyMode: null,
+      policy: null,
+      source: null,
+      providers: {
+        [invocation.runtime]: {
+          dispatchArgs: null,
+          selection: {
+            role: 'reviewer',
+            requestedCandidate: null,
+            candidateTier: null,
+            candidateIndex: null,
+            ceilingTier: null,
+            ceilingTarget: null,
+            selectedValue: null,
+            selectionMode: 'gate-invocation',
+            selectionBranch: 'gate-configured-invocation',
+            target: null,
+            cellSource: null,
+          },
+        },
+      },
+    },
+    requestedControls: {
+      model: {
+        value: null,
+        mechanism: 'base-role',
+        reason:
+          'Configured gate invocation is reported separately from runtime identity.',
+      },
+      effort: {
+        value: null,
+        mechanism: 'base-role',
+        reason:
+          'Configured gate invocation is reported separately from runtime identity.',
+      },
+    },
+    configuredDefaults: {
+      model: null,
+      modelSource: null,
+      effort: null,
+      effortSource: null,
+    },
+    gateInvocation: invocation,
+  });
+
+  return {
+    ...report,
+    route: { ...report.route, target: invocation.targetId },
+  };
 }
 
 function gateInvocationPromptContext(
@@ -2003,6 +2070,7 @@ function writeReviewGateResult(
     handoff: string;
     diversity?: GateDiversityMetadata;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration: GateInvocationCorroboration;
   },
 ): void {
@@ -2057,6 +2125,7 @@ function writeReviewGateExecutionFailure(
     timedOut?: boolean;
     timeoutMs?: number;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
@@ -2072,6 +2141,7 @@ function writeReviewGateExecutionFailure(
       project: payload.project,
       projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       ...(payload.corroboration
         ? { corroboration: payload.corroboration }
         : {}),
@@ -2095,6 +2165,7 @@ function writeReviewGateUnexpectedFailure(
     projectResolutionSource: ReviewProjectResolutionSource;
     target: string;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     error: unknown;
   },
 ): void {
@@ -2111,6 +2182,7 @@ function writeReviewGateUnexpectedFailure(
       project: payload.project,
       projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       message,
     });
     return;
@@ -2133,6 +2205,7 @@ function writeReviewGateArtifactValidationFailure(
     message: string;
     recovery: string;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
@@ -2147,6 +2220,7 @@ function writeReviewGateArtifactValidationFailure(
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       ...(payload.corroboration
         ? { corroboration: payload.corroboration }
         : {}),
@@ -2175,6 +2249,7 @@ function writeReviewGateTargetingFailure(
     generatedAt: string | null;
     message: string;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration: GateTargetCorroboration;
   },
 ): void {
@@ -2202,6 +2277,7 @@ function writeReviewGateTargetingFailure(
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       corroboration,
       receiveEligible: false,
       remediable: false,
@@ -2445,6 +2521,7 @@ async function runReviewGate(
         projectResolutionSource: ReviewProjectResolutionSource;
         target: string;
         gateInvocation: GateInvocationMetadata;
+        dispatchReport: DispatchReportV1;
       }
     | undefined;
   try {
@@ -2476,11 +2553,16 @@ async function runReviewGate(
       dependencies,
     );
     const gateInvocation = createGateInvocationMetadata(runId, selected);
+    const dispatchReport = buildGateDispatchReport(
+      gateInvocation,
+      options.reviewScope?.trim() || 'gate-review',
+    );
     postSelectionContext = {
       project: projectPath,
       projectResolutionSource: reviewProject.source,
       target: selected.id,
       gateInvocation,
+      dispatchReport,
     };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
     const before = await listReviewGateArtifactCandidates({
@@ -2518,6 +2600,7 @@ async function runReviewGate(
         timedOut: childResult.timedOut ?? false,
         timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
         gateInvocation,
+        dispatchReport,
       });
       process.exitCode = childExitCode;
       return;
@@ -2559,6 +2642,7 @@ async function runReviewGate(
         generatedAt: diagnosticArtifact?.generatedAt ?? null,
         message,
         gateInvocation,
+        dispatchReport,
         corroboration: initialTargetCorroboration,
       });
       process.exitCode = 1;
@@ -2584,6 +2668,7 @@ async function runReviewGate(
               ? 'Review artifact is missing oat_project for the explicitly declared project.'
               : 'Review artifact project identity does not match the explicitly declared project.',
         gateInvocation,
+        dispatchReport,
         corroboration: initialTargetCorroboration,
       });
       process.exitCode = 1;
@@ -2605,6 +2690,7 @@ async function runReviewGate(
           'Review artifact oat_generated_at is missing or is not a valid timestamp.',
         recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
         gateInvocation,
+        dispatchReport,
         corroboration: corroborateGateInvocation(
           gateInvocation,
           undefined,
@@ -2639,6 +2725,7 @@ async function runReviewGate(
         message: detail,
         recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
         gateInvocation,
+        dispatchReport,
         corroboration: corroborateGateInvocation(
           gateInvocation,
           undefined,
@@ -2673,6 +2760,7 @@ async function runReviewGate(
           : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
         recovery: `Copy the exact gate invocation fields from the review prompt into ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
         gateInvocation,
+        dispatchReport,
         corroboration,
       });
       process.exitCode = 1;
@@ -2690,6 +2778,7 @@ async function runReviewGate(
           'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
         recovery: `Set oat_review_invocation: gate in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
         gateInvocation,
+        dispatchReport,
         corroboration,
       });
       process.exitCode = 1;
@@ -2721,6 +2810,7 @@ async function runReviewGate(
       handoff,
       diversity: selected.diversity,
       gateInvocation,
+      dispatchReport,
       corroboration,
     });
     process.exitCode = blocking ? 1 : 0;
