@@ -1,5 +1,15 @@
 {
   "name": "pre-review",
+  "state": {
+    "frontmatter": {
+      "oat_current_task": "null",
+      "oat_status": "in_progress",
+      "oat_ready_for": "null",
+      "oat_template": "true",
+      "oat_phase": "plan",
+      "oat_phase_status": "in_progress"
+    }
+  },
   "plan": {
     "frontmatter": {
       "oat_status": "in_progress",
@@ -8,7 +18,7 @@
       "oat_template": "true",
       "oat_plan_parallel_groups": "[['p01', 'p02']]"
     },
-    "planReviewRow": "| plan   | artifact | pending | -        |"
+    "planReviewRow": "| plan   | artifact | pending | -    | -        |"
   },
   "implementation": {
     "frontmatter": {

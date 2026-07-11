@@ -1,8 +1,25 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import {
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const presetsRoot = path.dirname(fileURLToPath(import.meta.url));
+const artifactFiles = {
+  implementation: "implementation.md",
+  plan: "plan.md",
+  state: "state.md",
+};
+const defaultFileSystem = {
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+};
 
 function applyFrontmatter(source, overlay) {
   const match = source.match(/^(---\n)([\s\S]*?)(\n---\n)/);
@@ -24,7 +41,8 @@ function applyFrontmatter(source, overlay) {
 }
 
 function applyPlanReviewRow(source, row) {
-  const reviewRow = /^\| plan\s+\| artifact \| [^|]+ \| [^|]+\|$/m;
+  const reviewRow =
+    /^\| plan\s+\| artifact \| [^|\n]+ \| [^|\n]+ \| [^|\n]+ \|$/m;
 
   if (!reviewRow.test(source)) {
     throw new Error("plan is missing its review row");
@@ -34,7 +52,11 @@ function applyPlanReviewRow(source, row) {
 }
 
 export function applyPreset(artifacts, preset) {
-  if (!preset?.plan?.frontmatter || !preset?.implementation?.frontmatter) {
+  if (
+    !preset?.state?.frontmatter ||
+    !preset?.plan?.frontmatter ||
+    !preset?.implementation?.frontmatter
+  ) {
     throw new Error("invalid preset");
   }
 
@@ -47,14 +69,15 @@ export function applyPreset(artifacts, preset) {
       applyFrontmatter(artifacts.plan, preset.plan.frontmatter),
       preset.plan.planReviewRow,
     ),
+    state: applyFrontmatter(artifacts.state, preset.state.frontmatter),
   };
 }
 
-function readPreset(name) {
+function readPreset(name, fileSystem) {
   const presetPath = path.join(presetsRoot, `${name}.json`);
 
   try {
-    const preset = JSON.parse(readFileSync(presetPath, "utf8"));
+    const preset = JSON.parse(fileSystem.readFileSync(presetPath, "utf8"));
 
     if (preset.name !== name) {
       throw new Error("preset name does not match its filename");
@@ -70,20 +93,85 @@ function readPreset(name) {
   }
 }
 
-function applyPresetToFixture(name, projectRoot) {
-  const preset = readPreset(name);
-  const planPath = path.join(projectRoot, "plan.md");
-  const implementationPath = path.join(projectRoot, "implementation.md");
-  const updated = applyPreset(
-    {
-      implementation: readFileSync(implementationPath, "utf8"),
-      plan: readFileSync(planPath, "utf8"),
+function publishArtifacts(
+  projectRoot,
+  originals,
+  updated,
+  fileSystem,
+  transactionId,
+) {
+  const transaction = Object.entries(artifactFiles).map(
+    ([artifact, filename]) => {
+      const artifactPath = path.join(projectRoot, filename);
+
+      return {
+        artifact,
+        artifactPath,
+        temporaryPath: `${artifactPath}.preset-${transactionId}.tmp`,
+      };
     },
-    preset,
   );
 
-  writeFileSync(planPath, updated.plan);
-  writeFileSync(implementationPath, updated.implementation);
+  try {
+    for (const { artifact, temporaryPath } of transaction) {
+      fileSystem.writeFileSync(temporaryPath, updated[artifact]);
+    }
+
+    try {
+      for (const { artifactPath, temporaryPath } of transaction) {
+        fileSystem.renameSync(temporaryPath, artifactPath);
+      }
+    } catch (publishError) {
+      const rollbackErrors = [];
+
+      for (const { artifact, artifactPath } of transaction) {
+        try {
+          fileSystem.writeFileSync(artifactPath, originals[artifact]);
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError);
+        }
+      }
+
+      if (rollbackErrors.length > 0) {
+        throw new AggregateError(
+          [publishError, ...rollbackErrors],
+          "preset publish failed and rollback was incomplete",
+        );
+      }
+
+      throw publishError;
+    }
+  } finally {
+    for (const { temporaryPath } of transaction) {
+      fileSystem.rmSync(temporaryPath, { force: true });
+    }
+  }
+}
+
+export function applyPresetToFixture(
+  name,
+  projectRoot,
+  {
+    fileSystem = defaultFileSystem,
+    transactionId = `${process.pid}-${randomUUID()}`,
+  } = {},
+) {
+  const preset = readPreset(name, fileSystem);
+  const originals = Object.fromEntries(
+    Object.entries(artifactFiles).map(([artifact, filename]) => [
+      artifact,
+      fileSystem.readFileSync(path.join(projectRoot, filename), "utf8"),
+    ]),
+  );
+  const updated = applyPreset(originals, preset);
+
+  publishArtifacts(
+    projectRoot,
+    originals,
+    updated,
+    fileSystem,
+    transactionId,
+  );
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
