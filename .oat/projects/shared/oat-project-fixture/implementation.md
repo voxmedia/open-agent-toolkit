@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -54,14 +54,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 1/3       |
+| Phase 1 | in_progress | 3     | 2/3       |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 1/22 tasks completed
+**Total:** 2/22 tasks completed
 
 ---
 
@@ -135,16 +135,34 @@ oat_generated: false
 
 ### Task p01-t02: Fixture state presets
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 36933c44265a116f8cb5c03431f50af8308e9db2
 
 **Notes:**
 
 - Exact Cursor CLI task launch with `gpt-5.6-terra-medium` was accepted and
   ran for approximately 710 seconds before user interruption.
-- Accepted launch is terminal under the no-fallback contract. Four untracked
-  preset files remain as possible partial output; no worker process remains.
+- The user explicitly authorized root-owned task orchestration. A native root
+  recovery worker pinned to the same exact Terra target completed the preserved
+  partial files and committed them. This was recorded as
+  `operator-authorized-recovery`, not automatic fallback.
+- The native recovery connection was torn down after the worker committed.
+  Root verification confirmed the expected commit, exact four-file boundary,
+  clean worktree, and passing focused test.
 - Dispatch stamp: `Dispatch: scope=p01-t02 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high-fast target=cursor-cli:gpt-5.6-terra-medium`.
+- Recovery dispatch stamp: `Dispatch: scope=p01-t02 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
+
+**Outcome:**
+
+- Added canonical `pre-review` and `implementation-ready` state overlays plus a
+  pure applier with a small CLI.
+- Unknown presets fail closed without modifying the fixture copy.
+
+**Verification:**
+
+- `node --test tools/smoke/fixture/presets/apply-preset.test.mjs` — 3/3 passed
+  under independent root verification.
+- Commit boundary: exactly the four planned preset files.
 
 ---
 

@@ -180,8 +180,14 @@ model_reasoning_effort=max`); gate run `262c4812`.
     passed.
   - `p01-t02`: the same exact CLI target was accepted and ran for about
     710 seconds before user interruption. No fallback is eligible after that
-    accepted launch. Four untracked preset files remain as possible partial
-    output; no worker process remains.
+    accepted launch. Four untracked preset files remained as partial output.
+    The user later explicitly authorized root-owned individual task
+    orchestration and recovery. A native root Task worker pinned to the same
+    Terra target completed and committed the preserved output as
+    `36933c44265a116f8cb5c03431f50af8308e9db2`. Its connection was torn down
+    after commit; independent root verification confirmed the exact four-file
+    boundary, clean worktree, and 3/3 focused tests. Classification:
+    `operator-authorized-recovery`, not automatic fallback.
 
 ### 8. Draft-first dispatch contract for concurrent harness verification
 
