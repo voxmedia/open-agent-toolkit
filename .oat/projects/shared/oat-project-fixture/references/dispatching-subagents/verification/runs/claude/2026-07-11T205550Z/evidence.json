@@ -1,0 +1,476 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "runId": "claude-2026-07-11T205550Z",
+    "runType": "canonical",
+    "scope": "combined-capability",
+    "harness": "claude",
+    "flavor": "not-applicable",
+    "freshSession": true,
+    "contamination": [],
+    "capturedAt": "2026-07-11T20:55:50Z",
+    "workingDirectory": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture",
+    "repositoryCommit": "3111442a0831c3e5f1305968313f16fde7f2be40",
+    "inputHashes": {
+      "claims.md": "d2b47c872dcfc5558bddc25f93843ef83daf82f232e680a0fec767423d4dc781",
+      "protocol.md": "5efecc56a386331b771d0519ff5ed6ed20b125d1323b4c2678fbf572b750cfb7",
+      "provider-draft.md": "5d50fad0692c35b5df4b526624f34472c887cfff9a3d118e267a7811ac3c57d0"
+    },
+    "runtime": {
+      "rootModel": "claude-opus-4-8[1m]",
+      "versions": {
+        "claudeCli": "2.1.207 (Claude Code)"
+      }
+    },
+    "redactionStatus": "reviewed"
+  },
+  "catalogSnapshots": [
+    {
+      "snapshotId": "root-native-1",
+      "dispatchContext": "root-native",
+      "source": "tool-schema",
+      "observedAt": "2026-07-11T20:56:20Z",
+      "toolName": "Agent",
+      "roles": [
+        "claude",
+        "claude-code-guide",
+        "codex:codex-rescue",
+        "consensus:consensus-section-runner",
+        "Explore",
+        "general-purpose",
+        "oat-codebase-mapper",
+        "oat-phase-implementer",
+        "oat-reviewer",
+        "Plan",
+        "skeptical-evaluator",
+        "statusline-setup"
+      ],
+      "roleCatalogSource": "system-reminder (not a schema enum; `subagent_type` is an unconstrained string)",
+      "roleCatalogVisibility": "visible-before-first-nested-call",
+      "models": ["sonnet", "opus", "haiku", "fable"],
+      "modelSelectorGranularity": "tier-alias",
+      "efforts": [],
+      "effortExposure": "not-exposed",
+      "inheritance": "Optional model override for this agent. Takes precedence over the agent definition's model frontmatter. If omitted, uses the agent definition's model, or inherits from the parent. Ignored for subagent_type: \"fork\" — forks always inherit the parent model.",
+      "notes": [
+        "Tool description: \"Each agent type's model, reasoning effort, and tools come from its definition (`.claude/agents/*.md` frontmatter or SDK `agents`).\"",
+        "Tool description: \"Use SendMessage with the agent's ID or name to continue a previously spawned agent with its context intact; a new Agent call starts fresh.\"",
+        "The value `fork` is referenced in the model parameter description but does not appear in the advertised agent-type catalog."
+      ]
+    },
+    {
+      "snapshotId": "nested-native-1",
+      "dispatchContext": "nested-native",
+      "source": "tool-schema",
+      "observedAt": "2026-07-11T20:57:30Z",
+      "toolName": "Agent",
+      "reportedBy": "native-topology probe (agentId a8303b93e2d082a7b)",
+      "roles": [
+        "claude",
+        "claude-code-guide",
+        "codex:codex-rescue",
+        "consensus:consensus-section-runner",
+        "Explore",
+        "general-purpose",
+        "oat-codebase-mapper",
+        "oat-phase-implementer",
+        "oat-reviewer",
+        "Plan",
+        "skeptical-evaluator",
+        "statusline-setup"
+      ],
+      "roleCatalogSource": "system message appended alongside the first nested tool result",
+      "roleCatalogVisibility": "visible-only-after-first-nested-call",
+      "models": ["sonnet", "opus", "haiku", "fable"],
+      "modelSelectorGranularity": "tier-alias",
+      "efforts": [],
+      "effortExposure": "not-exposed",
+      "inheritance": "Optional model override for this agent. Takes precedence over the agent definition's model frontmatter. If omitted, uses the agent definition's model, or inherits from the parent. Ignored for subagent_type: \"fork\" — forks always inherit the parent model.",
+      "notes": [
+        "The nested model enum is available in the tool schema before any nested call; the nested agent-type catalog is not.",
+        "Root and nested catalogs are independent observations: identical contents this run, but obtained from different sources at different times."
+      ]
+    },
+    {
+      "snapshotId": "root-workflow-1",
+      "dispatchContext": "root-native",
+      "source": "tool-schema",
+      "observedAt": "2026-07-11T20:56:20Z",
+      "toolName": "Workflow",
+      "roles": [],
+      "roleCatalogSource": "opts.agentType is \"resolved from the same registry as the Agent tool\"; no independent enum is published in the Workflow schema",
+      "models": [],
+      "modelSelectorGranularity": "opaque",
+      "efforts": ["low", "medium", "high", "xhigh", "max"],
+      "effortExposure": "exposed",
+      "inheritance": "opts.model overrides the model for this agent call. Default to omitting it — the agent inherits the main-loop model (the resolved session model), which is almost always correct. opts.effort overrides the reasoning effort for this agent call ('low' | 'medium' | 'high' | 'xhigh' | 'max') — omit to inherit the session effort.",
+      "notes": [
+        "Observed by schema only. No Workflow launch was performed; this run carried no such authorization."
+      ]
+    },
+    {
+      "snapshotId": "cli-1",
+      "dispatchContext": "provider-cli",
+      "source": "cli-help",
+      "observedAt": "2026-07-11T20:56:20Z",
+      "roles": [],
+      "roleCatalogSource": "not applicable; --agents accepts a JSON object defining custom agents",
+      "models": ["fable", "opus", "sonnet", "claude-fable-5"],
+      "modelCatalogKind": "open-selector-not-closed-enum",
+      "modelSelectorGranularity": "exact-model-id",
+      "efforts": ["low", "medium", "high", "xhigh", "max"],
+      "effortExposure": "exposed",
+      "inheritance": "--model <model>: Model for the current session. Provide an alias for the latest model (e.g. 'fable', 'opus', or 'sonnet') or a model's full name (e.g. 'claude-fable-5').",
+      "notes": [
+        "The four `models` strings are the literal example selectors printed in --help, not a closed catalog. The CLI additionally accepted `claude-haiku-4-5-20251001`, an exact dated model ID absent from the help text and absent from the native enum.",
+        "--effort <level>: Effort level for the current session (low, medium, high, xhigh, max).",
+        "--output-format <format>: \"text\" (default), \"json\" (single result), or \"stream-json\" (realtime streaming); only works with --print."
+      ]
+    }
+  ],
+  "launches": [
+    {
+      "probeId": "native-topology",
+      "verificationScope": "native-capability",
+      "role": "general-purpose",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "inherited",
+      "modelSelectorGranularity": "inherited",
+      "effortSelector": "not-exposed",
+      "selectionSource": "parent-inheritance",
+      "catalogSnapshotId": "root-native-1",
+      "deadlineSeconds": 300,
+      "payload": {
+        "subagent_type": "general-purpose",
+        "description": "Read-only topology probe",
+        "run_in_background": false,
+        "model": "<omitted — deliberate inheritance path>",
+        "prompt": "<read-only schema/topology transcription brief; six numbered sections; explicit prohibition on file, shell, git, repo, and web access; authorized to launch exactly one nested leaf sentinel>"
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "agentId: a8303b93e2d082a7b",
+        "subagent_tokens: 36619",
+        "tool_uses: 1",
+        "duration_ms: 56584"
+      ],
+      "diagnostics": [
+        "Child reported nested dispatch: yes, via a tool named `Agent` (not `Task`).",
+        "Child reported its nested agent-type catalog as visible-only-after-first-nested-call.",
+        "Child observed no effort parameter on the nested Agent tool."
+      ],
+      "runtimeConfirmation": "claude-opus-4-8[1m]",
+      "result": "Structured topology report: complete tool list; nested Agent tool present; nested model enum [sonnet, opus, haiku, fable] with verbatim precedence text; twelve nested agent-type selectors; no nested effort parameter; catalog visibility timing = visible-only-after-first-nested-call; one nested leaf sentinel launched and completed.",
+      "continuationEvents": [
+        {
+          "kind": "handle-observed",
+          "handle": "SendMessage to: 'a8303b93e2d082a7b' with summary",
+          "used": false
+        }
+      ]
+    },
+    {
+      "probeId": "native-leaf",
+      "verificationScope": "native-capability",
+      "role": "general-purpose",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "haiku",
+      "modelSelectorGranularity": "tier-alias",
+      "effortSelector": "not-exposed",
+      "selectionSource": "explicit-call",
+      "catalogSnapshotId": "nested-native-1",
+      "deadlineSeconds": 300,
+      "payload": {
+        "description": "Nested sentinel probe",
+        "prompt": "Reply with exactly this string and nothing else: OAT_CLAUDE_NESTED_SENTINEL_OK. Do not use any tools.",
+        "subagent_type": "general-purpose",
+        "model": "haiku",
+        "run_in_background": false
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "agentId: aaf7ddb27d2494279",
+        "subagent_tokens: 21076",
+        "tool_uses: 0",
+        "duration_ms: 1774"
+      ],
+      "diagnostics": [
+        "Depth-2 launch from a generic depth-1 coordinator succeeded with an explicit per-call model selector.",
+        "The leaf did not self-report runtime identity; per U-M03 this is recorded as not-reported, not as launch rejection."
+      ],
+      "runtimeConfirmation": "not-reported",
+      "result": "OAT_CLAUDE_NESTED_SENTINEL_OK",
+      "continuationEvents": [
+        {
+          "kind": "handle-observed",
+          "handle": "SendMessage to: 'aaf7ddb27d2494279' with summary",
+          "used": false
+        }
+      ]
+    },
+    {
+      "probeId": "cli-sentinel",
+      "verificationScope": "cli-capability",
+      "role": "none",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "claude-haiku-4-5-20251001",
+      "modelSelectorGranularity": "exact-model-id",
+      "effortSelector": "none",
+      "selectionSource": "cli",
+      "catalogSnapshotId": "cli-1",
+      "deadlineSeconds": 120,
+      "payload": {
+        "command": "claude -p --model claude-haiku-4-5-20251001 --output-format json 'Reply with exactly this string and nothing else: OAT_CLAUDE_CLI_SENTINEL_OK' < /dev/null",
+        "flags": {
+          "-p": true,
+          "--model": "claude-haiku-4-5-20251001",
+          "--output-format": "json"
+        }
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "exit code: 0",
+        "\"type\":\"result\"",
+        "\"subtype\":\"success\"",
+        "\"is_error\":false",
+        "\"num_turns\":1",
+        "\"stop_reason\":\"end_turn\"",
+        "\"terminal_reason\":\"completed\"",
+        "\"duration_ms\":2331",
+        "\"session_id\":\"01ea8adc-e811-48ed-9ead-1393e6221852\"",
+        "modelUsage key: \"claude-haiku-4-5-20251001\" (contextWindow 200000, maxOutputTokens 32000)"
+      ],
+      "diagnostics": [
+        "Declared as an independent pre-start capability control before launch, not as a fallback after the accepted native launches.",
+        "A prior invocation attempt wrapped the command in `timeout 120 ...` and failed with `command not found: timeout` (exit 127) on macOS; the `claude` binary never executed. This is a shell-level failure to launch, not a rejected launch and not an accepted-launch outcome, so re-issuing the identical route is not fallback. Exactly one CLI child was dispatched."
+      ],
+      "runtimeConfirmation": "claude-haiku-4-5-20251001",
+      "result": "OAT_CLAUDE_CLI_SENTINEL_OK",
+      "continuationEvents": []
+    }
+  ],
+  "claims": [
+    {
+      "claimId": "CLA-M01",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1"],
+      "rationale": "The root Agent tool exposes a named-agent selector (`subagent_type`) and an explicit `model` enum [sonnet, opus, haiku, fable]. Qualification: `subagent_type` is an unconstrained string in the schema; the twelve-role catalog is delivered by system-reminder, not by a schema enum."
+    },
+    {
+      "claimId": "CLA-M02",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "native-topology"],
+      "rationale": "Verbatim schema text distinguishes all three layers: explicit call model 'Takes precedence over the agent definition's model frontmatter', and 'If omitted, uses the agent definition's model, or inherits from the parent.' Schema mode is sufficient per claims.md; the inheritance branch is additionally corroborated at runtime by CLA-M11."
+    },
+    {
+      "claimId": "CLA-M04",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "nested-native-1"],
+      "rationale": "The generic general-purpose child materialized a nested Agent tool and enumerated its own selector catalog: the same four-value model enum and the same twelve agent types. Material qualification: the nested agent-type catalog was visible only AFTER its first nested call, while the model enum was present in schema beforehand."
+    },
+    {
+      "claimId": "CLA-M05",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-leaf"],
+      "rationale": "One depth-2 leaf sentinel with an explicit `model: \"haiku\"` was accepted (agentId aaf7ddb27d2494279) and returned exactly OAT_CLAUDE_NESTED_SENTINEL_OK."
+    },
+    {
+      "claimId": "CLA-M08",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "runtime-report",
+      "evidenceRefs": ["native-topology", "native-leaf", "cli-sentinel"],
+      "rationale": "The two layers stayed separable across three launches. Topology probe: configured selector omitted/inherited, runtime identity self-reported as claude-opus-4-8[1m]. Leaf: configured `haiku`, runtime identity not-reported, launch still accepted. CLI: configured claude-haiku-4-5-20251001, runtime identity independently carried in the modelUsage key. Deduplicated across native and CLI scopes."
+    },
+    {
+      "claimId": "CLA-M10",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf", "root-native-1"],
+      "rationale": "Both accepted native children returned a launcher-owned agentId (a8303b93e2d082a7b, aaf7ddb27d2494279) with an explicit SendMessage resume affordance, and the Agent schema states resume preserves the child's context while 'a new Agent call starts fresh'. Handles were recorded; no continuation was launched."
+    },
+    {
+      "claimId": "CLA-M11",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "runtime-report",
+      "evidenceRefs": ["native-topology"],
+      "rationale": "The topology probe was launched as `general-purpose` with the model selector omitted and no agent-definition default. The child self-reported its runtime identity as claude-opus-4-8[1m] / 'Opus 4.8 (1M context)', identical to the root model — the parent-inheritance path observed at runtime, not merely in schema."
+    },
+    {
+      "claimId": "CLA-S01",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "snapshot",
+      "evidenceMode": "schema",
+      "evidenceRefs": [
+        "root-native-1",
+        "nested-native-1",
+        "root-workflow-1",
+        "cli-1"
+      ],
+      "rationale": "Four timestamped catalogs captured with verbatim selector strings: root native, nested native, Workflow, and CLI. Per claims.md this snapshot never promotes to a stable normative inventory."
+    },
+    {
+      "claimId": "CLA-M07",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "help",
+      "evidenceRefs": ["cli-1", "cli-sentinel"],
+      "rationale": "`claude --help` documents `--model <model>` accepting an alias or a model's full name, and the single read-only sentinel was accepted with the exact dated ID claude-haiku-4-5-20251001, echoed back as the modelUsage key. `claude -p` therefore exposes an explicit model route for a fresh CLI child, at exact-model-id granularity that native dispatch does not offer."
+    },
+    {
+      "claimId": "U-M01",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "nested-native-1"],
+      "rationale": "The root and nested catalogs are genuinely independent observations from different sources at different times: the root catalog was present pre-dispatch via system-reminder, while the child had no agent-type catalog at all until after its first nested call. Contents matched this run, but neither observation licenses the other."
+    },
+    {
+      "claimId": "U-M02",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf", "cli-sentinel"],
+      "rationale": "Every launch carried launcher-side acceptance evidence independent of child self-report: native children returned agentId plus a usage block (subagent_tokens, tool_uses, duration_ms); the CLI child returned exit 0 with a structured success result. Deduplicated across native and CLI scopes."
+    },
+    {
+      "claimId": "U-M03",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "runtime-report",
+      "evidenceRefs": ["native-leaf", "native-topology", "cli-sentinel"],
+      "rationale": "The leaf sentinel self-reported no runtime identity, yet its launch was accepted and it returned the exact fixed string — demonstrating that absent identity evidence is not evidence of unavailability. Identity was optional and present in two of three launches. Deduplicated across native and CLI scopes."
+    },
+    {
+      "claimId": "U-P05",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "help",
+      "evidenceRefs": ["cli-1", "cli-sentinel"],
+      "rationale": "Run adherence only. The CLI scope was declared an independent pre-start capability control before its launch, and was not a fallback: the native scope had already produced accepted launches and no native route was abandoned or switched. This records adherence, not universal policy correctness."
+    },
+    {
+      "claimId": "U-P06",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf", "cli-sentinel"],
+      "rationale": "Run adherence only. No second role, model, or route was attempted for any probe after an accepted launch. The one repeated shell invocation was a `command not found: timeout` failure in which the claude binary never executed — no launch occurred, so no accepted outcome was overridden. This records adherence, not mechanism truth."
+    },
+    {
+      "claimId": "U-P09",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Run adherence only. Continuation handles were exposed for both accepted native children and recorded as CLA-M10 evidence; no continuation was sent and no replacement route was launched, so the distinction was never exercised adversarially. This records adherence, not mechanism truth."
+    },
+    {
+      "claimId": "CLA-M06",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-workflow-1"],
+      "rationale": "Supplementary, not part of the canonical required set. Schema observation only, as claims.md permits absent separate launch authorization: Workflow's agent() exposes opts.model and opts.effort ('low'|'medium'|'high'|'xhigh'|'max'), and opts.agentType is documented as 'resolved from the same registry as the Agent tool'. No Workflow launch was performed."
+    },
+    {
+      "claimId": "CLA-M03",
+      "probeStatus": "not_run",
+      "verdict": "inconclusive",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": [],
+      "rationale": "Supplementary and pilot-covered; deliberately not re-probed. The bounded native protocol permits only one generic topology probe, and combining a named OAT role with an explicit per-call model would have required a second, production-role launch."
+    },
+    {
+      "claimId": "CLA-M09",
+      "probeStatus": "not_run",
+      "verdict": "inconclusive",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": [],
+      "rationale": "Supplementary and pilot-covered; deliberately not re-probed. Production roles correctly refuse topology-probe work by contract, and this run's single native topology probe was spent on a generic agent type as the protocol requires."
+    }
+  ],
+  "nonCoverage": [
+    {
+      "claimId": "CLA-P01",
+      "reason": "OAT must decide and document which Claude dispatch surface is sanctioned for coordinators, workers, and reviewers. Provider capability alone does not settle it; p04 design decision and contract tests own this."
+    },
+    {
+      "claimId": "CLA-P02",
+      "reason": "Actual production coordinator-to-worker behavior. A generic topology probe is explicitly not a substitute; p05 live smoke owns this."
+    },
+    {
+      "claimId": "U-P08",
+      "reason": "Phase-scoped review routing is outside the bounded capability protocol; p04 contract tests and p05 live evidence own its disposition."
+    }
+  ],
+  "contractCorrections": [
+    {
+      "id": "CC-1",
+      "target": "dispatching-subagents-claude-draft.md — Selection Rule 4 and the prose 'Claude's OAT-managed dispatch axis is model, not a separate reasoning-effort axis'",
+      "finding": "contradicted-in-part",
+      "detail": "effort_axis=not-applicable holds only for the native Agent tool, which has no effort parameter. `claude --effort <low|medium|high|xhigh|max>` exists on the CLI and Workflow.agent() accepts opts.effort with the same five values. The rule must be scoped per-surface.",
+      "evidenceRefs": ["root-native-1", "cli-1", "root-workflow-1"]
+    },
+    {
+      "id": "CC-2",
+      "target": "dispatching-subagents-claude-draft.md — Selection Rules 1 and 3",
+      "finding": "contradicted-in-part",
+      "detail": "Native model selection is tier-alias granularity only: the enum is exactly [sonnet, opus, haiku, fable], with no dated model IDs. A resolver returning an exact ID such as claude-haiku-4-5-20251001 cannot pass it through native dispatch; only the CLI accepts exact IDs. 'Exact model candidate' must be defined per-surface.",
+      "evidenceRefs": ["root-native-1", "cli-1", "cli-sentinel"]
+    },
+    {
+      "id": "CC-3",
+      "target": "dispatching-subagents-claude-draft.md — Selection Rule 2; provider-neutral policy U-P01",
+      "finding": "unimplementable-as-written-for-nested-dispatchers",
+      "detail": "A nested dispatcher cannot snapshot its agent-type catalog before its first dispatch: the topology probe observed visible-only-after-first-nested-call. The model enum is schema-available at every depth; the agent-type catalog is pre-call visible at the root only. Policy should split the two catalogs.",
+      "evidenceRefs": ["nested-native-1", "native-topology"]
+    },
+    {
+      "id": "CC-4",
+      "target": "dispatching-subagents-claude-draft.md — Control Surfaces table and all 'Native Task tool' references",
+      "finding": "naming-drift-cosmetic-only",
+      "detail": "The live root and nested dispatch tool is named `Agent`, not `Task`. The `oat-phase-implementer` agent type declares its tool grant as 'Read, Write, Edit, Bash, Grep, Glob, Task' (.agents/agents/oat-phase-implementer.md:5). This entry originally added the speculation that the grant 'may not resolve'. THAT SPECULATION WAS WRONG AND IS WITHDRAWN — see correctionNote.",
+      "correctionNote": "Corrected 2026-07-11T21:06:29Z after direct probing (supplementary packet claude-2026-07-11T210629Z). A `Task` grant DOES resolve: it materializes the dispatch tool, which the child sees under its live name `Agent`. Controls confirm it — a [\"Read\"]-only grant yields a Read-only child (grant is enforced), and a bogus name is silently dropped (a surviving name was recognized, not echoed). oat-phase-implementer receives a working dispatch tool. Only cosmetic naming drift survives. Residual unprobed risk: unknown tool names are dropped WITHOUT error, so removal of the `Task` alias would fail silently; migrating the grant to `Agent` is robustness insurance, not a bug fix.",
+      "evidenceRefs": [
+        "root-native-1",
+        "nested-native-1",
+        "claude-2026-07-11T210629Z/SUPP-1"
+      ]
+    }
+  ]
+}
