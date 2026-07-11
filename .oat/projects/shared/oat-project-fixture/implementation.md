@@ -557,7 +557,13 @@ corrected in this bookkeeping update.
   smoke-safe init path, and reports containment failures as fatal.
 - Independent verification: 56/56 smoke tests, 82/82 skill/closeout contract
   tests, repository lint/format, and orphan inspection passed.
-- Awaiting final Phase 2 self-review.
+- Final Phase 2 self-review failed — 0 Critical / 1 Important / 0 Medium.
+- Every iteration-2 target was verified fixed. The sole new finding is
+  pre-baseline recovery: a durable manifest published after worktree creation
+  has `baselineCommitSha: null`, but cleanup currently requires a completed
+  baseline ownership record.
+- The default retry limit of two is exhausted. Sequential execution is paused
+  for a human decision on one narrow additional retry.
 
 ---
 
