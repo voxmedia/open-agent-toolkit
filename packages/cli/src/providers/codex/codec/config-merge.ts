@@ -13,12 +13,14 @@ export interface CodexConfigMergeArgs {
   existingContent: string | null;
   desiredRoles: CodexManagedRoleConfig[];
   staleManagedRoles?: string[];
+  inheritedMaxDepth?: number;
 }
 
 export interface CodexSingleRoleConfigMergeArgs {
   existingContent: string | null;
   role: CodexManagedRoleConfig;
   staleManagedRoles?: string[];
+  inheritedMaxDepth?: number;
 }
 
 export interface CodexConfigMergeResult {
@@ -58,14 +60,35 @@ function getObject(value: unknown): TomlObject {
   return { ...(value as TomlObject) };
 }
 
+function getFiniteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/** Reads a valid numeric agents.max_depth value from Codex TOML content. */
+export function readCodexMaxDepth(content: string | null): number | null {
+  const parsed = parseConfig(content);
+  const agents = getObject(parsed.agents);
+  return getFiniteNumber(agents.max_depth);
+}
+
+/** Merges managed Codex roles and required shared agent configuration. */
 export function mergeCodexConfig({
   existingContent,
   desiredRoles,
   staleManagedRoles = [],
+  inheritedMaxDepth,
 }: CodexConfigMergeArgs): CodexConfigMergeResult {
   const parsed = parseConfig(existingContent);
   const features = getObject(parsed.features);
   const agents = getObject(parsed.agents);
+  const targetMaxDepth = getFiniteNumber(agents.max_depth);
+  const validInheritedMaxDepth = getFiniteNumber(inheritedMaxDepth);
+
+  agents.max_depth = Math.max(
+    2,
+    targetMaxDepth ?? 2,
+    validInheritedMaxDepth ?? 2,
+  );
 
   const nextConfig: TomlObject = {
     ...parsed,
@@ -102,14 +125,17 @@ export function mergeCodexConfig({
   };
 }
 
+/** Merges one managed Codex role using the shared configuration contract. */
 export function mergeCodexConfigForRole({
   existingContent,
   role,
   staleManagedRoles = [],
+  inheritedMaxDepth,
 }: CodexSingleRoleConfigMergeArgs): CodexConfigMergeResult {
   return mergeCodexConfig({
     existingContent,
     desiredRoles: [role],
     staleManagedRoles,
+    inheritedMaxDepth,
   });
 }
