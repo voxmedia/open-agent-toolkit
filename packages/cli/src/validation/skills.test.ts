@@ -1033,6 +1033,23 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/launcher-selected\/config-declared/i);
   });
 
+  it('keeps timed-out native reviewer retries on the accepted route', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
+    expect(content).toMatch(
+      /accepted native reviewer[\s\S]{0,180}times out[\s\S]{0,180}retry the same already-selected native `agent_type` route/i,
+    );
+    expect(content).toMatch(
+      /fresh pinned-child route is eligible only when the original native attempt[\s\S]{0,160}explicit pre-start role-selection rejection/i,
+    );
+    expect(content).toMatch(
+      /original native reviewer spawn was accepted[\s\S]{0,180}retry the same already-selected native `agent_type` route[\s\S]{0,220}do not switch[\s\S]{0,160}fresh pinned child/i,
+    );
+  });
+
   it('keeps project review dispatch native-first and launcher-owned', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',

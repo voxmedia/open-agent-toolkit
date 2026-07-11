@@ -194,7 +194,11 @@ result from an accepted child — including `BLOCKED` — is not role
 unavailability and is not a native role-selection rejection. Self-report is
 optional diagnostic data and cannot populate or overwrite launcher-owned
 `target`, `model_axis`, or `effort_axis` fields. An accepted child cannot
-trigger the fresh pinned-child or CLI fallback.
+trigger the fresh pinned-child or CLI fallback. If an accepted native reviewer
+later times out, retry the same already-selected native `agent_type` route. The
+fresh pinned-child route is eligible only when the original native attempt
+received explicit pre-start role-selection rejection; a timeout after native
+spawn acceptance never changes routes.
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
@@ -1227,7 +1231,7 @@ After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness co
   - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
   - For Codex Tier 1 review dispatches, use the materialized Codex role name from `providers.codex.dispatchArgs.variant` only when the resolver returns a reviewer variant for a capped managed policy. A Codex materialized reviewer role selected from a model+effort target must carry `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code, pass `model: providers.claude.dispatchArgs.model` for a concrete managed reviewer and never pass a per-review effort override. For Cursor, pass `model: providers.cursor.dispatchArgs.model` byte-for-byte for a concrete managed reviewer.
   - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
-  - If a reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the target-preserving review dispatch as failed for this phase. Retry the same exact role, pinned fresh-child route, or complete Claude/Cursor invocation payload within the retry bound, preserving the exact model argument; never downgrade a timed-out managed reviewer to unpinned inline execution.
+  - If a reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the target-preserving review dispatch as failed for this phase. When the original native reviewer spawn was accepted, retry the same already-selected native `agent_type` route within the retry bound; do not switch that timed-out reviewer to a fresh pinned child. The fresh pinned-child route is eligible only when the original native attempt received explicit pre-start role-selection rejection. Retry an already-selected pinned fresh-child route or complete Claude/Cursor invocation payload without changing routes, preserving the exact model argument; never downgrade a timed-out managed reviewer to unpinned inline execution.
 
 - Tier 2: read `.agents/agents/oat-reviewer.md` and review inline only with verified equivalent current-host model and effort controls, explicit inherit/default behavior, or the documented managed-uncapped reviewer behavior. Otherwise block.
 
@@ -1734,8 +1738,11 @@ concrete managed Claude or Cursor target must put
 `providers.claude.dispatchArgs.model` or
 `providers.cursor.dispatchArgs.model` respectively into the actual provider
 invocation as the exact `model` argument; Cursor strings remain opaque. On
-timeout or retry, preserve the same exact role or complete invocation payload,
-including the model argument. If the host cannot apply the required role or
+timeout or retry, preserve the already-selected route as well as its complete
+invocation payload: an accepted native reviewer retries the same native
+`agent_type`, while a fresh pinned-child route is eligible only when the
+original native attempt received explicit pre-start role-selection rejection.
+Preserve the exact model argument. If the host cannot apply the required role or
 model argument, fail closed or block unless verified equivalent current-host
 controls permit inline execution. The preference below chooses only among
 routes that preserve that target; it cannot authorize generic inline or base
