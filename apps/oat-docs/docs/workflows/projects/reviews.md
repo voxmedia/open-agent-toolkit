@@ -207,6 +207,17 @@ Final review `passed` gate requires:
   - Project-scope Codex role files are generated from canonical `.agents/agents/*.md` during `oat sync --scope project`.
   - User-config Codex roles materialize under `~/.codex`; project-config and supported-catalogue roles remain in the project-scoped, version-controlled `.codex` view.
   - Some Codex hosts require explicit user authorization before the skill may call `spawn_agent`. In those hosts, `oat-project-review-provide` should ask whether to delegate to `oat-reviewer` instead of reporting the reviewer as unresolved.
+  - An accepted launch using the exact materialized `agent_type` is authoritative
+    configured-invocation evidence for a reviewer. After the complete payload
+    is built, the launcher records its `target`, `model_axis`, and
+    `effort_axis`; reviewer self-report cannot supply or overwrite those
+    fields. Optional self-report is non-authoritative, while runtime
+    attestation is host-generated metadata.
+  - A fresh pinned CLI child is a fallback only for an actual native
+    role-selection rejection, never for absent self-reporting or model/effort
+    telemetry. A child accepted by the native host, including one that later
+    returns `BLOCKED`, has produced a review outcome and cannot trigger the
+    fallback.
 - If subagent dispatch is unavailable, follow the existing fallback path (fresh session preferred, inline reset as fallback).
 
 ## Reference artifacts

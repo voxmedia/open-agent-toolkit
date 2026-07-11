@@ -202,9 +202,14 @@ candidate above the maximum or absent from the configured ladder blocks.
 Build the complete host payload before writing dispatch logs:
 
 - **Codex:** use `providers.codex.dispatchArgs.variant` as the actual
-  `agent_type`. If the registered role cannot be selected, launch a fresh Codex
-  child pinned to `selection.target.model` and `selection.target.effort` with
-  canonical `oat-phase-implementer` instructions and the Task Scope.
+  `agent_type`. An accepted launch with that exact materialized role is
+  authoritative evidence of the configured invocation for coordinators and
+  task workers. A fresh Codex child pinned to `selection.target.model` and
+  `selection.target.effort` is permitted only after an actual native
+  role-selection rejection; missing self-reporting or model/effort telemetry
+  does not justify the fallback. An accepted child, including one that later
+  returns `BLOCKED`, is a task outcome and never triggers another pinned-child
+  fallback.
 - **Claude:** pass `providers.claude.dispatchArgs.model` as the actual Task
   `model`. Its separate effort axis is `not-applicable`.
 - **Cursor:** pass `providers.cursor.dispatchArgs.model` byte-for-byte as the
@@ -237,6 +242,14 @@ stamp adapter. It is not a second schema and must not be assembled by hand.
 Configured defaults and configured gate invocation remain distinct from runtime
 identity; when runtime identity is not observed, the report says so without
 weakening exact requested model or effort controls.
+
+After constructing the complete payload, the launcher records the selected
+target and requested model/effort controls in the report. Those configured
+invocation fields are launcher-owned and derive from resolver output plus the
+actual payload; worker output cannot populate or overwrite them. Optional
+coordinator or worker self-report remains non-authoritative runtime evidence.
+Runtime attestation, when available, is separate host-generated metadata rather
+than an agent claim.
 
 ## Task Scope and Commit Verification
 
