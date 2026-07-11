@@ -1237,6 +1237,9 @@ Parse the reviewer's confirmation for verdict + finding severities. Map to pass 
 
 - **pass:** zero Critical and zero Important findings.
 - **fail:** one or more Critical or Important findings.
+- **blocked:** An accepted reviewer `BLOCKED` terminal blocks this phase review.
+  It does not invoke fallback and must not be interpreted as a pass due to
+  absent findings. Stop and surface the review target and blocker reason.
 
 Medium / Minor findings do not block the phase but are recorded.
 
@@ -1689,6 +1692,10 @@ All must pass before proceeding.
 ### Step 14: Trigger Final Review
 
 **At the final plan phase boundary, a code review is required before PR.**
+
+An accepted reviewer `BLOCKED` terminal blocks final review. It does not invoke
+fallback and must not be interpreted as a pass due to absent findings. Stop and
+surface the review target and blocker reason.
 
 Before requesting final review, ensure the latest project-artifact bookkeeping is already committed. Review should evaluate the implementation state as it actually stands on the branch, not a half-tracked working tree.
 

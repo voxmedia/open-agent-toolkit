@@ -1033,6 +1033,41 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/launcher-selected\/config-declared/i);
   });
 
+  it('blocks accepted reviewer BLOCKED terminals without invoking fallback', async () => {
+    const coordinator = await readRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const phaseReview = implement.slice(
+      implement.indexOf('### Per-Phase Review'),
+      implement.indexOf('### Optional External Phase Review Gate'),
+    );
+    const finalReview = implement.slice(
+      implement.indexOf('### Step 14: Trigger Final Review'),
+      implement.indexOf('### Step 15: Prompt for Next Steps'),
+    );
+
+    expect(coordinator).toMatch(
+      /accepted\s+terminal\s+results[\s\S]{0,160}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
+    );
+    for (const [name, content] of [
+      ['phase reviewer', phaseReview],
+      ['final reviewer', finalReview],
+    ] as const) {
+      expect(content, `${name} BLOCKED gate`).toMatch(
+        /accepted reviewer[\s\S]{0,100}`BLOCKED`[\s\S]{0,180}(?:blocks|must block)[\s\S]{0,120}review/i,
+      );
+      expect(content, `${name} no fallback`).toMatch(
+        /`BLOCKED`[\s\S]{0,240}(?:does not|cannot|must not)[\s\S]{0,100}(?:invoke|trigger)[\s\S]{0,80}fallback/i,
+      );
+      expect(content, `${name} no absent-findings pass`).toMatch(
+        /(?:absent|no) findings[\s\S]{0,200}(?:cannot|must not)[\s\S]{0,160}(?:parse|interpret|treat)[\s\S]{0,100}pass|(?:cannot|must not)[\s\S]{0,160}(?:parse|interpret|treat)[\s\S]{0,100}pass[\s\S]{0,200}(?:absent|no) findings/i,
+      );
+    }
+  });
+
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
