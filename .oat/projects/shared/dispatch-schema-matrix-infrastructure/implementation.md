@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase | Status   | Tasks | Completed |
 | ----- | -------- | ----- | --------- |
 | p01   | complete | 6     | 6/6       |
-| p02   | pending  | 4     | 0/4       |
+| p02   | complete | 4     | 4/4       |
 | p03   | pending  | 6     | 0/6       |
 | p04   | pending  | 4     | 0/4       |
 | p05   | pending  | 3     | 0/3       |
 
-**Total:** 6/23 tasks completed
+**Total:** 10/23 tasks completed
 
 ---
 
@@ -162,13 +162,83 @@ oat_generated: false
 
 ## Phase p02: Pass-Scoped Cursor Validation
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-11
+**Completed:** 2026-07-11
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Split Cursor Task/subagent probing from broad catalog resolution while preserving the public availability API.
+- Added an explicit validation-pass context that memoizes one Task probe per exact Cursor candidate and one broad catalog resolution per command pass.
+- Config adoption and doctor now batch shared matrix refs through the same coordinator while retaining their existing warning, provenance, and severity policies.
+- Catalog presence remains diagnostic-only: it can produce `unvalidated` or `unknown-value`, never `valid` without Task/allow-list evidence.
+
+**Key files touched:**
+
+- `packages/cli/src/providers/identity/availability.ts` - separate Task-probe and broad-catalog operations.
+- `packages/cli/src/providers/identity/dispatch-validation.ts` - explicit pass context, memoization, result fan-out, and evidence typing.
+- `packages/cli/src/commands/config/index.ts` - one batch validation pass per matrix adoption.
+- `packages/cli/src/commands/doctor/index.ts` - one batch validation pass per dispatch-matrix doctor check.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/availability.test.ts src/providers/identity/dispatch-validation.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`
+- Result: Pass - 4 files, 165/165 tests.
+- Run: CLI type-check, Oxlint, formatting, and commit-range diff checks.
+- Result: Pass.
+
+**Notes / Decisions:**
+
+- The exact opaque candidate string is the Task-probe cache key; no trimming or normalization is used for grouping.
+- One stored promise covers broad catalog resolution, including its single permitted fallback call, and failures remain memoized for the pass.
+- Phase self-review found operation hooks leaking into non-Cursor validator options and fake coordinators in command test harnesses. Fix `75288f32` restored the prior options boundary and moved those tests onto the production coordinator.
+- One exact pinned phase subagent implemented all four tasks and the bounded review/fix loop directly; no nested task workers were launched.
 
 ### Task p02-t01: Separate Cursor Task probing from catalog diagnostics
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 697a80d5
+
+**Outcome:**
+
+- Cursor Task-probe and catalog resolution are independently injectable operations with the legacy public validator behavior preserved.
+
+---
+
+### Task p02-t02: Add the validation-pass coordinator
+
+**Status:** complete
+**Commit:** 22e254c0
+
+**Outcome:**
+
+- Added explicit pass-scoped Task-probe and catalog promise caches with typed result fan-out to every source ref.
+
+---
+
+### Task p02-t03: Use one validation pass during matrix adoption
+
+**Status:** complete
+**Commit:** df5fa4c5
+
+**Outcome:**
+
+- Matrix adoption validates all structural constraints first, then batches availability work while preserving path-specific save-anyway warnings.
+
+---
+
+### Task p02-t04: Use one validation pass during doctor checks
+
+**Status:** complete
+**Commit:** 5e2fff75
+
+**Outcome:**
+
+- Doctor shares validation work across user, shared, and local layers while preserving each issue's exact path and source label.
+
+**Review fix:** `75288f32` preserves non-Cursor validator option boundaries and exercises the production coordinator in command tests.
 
 ---
 
