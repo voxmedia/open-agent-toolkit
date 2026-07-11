@@ -35,6 +35,8 @@ import {
   type WorkflowDispatchCeilingPreset,
   type WorkflowDispatchPolicyMode,
   type WorkflowManagedDispatchPolicy,
+  type WorkflowPostImplementSequence,
+  normalizeWorkflowPostImplementSequence,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -125,7 +127,7 @@ type ConfigKey =
 
 interface ConfigValue {
   key: ConfigKey;
-  value: string | null;
+  value: unknown;
   source: ResolvedConfigSource;
 }
 
@@ -566,12 +568,13 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
-    type: 'wait | summary | pr | docs-pr',
+    type: 'legacy string (wait | summary | pr | docs-pr) | structured JSON object',
     defaultValue: 'unset',
     mutability: 'read/write',
-    owningCommand: 'oat config set workflow.postImplementSequence <value>',
+    owningCommand:
+      "oat config set workflow.postImplementSequence '<legacy-or-json>'",
     description:
-      'Default post-implementation chaining: "wait" stops without auto-chaining, "summary" generates summary only, "pr" runs pr-final (which auto-generates summary), "docs-pr" runs docs sync then pr-final. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Default post-implementation chaining. Legacy strings remain supported unchanged. Structured JSON uses {"preApproval":[...],"postApproval":[...]} with the canonical sequence steps. Plain get/list/dump output serializes structured values as compact JSON; get --json preserves the object value. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.reviewExecutionModel',
@@ -961,7 +964,7 @@ function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
 function parseWorkflowValue(
   key: ConfigKey,
   rawValue: string,
-): boolean | string {
+): boolean | string | WorkflowPostImplementSequence {
   if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
     const normalized = rawValue.trim().toLowerCase();
     if (normalized !== 'true' && normalized !== 'false') {
@@ -970,6 +973,27 @@ function parseWorkflowValue(
       );
     }
     return normalized === 'true';
+  }
+
+  if (key === 'workflow.postImplementSequence') {
+    const normalized = rawValue.trim();
+    if (normalized.startsWith('{') || normalized.startsWith('[')) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(normalized);
+      } catch {
+        throw new Error(
+          `Invalid value for ${key}: expected valid structured JSON`,
+        );
+      }
+      const sequence = normalizeWorkflowPostImplementSequence(parsed);
+      if (!sequence || Array.isArray(parsed)) {
+        throw new Error(
+          `Invalid value for ${key}: structured JSON must match {"preApproval":[...],"postApproval":[...]}`,
+        );
+      }
+      return sequence;
+    }
   }
 
   const allowed =
@@ -1150,9 +1174,16 @@ function toAvailabilityRef(
 function applyWorkflowValue(
   workflow: OatWorkflowConfig,
   key: ConfigKey,
-  value: boolean | string,
+  value: boolean | string | WorkflowPostImplementSequence,
 ): OatWorkflowConfig {
   const subKey = key.slice('workflow.'.length);
+
+  if (subKey === 'postImplementSequence') {
+    return {
+      ...workflow,
+      postImplementSequence: value as WorkflowPostImplementSequence,
+    };
+  }
 
   if (subKey === 'dispatchPolicy.mode') {
     const mode = value as WorkflowDispatchPolicyMode;
@@ -1287,6 +1318,7 @@ async function getConfigValue(
   userConfigDir: string,
   key: ConfigKey,
   dependencies: ConfigCommandDependencies,
+  preserveRawObject = false,
 ): Promise<ConfigValue> {
   const resolved = await dependencies.resolveEffectiveConfig(
     repoRoot,
@@ -1301,7 +1333,10 @@ async function getConfigValue(
 
   return {
     key,
-    value: formatResolvedValue(entry.value),
+    value:
+      preserveRawObject && typeof entry.value === 'object'
+        ? entry.value
+        : formatResolvedValue(entry.value),
     source: entry.source,
   };
 }
@@ -1341,8 +1376,7 @@ async function setConfigValue(
 
   if (isWorkflowKey(key)) {
     const parsedValue = parseWorkflowValue(key, rawValue);
-    const displayValue =
-      typeof parsedValue === 'boolean' ? String(parsedValue) : parsedValue;
+    const displayValue = formatResolvedValue(parsedValue);
     if (typeof parsedValue === 'string' && isDispatchCeilingProviderKey(key)) {
       const availability = await dependencies.validateMatrixCell(
         providerNameFromConfigKey(key),
@@ -1853,6 +1887,7 @@ async function runGet(
       userConfigDir,
       keyArg,
       dependencies,
+      context.json,
     );
     if (context.json) {
       context.logger.json({
@@ -1860,7 +1895,7 @@ async function runGet(
         ...value,
       });
     } else {
-      context.logger.info(value.value ?? '');
+      context.logger.info(formatResolvedValue(value.value) ?? '');
     }
     process.exitCode = 0;
   } catch (error) {

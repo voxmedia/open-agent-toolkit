@@ -374,6 +374,11 @@ context. An unresolved or verification-failing conflict stops fan-in.
 
 ## Phase Review Gate and HiLL
 
+Phase gate review is independent from HiLL: a configured passing gate continues
+automatically, while a HiLL checkpoint pauses for human approval. For the final
+phase, approval-aware post-implementation sequences run pre-approval work only
+after final review and post-approval work only after the recorded approval.
+
 After standard review passes and bookkeeping is committed, an enabled
 `oat_phase_review_gate` may run a target-neutral external review for the phase.
 Passing artifacts are still received for durable disposition; blocking

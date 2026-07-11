@@ -340,6 +340,52 @@ describe('resolveEffectiveConfig', () => {
   });
 
   describe('workflow preferences', () => {
+    it('resolves post-implementation sequences atomically without merging boundaries', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                postImplementSequence: {
+                  preApproval: ['summary'],
+                  postApproval: ['document'],
+                },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: { postImplementSequence: 'pr' },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                postImplementSequence: {
+                  preApproval: ['document'],
+                  postApproval: ['pr'],
+                },
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.postImplementSequence']).toEqual({
+        value: 'pr',
+        source: 'local',
+      });
+      expect(
+        result.resolved['workflow.postImplementSequence.preApproval'],
+      ).toBeUndefined();
+      expect(
+        result.resolved['workflow.postImplementSequence.postApproval'],
+      ).toBeUndefined();
+    });
+
     it('exposes workflow keys with source default when nothing set', async () => {
       const repoRoot = await createRepoRoot();
       const userConfigDir = await createUserConfigDir();

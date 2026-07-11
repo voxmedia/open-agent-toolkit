@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.13
+version: 2.1.14
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -563,20 +563,20 @@ copy compiled provider targets into this shape or user config. `Uncapped` and
 `Inherit Host Defaults` remain explicit modes; `Leave Unresolved` and
 non-interactive unresolved state are not implementation-ready.
 
-### Step 3.55: Configure Optional Phase Review
+### Step 3.55: Configure Optional Phase Gate Review
 
 After the generated quick plan has stable phase IDs and before Step 3.6 starts
-the plan artifact review, invoke the `Shared Phase-Review Setup Contract` from
+the plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
 `oat-project-plan-writing`.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
 through the shared contract without probing, prompting, or mutation. Otherwise
 let the contract probe qualifying targets and offer all phases, selected
 phases, or disabled. If the probe fails, no target qualifies, or the user
-declines, leave phase review disabled and continue with the contract's concise
+declines, leave Phase gate review disabled and continue with the contract's concise
 status output.
 
-This phase-review setup is independent from HiLL checkpoints. Do not read or
+This Phase gate review setup is independent from HiLL checkpoints. Do not read or
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 

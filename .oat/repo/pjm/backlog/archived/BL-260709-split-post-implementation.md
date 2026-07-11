@@ -1,7 +1,7 @@
 ---
 id: BL-260709-split-post-implementation
 title: 'Split post-implementation sequence into pre- and post-approval steps'
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - post-implementation
 assignee: null
 created: '2026-07-09T14:19:33Z'
-updated: '2026-07-09T14:19:33Z'
+updated: '2026-07-11T11:25:52Z'
 associated_issues: []
 ---
 

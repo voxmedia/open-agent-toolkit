@@ -22,7 +22,6 @@
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches       | open   | high     | feature | M        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews  | open   | high     | feature | M        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                  | open   | high     | feature | M        |
-| BL-260709-split-post-implementation      | Split post-implementation sequence into pre- and post-approval steps | open   | high     | feature | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs    | open   | medium   | feature | L        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                           | open   | medium   | task    | S        |
 
