@@ -660,7 +660,7 @@ Expected: all green; worktree validation passes post-commit.
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
-| plan   | artifact | passed  | 2026-07-11 | structured (in-memory; reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; 3 rounds, final fix applied verbatim) |
+| plan   | artifact | received | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T111711Z.md (reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; supersedes the earlier 3-round in-memory structured pass, which predated the user-scope asset revisions) |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
