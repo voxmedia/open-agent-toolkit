@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-07-11
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase); confirmed at implement start
+oat_plan_hill_phases: ['p06'] # final phase only, from workflow.hillCheckpointDefault
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p02', 'p03']] # runner core and evidence collector are file-disjoint
 oat_phase_review_gate:
   enabled: true
@@ -35,8 +36,8 @@ oat_template_name: plan
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user (confirmed at `oat-project-implement` start)
-- [ ] Set `oat_plan_hill_phases` at implement start (confirmed with user; `[]` until then)
+- [x] Confirmed HiLL checkpoints (final phase only, from workflow.hillCheckpointDefault)
+- [x] Set `oat_plan_hill_phases` at implement start
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 

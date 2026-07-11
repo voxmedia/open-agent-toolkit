@@ -54,14 +54,18 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 2 | pending     | 4     | 0/4       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 3     | 0/3       |
+| Phase 5 | pending     | 6     | 0/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/22 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Fixture Project Template
 
 **Status:** in_progress
 **Started:** 2026-07-11
@@ -85,10 +89,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Scaffold the fixture project template
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -113,7 +117,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Fixture state presets
 
 **Status:** pending
 **Commit:** -
@@ -124,12 +128,165 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Fixture format contract test
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Smoke Runner Core
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Runner skeleton and argument contract
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Preflight module
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Provisioning with manifest and isolated config
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t04: Cleanup and dry-run isolation proof
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Evidence Collector & Report
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Evidence collection module
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Assertion engine and report emitters
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t03: Negative-control assertions
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Orchestration Contract
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Coordinator selection contract in workflow skills
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Cursor and Claude native topology guidance
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t03: Selection-record fields for dispatch evidence
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Harness Protocols & Live Smoke Evidence
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Per-harness drive protocols and runner wiring
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t02: Codex live smoke runs
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t03: Claude live smoke runs
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t04: Cursor IDE live smoke runs
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t05: Cursor CLI live smoke runs
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t06: Live negative controls and cross-harness evidence summary
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Documentation, Vault Capture & Release
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: OAT docs and smoke runbook
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t02: Vault closing capture pass
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t03: Release validation
 
 **Status:** pending
 **Commit:** -
