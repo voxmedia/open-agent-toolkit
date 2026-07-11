@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: b216e6e9
+oat_current_task: p02-t02
+oat_last_commit: d4d27dd3
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260709-split-post-implementation' }

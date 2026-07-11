@@ -20,10 +20,10 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | completed   | 2     | 2/2       |
-| p02   | in_progress | 3     | 0/3       |
+| p02   | in_progress | 3     | 1/3       |
 | p03   | pending     | 3     | 0/3       |
 
-**Total:** 0/8 tasks completed
+**Total:** 3/8 tasks completed
 
 ## Phase 1: Structured Configuration Contract
 
@@ -70,8 +70,8 @@ resume routing satisfy their lifecycle contracts.
 
 ### Task p02-t01: Reorder final review, sequence steps, and approval
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d4d27dd3
 
 ### Task p02-t02: Preserve sequence routing across PR and resume transitions
 
@@ -156,6 +156,13 @@ Populate from completed phase summaries before final review and PR generation.
   `oat-phase-implementer-gpt-5-6-sol-medium`.
 - Focused config CLI tests and CLI type check passed.
 - Phase 1 implementation is complete; code review is next.
+
+### Execution Mode
+
+**Date:** 2026-07-10
+
+- User directed that implementation continues in the native session. Only
+  automatic phase-boundary review gates may use subagents.
 
 ### Artifact Review Received: plan
 
