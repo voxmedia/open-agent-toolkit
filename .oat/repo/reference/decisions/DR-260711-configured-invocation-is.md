@@ -14,8 +14,20 @@ Exact selected targets and immutable gate invocation provenance are report input
 
 ## Decision
 
-TODO
+Dispatch reports preserve launcher-configured invocation and runtime-observed
+identity as separate evidence classes. The configured target, model, effort,
+source, and immutable gate invocation record describe what OAT requested.
+`runtimeIdentity` describes only independently observed or otherwise trusted
+producer evidence and remains `not-reported` when that evidence is absent.
+
+Observed output, producer self-identification, or role-name parsing must not
+overwrite the configured invocation record.
 
 ## Consequences
 
-TODO
+- Consumers must read the configured and runtime sections independently rather
+  than collapsing them into one model or producer field.
+- Exact dispatch remains auditable even when the provider does not expose
+  trusted runtime telemetry.
+- The derived `Dispatch:` compatibility stamp cannot be used to manufacture or
+  upgrade runtime identity confidence.
