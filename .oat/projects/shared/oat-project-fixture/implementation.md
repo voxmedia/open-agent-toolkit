@@ -12,6 +12,26 @@ oat_generated: false
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-11
 
+## Gate Feedback Log (quick-start plan gate, `onFailure: block`, maxAttempts exhausted)
+
+- **Run 1** (`262c4812`, codex-5-6-sol-max): killed at the 600 s fixed timeout
+  while the nested managed reviewer was actively working; no artifact; work
+  lost. Spawned `BL-260711-add-activity-aware-gate`. Not counted as a
+  remediation attempt (operational failure).
+- **Attempt 1** (`2904d24d`, 20-min override): blocked — 2 Important
+  (non-deterministic unavailable-target control; `node --test <dir>` invalid
+  under Node 22) + 2 Medium (unbounded conditional fix clauses; missing exact
+  live-task commands). All four fixed in plan; row set `fixes_completed`.
+- **Attempt 2** (`7c142d9e`, merged 15-min default): prior fixes verified
+  clean; blocked on 3 new Important (preflight lacks authenticated-readiness
+  probes; Codex live task lacks `report.mjs --check` acceptance commands;
+  p06-t01 hand-authors project docs instead of invoking
+  `oat-project-document` per `apps/oat-docs/AGENTS.md`) + 1 Medium
+  (p06-t03 conditional re-verification evidence outside declared file/commit
+  scope). Artifact: `reviews/artifact-plan-review-2026-07-11T170953Z.md`.
+- **Escalated to user 2026-07-11** with accumulated feedback per gate
+  contract.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:
