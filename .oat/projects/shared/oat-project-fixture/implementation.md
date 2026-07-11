@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p02-t05
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -73,13 +73,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 5     | 4/5       |
+| Phase 2 | in_progress | 5     | 5/5       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 7/23 tasks completed
+**Total:** 8/23 tasks completed
 
 ---
 
@@ -437,16 +437,26 @@ corrected in this bookkeeping update.
 
 ### Task p02-t05: Isolate approval-aware closeout configuration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a5499b70f2e346e924b4c498c91625ea08bd5348
 
-**Reason added:**
+**Outcome:**
 
-- PR #135 merged after the original Phase 2 tasks completed and changed the
-  repository default to run summary, documentation, and PR before final
-  approval.
-- Disposable smoke runs must retain the new final-closeout ordering without
-  becoming eligible for those external side effects.
+- Added an immutable empty structured closeout policy to disposable local
+  config and the provisioning manifest.
+- Repository-local config resolution proves the local value atomically
+  replaces main's summary/document/PR default.
+- Disposable runs retain final approval ordering without any eligible external
+  closeout child.
+
+**Verification:**
+
+- Focused provisioning tests — 3/3 passed.
+- Complete runner suite — 26/26 passed.
+- Full smoke suite — 36/36 passed.
+- Direct runner/contract lint and format — passed.
+
+**Dispatch:** `Dispatch: scope=p02-t05 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 
 ### Phase 2 Summary
 
@@ -482,8 +492,10 @@ corrected in this bookkeeping update.
 - Fresh canonical verification was synthesized in `2a45ea93`, then main was
   merged as `9e93aeca` without conflicts so every verification provenance
   commit remains an ancestor.
-- Phase 2 self-review remains paused until p02-t05 isolates the merged
+- Phase 2 self-review remained paused until p02-t05 isolated the merged
   approval-aware closeout configuration.
+- p02-t05 completed that isolation with repository-local atomic-resolution
+  evidence; Phase 2 is ready for self-review.
 
 ---
 
