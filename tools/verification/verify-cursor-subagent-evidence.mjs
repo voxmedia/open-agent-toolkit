@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
+import { validateStructuredCapture } from './capture-cursor-subagent-evidence.mjs';
+
 const TIERS = ['economy', 'balanced', 'high', 'frontier'];
 const STATUSES = ['pending', 'valid', 'unknown-value', 'unvalidated'];
 const SENTINEL = 'OAT_CURSOR_SUBAGENT_MODEL_VALID';
@@ -606,13 +608,32 @@ export function validateEvidenceDocument(
   };
 }
 
+export function validateStructuredEvidenceDocument(markdown, capture) {
+  const blocks = extractBlocks(markdown, 'STRUCTURED_CAPTURE');
+  if (blocks.length !== 1) {
+    fail(
+      `expected exactly one structured capture block; found ${blocks.length}`,
+    );
+  }
+  const checked = validateStructuredCapture(capture);
+  if (JSON.stringify(blocks[0]) !== JSON.stringify(capture)) {
+    fail('tracked structured capture does not match the checked capture file');
+  }
+  validateStructuredCapture(blocks[0]);
+  return checked;
+}
+
 function parseArgs(argv) {
   const options = { allowPending: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--allow-pending') {
       options.allowPending = true;
-    } else if (arg === '--recommendation' || arg === '--evidence') {
+    } else if (
+      arg === '--recommendation' ||
+      arg === '--evidence' ||
+      arg === '--capture'
+    ) {
       const value = argv[index + 1];
       if (!value) {
         fail(`${arg} requires a path`);
@@ -641,7 +662,15 @@ async function main() {
     allowPending: options.allowPending,
     recommendationSha256,
   });
-  process.stdout.write(`${JSON.stringify({ status: 'ok', ...result })}\n`);
+  const structured = options.capture
+    ? validateStructuredEvidenceDocument(
+        evidence,
+        JSON.parse(await readFile(options.capture, 'utf8')),
+      )
+    : null;
+  process.stdout.write(
+    `${JSON.stringify({ status: 'ok', ...result, ...(structured ? { structured } : {}) })}\n`,
+  );
 }
 
 const invokedPath = process.argv[1]

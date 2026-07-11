@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { deriveStructuredProbe } from './capture-cursor-subagent-evidence.mjs';
 import {
   CANONICAL_COMMAND_SHAPE,
   CANONICAL_PROMPT_TEMPLATE,
   deriveCursorCandidates,
   validateEvidenceDocument,
+  validateStructuredEvidenceDocument,
 } from './verify-cursor-subagent-evidence.mjs';
 
 const SENTINEL = 'OAT_CURSOR_SUBAGENT_MODEL_VALID';
@@ -477,5 +479,83 @@ test('requires complete and consistent machine recommendation disposition', () =
   assert.throws(
     () => validate(document({ dispositionValue: wrongHash, records })),
     /result version\/hash/,
+  );
+});
+
+test('validates and matches a structured capture evidence block', () => {
+  const candidate = 'gpt-5.6-sol-high';
+  const events = [
+    {
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'private-call',
+      tool_call: {
+        taskToolCall: { args: { model: candidate, prompt: 'private' } },
+      },
+      session_id: 'private-session',
+    },
+    {
+      type: 'tool_call',
+      subtype: 'completed',
+      call_id: 'private-call',
+      tool_call: {
+        taskToolCall: {
+          args: { model: candidate, prompt: 'private' },
+          result: { success: { content: SENTINEL } },
+        },
+      },
+      session_id: 'private-session',
+    },
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: false,
+      duration_ms: 1,
+      result: SENTINEL,
+      session_id: 'private-session',
+      request_id: 'private-request',
+    },
+  ];
+  const probe = deriveStructuredProbe({
+    candidate,
+    kind: 'positive-control',
+    events,
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  const capture = {
+    schemaVersion: 2,
+    sanitizerSchemaVersion: 1,
+    capturedAt: '2026-07-11T12:00:00.000Z',
+    recommendation: {
+      version: recommendation.version,
+      sha256: recommendationSha256,
+    },
+    environment: {
+      selectedBinary: 'cursor-agent',
+      clientVersion: 'test',
+      cursorApiKey: 'present',
+      credentialStore: 'unset',
+    },
+    controls: {
+      status: 'inconclusive',
+      positive: probe,
+      negative: { ...probe, kind: 'negative-control', candidate: 'invalid' },
+    },
+    candidates: [],
+  };
+  const markdown = block('STRUCTURED_CAPTURE', capture);
+  assert.deepEqual(validateStructuredEvidenceDocument(markdown, capture), {
+    controls: 'inconclusive',
+    candidateCount: 0,
+    outcomes: {},
+  });
+  const changed = structuredClone(capture);
+  changed.environment.clientVersion = 'different';
+  assert.throws(
+    () => validateStructuredEvidenceDocument(markdown, changed),
+    /does not match/,
   );
 });
