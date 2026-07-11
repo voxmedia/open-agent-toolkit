@@ -559,18 +559,18 @@ Expected: all green.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                                               |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| p02    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| p03    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| p04    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| p05    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| p06    | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| final  | code     | pending         | -          | -                                                                                                                                                                                                                                      |
-| spec   | artifact | pending         | -          | -                                                                                                                                                                                                                                      |
-| design | artifact | pending         | -          | -                                                                                                                                                                                                                                      |
-| plan   | artifact | fixes_completed | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T165003Z.md — 2 Important + 2 Medium fixed in plan (deterministic negative-control probe, Node test globs, report-only drift/defect clauses, exact live-task commands); awaiting gate re-review |
+| Scope  | Type     | Status   | Date       | Artifact                                                                                                                                    |
+| ------ | -------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                                                                                                           |
+| p02    | code     | pending  | -          | -                                                                                                                                           |
+| p03    | code     | pending  | -          | -                                                                                                                                           |
+| p04    | code     | pending  | -          | -                                                                                                                                           |
+| p05    | code     | pending  | -          | -                                                                                                                                           |
+| p06    | code     | pending  | -          | -                                                                                                                                           |
+| final  | code     | pending  | -          | -                                                                                                                                           |
+| spec   | artifact | pending  | -          | -                                                                                                                                           |
+| design | artifact | pending  | -          | -                                                                                                                                           |
+| plan   | artifact | received | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T170953Z.md — gate re-review found 3 Important + 1 Medium; blocking findings awaiting review receive |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
