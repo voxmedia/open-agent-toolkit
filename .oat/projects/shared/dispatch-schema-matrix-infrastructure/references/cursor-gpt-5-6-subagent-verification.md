@@ -123,6 +123,128 @@ Configured-subset disposition: all four configured candidates remain selected
 in their existing tiers, but none is represented as live-verified. Operators
 should treat them as pending recheck, not as inferred capabilities.
 
+<!-- OAT_CURSOR_RECOMMENDATION_DISPOSITION_START -->
+
+```json
+{
+  "schemaVersion": 1,
+  "assetDisposition": "retained",
+  "sourceRecommendationVersion": "2026-07-10.2",
+  "sourceRecommendationSha256": "01cc3d6c1c451090a1a1439d4fbaa359e25f8e6edb93bb022558607f57234527",
+  "resultRecommendationVersion": "2026-07-10.2",
+  "resultRecommendationSha256": "01cc3d6c1c451090a1a1439d4fbaa359e25f8e6edb93bb022558607f57234527",
+  "rationale": "All live outcomes are unvalidated, so no definitive evidence supports a recommendation change.",
+  "candidateDecisions": [
+    {
+      "candidate": "gpt-5.6-luna-low",
+      "tier": "economy",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-luna-medium",
+      "tier": "economy",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-luna-high",
+      "tier": "economy",
+      "configured": true,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-luna-xhigh",
+      "tier": "balanced",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-terra-low",
+      "tier": "balanced",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-terra-medium",
+      "tier": "balanced",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-terra-high",
+      "tier": "balanced",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-terra-xhigh",
+      "tier": "balanced",
+      "configured": true,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-sol-low",
+      "tier": "high",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-sol-medium",
+      "tier": "high",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-sol-high",
+      "tier": "high",
+      "configured": true,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-sol-xhigh",
+      "tier": "frontier",
+      "configured": false,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    },
+    {
+      "candidate": "gpt-5.6-sol-max",
+      "tier": "frontier",
+      "configured": true,
+      "outcome": "unvalidated",
+      "decision": "retained",
+      "recheckDate": "2026-07-18"
+    }
+  ]
+}
+```
+
+<!-- OAT_CURSOR_RECOMMENDATION_DISPOSITION_END -->
+
 ## Evidence records
 
 <!-- OAT_CURSOR_EVIDENCE_RECORD_START -->
