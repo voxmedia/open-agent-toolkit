@@ -1,34 +1,34 @@
-import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { createRequire } from "node:module";
-import os from "node:os";
-import path from "node:path";
-import test from "node:test";
-import { fileURLToPath } from "node:url";
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 const fixtureRoot = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.join(fixtureRoot, "project");
-const repoRoot = path.resolve(fixtureRoot, "../../..");
+const projectRoot = path.join(fixtureRoot, 'project');
+const repoRoot = path.resolve(fixtureRoot, '../../..');
 const require = createRequire(import.meta.url);
-const tsxCli = require.resolve("tsx/cli");
-const cliEntry = path.join(repoRoot, "packages/cli/src/index.ts");
-const cliTsconfig = path.join(repoRoot, "packages/cli/tsconfig.json");
+const tsxCli = require.resolve('tsx/cli');
+const cliEntry = path.join(repoRoot, 'packages/cli/src/index.ts');
+const cliTsconfig = path.join(repoRoot, 'packages/cli/tsconfig.json');
 
 function frontmatter(source) {
   const match = source.match(/^---\n(?<content>[\s\S]*?)\n---/);
 
-  assert.ok(match, "fixture artifact must have YAML frontmatter");
+  assert.ok(match, 'fixture artifact must have YAML frontmatter');
   return match.groups.content;
 }
 
 function resolveCandidate(provider, candidate) {
   const temporaryRoot = mkdtempSync(
-    path.join(os.tmpdir(), "oat-fixture-resolver-"),
+    path.join(os.tmpdir(), 'oat-fixture-resolver-'),
   );
-  const home = path.join(temporaryRoot, "home");
+  const home = path.join(temporaryRoot, 'home');
 
-  mkdirSync(path.join(temporaryRoot, ".git"));
+  mkdirSync(path.join(temporaryRoot, '.git'));
   mkdirSync(home);
 
   try {
@@ -36,34 +36,32 @@ function resolveCandidate(provider, candidate) {
       process.execPath,
       [
         tsxCli,
-        "--tsconfig",
+        '--tsconfig',
         cliTsconfig,
         cliEntry,
-        "project",
-        "dispatch-ceiling",
-        "resolve",
-        "--provider",
+        'project',
+        'dispatch-ceiling',
+        'resolve',
+        '--provider',
         provider,
-        "--role",
-        "implementer",
-        "--ceiling-tier",
-        "high",
-        "--candidate-model",
+        '--role',
+        'implementer',
+        '--ceiling-tier',
+        'high',
+        '--candidate-model',
         candidate.model,
-        ...(candidate.effort
-          ? ["--candidate-effort", candidate.effort]
-          : []),
-        "--project-path",
+        ...(candidate.effort ? ['--candidate-effort', candidate.effort] : []),
+        '--project-path',
         projectRoot,
-        "--json",
+        '--json',
       ],
       {
         cwd: temporaryRoot,
-        encoding: "utf8",
+        encoding: 'utf8',
         env: {
           ...process.env,
           HOME: home,
-          OAT_NON_INTERACTIVE: "1",
+          OAT_NON_INTERACTIVE: '1',
           USERPROFILE: home,
         },
       },
@@ -80,85 +78,85 @@ function resolveCandidate(provider, candidate) {
   }
 }
 
-test("fixture plan preserves the canonical format contract", () => {
-  const plan = readFileSync(path.join(projectRoot, "plan.md"), "utf8");
+test('fixture plan preserves the canonical format contract', () => {
+  const plan = readFileSync(path.join(projectRoot, 'plan.md'), 'utf8');
   const yaml = frontmatter(plan);
 
   for (const [key, value] of [
-    ["oat_plan_source", "quick"],
-    ["oat_status", "in_progress"],
-    ["oat_ready_for", "null"],
-    ["oat_template", "true"],
+    ['oat_plan_source', 'quick'],
+    ['oat_status', 'in_progress'],
+    ['oat_ready_for', 'null'],
+    ['oat_template', 'true'],
   ]) {
     assert.match(
       yaml,
-      new RegExp(`^${key}: ${value}$`, "m"),
+      new RegExp(`^${key}: ${value}$`, 'm'),
       `plan frontmatter must declare ${key}`,
     );
   }
 
   const taskHeadings = [...plan.matchAll(/^### Task (p\d{2}-t\d{2}): .+$/gm)];
-  assert.equal(taskHeadings.length, 9, "fixture must have nine task headings");
+  assert.equal(taskHeadings.length, 9, 'fixture must have nine task headings');
   assert.deepEqual(
     taskHeadings.map((match) => match[1]),
     [
-      "p01-t01",
-      "p01-t02",
-      "p01-t03",
-      "p02-t01",
-      "p02-t02",
-      "p02-t03",
-      "p03-t01",
-      "p03-t02",
-      "p03-t03",
+      'p01-t01',
+      'p01-t02',
+      'p01-t03',
+      'p02-t01',
+      'p02-t02',
+      'p02-t03',
+      'p03-t01',
+      'p03-t02',
+      'p03-t03',
     ],
-    "task headings must retain stable pNN-tNN identifiers",
+    'task headings must retain stable pNN-tNN identifiers',
   );
 
   assert.match(
     plan,
     /^\| Scope\s+\| Type\s+\| Status\s+\| Date\s+\| Artifact \|$/m,
-    "reviews table must include the canonical Date column",
+    'reviews table must include the canonical Date column',
   );
   for (const [scope, type] of [
-    ["p01", "code"],
-    ["p02", "code"],
-    ["p03", "code"],
-    ["final", "code"],
-    ["spec", "artifact"],
-    ["design", "artifact"],
-    ["plan", "artifact"],
+    ['p01', 'code'],
+    ['p02', 'code'],
+    ['p03', 'code'],
+    ['final', 'code'],
+    ['spec', 'artifact'],
+    ['design', 'artifact'],
+    ['plan', 'artifact'],
   ]) {
     assert.match(
       plan,
       new RegExp(
         `^\\|\\s*${scope}\\s*\\|\\s*${type}\\s*\\|\\s*pending\\s*\\|\\s*-\\s*\\|\\s*-\\s*\\|$`,
-        "m",
+        'm',
       ),
       `missing required review row for ${scope}`,
     );
   }
 });
 
-test("fixture state preserves quick-mode lifecycle and monotonic dispatch policy", () => {
-  const state = readFileSync(path.join(projectRoot, "state.md"), "utf8");
+test('fixture state preserves quick-mode lifecycle and monotonic dispatch policy', () => {
+  const state = readFileSync(path.join(projectRoot, 'state.md'), 'utf8');
   const yaml = frontmatter(state);
 
   for (const [key, value] of [
-    ["oat_current_task", "null"],
-    ["oat_status", "in_progress"],
-    ["oat_ready_for", "null"],
-    ["oat_template", "true"],
-    ["oat_kind", "implementation"],
-    ["oat_phase", "plan"],
-    ["oat_phase_status", "in_progress"],
-    ["oat_workflow_mode", "quick"],
-    ["oat_workflow_origin", "native"],
-    ["oat_generated", "false"],
+    ['oat_current_task', 'null'],
+    ['oat_status', 'in_progress'],
+    ['oat_ready_for', 'null'],
+    ['oat_template', 'true'],
+    ['oat_kind', 'implementation'],
+    ['oat_phase', 'plan'],
+    ['oat_phase_status', 'in_progress'],
+    ['oat_workflow_mode', 'quick'],
+    ['oat_workflow_origin', 'native'],
+    ['oat_generated', 'false'],
   ]) {
     assert.match(
       yaml,
-      new RegExp(`^${key}: ${value}$`, "m"),
+      new RegExp(`^${key}: ${value}$`, 'm'),
       `state frontmatter must declare ${key}`,
     );
   }
@@ -167,19 +165,15 @@ test("fixture state preserves quick-mode lifecycle and monotonic dispatch policy
   assert.match(yaml, /^  policy: high$/m);
   assert.match(yaml, /^  source: project-state$/m);
   for (const [provider, lowerCandidate, highCandidate] of [
-    ["codex", "gpt-5.6-terra", "gpt-5.6-sol"],
-    ["claude", "sonnet", "opus"],
-    [
-      "cursor",
-      "fixture-cursor-opaque-medium",
-      "fixture-cursor-opaque-high",
-    ],
+    ['codex', 'gpt-5.6-terra', 'gpt-5.6-sol'],
+    ['claude', 'sonnet', 'opus'],
+    ['cursor', 'fixture-cursor-opaque-medium', 'fixture-cursor-opaque-high'],
   ]) {
     assert.match(
       yaml,
       new RegExp(
         `^    ${provider}:\\n      balanced:\\n        candidates:\\n[\\s\\S]*?${lowerCandidate}[\\s\\S]*?^      high:\\n        candidates:\\n[\\s\\S]*?${highCandidate}`,
-        "m",
+        'm',
       ),
       `state must retain monotonic ${provider} balanced and high candidates`,
     );
@@ -187,26 +181,26 @@ test("fixture state preserves quick-mode lifecycle and monotonic dispatch policy
   assert.doesNotMatch(
     yaml,
     /^\s*(?:selection|requestedCandidate|resolved|dispatchArgs|target):/m,
-    "state must not persist compiled selection or dispatch results",
+    'state must not persist compiled selection or dispatch results',
   );
 });
 
-test("fixture dispatch matrix supports exact lower candidates under High", () => {
+test('fixture dispatch matrix supports exact lower candidates under High', () => {
   const cases = [
     {
-      provider: "codex",
-      lower: { model: "gpt-5.6-terra", effort: "medium" },
-      high: { model: "gpt-5.6-sol", effort: "high" },
+      provider: 'codex',
+      lower: { model: 'gpt-5.6-terra', effort: 'medium' },
+      high: { model: 'gpt-5.6-sol', effort: 'high' },
     },
     {
-      provider: "claude",
-      lower: { model: "sonnet" },
-      high: { model: "opus" },
+      provider: 'claude',
+      lower: { model: 'sonnet' },
+      high: { model: 'opus' },
     },
     {
-      provider: "cursor",
-      lower: { model: "fixture-cursor-opaque-medium" },
-      high: { model: "fixture-cursor-opaque-high" },
+      provider: 'cursor',
+      lower: { model: 'fixture-cursor-opaque-medium' },
+      high: { model: 'fixture-cursor-opaque-high' },
     },
   ];
 
@@ -214,9 +208,9 @@ test("fixture dispatch matrix supports exact lower candidates under High", () =>
     const highResolution = resolveCandidate(provider, high);
     const highSelection = highResolution.providers[provider].selection;
 
-    assert.equal(highResolution.status, "resolved");
-    assert.equal(highResolution.source, "invocation");
-    assert.equal(highSelection.ceilingTier, "high");
+    assert.equal(highResolution.status, 'resolved');
+    assert.equal(highResolution.source, 'invocation');
+    assert.equal(highSelection.ceilingTier, 'high');
     assert.equal(highSelection.target.model, high.model);
     assert.equal(highSelection.target.effort, high.effort);
     assert.equal(highSelection.ceilingTarget.model, high.model);
@@ -225,10 +219,10 @@ test("fixture dispatch matrix supports exact lower candidates under High", () =>
     const lowerResolution = resolveCandidate(provider, lower);
     const lowerSelection = lowerResolution.providers[provider].selection;
 
-    assert.equal(lowerResolution.status, "resolved");
-    assert.equal(lowerResolution.source, "invocation");
-    assert.equal(lowerSelection.ceilingTier, "high");
-    assert.equal(lowerSelection.candidateTier, "balanced");
+    assert.equal(lowerResolution.status, 'resolved');
+    assert.equal(lowerResolution.source, 'invocation');
+    assert.equal(lowerSelection.ceilingTier, 'high');
+    assert.equal(lowerSelection.candidateTier, 'balanced');
     assert.equal(lowerSelection.requestedCandidate.model, lower.model);
     assert.equal(lowerSelection.requestedCandidate.effort, lower.effort);
     assert.equal(lowerSelection.target.model, lower.model);
@@ -239,10 +233,10 @@ test("fixture dispatch matrix supports exact lower candidates under High", () =>
   }
 });
 
-test("completed fixture discovery and design are durable artifacts", () => {
-  for (const artifact of ["discovery.md", "design.md"]) {
+test('completed fixture discovery and design are durable artifacts', () => {
+  for (const artifact of ['discovery.md', 'design.md']) {
     const yaml = frontmatter(
-      readFileSync(path.join(projectRoot, artifact), "utf8"),
+      readFileSync(path.join(projectRoot, artifact), 'utf8'),
     );
 
     assert.match(yaml, /^oat_status: complete$/m);
