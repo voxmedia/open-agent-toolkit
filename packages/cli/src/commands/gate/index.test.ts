@@ -2464,6 +2464,27 @@ describe('oat gate', () => {
           family: 'composer',
         },
       },
+      dispatchReport: {
+        schemaVersion: 1,
+        route: {
+          scope: 'p04',
+          action: 'review',
+          role: 'reviewer',
+          target: 'cursor-reviewer',
+        },
+        gateInvocation: {
+          targetId: 'cursor-reviewer',
+          runtime: 'cursor',
+          model: 'composer-2.5',
+        },
+        runtimeIdentity: {
+          producer: null,
+          model: null,
+          effort: null,
+          provenance: 'unknown',
+          confidence: 'not-reported',
+        },
+      },
     });
     expect(process.exitCode).toBe(0);
   });
@@ -2601,6 +2622,16 @@ describe('oat gate', () => {
           confidence: 'unknown',
           family: 'unknown',
           source: 'flag',
+        },
+      },
+      dispatchReport: {
+        gateInvocation: {
+          targetId: 'codex-default',
+        },
+        runtimeIdentity: {
+          producer: null,
+          provenance: 'unknown',
+          confidence: 'not-reported',
         },
       },
     });
@@ -3275,7 +3306,26 @@ describe('oat gate', () => {
           },
         },
       },
+      dispatchReport: {
+        gateInvocation: {
+          model: 'provider-default',
+        },
+        runtimeIdentity: {
+          producer: null,
+          model: null,
+          effort: null,
+          provenance: 'unknown',
+          confidence: 'not-reported',
+        },
+      },
     });
+    expect(
+      (
+        capture.jsonPayloads[0] as {
+          dispatchReport: { gateInvocation: { model: string } };
+        }
+      ).dispatchReport.gateInvocation.model,
+    ).not.toBe('self-reported-different-model');
     expect(process.exitCode).toBe(1);
   });
 
@@ -3468,12 +3518,40 @@ describe('oat gate', () => {
           reasoningEffort: string;
           source: string;
         };
+        dispatchReport: {
+          gateInvocation: {
+            runId: string;
+            targetId: string;
+            runtime: string;
+            model: string;
+            reasoningEffort: string;
+            source: string;
+          };
+          selection: {
+            cellSource: string | null;
+          };
+          runtimeIdentity: {
+            producer: string | null;
+            confidence: string;
+          };
+        };
       };
       expect(payload.gateInvocation).toMatchObject({
         runId: expect.any(String),
         targetId: target,
         runtime,
         ...expected,
+      });
+      expect(payload.dispatchReport.gateInvocation).toEqual(
+        payload.gateInvocation,
+      );
+      expect(payload.dispatchReport.selection.cellSource).toBeNull();
+      expect(payload.dispatchReport.gateInvocation.source).toBe(
+        expected.source,
+      );
+      expect(payload.dispatchReport.runtimeIdentity).toMatchObject({
+        producer: null,
+        confidence: 'not-reported',
       });
       const prompt = runner.calls.at(-1)?.args.at(-1) ?? '';
       expect(prompt).toContain(

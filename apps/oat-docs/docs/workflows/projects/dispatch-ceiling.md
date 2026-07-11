@@ -263,6 +263,33 @@ Reviewers use the final candidate at the configured review ceiling. Managed
 reviewer behavior. A timeout retry preserves the same exact role or complete
 Claude/Cursor model payload.
 
+### Cursor evidence authority
+
+Cursor resolution and runtime evidence answer different questions. Resolution
+proves which opaque candidate OAT requested. A stream-JSON Task start and
+correlated completion prove launcher behavior only when the model argument is
+preserved byte-for-byte. An accepted Task plus the child sentinel establishes
+argument eligibility for that account and client; a structured rejection can
+establish `unknown-value`. Runtime producer identity remains `not-reported`
+unless trusted Cursor telemetry or Cursor support independently confirms it.
+
+The [2026-07-11 GPT-5.6 evidence record](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
+ran positive and negative controls before candidate probes. Neither control
+emitted a Task event, so the harness stopped without probing the 13 recommended
+arguments or exploratory `gpt-5.6-sol-high-fast`. This is a harness/account
+boundary, not model rejection, and it supports no recommendation change.
+
+The tracked artifact's structured second-pass block exposes only an allowlisted
+event projection and non-reversible identifier hashes. Exact
+request/session/tool-call IDs and credential-redacted unprojected streams from
+that pass stay in gitignored local project storage for support diagnosis.
+
+The same public artifact intentionally preserves the sanitized historical v1
+text-mode record for provenance. That older section includes command arguments
+and prompts, stdout and stderr, exit and duration data, and capture-environment
+details such as user-specific binary paths; it is not limited to the structured
+second-pass projection.
+
 ## Coordinator and Worker Layers
 
 `oat-phase-implementer` has two explicit modes:
@@ -279,19 +306,44 @@ Workers run serially in the same worktree. Parallelism remains limited to
 plan-declared phase worktrees. See
 [Implementation Execution](implementation-execution.md) for the full loop.
 
-## Producer Provenance
+## Dispatch Report V1 and Producer Provenance
 
-Dispatch notes retain a parseable stamp for later review gates:
+Resolver calls that pass `--report-scope` and `--report-action` include a
+`dispatchReport` object in JSON output. Consumers must require
+`dispatchReport.schemaVersion: 1` before dispatch. The report keeps four
+different decisions separate:
+
+| Report area                                                         | What it means                                                        |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `policy`                                                            | The resolved managed/inherit policy, its status, name, and source    |
+| `selection.ceilingTier` / `selection.ceilingTarget`                 | The maximum allowed tier and its boundary target                     |
+| `selection.requestedCandidate` / `candidateTier` / `candidateIndex` | The exact candidate requested for this bounded task and its position |
+| `selection.exactSelectedTarget` / `route.target`                    | The compiled provider target and actual invocation route             |
+
+A named policy or ceiling is never a substitute for the requested candidate or
+exact selected target. `requestedControls` records what OAT put into the host
+payload. `configuredDefaults` records fallback configuration and is explicitly
+not a runtime observation.
+
+`gateInvocation` is an immutable copy of configured gate controls.
+`runtimeIdentity` is separate and stays `not-reported` until independently
+observed or otherwise supported runtime evidence exists. Requested controls,
+configured defaults, role-name parsing, and reviewer self-identification do not
+become observed runtime identity.
+
+Human output comes from `formatDispatchReport(dispatchReport)`. Dispatch notes
+also retain a parseable compatibility stamp for later review gates:
 
 ```text
 Dispatch: scope=p06-t03 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 ```
 
-`producer` is the resolved model slug when OAT can establish it; otherwise it is
-`unknown`. `provenance` is `declared`, `observed`, `inferred`, or `unknown`.
-Concrete Claude/Cursor model arguments can declare identity. Codex roles retain
-exact model and effort axes from resolver output even when producer identity is
-not independently observable.
+The stamp must be derived through `toDispatchStampRecord(dispatchReport)` and
+`formatDispatchStamp`; callers must not reconstruct it from policy labels, role
+names, candidate strings, or target names. `producer` is the runtime model slug
+when OAT can establish it; otherwise it is `unknown`. `provenance` is
+`declared`, `observed`, `inferred`, or `unknown`. Selected model and effort axes
+can remain exact even when runtime producer identity is not reported.
 
 ## Legacy Compatibility
 

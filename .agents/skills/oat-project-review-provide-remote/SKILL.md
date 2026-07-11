@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.0.2
+version: 1.0.3
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -210,6 +210,33 @@ Guard outcomes:
 ### Step 5: Run the Review (Tier 1/2/3 Dispatch)
 
 Mode-aware review against the project artifacts + the `oat-reviewer` checklist + severity model. Scope to the narrowing range when one was chosen; otherwise the full PR diff. Assign finding IDs per severity bucket (`C1`, `I1`, `M1`, `m1`), stable within the dispatch.
+
+**Step 5.0: Resolve and report the exact reviewer target.** Before capability
+probing, run:
+
+```bash
+oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --project-path "$PROJECT_PATH" --report-scope "$SCOPE_TOKEN" --report-action review --json
+```
+
+Require `dispatchReport.schemaVersion: 1`. Render/consume its versioned human
+block with `formatDispatchReport(dispatchReport)` semantics and derive the
+formal audit `Dispatch:` line only through
+`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
+Never hand-build a parallel stamp schema.
+
+Retain the exact managed provider payload from
+`providers.<provider>.dispatchArgs` and
+`providers.<provider>.selection.target` in the actual Tier 1/2/3 invocation;
+the report does not authorize substitution or lowering. Configured gate
+invocation, work-producer diversity, and independently observed reviewer
+`dispatchReport.runtimeIdentity` remain separate. Do not treat PR markers, implementation
+producer stamps, configured defaults, or reviewer self-report as runtime
+confirmation. Leave report runtime identity not-reported unless independently
+observed.
+
+This resolver command is independent of lifecycle gates. Reusable `oat gate
+review` commands must remain provider-neutral and must not contain or add a
+provider/model `--target` argument.
 
 **Step 5a: Probe subagent availability** (mirrors `oat-project-review-provide` Step 6a):
 

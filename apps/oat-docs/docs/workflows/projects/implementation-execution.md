@@ -88,6 +88,18 @@ import performs the same readiness setup:
 
 See [Dispatch Policy](dispatch-ceiling.md) for ladder shapes and ownership.
 
+### Validating plan metadata
+
+Before building the phase schedule, implementation validates plan parallelism:
+
+```bash
+oat project validate-plan --project-path .oat/projects/shared/example
+```
+
+The command rejects malformed groups, unknown phase IDs, duplicate membership,
+and singleton groups. Invalid metadata blocks execution rather than silently
+falling back to a different schedule.
+
 Before phase work, implementation runs provider preflight:
 
 ```bash
@@ -203,6 +215,28 @@ Build the complete host payload before writing dispatch logs:
 If exact controls cannot be applied, fail closed. A transient retry reuses the
 same complete provider payload. Substantive escalation re-resolves another
 configured candidate within the same named maximum and bounded retry budget.
+
+## Dispatch Reports During Execution
+
+Every implementation, fix, and review resolver call supplies explicit report
+context:
+
+```text
+--report-scope <phase-or-task> --report-action <implementation|fix|review>
+```
+
+The completed JSON must contain `dispatchReport.schemaVersion: 1` before the
+provider invocation begins. The coordinator reads the requested candidate,
+candidate tier, ceiling, exact selected target, requested controls, configured
+defaults, and runtime identity from that report as distinct fields. It does not
+infer any of them from a materialized role name or opaque Cursor string.
+
+The human dispatch block is rendered from the report. The formal `Dispatch:`
+line is a compatibility view derived from the same report through the dispatch
+stamp adapter. It is not a second schema and must not be assembled by hand.
+Configured defaults and configured gate invocation remain distinct from runtime
+identity; when runtime identity is not observed, the report says so without
+weakening exact requested model or effort controls.
 
 ## Task Scope and Commit Verification
 

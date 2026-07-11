@@ -27,19 +27,17 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  walkDispatchMatrix,
+  type DispatchMatrixCellRef,
+  type DispatchMatrixSource,
+} from '@config/dispatch-matrix';
+import {
   readOatConfig,
   type OatConfig,
   type OatLocalConfig,
   readOatLocalConfig,
   readUserConfig,
-  isCodexMaterializedRouteTarget,
-  isWorkflowDispatchCandidateLadder,
-  isWorkflowDispatchFallbackRoute,
   type UserConfig,
-  type WorkflowDispatchMatrixCell,
-  type WorkflowDispatchProviderValue,
-  type WorkflowDispatchRouteEntry,
-  type WorkflowDispatchRouteTarget,
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
@@ -52,12 +50,15 @@ import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
 import { geminiAdapter } from '@providers/gemini';
 import {
-  normalizeMatrixCellAvailability,
   validateMatrixCell,
   type MatrixCellAvailability,
   type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import {
+  createDispatchValidationPassContext,
+  validateDispatchMatrixRefs,
+} from '@providers/identity/dispatch-validation';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
@@ -86,6 +87,8 @@ interface DoctorDependencies {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailabilityResponse>;
+  createDispatchValidationPassContext: typeof createDispatchValidationPassContext;
+  validateDispatchMatrixRefs: typeof validateDispatchMatrixRefs;
   processEnv: NodeJS.ProcessEnv;
   runPjmDoctorChecks: (
     repoRoot: string,
@@ -110,23 +113,18 @@ interface SkillVersionReport {
   outdatedSkills: OutdatedSkillVersion[];
 }
 
-interface DispatchMatrixCellRef {
-  layer: DispatchMatrixConfigLayer;
-  provider: string;
-  value: string;
-  path: string;
-  target?: WorkflowDispatchRouteTarget;
-}
-
 interface DispatchMatrixCellIssue extends DispatchMatrixCellRef {
   availability: Exclude<MatrixCellAvailability, 'valid'>;
   message?: string;
 }
 
-type DispatchMatrixConfigLayer = 'user' | 'shared' | 'local';
+type DispatchMatrixConfigSource = Extract<
+  DispatchMatrixSource,
+  'user-config' | 'repo-config' | 'local-config'
+>;
 
 interface DispatchMatrixConfigLayerEntry {
-  layer: DispatchMatrixConfigLayer;
+  source: DispatchMatrixConfigSource;
   config: Pick<OatConfig, 'workflow'>;
 }
 
@@ -268,6 +266,8 @@ function createDependencies(): DoctorDependencies {
     readOatLocalConfig,
     readUserConfig,
     validateMatrixCell,
+    createDispatchValidationPassContext,
+    validateDispatchMatrixRefs,
     processEnv: process.env,
     runPjmDoctorChecks,
     // Default binding remains self-contained, but still honors the caller-
@@ -280,127 +280,56 @@ function createDependencies(): DoctorDependencies {
   };
 }
 
-function isRouteTarget(entry: unknown): entry is WorkflowDispatchRouteTarget {
-  return typeof entry === 'object' && entry !== null && !Array.isArray(entry);
-}
-
-function formatRouteTargetValue(entry: WorkflowDispatchRouteTarget): string {
-  return [entry.model, entry.effort].filter(Boolean).join('/');
-}
-
-function addDispatchMatrixCellRefs(
-  refs: DispatchMatrixCellRef[],
-  layer: DispatchMatrixConfigLayer,
-  provider: string,
-  path: string,
-  cell: WorkflowDispatchMatrixCell,
-): void {
-  if (typeof cell === 'string') {
-    refs.push({ layer, provider, value: cell, path });
-    return;
-  }
-
-  const addEntry = (entry: WorkflowDispatchRouteEntry, entryPath: string) => {
-    if (typeof entry === 'string') {
-      refs.push({ layer, provider, value: entry, path: entryPath });
-      return;
-    }
-
-    if (!isRouteTarget(entry)) {
-      return;
-    }
-
-    const targetProvider = entry.harness ?? provider;
-    if (isCodexMaterializedRouteTarget(provider, entry)) {
-      if (entry.model && entry.effort) {
-        refs.push({
-          layer,
-          provider: targetProvider,
-          value: formatRouteTargetValue(entry),
-          path: entryPath,
-          target: entry,
-        });
-        return;
-      }
-    }
-
-    if (entry.model) {
-      refs.push({
-        layer,
-        provider: targetProvider,
-        value: entry.model,
-        path: `${entryPath}.model`,
-      });
-    }
-    if (entry.effort) {
-      refs.push({
-        layer,
-        provider: targetProvider,
-        value: entry.effort,
-        path: `${entryPath}.effort`,
-      });
-    }
-  };
-
-  if (isWorkflowDispatchCandidateLadder(cell)) {
-    for (const [candidateIndex, candidate] of cell.candidates.entries()) {
-      const candidatePath = `${path}.candidates[${candidateIndex}]`;
-      if (isWorkflowDispatchFallbackRoute(candidate)) {
-        for (const [routeIndex, entry] of candidate.route.entries()) {
-          addEntry(entry, `${candidatePath}.route[${routeIndex}]`);
-        }
-        continue;
-      }
-      addEntry(candidate, candidatePath);
-    }
-    return;
-  }
-
-  for (const [index, entry] of cell.entries()) {
-    addEntry(entry, `${path}[${index}]`);
-  }
-}
-
 function collectDispatchMatrixCellRefs(
   layers: DispatchMatrixConfigLayerEntry[],
 ): DispatchMatrixCellRef[] {
-  const refs: DispatchMatrixCellRef[] = [];
-
-  for (const { layer, config } of layers) {
+  return layers.flatMap(({ source, config }) => {
     const providers = config.workflow?.dispatchCeiling?.providers ?? {};
+    return walkDispatchMatrix(providers, {
+      source,
+      pathPrefix: 'workflow.dispatchCeiling.providers',
+    });
+  });
+}
 
-    for (const [provider, providerValue] of Object.entries(providers)) {
-      const providerPath = `workflow.dispatchCeiling.providers.${provider}`;
-      if (typeof providerValue === 'string') {
-        refs.push({
-          layer,
-          provider,
-          value: providerValue,
-          path: providerPath,
-        });
-        continue;
-      }
+function dispatchMatrixSourceLabel(source: DispatchMatrixSource): string {
+  switch (source) {
+    case 'user-config':
+      return 'user';
+    case 'repo-config':
+      return 'shared';
+    case 'local-config':
+      return 'local';
+    case 'project-state':
+      return 'project-state';
+  }
+}
 
-      const tierMap = providerValue as Exclude<
-        WorkflowDispatchProviderValue,
-        string
-      >;
-      for (const [tier, cell] of Object.entries(tierMap)) {
-        if (cell === undefined) {
-          continue;
-        }
-        addDispatchMatrixCellRefs(
-          refs,
-          layer,
-          provider,
-          `${providerPath}.${tier}`,
-          cell,
-        );
-      }
-    }
+function dispatchMatrixRefValue(ref: DispatchMatrixCellRef): string {
+  return ref.value ?? ref.target?.model ?? ref.target?.effort ?? 'unknown';
+}
+
+function dispatchMatrixAvailabilityRef(ref: DispatchMatrixCellRef): {
+  provider: string;
+  value: string;
+  target: DispatchMatrixCellRef['target'];
+} | null {
+  if (ref.value !== null) {
+    return { provider: ref.provider, value: ref.value, target: null };
+  }
+  if (ref.target === null) {
+    return null;
   }
 
-  return refs;
+  const value = ref.target.model ?? ref.target.effort;
+  if (!value) {
+    return null;
+  }
+  return {
+    provider: ref.target.harness ?? ref.provider,
+    value,
+    target: ref.target,
+  };
 }
 
 function formatDispatchMatrixIssueList(
@@ -412,7 +341,7 @@ function formatDispatchMatrixIssueList(
         'message' in issue && typeof issue.message === 'string'
           ? `; ${issue.message}`
           : '';
-      return `${issue.path}=${issue.value} (${issue.layer} config)${suffix}`;
+      return `${issue.path}=${dispatchMatrixRefValue(issue)} (${dispatchMatrixSourceLabel(issue.source)} config)${suffix}`;
     })
     .join(', ');
 }
@@ -422,7 +351,9 @@ async function createDispatchMatrixDoctorCheck(
   layers: DispatchMatrixConfigLayerEntry[],
   dependencies: DoctorDependencies,
 ): Promise<DoctorCheck> {
-  const refs = collectDispatchMatrixCellRefs(layers);
+  const refs = collectDispatchMatrixCellRefs(layers).filter(
+    (ref) => dispatchMatrixAvailabilityRef(ref) !== null,
+  );
   if (refs.length === 0) {
     return {
       name: 'project:dispatch_matrix',
@@ -433,27 +364,20 @@ async function createDispatchMatrixDoctorCheck(
     };
   }
 
-  const issues: DispatchMatrixCellIssue[] = [];
-  for (const ref of refs) {
-    let result: ReturnType<typeof normalizeMatrixCellAvailability>;
-    try {
-      result = normalizeMatrixCellAvailability(
-        await dependencies.validateMatrixCell(ref.provider, ref.value, {
-          cwd: scopeRoot,
-          env: dependencies.processEnv,
-          detailed: true,
-          ...(ref.target ? { target: ref.target } : {}),
-        }),
-      );
-    } catch {
-      result = { availability: 'unvalidated' };
-    }
+  const pass = dependencies.createDispatchValidationPassContext({
+    cwd: scopeRoot,
+    env: dependencies.processEnv,
+    validateMatrixCell: dependencies.validateMatrixCell,
+  });
+  const results = await dependencies.validateDispatchMatrixRefs(refs, pass);
 
-    if (result.availability !== 'valid') {
+  const issues: DispatchMatrixCellIssue[] = [];
+  for (const result of results) {
+    if (result.status !== 'valid') {
       issues.push({
-        ...ref,
-        availability: result.availability,
-        ...(result.message ? { message: result.message } : {}),
+        ...result.ref,
+        availability: result.status,
+        ...(result.diagnostic ? { message: result.diagnostic } : {}),
       });
     }
   }
@@ -803,9 +727,9 @@ async function runChecksForScope(
       await createDispatchMatrixDoctorCheck(
         scopeRoot,
         [
-          { layer: 'user', config: userConfig },
-          { layer: 'shared', config },
-          { layer: 'local', config: localConfig },
+          { source: 'user-config', config: userConfig },
+          { source: 'repo-config', config },
+          { source: 'local-config', config: localConfig },
         ],
         dependencies,
       ),

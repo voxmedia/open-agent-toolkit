@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260711-configured-invocation-is       | 2026-07-11 | accepted | Configured invocation is separate from runtime identity                 | -      |
+| DR-260711-cursor-candidate-probes        | 2026-07-11 | accepted | Cursor candidate probes require passed structured controls              | -      |
+| DR-260711-cursor-catalog-presence-is     | 2026-07-11 | accepted | Cursor catalog presence is diagnostic only                              | -      |
 | DR-260710-configured-gate-provenance-is  | 2026-07-10 | accepted | Configured gate provenance is separate from reviewer identity           | -      |
 | DR-260710-declared-gate-projects-require | 2026-07-10 | accepted | Declared gate projects require artifact corroboration                   | -      |
 | DR-260709-codex-targets-are-materialized | 2026-07-09 | accepted | Codex targets are materialized from canonical agents                    | -      |

@@ -32,6 +32,20 @@ copying their content here. -->
 - Managed dispatch uses ordered provider candidate ladders with project/phase
   named maximum ceilings; Codex variants materialize by configuration ownership,
   while Claude and Cursor receive exact selected model values at invocation.
+- Dispatch matrix normalization and provenance-rich traversal are shared across
+  layered configuration, sparse project state, config adoption, and doctor.
+- Dispatch Report V1 provides deterministic machine and human output while
+  keeping policy, ceiling, requested candidate, exact selection, configured
+  gate invocation, and observed runtime identity distinct. The legacy
+  `Dispatch:` line is derived from that report.
+- Config adoption and doctor share pass-scoped Cursor validation: each distinct
+  candidate receives one Task probe and broad catalog retrieval is memoized for
+  the command pass without treating catalog presence as eligibility evidence.
+- Cursor GPT-5.6 verification now has a strict structured evidence schema,
+  exact Task correlation, control-gated candidate execution, and private-only
+  raw identifiers. The current headless client exposed no Task events, so the
+  controls were inconclusive and the configured recommendation remains
+  explicitly unvalidated.
 
 ## What's Next
 
@@ -39,7 +53,9 @@ copying their content here. -->
 Track concrete items in pjm/backlog/ and sequencing in pjm/roadmap.md; keep this
 section to a short narrative pointer. -->
 
-Continue the remaining dispatch work through the active backlog: reviewer
-subagent orchestration, structured post-implementation sequencing, matrix
-normalization consolidation, Cursor catalog verification/caching, and the
-deferred dispatch-machine schema.
+Continue the remaining dispatch work through the active backlog: recheck live
+GPT-5.6 Cursor Task/subagent eligibility after a client rollout exposes Task in
+headless mode or Cursor support confirms the private requests (review by
+2026-08-08), add root-owned exact dispatch with launcher-owned provenance,
+enable reviewer reconnaissance subagents, and structure post-implementation
+sequencing.

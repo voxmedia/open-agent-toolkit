@@ -998,7 +998,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.33');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
   });
 
   it('defines one fail-closed managed dispatch contract for every plan writer', async () => {
@@ -1220,7 +1220,7 @@ describe('validateOatSkills', () => {
       /phase coordinator/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.33');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
 
     const coordinator = agent.slice(
       agent.indexOf('### Mode: Phase Coordinator'),
@@ -2090,7 +2090,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.3.12'],
       ['oat-project-quick-start', '2.1.13'],
       ['oat-project-import-plan', '1.4.4'],
-      ['oat-project-review-provide', '1.3.12'],
+      ['oat-project-review-provide', '1.3.13'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2099,6 +2099,65 @@ describe('validateOatSkills', () => {
       );
       expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
         expectedVersion,
+      );
+    }
+  });
+
+  it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
+    const expectedVersions = [
+      ['oat-project-implement', '2.0.34'],
+      ['oat-project-review-provide', '1.3.13'],
+      ['oat-project-review-provide-remote', '1.0.3'],
+    ] as const;
+
+    for (const [skillName, expectedVersion] of expectedVersions) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
+        expectedVersion,
+      );
+      const invocations = [
+        ...content
+          .replace(/\\\r?\n\s*/g, ' ')
+          .matchAll(
+            /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+          ),
+      ]
+        .map(([command]) => command.trim())
+        .filter((command) => command.includes('--provider'));
+      expect(
+        invocations.length,
+        `${skillName} actionable resolver invocations`,
+      ).toBeGreaterThan(0);
+      for (const invocation of invocations) {
+        expect(invocation, `${skillName} report scope`).toMatch(
+          /--report-scope\s+\S+/,
+        );
+        expect(invocation, `${skillName} literal report action`).toMatch(
+          /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+        );
+      }
+      expect(content, `${skillName} versioned report`).toContain(
+        'dispatchReport.schemaVersion: 1',
+      );
+      expect(content, `${skillName} report renderer`).toContain(
+        'formatDispatchReport(dispatchReport)',
+      );
+      expect(content, `${skillName} report-derived stamp`).toContain(
+        'formatDispatchStamp(dispatchReport)',
+      );
+      expect(content, `${skillName} target retention`).toMatch(
+        /providers\.<provider>\.dispatchArgs[\s\S]{0,220}providers\.<provider>\.selection\.target/,
+      );
+      expect(content, `${skillName} configured provenance`).toMatch(
+        /configured/i,
+      );
+      expect(content, `${skillName} producer provenance`).toMatch(
+        /(?:diversity|producer)/i,
+      );
+      expect(content, `${skillName} runtime provenance`).toMatch(
+        /runtime(?:Identity|\s+identity)/i,
       );
     }
   });
