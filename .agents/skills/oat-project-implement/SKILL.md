@@ -1903,13 +1903,14 @@ approval when a final checkpoint is configured.
 
 ### Step 16: Prompt for Next Steps
 
-Run this prompt only when `workflow.postImplementSequence` was unset and no
-sequence snapshot was created. It occurs after final approval when a final
-checkpoint is configured. A configured legacy or structured preference has
-already completed through **Final HiLL Closeout Sequence**; do not re-dispatch
-its steps here. For configured `wait`, print `Post-implementation: wait (from
-workflow.postImplementSequence). Run follow-up skills manually when ready.` and
-exit without auto-chaining.
+Run the standard next-step prompt only when
+`workflow.postImplementSequence` was unset and no sequence snapshot was
+created. It occurs after final approval when a final checkpoint is configured.
+A configured legacy or structured preference has already completed through
+**Final HiLL Closeout Sequence**; do not re-dispatch its steps here. When the
+completed snapshot came from configured `wait`, print
+`Post-implementation: wait (from workflow.postImplementSequence). Run
+follow-up skills manually when ready.` and exit without auto-chaining.
 
 **Standard prompt (when preference is unset):**
 
