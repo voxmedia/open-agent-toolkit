@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t05
-oat_last_commit: a7455462
+oat_current_task: null
+oat_last_commit: 7b1b95d3
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -38,12 +38,12 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T12:42:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T12:59:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p06 review fixes queued after structured Cursor controls completed inconclusively
+Phase p06 review fixes complete; independent p06 re-review pending
 
 ## Artifacts
 
@@ -100,11 +100,14 @@ Phase p06 review fixes queued after structured Cursor controls completed inconcl
 - ✓ Phase p05 HiLL checkpoint approved by the user
 - ✓ Phase p05 completed: lockstep `0.1.49` release assets, full verification, and evidence-based backlog closeout
 - ✓ Phase p05 self-review passed after project PJM closeout drift fix (`6d1cb357`)
-- ✓ All 23 implementation tasks complete
+- ✓ Original p01-p05 implementation completed: 23 tasks before the p06 revision
 - ✓ Implementation-end gate review passed with one Minor plan-alignment finding addressed
 - ✓ Structured Cursor evidence revision approved after cross-project provenance analysis
 - ✓ Phase p06 initial tasks completed: structured capture, inconclusive controls, zero candidate probes, evidence reconciliation, and `0.1.50` release verification
-- ⧗ Phase p06 self-review: five accepted findings queued as `p06-t05` through `p06-t09`
+- ✓ Phase p06 review fixes completed: strict re-derivation, exact correlation, private redaction, docs privacy scope, and lifecycle reconciliation
+- ✓ All 32 implementation tasks complete
+- ✓ Full p06 repository and five-package `0.1.50` release verification passed
+- ⧗ Independent p06 re-review pending
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -113,4 +116,4 @@ Phase p06 review fixes queued after structured Cursor controls completed inconcl
 
 ## Next Milestone
 
-Complete p06 review fixes, rerun the p06 self-review, then receive a fresh final review.
+Pass the independent p06 re-review, then receive a fresh final review.

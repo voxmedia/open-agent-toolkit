@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p06-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 6     | 6/6       |
-| p02   | complete    | 4     | 4/4       |
-| p03   | complete    | 6     | 6/6       |
-| p04   | complete    | 4     | 4/4       |
-| p05   | complete    | 3     | 3/3       |
-| p06   | in_progress | 9     | 4/9       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 6     | 6/6       |
+| p02   | complete | 4     | 4/4       |
+| p03   | complete | 6     | 6/6       |
+| p04   | complete | 4     | 4/4       |
+| p05   | complete | 3     | 3/3       |
+| p06   | complete | 9     | 9/9       |
 
-**Total:** 27/32 tasks completed
+**Total:** 32/32 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -512,13 +512,48 @@ oat_generated: false
 
 ## Phase p06: Structured Cursor Task Evidence Revision
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
+**Completed:** 2026-07-11
 
 **Revision authorization:** The user approved replacing the inconclusive
 text-mode protocol with structured Task events, controls, longer timeouts, and
 separate configured-invocation/runtime-identity evidence, then rerunning the
 live probes immediately.
+
+### Phase Summary
+
+**Outcome:**
+
+- Added a strict structured Cursor Task capture and verification contract that
+  binds recommendation metadata, re-derives outcomes from an allowlisted event
+  projection, and fails closed on inventory or privacy drift.
+- Ran positive and negative controls on Cursor CLI `2026.07.09-a3815c0`.
+  Neither public stream exposed a Task event, so controls were inconclusive and
+  all 13 recommended plus one exploratory candidate were correctly skipped.
+- Retained the recommendation unchanged, kept the verification backlog open,
+  and documented Task acceptance separately from unreported runtime identity.
+- Hardened exact call/session/terminal correlation and private credential
+  redaction after the independent p06 self-review.
+- Advanced all five public packages to `0.1.50` and passed full release
+  validation.
+
+**Verification:**
+
+- Focused structured evidence suites: 21/21 before correlation/redaction review
+  fixes; 13/13 task-local tests after the split fixes.
+- Recorded capture and both tracked evidence copies verified and matched.
+- `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+  `pnpm build:docs`, `pnpm release:validate`, and `git diff --check`: pass.
+- Release validation packed and validated all five `0.1.50` public packages.
+
+**Notes:**
+
+- Exact request/session/tool-call IDs and credential-redacted raw streams remain
+  only in the gitignored local companion.
+- One sandboxed fix session could edit and verify but could not create the
+  external worktree `index.lock`; root committed p06-t05, then the approved
+  broader phase permission was used for p06-t06 through p06-t08.
 
 ### Task p06-t01: Add structured Cursor probe capture and evidence validation
 
@@ -568,36 +603,40 @@ implementation fixes and full verification complete.
 
 ### Task p06-t05: Derive structured evidence from recommendation-bound projections
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** d8e6b368
 
 ---
 
 ### Task p06-t06: Require exact Task correlation invariants
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 148ae8ef
 
 ---
 
 ### Task p06-t07: Harden private companion credential redaction
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 9d1d6394
 
 ---
 
 ### Task p06-t08: Scope public privacy claims to the structured pass
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 7b1b95d3
 
 ---
 
 ### Task p06-t09: Reconcile p06 lifecycle state and final verification
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** this root-owned bookkeeping commit
+
+**Outcome:** Recorded all p06 task commits and the passing full
+repository/release verification. The p06 review row is `fixes_completed`
+pending a fresh independent re-review.
 
 ---
 
