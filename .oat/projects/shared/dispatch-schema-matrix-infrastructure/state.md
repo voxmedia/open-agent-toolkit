@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: 9bb03265
+oat_current_task: p02-t01
+oat_last_commit: 2d789a92
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T00:25:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T01:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Resuming p01 with one exact phase subagent and no nested task workers
+Implementation - Phase p01 passed; ready to dispatch the p02 phase subagent
 
 ## Artifacts
 
@@ -84,6 +84,9 @@ Implementation - Resuming p01 with one exact phase subagent and no nested task w
 - ✓ Tier 1 subagent execution authorized
 - ✓ Final-phase HiLL checkpoint and auto-review configured
 - ✓ Initial nested-worker sandbox blocker resolved for this project through explicit phase-direct execution authorization
+- ✓ Phase p01 completed: shared matrix normalizer/walker and config, project-state, adoption, and doctor adapters
+- ✓ Phase p01 self-review passed after one bounded compatibility fix (`2d789a92`)
+- ✓ Phase p01 verification passed: 349 focused tests, CLI type-check, lint, and format
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -92,4 +95,4 @@ Implementation - Resuming p01 with one exact phase subagent and no nested task w
 
 ## Next Milestone
 
-Dispatch the exact p01 phase subagent from `p01-t01`; it implements tasks sequentially without nested workers and returns for root verification, phase self-review, and bookkeeping.
+Dispatch one exact p02 phase subagent at `p02-t01`; it implements the phase tasks sequentially without nested workers and returns for root verification, phase self-review, and bookkeeping.

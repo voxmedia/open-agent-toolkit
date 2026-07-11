@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,59 +24,73 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 6     | 0/6       |
-| p02   | pending     | 4     | 0/4       |
-| p03   | pending     | 6     | 0/6       |
-| p04   | pending     | 4     | 0/4       |
-| p05   | pending     | 3     | 0/3       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 6     | 6/6       |
+| p02   | pending  | 4     | 0/4       |
+| p03   | pending  | 6     | 0/6       |
+| p04   | pending  | 4     | 0/4       |
+| p05   | pending  | 3     | 0/3       |
 
-**Total:** 0/23 tasks completed
+**Total:** 6/23 tasks completed
 
 ---
 
 ## Phase p01: Shared Dispatch Matrix Core
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-10
+**Completed:** 2026-07-11
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added a reusable dispatch-matrix algebra, normalizer, structured issue model, and provenance-rich walker.
+- Layered config and project state now share canonical normalization while retaining their distinct malformed-input compatibility behavior.
+- Config adoption and doctor now consume shared matrix references instead of maintaining duplicate traversal logic.
+- Exact candidate selection now reports `candidateIndex` independently from fallback `routeIndex`.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/dispatch-matrix.ts` - shared normalization, traversal, types, guards, and target validation.
+- `packages/cli/src/config/oat-config.ts` - layered-config adapter and compatibility exports.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - project-state adapter and candidate-index propagation.
+- `packages/cli/src/commands/config/index.ts` - shared-ref adoption validation.
+- `packages/cli/src/commands/doctor/index.ts` - shared-ref diagnostics with structured source provenance.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/project/dispatch-ceiling/index.test.ts src/commands/config/index.test.ts src/commands/doctor/index.test.ts`
+- Result: Pass - 6 files, 349/349 tests.
+- Run: `pnpm --filter @open-agent-toolkit/cli type-check && pnpm lint && pnpm format`
+- Result: Pass.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Phase-direct execution used one exact pinned subagent for all six tasks and the phase self-review; no nested task workers were launched.
+- The self-review found project-state direct structured cells had become newly accepted. Fix `2d789a92` made `compatibilityMode` effective and restored the legacy project-state behavior without changing layered config.
+- A review concern about provider-specific validation location was rejected: availability policy remains outside the core, while shared types, guards, normalizers, and pre-existing target-shape validation belong to the reusable module per design.
 
 ### Task p01-t01: Add the shared matrix algebra, normalizer, and walker
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** 97dcab1a
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Dispatch matrix inputs now normalize into a shared canonical algebra and walk into refs that retain tier, candidate, fallback-route, path, and source provenance.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/dispatch-matrix.ts` - shared core.
+- `packages/cli/src/config/dispatch-matrix.test.ts` - algebra and walker coverage.
+- `packages/cli/src/config/oat-config.ts` - compatibility re-exports.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/dispatch-matrix.test.ts`
+- Result: Pass.
 
 **Notes / Decisions:**
 
@@ -92,12 +106,57 @@ oat_generated: false
 
 ### Task p01-t02: Adopt shared normalization in layered configuration
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 86900b29
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Layered configuration uses the shared normalizer while preserving silent malformed-sibling dropping and atomic candidate ladders during precedence resolution.
+
+---
+
+### Task p01-t03: Adopt shared normalization in project state
+
+**Status:** complete
+**Commit:** b615abd0
+
+**Notes:**
+
+- Project-state parsing uses a shared canonical matrix internally and a separate compatibility view for legacy top-level JSON output.
+
+---
+
+### Task p01-t04: Propagate exact candidate index through resolution
+
+**Status:** complete
+**Commit:** 672cf67f
+
+**Notes:**
+
+- Candidate indices are captured during ladder matching and remain separate from fallback route indices; non-candidate branches emit `null`.
+
+---
+
+### Task p01-t05: Replace config adoption traversals with shared references
+
+**Status:** complete
+**Commit:** ec189c6c
+
+**Notes:**
+
+- Config adoption validates canonical shared refs and structured targets, with malformed targets failing before provider availability probes.
+
+---
+
+### Task p01-t06: Replace doctor traversal with shared references
+
+**Status:** complete
+**Commit:** 6fe49d1c
+
+**Notes:**
+
+- Doctor uses shared refs and their structured source field for user/shared/local provenance while preserving valid, unknown, and unvalidated outcomes.
+- Phase review fix: `2d789a92` restored project-state direct-target compatibility and added explicit non-candidate index coverage.
 
 ---
 
@@ -210,10 +269,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run | Passed | Failed | Coverage                                                     |
+| ----- | --------- | ------ | ------ | ------------------------------------------------------------ |
+| 1     | 349       | 349    | 0      | Six focused suites; type-check, lint, and format also passed |
+| 2     | -         | -      | -      | -                                                            |
 
 ## Final Summary (for PR/docs)
 
