@@ -55,6 +55,10 @@ import {
   type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import {
+  createDispatchValidationPassContext,
+  validateDispatchMatrixRefs,
+} from '@providers/identity/dispatch-validation';
 import { Command } from 'commander';
 
 import { createConfigDumpCommand } from './dump';
@@ -168,6 +172,8 @@ interface ConfigCommandDependencies {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailabilityResponse>;
+  createDispatchValidationPassContext: typeof createDispatchValidationPassContext;
+  validateDispatchMatrixRefs: typeof validateDispatchMatrixRefs;
   processEnv: NodeJS.ProcessEnv;
 }
 
@@ -755,6 +761,8 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readFile: (path) => readFileDefault(path, 'utf8'),
   confirmAction,
   validateMatrixCell,
+  createDispatchValidationPassContext,
+  validateDispatchMatrixRefs,
   processEnv: process.env,
 };
 
@@ -1605,10 +1613,10 @@ async function validateRecommendationCells(
     throw new Error(targetErrors.join('\n'));
   }
 
-  for (const matrixRef of refs) {
+  const availabilityRefs = refs.filter((matrixRef) => {
     const ref = toAvailabilityRef(matrixRef);
     if (ref === null) {
-      continue;
+      return false;
     }
     const closedValues = closedDispatchProviderValues(ref.provider);
     if (!ref.target && closedValues && !closedValues.includes(ref.value)) {
@@ -1616,28 +1624,25 @@ async function validateRecommendationCells(
         `Invalid value for ${ref.path}: expected one of ${closedValues.join(' | ')}, got '${ref.value}'`,
       );
     }
+    return true;
+  });
 
-    let availability: MatrixCellAvailabilityResponse;
-    try {
-      availability = await dependencies.validateMatrixCell(
-        ref.provider,
-        ref.value,
-        {
-          cwd: repoRoot,
-          env: dependencies.processEnv,
-          detailed: true,
-          ...(ref.target ? { target: ref.target } : {}),
-        },
-      );
-    } catch {
-      availability = 'unvalidated';
-    }
+  const pass = dependencies.createDispatchValidationPassContext({
+    cwd: repoRoot,
+    env: dependencies.processEnv,
+    validateMatrixCell: dependencies.validateMatrixCell,
+  });
+  const results = await dependencies.validateDispatchMatrixRefs(
+    availabilityRefs,
+    pass,
+  );
 
-    const warning = matrixCellAvailabilityWarning(
-      ref.path,
-      ref.value,
-      availability,
-    );
+  for (const result of results) {
+    const ref = toAvailabilityRef(result.ref)!;
+    const warning = matrixCellAvailabilityWarning(ref.path, ref.value, {
+      availability: result.status,
+      ...(result.diagnostic ? { message: result.diagnostic } : {}),
+    });
     if (warning) {
       warn(warning);
     }

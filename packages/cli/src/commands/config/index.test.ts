@@ -8,10 +8,17 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import type {
+  AvailabilityOracleDependencies,
   MatrixCellAvailability,
   MatrixCellAvailabilityResult,
   ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import {
+  createDispatchValidationPassContext,
+  type DispatchMatrixValidationResult,
+  type DispatchValidationPassOptions,
+  type DispatchValidationPassContext,
+} from '@providers/identity/dispatch-validation';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -26,6 +33,7 @@ interface HarnessOptions {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
+  availabilityDependencies?: Partial<AvailabilityOracleDependencies>;
   assetFiles?: Record<string, string>;
   confirmResponses?: boolean[];
 }
@@ -64,6 +72,48 @@ function createHarness(options: HarnessOptions): {
   };
   if (options.validateMatrixCell) {
     overrides.validateMatrixCell = options.validateMatrixCell;
+    overrides.validateDispatchMatrixRefs = async (
+      refs,
+      context: DispatchValidationPassContext,
+    ): Promise<DispatchMatrixValidationResult[]> =>
+      Promise.all(
+        refs.map(async (ref) => {
+          const target = ref.target;
+          const provider = target?.harness ?? ref.provider;
+          const value = ref.value ?? target?.model ?? target?.effort ?? '';
+          let availability:
+            | MatrixCellAvailability
+            | MatrixCellAvailabilityResult;
+          try {
+            availability = await options.validateMatrixCell!(provider, value, {
+              cwd: context.options.cwd,
+              env: context.options.env,
+              detailed: true,
+              ...(target ? { target } : {}),
+            });
+          } catch {
+            availability = 'unvalidated';
+          }
+          const result =
+            typeof availability === 'string' ? { availability } : availability;
+          return {
+            ref,
+            status: result.availability,
+            evidence: 'none',
+            catalogPresence: null,
+            diagnostic: result.message ?? '',
+          };
+        }),
+      );
+  }
+  if (options.availabilityDependencies) {
+    overrides.createDispatchValidationPassContext = (
+      passOptions: DispatchValidationPassOptions,
+    ) =>
+      createDispatchValidationPassContext({
+        ...passOptions,
+        dependencies: options.availabilityDependencies,
+      });
   }
 
   const command = createConfigCommand(overrides);
@@ -1620,6 +1670,95 @@ describe('oat config', () => {
         'workflow.dispatchCeiling.providers.cursor.frontier',
       );
       expect(capture.warn.join('\n')).toContain('could not be validated');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('shares Cursor Task probes and catalog work while fanning warnings back to exact paths', async () => {
+      const root = await createRepoRoot();
+      const runCursorAgent = vi.fn(async (args: string[]) => {
+        if (args.includes('models')) {
+          return {
+            ok: true,
+            stdout:
+              'gpt-5.6-terra-xhigh - Terra XHigh\ngpt-5.6-sol-high - Sol High\n',
+            stderr: '',
+          };
+        }
+        return {
+          ok: false,
+          stdout: '',
+          stderr: 'Task probe was inconclusive',
+        };
+      });
+      const { command, capture } = createHarness({
+        cwd: root,
+        availabilityDependencies: {
+          pathExists: vi.fn(async () => false),
+          runCursorAgent,
+          runCodex: vi.fn(async () => ({
+            ok: false,
+            stdout: '',
+            stderr: 'not used',
+          })),
+          env: {},
+        },
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: '2026-07-07.1',
+              providers: {
+                cursor: {
+                  balanced: {
+                    candidates: ['gpt-5.6-terra-xhigh', 'gpt-5.6-terra-xhigh'],
+                  },
+                  high: { candidates: ['gpt-5.6-sol-high'] },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      const calls = runCursorAgent.mock.calls.map(([args]) => args);
+      expect(calls.filter((args) => args.includes('-p'))).toHaveLength(2);
+      expect(calls.filter((args) => args.includes('models'))).toHaveLength(1);
+      expect(
+        calls.filter((args) => args.includes('--list-models')),
+      ).toHaveLength(0);
+
+      const warnings = capture.warn.join('\n');
+      expect(warnings).toContain(
+        'workflow.dispatchCeiling.providers.cursor.balanced.candidates[0] value',
+      );
+      expect(warnings).toContain(
+        'workflow.dispatchCeiling.providers.cursor.balanced.candidates[1] value',
+      );
+      expect(warnings).toContain(
+        'workflow.dispatchCeiling.providers.cursor.high.candidates[0] value',
+      );
+      expect(
+        capture.warn.filter((warning) =>
+          warning.includes('gpt-5.6-terra-xhigh'),
+        ),
+      ).toHaveLength(2);
+      expect(capture.warn).toHaveLength(3);
+
+      const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
+      expect(JSON.parse(raw)).toMatchObject({
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              cursor: {
+                balanced: {
+                  candidates: ['gpt-5.6-terra-xhigh', 'gpt-5.6-terra-xhigh'],
+                },
+                high: { candidates: ['gpt-5.6-sol-high'] },
+              },
+            },
+          },
+        },
+      });
       expect(process.exitCode).toBe(0);
     });
 
