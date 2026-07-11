@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -35,19 +35,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T23:53:07.608Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:23:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T11:26:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: codex-subagent-max-depth
 
-**Status:** Planning complete
+**Status:** Implementation in progress
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Planning - Ready for implementation
+Implementation - Parallel phases `p01` and `p02` bootstrapping
 
 ## Artifacts
 
@@ -71,7 +71,7 @@ Planning - Ready for implementation
 - ✓ In-memory plan artifact review passed
 - ✓ Canonical plan-review findings addressed
 - ✓ Canonical plan re-review passed
-- ⧗ Awaiting implementation
+- ⧗ Implementing `p01` and `p02`
 
 ## Blockers
 
@@ -79,4 +79,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to begin execution
+Complete the `p01` and `p02` parallel schedule entry
