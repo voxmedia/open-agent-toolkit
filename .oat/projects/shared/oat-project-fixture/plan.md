@@ -206,6 +206,7 @@ Run: `node --test tools/smoke/runner/cleanup.test.mjs` — Expected: fails.
 
 - Modify: `tools/smoke/runner/provision.mjs`
 - Modify: `tools/smoke/runner/provision.test.mjs`
+- Modify: `tools/smoke/CONTRACT.md`
 
 **Step 1: Write test (RED)** — extend provisioning tests with a repository-level
 `workflow.postImplementSequence` containing `summary`, `document`, and `pr`.
@@ -232,7 +233,7 @@ do not copy the repository or user sequence into the disposable run.
 `pnpm exec oxfmt --check 'tools/smoke/runner/**/*.mjs'`.
 
 **Step 5: Commit** —
-`git add tools/smoke/runner && git commit -m "fix(p02-t05): isolate smoke closeout sequence"`.
+`git add tools/smoke/runner tools/smoke/CONTRACT.md && git commit -m "fix(p02-t05): isolate smoke closeout sequence"`.
 
 ---
 
