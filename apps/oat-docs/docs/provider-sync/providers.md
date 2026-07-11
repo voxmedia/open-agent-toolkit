@@ -23,7 +23,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Cursor model strings are opaque. OAT does not infer family, effort, cost, or capability from their spelling; the configured candidate position owns the named tier meaning.
     - Cursor model validation checks whether the selected model is eligible for subagent Task dispatch. Each adopt/doctor command probes each distinct exact candidate once and shares one lazy broad-catalog lookup across that pass; the cache ends with the command.
     - A sentinel-confirmed Task or explicit subagent allow-list is direct evidence. Broad `cursor-agent models` catalog presence is diagnostic-only and never proves subagent eligibility.
-    - The [dated GPT-5.6 verification artifact](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md) records sanitized one-shot results and concrete recheck dates. Until a recheck produces definitive evidence, unavailable candidates remain `unvalidated` or `unknown-value`; OAT does not infer capability from their spelling.
+    - The [dated GPT-5.6 verification artifact](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md) records sanitized one-shot results and concrete recheck dates. Until a recheck produces definitive evidence, unavailable candidates remain `unvalidated` or `unknown-value`; OAT does not infer capability from their spelling.
     - Rule files render as `.cursor/rules/*.mdc`
 
 === "Copilot"

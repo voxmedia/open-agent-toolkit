@@ -396,7 +396,7 @@ proves that a candidate can launch a subagent Task. OAT preserves
 `unvalidated` or `unknown-value` when direct evidence is unavailable instead of
 inferring capability from the candidate spelling.
 
-The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md)
+The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
 records the exact recommendation version, sanitized client context, one probe
 per distinct candidate, direct exit status, duration, stdout/stderr, outcome
 basis, and recheck date. Its 2026-07-11 pass left all 13 recommendation

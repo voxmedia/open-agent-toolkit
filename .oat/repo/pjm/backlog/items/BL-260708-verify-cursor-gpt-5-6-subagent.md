@@ -35,8 +35,9 @@ Target this check on or after 2026-07-09, when the GPT-5.6 Cursor model entries 
   out. The four configured candidates are also `unvalidated`; configuration
   does not establish eligibility.
 - The exact commands, outputs, exit status or timeout, environment metadata,
-  outcome basis, configured subset, and recommendation disposition are in
-  `.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md`.
+  outcome basis, configured subset, and recommendation disposition are in the
+  durable record at
+  `.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md`.
 - Acceptance criteria 1 and 3 remain open because no Sol, Terra, or Luna slug
   has successful Task/subagent eligibility evidence. Criterion 2 is satisfied
   by the reproducible artifact; criterion 4 is satisfied by this observed
