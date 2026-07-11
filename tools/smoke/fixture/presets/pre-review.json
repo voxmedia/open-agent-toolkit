@@ -8,7 +8,7 @@
       "oat_template": "true",
       "oat_plan_parallel_groups": "[['p01', 'p02']]"
     },
-    "planReviewRow": "| plan  | artifact | pending | -        |"
+    "planReviewRow": "| plan   | artifact | pending | -        |"
   },
   "implementation": {
     "frontmatter": {

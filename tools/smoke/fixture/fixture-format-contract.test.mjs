@@ -49,15 +49,22 @@ test("fixture plan preserves the canonical format contract", () => {
     "task headings must retain stable pNN-tNN identifiers",
   );
 
-  for (const row of [
-    "| p01   | code     | pending | -        |",
-    "| p02   | code     | pending | -        |",
-    "| p03   | code     | pending | -        |",
-    "| spec  | artifact | pending | -        |",
-    "| design | artifact | pending | -        |",
-    "| plan  | artifact | pending | -        |",
+  for (const [scope, type] of [
+    ["p01", "code"],
+    ["p02", "code"],
+    ["p03", "code"],
+    ["spec", "artifact"],
+    ["design", "artifact"],
+    ["plan", "artifact"],
   ]) {
-    assert.ok(plan.includes(row), `missing required review row: ${row}`);
+    assert.match(
+      plan,
+      new RegExp(
+        `^\\|\\s*${scope}\\s*\\|\\s*${type}\\s*\\|\\s*pending\\s*\\|\\s*-\\s*\\|$`,
+        "m",
+      ),
+      `missing required review row for ${scope}`,
+    );
   }
 });
 
