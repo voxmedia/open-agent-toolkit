@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T20:44:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T21:32:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -65,8 +65,8 @@ Implementation — Phase 2 tasks complete; paused before self-review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 22 tasks)
-- **Implementation:** `implementation.md` (in progress — Phase 1 tasks complete
-  and self-review passed)
+- **Implementation:** `implementation.md` (in progress — Phase 1 complete;
+  Phase 2 tasks complete and awaiting self-review)
 
 ## Progress
 
@@ -77,8 +77,10 @@ Implementation — Phase 2 tasks complete; paused before self-review
 - ✓ p01-t02 complete through operator-authorized native root recovery
 - ✓ p01-t03 complete after one integration-verification fix
 - ✓ Protocol v2, canned prompts, and Claude/Codex pilot packets committed
-- ⧗ Fresh canonical Claude/Codex/Cursor IDE/Cursor CLI verification against
-  stable HEAD
+- ✓ Fresh canonical Claude/Codex/Cursor IDE/Cursor CLI capability verification
+  complete against immutable hashed inputs
+- ✓ Verified provider-neutral contract candidate, provider references, and
+  promotion summary reconciled under `references/dispatching-subagents/`
 - ✓ Phase 1 self-review fixes complete (iteration 1)
 - ✓ Phase 1 dispatch-matrix blocker fixed with resolver-backed coverage
 - ✓ Final p01 self-review passed (0 Critical / 0 Important)
@@ -90,8 +92,7 @@ Implementation — Phase 2 tasks complete; paused before self-review
 - ✓ p02-t02 complete
 - ✓ p02-t03 complete
 - ✓ p02-t04 complete
-- ⧗ User-run subagent verification against stable HEAD before Phase 2
-  self-review
+- ✓ User-run subagent verification completed before Phase 2 self-review
 
 ## Blockers
 
@@ -99,4 +100,4 @@ None
 
 ## Next Milestone
 
-Resume Phase 2 self-review after user verification completes
+Resume Phase 2 self-review using the completed canonical verification evidence

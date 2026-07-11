@@ -40,6 +40,24 @@ oat_generated: false
   well enough that future workflow changes have a clear testing process and
   fixture-update path (dedicated runbook is a named p06-t01 deliverable).
 
+## Cross-Harness Dispatch Capability Verification
+
+- Fresh canonical combined-capability packets are complete for Codex, Claude,
+  Cursor IDE, and Cursor CLI under
+  `references/dispatching-subagents/verification/runs/`.
+- Shared `claims.md` and `protocol.md` input hashes matched across the four
+  canonical runs; each run recorded its provider-draft hash and provenance.
+- Codex, Claude, and Cursor IDE confirmed their required capability claim sets.
+  Cursor CLI confirmed the exact CLI route and retained five native-topology
+  claims as inconclusive after the one native connection closed mid-flight.
+- Verified provider-neutral guidance now lives in
+  `references/dispatching-subagents/contract.md`; provider qualifications and
+  the promotion matrix live beside it. Flat drafts and run packets remain
+  frozen inputs.
+- This verification resolves the external precondition for Phase 2
+  self-review. It does not advance `oat_current_task_id` or complete a planned
+  implementation task.
+
 > This document is used to resume interrupted implementation sessions.
 >
 > Conventions:

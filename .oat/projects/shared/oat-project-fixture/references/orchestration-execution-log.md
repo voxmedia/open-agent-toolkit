@@ -212,6 +212,43 @@ model_reasoning_effort=max`); gate run `262c4812`.
   the full provider contract inside `oat-project-implement` would continue the
   drift and context-size problem that contributed to the current confusion.
 
+### 9. Canonical cross-harness capability verification
+
+- **Evidence set:** fresh canonical combined-capability packets for Codex,
+  Claude, Cursor IDE, and Cursor CLI under
+  `dispatching-subagents/verification/runs/`. All four used byte-identical
+  `claims.md`, `protocol.md`, and provider-draft inputs by SHA-256.
+- **Codex:** all 15 required claims confirmed. Generic explicit native
+  coordinator → leaf dispatch completed; exact model/effort CLI sentinel
+  completed. Agent type, model, effort, service tier, fork context, depth, and
+  sandbox remain separate controls.
+- **Claude:** all 15 required claims confirmed. Generic inherited native
+  coordinator → explicit-model leaf dispatch completed; exact-ID CLI sentinel
+  completed. Native Agent accepts tier aliases without effort, while CLI and
+  Workflow expose different controls. Nested agent types became visible only
+  after the first nested call, so a universal pre-dispatch role-catalog rule is
+  unimplementable.
+- **Cursor IDE:** all 14 required claims confirmed. Generic explicit native
+  coordinator → leaf dispatch and the independent exact CLI sentinel completed.
+  CLI success still emitted no structured Task-selection event.
+- **Cursor CLI:** 9 required claims confirmed and 5 remained inconclusive. The
+  exact CLI sentinel completed, but the generic native topology connection
+  closed mid-flight without a nested catalog or leaf result. IDE native nesting
+  must not be inferred into the CLI flavor.
+- **Draft contradictions resolved:** Claude effort and exact-model rules are
+  surface-specific; model and role catalog timing must be separate; `Task`
+  remains a working Claude tool-grant alias for live `Agent`; Cursor catalogs
+  are snapshots rather than configuration; process completion does not prove
+  inner Task selection.
+- **Promotion output:** verified provider-neutral guidance now lives in
+  `dispatching-subagents/contract.md`, provider qualifications in
+  `dispatching-subagents/providers/`, and the claim-level reconciliation in
+  `dispatching-subagents/verification/summary.md`. Flat drafts and run packets
+  remain frozen inputs.
+- **Remaining boundary:** capability evidence does not settle production-role
+  cooperation, write authority, planning/implementation review policy, or gate
+  independence. p04 owns contract tests; p05 owns live workflow evidence.
+
 ## Cross-Cutting Incidents
 
 - **Stale binaries, twice:** (a) global `oat` 0.1.48 predated the dispatch
@@ -250,8 +287,10 @@ model_reasoning_effort=max`); gate run `262c4812`.
 - `BL-260711-add-activity-aware-gate` (gate timeout mechanism).
 - p04: phase-scoped review dispatch semantics into the plan-writing /
   implement / phase-implementer contracts (Decisions #11, #12).
-- Claude topology and Cursor CLI Task observability: answered by p05 live
-  runs, not yet evidenced.
+- Claude generic native nesting is confirmed; production-role cooperation
+  remains p05 scope. Cursor CLI structured Task-selection observability is
+  confirmed absent for the successful CLI sentinel, while headless native
+  nesting remains inconclusive and requires p05 workflow evidence.
 - This log should be extended during implementation (per-phase dispatch
   notes land in `implementation.md`; cross-cutting orchestration
   observations belong here) and consumed by the end-of-project review and

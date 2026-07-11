@@ -1,10 +1,10 @@
 # Dispatch Verification — Canned Session Prompts (v2)
 
-> **Status:** validation draft, companion to `protocol.md` v2 and `claims.md`.
-> One copy-paste prompt per harness target — Claude, Codex, Cursor IDE, and
-> Cursor CLI (the two Cursor flavors verifiably behave differently and are
-> separate targets, per discovery Decision #8). Prompts are self-contained by
-> design, so input paths appear inline in each prompt.
+> **Status:** validated companion to `protocol.md` v2 and `claims.md`. These
+> prompts produced the 2026-07-11 canonical capability packets and remain
+> available for bounded drift rechecks. One prompt exists per harness target —
+> Claude, Codex, Cursor IDE, and Cursor CLI — because the two Cursor flavors
+> verifiably behave differently.
 
 ## Operator Checklist (before pasting)
 
@@ -25,12 +25,12 @@
 ## Path Maintenance
 
 Every prompt resolves the repository from the fresh session's current working
-directory and requires every probe to use that same worktree. Until the
-flat-to-hierarchical move lands, the authoritative provider drafts are the flat
-`references/dispatching-subagents-*-draft.md` files, and that is what the
-prompts below reference. **The move commit MUST rewrite the `Read:` block in
-all four prompts atomically** (four occurrences; search for
-`dispatching-subagents-` in this file).
+directory and requires every probe to use that same worktree. The verified
+references live under `references/dispatching-subagents/`, but the prompt
+inputs remain the frozen flat `references/dispatching-subagents-*-draft.md`
+files so a recheck tests the same assertions. If p04 relocates or archives
+those inputs, rewrite the `Read:` block in all four prompts atomically (four
+occurrences; search for `dispatching-subagents-` in this file).
 
 ## Sentinel Strings
 
