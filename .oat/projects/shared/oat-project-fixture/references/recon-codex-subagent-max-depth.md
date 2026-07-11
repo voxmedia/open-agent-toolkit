@@ -116,9 +116,42 @@ From `references/subagent-orchestration-learnings.md` (in that project):
 
 - Define and enforce worker writable roots for worktree files, shared Git
   metadata, managed `.agents`, and potentially generated-output paths.
-- Reconcile whether the later scoped-writable-root success has been integrated
-  into the project's actual execution state.
+- ~~Reconcile whether the later scoped-writable-root success has been
+  integrated into the project's actual execution state.~~ Resolved — see
+  Update below.
 - Runtime identity remains unverified independently; provenance is correctly
   limited to launcher-selected/config-declared identity.
 - Cursor pinned-profile/model behavior remains provider-specific and
   unvalidated; do not infer it from Codex.
+
+## Update — 2026-07-11 (post-recon, verified by root agent)
+
+The "material state discrepancy" and unintegrated-diff findings above were
+resolved the same day. From `implementation.md` (Run 2) and the branch log:
+
+- **p01 and p02 recovered and merged.** Orchestration Run 2 re-ran both phases
+  with scoped writable roots for shared Git metadata and `.agents`; both phase
+  branches passed review (2/2 fix iterations each) and merged into the project
+  branch. 13/15 tasks complete.
+- **Native exact-role dispatch worked end to end** for primary phase tasks
+  (coordinators pinned to `oat-phase-implementer-gpt-5-6-sol-high`,
+  launcher-owned target/model/effort logs preserved).
+- **The fallback contract fired correctly once:** a p01 review-fix coordinator
+  received an explicit _pre-start_ `agent_type` rejection, and the root-owned
+  exact pinned worker fallback completed `p01-t06` — the only sanctioned
+  fallback trigger, observed working as designed.
+- **Contract drift got fixed as review fixes:** p02-t03..t07 aligned the phase
+  coordinator, project-review dispatch semantics, blocked-reviewer handling,
+  and reviewer retry routes across skills (the drift the learnings doc
+  warned about).
+- The learnings reference is now committed (implementation log records it).
+- **Remaining:** Phase 3 only — `p03-t01` (Codex provider surface docs/regen)
+  has a commit on the branch (`docs(p03-t01): …`); current work is `p03-t02`
+  (lockstep package bump + release validation). A HiLL checkpoint gated p03.
+
+Merge posture: still behind `dispatch-schema-matrix-infrastructure` (now PR
+#136). Once p03 completes, this branch needs the planned rebase/contract
+reconciliation against the merged sibling — both branches modified
+`oat-project-implement/SKILL.md` and dispatch-ceiling/doctor surfaces, and
+this branch's native-first depth-2 contract should supersede the sibling's
+temporary phase-direct workaround language.

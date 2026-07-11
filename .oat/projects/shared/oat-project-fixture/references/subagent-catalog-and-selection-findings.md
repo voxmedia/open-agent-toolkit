@@ -4,6 +4,30 @@
 > quick-start discovery for `oat-project-fixture`, plus the dispatch-selection
 > contract converged with the user during the brainstorm.
 
+## Native Task Catalog Snapshot (Cursor IDE Harness, 2026-07-11)
+
+The exact curated slug set available to this session's native Task tool.
+Session/version-specific — treat as a dated snapshot, not a stable contract.
+
+| Slug                                | Family / Tier           | Character                                 |
+| ----------------------------------- | ----------------------- | ----------------------------------------- |
+| `gpt-5.6-sol-high-fast`             | GPT-5.6 Sol, high, fast | Highest 5.6 family present, fast-tuned    |
+| `gpt-5.6-terra-medium`              | GPT-5.6 Terra, medium   | Cheapest 5.6 family tier present; no luna |
+| `gpt-5.5-extra-high`                | GPT-5.5, xhigh          | Heavy reasoning, slow/expensive           |
+| `gpt-5.3-codex`                     | Codex 5.3, medium       | Older Codex-tuned GPT                     |
+| `composer-2.5`                      | Cursor Composer         | Standard tier Cursor agent model          |
+| `composer-2.5-fast`                 | Cursor Composer, fast   | Fastest/cheapest option in catalog        |
+| `grok-4.5-fast-xhigh`               | Grok 4.5, xhigh, fast   | Fast with extra-high reasoning            |
+| `claude-4.6-sonnet-medium-thinking` | Sonnet 4.6, medium      | Mid-tier Claude with thinking             |
+| `claude-sonnet-5-thinking-high`     | Sonnet 5, high          | Strong Claude, high thinking              |
+| `claude-fable-5-thinking-high`      | Fable 5, high           | Frontier Claude (NO ZDR per CLI catalog)  |
+| `claude-opus-4-8-thinking-high`     | Opus 4.8, high          | Heaviest Claude, slow/expensive           |
+
+Additional selector semantics: omitting the model **inherits the parent
+model/effort**; effort is baked into each slug (no free parameterization); no
+luna variants and no terra tiers other than medium are natively pinnable in
+this snapshot.
+
 ## Three Catalogs, Three Granularities (Cursor)
 
 1. **Native Task tool (IDE harness, this session):** a curated list of ~11

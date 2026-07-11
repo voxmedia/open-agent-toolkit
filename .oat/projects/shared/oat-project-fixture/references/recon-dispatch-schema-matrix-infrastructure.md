@@ -125,10 +125,39 @@ From `references/codex-max-depth-cursor-verification-analysis-gpt-5.md`:
 
 ## Open Questions
 
-- p06 finding must be fixed and independently re-reviewed before merge.
+- ~~p06 finding must be fixed and independently re-reviewed before merge.~~
+  Resolved — see Update below.
 - Cursor runtime identity remains unreported; needs Cursor support or trusted
   child telemetry.
 - No recommendation candidate is verified Task-eligible (controls never
   observed a Task event).
 - Root-owned exact-dispatch broker / launcher-owned provenance work remains
   open in `BL-260711-add-root-owned-dispatch-broker`.
+
+## Update — 2026-07-11 (post-recon, verified by root agent)
+
+The blocking state described above was resolved the same day:
+
+- `fix(p06-t12): enforce public evidence schema` (`272dbe65`) closed the
+  Medium privacy/schema finding; the manual finding was recorded closed
+  (`2f82fc04`).
+- A fresh final gate review ran post-fix
+  (`reviews/archived/final-review-2026-07-11T140307Z.md`): gate invocation on
+  an independent runtime (`oat_gate_runtime: claude`, model fable, gate run id
+  `1825244d-…`), **0 critical / 0 important / 0 medium / 0 minor**, explicit
+  "ready to merge," with the p06 M1 closure independently verified against
+  shipped code.
+- Full workspace tests, lint, type-check, docs build, verification-tool tests,
+  and five-package `0.1.50` release validation passed on the reviewed tree
+  (post-fix, superseding the earlier stale-verification concern).
+- Project summary generated; PJM references refreshed; Cursor verification
+  follow-up backlog retained (controls inconclusive → zero candidate probes
+  ran; all slugs remain explicitly `unvalidated`, fail-closed).
+- `state.md` is `pr_open`; **PR #136** is open and `MERGEABLE`
+  (https://github.com/voxmedia/open-agent-toolkit/pull/136).
+
+Merge posture: no known blockers remain in this project's own lifecycle. The
+phase-direct workaround and Cursor validation gaps are documented known
+limitations with open backlog items, not merge blockers. Sequencing note
+unchanged: merge this branch **before** `codex-subagent-max-depth`, which then
+rebases and reconciles shared dispatch-skill contracts.
