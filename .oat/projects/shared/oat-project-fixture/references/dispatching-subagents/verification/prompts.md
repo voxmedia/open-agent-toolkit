@@ -382,8 +382,9 @@ Native scope (order matters; declare a deadline in seconds before each launch):
 CLI scope (independent; declare it before launching):
 5. Enumerate the account catalog: `cursor-agent --list-models` (or the
    current equivalent). Launch at most ONE read-only sentinel as a FRESH
-   child process with an explicit opaque model:
-   cursor-agent --print --output-format json
+   child process with an explicit opaque model. Workspace trust for this
+   verification worktree has been explicitly approved by the operator:
+   cursor-agent --trust --print --output-format json
    --model '<exact-opaque-model>' 'Reply with exactly this string and
    nothing else: OAT_CURSOR_CLI_SENTINEL_OK'
    This is a separate process, not your own session (CUR-M05). If your
