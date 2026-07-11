@@ -5,7 +5,37 @@ import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
+import {
+  VALID_DISPATCH_MATRIX_TIERS,
+  isWorkflowDispatchCandidateLadder,
+  type WorkflowDispatchCandidate,
+  type WorkflowDispatchCandidateLadder,
+  type WorkflowDispatchMatrixTier,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRoute,
+  type WorkflowDispatchRouteTarget,
+} from './dispatch-matrix';
 import { parseJsonConfig } from './json';
+
+export {
+  VALID_DISPATCH_MATRIX_TIERS,
+  isCodexMaterializedRouteTarget,
+  isWorkflowDispatchCandidateLadder,
+  isWorkflowDispatchFallbackRoute,
+  toWorkflowDispatchCandidateLadder,
+  validateDispatchRouteTarget,
+  type DispatchRouteTargetValidation,
+  type WorkflowDispatchCandidate,
+  type WorkflowDispatchCandidateLadder,
+  type WorkflowDispatchFallbackRoute,
+  type WorkflowDispatchLegacyMatrixCell,
+  type WorkflowDispatchMatrixCell,
+  type WorkflowDispatchMatrixTier,
+  type WorkflowDispatchProviderValue,
+  type WorkflowDispatchRoute,
+  type WorkflowDispatchRouteEntry,
+  type WorkflowDispatchRouteTarget,
+} from './dispatch-matrix';
 
 export interface OatDocumentationConfig {
   root?: string;
@@ -61,37 +91,6 @@ export type WorkflowManagedDispatchPolicy =
   | 'high'
   | 'frontier'
   | 'uncapped';
-export type WorkflowDispatchMatrixTier = Exclude<
-  WorkflowManagedDispatchPolicy,
-  'uncapped'
->;
-export interface WorkflowDispatchRouteTarget {
-  harness?: string;
-  model?: string;
-  effort?: string;
-}
-export interface DispatchRouteTargetValidation {
-  valid: boolean;
-  reason?: string;
-}
-export type WorkflowDispatchRouteEntry = string | WorkflowDispatchRouteTarget;
-export type WorkflowDispatchRoute = WorkflowDispatchRouteEntry[];
-export interface WorkflowDispatchFallbackRoute {
-  route: WorkflowDispatchRoute;
-}
-export type WorkflowDispatchCandidate =
-  | WorkflowDispatchRouteEntry
-  | WorkflowDispatchFallbackRoute;
-export interface WorkflowDispatchCandidateLadder {
-  candidates: WorkflowDispatchCandidate[];
-}
-export type WorkflowDispatchLegacyMatrixCell = string | WorkflowDispatchRoute;
-export type WorkflowDispatchMatrixCell =
-  | WorkflowDispatchCandidateLadder
-  | WorkflowDispatchLegacyMatrixCell;
-export type WorkflowDispatchProviderValue =
-  | string
-  | Partial<Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>>;
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
 export type GateAvoid = 'same-family' | 'same-runtime' | 'none';
 
@@ -179,8 +178,6 @@ export const VALID_DISPATCH_POLICY_MODES: readonly WorkflowDispatchPolicyMode[] 
   ['managed', 'inherit'];
 export const VALID_MANAGED_DISPATCH_POLICIES: readonly WorkflowManagedDispatchPolicy[] =
   ['economy', 'balanced', 'high', 'frontier', 'uncapped'];
-export const VALID_DISPATCH_MATRIX_TIERS: readonly WorkflowDispatchMatrixTier[] =
-  ['economy', 'balanced', 'high', 'frontier'];
 const VALID_GATE_ON_FAILURES: readonly GateOnFailure[] = [
   'block',
   'prompt',
@@ -230,56 +227,6 @@ export const BUILTIN_EXEC_TARGETS: Readonly<Record<string, ExecTarget>> = {
     priority: 70,
   },
 };
-
-export function isCodexMaterializedRouteTarget(
-  provider: string,
-  target: WorkflowDispatchRouteTarget,
-): boolean {
-  return (target.harness ?? provider) === 'codex';
-}
-
-export function validateDispatchRouteTarget(
-  provider: string,
-  target: WorkflowDispatchRouteTarget,
-): DispatchRouteTargetValidation {
-  if (!isCodexMaterializedRouteTarget(provider, target)) {
-    return { valid: true };
-  }
-
-  if (!target.model || !target.effort) {
-    return {
-      valid: false,
-      reason:
-        'Codex materialized dispatch targets must provide both model and effort.',
-    };
-  }
-
-  return { valid: true };
-}
-
-export function isWorkflowDispatchFallbackRoute(
-  value: unknown,
-): value is WorkflowDispatchFallbackRoute {
-  return isRecord(value) && Array.isArray(value.route);
-}
-
-export function isWorkflowDispatchCandidateLadder(
-  value: unknown,
-): value is WorkflowDispatchCandidateLadder {
-  return isRecord(value) && Array.isArray(value.candidates);
-}
-
-export function toWorkflowDispatchCandidateLadder(
-  cell: WorkflowDispatchMatrixCell,
-): WorkflowDispatchCandidateLadder {
-  if (isWorkflowDispatchCandidateLadder(cell)) {
-    return cell;
-  }
-
-  return {
-    candidates: [Array.isArray(cell) ? { route: cell } : cell],
-  };
-}
 
 function normalizeMaxAttempts(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
