@@ -275,3 +275,11 @@ configured gate rerun after these artifact corrections.
   findings.
 - The configured `docs-pr` preference will now resume as the normalized
   pre-approval sequence: summary → document → PR.
+
+### Final Closeout Snapshot
+
+**Date:** 2026-07-11
+
+- Snapshotted the configured legacy `docs-pr` preference before dispatching
+  children: pre-approval `[summary, document, pr]`, post-approval `[]`.
+- Final HiLL approval remains pending until all pre-approval steps succeed.
