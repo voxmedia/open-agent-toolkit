@@ -1642,6 +1642,196 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('adds an optional dispatch report after exact resolution and preserves non-first candidate provenance', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'low',
+                  },
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--report-scope',
+      'p03-t04',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      policy: 'balanced',
+      source: 'repo-config',
+      providers: {
+        codex: {
+          selection: {
+            candidateIndex: 1,
+            selectionBranch: 'candidate-requested',
+          },
+        },
+      },
+      dispatchReport: {
+        schemaVersion: 1,
+        route: {
+          scope: 'p03-t04',
+          action: 'implementation',
+          role: 'implementer',
+          target: 'oat-phase-implementer-gpt-5-6-terra-medium',
+        },
+        policy: {
+          status: 'resolved',
+          mode: 'managed',
+          name: 'balanced',
+          source: 'repo-config',
+        },
+        selection: {
+          requestedCandidate: {
+            model: 'gpt-5.6-terra',
+            effort: 'medium',
+          },
+          candidateTier: 'balanced',
+          candidateIndex: 1,
+          exactSelectedTarget: {
+            model: 'gpt-5.6-terra',
+            effort: 'medium',
+          },
+          selectionBranch: 'candidate-requested',
+          cellSource: 'repo-config',
+        },
+        requestedControls: {
+          model: {
+            value: 'gpt-5.6-terra',
+            mechanism: 'materialized-role',
+          },
+          effort: {
+            value: 'medium',
+            mechanism: 'materialized-role',
+          },
+        },
+        runtimeIdentity: {
+          producer: null,
+          provenance: 'unknown',
+          confidence: 'not-reported',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('leaves JSON and human output unchanged when report context is absent', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const jsonHarness = createHarness({ cwd: root, home });
+    await runCommand(jsonHarness.command, ['--provider', 'codex', '--json']);
+    expect(jsonHarness.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchReport',
+    );
+
+    const humanHarness = createHarness({ cwd: root, home });
+    await runCommand(humanHarness.command, ['--provider', 'codex']);
+    expect(humanHarness.capture.info.join('\n')).not.toContain(
+      'Dispatch Report V1',
+    );
+  });
+
+  it('prints formatted human report output after the existing resolver output', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Codex dispatch policy: inherit host defaults');
+    expect(output).toContain('Dispatch Report V1');
+    expect(output).toContain('Action / role: review / reviewer');
+    expect(output).toContain('Runtime identity was not reported.');
+  });
+
+  it('requires complete report context and validates action against the resolver role', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const incomplete = createHarness({ cwd: root, home });
+    await runCommand(incomplete.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p03-t04',
+      '--json',
+    ]);
+    expect(incomplete.capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: '--report-scope and --report-action must be provided together.',
+    });
+
+    const mismatch = createHarness({ cwd: root, home });
+    await runCommand(mismatch.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+    expect(mismatch.capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining(
+        'review/reviewer requires resolver role reviewer, received implementer',
+      ),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('applies an explicit named ceiling tier to one invocation without rewriting configuration', async () => {
     const { root, home } = await setup();
     const configPath = join(root, '.oat', 'config.json');

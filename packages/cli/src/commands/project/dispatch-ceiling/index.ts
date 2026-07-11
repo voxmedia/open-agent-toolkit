@@ -57,9 +57,16 @@ import {
   type EnforcementMechanism,
 } from '@providers/ceiling/registry';
 import {
+  buildDispatchReport,
+  formatDispatchReport,
+  type DispatchControlRequest,
+  type DispatchReportV1,
+} from '@providers/identity/dispatch-report';
+import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
+import type { DispatchAction, DispatchRole } from '@providers/identity/stamp';
 import { Command, Option } from 'commander';
 import YAML from 'yaml';
 
@@ -119,6 +126,8 @@ interface DispatchCeilingResolveOptions {
   projectPath?: string;
   preflight?: boolean;
   nonInteractive?: boolean;
+  reportScope?: string;
+  reportAction?: DispatchAction;
   json?: boolean;
 }
 
@@ -2367,6 +2376,105 @@ function writeHumanResolution(
   }
 }
 
+function reportRole(action: DispatchAction): DispatchRole {
+  if (action === 'review') {
+    return 'reviewer';
+  }
+  return action === 'fix' ? 'fix' : 'implementer';
+}
+
+function reportControl(
+  axis: string,
+  dispatchArgs: CeilingDispatchArgs,
+  reason: string,
+): DispatchControlRequest {
+  if (axis.startsWith('selected:')) {
+    return {
+      value: axis.slice('selected:'.length),
+      mechanism:
+        dispatchArgs && 'variant' in dispatchArgs
+          ? 'materialized-role'
+          : 'task-model-argument',
+      reason,
+    };
+  }
+  if (axis === 'inherited') {
+    return { value: null, mechanism: 'host-inherited', reason };
+  }
+  if (axis === 'provider-default') {
+    return { value: null, mechanism: 'provider-default', reason };
+  }
+  if (axis === 'not-applicable') {
+    return { value: null, mechanism: 'not-applicable', reason };
+  }
+  return { value: null, mechanism: 'base-role', reason };
+}
+
+function buildResolutionReport(
+  resolution: DispatchCeilingResolution,
+  options: DispatchCeilingResolveOptions,
+): DispatchReportV1 | null {
+  const hasScope = options.reportScope !== undefined;
+  const hasAction = options.reportAction !== undefined;
+  if (!hasScope && !hasAction) {
+    return null;
+  }
+  if (!hasScope || !hasAction) {
+    throw new Error(
+      '--report-scope and --report-action must be provided together.',
+    );
+  }
+
+  const scope = options.reportScope!.trim();
+  if (!scope) {
+    throw new Error('--report-scope must be a non-empty value.');
+  }
+
+  const action = options.reportAction!;
+  const role = reportRole(action);
+  const providerResolution = resolution.providers[resolution.provider];
+  if (!providerResolution) {
+    throw new Error(
+      `Dispatch report resolution is missing provider data for "${resolution.provider}".`,
+    );
+  }
+
+  const expectedResolverRole = role === 'reviewer' ? 'reviewer' : 'implementer';
+  if (providerResolution.selection.role !== expectedResolverRole) {
+    throw new Error(
+      `Invalid dispatch report action/role context: ${action}/${role} requires resolver role ${expectedResolverRole}, received ${providerResolution.selection.role}.`,
+    );
+  }
+
+  return buildDispatchReport({
+    scope,
+    action,
+    role,
+    resolution,
+    requestedControls: {
+      model: reportControl(
+        providerResolution.modelAxis,
+        providerResolution.dispatchArgs,
+        'Derived from the completed resolver model-axis result.',
+      ),
+      effort: reportControl(
+        providerResolution.effortAxis,
+        providerResolution.dispatchArgs,
+        'Derived from the completed resolver effort-axis result.',
+      ),
+    },
+    configuredDefaults: {
+      model: null,
+      modelSource: null,
+      effort:
+        resolution.provider === 'codex'
+          ? resolution.providerDefaultEffort
+          : null,
+      effortSource: resolution.provider === 'codex' ? 'codex-config' : null,
+    },
+  });
+}
+
 async function runDispatchCeilingResolve(
   context: CommandContext,
   dependencies: DispatchCeilingDependencies,
@@ -2378,11 +2486,17 @@ async function runDispatchCeilingResolve(
       dependencies,
       options,
     );
+    const dispatchReport = buildResolutionReport(resolution, options);
 
     if (context.json) {
-      context.logger.json(resolution);
+      context.logger.json(
+        dispatchReport ? { ...resolution, dispatchReport } : resolution,
+      );
     } else {
       writeHumanResolution(context, resolution);
+      if (dispatchReport) {
+        context.logger.info(formatDispatchReport(dispatchReport));
+      }
     }
 
     process.exitCode = resolution.status === 'blocked' ? 1 : 0;
@@ -2499,6 +2613,16 @@ export function createProjectDispatchCeilingCommand(
       .option(
         '--non-interactive',
         'Force non-interactive block behavior when the ceiling is unresolved',
+      )
+      .option(
+        '--report-scope <scope>',
+        'Include Dispatch Report V1 for the explicit workflow scope',
+      )
+      .addOption(
+        new Option(
+          '--report-action <action>',
+          'Dispatch Report V1 action; must match the resolver role',
+        ).choices(['implementation', 'fix', 'review']),
       )
       .option('--json', 'Output machine-readable JSON')
       .action(async (options: DispatchCeilingResolveOptions, cmd: Command) => {
