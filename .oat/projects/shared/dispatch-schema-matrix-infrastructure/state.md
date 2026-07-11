@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Resuming p01-t01 inline under explicit user authorization
+Implementation - Resuming p01 with one exact phase subagent and no nested task workers
 
 ## Artifacts
 
@@ -83,13 +83,13 @@ Implementation - Resuming p01-t01 inline under explicit user authorization
 - ✓ Cross-runtime plan exit gate passed; three Minor clarifications applied
 - ✓ Tier 1 subagent execution authorized
 - ✓ Final-phase HiLL checkpoint and auto-review configured
-- ✓ Initial coordinator sandbox blocker resolved for this project through explicit root-inline execution authorization
+- ✓ Initial nested-worker sandbox blocker resolved for this project through explicit phase-direct execution authorization
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
 
-- None. Root-inline execution is explicitly authorized for this project.
+- None. One exact phase subagent per phase, with no nested task workers, is explicitly authorized for this project.
 
 ## Next Milestone
 
-Implement p01 from `p01-t01` inline, preserving planned task commits, verification, phase self-review, and final review.
+Dispatch the exact p01 phase subagent from `p01-t01`; it implements tasks sequentially without nested workers and returns for root verification, phase self-review, and bookkeeping.

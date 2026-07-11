@@ -86,16 +86,23 @@ The discussion evaluated four approaches:
 - **Eliminate the separate coordinator (fallback):** the root performs phase
   coordination and launches exact restricted workers directly. This is proven
   and simple, but loses the coordinator's context-isolation benefit.
+- **Let the exact phase subagent implement its phase directly (interim
+  fallback):** retain one isolated, target-pinned subagent per phase, but remove
+  the nested task-worker layer. The phase agent executes the phase's tasks
+  sequentially with task-level commits and verification. This preserves phase
+  context isolation and avoids nested provider initialization, but weakens the
+  intended separation between phase coordination and ordinary task editing.
 - **Broaden coordinator permissions (last resort):** run the coordinator with
   `danger-full-access` so nested exact CLI workers can initialize. This
   preserves the process topology but gives the coordinator unnecessarily broad
   access and remains dependent on brittle process-inside-process behavior.
 
 For the blocked `dispatch-schema-matrix-infrastructure` project, the user
-explicitly authorized an immediate execution deviation: skip the separate
-phase coordinator and task workers, and let the current root session implement
-the planned tasks directly. That project-local unblock must not be mistaken for
-resolution of this backlog item or silently generalized into the OAT workflow.
+explicitly authorized the phase-direct fallback: dispatch one exact subagent per
+phase, let that phase subagent implement its planned tasks sequentially, and do
+not launch nested task workers. That project-local unblock must not be mistaken
+for resolution of this backlog item or silently generalized into the OAT
+workflow.
 
 ## Acceptance Criteria
 
@@ -126,9 +133,10 @@ resolution of this backlog item or silently generalized into the OAT workflow.
   deterministic named-role selection available, exact CLI broker fallback
   available, and no target-preserving route available. It fails before task
   edits when no safe exact route exists.
-- A documented root-direct fallback preserves exact dispatch and phase
-  bookkeeping when the broker protocol is unavailable; it is recorded as an
-  execution deviation rather than presented as the normal topology.
+- Documented phase-direct and root-direct fallbacks preserve exact dispatch and
+  phase bookkeeping when the broker protocol is unavailable; either fallback
+  is recorded as an execution deviation rather than presented as the normal
+  topology.
 - `danger-full-access` for a coordinator is not the default fallback. If a
   narrow writable-root configuration can support nested initialization, it is
   separately investigated and documented, but nested provider processes are

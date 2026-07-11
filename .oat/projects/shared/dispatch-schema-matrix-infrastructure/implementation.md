@@ -81,12 +81,12 @@ oat_generated: false
 **Notes / Decisions:**
 
 - The original exact phase-coordinator → exact task-worker topology remains unavailable in this host: nested CLI workers fail inside the coordinator sandbox, while native depth-2 delegation cannot expose deterministic materialized-role selection through the current orchestration tool.
-- The user explicitly authorized root-inline execution for this project. The root session will implement each planned task directly, preserve task ordering/commits/verification, and retain phase self-review plus the final review gate.
+- The user explicitly authorized phase-direct execution for this project. One exact pinned subagent will own each phase, implement its planned tasks sequentially, preserve task-level commits and verification, and return the phase for root verification and bookkeeping. It must not launch nested task workers.
 - Durable remediation is tracked by `BL-260711-add-root-owned-dispatch-broker`.
 
 **Issues Encountered:**
 
-- Initial worker launch failed before sampling with `failed to initialize in-process app-server client: Operation not permitted`. Resolved for this project by the user-authorized inline execution deviation; no coordinator or task-worker process will be launched.
+- Initial worker launch failed before sampling with `failed to initialize in-process app-server client: Operation not permitted`. Resolved for this project by the user-authorized phase-direct execution deviation: the exact phase subagent implements ordinary phase tasks itself and launches no nested task workers.
 
 ---
 
@@ -149,7 +149,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Resolved for this project on 2026-07-11: the user authorized root-inline implementation with no phase coordinator or task workers. Durable broker/provenance work is tracked by `BL-260711-add-root-owned-dispatch-broker`.
+- Resolved for this project on 2026-07-11: the user authorized one exact phase subagent per phase with no nested task workers. Durable broker/provenance work is tracked by `BL-260711-add-root-owned-dispatch-broker`.
 
 #### Artifact / Design Deltas
 
@@ -176,7 +176,7 @@ Chronological log of implementation progress.
 
 **Decisions:**
 
-- Resume all planned tasks inline in the root session. This is a project-local execution override, not a change to the intended OAT coordinator/worker contract.
+- Resume with one exact pinned phase subagent per phase. Each phase subagent implements its tasks sequentially and must not launch nested task workers. This is a project-local execution override, not a change to the intended OAT coordinator/worker contract.
 
 **Follow-ups / TODO:**
 
@@ -184,7 +184,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- Nested exact-worker launch from a restricted coordinator - resolved for this project through explicit root-inline authorization; durable fix deferred to `BL-260711-add-root-owned-dispatch-broker`.
+- Nested exact-worker launch from a restricted coordinator - resolved for this project through explicit phase-direct authorization; durable fix deferred to `BL-260711-add-root-owned-dispatch-broker`.
 
 **Session End:** {time}
 
@@ -202,9 +202,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review   | Source Artifact                                                                      | Planned / Documented                                                   | Actual / Accepted                                                                             | Reason                                                                                                                                                                                                                                                           | Source of Truth                                                                                           | Follow-up                                  |
-| --------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| execution-run-2 | `plan.md` execution contract and `oat-project-implement` coordinator/worker contract | One exact phase coordinator dispatches one exact task worker per task. | The root session implements planned tasks directly with no phase coordinator or task workers. | Nested exact CLI workers cannot initialize inside the restricted coordinator; native depth works but the exposed spawn interface cannot deterministically select the materialized role; the user explicitly authorized inline execution to unblock this project. | `implementation.md` for this run; planned product behavior remains governed by `plan.md` and `design.md`. | `BL-260711-add-root-owned-dispatch-broker` |
+| Task / Review   | Source Artifact                                                                      | Planned / Documented                                                                                         | Actual / Accepted                                                                                                   | Reason                                                                                                                                                                                              | Source of Truth                                                                                           | Follow-up                                  |
+| --------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| execution-run-2 | `plan.md` execution contract and `oat-project-implement` coordinator/worker contract | One exact phase coordinator dispatches one exact task worker per task and does not edit ordinary task files. | One exact pinned phase subagent implements all tasks in its phase sequentially and launches no nested task workers. | Nested exact CLI workers cannot initialize inside the restricted phase sandbox; the user explicitly authorized phase-direct implementation to retain phase isolation while unblocking this project. | `implementation.md` for this run; planned product behavior remains governed by `plan.md` and `design.md`. | `BL-260711-add-root-owned-dispatch-broker` |
 
 ## Test Results
 
