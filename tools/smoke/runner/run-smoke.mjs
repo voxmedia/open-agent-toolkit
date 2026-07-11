@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseArgs } from './args.mjs';
 import { runPreflight } from './preflight.mjs';
+import { provisionSmoke } from './provision.mjs';
 
 export class HandlerUnavailableError extends Error {
   constructor(stage) {
@@ -33,6 +34,9 @@ export async function runSmoke(options, { handlers = {}, preflight } = {}) {
 export async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
   return runSmoke(options, {
+    handlers: {
+      prepare: (prepareOptions) => provisionSmoke(prepareOptions),
+    },
     preflight: (preflightOptions) =>
       runPreflight(preflightOptions, { reporter: console.log }),
   });
