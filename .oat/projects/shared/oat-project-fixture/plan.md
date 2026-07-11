@@ -228,7 +228,13 @@ Run: `node --test tools/smoke/evidence/collect.test.mjs` — Expected: fails.
 - Create: `tools/smoke/evidence/assertions.mjs`
 - Create: `tools/smoke/evidence/report.mjs` (markdown + JSON emitters)
 
-**Step 1: Write test (RED)** — `tools/smoke/evidence/assertions.test.mjs`: assertion table computed from golden bundles — phase/task dispatch completeness, exact selected target at-or-below ceiling, parallel isolation (disjoint writes, separate worktrees, flat branch names), fan-in reconciliation, review/gate rows durable + corroborated, runtime identity recorded or `not-reported`. Report emitters produce deterministic output for a fixed bundle.
+**Step 1: Write test (RED)** — `tools/smoke/evidence/assertions.test.mjs`: **scenario-aware assertion profiles** per design §Scenario / Entry-Point Model, selected by the scenario recorded in the bundle's provisioning manifest:
+
+- `plan-review` profile: substantive plan unchanged on resume (task IDs, parallel groups, content hash), review row disposition durable + corroborated, pre-review → reviewed → implementation-ready state transitions atomic and ordered.
+- `implement` profile: phase/task dispatch completeness, exact selected target at-or-below ceiling, parallel isolation (disjoint writes, separate worktrees, flat branch names), fan-in reconciliation, review/gate rows durable + corroborated, runtime identity recorded or `not-reported`.
+- `full` profile: union of both.
+
+Report emitters produce deterministic output for a fixed bundle. Golden fixtures cover each profile.
 Run: `node --test tools/smoke/evidence/assertions.test.mjs` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — same test passes.
@@ -265,14 +271,17 @@ Run: `node --test tools/smoke/evidence/assertions.test.mjs` — Expected: fails.
 
 _Sequential; depends on p01–p03 conceptually only through plan order — its write set is skills/agents, disjoint from `tools/smoke/`. Kept sequential (not grouped) because PR #137 may merge mid-project and this phase must reconcile against the merged contract language, not race it._
 
+_Skill version-bump policy: one frontmatter `version:` bump per changed canonical skill in the final PR diff. Bump each skill on its first p04 edit (p04-t01); p04-t02 and p04-t03 do not bump again unless they touch a skill not already bumped in this phase._
+
 ### Task p04-t01: Coordinator selection contract in workflow skills
 
 **Files:**
 
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump)
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md` (version bump)
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting the coordinator contract text includes: full-information selection (ladder ∩ ceiling ∩ harness-native catalog), upward-not-downward substitution, task workers never silently inheriting the root model, and recorded pre-start CLI selection with reason + candidates considered. (If PR #137 relocates the skill contract tests, re-pin this path in the plan before implementing — see References.)
+**Step 1: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting the coordinator contract text includes: full-information selection (ladder ∩ ceiling ∩ harness-native catalog), upward-not-downward substitution, task workers never silently inheriting the root model, recorded pre-start CLI selection with reason + candidates considered, and **self-review dispatch semantics** (discovery Decision #11): auto artifact-review and phase self-reviews run as native subagents inheriting the parent model by default; managed target pinning and cross-family independence are gate/provenance requirements satisfied by configured CLI exec targets, and the plan-writing reviewer contract must not require managed pinning for non-gate self-reviews. (If PR #137 relocates the skill contract tests, re-pin this path in the plan before implementing — see References.)
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — author the contract language in both surfaces; keep Codex-specific dispatch language consistent with the current merged state (post-#136, and post-#137 if merged by execution time).
@@ -327,7 +336,7 @@ Run: scoped vitest + `node --test tools/smoke/evidence/` — Expected: fails.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-_Sequential; depends on p01–p04. Live tasks execute from this worktree against real providers and may pause for manual harness sessions (Cursor IDE) — these pauses are task steps, not blockers. Live tasks (p05-t02 through p05-t06) intentionally use evidence-assertion step structures (Preconditions/Execute/Verify/Commit) instead of the RED/GREEN pattern: their verification surface is the committed evidence report, not a unit test._
+_Sequential; depends on p01–p04. Live tasks execute from this worktree against real providers and may pause for manual harness sessions (Cursor IDE) — these pauses are task steps, not blockers. Live tasks (p05-t02 through p05-t06) intentionally use evidence-assertion step structures (Preconditions/Execute/Verify/Commit) instead of the RED/GREEN pattern: their verification surface is the committed evidence report, not a unit test. Each Verify step applies the assertion profile matching the scenario run (`plan-review` / `implement` / `full`) per design §Scenario Model and p03-t02._
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -359,7 +368,7 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 2: Execute** — run `plan-review`, then `implement`, then one `full` scenario via `node tools/smoke/runner/run-smoke.mjs --harness codex --scenario <s>`.
 
-**Step 3: Verify** — evidence assertion table passes for each run: native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration. `node --test tools/smoke/evidence/` still green.
+**Step 3: Verify** — the assertion profile matching each scenario passes: `plan-review` run → plan-review profile (resume discipline, review disposition, state transitions); `implement` run → implement profile (native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration); `full` run → union. `node --test tools/smoke/evidence/` still green.
 
 **Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "feat(p05-t02): record codex live smoke evidence"`
 

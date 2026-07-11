@@ -127,6 +127,16 @@ mechanism for cross-cutting workflow changes.
     (per-harness dossiers created 2026-07-11) and
     `02 - Projects/Programmatic Cursor/` (change-log entry). A closing pass at
     project end adds smoke evidence learnings and selected mermaid diagrams.
+11. **Self-review vs gate dispatch semantics:** built-in auto artifact reviews
+    and phase self-reviews run as native subagents inheriting the parent model
+    by default — no managed target pinning required. Cross-family independence
+    and provenance pinning are the _gate's_ job, executed via configured CLI
+    exec targets (`gates.execTargets`) with host-avoidance, which are not
+    limited by the harness's native subagent catalog. The current
+    plan-writing contract over-pins self-reviews under capped managed
+    policies; correcting that language is p04 scope. (Decided 2026-07-11
+    during plan review, when the managed reviewer resolution forced a
+    matrix override that inherit-by-default would not have needed.)
 
 ## Constraints
 
