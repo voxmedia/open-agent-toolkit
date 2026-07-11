@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 0ae2bf13
+oat_current_task: p06-t05
+oat_last_commit: a7455462
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:57:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T12:42:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation revision p06 approved; structured Cursor probe work pending
+Phase p06 review fixes queued after structured Cursor controls completed inconclusively
 
 ## Artifacts
 
@@ -103,7 +103,8 @@ Implementation revision p06 approved; structured Cursor probe work pending
 - ✓ All 23 implementation tasks complete
 - ✓ Implementation-end gate review passed with one Minor plan-alignment finding addressed
 - ✓ Structured Cursor evidence revision approved after cross-project provenance analysis
-- ⧗ Phase p06: structured capture, controls, live probes, reconciliation, and release verification
+- ✓ Phase p06 initial tasks completed: structured capture, inconclusive controls, zero candidate probes, evidence reconciliation, and `0.1.50` release verification
+- ⧗ Phase p06 self-review: five accepted findings queued as `p06-t05` through `p06-t09`
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -112,4 +113,4 @@ Implementation revision p06 approved; structured Cursor probe work pending
 
 ## Next Milestone
 
-Complete p06, rerun documentation sync as needed, and receive a fresh final review.
+Complete p06 review fixes, rerun the p06 self-review, then receive a fresh final review.

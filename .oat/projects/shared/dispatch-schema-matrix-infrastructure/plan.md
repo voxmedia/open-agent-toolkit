@@ -1229,6 +1229,193 @@ git add packages/cli/package.json packages/control-plane/package.json packages/d
 git commit -m "chore(p06-t04): prepare structured cursor evidence release"
 ```
 
+### Task p06-t05: (review) Derive structured evidence from recommendation-bound projections
+
+**Files:**
+
+- Modify: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+- Modify: `tools/verification/verify-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/verify-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding C1: the verifier currently checks asserted structured outcomes
+for consistency but does not independently derive them from the public event
+projection, bind recommendation metadata to the supplied recommendation, or
+enforce the expected post-control candidate inventory.
+
+**Step 2: Implement fix**
+
+Define a strict capture-level schema and recompute every derived probe field
+from the minimal public projection. Bind recommendation version/hash to the
+supplied recommendation, require the recommendation-derived candidate set plus
+explicit exploratory entries when controls pass, and reject capture-level
+extra fields or unsafe environment values.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+node --test tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+node tools/verification/verify-cursor-subagent-evidence.mjs \
+  --recommendation packages/cli/config/dispatch-matrix-recommendation.json \
+  --capture /tmp/oat-cursor-structured-pass.json \
+  --evidence .oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md
+```
+
+Expected: adversarial forged outcomes, recommendation mismatches, inventory
+drift, and capture-level privacy leaks fail closed while the recorded
+inconclusive pass verifies.
+
+**Step 4: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs tools/verification/verify-cursor-subagent-evidence.mjs tools/verification/verify-cursor-subagent-evidence.test.mjs
+git commit -m "fix(p06-t05): derive structured cursor evidence"
+```
+
+### Task p06-t06: (review) Require exact Task correlation invariants
+
+**Files:**
+
+- Modify: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I1: missing call IDs compare equal, and start, completion, and
+terminal events are not required to share a session or compatible exit state.
+
+**Step 2: Implement fix**
+
+Require non-empty Task call and session IDs, exact start/completion call and
+session agreement, terminal session agreement, successful terminal state, and
+compatible direct exit status before classifying a Task as accepted and valid.
+
+**Step 3: Verify**
+
+Run:
+`node --test tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+Expected: missing IDs, mismatched sessions, terminal errors, and nonzero exits
+all fail closed.
+
+**Step 4: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs
+git commit -m "fix(p06-t06): require exact task correlation"
+```
+
+### Task p06-t07: (review) Harden private companion credential redaction
+
+**Files:**
+
+- Modify: `tools/verification/capture-cursor-subagent-evidence.mjs`
+- Modify: `tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M1: string redaction misses common Basic authorization, cookie,
+and credential assignment forms in private stdout/stderr.
+
+**Step 2: Implement fix**
+
+Cover every credential-key family recognized by the recursive key matcher plus
+common authorization and cookie header syntax. Add table-driven nested and raw
+string cases without weakening exact identifier retention in the private-only
+companion.
+
+**Step 3: Verify**
+
+Run:
+`node --test tools/verification/capture-cursor-subagent-evidence.test.mjs`
+
+Expected: supported credential encodings are redacted and exact private
+correlation IDs remain available locally.
+
+**Step 4: Commit**
+
+```bash
+git add tools/verification/capture-cursor-subagent-evidence.mjs tools/verification/capture-cursor-subagent-evidence.test.mjs
+git commit -m "fix(p06-t07): harden cursor evidence redaction"
+```
+
+### Task p06-t08: (review) Scope public privacy claims to the structured pass
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/provider-sync/providers.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
+
+**Step 1: Understand the issue**
+
+Review finding M2: docs describe the whole linked evidence artifact as the
+structured allowlist even though the intentionally preserved historical v1
+section contains broader sanitized prompt/argv/output fields.
+
+**Step 2: Implement fix**
+
+Scope the allowlist and hashed-ID claim explicitly to the structured
+second-pass block, and separately describe the broader sanitized historical v1
+record retained for provenance.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm exec oxfmt --check apps/oat-docs/docs/cli-utilities/configuration.md apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+pnpm build:docs
+```
+
+Expected: all three docs state the two privacy shapes precisely and build.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/cli-utilities/configuration.md apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+git commit -m "docs(p06-t08): clarify cursor evidence privacy"
+```
+
+### Task p06-t09: (review) Reconcile p06 lifecycle state and final verification
+
+**Files:**
+
+- Modify: `.oat/projects/shared/dispatch-schema-matrix-infrastructure/implementation.md`
+- Modify: `.oat/projects/shared/dispatch-schema-matrix-infrastructure/state.md`
+- Modify: `.oat/projects/shared/dispatch-schema-matrix-infrastructure/plan.md`
+
+**Step 1: Understand the issue**
+
+Review finding I2: root-owned phase bookkeeping had not yet recorded the four
+completed p06 commits or their full verification evidence when the phase review
+ran.
+
+**Step 2: Reconcile**
+
+After p06-t05 through p06-t08 complete, record all nine p06 task commits,
+verification results, control/candidate outcome, review disposition, and the
+next lifecycle action. Mark the p06 review `fixes_completed` pending re-review.
+
+**Step 3: Verify**
+
+Run `pnpm format`, `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+`pnpm build:docs`, `pnpm release:validate`, and `git diff --check` sequentially.
+
+Expected: the full repository/release suite passes and project tracking resumes
+at the p06 re-review boundary.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/dispatch-schema-matrix-infrastructure/plan.md .oat/projects/shared/dispatch-schema-matrix-infrastructure/implementation.md .oat/projects/shared/dispatch-schema-matrix-infrastructure/state.md .oat/projects/shared/dispatch-schema-matrix-infrastructure/reviews/
+git commit -m "chore(oat): reconcile p06 review fixes"
+```
+
 ---
 
 ## Reviews
@@ -1240,7 +1427,7 @@ git commit -m "chore(p06-t04): prepare structured cursor evidence release"
 | p03           | code     | passed          | 2026-07-11 | reviews/archived/code-p03-self-review-2026-07-11.md           |
 | p04           | code     | passed          | 2026-07-11 | reviews/archived/code-p04-self-review-2026-07-11.md           |
 | p05           | code     | passed          | 2026-07-11 | reviews/archived/code-p05-self-review-2026-07-11.md           |
-| p06           | code     | pending         | -          | -                                                             |
+| p06           | code     | fixes_added     | 2026-07-11 | reviews/archived/code-p06-self-review-2026-07-11.md           |
 | final-pre-p06 | code     | passed          | 2026-07-11 | reviews/archived/final-review-2026-07-11T034130Z.md           |
 | final         | code     | pending         | -          | -                                                             |
 | spec          | artifact | pending         | -          | -                                                             |
@@ -1266,9 +1453,9 @@ approval.
 - Phase p03: 6 tasks — Dispatch Report V1 and workflow integrations
 - Phase p04: 4 tasks — live evidence, recommendation, and docs
 - Phase p05: 3 tasks — release validation and backlog closeout
-- Phase p06: 4 tasks — structured Cursor controls, probes, reconciliation, and release validation
+- Phase p06: 9 tasks — structured Cursor controls, probes, reconciliation, review fixes, and release validation
 
-**Total: 27 tasks**
+**Total: 32 tasks**
 
 Ready for implementation only after optional phase-review setup and the managed
 plan artifact review complete.

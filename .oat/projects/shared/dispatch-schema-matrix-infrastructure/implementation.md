@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p06-t01
+oat_current_task_id: p06-t05
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | p03   | complete    | 6     | 6/6       |
 | p04   | complete    | 4     | 4/4       |
 | p05   | complete    | 3     | 3/3       |
-| p06   | in_progress | 4     | 0/4       |
+| p06   | in_progress | 9     | 4/9       |
 
-**Total:** 23/27 tasks completed
+**Total:** 27/32 tasks completed
 
 **HiLL:** Phase p05 approved by the user on 2026-07-11 before final release and backlog closeout work began.
 
@@ -522,26 +522,79 @@ live probes immediately.
 
 ### Task p06-t01: Add structured Cursor probe capture and evidence validation
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 7e64ecf9
 
 ---
 
 ### Task p06-t02: Run controls and the second live candidate pass
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 5cd7dfee
 
 ---
 
 ### Task p06-t03: Reconcile recommendation and user-facing evidence semantics
 
+**Status:** complete
+**Commit:** 71e1300f
+
+---
+
+### Task p06-t04: Bump release assets and run final verification
+
+**Status:** complete
+**Commit:** a7455462
+
+---
+
+### Review Received: p06
+
+**Date:** 2026-07-11
+**Review artifact:** `reviews/archived/code-p06-self-review-2026-07-11.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 2
+- Medium: 2
+- Minor: 0
+
+**New tasks added:** `p06-t05`, `p06-t06`, `p06-t07`, `p06-t08`, `p06-t09`
+
+**Disposition:** All findings accepted. C1, I1, M1, and M2 become bounded
+code/docs fixes. I2 is the root-owned lifecycle reconciliation task after the
+implementation fixes and full verification complete.
+
+### Task p06-t05: Derive structured evidence from recommendation-bound projections
+
 **Status:** pending
 **Commit:** -
 
 ---
 
-### Task p06-t04: Bump release assets and run final verification
+### Task p06-t06: Require exact Task correlation invariants
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t07: Harden private companion credential redaction
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t08: Scope public privacy claims to the structured pass
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t09: Reconcile p06 lifecycle state and final verification
 
 **Status:** pending
 **Commit:** -
