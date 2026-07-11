@@ -26,82 +26,79 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 4     | 0/4       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/8 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Codex Depth Policy and Scope Wiring
 
 **Status:** in_progress
 **Started:** 2026-07-10
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Enforce the shared max-depth floor
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+---
 
-- {Notes will be added during implementation}
+### Task p01-t02: Preserve inherited depth during Codex sync
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Apply scope-safe depth in direct materialization
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t04: Diagnose insufficient managed-role depth
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Native Dispatch Provenance Contract
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Make exact native dispatch the primary route
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Document configured reviewer and worker provenance
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Provider Surface and Release Validation
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Document and regenerate the Codex provider surface
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Bump lockstep packages and validate the release
 
 **Status:** pending
 **Commit:** -
@@ -128,40 +125,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-07-10
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-10
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+No implementation runs yet.
 
 ## Deviations from Plan / Design
 
@@ -179,6 +143,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -207,4 +172,4 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
