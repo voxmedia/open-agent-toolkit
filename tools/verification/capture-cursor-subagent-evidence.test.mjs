@@ -446,6 +446,127 @@ test('constrains public structural values and opaque model strings', () => {
   }
 });
 
+test('enforces exact types and finite domains across the public probe schema', () => {
+  const cases = [
+    [
+      'event sentinelObserved',
+      (probe) => {
+        probe.events[3].sentinelObserved = 'private parent prompt';
+      },
+    ],
+    [
+      'event terminalError',
+      (probe) => {
+        probe.events[4].terminalError = 'false';
+      },
+    ],
+    [
+      'kind',
+      (probe) => {
+        probe.kind = 'arbitrary-kind';
+      },
+    ],
+    [
+      'availabilityStatus',
+      (probe) => {
+        probe.availabilityStatus = 'arbitrary-status';
+      },
+    ],
+    [
+      'taskSelection',
+      (probe) => {
+        probe.taskSelection = 'arbitrary-selection';
+      },
+    ],
+    [
+      'childCompletion',
+      (probe) => {
+        probe.childCompletion = 'arbitrary-completion';
+      },
+    ],
+    [
+      'runtimeIdentity',
+      (probe) => {
+        probe.runtimeIdentity = 'private runtime prose';
+      },
+    ],
+    [
+      'outcomeBasis',
+      (probe) => {
+        probe.outcomeBasis = 'arbitrary-basis';
+      },
+    ],
+    [
+      'terminalEventObserved',
+      (probe) => {
+        probe.terminalEventObserved = 'true';
+      },
+    ],
+    [
+      'directExitStatus',
+      (probe) => {
+        probe.directExitStatus = '0';
+      },
+    ],
+    [
+      'terminationSignal',
+      (probe) => {
+        probe.terminationSignal = 'private signal prose';
+      },
+    ],
+    [
+      'durationMs',
+      (probe) => {
+        probe.durationMs = '24';
+      },
+    ],
+    [
+      'streamStatus',
+      (probe) => {
+        probe.streamStatus = 'arbitrary-stream';
+      },
+    ],
+    [
+      'sanitizerSchemaVersion',
+      (probe) => {
+        probe.sanitizerSchemaVersion = '1';
+      },
+    ],
+    [
+      'tier',
+      (probe) => {
+        probe.tier = 'arbitrary-tier';
+      },
+    ],
+  ];
+
+  for (const [name, mutate] of cases) {
+    const capture = captureFixture();
+    mutate(capture.candidates[0]);
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /boolean|integer|signal|structural|schema|status|kind|tier|runtime|not-reported|unsafe|derived/i,
+      name,
+    );
+  }
+});
+
+test('rejects path and URI material independent of local root names', () => {
+  for (const unsafePath of [
+    '/workspace/private/file',
+    '/root/private/file',
+    'file:///Users/private/file',
+  ]) {
+    const capture = captureFixture();
+    capture.candidates[0].terminationSignal = unsafePath;
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /path|signal|unsafe/i,
+      unsafePath,
+    );
+  }
+});
+
 test('recursively redacts credentials from private raw events without removing exact IDs', () => {
   const value = redactPrivateValue({
     session_id: sessionId,
@@ -502,7 +623,10 @@ test('redacts every credential key family in nested private values', () => {
 test('redacts common credential encodings from private stdout and stderr strings', () => {
   const cases = [
     ['Authorization: Basic dXNlcjpwYXNz', 'Authorization: Basic <redacted>'],
-    ['Proxy-Authorization=Digest abc123', 'Proxy-Authorization: Digest <redacted>'],
+    [
+      'Proxy-Authorization=Digest abc123',
+      'Proxy-Authorization: Digest <redacted>',
+    ],
     ['Authorization: Bearer abc123', 'Authorization: Bearer <redacted>'],
     ['Cookie: session=abc; csrf=def', 'Cookie: <redacted>'],
     ['Set-Cookie: session=abc; HttpOnly', 'Set-Cookie: <redacted>'],

@@ -16,10 +16,9 @@ const CREDENTIAL_KEY =
   /(?:authorization|cookie|credential|api[_-]?key|token|secret|password)/i;
 const AUTHORIZATION_HEADER =
   /\b((?:proxy-)?authorization)\b["']?\s*[:=]\s*["']?([^\r\n,;'"`]+)/gi;
-const COOKIE_HEADER =
-  /\b((?:set-)?cookie)\b["']?\s*[:=]\s*["']?[^\r\n,'"]+/gi;
+const COOKIE_HEADER = /\b((?:set-)?cookie)\b["']?\s*[:=]\s*["']?[^\r\n,'"]+/gi;
 const LOCAL_PATH =
-  /(?:^|[\s"'`=(])(?:\/(?:Users|home|private|tmp|var|etc|opt|Volumes)(?:\/|$)|[A-Za-z]:[\\/]|\\\\[^\\/\s]+[\\/])/;
+  /(?:file:\/\/\/?|(?:^|[\s"'`=(])\/(?!\/)|[A-Za-z]:[\\/]|\\\\[^\\/\s]+[\\/])/i;
 const CREDENTIAL_ASSIGNMENT = new RegExp(
   String.raw`\b((?:[a-z0-9_.-]*(?:credential|api[_-]?key|token|secret|password)[a-z0-9_.-]*)|api key)\b["']?\s*[:=]\s*["']?[^\s,;}'"\x60]+`,
   'gi',
@@ -189,8 +188,7 @@ function requireTerminalIntegrity(events) {
       terminal[0].subtype.trim().length === 0 ||
       typeof terminal[0].session_id !== 'string' ||
       terminal[0].session_id.trim().length === 0 ||
-      ('is_error' in terminal[0] &&
-        typeof terminal[0].is_error !== 'boolean'))
+      ('is_error' in terminal[0] && typeof terminal[0].is_error !== 'boolean'))
   ) {
     fail('terminal result event is malformed');
   }
@@ -412,6 +410,35 @@ const EVENT_SUBTYPES = new Set([
 ]);
 const TOOL_NAMES = new Set(['Task']);
 const TASK_RESULTS = new Set(['error', 'success', 'unknown']);
+const PROBE_KINDS = new Set([
+  'positive-control',
+  'negative-control',
+  'candidate',
+]);
+const AVAILABILITY_STATUSES = new Set([
+  'valid',
+  'unknown-value',
+  'unvalidated',
+]);
+const TASK_SELECTIONS = new Set(['accepted', 'rejected', 'not-observed']);
+const CHILD_COMPLETIONS = new Set([
+  'completed',
+  'failed',
+  'timed-out',
+  'not-observed',
+]);
+const OUTCOME_BASES = new Set([
+  'malformed-stream',
+  'no-definitive-task-evidence',
+  'missing-terminal-event',
+  'structured-task-rejection',
+  'correlated-task-sentinel',
+  'correlated-task-terminal-failure',
+  'correlated-task-without-sentinel',
+]);
+const STREAM_STATUSES = new Set(['valid', 'malformed']);
+const PROBE_TIERS = new Set([...TIERS, 'exploratory']);
+const TERMINATION_SIGNALS = new Set(['SIGTERM', 'SIGKILL']);
 const OPAQUE_MODEL = /^[\p{L}\p{N}][\p{L}\p{N}._:+/@-]{0,127}$/u;
 
 const CAPTURE_KEYS = new Set([
@@ -484,6 +511,21 @@ function validateOpaqueModel(value, label) {
   }
 }
 
+function validateNullableExitStatus(value, label) {
+  if (
+    value !== null &&
+    (!Number.isInteger(value) || value < 0 || value > 255)
+  ) {
+    fail(`${label} must be null or an integer exit status from 0 through 255`);
+  }
+}
+
+function validateTerminationSignal(value, label) {
+  if (value !== null && !TERMINATION_SIGNALS.has(value)) {
+    fail(`${label} must be null or a supported termination signal`);
+  }
+}
+
 function validatePublicValueSafety(value, label) {
   if (typeof value === 'string') {
     validatePublicString(value, label);
@@ -533,7 +575,9 @@ function deriveProbeProjection(probe, label) {
       completion.correlationHash !== start.correlationHash ||
       completion.sessionHash !== start.sessionHash
     ) {
-      fail(`${label} Task completion does not exactly correlate with Task start`);
+      fail(
+        `${label} Task completion does not exactly correlate with Task start`,
+      );
     }
   }
   if (completions.length > 1) {
@@ -548,7 +592,9 @@ function deriveProbeProjection(probe, label) {
   }
   const terminal = terminals[0] ?? null;
   if (start && terminal?.sessionHash !== start.sessionHash) {
-    fail(`${label} terminal session does not exactly correlate with Task start`);
+    fail(
+      `${label} terminal session does not exactly correlate with Task start`,
+    );
   }
 
   let taskSelection = 'not-observed';
@@ -621,6 +667,9 @@ function validateProbeAllowlist(probe, label) {
     if (!isObject(event)) {
       fail(`${label}.events[${index}] must be an object`);
     }
+    if (!('eventType' in event)) {
+      fail(`${label}.events[${index}] is missing required field: eventType`);
+    }
     for (const key of Object.keys(event)) {
       if (!EVENT_KEYS.has(key)) {
         fail(
@@ -670,12 +719,64 @@ function validateProbeAllowlist(probe, label) {
         `${label}.events[${index}].requestedModel`,
       );
     }
-    if (
-      'terminalError' in event &&
-      typeof event.terminalError !== 'boolean'
-    ) {
+    if ('terminalError' in event && typeof event.terminalError !== 'boolean') {
       fail(`${label}.events[${index}].terminalError must be a boolean`);
     }
+    if (
+      'sentinelObserved' in event &&
+      typeof event.sentinelObserved !== 'boolean'
+    ) {
+      fail(`${label}.events[${index}].sentinelObserved must be a boolean`);
+    }
+  }
+  validateStructuralValue(probe.kind, PROBE_KINDS, `${label}.kind`);
+  validateStructuralValue(
+    probe.availabilityStatus,
+    AVAILABILITY_STATUSES,
+    `${label}.availabilityStatus`,
+  );
+  validateStructuralValue(
+    probe.taskSelection,
+    TASK_SELECTIONS,
+    `${label}.taskSelection`,
+  );
+  validateStructuralValue(
+    probe.childCompletion,
+    CHILD_COMPLETIONS,
+    `${label}.childCompletion`,
+  );
+  if (probe.runtimeIdentity !== 'not-reported') {
+    fail(`${label}.runtimeIdentity must be not-reported`);
+  }
+  validateStructuralValue(
+    probe.outcomeBasis,
+    OUTCOME_BASES,
+    `${label}.outcomeBasis`,
+  );
+  if (typeof probe.terminalEventObserved !== 'boolean') {
+    fail(`${label}.terminalEventObserved must be a boolean`);
+  }
+  validateNullableExitStatus(
+    probe.directExitStatus,
+    `${label}.directExitStatus`,
+  );
+  validateTerminationSignal(
+    probe.terminationSignal,
+    `${label}.terminationSignal`,
+  );
+  if (!Number.isInteger(probe.durationMs) || probe.durationMs < 0) {
+    fail(`${label}.durationMs must be a non-negative integer`);
+  }
+  validateStructuralValue(
+    probe.streamStatus,
+    STREAM_STATUSES,
+    `${label}.streamStatus`,
+  );
+  if (probe.sanitizerSchemaVersion !== 1) {
+    fail(`${label}.sanitizerSchemaVersion must equal 1`);
+  }
+  if ('tier' in probe) {
+    validateStructuralValue(probe.tier, PROBE_TIERS, `${label}.tier`);
   }
   if (probe.candidate !== null) {
     validateOpaqueModel(probe.candidate, `${label}.candidate`);
@@ -832,6 +933,12 @@ export function validateStructuredCapture(
   );
   validateProbeAllowlist(capture.controls.positive, 'positive control');
   validateProbeAllowlist(capture.controls.negative, 'negative control');
+  if (capture.controls.positive.kind !== 'positive-control') {
+    fail('positive control kind must be positive-control');
+  }
+  if (capture.controls.negative.kind !== 'negative-control') {
+    fail('negative control kind must be negative-control');
+  }
   capture.candidates.forEach((probe, index) =>
     validateProbeAllowlist(probe, `candidates[${index}]`),
   );
@@ -868,15 +975,13 @@ export function validateStructuredCapture(
   if (
     !Array.isArray(exploratoryCandidates) ||
     new Set(exploratoryCandidates).size !== exploratoryCandidates.length ||
-    exploratoryCandidates.some(
-      (candidate) => {
-        if (typeof candidate !== 'string') {
-          return true;
-        }
-        validateOpaqueModel(candidate, 'exploratory candidate');
-        return false;
-      },
-    )
+    exploratoryCandidates.some((candidate) => {
+      if (typeof candidate !== 'string') {
+        return true;
+      }
+      validateOpaqueModel(candidate, 'exploratory candidate');
+      return false;
+    })
   ) {
     fail('structured capture exploratoryCandidates must be unique strings');
   }
