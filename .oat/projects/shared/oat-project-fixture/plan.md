@@ -7,6 +7,11 @@ oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase); confirmed at implement start
 oat_plan_parallel_groups: [['p02', 'p03']] # runner core and evidence collector are file-disjoint
+oat_phase_review_gate:
+  enabled: true
+  phases: []
+  review_type: code
+  exit_nonzero_on: important
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null
 oat_import_source_path: null
