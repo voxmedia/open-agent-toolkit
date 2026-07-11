@@ -13,8 +13,6 @@ import type {
 } from '@providers/identity/availability';
 import {
   createDispatchValidationPassContext,
-  type DispatchMatrixValidationResult,
-  type DispatchValidationPassContext,
   type DispatchValidationPassOptions,
 } from '@providers/identity/dispatch-validation';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -133,37 +131,24 @@ function createHarness(options: HarnessOptions = {}): {
     options.validateMatrixCell ??
       (async () => 'valid' satisfies MatrixCellAvailability),
   );
-  const validationOverrides: Parameters<typeof createDoctorCommand>[0] =
-    options.availabilityDependencies
-      ? {
-          createDispatchValidationPassContext: (
-            passOptions: DispatchValidationPassOptions,
-          ) =>
-            createDispatchValidationPassContext({
-              ...passOptions,
-              dependencies: options.availabilityDependencies,
-            }),
-        }
-      : {
-          validateDispatchMatrixRefs: async (
-            refs,
-            context: DispatchValidationPassContext,
-          ): Promise<DispatchMatrixValidationResult[]> =>
-            Promise.all(
-              refs.map(async (ref) => {
-                const target = ref.target;
-                const provider = target?.harness ?? ref.provider;
-                const value =
-                  ref.value ?? target?.model ?? target?.effort ?? '';
+  const validationOverrides: Parameters<typeof createDoctorCommand>[0] = {
+    createDispatchValidationPassContext: (
+      passOptions: DispatchValidationPassOptions,
+    ) =>
+      createDispatchValidationPassContext({
+        ...passOptions,
+        ...(options.availabilityDependencies
+          ? { dependencies: options.availabilityDependencies }
+          : {
+              probeCursorSubagentModel: async (value, probeOptions) => {
                 let availability:
                   | MatrixCellAvailability
                   | MatrixCellAvailabilityResult;
                 try {
-                  availability = await validateMatrixCell(provider, value, {
-                    cwd: context.options.cwd,
-                    env: context.options.env,
+                  availability = await validateMatrixCell('cursor', value, {
+                    cwd: probeOptions.cwd,
+                    env: probeOptions.env,
                     detailed: true,
-                    ...(target ? { target } : {}),
                   });
                 } catch {
                   availability = 'unvalidated';
@@ -173,15 +158,14 @@ function createHarness(options: HarnessOptions = {}): {
                     ? { availability }
                     : availability;
                 return {
-                  ref,
-                  status: result.availability,
+                  ...result,
+                  decisive: true,
                   evidence: 'none',
-                  catalogPresence: null,
-                  diagnostic: result.message ?? '',
                 };
-              }),
-            ),
-        };
+              },
+            }),
+      }),
+  };
   const command = createDoctorCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? scope) as Scope,
@@ -534,7 +518,6 @@ describe('createDoctorCommand', () => {
       cwd: '/tmp/workspace',
       env: {},
       detailed: true,
-      target: { model: 'gpt-5.5-high' },
     });
     expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'high', {
       cwd: '/tmp/workspace',

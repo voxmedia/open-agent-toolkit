@@ -15,9 +15,7 @@ import type {
 } from '@providers/identity/availability';
 import {
   createDispatchValidationPassContext,
-  type DispatchMatrixValidationResult,
   type DispatchValidationPassOptions,
-  type DispatchValidationPassContext,
 } from '@providers/identity/dispatch-validation';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -72,39 +70,6 @@ function createHarness(options: HarnessOptions): {
   };
   if (options.validateMatrixCell) {
     overrides.validateMatrixCell = options.validateMatrixCell;
-    overrides.validateDispatchMatrixRefs = async (
-      refs,
-      context: DispatchValidationPassContext,
-    ): Promise<DispatchMatrixValidationResult[]> =>
-      Promise.all(
-        refs.map(async (ref) => {
-          const target = ref.target;
-          const provider = target?.harness ?? ref.provider;
-          const value = ref.value ?? target?.model ?? target?.effort ?? '';
-          let availability:
-            | MatrixCellAvailability
-            | MatrixCellAvailabilityResult;
-          try {
-            availability = await options.validateMatrixCell!(provider, value, {
-              cwd: context.options.cwd,
-              env: context.options.env,
-              detailed: true,
-              ...(target ? { target } : {}),
-            });
-          } catch {
-            availability = 'unvalidated';
-          }
-          const result =
-            typeof availability === 'string' ? { availability } : availability;
-          return {
-            ref,
-            status: result.availability,
-            evidence: 'none',
-            catalogPresence: null,
-            diagnostic: result.message ?? '',
-          };
-        }),
-      );
   }
   if (options.availabilityDependencies) {
     overrides.createDispatchValidationPassContext = (
@@ -113,6 +78,34 @@ function createHarness(options: HarnessOptions): {
       createDispatchValidationPassContext({
         ...passOptions,
         dependencies: options.availabilityDependencies,
+      });
+  } else if (options.validateMatrixCell) {
+    overrides.createDispatchValidationPassContext = (
+      passOptions: DispatchValidationPassOptions,
+    ) =>
+      createDispatchValidationPassContext({
+        ...passOptions,
+        probeCursorSubagentModel: async (value, probeOptions) => {
+          let availability:
+            | MatrixCellAvailability
+            | MatrixCellAvailabilityResult;
+          try {
+            availability = await options.validateMatrixCell!('cursor', value, {
+              cwd: probeOptions.cwd,
+              env: probeOptions.env,
+              detailed: true,
+            });
+          } catch {
+            availability = 'unvalidated';
+          }
+          const result =
+            typeof availability === 'string' ? { availability } : availability;
+          return {
+            ...result,
+            decisive: true,
+            evidence: 'none',
+          };
+        },
       });
   }
 

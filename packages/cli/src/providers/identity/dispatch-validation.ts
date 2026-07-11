@@ -81,6 +81,21 @@ function availabilityRef(ref: DispatchMatrixCellRef): {
   };
 }
 
+function oracleOptions(
+  context: DispatchValidationPassContext,
+  target: DispatchMatrixCellRef['target'],
+): ValidateMatrixCellOptions {
+  return {
+    cwd: context.options.cwd,
+    ...(context.options.env ? { env: context.options.env } : {}),
+    ...(context.options.dependencies
+      ? { dependencies: context.options.dependencies }
+      : {}),
+    detailed: true,
+    ...(target ? { target } : {}),
+  };
+}
+
 function cursorCatalogDiagnostic(value: string, presence: boolean): string {
   return presence
     ? `Cursor's broad model catalog lists '${value}', but subagent Task dispatch could not be validated.`
@@ -197,11 +212,11 @@ async function validateRef(
   const validator = context.options.validateMatrixCell ?? validateMatrixCell;
   try {
     const result = normalizeMatrixCellAvailability(
-      await validator(candidate.provider, candidate.value, {
-        ...context.options,
-        detailed: true,
-        ...(candidate.target ? { target: candidate.target } : {}),
-      }),
+      await validator(
+        candidate.provider,
+        candidate.value,
+        oracleOptions(context, candidate.target),
+      ),
     );
     return {
       ref,

@@ -36,6 +36,61 @@ function dependencies(
 }
 
 describe('validateDispatchMatrixRefs', () => {
+  it('passes only oracle options to a non-Cursor structured-target validator', async () => {
+    const validateMatrixCell = vi.fn(async () => 'valid' as const);
+    const probeCursorSubagentModel = vi.fn(async () => {
+      throw new Error('Cursor probe should not run');
+    });
+    const resolveCursorModelCatalog = vi.fn(async () => {
+      throw new Error('Cursor catalog should not run');
+    });
+    const target = {
+      harness: 'codex',
+      model: 'gpt-5.6-sol',
+      effort: 'xhigh',
+    };
+    const ref: DispatchMatrixCellRef = {
+      provider: 'cursor',
+      tier: 'frontier',
+      candidateIndex: 0,
+      fallbackRouteIndex: 0,
+      value: null,
+      target,
+      path: 'cursor.frontier[0].route[0]',
+      source: 'repo-config',
+    };
+
+    await expect(
+      validateDispatchMatrixRefs(
+        [ref],
+        createDispatchValidationPassContext({
+          cwd: '/repo',
+          env: { OAT_TEST: '1' },
+          validateMatrixCell,
+          probeCursorSubagentModel,
+          resolveCursorModelCatalog,
+        }),
+      ),
+    ).resolves.toEqual([
+      {
+        ref,
+        status: 'valid',
+        evidence: 'none',
+        catalogPresence: null,
+        diagnostic: '',
+      },
+    ]);
+
+    expect(validateMatrixCell).toHaveBeenCalledWith('codex', 'gpt-5.6-sol', {
+      cwd: '/repo',
+      env: { OAT_TEST: '1' },
+      detailed: true,
+      target,
+    });
+    expect(probeCursorSubagentModel).not.toHaveBeenCalled();
+    expect(resolveCursorModelCatalog).not.toHaveBeenCalled();
+  });
+
   it('fans one exact candidate probe back to duplicate source refs', async () => {
     const runCursorAgent = vi.fn(async () => ({
       ok: true,
