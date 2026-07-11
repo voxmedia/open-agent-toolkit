@@ -38,7 +38,10 @@
   ],
   "workflow": {
     "archiveOnComplete": true,
-    "postImplementSequence": "docs-pr",
+    "postImplementSequence": {
+      "preApproval": ["summary", "document", "pr"],
+      "postApproval": []
+    },
     "autoReviewAtHillCheckpoints": true
   }
 }
