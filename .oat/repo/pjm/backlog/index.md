@@ -5,10 +5,10 @@
 ## Curated Overview
 
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
-- Remaining dispatch follow-ups cover matrix normalization consolidation, Cursor catalog caching and model-slug verification, and the deferred machine schema/formatter work.
-- The `codex-family-subagents` discovery added a 2026-07-09 follow-up to verify Cursor's actual GPT-5.6 subagent model slugs before OAT wires Sol, Terra, or Luna into Cursor dispatch configuration.
+- Dispatch matrix normalization consolidation, pass-scoped Cursor catalog caching, and the Dispatch Report V1 schema/formatter are shipped.
+- GPT-5.6 live Task/subagent slug eligibility remains an active recheck: the current Cursor candidates are configured but unvalidated, with the next canonical probe scheduled after 2026-07-18.
 - High-priority review throughput work now tracks `oat-reviewer` orchestration of cheaper/faster reconnaissance subagents while preserving primary-reviewer judgment for synthesis, severity, and final findings.
-- The `codex-family-subagents` dispatch UX supplement is split: human-facing display guidance is folded into project p03-t05, while reusable machine schema/formatter work is tracked as `BL-260709-add-dispatch-machine-schema`.
+- The `codex-family-subagents` dispatch UX split is complete: human-facing guidance and the reusable Dispatch Report V1 schema/formatter shipped through `dispatch-schema-matrix-infrastructure`.
 - High-priority workflow follow-up now tracks structured post-implementation sequencing so final-review-passed projects can run summary/docs/PR preparation before final HiLL approval when configured, while stricter repos can defer selected actions until after approval.
 - High-priority orchestration follow-up now tracks a root-owned exact-dispatch broker and launcher-owned provenance so phase coordinators can retain phase semantics without broad permissions or nested provider initialization; root-direct execution remains a documented fallback only.
 
