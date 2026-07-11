@@ -88,8 +88,8 @@ function captureFixture(overrides = {}) {
     timedOut: false,
   });
   const negativeEvents = [
-    taskEvent('started', 'oat-deliberately-invalid-model'),
-    taskEvent('completed', 'oat-deliberately-invalid-model', {
+    taskEvent('started', 'oat-deliberately-invalid-task-model'),
+    taskEvent('completed', 'oat-deliberately-invalid-task-model', {
       error: {
         message: 'Invalid model. Allowed models: gpt-5.6-sol-high',
       },
@@ -105,7 +105,7 @@ function captureFixture(overrides = {}) {
     },
   ];
   const negative = deriveStructuredProbe({
-    candidate: 'oat-deliberately-invalid-model',
+    candidate: 'oat-deliberately-invalid-task-model',
     kind: 'negative-control',
     events: negativeEvents,
     directExitStatus: 0,
@@ -117,6 +117,7 @@ function captureFixture(overrides = {}) {
     ...positive,
     kind: 'candidate',
     tier: 'high',
+    events: structuredClone(positive.events),
   };
   return {
     schemaVersion: 2,
@@ -489,6 +490,108 @@ test('validates positive and negative controls and rejects direct public identif
     () => validateStructuredCapture(inconclusive, validationOptions),
     /positive control/,
   );
+});
+
+test('binds passed controls to their exact requested model arguments', () => {
+  const cases = [
+    {
+      name: 'missing positive start model',
+      mutate(capture) {
+        delete capture.controls.positive.events[2].requestedModel;
+        capture.controls.positive.requestedModel = null;
+      },
+    },
+    {
+      name: 'replaced positive start model',
+      mutate(capture) {
+        capture.controls.positive.events[2].requestedModel = 'replacement';
+        capture.controls.positive.events[3].requestedModel = 'replacement';
+        capture.controls.positive.requestedModel = 'replacement';
+      },
+    },
+    {
+      name: 'mismatched positive completion model',
+      mutate(capture) {
+        capture.controls.positive.events[3].requestedModel = 'replacement';
+      },
+    },
+    {
+      name: 'replaced negative candidate',
+      mutate(capture) {
+        capture.controls.negative.candidate = 'replacement';
+      },
+    },
+    {
+      name: 'missing negative start model',
+      mutate(capture) {
+        delete capture.controls.negative.events[0].requestedModel;
+        capture.controls.negative.requestedModel = null;
+      },
+    },
+    {
+      name: 'replaced negative start model',
+      mutate(capture) {
+        capture.controls.negative.events[0].requestedModel = 'replacement';
+        capture.controls.negative.requestedModel = 'replacement';
+      },
+    },
+    {
+      name: 'mismatched negative completion model',
+      mutate(capture) {
+        capture.controls.negative.events[1].requestedModel = 'replacement';
+      },
+    },
+  ];
+
+  for (const testCase of cases) {
+    const capture = captureFixture();
+    testCase.mutate(capture);
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /control.*model|model.*control/i,
+      testCase.name,
+    );
+  }
+});
+
+test('allows inconclusive controls without observed Task model identities', () => {
+  const events = [
+    {
+      type: 'result',
+      subtype: 'success',
+      is_error: false,
+      session_id: sessionId,
+      request_id: requestId,
+    },
+  ];
+  const positive = deriveStructuredProbe({
+    candidate: null,
+    kind: 'positive-control',
+    events,
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  const negative = deriveStructuredProbe({
+    candidate: 'oat-deliberately-invalid-task-model',
+    kind: 'negative-control',
+    events,
+    directExitStatus: 0,
+    terminationSignal: null,
+    durationMs: 1,
+    timedOut: false,
+  });
+  const capture = captureFixture({
+    controls: { status: 'inconclusive', positive, negative },
+    candidates: [],
+  });
+
+  assert.deepEqual(validateStructuredCapture(capture, validationOptions), {
+    controls: 'inconclusive',
+    candidateCount: 0,
+    outcomes: {},
+  });
 });
 
 test('re-derives asserted probe outcomes from the public event projection', () => {

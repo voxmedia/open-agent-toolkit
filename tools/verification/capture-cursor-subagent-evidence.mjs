@@ -598,6 +598,39 @@ function validateProbeAllowlist(probe, label) {
   }
 }
 
+function validateControlIdentity(probe, label, expectedModel) {
+  if (typeof probe.candidate !== 'string' || probe.candidate.length === 0) {
+    fail(`${label} candidate model must be a non-empty opaque string`);
+  }
+  if (probe.candidate !== expectedModel) {
+    fail(`${label} candidate model does not byte-match the expected control`);
+  }
+
+  const start = probe.events.find(
+    (event) =>
+      event.eventType === 'tool_call' &&
+      event.subtype === 'started' &&
+      event.toolName === 'Task',
+  );
+  if (start?.requestedModel !== expectedModel) {
+    fail(`${label} Task start model does not byte-match the expected control`);
+  }
+
+  const completion = probe.events.find(
+    (event) =>
+      event.eventType === 'tool_call' &&
+      event.subtype === 'completed' &&
+      event.toolName === 'Task',
+  );
+  if (
+    completion &&
+    'requestedModel' in completion &&
+    completion.requestedModel !== expectedModel
+  ) {
+    fail(`${label} Task completion model does not byte-match its Task start`);
+  }
+}
+
 function controlsPassed(controls) {
   return (
     controls.positive?.taskSelection === 'accepted' &&
@@ -688,6 +721,18 @@ export function validateStructuredCapture(
   capture.candidates.forEach((probe, index) =>
     validateProbeAllowlist(probe, `candidates[${index}]`),
   );
+  if (capture.controls.status === 'passed') {
+    validateControlIdentity(
+      capture.controls.positive,
+      'positive control',
+      capture.controls.positive.candidate,
+    );
+    validateControlIdentity(
+      capture.controls.negative,
+      'negative control',
+      NEGATIVE_CONTROL,
+    );
+  }
 
   const passed = controlsPassed(capture.controls);
   if (capture.controls.status === 'passed' && !passed) {
