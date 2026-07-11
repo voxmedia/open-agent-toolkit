@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
@@ -232,4 +232,43 @@ failed runs still produce diagnosable reports.
 
 ## Testing Strategy
 
-_(pending)_
+### Level 1 — Unit/static (no providers, runs in CI)
+
+- **Fixture integrity:** plan format invariants (stable `pNN-tNN` IDs,
+  parallel-group declaration, reviews table); preset overlays apply cleanly
+  and are inverses of each other; fixture never drifts from the plan-writing
+  canonical format (contract test against the plan-format validators).
+- **Runner logic:** preflight checks, provisioning-manifest completeness,
+  cleanup idempotence — via a dry-run mode with providers mocked.
+- **Evidence collector:** assertion table computed correctly from golden
+  inputs (recorded dispatch records, review artifacts with known
+  corroboration fields, git histories with known shapes).
+
+### Level 2 — Dry-run smoke (no providers, runnable locally anytime)
+
+Full runner pass with a no-op drive step: provision → preset → collect
+(empty evidence) → cleanup. Asserts the isolation guarantees directly: the
+user's persisted OAT config is byte-identical before/after, the source repo
+is untouched, and the disposable worktree is fully removed. Interrupt
+control: kill the runner mid-provision and mid-drive; verify cleanup from
+the manifest leaves no orphans and never touches unrelated worktrees.
+
+### Level 3 — Live smoke (the deliverable itself, opt-in)
+
+Per harness target (Codex, Claude, Cursor IDE, Cursor CLI): `plan-review`
+scenario, `implement` scenario, and at least one full-workflow run. Two
+negative controls: preflight against a deliberately unavailable target (must
+report and exit without provisioning), and — where cheap — one observed
+reviewer/worker failure path confirming no-fallback-after-acceptance holds.
+Evidence reports are committed as the project's acceptance artifacts (these
+also record the per-harness topology answers, e.g. Claude nesting).
+
+### Level 4 — Docs
+
+`pnpm build:docs` green, mermaid diagrams render, generated docs index
+regenerated through normal tooling; `pnpm release:validate` if shipped
+surfaces change.
+
+No requirement-to-test mapping (quick mode); the Level 3 assertion table in
+the evidence report is the acceptance surface for the orchestration
+requirements.
