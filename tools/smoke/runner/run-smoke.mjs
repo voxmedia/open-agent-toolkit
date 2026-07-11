@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 
 import { parseArgs } from './args.mjs';
+import { runPreflight } from './preflight.mjs';
 
 export class HandlerUnavailableError extends Error {
   constructor(stage) {
@@ -9,8 +10,12 @@ export class HandlerUnavailableError extends Error {
   }
 }
 
-export async function runSmoke(options, { handlers = {} } = {}) {
+export async function runSmoke(options, { handlers = {}, preflight } = {}) {
   const results = {};
+
+  if (typeof preflight === 'function') {
+    results.preflight = await preflight(options);
+  }
 
   for (const stage of options.stages) {
     const handler = handlers[stage];
@@ -27,7 +32,10 @@ export async function runSmoke(options, { handlers = {} } = {}) {
 
 export async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
-  return runSmoke(options);
+  return runSmoke(options, {
+    preflight: (preflightOptions) =>
+      runPreflight(preflightOptions, { reporter: console.log }),
+  });
 }
 
 const invokedPath = process.argv[1] ? fileURLToPath(import.meta.url) : null;
