@@ -676,6 +676,15 @@ export async function computeCodexProjectExtensionPlan(
   const desiredRoleNames = new Set(desiredRoles.map((role) => role.roleName));
   const existingConfigPath = configPath(scopeRoot);
   const existingConfigContent = await readOptionalFile(existingConfigPath);
+
+  if (isPartialSync && desiredRoles.length === 0) {
+    return {
+      operations: [],
+      managedRoles: [],
+      aggregateConfigHash: hashContent(existingConfigContent ?? ''),
+    };
+  }
+
   const inheritedMaxDepth = await readInheritedCodexMaxDepth(
     scopeRoot,
     options,
@@ -689,14 +698,6 @@ export async function computeCodexProjectExtensionPlan(
         isUserCodexScope(scopeRoot, options) ? 'user-config' : 'project-config',
         !isUserCodexScope(scopeRoot, options),
       );
-
-  if (isPartialSync && desiredRoles.length === 0) {
-    return {
-      operations: [],
-      managedRoles: [],
-      aggregateConfigHash: hashContent(existingConfigContent ?? ''),
-    };
-  }
 
   const operations: CodexExtensionWriteOperation[] = [];
 

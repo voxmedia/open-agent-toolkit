@@ -911,6 +911,28 @@ describe('codex sync extension', () => {
     expect(partialPlan.managedRoles).toEqual([]);
   });
 
+  it('ignores malformed user codex config during zero-role partial sync', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(root, home);
+
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents\nmax_depth = 5\n',
+    );
+
+    const partialPlan = await computeCodexProjectExtensionPlan(
+      root,
+      [],
+      ['.agents/skills/oat-docs-analyze'],
+      { userConfigDir: join(home, '.oat') },
+    );
+
+    expect(partialPlan.operations).toEqual([]);
+    expect(partialPlan.managedRoles).toEqual([]);
+  });
+
   it('does not update an existing user codex config during zero-role partial sync', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);
