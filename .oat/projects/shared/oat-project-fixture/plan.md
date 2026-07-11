@@ -45,7 +45,7 @@ oat_template_name: plan
 
 - **`[['p02','p03']]`** — the runner core (p02) and the evidence collector (p03) have disjoint write sets: `tools/smoke/runner/**` vs `tools/smoke/evidence/**`, with tests colocated per module. They integrate through a small file/CLI contract defined in p01 (`tools/smoke/CONTRACT.md`: provisioning-manifest shape, evidence output paths, collector invocation), so neither phase edits the other's files; the live wiring is exercised first in p04. Verification is independent (`node --test` per directory). Neither phase touches shared generated assets, package manifests, or docs builds, avoiding the operational write-set conflicts documented in the max-depth learnings.
 - **p01 must precede the group** — both phases consume the fixture and the contract doc it ships.
-- **p04 and p05 are sequential** — p04 (live harness runs) depends on all three build phases and produces evidence consumed by p05 (docs/Vault/release). p05 additionally touches lockstep package manifests and the docs app, which must not race anything.
+- **p04, p05, and p06 are sequential** — p04 (orchestration contract in skills) writes `.agents/**` and skill contract tests and must reconcile against PR #137's merged language rather than race it; p05 (live harness runs) depends on all prior phases and produces evidence consumed by p06 (docs/Vault/release). p06 additionally touches lockstep package manifests and the docs app, which must not race anything.
 - Fixture-internal parallelism (the fixture's own p01∥p02 phases) is content of the fixture, not this plan's execution shape.
 
 ---
@@ -259,11 +259,75 @@ Run: `node --test tools/smoke/evidence/assertions.test.mjs` — Expected: fails.
 
 ---
 
-## Phase 4: Harness Protocols & Live Smoke Evidence
+## Phase 4: Orchestration Contract (Cross-Harness Native-First Selection)
 
-_Sequential; depends on p01–p03. Live tasks execute from this worktree against real providers and may pause for manual harness sessions (Cursor IDE) — these pauses are task steps, not blockers._
+_Sequential; depends on p01–p03 conceptually only through plan order — its write set is skills/agents, disjoint from `tools/smoke/`. Kept sequential (not grouped) because PR #137 may merge mid-project and this phase must reconcile against the merged contract language, not race it._
 
-### Task p04-t01: Per-harness drive protocols and runner wiring
+### Task p04-t01: Coordinator selection contract in workflow skills
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump)
+- Modify: `.agents/agents/oat-phase-implementer.md`
+
+**Step 1: Write test (RED)** — extend the skill contract tests (`packages/cli/src/validation/skills.test.ts` or the colocated contract test the repo uses post-#137) asserting the coordinator contract text includes: full-information selection (ladder ∩ ceiling ∩ harness-native catalog), upward-not-downward substitution, task workers never silently inheriting the root model, and recorded pre-start CLI selection with reason + candidates considered.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` — Expected: fails.
+
+**Step 2: Implement (GREEN)** — author the contract language in both surfaces; keep Codex-specific dispatch language consistent with the current merged state (post-#136, and post-#137 if merged by execution time).
+
+**Step 3: Refactor** — run the cross-skill drift check: review-provide skills must not contradict the updated contract (fix if flagged).
+
+**Step 4: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm lint && pnpm format`
+
+**Step 5: Commit** — `git add .agents packages/cli && git commit -m "feat(p04-t01): add cross-harness coordinator selection contract"`
+
+---
+
+### Task p04-t02: Cursor and Claude native topology guidance
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+
+**Step 1: Write test (RED)** — extend the same contract tests: per-harness topology guidance present for Cursor (native Task; omit-model = inherit; curated catalog read from tool spec; opaque strings never normalized) and Claude (native Task; topology to be confirmed by smoke evidence — guidance must state the confirmation obligation, not assume nesting).
+Run: scoped vitest as in p04-t01 — Expected: fails.
+
+**Step 2: Implement (GREEN)** — author the guidance; align vocabulary with `references/subagent-catalog-and-selection-findings.md`.
+
+**Step 3: Refactor** — none.
+
+**Step 4: Verify** — scoped vitest + `pnpm lint && pnpm format`
+
+**Step 5: Commit** — `git add .agents packages/cli && git commit -m "feat(p04-t02): add cursor and claude native topology guidance"`
+
+---
+
+### Task p04-t03: Selection-record fields for dispatch evidence
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` (dispatch-notes record shape)
+- Modify: `tools/smoke/CONTRACT.md` (evidence contract references the same field names)
+
+**Step 1: Write test (RED)** — contract test asserting the dispatch-record shape documents `selection_reason` (e.g. `native-catalog`, `native-catalog-unsatisfying`, `pre-start-rejection`, `inherit`) and `candidates_considered`; smoke evidence assertions (p03) reference identical field names (cross-file consistency check).
+Run: scoped vitest + `node --test tools/smoke/evidence/` — Expected: fails.
+
+**Step 2: Implement (GREEN)** — document the fields; update evidence golden fixtures if field names shift.
+
+**Step 3: Refactor** — none.
+
+**Step 4: Verify** — scoped vitest + `node --test tools/smoke/` + `pnpm lint && pnpm format`
+
+**Step 5: Commit** — `git add .agents tools/smoke packages/cli && git commit -m "feat(p04-t03): define selection-record fields for dispatch evidence"`
+
+---
+
+## Phase 5: Harness Protocols & Live Smoke Evidence
+
+_Sequential; depends on p01–p04. Live tasks execute from this worktree against real providers and may pause for manual harness sessions (Cursor IDE) — these pauses are task steps, not blockers._
+
+### Task p05-t01: Per-harness drive protocols and runner wiring
 
 **Files:**
 
@@ -279,11 +343,11 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 4: Verify** — `node --test tools/smoke/` (full suite) and `pnpm lint && pnpm format`
 
-**Step 5: Commit** — `git add tools/smoke && git commit -m "feat(p04-t01): add per-harness drive protocols and wire evidence collection"`
+**Step 5: Commit** — `git add tools/smoke && git commit -m "feat(p05-t01): add per-harness drive protocols and wire evidence collection"`
 
 ---
 
-### Task p04-t02: Codex live smoke runs
+### Task p05-t02: Codex live smoke runs
 
 **Files:**
 
@@ -295,11 +359,11 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 3: Verify** — evidence assertion table passes for each run: native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration. `node --test tools/smoke/evidence/` still green.
 
-**Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "feat(p04-t02): record codex live smoke evidence"`
+**Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "feat(p05-t02): record codex live smoke evidence"`
 
 ---
 
-### Task p04-t03: Claude live smoke runs
+### Task p05-t03: Claude live smoke runs
 
 **Files:**
 
@@ -312,11 +376,11 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 3: Verify** — assertion tables pass; the nesting answer (native coordinator→worker supported or the sanctioned alternative topology) is recorded in both the report and the protocol doc.
 
-**Step 4: Commit** — `git add tools/smoke/reports/claude tools/smoke/protocols/claude.md && git commit -m "feat(p04-t03): record claude live smoke evidence and topology"`
+**Step 4: Commit** — `git add tools/smoke/reports/claude tools/smoke/protocols/claude.md && git commit -m "feat(p05-t03): record claude live smoke evidence and topology"`
 
 ---
 
-### Task p04-t04: Cursor IDE live smoke runs
+### Task p05-t04: Cursor IDE live smoke runs
 
 **Files:**
 
@@ -328,11 +392,11 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 3: Verify** — assertion tables pass: coordinator full-information selection recorded (native catalog considered, choice + reason), any CLI task dispatch present only as recorded pre-start selection, task workers never inherit the root model silently.
 
-**Step 4: Commit** — `git add tools/smoke/reports/cursor-ide && git commit -m "feat(p04-t04): record cursor IDE live smoke evidence"`
+**Step 4: Commit** — `git add tools/smoke/reports/cursor-ide && git commit -m "feat(p05-t04): record cursor IDE live smoke evidence"`
 
 ---
 
-### Task p04-t05: Cursor CLI live smoke runs
+### Task p05-t05: Cursor CLI live smoke runs
 
 **Files:**
 
@@ -345,11 +409,11 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 3: Verify** — either positive evidence (first structured Task events recorded for the CLI flavor) or a structured inconclusive capture consistent with the prior verification tooling — both are valid recorded outcomes; the protocol doc states which one and why.
 
-**Step 4: Commit** — `git add tools/smoke/reports/cursor-cli tools/smoke/protocols/cursor-cli.md && git commit -m "feat(p04-t05): record cursor CLI live smoke evidence"`
+**Step 4: Commit** — `git add tools/smoke/reports/cursor-cli tools/smoke/protocols/cursor-cli.md && git commit -m "feat(p05-t05): record cursor CLI live smoke evidence"`
 
 ---
 
-### Task p04-t06: Cross-harness evidence summary
+### Task p05-t06: Cross-harness evidence summary
 
 **Files:**
 
@@ -360,15 +424,15 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 2: Verify** — `node --test tools/smoke/` green; every claim in SUMMARY.md links a committed evidence report.
 
-**Step 3: Commit** — `git add tools/smoke && git commit -m "docs(p04-t06): add cross-harness smoke evidence summary"`
+**Step 3: Commit** — `git add tools/smoke && git commit -m "docs(p05-t06): add cross-harness smoke evidence summary"`
 
 ---
 
-## Phase 5: Documentation, Vault Capture & Release
+## Phase 6: Documentation, Vault Capture & Release
 
-_Sequential; depends on p04._
+_Sequential; depends on p05._
 
-### Task p05-t01: OAT docs — orchestration/subagents/programmatic execution
+### Task p06-t01: OAT docs — orchestration/subagents/programmatic execution
 
 **Files:**
 
@@ -379,11 +443,11 @@ _Sequential; depends on p04._
 
 **Step 2: Verify** — `pnpm build:docs` green; generated index regenerated (not hand-edited); `pnpm lint && pnpm format`.
 
-**Step 3: Commit** — `git add apps/oat-docs && git commit -m "docs(p05-t01): add orchestration and smoke workflow documentation"`
+**Step 3: Commit** — `git add apps/oat-docs && git commit -m "docs(p06-t01): add orchestration and smoke workflow documentation"`
 
 ---
 
-### Task p05-t02: Vault closing capture pass
+### Task p06-t02: Vault closing capture pass
 
 **Files (outside repo, per discovery decision #10):**
 
@@ -398,7 +462,7 @@ _Sequential; depends on p04._
 
 ---
 
-### Task p05-t03: Release validation
+### Task p06-t03: Release validation
 
 **Files:**
 
@@ -410,7 +474,7 @@ _Sequential; depends on p04._
 **Step 2: Verify** — `pnpm build && pnpm test && pnpm release:validate`
 Expected: all green.
 
-**Step 3: Commit** — `git add packages tools/smoke/README.md pnpm-lock.yaml && git commit -m "chore(p05-t03): bump lockstep packages and validate release"`
+**Step 3: Commit** — `git add packages tools/smoke/README.md pnpm-lock.yaml && git commit -m "chore(p06-t03): bump lockstep packages and validate release"`
 
 ---
 
@@ -423,6 +487,7 @@ Expected: all green.
 | p03    | code     | pending | -    | -        |
 | p04    | code     | pending | -    | -        |
 | p05    | code     | pending | -    | -        |
+| p06    | code     | pending | -    | -        |
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
@@ -446,10 +511,11 @@ Expected: all green.
 - Phase 1: 3 tasks — Fixture project template, state presets, format contract
 - Phase 2: 4 tasks — Runner skeleton, preflight, provisioning, cleanup/dry-run
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
-- Phase 4: 6 tasks — Harness protocols + live smoke evidence (Codex, Claude, Cursor IDE, Cursor CLI) + summary
-- Phase 5: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
+- Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
+- Phase 5: 6 tasks — Harness protocols + live smoke evidence (Codex, Claude, Cursor IDE, Cursor CLI) + summary
+- Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
 
-**Total: 19 tasks**
+**Total: 22 tasks**
 
 Ready for code review and merge.
 

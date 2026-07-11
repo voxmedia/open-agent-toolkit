@@ -211,7 +211,35 @@ IDE and CLI verifiably behave differently):
   smoke run either produces the first positive evidence or documents the
   flavor's actual sanctioned topology.
 
-### 5. Documentation & knowledge capture
+### 5. Orchestration contract updates (cross-harness native-first selection)
+
+- **Purpose:** land the discovery Decision #4 dispatch-selection contract in
+  the workflow skills themselves — the piece neither sibling project ships.
+  PR #136 (merged) provides matrix/report infrastructure; PR #137 provides the
+  Codex native depth-2 topology and fallback discipline. What remains, and
+  what this component owns:
+  - **Coordinator full-information selection** in the phase-coordination
+    contract: intersect configured ladder ∩ project ceiling ∩ the harness's
+    native catalog (read from the coordinator's own tool spec at dispatch
+    time); judge per task; substitute upward, never downward; task workers
+    never silently inherit the root model.
+  - **Recorded pre-start CLI selection:** provider-CLI task dispatch is a
+    deliberate pre-start choice recorded with reason (e.g.
+    `native-catalog-unsatisfying`) and candidates considered — the dispatch
+    record fields the smoke evidence asserts on (they must exist to be
+    assertable).
+  - **Cursor/Claude native-first topology guidance** in the implementation
+    and phase-coordination skills (Codex-specific guidance ships in #137;
+    the other harnesses need their sanctioned native topology stated).
+- **Surfaces:** `.agents/skills/oat-project-implement/SKILL.md`,
+  `.agents/agents/oat-phase-implementer.md` (+ dispatch-language overlap in
+  review-provide skills if drift checks flag it), skill contract tests,
+  canonical skill version bumps per repo policy.
+- **Constraint:** reconcile at contract level against PR #137's language after
+  it merges (both touch the same skills); do not fork a third dialect of the
+  dispatch contract.
+
+### 6. Documentation & knowledge capture
 
 - **OAT docs deliverable:** an orchestration/subagents/programmatic-execution
   documentation section in `apps/oat-docs`, covering the native-first

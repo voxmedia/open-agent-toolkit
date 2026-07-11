@@ -149,8 +149,13 @@ resolved the same day. From `implementation.md` (Run 2) and the branch log:
   has a commit on the branch (`docs(p03-t01): …`); current work is `p03-t02`
   (lockstep package bump + release validation). A HiLL checkpoint gated p03.
 
+**2026-07-11 (later): PR #137 opened** — "feat: enable native nested Codex
+role delegation," open and `MERGEABLE`
+(https://github.com/voxmedia/open-agent-toolkit/pull/137). PR #136 merged the
+same day, so the sequencing recommendation was followed.
+
 Merge posture: still behind `dispatch-schema-matrix-infrastructure` (now PR
-#136). Once p03 completes, this branch needs the planned rebase/contract
+#136, merged). Once p03 completes, this branch needs the planned rebase/contract
 reconciliation against the merged sibling — both branches modified
 `oat-project-implement/SKILL.md` and dispatch-ceiling/doctor surfaces, and
 this branch's native-first depth-2 contract should supersede the sibling's

@@ -18,6 +18,13 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+  matrix:
+    cursor:
+      high:
+        candidates:
+          - gpt-5.6-sol-low
+          - gpt-5.6-sol-medium
+          - gpt-5.6-sol-high-fast
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
