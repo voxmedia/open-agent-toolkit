@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -35,26 +35,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T23:53:07.608Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T02:26:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T02:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: codex-subagent-max-depth
 
-**Status:** Planning complete
+**Status:** Planning review fixes
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-10
 
 ## Current Phase
 
-Planning - Ready for implementation
+Planning - Canonical artifact re-review pending
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
-- **Plan:** `plan.md` (complete — ready for implementation)
+- **Plan:** `plan.md` (review fixes completed — re-review pending)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -68,8 +68,9 @@ Planning - Ready for implementation
 - ✓ Parallel phases `p01` and `p02` confirmed
 - ✓ Managed High dispatch policy resolved
 - ✓ Independent review enabled for all phases
-- ✓ Plan artifact review passed
-- ⧗ Awaiting implementation
+- ✓ In-memory plan artifact review passed
+- ✓ Canonical plan-review findings addressed
+- ⧗ Awaiting canonical plan re-review
 
 ## Blockers
 
@@ -77,4 +78,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to begin execution
+Re-run the canonical plan artifact review

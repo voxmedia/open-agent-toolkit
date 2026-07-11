@@ -60,7 +60,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t04: Diagnose insufficient managed-role depth
+### Task p01-t04: Diagnose insufficient depth in doctor and preflight
 
 **Status:** pending
 **Commit:** -

@@ -1,10 +1,10 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p01', 'p02']]
 oat_phase_review_gate:
   enabled: true
@@ -16,7 +16,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: false
+oat_template: true
 ---
 
 # Implementation Plan: codex-subagent-max-depth
@@ -45,7 +45,7 @@ pnpm, Turborepo
 - [x] Confirmed the `p01` + `p02` parallel group with the user
 - [x] Resolved project dispatch policy as managed `High`
 - [x] Configured independent review for all implementation phases
-- [x] Ran and recorded the clean plan artifact review
+- [ ] Re-run canonical plan artifact review after fixes
 
 ---
 
@@ -219,12 +219,14 @@ git commit -m "feat(p01-t03): enforce depth in direct codex materialization"
 
 ---
 
-### Task p01-t04: Diagnose insufficient managed-role depth
+### Task p01-t04: Diagnose insufficient depth in doctor and preflight
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/doctor/index.ts`
 - Modify: `packages/cli/src/commands/doctor/index.test.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
 
 **Step 1: Write test (RED)**
 
@@ -237,17 +239,23 @@ Add managed-role checks for project and user scopes:
 - Recommend the matching `oat sync --scope project|user` and scoped direct
   materialization command.
 - For project diagnosis, inherit user depth only when project depth is absent.
+- Separately verify implementation preflight blocks managed nested dispatch
+  when effective depth is missing, invalid, or below `2`, passes at `2+`, and
+  returns scope-appropriate remediation.
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts src/commands/project/dispatch-ceiling/index.test.ts`
 
-Expected: The new `codex_max_depth` check is absent.
+Expected: The new `codex_max_depth` doctor check and managed preflight guard are
+absent.
 
 **Step 2: Implement (GREEN)**
 
 Extract the Codex managed-role checks so both concrete scopes can use them.
 Compute effective depth with Codex precedence, add a scope-qualified doctor
 check, and preserve existing TOML, multi-agent, and role-file diagnostics.
+Wire the same effective-depth requirement into the managed implementation
+preflight path without changing unrelated dispatch target selection.
 
 **Step 3: Refactor**
 
@@ -257,15 +265,16 @@ non-obvious helpers.
 **Step 4: Verify**
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/index.test.ts src/commands/project/dispatch-ceiling/index.test.ts`
 
-Expected: Existing doctor tests and all new depth/remediation cases pass.
+Expected: Existing doctor/dispatch tests and all new depth/remediation cases
+pass.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/doctor/index.ts packages/cli/src/commands/doctor/index.test.ts
-git commit -m "feat(p01-t04): diagnose codex subagent depth"
+git add packages/cli/src/commands/doctor/index.ts packages/cli/src/commands/doctor/index.test.ts packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts
+git commit -m "feat(p01-t04): guard codex nested dispatch depth"
 ```
 
 ---
@@ -362,9 +371,9 @@ and must never trigger pinned CLI fallback.
 
 **Step 3: Verify**
 
-Run: `pnpm format`
+Run: `pnpm format && pnpm build:docs`
 
-Expected: Markdown formatting passes.
+Expected: Markdown formatting and the complete documentation build pass.
 
 **Step 4: Commit**
 
@@ -469,15 +478,15 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                    |
-| ------ | -------- | ------- | ---------- | --------------------------- |
-| p01    | code     | pending | -          | -                           |
-| p02    | code     | pending | -          | -                           |
-| p03    | code     | pending | -          | -                           |
-| final  | code     | pending | -          | -                           |
-| spec   | artifact | pending | -          | -                           |
-| design | artifact | pending | -          | -                           |
-| plan   | artifact | passed  | 2026-07-10 | in-memory structured review |
+| Scope  | Type     | Status          | Date       | Artifact                                           |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                  |
+| p02    | code     | pending         | -          | -                                                  |
+| p03    | code     | pending         | -          | -                                                  |
+| final  | code     | pending         | -          | -                                                  |
+| spec   | artifact | pending         | -          | -                                                  |
+| design | artifact | pending         | -          | -                                                  |
+| plan   | artifact | fixes_completed | 2026-07-10 | reviews/artifact-plan-review-2026-07-11T023909Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -486,7 +495,8 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+- `passed`: re-review run and recorded as passing (no unresolved
+  Critical/Important/Medium)
 
 ---
 
