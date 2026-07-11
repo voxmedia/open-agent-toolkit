@@ -291,3 +291,14 @@ configured gate rerun after these artifact corrections.
 - Generated `summary.md` and promoted the atomic configuration, immutable
   closeout snapshot, and Phase gate terminology decisions to the canonical
   decision log.
+
+### Pre-Approval Documentation Complete
+
+**Date:** 2026-07-11
+
+- Confirmed the Phase 3 documentation already covers the structured config,
+  approval ordering, CLI surface, and checkpoint terminology; no further docs
+  edits were needed.
+- PJM doctor still reports unrelated legacy template-frontmatter and layout
+  warnings outside this project's archived backlog item; this project's
+  backlog-specific diagnostics remain clean.
