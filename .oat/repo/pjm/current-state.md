@@ -32,6 +32,15 @@ copying their content here. -->
 - Managed dispatch uses ordered provider candidate ladders with project/phase
   named maximum ceilings; Codex variants materialize by configuration ownership,
   while Claude and Cursor receive exact selected model values at invocation.
+- Dispatch matrix normalization and provenance-rich traversal are shared across
+  layered configuration, sparse project state, config adoption, and doctor.
+- Dispatch Report V1 provides deterministic machine and human output while
+  keeping policy, ceiling, requested candidate, exact selection, configured
+  gate invocation, and observed runtime identity distinct. The legacy
+  `Dispatch:` line is derived from that report.
+- Config adoption and doctor share pass-scoped Cursor validation: each distinct
+  candidate receives one Task probe and broad catalog retrieval is memoized for
+  the command pass without treating catalog presence as eligibility evidence.
 
 ## What's Next
 
@@ -39,7 +48,7 @@ copying their content here. -->
 Track concrete items in pjm/backlog/ and sequencing in pjm/roadmap.md; keep this
 section to a short narrative pointer. -->
 
-Continue the remaining dispatch work through the active backlog: reviewer
-subagent orchestration, structured post-implementation sequencing, matrix
-normalization consolidation, Cursor catalog verification/caching, and the
-deferred dispatch-machine schema.
+Continue the remaining dispatch work through the active backlog: recheck live
+GPT-5.6 Cursor Task/subagent eligibility after 2026-07-18, add root-owned exact
+dispatch with launcher-owned provenance, enable reviewer reconnaissance
+subagents, and structure post-implementation sequencing.
