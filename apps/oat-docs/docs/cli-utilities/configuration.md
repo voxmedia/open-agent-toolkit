@@ -381,6 +381,30 @@ has verified equivalent current-host controls for explicit inherit,
 managed-uncapped, or base-role behavior. Capped managed reviews still require
 the exact registered role, pinned child, or resolver-returned model argument.
 
+### Cursor validation pass and live evidence
+
+Config adoption and doctor validate Cursor candidates with one command-scoped
+pass context. Duplicate references to the same byte-for-byte candidate share
+one Task/subagent probe. If a decisive probe is unavailable, the pass resolves
+the broad catalog once, with at most one `--list-models` fallback. The cache
+ends with that adopt or doctor command; it is not process-global and has no
+TTL.
+
+A sentinel-confirmed Task launch or an explicit subagent allow-list is direct
+eligibility evidence. Broad catalog presence is diagnostic-only and never
+proves that a candidate can launch a subagent Task. OAT preserves
+`unvalidated` or `unknown-value` when direct evidence is unavailable instead of
+inferring capability from the candidate spelling.
+
+The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md)
+records the exact recommendation version, sanitized client context, one probe
+per distinct candidate, direct exit status, duration, stdout/stderr, outcome
+basis, and recheck date. Its 2026-07-11 pass left all 13 recommendation
+candidates—including the four configured values—`unvalidated`, so the
+recommendation remained unchanged. Re-run the canonical probe on the recorded
+2026-07-18 recheck date; do not silently promote an unavailable result from
+catalog output or slug spelling.
+
 ### Legacy compatibility
 
 The command and docs path retain `dispatch-ceiling` for compatibility. Legacy
