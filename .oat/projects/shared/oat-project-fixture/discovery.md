@@ -12,131 +12,202 @@ oat_generated: false
 
 Discovery is for requirements and decisions, not implementation details.
 
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Backlog item `BL-260711-add-live-workflow-smoke` (imported into this
+worktree's backlog): add an opt-in, disposable live-provider smoke workflow
+that exercises real OAT project execution end to end — a version-controlled
+fixture project with two short phases of three deterministic log-append tasks
+each, run through the normal lifecycle (exact task-worker dispatch, phase
+reviews, final gate) against real authenticated providers, leaving the user's
+OAT config and the source repository unchanged, then summarizing recorded
+dispatch and gate evidence.
 
-## Clarifying Questions
+Motivation: recent workflow changes shipped without dogfooding and created a
+tangled situation. Several simultaneous change streams — GPT-5.6 sol/terra/luna
+family dispatch, Cursor subagent support, phase-coordinator orchestration, and
+gate provenance hardening — interacted badly. The core defect: gate-reviewer
+provenance requirements were conflated with implementation dispatch, causing
+`codex exec` / `cursor-agent` / `claude -p` to be used for regular
+implementation when native subagent tools should be used. The fixture gives a
+cheap, safe acceptance surface so workflow/gate/dispatch changes can be
+verified without burning tokens on (or breaking) real projects.
 
-### Question 1: {Topic}
+**Scope expansion agreed during discovery:** beyond fixture/smoke capability,
+this project also lands a working subagent orchestration model across all
+three harnesses (Codex, Cursor, Claude), and runs the live smoke workflow from
+this worktree with each harness, recording evidence.
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+## Session Recon (see references/)
+
+Deep recon was performed during discovery; findings are durable reference
+artifacts rather than inline discovery content:
+
+- `references/recon-codex-subagent-max-depth.md` — in-flight sibling project:
+  native depth-2 topology validated; feature code unintegrated in child
+  worktrees; state discrepancies; merge risks.
+- `references/recon-dispatch-schema-matrix-infrastructure.md` — in-flight
+  sibling project: dispatch matrix/report infrastructure complete except one
+  blocking p06 review finding; contains a user-authorized temporary
+  phase-direct workaround (not the intended topology).
+- `references/recon-archived-dispatch-projects.md` — the five completed
+  projects that built current dispatch/gate semantics, their settled
+  decisions, and the historical seam behind the conflation defect.
+- `references/subagent-catalog-and-selection-findings.md` — live session
+  evidence on Cursor catalogs (native Task vs CLI vs UI), inheritance,
+  the accepted exact Task-model positive control, family ordering
+  (sol > terra > luna), and the converged dispatch-selection contract.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+Well-trodden by the backlog item and session discussion; a single direction
+was validated rather than multiple competing approaches:
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Chosen direction:** a version-controlled fixture project template +
+documented opt-in smoke runner that executes the normal OAT lifecycle against
+real providers from a disposable worktree, with launcher-owned dispatch/gate
+evidence as the acceptance surface. Alternatives (unit tests only, dogfooding
+real projects) are what this project explicitly replaces as the verification
+mechanism for cross-cutting workflow changes.
 
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**User validated:** Yes (backlog item + session discussion).
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Fixture shape:** two phases × three explicit tasks with stable IDs; every
+   task makes a bounded, deterministic append to a fixture log. Trivial
+   implementation, real orchestration.
+2. **Opt-in smoke runner:** executes the normal project lifecycle with real
+   authenticated provider runtimes — exact task-worker dispatch, configured
+   phase reviews, final lifecycle gate. Never modifies the source repo or the
+   user's persisted OAT config. Documented as manual/release-validation smoke,
+   not default CI.
+3. **Cross-harness orchestration model (expanded scope):** the project lands a
+   working native-first subagent orchestration model on Codex, Cursor, and
+   Claude: root agents orchestrate phases/tasks with native subagent tools;
+   nested native dispatch (phase coordinator → task workers) is the intended
+   topology; provenance/exact-target pinning is a gate/review concern, not an
+   implementation-dispatch requirement.
+4. **Dispatch-selection contract** (full statement in
+   `references/subagent-catalog-and-selection-findings.md`):
+   - A named ceiling is a budget maximum, not a model selection.
+   - The coordinator selects per task with full information (ceiling ∩
+     configured ladder ∩ its harness-native catalog); no pick-then-miss.
+   - Provider-CLI dispatch for a task is a deliberate pre-start selection
+     recorded with reason when no native candidate satisfies — never a
+     mid-flight fallback after an accepted/ambiguous native attempt.
+   - Downward capability substitution never happens; task workers must not
+     silently inherit an expensive root model.
+   - Acceptable degradation: phase coordinator may inherit from root when its
+     preferred tier is not natively pinnable.
+5. **Fallback discipline (adopted from max-depth learnings):** external pinned
+   children only on explicit pre-start native role-selection rejection;
+   accepted-child outcomes (including `BLOCKED`) are terminal; missing
+   self-report is never an availability signal.
+6. **Live smoke evidence per harness:** run the smoke workflow from this
+   worktree on each of Codex, Cursor, and Claude; record dispatch and gate
+   evidence per the three-layer model (policy resolution / launcher-owned
+   configured invocation / runtime-observed identity, with runtime identity
+   allowed to be `not-reported`).
+7. **Recon durability:** session recon lives in `references/`, keeping
+   discovery lean while preserving merge-order analysis and evidence.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Extend, do not reimplement, what the two in-flight sibling projects ship
+  (dispatch matrix/walker/report; max-depth merge floor). Their merge order —
+  `dispatch-schema-matrix-infrastructure` first (after its p06 fix), then
+  `codex-subagent-max-depth` rebased with contract-level skill reconciliation
+  — is analyzed in `references/`.
+- The smoke runner must consume real provider auth available on the local
+  machine and preflight readiness clearly, exiting without starting a partial
+  workflow when a runtime/target is unavailable.
+- Cleanup must handle interrupted runs without deleting unrelated worktrees or
+  project artifacts.
+- The standard fixture must exercise a lower exact candidate beneath a higher
+  named project ceiling, including a Cursor opaque model argument when Cursor
+  is available.
+- Cross-harness consistency: uniform selection semantics with harness-specific
+  resolution; avoid divergent mechanisms per harness where possible.
+- Repo release discipline applies (skill version bumps, lockstep public
+  package bumps, `pnpm release:validate`) if shipped functionality changes.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A version-controlled fixture can be copied into a disposable worktree; two
+  phases with three stable task IDs each; bounded deterministic task outcomes.
+- An opt-in smoke command or documented runner executes the normal lifecycle
+  against real providers without mutating the source repo or persisted config.
+- Fixture config and report prove: phase/task dispatch, exact selected
+  provider model or Codex role, phase review execution, final gate execution,
+  declared review project, and recorded invocation/producer provenance.
+- The smoke run demonstrates the dispatch-selection contract, including a
+  below-ceiling exact candidate and (when Cursor is available) an opaque
+  Cursor model argument.
+- Live smoke evidence recorded from this worktree for each harness: Codex,
+  Cursor, Claude — demonstrating the native-first orchestration model (nested
+  native dispatch where the harness supports it).
+- Preflight reports unavailable runtimes/targets and exits cleanly; cleanup is
+  safe for interrupted runs.
+- Runner documented as manual/release-validation smoke, not default CI.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Root-owned dispatch broker (tracked as
+  `BL-260711-add-root-owned-dispatch-broker`).
+- Completing/merging the two in-flight sibling projects (their own lifecycle);
+  this project documents merge-order analysis and provides the acceptance
+  surface they can be verified against.
+- Host-generated runtime attestations (additive future work; absence of
+  runtime identity must not invalidate accepted launches).
+- Default-CI integration of the smoke workflow.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Cursor UI-configurable native subagent catalog (the settings "Edit"
+  affordance) as a way to close the native tier-fidelity gap — verify before
+  relying on it.
+- Reviewer-orchestrated exploratory subagents (carried from
+  codex-family-subagents residuals).
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Sibling sequencing:** can live smoke runs land before the two sibling
+  branches merge (running against this worktree's local binary), or do some
+  scenarios require their merged behavior? Likely answer: run against local
+  binary now, re-verify after merges; confirm during planning.
+- **Claude nesting:** does Claude's native subagent mechanism support
+  coordinator → task-worker nesting, and if not, what is the sanctioned
+  Claude topology for the smoke run?
+- **Cursor native catalog authority:** how should the smoke evidence record
+  the coordinator-read native catalog (it is not externally enumerable)?
+- **Codex sandbox write surfaces:** the smoke fixture should exercise the
+  scoped-writable-roots remedy (shared Git metadata, `.agents`) validated by
+  max-depth — confirm how the runner provisions those roots per provider.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Local provider auth exists for Codex, Cursor, and Claude on this machine.
+- The local `oat` binary built from this worktree is the executable under
+  test; a stale global binary must not silently shadow it (prior incident in
+  backlog-lifecycle-hardening).
+- This session's accepted exact Task launches generalize to Cursor IDE-harness
+  smoke runs (configured-invocation level only).
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Provider cost/flakiness of live runs:** Likelihood: Medium. Impact:
+  Medium. Mitigation: trivial task bodies, bounded timeouts, per-harness
+  opt-in, evidence capture even on partial failure.
+- **In-flight merges change dispatch contracts mid-project:** Likelihood:
+  Medium. Impact: High. Mitigation: merge-order analysis in `references/`;
+  re-run smoke after each sibling merge; treat smoke as their acceptance
+  gate.
+- **Harness catalog drift (Cursor curated slugs change):** Likelihood: Medium.
+  Impact: Low-Medium. Mitigation: coordinator reads its catalog at dispatch
+  time; evidence records candidates considered.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Quick mode with architecture decisions surfaced → lightweight design is
+recommended before plan generation.
