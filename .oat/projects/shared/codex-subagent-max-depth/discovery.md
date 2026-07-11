@@ -17,111 +17,149 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Ensure OAT-managed Codex coordinator/worker roles support the native execution
+topology `root (depth 0) → phase coordinator (depth 1) → task worker (depth 2)`.
+Both project and explicit user materialization must enforce an effective
+`agents.max_depth` of at least `2` without lowering higher user values,
+overwriting unrelated configuration, or crossing configuration scopes.
+
+Doctor/preflight must identify managed roles whose effective depth is too low,
+explain the required topology, and provide scope-appropriate remediation.
+Coverage must include merge thresholds, preservation, idempotence, scope,
+sync output, and doctor behavior. Provider documentation, generated assets,
+lockstep public-package versions, and release validation are part of delivery.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Coordinator sandbox failure
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Does native nested delegation require broadening the coordinator sandbox
+because a workspace-write coordinator could not launch nested `codex exec`?
+**A:** Diagnostics showed that nested CLI execution fails during app-server
+initialization under an outer workspace-write sandbox, but native depth-2
+`spawn_agent` succeeds under workspace-write when `agents.max_depth=2`.
+**Decision:** Do not broaden coordinator permissions or redesign the topology.
+The CLI fallback limitation is separate from the native path this project owns.
+
+### Question 2: Dispatch provenance
+
+**Q:** Must coordinators and workers self-report their model and reasoning effort?
+**A:** No. The user considers the exact launcher-selected `agent_type`
+authoritative; agent self-reporting is unnecessary.
+**Decision:** The launcher records the selected materialized role and its
+config-declared model/effort. Coordinator and worker reports remain focused on
+task outcomes, commits, verification, blockers, and deviations.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Native exact-role delegation _(Chosen)_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+Enforce depth `2`, dispatch the exact materialized `agent_type`, and treat the
+launcher record plus role configuration as provenance. This preserves
+workspace-write role isolation and the existing coordinator/worker topology.
 
-### Approach 1: {Strategy Name} _(Recommended)_
+### Approach 2: Full-access CLI coordinator with sandboxed CLI workers
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+Launch a full-access coordinator process and have it launch exact
+workspace-write workers through `codex exec`. Diagnostics proved this can work,
+but it replaces native depth-2 delegation with nested processes and broadens
+the coordinator trust boundary.
 
-### Approach 2: {Strategy Name}
+### Approach 3: Root dispatch broker or direct root coordination
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+Move worker launching to the root so it owns runtime provenance. This provides
+strong evidence but introduces a broker/resume protocol or removes the
+coordinator, materially changing the topology.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Native exact-role delegation with launcher-owned provenance.
+**Rationale:** A no-edit runtime probe demonstrated that a workspace-write root
+can spawn a coordinator at depth 1 and that coordinator can spawn an exact
+materialized role at depth 2. Self-reported model metadata adds no trustworthy
+evidence beyond the launcher-selected role and its static configuration.
+**User validated:** Yes, explicitly on 2026-07-10.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- Enforce the minimum in the existing shared Codex config merge used by sync
+  and direct materialization rather than duplicating command-specific writes.
+- Preserve `sandbox_mode = "workspace-write"` on managed implementer roles.
+- Record model/effort as launcher-selected and config-declared, not
+  worker-observed.
+- Keep exact-role selection fail-closed for managed capped dispatch.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Depth floor:** Managed Codex role materialization requires
+   `agents.max_depth >= 2`; missing or lower values become `2`, equal and higher
+   values are preserved.
+2. **Scope ownership:** Project materialization mutates only project Codex
+   config; explicit user materialization mutates only user Codex config.
+3. **Provenance ownership:** The launcher owns coordinator and worker dispatch
+   provenance from the exact `agent_type` and materialized role configuration.
+4. **Sandbox posture:** Native coordinator and worker roles remain
+   workspace-write; no full-access default is introduced.
+5. **Failure behavior:** Managed exact-role dispatch still blocks when the
+   requested `agent_type` cannot be selected.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve unrelated Codex configuration and custom roles.
+- Remain idempotent and never lower a configured depth.
+- Do not change `agents.max_threads`.
+- Use normal repository sync/generation and package release policy.
+- Bump each changed canonical skill version once in the final PR diff.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Shared merge behavior covers missing, lower, equal, and higher depth values.
+- Sync and direct materialization converge on the same depth-floor semantics.
+- Project and user scopes remain isolated.
+- Doctor passes at depth `2+` and warns below `2` with correct remediation.
+- Exact native depth-2 role delegation remains compatible with workspace-write.
+- Focused tests, generated assets, provider docs, package versions, and
+  `pnpm release:validate` all pass.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Redesigning or removing the phase coordinator.
+- Introducing a root dispatch broker.
+- Making full-access coordinators the default.
+- Repairing unrelated custom `agent_type` selection behavior.
+- Generic or unknown-target fallback for managed capped dispatch.
+- Increasing required depth above `2` or changing `agents.max_threads`.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Launcher-owned runtime attestations beyond config-declared role provenance.
+- Nested `codex exec` support from sandboxed coordinators.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- None blocking plan generation.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Codex honors `model` and `model_reasoning_effort` declared by the exact
+  selected materialized role.
+- Native spawn success plus exact launcher selection is sufficient provenance;
+  runtime model telemetry is not currently available to the coordinator.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Configured versus observed target:** Codex does not return independent
+  runtime model/effort telemetry to the parent.
+  - **Likelihood:** High
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Label provenance accurately as launcher-selected and
+    config-declared; never describe it as worker-observed.
+- **Fallback regression:** Existing instructions may choose nested CLI even
+  when exact native role selection is available.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Keep native exact-role dispatch primary and preserve
+    fail-closed behavior when exact selection is unavailable.
 
 ## Next Steps
 
@@ -132,11 +170,6 @@ Use this discovery artifact to drive the next workflow step:
 - **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
   if you want a formalized requirements artifact but aren't ready to
   design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- Proceed through the quick workflow decision gate. The implementation is
+  bounded, but lightweight design may be useful to pin the provenance boundary
+  between launcher records and agent reports before planning.
