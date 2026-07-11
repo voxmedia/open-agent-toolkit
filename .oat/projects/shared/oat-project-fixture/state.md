@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t04
-oat_last_commit: 153bc07a6a6be223ea27061d9c87e5ad5add0457
+oat_current_task: p03-t01
+oat_last_commit: e7b14cccef453991909eacb5134011cd082e1464
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T20:31:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T20:40:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2, p02-t04 cleanup and interruption safety
+Implementation — Phase 2 tasks complete; paused before self-review
 
 ## Artifacts
 
@@ -88,7 +88,9 @@ Implementation — Phase 2, p02-t04 cleanup and interruption safety
 - ✓ p02-t01 complete
 - ✓ p02-t02 complete
 - ✓ p02-t03 complete
-- ⧗ p02-t04 next
+- ✓ p02-t04 complete
+- ⧗ User-run subagent verification against stable HEAD before Phase 2
+  self-review
 
 ## Blockers
 
@@ -96,4 +98,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 2 smoke runner core
+Resume Phase 2 self-review after user verification completes

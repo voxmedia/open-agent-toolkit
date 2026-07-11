@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p02-t04
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -55,13 +55,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 3/4       |
+| Phase 2 | in_progress | 4     | 4/4       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 6/22 tasks completed
+**Total:** 7/22 tasks completed
 
 ---
 
@@ -398,8 +398,46 @@ corrected in this bookkeeping update.
 
 ### Task p02-t04: Cleanup and dry-run isolation proof
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e7b14cccef453991909eacb5134011cd082e1464
+
+**Outcome:**
+
+- Added manifest-only cleanup with containment checks, idempotence, partial
+  recovery, and safe Git worktree/branch ordering.
+- Added full dry-run isolation plus SIGTERM recovery during provision and
+  drive.
+
+**Verification:**
+
+- Focused cleanup tests — 7/7 passed.
+- Complete runner suite — 26/26 passed.
+- Full smoke suite — 36/36 passed.
+- Direct runner lint/format — passed; no smoke worktree/branch orphans.
+
+**Dispatch:** `Dispatch: scope=p02-t04 action=implementation role=implementer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
+
+### Phase 2 Summary
+
+**Outcome:**
+
+- Implemented the staged smoke-runner shell from argument parsing through
+  preflight, isolated provisioning, dry-run orchestration, and cleanup.
+- Failures before and during execution preserve deterministic evidence and
+  clean only manifest-owned resources.
+
+**Key files:**
+
+- `tools/smoke/runner/run-smoke.mjs` — staged orchestration and signal handling.
+- `tools/smoke/runner/preflight.mjs` — runtime/auth/local-build readiness.
+- `tools/smoke/runner/provision.mjs` — isolated worktree/config/manifest setup.
+- `tools/smoke/runner/cleanup.mjs` — bounded cleanup and recovery.
+
+**Phase verification:**
+
+- `node --test 'tools/smoke/runner/**/*.test.mjs'` — 26/26 passed.
+- Direct runner oxlint/oxfmt — passed.
+- Worktree inspection — no smoke test orphans.
 
 ---
 
