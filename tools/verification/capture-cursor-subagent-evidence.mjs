@@ -154,6 +154,10 @@ export function projectPublicEvents(events) {
         taskResult === 'success'
           ? containsSentinel(task.result.success)
           : undefined,
+      terminalError:
+        event.type === 'result' && typeof event.is_error === 'boolean'
+          ? event.is_error
+          : undefined,
     });
   });
 }
@@ -168,7 +172,11 @@ function requireTerminalIntegrity(events) {
   if (
     terminal.length === 1 &&
     (typeof terminal[0].subtype !== 'string' ||
-      typeof terminal[0].session_id !== 'string')
+      terminal[0].subtype.trim().length === 0 ||
+      typeof terminal[0].session_id !== 'string' ||
+      terminal[0].session_id.trim().length === 0 ||
+      ('is_error' in terminal[0] &&
+        typeof terminal[0].is_error !== 'boolean'))
   ) {
     fail('terminal result event is malformed');
   }
@@ -197,6 +205,20 @@ export function deriveStructuredProbe({
   }
 
   const start = taskStarts[0] ?? null;
+  if (
+    start &&
+    (typeof start.event.call_id !== 'string' ||
+      start.event.call_id.trim().length === 0)
+  ) {
+    fail('Task start requires a non-empty call ID');
+  }
+  if (
+    start &&
+    (typeof start.event.session_id !== 'string' ||
+      start.event.session_id.trim().length === 0)
+  ) {
+    fail('Task start requires a non-empty session ID');
+  }
   const requestedModel = start?.task?.args?.model;
   if (start && typeof requestedModel !== 'string') {
     fail('Task start does not contain an exact string model argument');
@@ -212,22 +234,42 @@ export function deriveStructuredProbe({
     );
   }
 
-  const completions = start
-    ? events
-        .map((event) => ({ event, task: findTaskCall(event) }))
-        .filter(
-          ({ event, task }) =>
-            event.subtype === 'completed' &&
-            task &&
-            event.call_id === start.event.call_id,
-        )
-    : [];
+  const taskCompletions = events
+    .map((event) => ({ event, task: findTaskCall(event) }))
+    .filter(({ event, task }) => event.subtype === 'completed' && task);
+  if (taskCompletions.length > 0 && !start) {
+    fail('Task completion has no correlated Task start');
+  }
+  for (const { event } of taskCompletions) {
+    if (
+      typeof event.call_id !== 'string' ||
+      event.call_id.trim().length === 0
+    ) {
+      fail('Task completion requires a non-empty call ID');
+    }
+    if (
+      typeof event.session_id !== 'string' ||
+      event.session_id.trim().length === 0
+    ) {
+      fail('Task completion requires a non-empty session ID');
+    }
+    if (
+      event.call_id !== start.event.call_id ||
+      event.session_id !== start.event.session_id
+    ) {
+      fail('Task completion does not exactly correlate with Task start');
+    }
+  }
+  const completions = taskCompletions;
   if (completions.length > 1) {
     fail(
       `expected at most one correlated Task completion; found ${completions.length}`,
     );
   }
   const completion = completions[0] ?? null;
+  if (start && terminal && terminal.session_id !== start.event.session_id) {
+    fail('terminal session ID does not exactly correlate with Task start');
+  }
   if (
     completion &&
     typeof completion.task.args.model === 'string' &&
@@ -253,8 +295,16 @@ export function deriveStructuredProbe({
     } else if (kindOfResult === 'success') {
       taskSelection = 'accepted';
       if (containsSentinel(completion.task.result.success)) {
-        childCompletion = 'completed';
-        outcomeBasis = 'correlated-task-sentinel';
+        const compatibleTerminal =
+          terminal?.subtype === 'success' &&
+          terminal.is_error !== true &&
+          directExitStatus === 0 &&
+          terminationSignal === null &&
+          !timedOut;
+        childCompletion = compatibleTerminal ? 'completed' : 'failed';
+        outcomeBasis = compatibleTerminal
+          ? 'correlated-task-sentinel'
+          : 'correlated-task-terminal-failure';
       } else {
         childCompletion = 'failed';
         outcomeBasis = 'correlated-task-without-sentinel';
@@ -330,6 +380,7 @@ const EVENT_KEYS = new Set([
   'requestedModel',
   'taskResult',
   'sentinelObserved',
+  'terminalError',
 ]);
 
 const CAPTURE_KEYS = new Set([
@@ -387,15 +438,29 @@ function deriveProbeProjection(probe, label) {
     fail(`${label} projection contains multiple Task starts`);
   }
   const start = starts[0] ?? null;
-  const completions = start?.correlationHash
-    ? probe.events.filter(
-        (event) =>
-          event.eventType === 'tool_call' &&
-          event.subtype === 'completed' &&
-          event.toolName === 'Task' &&
-          event.correlationHash === start.correlationHash,
-      )
-    : [];
+  if (start && (!start.correlationHash || !start.sessionHash)) {
+    fail(`${label} Task start is missing exact correlation identifiers`);
+  }
+  const completions = probe.events.filter(
+    (event) =>
+      event.eventType === 'tool_call' &&
+      event.subtype === 'completed' &&
+      event.toolName === 'Task',
+  );
+  if (completions.length > 0 && !start) {
+    fail(`${label} Task completion has no correlated Task start`);
+  }
+  for (const completion of completions) {
+    if (!completion.correlationHash || !completion.sessionHash) {
+      fail(`${label} Task completion is missing exact correlation identifiers`);
+    }
+    if (
+      completion.correlationHash !== start.correlationHash ||
+      completion.sessionHash !== start.sessionHash
+    ) {
+      fail(`${label} Task completion does not exactly correlate with Task start`);
+    }
+  }
   if (completions.length > 1) {
     fail(`${label} projection contains multiple correlated Task completions`);
   }
@@ -407,6 +472,9 @@ function deriveProbeProjection(probe, label) {
     fail(`${label} projection contains multiple terminal events`);
   }
   const terminal = terminals[0] ?? null;
+  if (start && terminal?.sessionHash !== start.sessionHash) {
+    fail(`${label} terminal session does not exactly correlate with Task start`);
+  }
 
   let taskSelection = 'not-observed';
   let childCompletion =
@@ -426,8 +494,15 @@ function deriveProbeProjection(probe, label) {
   } else if (completion?.taskResult === 'success') {
     taskSelection = 'accepted';
     if (completion.sentinelObserved === true) {
-      childCompletion = 'completed';
-      outcomeBasis = 'correlated-task-sentinel';
+      const compatibleTerminal =
+        terminal?.subtype === 'success' &&
+        terminal.terminalError !== true &&
+        probe.directExitStatus === 0 &&
+        probe.terminationSignal === null;
+      childCompletion = compatibleTerminal ? 'completed' : 'failed';
+      outcomeBasis = compatibleTerminal
+        ? 'correlated-task-sentinel'
+        : 'correlated-task-terminal-failure';
     } else {
       childCompletion = 'failed';
       outcomeBasis = 'correlated-task-without-sentinel';
@@ -482,6 +557,12 @@ function validateProbeAllowlist(probe, label) {
       if (key.endsWith('Hash') && !/^sha256:[a-f0-9]{64}$/.test(value)) {
         fail(`${label}.events[${index}].${key} must be a non-reversible hash`);
       }
+    }
+    if (
+      'terminalError' in event &&
+      typeof event.terminalError !== 'boolean'
+    ) {
+      fail(`${label}.events[${index}].terminalError must be a boolean`);
     }
   }
   requireExactKeys(

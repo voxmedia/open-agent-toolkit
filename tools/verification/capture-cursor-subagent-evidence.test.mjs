@@ -172,6 +172,110 @@ test('correlates exact byte-preserved Task start/completion and terminal IDs', (
   assert.notEqual(probe.correlation.sessionHash, sessionId);
 });
 
+test('fails closed on missing or contradictory Task correlation identifiers', () => {
+  const cases = [
+    {
+      name: 'missing start call ID',
+      events: successEvents().map((event, index) =>
+        index === 2 ? { ...event, call_id: undefined } : event,
+      ),
+    },
+    {
+      name: 'missing completion call ID',
+      events: successEvents().map((event, index) =>
+        index === 3 ? { ...event, call_id: undefined } : event,
+      ),
+    },
+    {
+      name: 'mismatched completion call ID',
+      events: successEvents().map((event, index) =>
+        index === 3 ? { ...event, call_id: 'different-call' } : event,
+      ),
+    },
+    {
+      name: 'mismatched completion session ID',
+      events: successEvents().map((event, index) =>
+        index === 3 ? { ...event, session_id: 'different-session' } : event,
+      ),
+    },
+    {
+      name: 'mismatched terminal session ID',
+      events: successEvents().map((event, index) =>
+        index === 4 ? { ...event, session_id: 'different-session' } : event,
+      ),
+    },
+  ];
+
+  for (const { name, events } of cases) {
+    assert.throws(
+      () =>
+        deriveStructuredProbe({
+          candidate: 'gpt-5.6-sol-high',
+          kind: 'candidate',
+          events,
+          directExitStatus: 0,
+          terminationSignal: null,
+          durationMs: 24,
+          timedOut: false,
+        }),
+      /call ID|session ID|correlat/i,
+      name,
+    );
+  }
+});
+
+test('requires successful terminal and direct exit state for a valid Task', () => {
+  const cases = [
+    {
+      name: 'terminal error subtype',
+      events: successEvents().map((event, index) =>
+        index === 4 ? { ...event, subtype: 'error', is_error: true } : event,
+      ),
+      directExitStatus: 0,
+      terminationSignal: null,
+    },
+    {
+      name: 'terminal error flag',
+      events: successEvents().map((event, index) =>
+        index === 4 ? { ...event, is_error: true } : event,
+      ),
+      directExitStatus: 0,
+      terminationSignal: null,
+    },
+    {
+      name: 'nonzero direct exit',
+      events: successEvents(),
+      directExitStatus: 1,
+      terminationSignal: null,
+    },
+    {
+      name: 'termination signal',
+      events: successEvents(),
+      directExitStatus: 0,
+      terminationSignal: 'SIGTERM',
+    },
+  ];
+
+  for (const testCase of cases) {
+    const probe = deriveStructuredProbe({
+      candidate: 'gpt-5.6-sol-high',
+      kind: 'candidate',
+      events: testCase.events,
+      directExitStatus: testCase.directExitStatus,
+      terminationSignal: testCase.terminationSignal,
+      durationMs: 24,
+      timedOut: false,
+    });
+    assert.equal(probe.availabilityStatus, 'unvalidated', testCase.name);
+    assert.equal(probe.childCompletion, 'failed', testCase.name);
+    assert.equal(
+      probe.outcomeBasis,
+      'correlated-task-terminal-failure',
+      testCase.name,
+    );
+  }
+});
+
 test('derives rejection, missing Task, failure, timeout, and malformed terminal states', () => {
   const rejected = deriveStructuredProbe({
     candidate: 'bad',
