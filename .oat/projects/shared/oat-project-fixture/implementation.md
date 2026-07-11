@@ -544,6 +544,21 @@ corrected in this bookkeeping update.
   repository binary.
 - Fix iteration 2 is the final configured retry and covers these six findings.
 
+**Fix iteration 2 completed:**
+
+- `14602843` — cancellation now blocks later normal stages; preflight executes
+  the real fixture contracts and requires PATH `oat` to equal the executable,
+  current repository build.
+- `5f8106a1` — cleanup accepts marker-bound descendant lifecycle tips; a
+  concurrency-safe manifest journal records nested worktrees/branches; scoped
+  hook suppression prevents hidden checkout/commit effects.
+- `5e9193f4` — canonical autonomous bootstrap detects smoke mode before
+  worktree creation, skips local/provider sync and sync commits, uses the
+  smoke-safe init path, and reports containment failures as fatal.
+- Independent verification: 56/56 smoke tests, 82/82 skill/closeout contract
+  tests, repository lint/format, and orphan inspection passed.
+- Awaiting final Phase 2 self-review.
+
 ---
 
 ## Phase 3: Evidence Collector & Report
