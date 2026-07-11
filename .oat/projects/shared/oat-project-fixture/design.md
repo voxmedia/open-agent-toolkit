@@ -231,12 +231,14 @@ IDE and CLI verifiably behave differently):
   - **Cursor/Claude native-first topology guidance** in the implementation
     and phase-coordination skills (Codex-specific guidance ships in #137;
     the other harnesses need their sanctioned native topology stated).
-- **Self-review vs gate dispatch (discovery Decision #11):** auto artifact
-  reviews and phase self-reviews run as native subagents inheriting the
-  parent model by default; managed pinning and cross-family independence
-  belong to gates via configured CLI exec targets. The plan-writing reviewer
-  contract's managed-pinning requirement for non-gate self-reviews is
-  corrected as part of this component.
+- **Review dispatch by phase (discovery Decision #11):** the invariant is
+  "reviewer at or above ceiling." Planning-phase artifact self-reviews inherit
+  the parent model (planning root already at/above ceiling); implementation-
+  phase self-reviews resolve via the dispatch ceiling and dispatch at the
+  ceiling's final candidate (tasks may run below ceiling; reviews must not
+  inherit a below-ceiling worker model); gates pin cross-family CLI exec
+  targets. The plan-writing reviewer contract's managed-pinning requirement
+  for planning-phase self-reviews is corrected as part of this component.
 - **Surfaces:** `.agents/skills/oat-project-implement/SKILL.md`,
   `.agents/skills/oat-project-plan-writing/SKILL.md`,
   `.agents/agents/oat-phase-implementer.md` (+ dispatch-language overlap in

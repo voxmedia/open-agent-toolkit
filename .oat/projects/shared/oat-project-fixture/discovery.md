@@ -127,16 +127,26 @@ mechanism for cross-cutting workflow changes.
     (per-harness dossiers created 2026-07-11) and
     `02 - Projects/Programmatic Cursor/` (change-log entry). A closing pass at
     project end adds smoke evidence learnings and selected mermaid diagrams.
-11. **Self-review vs gate dispatch semantics:** built-in auto artifact reviews
-    and phase self-reviews run as native subagents inheriting the parent model
-    by default — no managed target pinning required. Cross-family independence
-    and provenance pinning are the _gate's_ job, executed via configured CLI
-    exec targets (`gates.execTargets`) with host-avoidance, which are not
-    limited by the harness's native subagent catalog. The current
-    plan-writing contract over-pins self-reviews under capped managed
-    policies; correcting that language is p04 scope. (Decided 2026-07-11
-    during plan review, when the managed reviewer resolution forced a
-    matrix override that inherit-by-default would not have needed.)
+11. **Review dispatch semantics by phase (invariant: reviewer at or above
+    ceiling):**
+    - _Planning-phase artifact self-reviews_ (auto artifact-review loop for
+      plan/spec/design): native subagents inheriting the parent model by
+      default. The planning root already runs at/above the review ceiling, so
+      managed re-pinning is typically unnecessary. The ceiling is resolved at
+      quick-start Step 3.5 — after plan generation, before plan review — so
+      pinning is _possible_ there, just not the default.
+    - _Implementation-phase self-reviews_ (phase/final code reviews dispatched
+      by `oat-project-implement`): resolve via the dispatch-ceiling mechanism
+      and dispatch **at the ceiling** (final candidate of the review tier).
+      Implementation tasks may run below ceiling; reviews must never inherit
+      a below-ceiling worker/coordinator model.
+    - _Gate reviews_: cross-family independence and provenance pinning via
+      configured CLI exec targets (`gates.execTargets`) with host-avoidance,
+      unconstrained by the harness's native subagent catalog.
+    - The current plan-writing contract over-pins planning-phase self-reviews
+      under capped managed policies; correcting that language is p04 scope.
+      (Decided 2026-07-11 during plan review; refined same day to the
+      phase-scoped rule.)
 
 ## Constraints
 
