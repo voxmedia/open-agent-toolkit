@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 1580ee450f16aa70718309512f09c71da3ce1812
+oat_last_commit: f81dceb3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p03] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p03] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -30,24 +30,24 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T23:53:07.608Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T15:17:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T15:26:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: codex-subagent-max-depth
 
-**Status:** Implementation in progress
+**Status:** Implementation complete
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-11
 
 ## Current Phase
 
-Implementation complete - final review pending
+Implementation complete - ready for final PR
 
 ## Artifacts
 
@@ -79,7 +79,9 @@ Implementation complete - final review pending
 - ✓ Rebased onto merged PR #136 and resolved semantic conflicts
 - ✓ p03 provider regeneration and release validation passed
 - ✓ p03 independent review passed
-- ⧗ Final project review pending
+- ✓ Final project code review completed
+- ✓ Bookkeeping-only finding fixed and re-review waived by user
+- ✓ Project reconciled for final PR
 
 ## Blockers
 
@@ -87,4 +89,4 @@ None.
 
 ## Next Milestone
 
-Run the final project review across the complete rebased implementation.
+Open the final project pull request.

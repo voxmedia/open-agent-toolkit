@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-07-11
 oat_current_task_id: null
@@ -271,7 +271,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Run final project review and reconcile lifecycle completion.
+- Open the final project pull request.
 
 <!-- orchestration-runs-end -->
 
@@ -293,6 +293,27 @@ archived after findings were resolved
 **New tasks added:** None
 
 **Next:** Execute the approved plan via `oat-project-implement`.
+
+---
+
+### Review Received: final
+
+**Date:** 2026-07-11
+**Review evidence:** in-memory exact pinned final code review
+
+**Findings:**
+
+- Critical: 0
+- Important: 1 bookkeeping-only finding
+- Medium: 0
+- Minor: 0
+
+**Resolution:** Removed the obsolete tracked failing plan-review artifact,
+replaced dangling archived-artifact references, and verified `oat review latest`
+returns only an archived non-actionable passing review. The user accepted this
+bookkeeping remediation and explicitly waived re-review.
+
+**Next:** Run `oat-project-pr-final`.
 
 ---
 
