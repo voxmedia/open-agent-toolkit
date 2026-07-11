@@ -93,6 +93,36 @@ The currently configured subset is called out separately from the full recommend
 
 A broad `cursor-agent models` or `cursor-agent --list-models` result is diagnostic-only. It can explain an `unvalidated` result but can never promote one to `valid`. No broad catalog command was needed or used as outcome proof in this pass.
 
+## Evidence-to-recommendation disposition
+
+No recommendation asset change is supported by this pass. Recommendation
+version `2026-07-10.2`, its generated mirror, and all opaque Cursor strings are
+retained byte-for-byte. A timeout or non-sentinel parent response is not proof
+that a candidate is eligible or ineligible for Cursor Task dispatch. In
+particular, model-unavailable prose that does not match the implemented explicit
+subagent allow-list contract remains `unvalidated`; it is not promoted to
+`unknown-value` based on wording or slug spelling.
+
+| Candidate              | Configured | Live outcome | Recommendation disposition                            |
+| ---------------------- | ---------- | ------------ | ----------------------------------------------------- |
+| `gpt-5.6-luna-low`     | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-luna-medium`  | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-luna-high`    | yes        | unvalidated  | Retain configured value unchanged; recheck 2026-07-18 |
+| `gpt-5.6-luna-xhigh`   | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-terra-low`    | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-terra-medium` | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-terra-high`   | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-terra-xhigh`  | yes        | unvalidated  | Retain configured value unchanged; recheck 2026-07-18 |
+| `gpt-5.6-sol-low`      | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-sol-medium`   | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-sol-high`     | yes        | unvalidated  | Retain configured value unchanged; recheck 2026-07-18 |
+| `gpt-5.6-sol-xhigh`    | no         | unvalidated  | Retain unchanged; recheck 2026-07-18                  |
+| `gpt-5.6-sol-max`      | yes        | unvalidated  | Retain configured value unchanged; recheck 2026-07-18 |
+
+Configured-subset disposition: all four configured candidates remain selected
+in their existing tiers, but none is represented as live-verified. Operators
+should treat them as pending recheck, not as inferred capabilities.
+
 ## Evidence records
 
 <!-- OAT_CURSOR_EVIDENCE_RECORD_START -->
