@@ -1,7 +1,11 @@
 import type { WorkflowDispatchMatrixTier } from '@config/dispatch-matrix';
 
 import type { IdentityProvenance } from './provenance';
-import type { DispatchAction, DispatchRole } from './stamp';
+import type {
+  DispatchAction,
+  DispatchRole,
+  DispatchStampRecord,
+} from './stamp';
 
 export type DispatchReportPolicyStatus = 'resolved' | 'unresolved' | 'blocked';
 export type DispatchReportPolicyMode = 'managed' | 'inherit' | null;
@@ -288,6 +292,40 @@ function formatControl(name: string, control: DispatchControlRequest): string {
   return `  ${name}: ${display(control.value)} (${control.mechanism}) — ${control.reason}`;
 }
 
+function controlAxis(control: DispatchControlRequest): string {
+  if (
+    control.mechanism === 'task-model-argument' ||
+    control.mechanism === 'materialized-role'
+  ) {
+    return control.value ? `selected:${control.value}` : 'unknown';
+  }
+  if (control.mechanism === 'host-inherited') {
+    return 'inherited';
+  }
+  if (
+    control.mechanism === 'base-role' ||
+    control.mechanism === 'provider-default'
+  ) {
+    return 'provider-default';
+  }
+  return 'not-applicable';
+}
+
+function dispatchPolicy(report: DispatchReportV1): string {
+  if (report.policy.name) {
+    return report.policy.name;
+  }
+  return report.policy.mode === 'inherit' ? 'inherit-host-defaults' : 'unknown';
+}
+
+function dispatchCeiling(report: DispatchReportV1): string {
+  return (
+    report.selection.ceilingTarget?.effort ??
+    report.selection.ceilingTarget?.model ??
+    'none'
+  );
+}
+
 export function buildDispatchReport(
   input: DispatchReportInput,
 ): DispatchReportV1 {
@@ -405,4 +443,22 @@ export function formatDispatchReport(report: DispatchReportV1): string {
     `  Provenance: ${report.runtimeIdentity.provenance}`,
     `  Confidence: ${report.runtimeIdentity.confidence}`,
   ].join('\n');
+}
+
+export function toDispatchStampRecord(
+  report: DispatchReportV1,
+): DispatchStampRecord {
+  const runtimeReported = report.runtimeIdentity.producer !== null;
+  return {
+    scope: report.route.scope,
+    action: report.route.action,
+    role: report.route.role,
+    producer: report.runtimeIdentity.producer ?? 'unknown',
+    provenance: runtimeReported ? report.runtimeIdentity.provenance : 'unknown',
+    modelAxis: controlAxis(report.requestedControls.model),
+    effortAxis: controlAxis(report.requestedControls.effort),
+    dispatchPolicy: dispatchPolicy(report),
+    dispatchCeiling: dispatchCeiling(report),
+    target: report.route.target,
+  };
 }

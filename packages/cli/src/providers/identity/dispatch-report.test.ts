@@ -4,6 +4,7 @@ import {
   buildDispatchReport,
   formatDispatchReport,
   serializeDispatchReport,
+  toDispatchStampRecord,
   type DispatchReportInput,
   type DispatchReportResolution,
   type DispatchReportV1,
@@ -537,5 +538,32 @@ describe('dispatch report rendering', () => {
     expect(output).toContain('Producer: not reported');
     expect(output).not.toContain('Producer: gpt-5.6-sol');
     expect(output).not.toContain('Runtime model: medium');
+  });
+
+  it('derives compatibility stamp records from the report without a second identity schema', () => {
+    const report = buildDispatchReport(
+      input({
+        runtimeIdentity: {
+          producer: 'gpt-5.6-sol',
+          model: 'gpt-5.6-sol',
+          effort: 'high',
+          provenance: 'observed',
+          confidence: 'high',
+        },
+      }),
+    );
+
+    expect(toDispatchStampRecord(report)).toEqual({
+      scope: 'p03-t01',
+      action: 'implementation',
+      role: 'implementer',
+      producer: 'gpt-5.6-sol',
+      provenance: 'observed',
+      modelAxis: 'selected:gpt-5.6-sol',
+      effortAxis: 'selected:high',
+      dispatchPolicy: 'high',
+      dispatchCeiling: 'high',
+      target: 'oat-phase-implementer-gpt-5-6-sol-high',
+    });
   });
 });
