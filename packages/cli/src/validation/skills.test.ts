@@ -998,7 +998,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.35');
   });
 
   it('makes native Codex dispatch and launcher-owned provenance authoritative', async () => {
@@ -1038,7 +1038,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.35');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,180}times out[\s\S]{0,180}retry the same already-selected native `agent_type` route/i,
     );
@@ -1055,7 +1055,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.13');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.14');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1353,7 +1353,7 @@ describe('validateOatSkills', () => {
       /phase coordinator/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.34');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.35');
 
     const coordinator = agent.slice(
       agent.indexOf('### Mode: Phase Coordinator'),
@@ -2235,7 +2235,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.3.12'],
       ['oat-project-quick-start', '2.1.13'],
       ['oat-project-import-plan', '1.4.4'],
-      ['oat-project-review-provide', '1.3.13'],
+      ['oat-project-review-provide', '1.3.14'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2250,8 +2250,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.0.34'],
-      ['oat-project-review-provide', '1.3.13'],
+      ['oat-project-implement', '2.0.35'],
+      ['oat-project-review-provide', '1.3.14'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 

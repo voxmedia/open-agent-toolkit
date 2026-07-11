@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.34
+version: 2.0.35
 description: Use when plan.md is ready for execution. Dispatches phase coordinators that select one exact target-pinned worker per task; supports bounded fix loops and plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
