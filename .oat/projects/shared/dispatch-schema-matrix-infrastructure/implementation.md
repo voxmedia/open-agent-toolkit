@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ----- | -------- | ----- | --------- |
 | p01   | complete | 6     | 6/6       |
 | p02   | complete | 4     | 4/4       |
-| p03   | pending  | 6     | 0/6       |
+| p03   | complete | 6     | 6/6       |
 | p04   | pending  | 4     | 0/4       |
 | p05   | pending  | 3     | 0/3       |
 
-**Total:** 10/23 tasks completed
+**Total:** 16/23 tasks completed
 
 ---
 
@@ -242,6 +242,112 @@ oat_generated: false
 
 ---
 
+## Phase p03: Dispatch Report V1
+
+**Status:** complete
+**Started:** 2026-07-11
+**Completed:** 2026-07-11
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added a reusable versioned dispatch report that keeps policy, requested candidate, ceiling, exact selection, configured defaults, immutable gate invocation, and runtime identity distinct.
+- Added deterministic JSON and human formatters and made the legacy `Dispatch:` line a derived compatibility representation.
+- Added opt-in report context to `dispatch-ceiling resolve` without changing legacy output when report flags are absent.
+- Adapted gate output to preserve configured invocation provenance without treating it as matrix-cell or runtime-observed identity.
+- Updated implementation and review workflows to consume the report and derive compatibility stamps from it.
+
+**Key files touched:**
+
+- `packages/cli/src/providers/identity/dispatch-report.ts` - V1 schema, builder, deterministic serialization, human formatting, and stamp adapter.
+- `packages/cli/src/providers/identity/stamp.ts` - compatibility stamp derivation from report data.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - opt-in resolver report context and output.
+- `packages/cli/src/commands/gate/index.ts` - immutable gate invocation report adapter.
+- `.agents/skills/oat-project-{implement,review-provide,review-provide-remote}/SKILL.md` - workflow report and derived-stamp guidance.
+
+**Verification:**
+
+- Run: nine focused report, stamp, resolver, gate, workflow-contract, and bundle-consistency suites.
+- Result: Pass - 9 files, 436/436 tests.
+- Run: CLI type-check, lint, formatting, canonical-skill formatting, and commit-range diff checks.
+- Result: Pass.
+
+**Notes / Decisions:**
+
+- Gate-configured invocation provenance is immutable and remains separate from `selection.cellSource` and runtime-observed identity.
+- Unknown configured Codex effort is represented as `null` with no source; `codex-config` is emitted only when the effort is known.
+- Canonical workflow skill versions were bumped exactly once in the phase; bundled mirrors remain deferred to p05 regeneration.
+- One exact pinned phase subagent implemented all six tasks and the bounded review/fix loop directly; no nested task workers were launched.
+
+### Task p03-t01: Add the report schema and pure builder
+
+**Status:** complete
+**Commit:** aedafd6b
+
+**Outcome:**
+
+- Added the V1 schema and pure builder with explicit provenance boundaries.
+
+---
+
+### Task p03-t02: Add deterministic JSON and human formatting
+
+**Status:** complete
+**Commit:** 67704a2a
+
+**Outcome:**
+
+- Added stable serialization and human-readable report rendering.
+
+---
+
+### Task p03-t03: Derive compatibility stamps from reports
+
+**Status:** complete
+**Commit:** 07823ab2
+
+**Outcome:**
+
+- The legacy `Dispatch:` representation is now derived from report data.
+
+---
+
+### Task p03-t04: Integrate report context with dispatch-ceiling resolve
+
+**Status:** complete
+**Commit:** 5bb809e3
+
+**Outcome:**
+
+- Resolver callers can request a scoped report while existing output remains compatible by default.
+
+---
+
+### Task p03-t05: Adapt immutable gate provenance into reports
+
+**Status:** complete
+**Commit:** c6256d5b
+
+**Outcome:**
+
+- Gate JSON output carries the report alongside immutable configured invocation metadata.
+
+---
+
+### Task p03-t06: Integrate reports into implementation and review workflows
+
+**Status:** complete
+**Commit:** 30ffd78e
+
+**Outcome:**
+
+- Implementation and review skills request, render, and retain report context and derive compatibility stamps from it.
+
+**Review fix:** `760de162` resolves all five p03 self-review findings covering gate provenance, unknown configured effort, absent-report compatibility, deep stable ordering, and literal workflow command contracts.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -339,10 +445,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage                                                     |
-| ----- | --------- | ------ | ------ | ------------------------------------------------------------ |
-| 1     | 349       | 349    | 0      | Six focused suites; type-check, lint, and format also passed |
-| 2     | -         | -      | -      | -                                                            |
+| Phase | Tests Run | Passed | Failed | Coverage                                                      |
+| ----- | --------- | ------ | ------ | ------------------------------------------------------------- |
+| 1     | 349       | 349    | 0      | Six focused suites; type-check, lint, and format also passed  |
+| 2     | 165       | 165    | 0      | Four focused suites; type-check, lint, and format also passed |
+| 3     | 436       | 436    | 0      | Nine focused suites; type-check, lint, and format also passed |
 
 ## Final Summary (for PR/docs)
 
