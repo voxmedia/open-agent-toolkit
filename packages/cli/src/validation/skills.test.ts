@@ -1247,7 +1247,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.4');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.5');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /phase coordinator/i,
     );
@@ -1275,6 +1275,18 @@ describe('validateOatSkills', () => {
     expect(coordinator).toContain('providers.codex.dispatchArgs.variant');
     expect(coordinator).toContain('providers.claude.dispatchArgs.model');
     expect(coordinator).toContain('providers.cursor.dispatchArgs.model');
+    expect(coordinator).toMatch(
+      /Codex[\s\S]{0,180}(?:attempt|dispatch)[\s\S]{0,180}exact materialized `agent_type` first/i,
+    );
+    expect(coordinator).toMatch(
+      /only explicit\s+pre-start native role-selection rejection[\s\S]{0,260}(?:permits|allows)[\s\S]{0,160}fresh pinned fallback/i,
+    );
+    expect(coordinator).toMatch(
+      /launcher-owned `target`, `model_axis`, and `effort_axis`[\s\S]{0,260}(?:immutable|must not)[\s\S]{0,180}(?:worker )?self-report/i,
+    );
+    expect(coordinator).toMatch(
+      /missing telemetry[\s\S]{0,180}accepted\s+terminal\s+results[\s\S]{0,120}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
+    );
     expect(coordinator).toMatch(
       /Cursor[\s\S]{0,260}(?:byte-for-byte|opaque)[\s\S]{0,220}(?:actual|invocation)/i,
     );
