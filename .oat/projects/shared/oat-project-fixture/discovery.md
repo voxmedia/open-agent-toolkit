@@ -119,9 +119,19 @@ mechanism for cross-cutting workflow changes.
    CLI behave differently (live-verified: exact Task pinning accepted in IDE;
    headless probes observed zero Task events even for controls). Smoke runs
    and evidence treat them as separate targets.
-9. **Documentation deliverable:** the project ships high-quality OAT docs on
-   orchestration/subagents/programmatic execution, including mermaid diagrams
-   (topology, dispatch selection, evidence layers, smoke flow).
+9. **Documentation deliverable (hard requirement):** the project ships
+   high-quality OAT docs on orchestration/subagents/programmatic execution,
+   including mermaid diagrams. Reaffirmed 2026-07-11 after live gate
+   observation: the review/dispatch flows are complex enough (e.g. a lifecycle
+   gate exec target spawning a nested managed reviewer child) that expected
+   behavior and flow MUST be documented visually to avoid confusion, whatever
+   the final implementation is. Required diagrams include: per-harness
+   coordinator/worker topology; dispatch selection flow (ladder ∩ ceiling ∩
+   native catalog); the four review flavors and who resolves their targets
+   (planning self-review = inherit; implementation self-review = at-ceiling
+   pin; phase review gate = gate target; lifecycle gate = cross-runtime CLI
+   exec target, possibly with nested managed reviewer dispatch); three-layer
+   evidence model; smoke runner data flow.
 10. **Durable knowledge capture (Vault):** findings are mirrored into the
     user's Vault — `04 - Resources/Programmatic Agent Execution/Harnesses/`
     (per-harness dossiers created 2026-07-11) and
@@ -147,6 +157,17 @@ mechanism for cross-cutting workflow changes.
       under capped managed policies; correcting that language is p04 scope.
       (Decided 2026-07-11 during plan review; refined same day to the
       phase-scoped rule.)
+12. **Native-catalog mismatch advisory (Cursor):** when a Cursor agent
+    intersecting the dispatch ladder with its native catalog finds ladder
+    entries that are not natively dispatchable, it should flag this and
+    notify the user — but never suggest _removing_ those entries, because
+    ladders serve both native subagent dispatch and CLI dispatch, whose
+    available model sets differ. The advisory should instead surface
+    natively-dispatchable near-equivalents worth _adding_ (e.g.
+    `gpt-5.6-sol-high` is CLI-only while `gpt-5.6-sol-high-fast` is natively
+    pinnable — suggest adding the latter). A project-state pinning override
+    remains the immediate workaround; the advisory helps users evolve their
+    ladders deliberately.
 
 ## Constraints
 

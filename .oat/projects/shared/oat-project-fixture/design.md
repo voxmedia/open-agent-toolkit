@@ -231,6 +231,12 @@ IDE and CLI verifiably behave differently):
   - **Cursor/Claude native-first topology guidance** in the implementation
     and phase-coordination skills (Codex-specific guidance ships in #137;
     the other harnesses need their sanctioned native topology stated).
+  - **Native-catalog mismatch advisory (discovery Decision #12):** when the
+    coordinator's ladder ∩ native-catalog intersection reveals ladder entries
+    that are not natively dispatchable, the contract requires flagging this
+    to the user with natively-dispatchable near-equivalents suggested as
+    ladder _additions_ — never suggesting removal, since ladders also serve
+    CLI dispatch with a different availability set.
 - **Review dispatch by phase (discovery Decision #11):** the invariant is
   "reviewer at or above ceiling." Planning-phase artifact self-reviews inherit
   the parent model (planning root already at/above ceiling); implementation-

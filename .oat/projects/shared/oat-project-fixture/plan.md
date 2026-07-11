@@ -301,7 +301,7 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skill
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Write test (RED)** — extend the same contract tests: per-harness topology guidance present for Cursor (native Task; omit-model = inherit; curated catalog read from tool spec; opaque strings never normalized) and Claude (native Task; topology to be confirmed by smoke evidence — guidance must state the confirmation obligation, not assume nesting).
+**Step 1: Write test (RED)** — extend the same contract tests: per-harness topology guidance present for Cursor (native Task; omit-model = inherit; curated catalog read from tool spec; opaque strings never normalized; **native-catalog mismatch advisory** per discovery Decision #12 — flag ladder entries not natively dispatchable, suggest natively-pinnable near-equivalents as ladder additions, never suggest removal since ladders also serve CLI dispatch) and Claude (native Task; topology to be confirmed by smoke evidence — guidance must state the confirmation obligation, not assume nesting).
 Run: scoped vitest as in p04-t01 — Expected: fails.
 
 **Step 2: Implement (GREEN)** — author the guidance; align vocabulary with `references/subagent-catalog-and-selection-findings.md`.
@@ -452,7 +452,7 @@ _Sequential; depends on p05._
 
 **Files:**
 
-- Create: docs pages under `apps/oat-docs/docs/` (orchestration model, subagent dispatch & selection contract, evidence layers, smoke workflow how-to) with mermaid diagrams (topology per harness, selection flow, three-layer evidence, smoke data flow)
+- Create: docs pages under `apps/oat-docs/docs/` (orchestration model, subagent dispatch & selection contract, evidence layers, smoke workflow how-to) with the required mermaid diagram set from discovery Decision #9: per-harness coordinator/worker topology; dispatch selection flow (ladder ∩ ceiling ∩ native catalog, incl. the mismatch advisory); the four review flavors and their target resolution (planning self-review = inherit, implementation self-review = at-ceiling pin, phase review gate = gate target, lifecycle gate = cross-runtime CLI exec target with possible nested managed reviewer); three-layer evidence model; smoke runner data flow
 - Modify: docs nav per `apps/oat-docs/AGENTS.md` conventions; regenerate `apps/oat-docs/index.md` via `oat docs generate-index`
 
 **Step 1: Author** — pages draw on `design.md`, `tools/smoke/reports/SUMMARY.md`, and the project references; diagrams authored in mermaid.
