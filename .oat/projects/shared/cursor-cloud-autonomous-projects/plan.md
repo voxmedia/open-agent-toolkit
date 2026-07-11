@@ -247,7 +247,7 @@ Expected: pass; body <500 lines (inventory in references).
 **Steps:**
 
 - Frontmatter: model-invocable (auto-surface), description keyed to "OAT + Cursor Cloud environment" triggers.
-- Body: cloud detection (env markers, `cursor-cloud` MCP `run-info`/`environment-info`); project-home resolution (multi-repo + single-repo); skill-precedence rule (user-scope copy wins over drifted repo copies; absolute-path reads — primary or fallback per p02-t01 outcome); CLI availability contract (verify `oat`, install via npm if missing, never approximate artifacts); awareness pointers (autonomous skill, org-layer context skills).
+- Body: cloud detection (env markers, `cursor-cloud` MCP `run-info`/`environment-info`); project-home resolution (multi-repo + single-repo); **asset-precedence rule covering skills, templates, and scripts** (user-scope copy wins over repo copies — repo copies are never customized, only stale; absolute-path reads — primary or fallback per p02-t01 outcome; scripts: prefer `~/.oat/scripts/<name>` over `.oat/scripts/<name>` when both exist); CLI availability contract (verify `oat`, install via npm if missing, never approximate artifacts); awareness pointers (autonomous skill, org-layer context skills).
 - References file: deterministic family identity (`run-info` → `originalModelName` → family map), pinned-slug subagent dispatch guidance, degraded-tier logging shape.
 
 **Verify:**
@@ -261,52 +261,52 @@ Expected: validation passes; org-identifier scan returns zero hits (NFR1).
 
 ### Task p02-t04: CLI — workflows pack user-scope installability as a split install, direct + aggregate (TDD)
 
-**Rationale (verified 2026-07-11):** the project-only guard protects repo-coupled assets, not skills. Templates install to `<root>/.oat/templates/` (read by `oat project new` strictly from the repo root), scripts to `<root>/.oat/scripts/` (repo-relative skill references), and the installer scaffolds a projects root — all nonsensical or harmful in a home directory. Skills and agents are user-scope-safe. Therefore user scope installs **skills + agents only** and skips templates, scripts, and projects-root scaffolding; project scope is unchanged.
+**Rationale (verified 2026-07-11; revised after version-skew discussion):** the project-only guard exists because parts of the install are repo-coupled, but skills/templates/scripts version together in one package release — a user-scope install must carry all three (plus agents) or user-canonical skills would pair with stale repo templates/scripts. Repo copies are never customized in this fleet (difference = staleness), so user scope installs the **full asset set at user-level paths**: skills + agents to `~/.agents/`, templates to `~/.oat/templates/`, scripts to `~/.oat/scripts/` (precedent: core pack installs `~/.oat/docs/`). Only the projects-root scaffolding side effects remain project-scope-only (a projects tree in the home directory would violate repo-rooted artifacts). Project-scope behavior is unchanged.
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/init/tools/workflows/index.ts` (replace the project-only rejection with scope-split routing)
-- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` (user-scope mode: skills + agents to user home `.agents/`; skip templates/scripts/projects-root blocks)
+- Modify: `packages/cli/src/commands/init/tools/workflows/index.ts` (replace the project-only rejection with scope routing)
+- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts` (user-scope mode: skills/agents → user `.agents/`; templates → `~/.oat/templates/`; scripts → `~/.oat/scripts/`; skip projects-root block)
 - Modify: `packages/cli/src/commands/init/tools/index.ts` (aggregate installer: add workflows to the user-eligible pack set, drop the project-only label, route user-scope installs away from `projectRoot`)
 - Modify: colocated test files for both (locate with `rg -l "supports only --scope project|user-eligible|projectRoot" packages/cli/src/commands/init/tools`)
-- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (document the split-scope semantics)
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (document user-scope semantics and asset destinations)
 
-**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes skills + agents under a temp-home `.agents/`, and creates **no** `~/.oat/templates`, `~/.oat/scripts`, or projects-root artifacts; (b) aggregate/guided: user-scope aggregate install includes workflows with the same split semantics, writing nothing to `projectRoot`; (c) scope/removal semantics match other user-eligible packs; existing project-scope tests unchanged.
+**Step 1: Write tests (RED)** — (a) direct: `oat init tools workflows --scope user` materializes skills + agents under temp-home `.agents/`, templates under temp-home `.oat/templates/`, scripts under temp-home `.oat/scripts/` (executable bit preserved), and creates **no** projects-root artifacts; (b) aggregate/guided: user-scope aggregate install includes workflows with identical destinations, writing nothing to `projectRoot`; (c) scope/removal/update semantics match other user-eligible packs; existing project-scope tests unchanged.
 
-**Step 2: Implement (GREEN)** — scope-split routing in the subcommand; user-eligible set + destination routing in the aggregate installer (mirror `ideas`/`brainstorm` handling); split install path in `install-workflows.ts`.
+**Step 2: Implement (GREEN)** — scope routing in the subcommand; user-eligible set + destination routing in the aggregate installer (mirror `ideas`/`brainstorm` handling); user-destination install path in `install-workflows.ts`.
 
 **Step 3: Refactor** — dedupe scope plumbing with the shared scope-option helper if trivial.
 
 **Step 4: Verify:**
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
-Expected: green; direct and aggregate fresh-home tests prove skills+agents under user `.agents/` with zero repo-coupled artifacts in the home directory.
+Expected: green; direct and aggregate fresh-home tests prove the full asset set at user paths with zero projects-root artifacts in the home directory.
 
-**Commit:** `feat(p02-t04): split-scope user installability for workflows pack (direct + aggregate)`
+**Commit:** `feat(p02-t04): full-asset user-scope installability for workflows pack (direct + aggregate)`
 
 ---
 
-### Task p02-t07: CLI — bundled-template fallback in `oat project new` (TDD)
+### Task p02-t07: CLI — user-first template/script resolution in consumers (TDD)
 
-**Rationale:** a repo that never adopted OAT project-scope has no `.oat/templates/`, so `oat project new` cannot scaffold there — forcing the manual-approximation failure mode this project exists to kill. With user-scope skills installed but no repo templates, the CLI must be self-sufficient.
+**Rationale:** repo copies are never customized — a differing repo copy is only stale — so the freshest tier wins. Resolution order for templates (and the instruction-level rule for scripts): **user (`~/.oat/templates/`, refreshed to latest at env boot) → repo (`.oat/templates/`) → bundled assets** (the `npx`-no-install floor). This simultaneously fixes the un-adopted-repo case (no repo templates at all — the Bruno manual-approximation trigger) and the stale-repo case. Artifacts still land in the repo's projects root regardless of template source.
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/project/new/scaffold.ts` (template resolution: repo `.oat/templates/<file>` first — unchanged; fall back per-file to the bundled assets `templates/` via `resolveAssetsRoot()`)
-- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts` (fallback cases)
+- Modify: `packages/cli/src/commands/project/new/scaffold.ts` (per-file three-tier resolution: user → repo → bundled via `resolveAssetsRoot()`)
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts` (resolution cases)
 
-**Step 1: Write tests (RED)** — (a) repo without `.oat/templates/`: scaffold succeeds from bundled assets, artifacts land under the repo's projects root (repo-rooted artifacts preserved); (b) repo with partial templates: repo copy wins per file, bundled fills gaps; (c) existing full-repo-templates behavior byte-identical.
+**Step 1: Write tests (RED)** — (a) user templates present: user copy wins over differing repo copy; (b) no user install, repo present: repo copy used (today's behavior); (c) neither: bundled assets used, scaffold succeeds, artifacts land under the repo's projects root; (d) partial tiers: per-file resolution (user copy for one file, repo for another, bundled fills gaps).
 
-**Step 2: Implement (GREEN)** — per-file two-tier resolution; no new config surface.
+**Step 2: Implement (GREEN)** — per-file three-tier resolution helper; no new config surface.
 
-**Step 3: Refactor** — extract a `resolveTemplateSource(repoRoot, file)` helper if it clarifies.
+**Step 3: Refactor** — extract `resolveTemplateSource(userOatRoot, repoRoot, file)` if it clarifies.
 
 **Step 4: Verify:**
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
-Expected: green; all three scenarios covered.
+Expected: green; all four scenarios covered.
 
-**Commit:** `feat(p02-t07): bundled-template fallback for project scaffolding`
+**Commit:** `feat(p02-t07): user-first template resolution for project scaffolding`
 
 ---
 
