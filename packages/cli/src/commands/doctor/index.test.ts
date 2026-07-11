@@ -974,6 +974,9 @@ describe('createDoctorCommand', () => {
         [codexConfigPath]: `[features]
 multi_agent = true
 
+[agents]
+max_depth = 2
+
 [agents.reviewer]
 config_file = "agents/reviewer.toml"
 `,
@@ -993,6 +996,185 @@ config_file = "agents/reviewer.toml"
     expect(capture.info[0]).toContain('enabled for codex managed roles');
     expect(capture.info[0]).toContain('codex_role_file_refs');
     expect(capture.info[0]).toContain('references exist');
+  });
+
+  it.each([2, 3])(
+    'passes project codex max depth %i for managed roles',
+    async (maxDepth) => {
+      const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+      const reviewerRolePath = '/tmp/workspace/.codex/agents/reviewer.toml';
+      const { command, capture } = createHarness({
+        pathExists: {
+          [codexConfigPath]: true,
+          [reviewerRolePath]: true,
+        },
+        fileContents: {
+          [codexConfigPath]: `[features]\nmulti_agent = true\n\n[agents]\nmax_depth = ${maxDepth}\n\n[agents.reviewer]\nconfig_file = "agents/reviewer.toml"\n`,
+          [reviewerRolePath]: [
+            '# oat-managed: true',
+            '# oat-role: reviewer',
+          ].join('\n'),
+        },
+      });
+
+      await runDoctor(command);
+
+      expect(capture.info[0]).toContain('project:codex_max_depth');
+      expect(capture.info[0]).toContain(`agents.max_depth is ${maxDepth}`);
+      expect(capture.info[0]).toContain(
+        'root (0) → phase coordinator (1) → task worker (2)',
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it.each([
+    ['missing', ''],
+    ['invalid', 'max_depth = "invalid"'],
+    ['below the required floor', 'max_depth = 1'],
+  ])('warns when project codex max depth is %s', async (_label, depthLine) => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const rolePath = '/tmp/workspace/.codex/agents/worker.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [codexConfigPath]: true,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]: `[features]\nmulti_agent = true\n\n[agents]\n${depthLine}\n\n[agents.worker]\nconfig_file = "agents/worker.toml"\n`,
+        [rolePath]: '# oat-managed: true\n# oat-role: worker\n',
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('project:codex_max_depth');
+    expect(capture.info[0]).toContain(
+      'root (0) → phase coordinator (1) → task worker (2)',
+    );
+    expect(capture.info[0]).toContain('oat sync --scope project');
+    expect(capture.info[0]).toContain(
+      'oat providers codex materialize <agent-name> --scope project',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not emit a codex max depth check without managed roles', async () => {
+    const codexConfigPath = '/tmp/workspace/.codex/config.toml';
+    const { command, capture } = createHarness({
+      pathExists: { [codexConfigPath]: true },
+      fileContents: {
+        [codexConfigPath]:
+          '[agents]\nmax_depth = 1\n\n[agents.custom]\nconfig_file = "agents/custom.toml"\n',
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).not.toContain('codex_max_depth');
+  });
+
+  it('inherits user codex max depth only when project depth is absent', async () => {
+    const projectConfigPath = '/tmp/workspace/.codex/config.toml';
+    const userConfigPath = '/tmp/home/.codex/config.toml';
+    const rolePath = '/tmp/workspace/.codex/agents/worker.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [projectConfigPath]: true,
+        [userConfigPath]: true,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [projectConfigPath]:
+          '[features]\nmulti_agent = true\n\n[agents.worker]\nconfig_file = "agents/worker.toml"\n',
+        [userConfigPath]: '[agents]\nmax_depth = 3\n',
+        [rolePath]: '# oat-managed: true\n# oat-role: worker\n',
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('project:codex_max_depth');
+    expect(capture.info[0]).toContain('agents.max_depth is 3');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not inherit user codex max depth over an invalid project value', async () => {
+    const projectConfigPath = '/tmp/workspace/.codex/config.toml';
+    const userConfigPath = '/tmp/home/.codex/config.toml';
+    const rolePath = '/tmp/workspace/.codex/agents/worker.toml';
+    const { command, capture } = createHarness({
+      pathExists: {
+        [projectConfigPath]: true,
+        [userConfigPath]: true,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [projectConfigPath]:
+          '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = "invalid"\n\n[agents.worker]\nconfig_file = "agents/worker.toml"\n',
+        [userConfigPath]: '[agents]\nmax_depth = 4\n',
+        [rolePath]: '# oat-managed: true\n# oat-role: worker\n',
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('project:codex_max_depth');
+    expect(capture.info[0]).toContain('not a valid number');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('checks user codex max depth with user-scoped remediation', async () => {
+    const codexConfigPath = '/tmp/home/.codex/config.toml';
+    const rolePath = '/tmp/home/.codex/agents/worker.toml';
+    const { command, capture } = createHarness({
+      scope: 'user',
+      pathExists: {
+        '/tmp/home/.agents/skills': true,
+        '/tmp/home/.oat/sync/manifest.json': true,
+        [codexConfigPath]: true,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]:
+          '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 1\n\n[agents.worker]\nconfig_file = "agents/worker.toml"\n',
+        [rolePath]: '# oat-managed: true\n# oat-role: worker\n',
+      },
+    });
+
+    await runDoctor(command, { scope: 'user' });
+
+    expect(capture.info[0]).toContain('user:codex_max_depth');
+    expect(capture.info[0]).toContain('oat sync --scope user');
+    expect(capture.info[0]).toContain(
+      'oat providers codex materialize <agent-name> --scope user',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('passes user codex max depth at the managed-role floor', async () => {
+    const codexConfigPath = '/tmp/home/.codex/config.toml';
+    const rolePath = '/tmp/home/.codex/agents/worker.toml';
+    const { command, capture } = createHarness({
+      scope: 'user',
+      pathExists: {
+        '/tmp/home/.agents/skills': true,
+        '/tmp/home/.oat/sync/manifest.json': true,
+        [codexConfigPath]: true,
+        [rolePath]: true,
+      },
+      fileContents: {
+        [codexConfigPath]:
+          '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 2\n\n[agents.worker]\nconfig_file = "agents/worker.toml"\n',
+        [rolePath]: '# oat-managed: true\n# oat-role: worker\n',
+      },
+    });
+
+    await runDoctor(command, { scope: 'user' });
+
+    expect(capture.info[0]).toContain('user:codex_max_depth');
+    expect(capture.info[0]).toContain('agents.max_depth is 2');
+    expect(process.exitCode).toBe(0);
   });
 
   it('fails when codex config.toml cannot be parsed', async () => {

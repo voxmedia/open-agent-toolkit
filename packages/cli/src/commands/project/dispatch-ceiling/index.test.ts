@@ -883,7 +883,6 @@ describe('oat project dispatch-ceiling resolve', () => {
           },
         },
       });
-
       const { command, capture } = createHarness({ cwd: root, home });
       await runCommand(command, [
         '--provider',
@@ -1304,6 +1303,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           },
         },
       });
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        '[agents]\nmax_depth = 2\n',
+        'utf8',
+      );
 
       const { command, capture } = createHarness({ cwd: root, home });
       await runCommand(command, [
@@ -1376,7 +1381,6 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
-
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
       '--provider',
@@ -2340,7 +2344,6 @@ describe('oat project dispatch-ceiling resolve', () => {
       ].join('\n'),
       'utf8',
     );
-
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
       '--provider',
@@ -2522,6 +2525,12 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 2\n',
+      'utf8',
+    );
 
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
@@ -2780,6 +2789,289 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    ['missing', ''],
+    ['invalid', 'max_depth = "invalid"'],
+    ['below the required floor', 'max_depth = 1'],
+  ])(
+    'blocks managed codex implementation preflight when project max depth is %s',
+    async (_label, depthLine) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        `[agents]\n${depthLine}\n`,
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'blocked',
+        provider: 'codex',
+        unresolved: true,
+      });
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('root (0) → phase coordinator (1) → task worker (2)');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('oat sync --scope project');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain(
+        'oat providers codex materialize <agent-name> --scope project',
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([2, 4])(
+    'passes managed codex implementation preflight at project max depth %i',
+    async (maxDepth) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        `[agents]\nmax_depth = ${maxDepth}\n`,
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'codex',
+        unresolved: false,
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('inherits user max depth for project implementation preflight only when project depth is absent', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(join(root, '.codex', 'config.toml'), '[agents]\n', 'utf8');
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 3\n',
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preflight',
+      '--non-interactive',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      unresolved: false,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not inherit user max depth over an invalid project value during preflight', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = "invalid"\n',
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 4\n',
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preflight',
+      '--non-interactive',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      provider: 'codex',
+      unresolved: true,
+    });
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'agents.max_depth is not a valid number',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('uses user-scoped depth and remediation for user implementation preflight', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 4\n',
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 1\n',
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(
+      command,
+      [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ],
+      ['--scope', 'user'],
+    );
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      provider: 'codex',
+      unresolved: true,
+    });
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'oat sync --scope user',
+    );
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'oat providers codex materialize <agent-name> --scope user',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('does not use harness as a same-harness route dispatch value', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
@@ -2869,6 +3161,12 @@ describe('oat project dispatch-ceiling resolve', () => {
         '# State',
         '',
       ].join('\n'),
+      'utf8',
+    );
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 2\n',
       'utf8',
     );
 

@@ -209,6 +209,13 @@ interface RequestedDispatchCandidate {
   effort?: string;
 }
 
+type CodexDepthScope = 'project' | 'user';
+
+interface CodexMaxDepthEntry {
+  present: boolean;
+  value: unknown;
+}
+
 const DEFAULT_DEPENDENCIES: DispatchCeilingDependencies = {
   buildCommandContext,
   resolveProjectRoot,
@@ -1888,6 +1895,77 @@ function readCodexDefaultFromToml(content: string): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
+function readCodexMaxDepthEntry(content: string): CodexMaxDepthEntry {
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = TOML.parse(content) as Record<string, unknown>;
+  } catch {
+    return { present: true, value: null };
+  }
+
+  const agents = parsed.agents;
+  if (!agents || typeof agents !== 'object' || Array.isArray(agents)) {
+    return { present: false, value: undefined };
+  }
+  const record = agents as Record<string, unknown>;
+  return {
+    present: Object.prototype.hasOwnProperty.call(record, 'max_depth'),
+    value: record.max_depth,
+  };
+}
+
+async function readCodexMaxDepthAtPath(
+  path: string,
+  dependencies: DispatchCeilingDependencies,
+): Promise<CodexMaxDepthEntry> {
+  if (!(await dependencies.pathExists(path))) {
+    return { present: false, value: undefined };
+  }
+  try {
+    return readCodexMaxDepthEntry(await dependencies.readFile(path));
+  } catch {
+    return { present: true, value: null };
+  }
+}
+
+/**
+ * Resolves the depth seen by Codex: project config wins whenever it declares a
+ * value, while an absent project value inherits the user config.
+ */
+async function resolveEffectiveCodexMaxDepth(
+  scope: CodexDepthScope,
+  repoRoot: string,
+  context: CommandContext,
+  dependencies: DispatchCeilingDependencies,
+): Promise<CodexMaxDepthEntry> {
+  const userPath = join(context.home, '.codex', 'config.toml');
+  if (scope === 'user') {
+    return readCodexMaxDepthAtPath(userPath, dependencies);
+  }
+
+  const projectEntry = await readCodexMaxDepthAtPath(
+    join(repoRoot, '.codex', 'config.toml'),
+    dependencies,
+  );
+  return projectEntry.present
+    ? projectEntry
+    : readCodexMaxDepthAtPath(userPath, dependencies);
+}
+
+function managedCodexDepthBlockMessage(
+  scope: CodexDepthScope,
+  entry: CodexMaxDepthEntry,
+): string {
+  const validDepth =
+    typeof entry.value === 'number' && Number.isFinite(entry.value);
+  const state = !entry.present
+    ? 'agents.max_depth is missing'
+    : validDepth
+      ? `agents.max_depth is ${entry.value}`
+      : 'agents.max_depth is not a valid number';
+  return `BLOCKED: Codex ${state}; managed implementation requires root (0) → phase coordinator (1) → task worker (2).\nRun \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --scope ${scope}\`.`;
+}
+
 async function resolveCodexProviderDefaultEffort(
   repoRoot: string,
   context: CommandContext,
@@ -1981,6 +2059,44 @@ async function resolveDispatchCeiling(
   };
 
   if (resolvedValue) {
+    const requiresManagedCodexDepth =
+      options.preflight === true &&
+      provider === 'codex' &&
+      role === 'implementer' &&
+      resolvedValue.mode === 'managed';
+
+    if (requiresManagedCodexDepth) {
+      const scope: CodexDepthScope =
+        context.scope === 'user' ? 'user' : 'project';
+      const depth = await resolveEffectiveCodexMaxDepth(
+        scope,
+        repoRoot,
+        context,
+        dependencies,
+      );
+      const numericDepth =
+        typeof depth.value === 'number' && Number.isFinite(depth.value)
+          ? depth.value
+          : null;
+      if (numericDepth === null || numericDepth < 2) {
+        return {
+          status: 'blocked',
+          provider,
+          value: resolvedValue.value,
+          policyMode: resolvedValue.mode,
+          policy: resolvedValue.policy,
+          source: resolvedValue.source,
+          preset: resolvedValue.preset,
+          unresolved: true,
+          projectPath,
+          providerDefaultEffort,
+          matrix: resolvedValue.matrix,
+          providers,
+          message: managedCodexDepthBlockMessage(scope, depth),
+        };
+      }
+    }
+
     const incompleteManagedPreflight =
       options.preflight === true &&
       resolvedValue.mode === 'managed' &&
