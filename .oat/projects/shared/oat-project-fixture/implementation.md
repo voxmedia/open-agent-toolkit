@@ -91,7 +91,8 @@ oat_generated: false
 
 - Run: `node --test 'tools/smoke/fixture/**/*.test.mjs'`
 - Run: `pnpm lint && pnpm format`
-- Result: 7/7 fixture tests pass; lint and formatting pass.
+- Result: 10/10 fixture tests pass, including resolver-backed provider cases;
+  lint and formatting pass.
 
 **Notes / Decisions:**
 
@@ -193,7 +194,8 @@ oat_generated: false
 
 **Verification:**
 
-- `node --test 'tools/smoke/fixture/**/*.test.mjs'` — 7/7 passed.
+- `node --test 'tools/smoke/fixture/**/*.test.mjs'` — 10/10 passed after review
+  fixes.
 - `pnpm lint && pnpm format` — passed.
 
 **Dispatch:**
@@ -250,6 +252,16 @@ nondecreasing tier rule. Iteration 2 moves candidates into monotonic tier cells
 and adds resolver-backed coverage.
 
 **Review dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
+
+**Fix 2 — monotonic dispatch tiers:**
+
+- Commit: `f611c31deb4571dfaddd68de33fee7eda17fec46`
+- Lower candidates now occupy lower named tiers while each provider retains a
+  valid High ceiling target.
+- Resolver-backed tests prove exact lower selection under High for Codex,
+  Claude, and Cursor with `source=invocation`.
+- Full fixture suite passes 10/10.
+- Dispatch: `Dispatch: scope=p01-t01 action=fix role=fix producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
 
 ---
 

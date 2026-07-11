@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 939aae6d3b8ea935c774bd97313d952c1f817608
+oat_last_commit: f611c31deb4571dfaddd68de33fee7eda17fec46
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T19:49:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T19:55:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 fix iteration 2
+Implementation — Phase 1 iteration 2 complete; awaiting re-review
 
 ## Artifacts
 
@@ -78,7 +78,8 @@ Implementation — Phase 1 fix iteration 2
 - ✓ p01-t03 complete after one integration-verification fix
 - ⧗ Concurrent Codex/Claude dispatch-contract verification package ready
 - ✓ Phase 1 self-review fixes complete (iteration 1)
-- ⧗ Phase 1 re-review found one remaining dispatch-matrix blocker
+- ✓ Phase 1 dispatch-matrix blocker fixed with resolver-backed coverage
+- ⧗ Final p01 self-review next
 
 ## Blockers
 
@@ -86,4 +87,4 @@ None
 
 ## Next Milestone
 
-Fix monotonic fixture dispatch tiers and pass re-review
+Pass final p01 self-review and external phase gate
