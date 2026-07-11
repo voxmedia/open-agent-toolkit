@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-10
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p01', 'p02']]
 oat_phase_review_gate:
   enabled: true
@@ -16,7 +16,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: codex-subagent-max-depth
@@ -45,7 +45,7 @@ pnpm, Turborepo
 - [x] Confirmed the `p01` + `p02` parallel group with the user
 - [x] Resolved project dispatch policy as managed `High`
 - [x] Configured independent review for all implementation phases
-- [ ] Re-run canonical plan artifact review after fixes
+- [x] Re-ran canonical plan artifact review after fixes
 
 ---
 
@@ -478,15 +478,15 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                           |
-| ------ | -------- | --------------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                  |
-| p02    | code     | pending         | -          | -                                                  |
-| p03    | code     | pending         | -          | -                                                  |
-| final  | code     | pending         | -          | -                                                  |
-| spec   | artifact | pending         | -          | -                                                  |
-| design | artifact | pending         | -          | -                                                  |
-| plan   | artifact | fixes_completed | 2026-07-10 | reviews/artifact-plan-review-2026-07-11T023909Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-11 | reviews/archived/artifact-plan-review-2026-07-11T032911Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
