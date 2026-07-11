@@ -566,4 +566,51 @@ describe('dispatch report rendering', () => {
       target: 'oat-phase-implementer-gpt-5-6-sol-high',
     });
   });
+
+  it('keeps configured gate invocation separate when reviewer runtime identity is not independently observed', () => {
+    const report = buildDispatchReport(
+      input({
+        action: 'review',
+        role: 'reviewer',
+        resolution: resolution({
+          providers: {
+            codex: {
+              dispatchArgs: null,
+              selection: {
+                ...resolution().providers['codex']!.selection,
+                role: 'reviewer',
+                selectionMode: 'gate-invocation',
+                selectionBranch: 'gate-configured-invocation',
+                target: null,
+              },
+            },
+          },
+        }),
+        gateInvocation: {
+          runId: 'gate-run-independent',
+          targetId: 'cursor-reviewer',
+          runtime: 'cursor',
+          model: 'composer-2.5',
+          reasoningEffort: 'provider-default',
+          source: 'exec-target-config',
+        },
+      }),
+    );
+
+    expect(report.gateInvocation).toEqual({
+      runId: 'gate-run-independent',
+      targetId: 'cursor-reviewer',
+      runtime: 'cursor',
+      model: 'composer-2.5',
+      reasoningEffort: 'provider-default',
+      source: 'exec-target-config',
+    });
+    expect(report.runtimeIdentity).toEqual({
+      producer: null,
+      model: null,
+      effort: null,
+      provenance: 'unknown',
+      confidence: 'not-reported',
+    });
+  });
 });
