@@ -1,11 +1,12 @@
-# Orchestration Execution Log — oat-project-fixture (planning session)
+# Orchestration Execution Log — oat-project-fixture
 
 Chronological record of every orchestration event in the 2026-07-11
 quick-start session (brainstorm → discovery → design → plan → gate), with
 outcomes and evidence-based classifications in the style of
-`codex-subagent-max-depth`'s `subagent-orchestration-learnings.md`. Root
-agent: Cursor IDE harness (Fable 5). Intended to feed the end-of-project
-review and the p06 docs deliverable.
+`codex-subagent-max-depth`'s `subagent-orchestration-learnings.md`. Initial
+root: Cursor IDE harness (Fable 5); implementation resumed after a user model
+switch under GPT-5.6 Sol. Intended to feed the end-of-project review and the
+p06 docs deliverable.
 
 ## Dispatch Log
 
@@ -108,6 +109,67 @@ model_reasoning_effort=max`); gate run `262c4812`.
   `onFailure: block`. User decision: apply all fixes, skip further gate
   runs; docs-workflow nuance recorded (default flow, not hard prohibition).
   All recorded in the plan review row and `implementation.md`.
+
+### 7. Implementation preflight and native-catalog drift
+
+- **Trigger:** implementation resumed after the user changed the root session
+  model from Fable 5 to GPT-5.6 Sol.
+- **Earlier root catalog snapshot (Fable 5):**
+  `gpt-5.6-terra-medium`, `gpt-5.6-sol-high-fast`,
+  `composer-2.5-fast`, `composer-2.5`, `gpt-5.3-codex`,
+  `gpt-5.5-extra-high`, `grok-4.5-fast-xhigh`,
+  `claude-4.6-sonnet-medium-thinking`,
+  `claude-sonnet-5-thinking-high`, `claude-fable-5-thinking-high`,
+  `claude-opus-4-8-thinking-high`.
+- **Current root catalog snapshot (GPT-5.6 Sol):**
+  `gpt-5.6-terra-medium`, `gpt-5.6-sol-xhigh`,
+  `composer-2.5-fast`, `composer-2.5`, `gpt-5.3-codex`,
+  `gpt-5.5-extra-high`, `grok-4.5-fast-xhigh`,
+  `claude-4.6-sonnet-medium-thinking`,
+  `claude-sonnet-5-thinking-high`, `claude-fable-5-thinking-high`,
+  `claude-opus-4-8-thinking-high`.
+- **Observed root delta:** `gpt-5.6-sol-high-fast` disappeared and
+  `gpt-5.6-sol-xhigh` appeared. The account/CLI catalog still exposes both.
+  The model switch and tool-schema change are temporally correlated, but
+  causation is not yet proven; proving it requires switching the root model
+  again and comparing the newly injected Task schema.
+- **Correction to preflight wording:** “not exposed by this session” was too
+  broad. The exact high-fast slug was exposed and accepted earlier in this
+  same conversation. It is absent only from the current root invocation's
+  native Task schema.
+- **Nested coordinator observation:** a native, inherited phase coordinator
+  launched successfully, but its nested Task schema exposed only
+  `composer-2.5-fast`. Therefore it could not natively launch the configured
+  `gpt-5.6-terra-medium` task worker.
+- **Controlled probes (fresh, read-only):**
+
+  | Child role              | Child model            | Nested tool | Nested explicit model catalog |
+  | ----------------------- | ---------------------- | ----------- | ----------------------------- |
+  | `generalPurpose`        | `gpt-5.6-terra-medium` | available   | `composer-2.5-fast` only      |
+  | `oat-phase-implementer` | `gpt-5.6-terra-medium` | available   | `composer-2.5-fast` only      |
+  | `oat-phase-implementer` | `gpt-5.6-sol-xhigh`    | available   | `composer-2.5-fast` only      |
+
+- **Classification — confirmed:** within the tested matrix, the nested catalog
+  is independent of child role and chosen child model. The strongest supported
+  explanation is a child/nesting tool-policy restriction, not account
+  availability or the selected coordinator model. A broader host/runtime test
+  would be required to prove the restriction is universally depth-based.
+- **Project impact:** the configured ladder was satisfiable through Cursor
+  CLI (`cursor-agent --list-models` includes both Terra medium and Sol
+  high-fast) but not through the coordinator's nested native tool. This is a
+  live reproduction of the catalog-mismatch case p04/p05 are meant to specify
+  and smoke-test.
+- **p01 execution evidence:**
+  - `p01-t01`: native nested launch rejected before start; coordinator made a
+    deliberate pre-start CLI selection (`selection_reason=pre-start-rejection`,
+    candidates considered: Terra medium and Composer fast), launched
+    `cursor-agent --model gpt-5.6-terra-medium`, and committed
+    `35bfc3b6bc890b5301ea2148b724493b529d2ac7`. Focused test, lint, and format
+    passed.
+  - `p01-t02`: the same exact CLI target was accepted and ran for about
+    710 seconds before user interruption. No fallback is eligible after that
+    accepted launch. Four untracked preset files remain as possible partial
+    output; no worker process remains.
 
 ## Cross-Cutting Incidents
 

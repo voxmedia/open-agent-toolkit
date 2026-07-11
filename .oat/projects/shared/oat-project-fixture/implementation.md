@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -54,14 +54,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 0/3       |
+| Phase 1 | in_progress | 3     | 1/3       |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 0/22 tasks completed
+**Total:** 1/22 tasks completed
 
 ---
 
@@ -91,40 +91,60 @@ oat_generated: false
 
 ### Task p01-t01: Scaffold the fixture project template
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 35bfc3b6bc890b5301ea2148b724493b529d2ac7
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Added a deterministic quick-mode fixture with three phases, three tasks per
+  phase, disjoint log targets, and stable task IDs.
+- Defined the runner/evidence interface in `tools/smoke/CONTRACT.md`.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `tools/smoke/fixture/project/` - complete project artifact fixture.
+- `tools/smoke/fixture/workspace/logs/` - phase-local deterministic work
+  targets.
+- `tools/smoke/fixture/fixture-integrity.test.mjs` - fixture structure and
+  task-boundary contract.
+- `tools/smoke/CONTRACT.md` - provisioning and evidence exchange contract.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `node --test tools/smoke/fixture/fixture-integrity.test.mjs`
+- Run: `pnpm lint`
+- Run: `pnpm format`
+- Result: all passed.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Native nested dispatch rejected the configured Terra candidate before
+  launch. The coordinator deliberately selected the exact Cursor CLI target
+  before task execution.
+- `selection_reason=pre-start-rejection`;
+  `candidates_considered=[gpt-5.6-terra-medium,composer-2.5-fast]`.
+- Dispatch stamp: `Dispatch: scope=p01-t01 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high-fast target=cursor-cli:gpt-5.6-terra-medium`.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- The coordinator's nested native catalog exposed only
+  `composer-2.5-fast`, which is not an eligible configured candidate. The
+  project-sanctioned pre-start CLI route resolved the mismatch.
 
 ---
 
 ### Task p01-t02: Fixture state presets
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Exact Cursor CLI task launch with `gpt-5.6-terra-medium` was accepted and
+  ran for approximately 710 seconds before user interruption.
+- Accepted launch is terminal under the no-fallback contract. Four untracked
+  preset files remain as possible partial output; no worker process remains.
+- Dispatch stamp: `Dispatch: scope=p01-t02 action=implementation role=implementer producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high-fast target=cursor-cli:gpt-5.6-terra-medium`.
 
 ---
 
@@ -315,28 +335,38 @@ Chronological log of implementation progress.
 
 ### 2026-07-11
 
-**Session Start:** {time}
+**Session Start:** 13:11 CDT
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Scaffold the fixture project template -
+      `35bfc3b6bc890b5301ea2148b724493b529d2ac7`
+- [ ] p01-t02: Fixture state presets - interrupted after accepted child launch
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Shipped the deterministic fixture project and runner/evidence contract.
+- Reproduced native-catalog drift at both root and nested dispatch boundaries.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Used a recorded pre-start Cursor CLI selection for p01-t01 after the native
+  nested catalog rejected the exact configured candidate.
+- Preserved p01-t02 partial output after user interruption; no replacement
+  worker or fallback was launched.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Decide how to resume p01-t02 without violating the accepted-launch terminal
+  outcome.
+- Decide whether this project should continue under the current root/nested
+  catalog topology or restart under a runtime exposing the expected native
+  catalog.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- Implementation intentionally paused for user discussion; no technical
+  process remains active.
 
-**Session End:** {time}
+**Session End:** 13:29 CDT
 
 ---
 
