@@ -15,7 +15,7 @@ oat_post_implement_sequence:
   status: pre_approval
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   post_approval: []
   post_approval_completed: []
@@ -36,7 +36,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T00:58:56.209Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T11:37:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T11:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -48,7 +48,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final review passed; running configured pre-approval sequence
+Implementation - Pre-approval summary complete; documentation step in progress
 
 ## Artifacts
 
@@ -98,6 +98,7 @@ Implementation - Final review passed; running configured pre-approval sequence
 - ✓ Phase 3: documentation, release, and backlog archive complete
 - ✓ Full workspace and release validation passed
 - ✓ Final code review passed with no findings
+- ✓ Pre-approval summary generated and key decisions promoted
 
 ## Blockers
 
@@ -105,4 +106,4 @@ None
 
 ## Next Milestone
 
-Run configured pre-approval steps; final HiLL approval remains pending.
+Verify documentation coverage, then create the configured pre-approval PR.
