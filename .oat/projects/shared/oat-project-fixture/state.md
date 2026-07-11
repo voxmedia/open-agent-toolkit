@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T22:32:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T22:39:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 fixes complete; awaiting re-review
+Implementation — Phase 2 fix iteration 2
 
 ## Artifacts
 
@@ -96,7 +96,8 @@ Implementation — Phase 2 fixes complete; awaiting re-review
 - ✓ Main merged without conflicts; verification provenance preserved
 - ✓ p02-t05 isolates approval-aware closeout side effects
 - ✓ Phase 2 self-review iteration 1 fixes complete
-- ⧗ Phase 2 self-review iteration 2 next
+- ⧗ Phase 2 re-review failed 1C/5I/0M; final configured fix iteration in
+  progress
 
 ## Blockers
 
@@ -104,4 +105,4 @@ None
 
 ## Next Milestone
 
-Pass Phase 2 self-review iteration 2 and external phase gate
+Complete Phase 2 fix iteration 2 and final self-review

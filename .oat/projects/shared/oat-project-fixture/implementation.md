@@ -531,7 +531,18 @@ corrected in this bookkeeping update.
   sync, and provider sync; dependency setup is offline/frozen.
 - Independent verification: 49/49 tests, direct lint/format, shell syntax, and
   orphan inspection passed.
-- Awaiting self-review iteration 2.
+- Self-review iteration 2 failed — 1 Critical / 5 Important / 0 Medium.
+- C1: cleanup binds ownership to the baseline tip, so legitimate lifecycle
+  commits block cleanup; nested worktrees/branches need an atomic ownership
+  journal.
+- I1/I2: a signal already observed during preflight does not block prepare;
+  fixture preflight still omits preset/inverse/dispatch contracts.
+- I3/I4: the canonical bootstrap skill runs local/provider sync outside the
+  hardened script; disposable worktree creation/baseline commit can execute
+  shared repository hooks.
+- I5: the local build probe stopped comparing PATH `oat` with the validated
+  repository binary.
+- Fix iteration 2 is the final configured retry and covers these six findings.
 
 ---
 
