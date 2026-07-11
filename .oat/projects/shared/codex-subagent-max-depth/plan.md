@@ -293,7 +293,7 @@ git commit -m "feat(p01-t04): guard codex nested dispatch depth"
 Include every required direct-materialization operand in doctor and preflight
 remediation text, with matching project/user assertions.
 
-**Commit:** `46a90a86f55c2a16c1ca47a9ed0e897973b980b0`
+**Commit:** `8cc8923125622bc043a30ddc2e0fa662c3049e7f`
 
 ---
 
@@ -307,7 +307,7 @@ remediation text, with matching project/user assertions.
 Return from zero-role partial sync before reading unrelated inherited user
 Codex TOML, and cover malformed inherited configuration.
 
-**Commit:** `2803cc4c10b07b996c0b865e543baaf67f37ca40`
+**Commit:** `f175f592799560c15d64688ad509cb2458e941fb`
 
 ---
 
@@ -422,7 +422,7 @@ Update the canonical phase coordinator and contract tests so exact native
 `agent_type` is attempted first, launcher-owned provenance is immutable, and
 only explicit pre-start role-selection rejection permits fallback.
 
-**Commit:** `ae0724e6f52ca8a4e918c92b512c6c36cdb934eb`
+**Commit:** `7eb3b1bbb84e02c04a2a5620644592540a7d9ea1`
 
 ---
 
@@ -431,7 +431,7 @@ only explicit pre-start role-selection rejection permits fallback.
 Make accepted reviewer `BLOCKED` explicitly block phase/final review, never
 trigger fallback, and never pass through absent findings.
 
-**Commit:** `0de4f40dc71ebc16c718669580fa8be5bbb04967`
+**Commit:** `6b1f1f46b958cdb556af775eadfb22a249f714d3`
 
 ---
 
@@ -440,7 +440,7 @@ trigger fallback, and never pass through absent findings.
 Apply native-first, rejection-only fallback and launcher-owned provenance to
 `oat-project-review-provide`; bump its canonical skill version once.
 
-**Commit:** `13474feb8404b9a91ceda7515b7b334072cc3e7b`
+**Commit:** `82bd024e20dd89383c7272b674070e33124cab86`
 
 ---
 
@@ -449,7 +449,7 @@ Apply native-first, rejection-only fallback and launcher-owned provenance to
 Document that accepted reviewer `BLOCKED` blocks review, cannot pass from absent
 findings, and remains subject to managed exact-target fallback guards.
 
-**Commit:** `8d5c9f1c93a2dd8c79e9c614adc1aefca62e877f`
+**Commit:** `517d1721b3950a34aefa0b77ae71afb5b4b30a43`
 
 ---
 
@@ -458,7 +458,7 @@ findings, and remains subject to managed exact-target fallback guards.
 Require accepted native reviewer timeouts to retry the same native route; the
 pinned child remains eligible only after explicit pre-start rejection.
 
-**Commit:** `adbada5264c2ede9898416f36c59d9847cc15059`
+**Commit:** `f67354fa2db20cd1e95689aa3b29d558020ec86d`
 
 ---
 
@@ -511,10 +511,18 @@ git commit -m "docs(p03-t01): document codex nested role configuration"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Generated: `.oat/sync/manifest.json`
 
 **Step 1: Bump lockstep versions**
 
-Advance all five public packages together from `0.1.48` to `0.1.49`.
+After rebasing onto PR #136, advance all five public packages together from
+`0.1.50` to `0.1.51`. Because merged main already carries implementation skill
+`2.0.34` and review-provide `1.3.13`, advance this branch's changed canonical
+skills to `2.0.35` and `1.3.14`, respectively, then regenerate managed views.
 
 **Step 2: Run focused and workspace verification**
 
@@ -531,6 +539,7 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run \
 pnpm lint
 pnpm format
 pnpm type-check
+pnpm test
 pnpm build
 pnpm build:docs
 pnpm release:validate
@@ -560,7 +569,7 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
 | p01    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
 | p02    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
-| p03    | code     | pending | -          | -                                                           |
+| p03    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
 | final  | code     | pending | -          | -                                                           |
 | spec   | artifact | pending | -          | -                                                           |
 | design | artifact | pending | -          | -                                                           |

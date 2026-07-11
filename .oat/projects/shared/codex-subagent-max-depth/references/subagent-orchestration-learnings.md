@@ -150,6 +150,29 @@ The incident also showed that process timeout and artifact completion are
 distinct signals: orchestration should inspect the correlated artifact before
 concluding that all review work was lost.
 
+#### Rebase conflicts require semantic, not textual, resolution
+
+PR #136 introduced Dispatch Report V1 while this branch was in progress. The
+overlap changed the meaning of provenance: selected target/model/effort belong
+to configured invocation, while runtime producer identity remains independently
+observed.
+
+The rebase preserved both contracts by retaining Dispatch Report V1's identity
+separation and this project's native-first, explicit-rejection-only fallback
+rules. Choosing either conflict side wholesale would have regressed one of
+those guarantees.
+
+#### Missing build outputs can survive as stale incremental state
+
+Release validation cleanup removed package `dist/` directories while
+`tsconfig.tsbuildinfo` still marked them current. Subsequent Turbo builds
+reported successful cache hits or no-op TypeScript builds, then downstream
+packages failed to resolve workspace dependencies.
+
+Forcing non-incremental TypeScript emits for the internal dependency chain
+restored the outputs. Full tests, docs build, and release validation then
+passed. This was build-state corruption, not a source-code regression.
+
 ### Potential Resolutions
 
 #### Root-owned dispatch broker
@@ -401,6 +424,11 @@ as a cleanliness shortcut.
     skill once per PR, regenerate managed views through normal tooling, bump the
     lockstep public packages for shipped assets, and run
     `pnpm release:validate`.
+17. Rebase before the final release bump, then derive package and canonical
+    skill versions from merged main rather than the branch's original baseline.
+18. When `dist/` is absent but TypeScript incremental metadata remains, force a
+    non-incremental dependency-chain emit before classifying downstream module
+    resolution failures as code defects.
 
 ## Evidence Sources
 

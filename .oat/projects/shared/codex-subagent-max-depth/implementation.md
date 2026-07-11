@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 6     | 6/6       |
 | Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | pending  | 2     | 0/2       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 13/15 tasks completed
+**Total:** 15/15 tasks completed
 
 ---
 
@@ -42,42 +42,42 @@ oat_generated: false
 ### Task p01-t01: Enforce the shared max-depth floor
 
 **Status:** complete
-**Commit:** `9f254c5526b88b8c0e9122d309db27bba5250f65`
+**Commit:** `65ed555113f6990ab0a9480b6a3f03016ee0692b`
 
 ---
 
 ### Task p01-t02: Preserve inherited depth during Codex sync
 
 **Status:** complete
-**Commit:** `8d4afed1c0fce658024950174d76a1eb8012f7f5`
+**Commit:** `9e5c872f21c12892c80dedace67bdd3bf94f7908`
 
 ---
 
 ### Task p01-t03: Apply scope-safe depth in direct materialization
 
 **Status:** complete
-**Commit:** `d092afb062dcb7fb12fe2bf0cdfc90d35d29b316`
+**Commit:** `418b2905a8c41aadae525503be4fe22c5edc2388`
 
 ---
 
 ### Task p01-t04: Diagnose insufficient depth in doctor and preflight
 
 **Status:** complete
-**Commit:** `92afa50e094dd898b7e19af0f4600a62211dab55`
+**Commit:** `85f3adabc1a45c4e33535aa04442bfeeed616aaa`
 
 ---
 
 ### Task p01-t05: (review) Make remediation commands executable
 
 **Status:** complete
-**Commit:** `46a90a86f55c2a16c1ca47a9ed0e897973b980b0`
+**Commit:** `8cc8923125622bc043a30ddc2e0fa662c3049e7f`
 
 ---
 
 ### Task p01-t06: (review) Preserve zero-role partial sync no-op
 
 **Status:** complete
-**Commit:** `2803cc4c10b07b996c0b865e543baaf67f37ca40`
+**Commit:** `f175f592799560c15d64688ad509cb2458e941fb`
 
 ---
 
@@ -89,68 +89,68 @@ oat_generated: false
 ### Task p02-t01: Make exact native dispatch the primary route
 
 **Status:** complete
-**Commit:** `0caa61f93d069b6abdc52f99ac9f01e0c4a15d30`
+**Commit:** `d4051bedbcb889ff736a4e95682f371fa0422932`
 
 ---
 
 ### Task p02-t02: Document configured reviewer and worker provenance
 
 **Status:** complete
-**Commit:** `8dfc57c6dc2d95b20c9dacac1f60000b92f4542d`
+**Commit:** `a37bdf448a28195fdf93bc21f7b1aa4755f89697`
 
 ---
 
 ### Task p02-t03: (review) Align phase coordinator dispatch contract
 
 **Status:** complete
-**Commit:** `ae0724e6f52ca8a4e918c92b512c6c36cdb934eb`
+**Commit:** `7eb3b1bbb84e02c04a2a5620644592540a7d9ea1`
 
 ---
 
 ### Task p02-t04: (review) Handle blocked reviewer terminals
 
 **Status:** complete
-**Commit:** `0de4f40dc71ebc16c718669580fa8be5bbb04967`
+**Commit:** `6b1f1f46b958cdb556af775eadfb22a249f714d3`
 
 ---
 
 ### Task p02-t05: (review) Align project review dispatch semantics
 
 **Status:** complete
-**Commit:** `13474feb8404b9a91ceda7515b7b334072cc3e7b`
+**Commit:** `82bd024e20dd89383c7272b674070e33124cab86`
 
 ---
 
 ### Task p02-t06: (review) Document blocked reviewer semantics
 
 **Status:** complete
-**Commit:** `8d5c9f1c93a2dd8c79e9c614adc1aefca62e877f`
+**Commit:** `517d1721b3950a34aefa0b77ae71afb5b4b30a43`
 
 ---
 
 ### Task p02-t07: (review) Preserve reviewer retry route
 
 **Status:** complete
-**Commit:** `adbada5264c2ede9898416f36c59d9847cc15059`
+**Commit:** `f67354fa2db20cd1e95689aa3b29d558020ec86d`
 
 ---
 
 ## Phase 3: Provider Surface and Release Validation
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-11
 
 ### Task p03-t01: Document and regenerate the Codex provider surface
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `0ef3132b56822100468fc7668530ef4ab40a75f0`
 
 ---
 
 ### Task p03-t02: Bump lockstep packages and validate the release
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `1580ee450f16aa70718309512f09c71da3ce1812`
 
 ---
 
@@ -247,6 +247,32 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Execute p03 provider regeneration, lockstep version bumps, and release
   validation after HiLL approval.
 
+### Run 3 — 2026-07-11 09:00
+
+**Branch:** codex-subagent-max-depth
+**Tier:** 1
+**Policy:** merge-strategy=merge, retry-limit=2
+**Phases:** 1 executed, 1 passed, 0 failed
+
+#### Phase Outcomes
+
+| Phase | Implementer | Review | Fix Iterations | Disposition |
+| ----- | ----------- | ------ | -------------- | ----------- |
+| p03   | complete    | passed | 0/2            | complete    |
+
+#### Dispatch Notes
+
+- p03-t01 used the root-owned exact Terra/Medium bootstrap route because it
+  materialized the depth setting required for native nesting.
+- p03-t02 used the accepted native Sol/High worker and preserved Dispatch Report
+  V1's separation between configured invocation and runtime producer identity.
+- The branch rebased onto merged PR #136 commit `2b9430c5`; semantic conflicts
+  retained the new dispatch-report model plus this project's native-first rules.
+
+#### Outstanding Items
+
+- Run final project review and reconcile lifecycle completion.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -279,48 +305,67 @@ Chronological log of implementation progress.
 - 2026-07-11: Added
   `references/subagent-orchestration-learnings.md` from session and artifact
   evidence.
+- 2026-07-11: Rebased onto PR #136, resolved Dispatch Report V1 conflicts, and
+  completed p03 at public package version `0.1.51`.
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason                                          | Source of Truth         | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ----------------------------------------------- | ----------------------- | --------- |
-| p01 review    | code review     | 4 planned tasks      | 2 review fixes    | executable remediation and zero-role no-op gaps | reviewed implementation | completed |
-| p02 review    | code review     | 2 planned tasks      | 5 review fixes    | distributed dispatch-contract drift             | reviewed implementation | completed |
+| Task / Review | Source Artifact | Planned / Documented   | Actual / Accepted                             | Reason                                          | Source of Truth                       | Follow-up |
+| ------------- | --------------- | ---------------------- | --------------------------------------------- | ----------------------------------------------- | ------------------------------------- | --------- |
+| p01 review    | code review     | 4 planned tasks        | 2 review fixes                                | executable remediation and zero-role no-op gaps | reviewed implementation               | completed |
+| p02 review    | code review     | 2 planned tasks        | 5 review fixes                                | distributed dispatch-contract drift             | reviewed implementation               | completed |
+| p03 rebase    | merged PR #136  | package version 0.1.49 | package version 0.1.51 and Dispatch Report V1 | upstream merged before final validation         | merged main + reviewed implementation | completed |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                       | Passed | Failed | Coverage                                    |
-| ----- | ----------------------------------------------- | ------ | ------ | ------------------------------------------- |
-| 1     | 211 phase tests plus 136 and 29 fix tests       | all    | 0      | merge, sync, materialize, doctor, preflight |
-| 2     | 72 skill contract tests; formatting; docs build | all    | 0      | dispatch contracts, skills, docs            |
-| 3     | -                                               | -      | -      | -                                           |
+| Phase | Tests Run                                                        | Passed | Failed | Coverage                                      |
+| ----- | ---------------------------------------------------------------- | ------ | ------ | --------------------------------------------- |
+| 1     | 211 phase tests plus 136 and 29 fix tests                        | all    | 0      | merge, sync, materialize, doctor, preflight   |
+| 2     | 72 skill contract tests; formatting; docs build                  | all    | 0      | dispatch contracts, skills, docs              |
+| 3     | 424 focused; 2,656 CLI; full workspace; docs; release validation | all    | 0      | rebase integration, generated views, packages |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Managed Codex role materialization enforces effective
+  `agents.max_depth >= 2` across sync and direct materialization.
+- Native exact-role dispatch is primary, with launcher-owned configured
+  invocation and explicit pre-start-rejection-only fallback.
+- Doctor and managed preflight diagnose insufficient depth with executable,
+  scope-correct remediation.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- OAT-managed Codex coordinators can natively spawn exact task workers at depth
+  2 without requiring model/effort self-report.
+- Higher project or inherited user depth remains preserved; unrelated Codex
+  configuration and custom roles remain intact.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/providers/codex/codec/config-merge.ts` - depth-aware shared
+  Codex config merge
+- `packages/cli/src/commands/doctor/index.ts` - managed-role depth diagnosis
+- `.agents/skills/oat-project-implement/SKILL.md` - native-first dispatch
+  contract integrated with Dispatch Report V1
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 424 focused tests and 2,656 CLI tests
+- Full workspace lint, format, type-check, test, and build
+- 55-page documentation production build
+- `pnpm release:validate` for all five public packages at `0.1.51`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- PR #136 introduced Dispatch Report V1 during implementation. Rebase conflict
+  resolution kept configured invocation separate from runtime producer identity
+  while preserving the approved native-first and fallback semantics.
 
 ## References
 
