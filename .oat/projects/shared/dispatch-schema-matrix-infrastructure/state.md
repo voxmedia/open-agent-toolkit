@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 760de162
+oat_current_task: p05-t01
+oat_last_commit: f2122197
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T02:37:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T03:14:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase p03 passed; ready to dispatch the p04 phase subagent
+Implementation - Phase p04 passed; p05 HiLL checkpoint awaiting approval
 
 ## Artifacts
 
@@ -93,6 +93,10 @@ Implementation - Phase p03 passed; ready to dispatch the p04 phase subagent
 - ✓ Phase p03 completed: reusable Dispatch Report V1 schema, deterministic formatters, derived compatibility stamps, resolver/gate adapters, and workflow integration
 - ✓ Phase p03 self-review passed after five bounded provenance and contract fixes (`760de162`)
 - ✓ Phase p03 verification passed: 436 focused tests, CLI type-check, lint, and format
+- ✓ Phase p04 completed: reproducible Cursor verification protocol, 13 live probes, evidence-driven recommendation disposition, and user documentation
+- ✓ Phase p04 self-review passed after verifier hardening (`f2122197`)
+- ✓ Phase p04 verification passed: 11 verifier tests, 128 targeted CLI tests, docs build/lint, and a clean 549-link local crawl
+- ⧗ Phase p05 HiLL checkpoint reached; final release/backlog phase requires approval before dispatch
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -101,4 +105,4 @@ Implementation - Phase p03 passed; ready to dispatch the p04 phase subagent
 
 ## Next Milestone
 
-Dispatch one exact p04 phase subagent at `p04-t01`; it implements the phase tasks sequentially without nested workers and returns for root verification, phase self-review, and bookkeeping.
+Obtain HiLL approval, then dispatch one exact p05 phase subagent at `p05-t01`; it implements the phase tasks sequentially without nested workers and returns for root verification, final phase self-review, implementation-end gate review, and bookkeeping.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | p01   | complete | 6     | 6/6       |
 | p02   | complete | 4     | 4/4       |
 | p03   | complete | 6     | 6/6       |
-| p04   | pending  | 4     | 0/4       |
+| p04   | complete | 4     | 4/4       |
 | p05   | pending  | 3     | 0/3       |
 
-**Total:** 16/23 tasks completed
+**Total:** 20/23 tasks completed
 
 ---
 
@@ -348,6 +348,92 @@ oat_generated: false
 
 ---
 
+## Phase p04: Cursor Evidence and User Documentation
+
+**Status:** complete
+**Started:** 2026-07-11
+**Completed:** 2026-07-11
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added a deterministic machine checker and evidence protocol derived from recommendation version `2026-07-10.2`.
+- Ran one canonical Cursor Task/subagent probe for every distinct recommended GPT-5.6 candidate and persisted sanitized command, prompt, output, exit, duration, environment, outcome, and recheck evidence.
+- Recorded all 13 candidates as `unvalidated`: eight exited without decisive evidence and five timed out; the four configured candidates are explicitly identified.
+- Retained the recommendation unchanged because no probe produced sentinel or explicit allow-list evidence supporting a change.
+- Documented Dispatch Report V1 semantics, one-pass Cursor validation lifetime, evidence limitations, and recheck behavior across user-facing docs.
+
+**Key files touched:**
+
+- `.oat/projects/shared/dispatch-schema-matrix-infrastructure/references/cursor-gpt-5-6-subagent-verification.md` - complete live evidence and machine disposition.
+- `tools/verification/verify-cursor-subagent-evidence.mjs` - deterministic inventory, protocol, redaction, outcome, subset, and disposition checker.
+- `tools/verification/verify-cursor-subagent-evidence.test.mjs` - positive and adversarial checker coverage.
+- `apps/oat-docs/docs/**` - dispatch report, gate provenance, Cursor cache, and live-evidence documentation.
+
+**Verification:**
+
+- Run: verifier test suite and final evidence checker.
+- Result: Pass - 11/11 tests and 13/13 complete records.
+- Run: recommendation adoption and bundle consistency tests.
+- Result: Pass - 128/128 tests.
+- Run: docs build, docs formatting/Markdown lint, and local static-export link crawl.
+- Result: Pass - 52 pages, 549 links, 0 broken.
+
+**Notes / Decisions:**
+
+- Broad catalog presence was not used as eligibility evidence.
+- Model-unavailable prose without the implemented explicit subagent allow-list grammar remains `unvalidated`, matching production semantics.
+- The recommendation and generated mirror remain byte-for-byte unchanged.
+- The default remote link crawl still sees pre-deployment GitHub Pages HTML; rerun it after deployment. The current branch-local export is clean.
+- One exact pinned phase subagent implemented all four tasks and the bounded review/fix loop directly; no nested task workers were launched.
+
+### Task p04-t01: Create the live-verification inventory and protocol
+
+**Status:** complete
+**Commit:** 578fa21c
+
+**Outcome:**
+
+- Added the 13-candidate pending protocol artifact and deterministic evidence checker/tests.
+
+---
+
+### Task p04-t02: Run and record all live Cursor Task probes
+
+**Status:** complete
+**Commit:** e7f1ee86
+
+**Outcome:**
+
+- Recorded one sanitized direct probe for each exact candidate; all 13 remained non-definitive and received a 2026-07-18 recheck date.
+
+---
+
+### Task p04-t03: Reconcile the recommendation with live evidence
+
+**Status:** complete
+**Commit:** 44b513ce
+
+**Outcome:**
+
+- Retained recommendation version `2026-07-10.2` and every opaque candidate because no live result justified a change.
+
+---
+
+### Task p04-t04: Document report semantics and Cursor verification
+
+**Status:** complete
+**Commit:** d5ba8eaa
+
+**Outcome:**
+
+- Updated workflow, gate, configuration, and provider docs with the shipped report/cache/evidence semantics and repaired an existing referenced docs anchor.
+
+**Review fix:** `f2122197` makes the evidence checker independently enforce canonical protocol, derived outcomes, recursive redaction, the authoritative configured subset, and complete machine recommendation disposition.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -445,11 +531,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage                                                      |
-| ----- | --------- | ------ | ------ | ------------------------------------------------------------- |
-| 1     | 349       | 349    | 0      | Six focused suites; type-check, lint, and format also passed  |
-| 2     | 165       | 165    | 0      | Four focused suites; type-check, lint, and format also passed |
-| 3     | 436       | 436    | 0      | Nine focused suites; type-check, lint, and format also passed |
+| Phase | Tests Run | Passed | Failed | Coverage                                                        |
+| ----- | --------- | ------ | ------ | --------------------------------------------------------------- |
+| 1     | 349       | 349    | 0      | Six focused suites; type-check, lint, and format also passed    |
+| 2     | 165       | 165    | 0      | Four focused suites; type-check, lint, and format also passed   |
+| 3     | 436       | 436    | 0      | Nine focused suites; type-check, lint, and format also passed   |
+| 4     | 139       | 139    | 0      | 11 verifier and 128 targeted CLI tests; docs checks also passed |
 
 ## Final Summary (for PR/docs)
 
