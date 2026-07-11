@@ -555,13 +555,16 @@ fallbacks.
 A concrete managed Codex target takes precedence over tier availability.
 Build the actual provider invocation before reporting the target as enforced:
 
-- Codex uses the exact registered reviewer role or variant from
-  `providers.codex.dispatchArgs.variant` when selectable. If the current host
-  cannot select it, launch a fresh Codex child with the resolver target's
-  explicit model, reasoning effort, canonical role instructions from
-  `.agents/agents/oat-reviewer.md`, and the same Review Scope payload.
-  If that fresh child is unavailable, use only a verified-equivalent inline
-  route or block the review.
+- Codex must send the resolver-returned Codex variant first as the native
+  `agent_type`. Spawn acceptance plus the complete launcher payload is
+  configured invocation evidence; it does not require reviewer self-report or
+  separate runtime telemetry. A native role-selection rejection means an
+  explicit host rejection of that exact `agent_type` before any reviewer or
+  child starts. Only after that pre-start rejection may the workflow launch a
+  fresh Codex child with the resolver target's explicit model, reasoning
+  effort, canonical role instructions from `.agents/agents/oat-reviewer.md`,
+  and the same Review Scope payload. If neither exact route is available, use
+  only a verified-equivalent inline route or block the review.
 - Claude requires a non-empty `providers.claude.dispatchArgs.model`; the actual
   provider invocation must include that exact value as its `model` argument.
 - Cursor requires a non-empty `providers.cursor.dispatchArgs.model`; the actual
@@ -572,6 +575,18 @@ Managed incomplete resolver results, including a missing or incomplete
 candidate ladder, fail closed before review. Route interactive repair through
 the planning workflow's `Complete Dispatch Ladder Adoption Contract`; do not
 invent a reviewer target.
+
+After constructing the complete provider payload, record the launcher-owned
+`target`, `model_axis`, and `effort_axis` with
+`launcher-selected/config-declared` provenance. These fields are immutable:
+missing telemetry, missing reviewer self-report, or contradictory self-report
+must not populate, replace, or overwrite them and must not trigger fallback.
+
+Once the native host accepts a reviewer, every terminal result is an
+authoritative review outcome. An accepted reviewer returning `BLOCKED` is a
+terminal blocking review outcome: it blocks the review and does not invoke or
+trigger the fresh-child fallback. Absent findings from that terminal must not
+be parsed, interpreted, or treated as a passing review.
 
 On timeout or retry, reuse the same exact role or complete invocation payload,
 including the Claude or Cursor model argument. If the host cannot apply a
@@ -623,7 +638,7 @@ Then spawn the reviewer:
 - Use provider-appropriate dispatch:
   - Claude Code: Task tool with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`). For a concrete managed target, the payload must also contain `model: providers.claude.dispatchArgs.model` with the resolver-returned value.
   - Cursor: explicit invocation `/oat-reviewer` (or natural mention) with agent resolved from `.cursor/agents/oat-reviewer.md` or `.claude/agents/oat-reviewer.md` compatibility path. For a concrete managed target, the invocation must also contain `model: providers.cursor.dispatchArgs.model` with the exact opaque resolver-returned string.
-  - Codex style: for a concrete managed target, spawn the exact resolver-returned `agent_type`; if it cannot be selected, use the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
+  - Codex style: for a concrete managed target, first spawn the exact resolver-returned native `agent_type`; only an explicit pre-start native role-selection rejection permits the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
 - Pass the Review Scope metadata block from Step 5 as the prompt
 - Include the pre-computed artifact path for the subagent to write to
 - **If a worktree was resolved in Step 1.5:** include the worktree path in the prompt so the subagent writes the artifact to the worktree directory, not the current session's working directory
@@ -633,6 +648,9 @@ The `oat-reviewer` agent definition contains the full review process, mode contr
 
 After the subagent completes:
 
+- Treat its terminal status as authoritative. An accepted `BLOCKED` result
+  blocks the review; do not invoke fallback and do not infer a pass from a
+  missing review artifact or absent findings.
 - Verify the review artifact was written to the expected path
 - Continue with Step 9 (plan update) and Step 9.5 (commit)
 

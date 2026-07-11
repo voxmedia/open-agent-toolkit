@@ -1033,6 +1033,33 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/launcher-selected\/config-declared/i);
   });
 
+  it('keeps project review dispatch native-first and launcher-owned', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.13');
+    expect(content).toMatch(
+      /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
+    );
+    expect(content).toMatch(
+      /native role-selection rejection[\s\S]{0,520}explicit[\s\S]{0,220}`agent_type`[\s\S]{0,220}before[\s\S]{0,120}(?:child|reviewer)[\s\S]{0,100}start/i,
+    );
+    expect(content).toMatch(
+      /launcher-owned\s+`target`, `model_axis`, and `effort_axis`[\s\S]{0,320}(?:immutable|must not)[\s\S]{0,240}self-report/i,
+    );
+    expect(content).toMatch(/launcher-selected\/config-declared/i);
+    expect(content).toMatch(
+      /accepted reviewer[\s\S]{0,140}`BLOCKED`[\s\S]{0,220}(?:blocks|blocking)[\s\S]{0,140}review/i,
+    );
+    expect(content).toMatch(
+      /`BLOCKED`[\s\S]{0,260}(?:does not|cannot|must not)[\s\S]{0,120}(?:invoke|trigger)[\s\S]{0,100}fallback/i,
+    );
+    expect(content).toMatch(
+      /(?:absent|no) findings[\s\S]{0,220}(?:cannot|must not)[\s\S]{0,180}(?:parse|interpret|treat)[\s\S]{0,120}pass|(?:cannot|must not)[\s\S]{0,180}(?:parse|interpret|treat)[\s\S]{0,120}pass[\s\S]{0,220}(?:absent|no) findings/i,
+    );
+  });
+
   it('blocks accepted reviewer BLOCKED terminals without invoking fallback', async () => {
     const coordinator = await readRepoFile(
       '.agents/agents/oat-phase-implementer.md',
