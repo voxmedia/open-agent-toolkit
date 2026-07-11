@@ -10,6 +10,15 @@ import {
 } from 'node:path';
 import { promisify } from 'node:util';
 
+import {
+  gitCommonDirectory,
+  isCommitAncestor,
+  parseWorktrees,
+  readSmokeMarkerAtCommit,
+  requireCommitSha as requireJournalCommitSha,
+  validateSmokeMarkerBinding,
+} from './journal.mjs';
+
 const execFileAsync = promisify(execFile);
 
 export class CleanupRefusalError extends Error {
@@ -56,11 +65,11 @@ function requireBranch(value) {
 }
 
 function requireCommitSha(value, field) {
-  if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) {
-    throw new CleanupRefusalError(`${field} must be a full commit SHA.`);
+  try {
+    return requireJournalCommitSha(value, field);
+  } catch (error) {
+    throw new CleanupRefusalError(error.message);
   }
-
-  return value;
 }
 
 function validateBranchOwnership(manifest, branch) {
@@ -93,9 +102,9 @@ function validateBranchOwnership(manifest, branch) {
     ownership.baseCommitSha,
     'branchOwnership.baseCommitSha',
   );
-  const expectedTipCommitSha = requireCommitSha(
-    ownership.expectedTipCommitSha,
-    'branchOwnership.expectedTipCommitSha',
+  const baselineCommitSha = requireCommitSha(
+    ownership.baselineCommitSha,
+    'branchOwnership.baselineCommitSha',
   );
   if (baseCommitSha !== sourceCommitSha) {
     throw new CleanupRefusalError(
@@ -103,20 +112,111 @@ function validateBranchOwnership(manifest, branch) {
     );
   }
 
-  const recordedTip = manifest.baselineCommitSha ?? sourceCommitSha;
   if (
-    requireCommitSha(recordedTip, 'recorded branch tip') !==
-    expectedTipCommitSha
+    requireCommitSha(manifest.baselineCommitSha, 'baselineCommitSha') !==
+    baselineCommitSha
   ) {
     throw new CleanupRefusalError(
-      'branch ownership tip does not match the recorded provisioning tip.',
+      'branch ownership baseline does not match the recorded smoke baseline.',
+    );
+  }
+  if (
+    ownership.runIdentity !== manifest.runIdentity ||
+    manifest.runIdentity !== branch
+  ) {
+    throw new CleanupRefusalError(
+      'branch ownership run identity does not match the manifest.',
     );
   }
 
   return {
     baseCommitSha,
-    expectedTipCommitSha,
+    baselineCommitSha,
   };
+}
+
+function requireJournalBranch(value, field) {
+  const hasUnsafeControlCharacter =
+    typeof value === 'string' &&
+    [...value].some((character) => {
+      const codePoint = character.codePointAt(0);
+      return codePoint <= 0x20 || codePoint === 0x7f;
+    });
+
+  if (
+    typeof value !== 'string' ||
+    value.length === 0 ||
+    value.startsWith('-') ||
+    value.startsWith('/') ||
+    value.endsWith('/') ||
+    value.endsWith('.') ||
+    value.includes('..') ||
+    value.includes('//') ||
+    value.includes('@{') ||
+    hasUnsafeControlCharacter ||
+    /[~^:?*[\]\\]/u.test(value)
+  ) {
+    throw new CleanupRefusalError(`${field} is not a safe branch name.`);
+  }
+  return value;
+}
+
+function validateOwnershipJournal(manifest, worktreePath, commonGitDir) {
+  const journal = manifest.ownershipJournal;
+  if (
+    !journal ||
+    typeof journal !== 'object' ||
+    Array.isArray(journal) ||
+    journal.schemaVersion !== 1 ||
+    !Array.isArray(journal.resources)
+  ) {
+    throw new CleanupRefusalError(
+      'ownershipJournal must use the supported schema.',
+    );
+  }
+
+  const seenBranches = new Set();
+  const seenWorktrees = new Set();
+  return journal.resources.map((entry, index) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new CleanupRefusalError(
+        `ownershipJournal.resources[${index}] must be an object.`,
+      );
+    }
+    const branch = requireJournalBranch(
+      entry.branch,
+      `ownershipJournal.resources[${index}].branch`,
+    );
+    const nestedWorktreePath = requireAbsolutePath(
+      entry.worktreePath,
+      `ownershipJournal.resources[${index}].worktreePath`,
+    );
+    const baselineCommitSha = requireCommitSha(
+      entry.baselineCommitSha,
+      `ownershipJournal.resources[${index}].baselineCommitSha`,
+    );
+    if (
+      nestedWorktreePath === worktreePath ||
+      branch === manifest.branch ||
+      entry.commonGitDir !== commonGitDir ||
+      entry.runIdentity !== manifest.runIdentity ||
+      seenBranches.has(branch) ||
+      seenWorktrees.has(nestedWorktreePath)
+    ) {
+      throw new CleanupRefusalError(
+        `ownershipJournal.resources[${index}] conflicts with run ownership.`,
+      );
+    }
+    seenBranches.add(branch);
+    seenWorktrees.add(nestedWorktreePath);
+    return {
+      baselineCommitSha,
+      branch,
+      commonGitDir,
+      runIdentity: entry.runIdentity,
+      worktreePath: nestedWorktreePath,
+    };
+  });
 }
 
 function validateManifest(manifest, runsDirectory) {
@@ -127,6 +227,10 @@ function validateManifest(manifest, runsDirectory) {
   const smokeRoot = requireAbsolutePath(runsDirectory, 'runsDirectory');
   const branch = requireBranch(manifest.branch);
   const branchOwnership = validateBranchOwnership(manifest, branch);
+  const commonGitDir = requireAbsolutePath(
+    manifest.commonGitDir,
+    'commonGitDir',
+  );
   const manifestPath = requireAbsolutePath(
     manifest.manifestPath,
     'manifestPath',
@@ -152,6 +256,11 @@ function validateManifest(manifest, runsDirectory) {
       'worktreePath must be the manifest run directory worktree.',
     );
   }
+  const nestedResources = validateOwnershipJournal(
+    manifest,
+    worktreePath,
+    commonGitDir,
+  );
 
   if (manifest.fixtureProjectPath !== undefined) {
     const fixtureProjectPath = requireAbsolutePath(
@@ -196,32 +305,14 @@ function validateManifest(manifest, runsDirectory) {
   return {
     branch,
     branchOwnership,
+    commonGitDir,
     createdPaths: normalizedCreatedPaths,
     manifestPath,
     runPath,
     smokeRoot,
+    nestedResources,
     worktreePath,
   };
-}
-
-function parseWorktrees(output) {
-  if (!output) {
-    return [];
-  }
-
-  return output
-    .split(/\n\n+/)
-    .map((block) => {
-      const entry = {};
-      for (const line of block.split('\n')) {
-        const separator = line.indexOf(' ');
-        const key = separator === -1 ? line : line.slice(0, separator);
-        const value = separator === -1 ? true : line.slice(separator + 1);
-        entry[key] = value;
-      }
-      return entry;
-    })
-    .filter((entry) => typeof entry.worktree === 'string');
 }
 
 async function pathExists(path, fileSystem) {
@@ -249,6 +340,30 @@ async function canonicalPath(path, fileSystem) {
 
 async function readManifest(manifestOrPath, runsDirectory, fileSystem) {
   if (typeof manifestOrPath !== 'string') {
+    if (
+      manifestOrPath &&
+      typeof manifestOrPath === 'object' &&
+      typeof manifestOrPath.manifestPath === 'string'
+    ) {
+      const authoritativePath = requireAbsolutePath(
+        manifestOrPath.manifestPath,
+        'manifestPath',
+      );
+      if (await pathExists(authoritativePath, fileSystem)) {
+        try {
+          return {
+            manifest: JSON.parse(
+              await fileSystem.readFile(authoritativePath, 'utf8'),
+            ),
+            missing: false,
+          };
+        } catch (error) {
+          throw new CleanupRefusalError(
+            `manifest could not be read as complete JSON: ${error.message}`,
+          );
+        }
+      }
+    }
     return { manifest: manifestOrPath, missing: false };
   }
 
@@ -286,6 +401,141 @@ function removalOrder(paths) {
   });
 }
 
+function asCleanupRefusal(error) {
+  if (error instanceof CleanupRefusalError) {
+    return error;
+  }
+  return new CleanupRefusalError(error.message);
+}
+
+async function validateOwnedResource(
+  resource,
+  {
+    canonicalWorktrees,
+    fileSystem,
+    git,
+    manifest,
+    repository,
+    branchMap,
+    commonGitDir,
+  },
+) {
+  try {
+    const marker = await readSmokeMarkerAtCommit(resource.baselineCommitSha, {
+      cwd: repository,
+      git,
+    });
+    validateSmokeMarkerBinding(marker, manifest);
+  } catch (error) {
+    throw asCleanupRefusal(error);
+  }
+
+  const branchRef = `refs/heads/${resource.branch}`;
+  const registeredAtPath = canonicalWorktrees.find(
+    (entry) => entry.canonicalPath === resource.worktreePath,
+  );
+  const branchRegistrations = canonicalWorktrees.filter(
+    (entry) => entry.branch === branchRef,
+  );
+  if (registeredAtPath && registeredAtPath.branch !== branchRef) {
+    throw new CleanupRefusalError(
+      `journaled worktree ${resource.worktreePath} is registered to a different branch.`,
+    );
+  }
+  if (
+    branchRegistrations.some(
+      (entry) => entry.canonicalPath !== resource.worktreePath,
+    )
+  ) {
+    throw new CleanupRefusalError(
+      `journaled branch ${resource.branch} is checked out in an unjournaled worktree.`,
+    );
+  }
+
+  const branchTip = branchMap.get(resource.branch);
+  if (
+    branchTip &&
+    !(await isCommitAncestor(resource.baselineCommitSha, branchTip, {
+      cwd: repository,
+      git,
+    }))
+  ) {
+    throw new CleanupRefusalError(
+      `branch ${resource.branch} diverged from its ownership baseline.`,
+    );
+  }
+  if (registeredAtPath) {
+    if (!branchTip || registeredAtPath.HEAD !== branchTip) {
+      throw new CleanupRefusalError(
+        `worktree ${resource.worktreePath} no longer corroborates its journaled branch.`,
+      );
+    }
+    if (
+      !(await isCommitAncestor(
+        resource.baselineCommitSha,
+        registeredAtPath.HEAD,
+        { cwd: repository, git },
+      ))
+    ) {
+      throw new CleanupRefusalError(
+        `worktree ${resource.worktreePath} diverged from its ownership baseline.`,
+      );
+    }
+    if (await pathExists(resource.worktreePath, fileSystem)) {
+      let actualCommonDirectory;
+      try {
+        actualCommonDirectory = await gitCommonDirectory(
+          resource.worktreePath,
+          {
+            fileSystem,
+            git,
+          },
+        );
+      } catch (error) {
+        throw new CleanupRefusalError(
+          `could not corroborate the shared Git directory for ${resource.worktreePath}: ${error.message}`,
+        );
+      }
+      if (
+        actualCommonDirectory !== commonGitDir ||
+        actualCommonDirectory !== resource.commonGitDir
+      ) {
+        throw new CleanupRefusalError(
+          `worktree ${resource.worktreePath} belongs to a mismatched shared Git directory.`,
+        );
+      }
+    }
+  }
+
+  return {
+    branchExists: Boolean(branchTip),
+    registered: Boolean(registeredAtPath),
+  };
+}
+
+function parseBranches(output) {
+  const branches = new Map();
+  for (const line of output.split('\n')) {
+    if (!line) {
+      continue;
+    }
+    const separator = line.indexOf('\t');
+    if (separator === -1) {
+      throw new CleanupRefusalError('could not parse repository branch list.');
+    }
+    const ref = line.slice(0, separator);
+    const sha = line.slice(separator + 1);
+    if (!ref.startsWith('refs/heads/')) {
+      continue;
+    }
+    branches.set(
+      ref.slice('refs/heads/'.length),
+      requireCommitSha(sha, `tip for ${ref}`),
+    );
+  }
+  return branches;
+}
+
 export async function cleanupSmoke(
   manifestOrPath,
   {
@@ -313,12 +563,25 @@ export async function cleanupSmoke(
 
   const resources = validateManifest(loaded.manifest, runsDirectory);
   const actions = [];
+  let repositoryCommonDirectory;
+  try {
+    repositoryCommonDirectory = await gitCommonDirectory(repository, {
+      fileSystem,
+      git,
+    });
+  } catch (error) {
+    throw new CleanupRefusalError(
+      `could not resolve the repository shared Git directory: ${error.message}`,
+    );
+  }
+  if (repositoryCommonDirectory !== resources.commonGitDir) {
+    throw new CleanupRefusalError(
+      'cleanup repository has a mismatched shared Git directory.',
+    );
+  }
+
   const worktrees = parseWorktrees(
     await git(['worktree', 'list', '--porcelain'], { cwd: repository }),
-  );
-  const canonicalWorktreePath = await canonicalPath(
-    resources.worktreePath,
-    fileSystem,
   );
   const canonicalWorktrees = await Promise.all(
     worktrees.map(async (entry) => ({
@@ -326,74 +589,107 @@ export async function cleanupSmoke(
       canonicalPath: await canonicalPath(entry.worktree, fileSystem),
     })),
   );
-  const expectedBranchRef = `refs/heads/${resources.branch}`;
-  const registeredAtPath = canonicalWorktrees.find(
-    (entry) => entry.canonicalPath === canonicalWorktreePath,
-  );
-  const branchRegistrations = canonicalWorktrees.filter(
-    (entry) => entry.branch === expectedBranchRef,
-  );
-
-  if (registeredAtPath && registeredAtPath.branch !== expectedBranchRef) {
-    throw new CleanupRefusalError(
-      'the recorded worktree path is registered to a different branch.',
-    );
-  }
-
-  if (
-    branchRegistrations.some(
-      (entry) => entry.canonicalPath !== canonicalWorktreePath,
-    )
-  ) {
-    throw new CleanupRefusalError(
-      'the recorded branch is checked out in an unrecorded worktree.',
-    );
-  }
-
-  const branchOutput = await git(['branch', '--list', resources.branch], {
-    cwd: repository,
-  });
-  const branchExists = Boolean(branchOutput.trim());
-  if (
-    !resources.branchOwnership &&
-    (registeredAtPath || branchRegistrations.length > 0 || branchExists)
-  ) {
-    throw new CleanupRefusalError(
-      'branch or worktree exists without explicit run ownership.',
-    );
-  }
-
-  if (resources.branchOwnership && branchExists) {
-    const actualTipCommitSha = await git(
-      ['rev-parse', '--verify', expectedBranchRef],
+  const branchMap = parseBranches(
+    await git(
+      ['for-each-ref', '--format=%(refname)%09%(objectname)', 'refs/heads'],
       { cwd: repository },
+    ),
+  );
+  const nestedOwnedResources = await Promise.all(
+    resources.nestedResources.map(async (resource) => ({
+      ...resource,
+      removalPath: resource.worktreePath,
+      worktreePath: await canonicalPath(resource.worktreePath, fileSystem),
+    })),
+  );
+  const outerResource = {
+    baselineCommitSha: resources.branchOwnership?.baselineCommitSha,
+    branch: resources.branch,
+    commonGitDir: resources.commonGitDir,
+    removalPath: resources.worktreePath,
+    runIdentity: loaded.manifest.runIdentity,
+    worktreePath: await canonicalPath(resources.worktreePath, fileSystem),
+  };
+  const ownedResources = [...nestedOwnedResources, outerResource];
+  if (!resources.branchOwnership) {
+    throw new CleanupRefusalError(
+      'outer branch or worktree exists without explicit run ownership.',
     );
-    if (actualTipCommitSha !== resources.branchOwnership.expectedTipCommitSha) {
+  }
+
+  const resourceStates = new Map();
+  for (const resource of ownedResources) {
+    resourceStates.set(
+      resource.branch,
+      await validateOwnedResource(resource, {
+        branchMap,
+        canonicalWorktrees,
+        commonGitDir: resources.commonGitDir,
+        fileSystem,
+        git,
+        manifest: loaded.manifest,
+        repository,
+      }),
+    );
+  }
+
+  const ownedPaths = new Set(
+    ownedResources.map((resource) => resource.worktreePath),
+  );
+  const ownedBranches = new Set(
+    ownedResources.map((resource) => resource.branch),
+  );
+  const runBaseline = resources.branchOwnership.baselineCommitSha;
+  for (const entry of canonicalWorktrees) {
+    if (
+      !ownedPaths.has(entry.canonicalPath) &&
+      typeof entry.HEAD === 'string' &&
+      /^[0-9a-f]{40}$/u.test(entry.HEAD) &&
+      (await isCommitAncestor(runBaseline, entry.HEAD, {
+        cwd: repository,
+        git,
+      }))
+    ) {
       throw new CleanupRefusalError(
-        'recorded branch tip no longer corroborates run ownership.',
+        `run-descendant worktree ${entry.canonicalPath} is not journaled.`,
+      );
+    }
+  }
+  for (const [branch, tip] of branchMap) {
+    if (
+      !ownedBranches.has(branch) &&
+      (await isCommitAncestor(runBaseline, tip, { cwd: repository, git }))
+    ) {
+      throw new CleanupRefusalError(
+        `run-descendant branch ${branch} is not journaled.`,
       );
     }
   }
 
-  if (
-    registeredAtPath &&
-    resources.branchOwnership &&
-    registeredAtPath.HEAD !== resources.branchOwnership.expectedTipCommitSha
-  ) {
-    throw new CleanupRefusalError(
-      'recorded worktree HEAD no longer corroborates run ownership.',
-    );
+  for (const resource of nestedOwnedResources) {
+    if (resourceStates.get(resource.branch).registered) {
+      await git(['worktree', 'remove', '--force', resource.removalPath], {
+        cwd: repository,
+      });
+      actions.push(`worktree:${resource.removalPath}`);
+    }
   }
-
-  if (registeredAtPath) {
+  if (resourceStates.get(resources.branch).registered) {
     await git(['worktree', 'remove', '--force', resources.worktreePath], {
       cwd: repository,
     });
     actions.push(`worktree:${resources.worktreePath}`);
   }
-
-  if (branchExists) {
-    await git(['branch', '--delete', '--force', resources.branch], {
+  for (const resource of nestedOwnedResources) {
+    if (resourceStates.get(resource.branch).branchExists) {
+      await git(['branch', '--delete', '--force', '--', resource.branch], {
+        cwd: repository,
+      });
+      actions.push(`branch:${resource.branch}`);
+    }
+  }
+  if (resourceStates.get(resources.branch).branchExists) {
+    await git(['branch', '--delete', '--force', '--', resources.branch], {
       cwd: repository,
     });
     actions.push(`branch:${resources.branch}`);

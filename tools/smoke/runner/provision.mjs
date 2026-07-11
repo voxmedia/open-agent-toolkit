@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { applyPresetToFixture } from '../fixture/presets/apply-preset.mjs';
+import { gitCommonDirectory } from './journal.mjs';
 
 const execFileAsync = promisify(execFile);
 const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
@@ -164,6 +165,7 @@ async function resolveCloseoutPolicy(worktreePath) {
 function createManifest({
   appliedScenario,
   branch,
+  commonGitDir,
   harness,
   manifestPath,
   runPath,
@@ -185,6 +187,7 @@ function createManifest({
     appliedScenario,
     baselineCommitSha: null,
     branch,
+    commonGitDir,
     createdPaths: [manifestPath, runPath],
     fixtureProjectPath,
     harness,
@@ -193,19 +196,26 @@ function createManifest({
       value: SMOKE_CLOSEOUT_POLICY,
     },
     intendedSmokeBootstrap: {
+      branch,
       configSha256,
       configSource: configPath,
       manifestPath,
       markerPath,
       policy: SMOKE_BOOTSTRAP_POLICY,
+      runIdentity: branch,
     },
     manifestPath,
+    ownershipJournal: {
+      resources: [],
+      schemaVersion: 1,
+    },
     provisioningState: 'initializing',
     readiness: {
       reason: 'provisioning',
       status: 'not-ready',
     },
     sourceCommitSha,
+    runIdentity: branch,
     worktreePath,
     writableRoots: [],
   };
@@ -271,9 +281,14 @@ export async function provisionSmoke(
   }
 
   const sourceCommitSha = await git(['rev-parse', 'HEAD'], { cwd: repository });
+  const commonGitDir = await gitCommonDirectory(repository, {
+    fileSystem,
+    git,
+  });
   const manifest = createManifest({
     appliedScenario: scenario,
     branch,
+    commonGitDir,
     harness,
     manifestPath,
     runPath,
@@ -286,16 +301,26 @@ export async function provisionSmoke(
   try {
     await fileSystem.mkdir(runPath, { recursive: true });
     await git(
-      ['worktree', 'add', '-b', branch, worktreePath, sourceCommitSha],
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '-b',
+        branch,
+        worktreePath,
+        sourceCommitSha,
+      ],
       {
         cwd: repository,
       },
     );
     manifest.branchOwnership = {
       baseCommitSha: sourceCommitSha,
+      baselineCommitSha: null,
       branch,
       createdByRun: true,
-      expectedTipCommitSha: sourceCommitSha,
+      runIdentity: branch,
     };
     manifest.provisioningState = 'worktree-created';
     manifest.createdPaths.push(worktreePath);
@@ -336,11 +361,13 @@ export async function provisionSmoke(
       markerPath,
       `${JSON.stringify(
         {
+          branch,
           configSha256: sha256(configContents),
           configSource: configPath,
           manifestPath,
           policy: SMOKE_BOOTSTRAP_POLICY,
-          schemaVersion: 1,
+          runIdentity: branch,
+          schemaVersion: 2,
         },
         null,
         2,
@@ -348,11 +375,13 @@ export async function provisionSmoke(
     );
     manifest.createdPaths.push(markerPath);
     manifest.effectiveSmokeBootstrap = {
+      branch,
       configSha256: sha256(configContents),
       configSource: configPath,
       manifestPath,
       markerPath,
       policy: SMOKE_BOOTSTRAP_POLICY,
+      runIdentity: branch,
     };
     await saveManifest(manifest, fileSystem);
 
@@ -368,13 +397,22 @@ export async function provisionSmoke(
         cwd: worktreePath,
       },
     );
-    await git(['commit', '-m', 'test(smoke): establish fixture baseline'], {
-      cwd: worktreePath,
-    });
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'commit',
+        '-m',
+        'test(smoke): establish fixture baseline',
+      ],
+      {
+        cwd: worktreePath,
+      },
+    );
     manifest.baselineCommitSha = await git(['rev-parse', 'HEAD'], {
       cwd: worktreePath,
     });
-    manifest.branchOwnership.expectedTipCommitSha = manifest.baselineCommitSha;
+    manifest.branchOwnership.baselineCommitSha = manifest.baselineCommitSha;
     manifest.provisioningState = 'baseline-committed';
     await saveManifest(manifest, fileSystem);
 

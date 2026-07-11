@@ -6,6 +6,7 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -81,7 +82,7 @@ async function assertNoSmokeGitResources(repository, baselineWorktrees) {
   );
 }
 
-test('removes only exact manifest resources in dependency order and is idempotent', async () => {
+test('removes a lifecycle-advanced outer branch in dependency order and is idempotent', async () => {
   const repository = await createRepository();
   const runsDirectory = join(repository, '.smoke-runs');
   const baselineWorktrees = await git(['worktree', 'list', '--porcelain'], {
@@ -93,6 +94,14 @@ test('removes only exact manifest resources in dependency order and is idempoten
 
   try {
     manifest = await provision(repository, 'exact-manifest');
+    await writeFile(
+      join(manifest.worktreePath, 'lifecycle-result.txt'),
+      'legitimate lifecycle output\n',
+    );
+    await git(['add', 'lifecycle-result.txt'], { cwd: manifest.worktreePath });
+    await git(['commit', '-m', 'test: complete smoke lifecycle'], {
+      cwd: manifest.worktreePath,
+    });
     const result = await cleanup(repository, manifest);
 
     assert.equal(result.status, 'cleaned');
@@ -143,14 +152,27 @@ test('refuses unrecorded or out-of-root paths, branches, and worktrees', async (
     ];
 
     for (const invalidManifest of invalidManifests) {
+      await writeFile(
+        manifest.manifestPath,
+        `${JSON.stringify(invalidManifest, null, 2)}\n`,
+      );
       await assert.rejects(
-        () => cleanup(repository, invalidManifest),
+        () =>
+          cleanupSmoke(manifest.manifestPath, {
+            git,
+            repository,
+            runsDirectory: join(repository, '.smoke-runs'),
+          }),
         CleanupRefusalError,
       );
       assert.equal(await exists(manifest.worktreePath), true);
       assert.match(
         await git(['branch', '--list', manifest.branch], { cwd: repository }),
         new RegExp(manifest.branch),
+      );
+      await writeFile(
+        manifest.manifestPath,
+        `${JSON.stringify(manifest, null, 2)}\n`,
       );
     }
 
@@ -169,12 +191,16 @@ test('preserves a pre-existing smoke-named branch without ownership evidence', a
   const manifestPath = join(runPath, 'provisioning-manifest.json');
   const worktreePath = join(runPath, 'worktree');
   const existingTip = await git(['rev-parse', 'HEAD'], { cwd: repository });
+  const commonGitDir = await realpath(join(repository, '.git'));
   await git(['branch', branch, existingTip], { cwd: repository });
   await mkdir(runPath, { recursive: true });
   const manifest = {
     branch,
+    commonGitDir,
     createdPaths: [manifestPath, runPath],
     manifestPath,
+    ownershipJournal: { resources: [], schemaVersion: 1 },
+    runIdentity: branch,
     worktreePath,
   };
   await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
@@ -194,24 +220,25 @@ test('preserves a pre-existing smoke-named branch without ownership evidence', a
   }
 });
 
-test('fails closed when an owned branch tip no longer matches the manifest', async () => {
+test('fails closed when an owned branch diverges from its immutable baseline', async () => {
   const repository = await createRepository();
   let manifest;
 
   try {
     manifest = await provision(repository, 'tip-mismatch');
-    await writeFile(
-      join(manifest.worktreePath, 'unexpected.txt'),
-      'unexpected branch mutation\n',
+    await git(
+      [
+        'update-ref',
+        `refs/heads/${manifest.branch}`,
+        manifest.sourceCommitSha,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: repository },
     );
-    await git(['add', 'unexpected.txt'], { cwd: manifest.worktreePath });
-    await git(['commit', '-m', 'test: diverge owned smoke branch'], {
-      cwd: manifest.worktreePath,
-    });
 
     await assert.rejects(
       () => cleanup(repository, manifest),
-      /branch tip no longer corroborates run ownership/,
+      /diverged from its ownership baseline/,
     );
     assert.equal(await exists(manifest.worktreePath), true);
     assert.match(
@@ -219,6 +246,82 @@ test('fails closed when an owned branch tip no longer matches the manifest', asy
       new RegExp(manifest.branch),
     );
     assert.equal(await exists(manifest.manifestPath), true);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses run-descendant worktrees and branches absent from the journal', async () => {
+  const repository = await createRepository();
+  const branch = 'smoke-child-unjournaled';
+  let childWorktreePath;
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'unjournaled-child');
+    childWorktreePath = join(repository, '.children/unjournaled');
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '-b',
+        branch,
+        childWorktreePath,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: repository },
+    );
+
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /run-descendant worktree .* is not journaled/,
+    );
+    assert.equal(await exists(childWorktreePath), true);
+    assert.equal(await exists(manifest.worktreePath), true);
+
+    await git(['worktree', 'remove', '--force', childWorktreePath], {
+      cwd: repository,
+    });
+    await git(['branch', '--delete', '--force', '--', branch], {
+      cwd: repository,
+    });
+    await cleanup(repository, manifest);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses a manifest tampered to name a baseline without the run marker', async () => {
+  const repository = await createRepository();
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'tampered-baseline');
+    const tampered = {
+      ...manifest,
+      baselineCommitSha: manifest.sourceCommitSha,
+      branchOwnership: {
+        ...manifest.branchOwnership,
+        baselineCommitSha: manifest.sourceCommitSha,
+      },
+    };
+    await writeFile(
+      manifest.manifestPath,
+      `${JSON.stringify(tampered, null, 2)}\n`,
+    );
+
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /does not contain the smoke marker/,
+    );
+    assert.equal(await exists(manifest.worktreePath), true);
+    await writeFile(
+      manifest.manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+    await cleanup(repository, manifest);
   } finally {
     await rm(repository, { force: true, recursive: true });
   }

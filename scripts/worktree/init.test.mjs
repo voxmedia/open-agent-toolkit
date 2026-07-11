@@ -1,17 +1,28 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
+import { cleanupSmoke } from '../../tools/smoke/runner/cleanup.mjs';
 import { provisionSmoke } from '../../tools/smoke/runner/provision.mjs';
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, '../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const initScript = join(repositoryRoot, 'scripts/worktree/init.sh');
+const journalScript = join(repositoryRoot, 'tools/smoke/runner/journal.mjs');
 
 async function git(args, { cwd } = {}) {
   const { stdout } = await execFileAsync('git', args, {
@@ -51,7 +62,9 @@ async function createRepository() {
   await git(['config', 'user.name', 'Smoke Test'], { cwd: directory });
   await mkdir(join(directory, '.oat'), { recursive: true });
   await mkdir(join(directory, 'scripts/worktree'), { recursive: true });
+  await mkdir(join(directory, 'tools/smoke/runner'), { recursive: true });
   await cp(initScript, join(directory, 'scripts/worktree/init.sh'));
+  await cp(journalScript, join(directory, 'tools/smoke/runner/journal.mjs'));
   await writeFile(
     join(directory, '.oat/config.json'),
     `${JSON.stringify(
@@ -79,6 +92,7 @@ async function createRepository() {
       'README.md',
       'scripts/sync-archived-projects-from-s3.sh',
       'scripts/worktree/init.sh',
+      'tools/smoke/runner/journal.mjs',
     ],
     { cwd: directory },
   );
@@ -130,6 +144,12 @@ exit 98
   }
 }
 
+async function exists(path) {
+  return access(path)
+    .then(() => true)
+    .catch(() => false);
+}
+
 test('isolates nested smoke bootstrap from normal worktree initialization', async () => {
   const repository = await createRepository();
   const runsDirectory = join(repository, '.smoke-runs');
@@ -138,6 +158,7 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
   const fakeBin = join(repository, 'test-control/bin');
   const pnpmRecord = join(repository, 'test-control/pnpm.log');
   const forbiddenLog = join(repository, 'test-control/forbidden.log');
+  const childBranch = 'smoke-child-p02';
   let childWorktreePath;
   let manifest;
 
@@ -166,9 +187,12 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
     childWorktreePath = join(runsDirectory, `${manifest.branch}-child`);
     await git(
       [
+        '-c',
+        'core.hooksPath=/dev/null',
         'worktree',
         'add',
-        '--detach',
+        '-b',
+        childBranch,
         childWorktreePath,
         manifest.baselineCommitSha,
       ],
@@ -210,6 +234,24 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
       await readFile(childConfig),
       await readFile(manifest.intendedSmokeBootstrap.configSource),
     );
+    const journaledManifest = JSON.parse(
+      await readFile(manifest.manifestPath, 'utf8'),
+    );
+    assert.equal(journaledManifest.ownershipJournal.resources.length, 1);
+    assert.deepEqual(
+      {
+        branch: journaledManifest.ownershipJournal.resources[0].branch,
+        runIdentity:
+          journaledManifest.ownershipJournal.resources[0].runIdentity,
+        worktreePath:
+          journaledManifest.ownershipJournal.resources[0].worktreePath,
+      },
+      {
+        branch: childBranch,
+        runIdentity: manifest.runIdentity,
+        worktreePath: await realpath(childWorktreePath),
+      },
+    );
     assert.deepEqual(
       await resolveLocalCloseoutPolicy(childWorktreePath, home),
       {
@@ -246,6 +288,14 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
       }),
       '?? .oat/config.local.json',
     );
+    await writeFile(
+      join(childWorktreePath, 'smoke-lifecycle.txt'),
+      'nested lifecycle commit\n',
+    );
+    await git(['add', 'smoke-lifecycle.txt'], { cwd: childWorktreePath });
+    await git(['commit', '-m', 'test: nested smoke lifecycle'], {
+      cwd: childWorktreePath,
+    });
     assert.equal(
       await git(['status', '--short', '--untracked-files=all'], {
         cwd: childWorktreePath,
@@ -297,6 +347,23 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
     );
     await assert.rejects(() => readFile(childConfig), { code: 'ENOENT' });
     await assert.rejects(() => readFile(pnpmRecord), { code: 'ENOENT' });
+
+    const cleanupResult = await cleanupSmoke(manifest.manifestPath, {
+      git,
+      repository,
+      runsDirectory,
+    });
+    assert.equal(cleanupResult.status, 'cleaned');
+    assert.equal(await exists(childWorktreePath), false);
+    assert.equal(await exists(manifest.worktreePath), false);
+    assert.equal(
+      await git(['branch', '--list', childBranch], { cwd: repository }),
+      '',
+    );
+    assert.equal(
+      await git(['branch', '--list', manifest.branch], { cwd: repository }),
+      '',
+    );
   } finally {
     if (childWorktreePath) {
       await git(['worktree', 'remove', '--force', childWorktreePath], {

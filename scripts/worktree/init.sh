@@ -103,9 +103,11 @@ run_smoke_bootstrap() {
   local validation_output
   local config_source
   local baseline_commit
+  local manifest_path
   local source_root
   local source_common_git_dir
   local config_destination="${current_root}/.oat/config.local.json"
+  local journal_script="${current_root}/tools/smoke/runner/journal.mjs"
 
   validation_output="$(
     node - "$marker_path" <<'NODE'
@@ -231,17 +233,19 @@ requireRegularFile(markerPath, 'tracked marker');
 const marker = requirePlainObject(readJson(markerPath, 'marker'), 'marker');
 if (
   !isDeepStrictEqual(Object.keys(marker).sort(), [
+    'branch',
     'configSha256',
     'configSource',
     'manifestPath',
     'policy',
+    'runIdentity',
     'schemaVersion',
   ])
 ) {
-  fail('marker fields do not match schema version 1');
+  fail('marker fields do not match schema version 2');
 }
-if (marker.schemaVersion !== 1) {
-  fail('schemaVersion must equal 1');
+if (marker.schemaVersion !== 2) {
+  fail('schemaVersion must equal 2');
 }
 if (
   typeof marker.configSha256 !== 'string' ||
@@ -278,14 +282,18 @@ const fixtureProject = requireAbsolutePath(
 const sourceMarkerPath = join(sourceWorktree, '.oat/smoke-bootstrap.json');
 const expectedConfigSource = join(sourceWorktree, '.oat/config.local.json');
 const expectedBootstrap = {
+  branch: marker.branch,
   configSha256: marker.configSha256,
   configSource,
   manifestPath,
   markerPath: sourceMarkerPath,
   policy: expectedPolicy,
+  runIdentity: marker.runIdentity,
 };
 
 if (
+  marker.branch !== manifest.branch ||
+  marker.runIdentity !== manifest.runIdentity ||
   manifest.manifestPath !== manifestPath ||
   dirname(manifestPath) !== dirname(sourceWorktree) ||
   configSource !== expectedConfigSource ||
@@ -350,12 +358,13 @@ if (
   fail('smoke config values do not match the provisioned fixture');
 }
 
-process.stdout.write(`${configSource}\n${manifest.baselineCommitSha}`);
+process.stdout.write(
+  `${configSource}\t${manifest.baselineCommitSha}\t${manifestPath}`,
+);
 NODE
   )"
 
-  config_source="${validation_output%$'\n'*}"
-  baseline_commit="${validation_output##*$'\n'}"
+  IFS=$'\t' read -r config_source baseline_commit manifest_path <<<"$validation_output"
   source_root="$(cd "$(dirname "$config_source")/.." && pwd -P)"
   source_common_git_dir="$(
     git -C "$source_root" rev-parse --path-format=absolute --git-common-dir
@@ -369,6 +378,16 @@ NODE
     echo "error: smoke baseline is not an ancestor of the target worktree" >&2
     return 1
   fi
+  if [[ ! -f "$journal_script" || -L "$journal_script" ]]; then
+    echo "error: smoke ownership journal is missing or unsafe" >&2
+    return 1
+  fi
+
+  echo "registering nested smoke worktree ownership"
+  node "$journal_script" register \
+    --manifest "$manifest_path" \
+    --marker "$marker_path" \
+    --worktree "$current_root"
 
   echo "smoke bootstrap marker: ${marker_path#"${current_root}/"}"
   echo "copying only the provisioned smoke config"

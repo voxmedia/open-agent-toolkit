@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
+  chmod,
   cp,
   mkdir,
   mkdtemp,
@@ -183,6 +184,15 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
   await writeFile(homeConfig, '{"personal":true}\n');
   const originalUserConfig = await readFile(homeConfig, 'utf8');
   const sourceCommitSha = await git(['rev-parse', 'HEAD'], { cwd: repository });
+  const hookLog = join(repository, '.git/smoke-hook.log');
+  for (const hook of ['post-checkout', 'pre-commit']) {
+    const hookPath = join(repository, '.git/hooks', hook);
+    await writeFile(
+      hookPath,
+      `#!/bin/sh\nprintf '${hook}\\n' >> ${JSON.stringify(hookLog)}\n`,
+    );
+    await chmod(hookPath, 0o755);
+  }
   const manifestPublishes = [];
   let childWorktreePath;
   let manifest;
@@ -220,9 +230,19 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     assert.notEqual(manifest.baselineCommitSha, sourceCommitSha);
     assert.deepEqual(manifest.branchOwnership, {
       baseCommitSha: sourceCommitSha,
+      baselineCommitSha: manifest.baselineCommitSha,
       branch: manifest.branch,
       createdByRun: true,
-      expectedTipCommitSha: manifest.baselineCommitSha,
+      runIdentity: manifest.branch,
+    });
+    assert.equal(manifest.runIdentity, manifest.branch);
+    assert.equal(
+      manifest.commonGitDir,
+      await realpath(join(repository, '.git')),
+    );
+    assert.deepEqual(manifest.ownershipJournal, {
+      resources: [],
+      schemaVersion: 1,
     });
     assert.equal(manifest.provisioningState, 'ready');
     assert.deepEqual(manifest.readiness, { status: 'ready' });
@@ -236,11 +256,13 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       .update(await readFile(configPath))
       .digest('hex');
     const expectedSmokeBootstrap = {
+      branch: manifest.branch,
       configSha256,
       configSource: configPath,
       manifestPath: manifest.manifestPath,
       markerPath,
       policy: smokeBootstrapPolicy,
+      runIdentity: manifest.branch,
     };
     assert.deepEqual(manifest.intendedSmokeBootstrap, expectedSmokeBootstrap);
     assert.deepEqual(manifest.effectiveSmokeBootstrap, expectedSmokeBootstrap);
@@ -267,6 +289,7 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       await assert.rejects(() => readFile(source), { code: 'ENOENT' });
     }
     assert.equal(await readFile(homeConfig, 'utf8'), originalUserConfig);
+    await assert.rejects(() => readFile(hookLog), { code: 'ENOENT' });
 
     const config = JSON.parse(
       await readFile(
@@ -475,9 +498,10 @@ test('preserves a partial manifest when fixture copying fails', async () => {
     assert.match(manifest.readiness.reason, /copy failed/);
     assert.deepEqual(manifest.branchOwnership, {
       baseCommitSha: manifest.sourceCommitSha,
+      baselineCommitSha: null,
       branch,
       createdByRun: true,
-      expectedTipCommitSha: manifest.sourceCommitSha,
+      runIdentity: branch,
     });
     assert.ok(manifest.createdPaths.includes(manifest.worktreePath));
     assert.ok(
