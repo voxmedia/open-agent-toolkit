@@ -13,8 +13,8 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Quick mode defers implementation phase checkpoints to oat-project-implement
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_checkpoints: [p05] # Quick mode defers implementation phase checkpoints to oat-project-implement
+oat_hill_completed: [p05] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -43,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T03:14:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T03:20:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase p04 passed; p05 HiLL checkpoint awaiting approval
+Implementation - Phase p04 passed; p05 HiLL checkpoint approved and ready for dispatch
 
 ## Artifacts
 
@@ -96,7 +96,8 @@ Implementation - Phase p04 passed; p05 HiLL checkpoint awaiting approval
 - ✓ Phase p04 completed: reproducible Cursor verification protocol, 13 live probes, evidence-driven recommendation disposition, and user documentation
 - ✓ Phase p04 self-review passed after verifier hardening (`f2122197`)
 - ✓ Phase p04 verification passed: 11 verifier tests, 128 targeted CLI tests, docs build/lint, and a clean 549-link local crawl
-- ⧗ Phase p05 HiLL checkpoint reached; final release/backlog phase requires approval before dispatch
+- ✓ Phase p05 HiLL checkpoint reached before final release/backlog dispatch
+- ✓ Phase p05 HiLL checkpoint approved by the user
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -105,4 +106,4 @@ Implementation - Phase p04 passed; p05 HiLL checkpoint awaiting approval
 
 ## Next Milestone
 
-Obtain HiLL approval, then dispatch one exact p05 phase subagent at `p05-t01`; it implements the phase tasks sequentially without nested workers and returns for root verification, final phase self-review, implementation-end gate review, and bookkeeping.
+Dispatch one exact p05 phase subagent at `p05-t01`; it implements the phase tasks sequentially without nested workers and returns for root verification, final phase self-review, implementation-end gate review, and bookkeeping.
