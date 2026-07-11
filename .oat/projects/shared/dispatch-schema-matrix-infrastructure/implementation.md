@@ -1,11 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p01-t01
-    reason: 'Exact pinned Codex task workers cannot initialize from the coordinator workspace-write sandbox; danger-full-access approval is required for nested app-server access.'
-    since: 2026-07-10
-oat_last_updated: 2026-07-10
+oat_blockers: []
+oat_last_updated: 2026-07-11
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -13,7 +10,7 @@ oat_generated: false
 # Implementation: dispatch-schema-matrix-infrastructure
 
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-11
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -65,8 +62,7 @@ oat_generated: false
 
 ### Task p01-t01: Add the shared matrix algebra, normalizer, and walker
 
-**Status:** blocked
-**Blocker:** Exact `gpt-5.6-sol`/`high` worker launch failed before sampling because nested Codex app-server initialization was denied by the coordinator sandbox.
+**Status:** in_progress
 **Commit:** -
 
 **Outcome (required when completed):**
@@ -84,11 +80,13 @@ oat_generated: false
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- The original exact phase-coordinator → exact task-worker topology remains unavailable in this host: nested CLI workers fail inside the coordinator sandbox, while native depth-2 delegation cannot expose deterministic materialized-role selection through the current orchestration tool.
+- The user explicitly authorized root-inline execution for this project. The root session will implement each planned task directly, preserve task ordering/commits/verification, and retain phase self-review plus the final review gate.
+- Durable remediation is tracked by `BL-260711-add-root-owned-dispatch-broker`.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- Initial worker launch failed before sampling with `failed to initialize in-process app-server client: Operation not permitted`. Resolved for this project by the user-authorized inline execution deviation; no coordinator or task-worker process will be launched.
 
 ---
 
@@ -151,7 +149,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- p01-t01: rerun the exact-target coordinator only after approval for the sandbox access required by nested Codex workers.
+- Resolved for this project on 2026-07-11: the user authorized root-inline implementation with no phase coordinator or task workers. Durable broker/provenance work is tracked by `BL-260711-add-root-owned-dispatch-broker`.
 
 #### Artifact / Design Deltas
 
@@ -178,7 +176,7 @@ Chronological log of implementation progress.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Resume all planned tasks inline in the root session. This is a project-local execution override, not a change to the intended OAT coordinator/worker contract.
 
 **Follow-ups / TODO:**
 
@@ -186,7 +184,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- Nested exact-worker launch from a restricted coordinator - resolved for this project through explicit root-inline authorization; durable fix deferred to `BL-260711-add-root-owned-dispatch-broker`.
 
 **Session End:** {time}
 
@@ -204,9 +202,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review   | Source Artifact                                                                      | Planned / Documented                                                   | Actual / Accepted                                                                             | Reason                                                                                                                                                                                                                                                           | Source of Truth                                                                                           | Follow-up                                  |
+| --------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| execution-run-2 | `plan.md` execution contract and `oat-project-implement` coordinator/worker contract | One exact phase coordinator dispatches one exact task worker per task. | The root session implements planned tasks directly with no phase coordinator or task workers. | Nested exact CLI workers cannot initialize inside the restricted coordinator; native depth works but the exposed spawn interface cannot deterministically select the materialized role; the user explicitly authorized inline execution to unblock this project. | `implementation.md` for this run; planned product behavior remains governed by `plan.md` and `design.md`. | `BL-260711-add-root-owned-dispatch-broker` |
 
 ## Test Results
 

@@ -1,15 +1,13 @@
 ---
 oat_current_task: p01-t01
-oat_last_commit: null
-oat_blockers:
-  - task_id: p01-t01
-    reason: 'Exact pinned Codex task workers cannot initialize from the coordinator workspace-write sandbox; danger-full-access approval is required for nested app-server access.'
-    since: 2026-07-10
+oat_last_commit: 9bb03265
+oat_blockers: []
 associated_issues:
   - { type: backlog, ref: BL-260709-add-dispatch-machine-schema }
   - { type: backlog, ref: BL-260707-consolidate-dispatch-matrix }
   - { type: backlog, ref: BL-260707-cache-cursor-model-catalog }
   - { type: backlog, ref: BL-260708-verify-cursor-gpt-5-6-subagent }
+  - { type: backlog, ref: BL-260711-add-root-owned-dispatch-broker }
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -45,7 +43,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T23:24:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T00:25:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -53,11 +51,11 @@ oat_generated: false
 
 **Status:** Implement
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-11
 
 ## Current Phase
 
-Implementation - Blocked before p01-t01 worker launch
+Implementation - Resuming p01-t01 inline under explicit user authorization
 
 ## Artifacts
 
@@ -85,12 +83,13 @@ Implementation - Blocked before p01-t01 worker launch
 - ✓ Cross-runtime plan exit gate passed; three Minor clarifications applied
 - ✓ Tier 1 subagent execution authorized
 - ✓ Final-phase HiLL checkpoint and auto-review configured
-- ⚠ `p01-t01` exact worker launch blocked by coordinator sandbox permissions
+- ✓ Initial coordinator sandbox blocker resolved for this project through explicit root-inline execution authorization
+- ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
 
-- `p01-t01`: nested pinned Codex workers require app-server access unavailable inside the coordinator's `workspace-write` sandbox.
+- None. Root-inline execution is explicitly authorized for this project.
 
 ## Next Milestone
 
-Authorize the required coordinator sandbox access, then retry p01 from `p01-t01`
+Implement p01 from `p01-t01` inline, preserving planned task commits, verification, phase self-review, and final review.
