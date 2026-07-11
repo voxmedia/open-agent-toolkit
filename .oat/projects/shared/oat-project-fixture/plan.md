@@ -36,6 +36,7 @@ oat_template_name: plan
 ## Planning Checklist
 
 - [ ] Confirmed HiLL checkpoints with user (confirmed at `oat-project-implement` start)
+- [ ] Set `oat_plan_hill_phases` at implement start (confirmed with user; `[]` until then)
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -46,6 +47,7 @@ oat_template_name: plan
 - **`[['p02','p03']]`** — the runner core (p02) and the evidence collector (p03) have disjoint write sets: `tools/smoke/runner/**` vs `tools/smoke/evidence/**`, with tests colocated per module. They integrate through a small file/CLI contract defined in p01 (`tools/smoke/CONTRACT.md`: provisioning-manifest shape, evidence output paths, collector invocation), so neither phase edits the other's files; the live wiring is exercised first in p04. Verification is independent (`node --test` per directory). Neither phase touches shared generated assets, package manifests, or docs builds, avoiding the operational write-set conflicts documented in the max-depth learnings.
 - **p01 must precede the group** — both phases consume the fixture and the contract doc it ships.
 - **p04, p05, and p06 are sequential** — p04 (orchestration contract in skills) writes `.agents/**` and skill contract tests and must reconcile against PR #137's merged language rather than race it; p05 (live harness runs) depends on all prior phases and produces evidence consumed by p06 (docs/Vault/release). p06 additionally touches lockstep package manifests and the docs app, which must not race anything.
+- **Sibling sequencing (decided):** live smoke runs execute against this worktree's local binary now — main is already merged in (post-PR #136), so `dispatch-schema-matrix-infrastructure` behavior is under test. When PR #137 (`codex-subagent-max-depth`) merges, merge main again before or during p04 (contract reconciliation) and re-run the Codex `implement` scenario as re-verification (bounded step in p06-t03). No smoke work is blocked on sibling merges.
 - Fixture-internal parallelism (the fixture's own p01∥p02 phases) is content of the fixture, not this plan's execution shape.
 
 ---
@@ -164,7 +166,7 @@ Run: `node --test tools/smoke/runner/preflight.test.mjs` — Expected: fails.
 - Create: `tools/smoke/runner/provision.mjs`
 - Modify: `tools/smoke/runner/run-smoke.mjs`
 
-**Step 1: Write test (RED)** — `tools/smoke/runner/provision.test.mjs`: provisioning (a) creates a disposable worktree with a flat collision-resistant branch name, (b) copies the fixture into `.oat/projects/`, (c) writes isolated `config.local.json` (activeProject + smoke markers) without reading or writing the user's `~/.oat/config.json`, (d) applies the scenario's state preset, (e) records every created path/branch/worktree in a provisioning manifest per `CONTRACT.md`.
+**Step 1: Write test (RED)** — `tools/smoke/runner/provision.test.mjs`: provisioning (a) creates a disposable worktree with a flat collision-resistant branch name, (b) copies the fixture into `.oat/projects/`, (c) writes isolated `config.local.json` (activeProject + smoke markers) without reading or writing the user's `~/.oat/config.json`, (d) applies the scenario's state preset, (e) records every created path/branch/worktree in a provisioning manifest per `CONTRACT.md`, (f) resolves and records the per-harness writable-root requirements (worktree content, shared Git metadata dir, `.agents`) in the manifest so drive protocols can provision Codex scoped writable roots before launch.
 Run: `node --test tools/smoke/runner/provision.test.mjs` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — same test passes.
@@ -184,7 +186,7 @@ Run: `node --test tools/smoke/runner/provision.test.mjs` — Expected: fails.
 - Create: `tools/smoke/runner/cleanup.mjs`
 - Modify: `tools/smoke/runner/run-smoke.mjs` (wire `--dry-run` end-to-end: provision → no-op drive → collect stub → cleanup)
 
-**Step 1: Write test (RED)** — `tools/smoke/runner/cleanup.test.mjs`: cleanup removes exactly the manifest's entries (idempotent; second run is a no-op), refuses paths outside the manifest, and survives a manifest from an interrupted run (partial entries). Dry-run integration test: full pass leaves `git status` clean, user config untouched (byte-compare), and no worktrees behind.
+**Step 1: Write test (RED)** — `tools/smoke/runner/cleanup.test.mjs`: cleanup removes exactly the manifest's entries (idempotent; second run is a no-op), refuses paths outside the manifest, and survives a manifest from an interrupted run (partial entries). Dry-run integration test: full pass leaves `git status` clean, user config untouched (byte-compare), and no worktrees behind. Interrupt integration test: spawn the runner in dry-run mode, send SIGTERM mid-provision and mid-drive, then assert cleanup from the manifest leaves no orphans and touches nothing outside it (design Level 2 kill-and-recover).
 Run: `node --test tools/smoke/runner/cleanup.test.mjs` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — same test passes.
@@ -270,7 +272,7 @@ _Sequential; depends on p01–p03 conceptually only through plan order — its w
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump)
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Write test (RED)** — extend the skill contract tests (`packages/cli/src/validation/skills.test.ts` or the colocated contract test the repo uses post-#137) asserting the coordinator contract text includes: full-information selection (ladder ∩ ceiling ∩ harness-native catalog), upward-not-downward substitution, task workers never silently inheriting the root model, and recorded pre-start CLI selection with reason + candidates considered.
+**Step 1: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting the coordinator contract text includes: full-information selection (ladder ∩ ceiling ∩ harness-native catalog), upward-not-downward substitution, task workers never silently inheriting the root model, and recorded pre-start CLI selection with reason + candidates considered. (If PR #137 relocates the skill contract tests, re-pin this path in the plan before implementing — see References.)
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — author the contract language in both surfaces; keep Codex-specific dispatch language consistent with the current merged state (post-#136, and post-#137 if merged by execution time).
@@ -325,7 +327,7 @@ Run: scoped vitest + `node --test tools/smoke/evidence/` — Expected: fails.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-_Sequential; depends on p01–p04. Live tasks execute from this worktree against real providers and may pause for manual harness sessions (Cursor IDE) — these pauses are task steps, not blockers._
+_Sequential; depends on p01–p04. Live tasks execute from this worktree against real providers and may pause for manual harness sessions (Cursor IDE) — these pauses are task steps, not blockers. Live tasks (p05-t02 through p05-t06) intentionally use evidence-assertion step structures (Preconditions/Execute/Verify/Commit) instead of the RED/GREEN pattern: their verification surface is the committed evidence report, not a unit test._
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -372,7 +374,7 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 1: Preconditions** — preflight passes for Claude.
 
-**Step 2: Execute** — `plan-review` + `implement` scenarios.
+**Step 2: Execute** — `plan-review` + `implement` scenarios. (Full-workflow run deferred for Claude per design Level 3 to bound live-provider cost; deferral recorded in the evidence summary.)
 
 **Step 3: Verify** — assertion tables pass; the nesting answer (native coordinator→worker supported or the sanctioned alternative topology) is recorded in both the report and the protocol doc.
 
@@ -388,7 +390,7 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 1: Preconditions** — preflight passes; runner prints the canned root prompt; user starts the IDE session (manual pause).
 
-**Step 2: Execute** — `plan-review` + `implement` scenarios driven by the IDE root session.
+**Step 2: Execute** — `plan-review` + `implement` scenarios driven by the IDE root session, plus one `full` scenario (required on Cursor IDE per design Level 3).
 
 **Step 3: Verify** — assertion tables pass: coordinator full-information selection recorded (native catalog considered, choice + reason), any CLI task dispatch present only as recorded pre-start selection, task workers never inherit the root model silently.
 
@@ -405,7 +407,7 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 1: Preconditions** — preflight passes for `cursor-agent`.
 
-**Step 2: Execute** — `plan-review` scenario first; proceed to `implement` only if Task dispatch is observable in this flavor.
+**Step 2: Execute** — `plan-review` scenario first; proceed to `implement` only if Task dispatch is observable in this flavor. (Full-workflow run deferred for Cursor CLI per design Level 3; deferral recorded in the evidence summary.)
 
 **Step 3: Verify** — either positive evidence (first structured Task events recorded for the CLI flavor) or a structured inconclusive capture consistent with the prior verification tooling — both are valid recorded outcomes; the protocol doc states which one and why.
 
@@ -413,18 +415,23 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 ---
 
-### Task p05-t06: Cross-harness evidence summary
+### Task p05-t06: Live negative controls and cross-harness evidence summary
 
 **Files:**
 
-- Create: `tools/smoke/reports/SUMMARY.md` (per-harness topology matrix, selection-contract observations, divergences, fixture/runner adjustments made)
+- Create: `tools/smoke/reports/negative-controls/` (live unavailable-target preflight evidence)
+- Create: `tools/smoke/reports/SUMMARY.md` (per-harness topology matrix, selection-contract observations, divergences, deferrals, fixture/runner adjustments made)
 - Modify: fixture/runner files only if live runs surfaced defects (each fix keeps its phase's tests green)
 
-**Step 1: Synthesize** — comparative matrix across the four targets; explicit statement of the landed orchestration model per harness.
+**Step 1: Live negative control (unavailable target)** — run `node tools/smoke/runner/run-smoke.mjs --harness <deliberately-unavailable-target> --scenario plan-review`; assert it reports unavailability and exits **without provisioning** (no manifest, no worktree); commit the preflight report as evidence. Zero provider cost.
 
-**Step 2: Verify** — `node --test tools/smoke/` green; every claim in SUMMARY.md links a committed evidence report.
+**Step 2: Failure-path control (opportunistic)** — if any p05 live run naturally produced a post-acceptance child failure, assert no-fallback-after-acceptance on its bundle (p03-t03 assertion); otherwise record `not-observed` in SUMMARY.md rather than forcing a failure.
 
-**Step 3: Commit** — `git add tools/smoke && git commit -m "docs(p05-t06): add cross-harness smoke evidence summary"`
+**Step 3: Synthesize** — comparative matrix across the four targets; explicit statement of the landed orchestration model per harness; record the Claude and Cursor CLI full-workflow deferrals.
+
+**Step 4: Verify** — `node --test tools/smoke/` green; every claim in SUMMARY.md links a committed evidence report.
+
+**Step 5: Commit** — `git add tools/smoke && git commit -m "docs(p05-t06): add negative controls and cross-harness smoke evidence summary"`
 
 ---
 
@@ -458,7 +465,16 @@ _Sequential; depends on p05._
 
 **Step 2: Verify** — links resolve; entries dated; no repo changes in this task.
 
-**Step 3: Commit** — repo no-op; record completion in `implementation.md` (vault is not git-tracked here).
+**Step 3: Record completion (machine-checkable)** — append a completion entry to `implementation.md` under this task using this template, so resume tooling can detect completion without git artifacts:
+
+```markdown
+- Vault capture complete: {ISO date}
+  - Paths touched: {list of vault file paths}
+  - Diagrams mirrored: {list or "none"}
+  - Link spot-check: {pass|fail + notes}
+```
+
+**Step 4: Commit** — commit the `implementation.md` bookkeeping entry: `git add .oat/projects/shared/oat-project-fixture/implementation.md && git commit -m "chore(p06-t02): record vault capture completion"`
 
 ---
 
@@ -471,10 +487,12 @@ _Sequential; depends on p05._
 
 **Step 1: Bump & document** — lockstep bump all five public packages; author the README.
 
-**Step 2: Verify** — `pnpm build && pnpm test && pnpm release:validate`
+**Step 2: Post-merge re-verification (conditional)** — if PR #137 (`codex-subagent-max-depth`) merged after p05 completed, merge main and re-run the Codex `implement` scenario once; commit the refreshed evidence report (sibling-sequencing policy in `## Parallelism`).
+
+**Step 3: Verify** — `pnpm build && pnpm test && pnpm release:validate`
 Expected: all green.
 
-**Step 3: Commit** — `git add packages tools/smoke/README.md pnpm-lock.yaml && git commit -m "chore(p06-t03): bump lockstep packages and validate release"`
+**Step 4: Commit** — `git add packages tools/smoke/README.md pnpm-lock.yaml && git commit -m "chore(p06-t03): bump lockstep packages and validate release"`
 
 ---
 

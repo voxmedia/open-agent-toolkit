@@ -74,9 +74,13 @@ mechanism for cross-cutting workflow changes.
 
 ## Key Decisions
 
-1. **Fixture shape:** two phases × three explicit tasks with stable IDs; every
-   task makes a bounded, deterministic append to a fixture log. Trivial
-   implementation, real orchestration.
+1. **Fixture shape:** three phases × three explicit tasks with stable IDs;
+   phases 1 and 2 form a declared parallel group, phase 3 is sequential fan-in
+   dependent on both. Every task makes a bounded, deterministic append to a
+   fixture log. Trivial implementation, real orchestration. (Expanded from the
+   backlog item's two-phase shape during design, at user direction, to
+   exercise worktree parallelism, its permission gotchas, and post-fan-in
+   reconciliation.)
 2. **Opt-in smoke runner:** executes the normal project lifecycle with real
    authenticated provider runtimes — exact task-worker dispatch, configured
    phase reviews, final lifecycle gate. Never modifies the source repo or the
@@ -146,8 +150,9 @@ mechanism for cross-cutting workflow changes.
 
 ## Success Criteria
 
-- A version-controlled fixture can be copied into a disposable worktree; two
-  phases with three stable task IDs each; bounded deterministic task outcomes.
+- A version-controlled fixture can be copied into a disposable worktree; three
+  phases with three stable task IDs each (p01∥p02 parallel group + p03
+  fan-in); bounded deterministic task outcomes.
 - An opt-in smoke command or documented runner executes the normal lifecycle
   against real providers without mutating the source repo or persisted config.
 - Fixture config and report prove: phase/task dispatch, exact selected

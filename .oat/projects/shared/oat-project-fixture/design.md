@@ -283,9 +283,11 @@ the manifest leaves no orphans and never touches unrelated worktrees.
 
 ### Level 3 — Live smoke (the deliverable itself, opt-in)
 
-Per harness target (Codex, Claude, Cursor IDE, Cursor CLI): `plan-review`
-scenario, `implement` scenario, and at least one full-workflow run. Two
-negative controls: preflight against a deliberately unavailable target (must
+Per harness target (Codex, Claude, Cursor IDE, Cursor CLI): `plan-review` and
+`implement` scenarios. Full-workflow runs (plan-review → implement in one
+pass) are required on Codex and Cursor IDE; they are explicitly deferred for
+Claude and Cursor CLI to bound live-provider cost, with the deferral recorded
+in the cross-harness evidence summary. Two negative controls: preflight against a deliberately unavailable target (must
 report and exit without provisioning), and — where cheap — one observed
 reviewer/worker failure path confirming no-fallback-after-acceptance holds.
 Evidence reports are committed as the project's acceptance artifacts (these
