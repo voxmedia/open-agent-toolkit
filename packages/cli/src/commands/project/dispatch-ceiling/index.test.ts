@@ -425,6 +425,97 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('preserves modern project candidate ladders in the top-level JSON compatibility field', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    codex:',
+        '      balanced:',
+        '        candidates:',
+        '          - { harness: codex, model: gpt-5.6-terra, effort: medium }',
+        '      high:',
+        '        candidates:',
+        '          - { harness: codex, model: gpt-5.6-sol, effort: high }',
+        '          - route:',
+        '              - { harness: codex, model: gpt-5.6-sol, effort: xhigh }',
+        '              - { harness: cursor, model: gpt-5.6-sol-xhigh }',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      matrix: {
+        codex: {
+          balanced: {
+            candidates: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-terra',
+                effort: 'medium',
+              },
+            ],
+          },
+          high: {
+            candidates: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: 'high',
+              },
+              {
+                route: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'xhigh',
+                  },
+                  { harness: 'cursor', model: 'gpt-5.6-sol-xhigh' },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      providers: {
+        codex: {
+          cellSource: 'project-state',
+          selection: {
+            candidateTier: 'balanced',
+            requestedCandidate: {
+              model: 'gpt-5.6-terra',
+              effort: 'medium',
+            },
+          },
+        },
+      },
+    });
+    expect(capture.warn).toEqual([]);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('ignores malformed project dispatch matrix overrides with a warning', async () => {
     const { root, home } = await setup();
     await writeFile(
@@ -462,6 +553,38 @@ describe('oat project dispatch-ceiling resolve', () => {
       status: 'resolved',
       provider: 'codex',
       value: 'high',
+      matrix: null,
+    });
+    expect(capture.warn).toEqual([
+      'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns when the project dispatch matrix is not an object', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  matrix: malformed',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
       matrix: null,
     });
     expect(capture.warn).toEqual([
