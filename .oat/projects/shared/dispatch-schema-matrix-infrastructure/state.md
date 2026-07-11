@@ -17,7 +17,7 @@ oat_hill_checkpoints: [p05] # Quick mode defers implementation phase checkpoints
 oat_hill_completed: [p05] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -39,11 +39,11 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/136' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:08:56.274Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T14:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T14:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation and final gate complete; ready for PR handoff
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -113,6 +113,8 @@ Implementation and final gate complete; ready for PR handoff
 - ✓ Full repository and five-package release verification passed after manual closeout
 - ✓ Cross-runtime final gate passed with 0 findings (`1825244d-d5eb-4155-8dc6-f674ecadc1cc`)
 - ✓ Final review consumed; p06 and final review rows passed
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/136
+- ⧗ Awaiting human review
 - ⧗ Durable exact-dispatch broker and launcher-owned provenance tracked in `BL-260711-add-root-owned-dispatch-broker`
 
 ## Blockers
@@ -121,4 +123,7 @@ Implementation and final gate complete; ready for PR handoff
 
 ## Next Milestone
 
-Run the configured documentation/PR handoff sequence.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
