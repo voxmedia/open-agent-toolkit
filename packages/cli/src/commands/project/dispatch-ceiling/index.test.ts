@@ -232,6 +232,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           dispatchArgs: null,
           modelAxis: 'unresolved',
           effortAxis: 'unresolved',
+          selection: { candidateIndex: null },
         },
       },
     });
@@ -422,6 +423,43 @@ describe('oat project dispatch-ceiling resolve', () => {
       matrix: null,
     });
     expect(capture.warn).toEqual([]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('ignores direct structured project-state tier targets as malformed legacy input', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    codex:',
+        '      high: { model: gpt-5.6-sol, effort: high }',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'xhigh',
+      matrix: null,
+      providers: { codex: { selection: { candidateIndex: null } } },
+    });
+    expect(capture.warn).toEqual([
+      'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+    ]);
     expect(process.exitCode).toBe(0);
   });
 

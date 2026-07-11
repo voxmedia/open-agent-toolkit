@@ -229,6 +229,7 @@ function normalizeMatrixCell(
   value: unknown,
   path: string,
   issues: DispatchMatrixNormalizationIssue[],
+  compatibilityMode: 'layered-config' | 'project-state',
 ): WorkflowDispatchCandidateLadder | undefined {
   const scalar = normalizeProviderScalar(provider, value);
   if (scalar !== undefined) {
@@ -254,9 +255,11 @@ function normalizeMatrixCell(
     return candidates.length > 0 ? { candidates } : undefined;
   }
 
-  const target = normalizeRouteTarget(value);
-  if (target !== undefined) {
-    return { candidates: [target] };
+  if (compatibilityMode === 'layered-config') {
+    const target = normalizeRouteTarget(value);
+    if (target !== undefined) {
+      return { candidates: [target] };
+    }
   }
 
   if (Array.isArray(value)) {
@@ -329,6 +332,7 @@ export function normalizeDispatchMatrix(
         rawCell,
         tierPath,
         issues,
+        options.compatibilityMode,
       );
       if (normalized !== undefined) {
         tiers[tier as WorkflowDispatchMatrixTier] = normalized;

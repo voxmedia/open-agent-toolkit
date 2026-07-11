@@ -119,6 +119,52 @@ describe('normalizeDispatchMatrix', () => {
       },
     ]);
   });
+
+  it('keeps direct targets layered-only while preserving project ladders and legacy routes', () => {
+    const directTarget = { model: 'gpt-5.6-sol', effort: 'high' };
+    const layered = normalizeDispatchMatrix(
+      { codex: { high: directTarget } },
+      { pathPrefix: 'matrix', compatibilityMode: 'layered-config' },
+    );
+    expect(layered).toEqual({
+      providers: {
+        codex: { high: { candidates: [directTarget] } },
+      },
+      issues: [],
+    });
+
+    const projectState = normalizeDispatchMatrix(
+      {
+        codex: {
+          economy: { candidates: ['low'] },
+          high: directTarget,
+        },
+        cursor: {
+          balanced: ['opaque-primary', { harness: 'claude', model: 'sonnet' }],
+        },
+      },
+      { pathPrefix: 'matrix', compatibilityMode: 'project-state' },
+    );
+    expect(projectState.providers).toEqual({
+      codex: { economy: { candidates: ['low'] } },
+      cursor: {
+        balanced: {
+          candidates: [
+            {
+              route: ['opaque-primary', { harness: 'claude', model: 'sonnet' }],
+            },
+          ],
+        },
+      },
+    });
+    expect(projectState.issues).toEqual([
+      {
+        path: 'matrix.codex.high',
+        kind: 'malformed-candidate',
+        value: directTarget,
+      },
+    ]);
+  });
 });
 
 describe('walkDispatchMatrix', () => {
