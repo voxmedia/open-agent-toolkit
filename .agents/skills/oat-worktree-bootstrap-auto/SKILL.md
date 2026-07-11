@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.4.0
+version: 1.5.0
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -41,12 +41,13 @@ When this skill is executed, provide concise status updates:
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before major phases, print compact indicators, for example:
-  - `[1/6] Resolving worktree root…`
-  - `[2/6] Creating/reusing worktree…`
-  - `[3/6] Verifying resolved base in worktree HEAD…`
-  - `[4/6] Running baseline checks…`
-  - `[5/6] Syncing provider directories…`
-  - `[6/6] Returning structured status…`
+  - `[1/7] Resolving worktree root…`
+  - `[2/7] Detecting bootstrap mode from resolved base…`
+  - `[3/7] Creating/reusing worktree…`
+  - `[4/7] Verifying resolved base in worktree HEAD…`
+  - `[5/7] Running baseline checks…`
+  - `[6/7] Syncing providers or recording smoke skips…`
+  - `[7/7] Returning structured status…`
 
 ## Inputs
 
@@ -69,7 +70,14 @@ When this skill is executed, provide concise status updates:
 | `strict`        | Fail fast on any baseline check failure. Return error status immediately.                                  |
 | `allow-failing` | Continue on baseline failures. Emit structured warnings. Log failures to project artifacts when available. |
 
+The baseline policy never downgrades smoke containment failures. A missing,
+unsafe, or malformed smoke marker, or failure of the smoke-safe
+`pnpm run worktree:init` path, is always fatal.
+
 ## Process
+
+Initialize `BOOTSTRAP_MODE=normal` at process entry so even failures before base
+inspection return an explicit mode. Only Step 1.5 may change it to `smoke`.
 
 ### Step 1: Resolve Worktree Root
 
@@ -86,19 +94,84 @@ Use the same resolution precedence as `oat-worktree-bootstrap`:
 
 If the resolved root is project-local (`.worktrees` or `worktrees`), verify it is gitignored.
 
+### Step 1.5: Resolve Base and Detect Bootstrap Mode
+
+Resolve the base commit and inspect that commit, not the caller's checkout or
+the eventual target, before any worktree creation command:
+
+```bash
+RESOLVED_BASE_SHA=$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")
+BOOTSTRAP_MODE=normal
+SMOKE_MARKER_ENTRY=$(
+  git -C "$REPO_ROOT" ls-tree "$RESOLVED_BASE_SHA" -- ".oat/smoke-bootstrap.json"
+)
+if [[ -n "$SMOKE_MARKER_ENTRY" ]]; then
+  BOOTSTRAP_MODE=smoke
+fi
+```
+
+`BOOTSTRAP_MODE` is derived state, not a caller override. Set
+`BOOTSTRAP_MODE=smoke` only when the resolved base commit tracks the marker
+path. An absent path selects `normal`; a base-resolution or tree-inspection
+error is a bootstrap error. This detection must complete before Step 2.
+
 ### Step 2: Create or Reuse Worktree
 
 - Validate branch name: `^[a-zA-Z0-9._/-]+$`
 - Resolve target path: `{root}/{branch-name}`
-- If branch exists locally: `git worktree add "{target-path}" "{branch-name}"`
-- If branch does not exist: `git worktree add "{target-path}" -b "{branch-name}" "{base-ref}"`
-- If worktree already exists at target path: reuse it (validate branch matches)
+- In normal mode, preserve existing behavior:
+  - If the branch exists locally:
+    `git -C "$REPO_ROOT" worktree add "$TARGET_PATH" "$BRANCH_NAME"`
+  - If the branch does not exist:
+    `git -C "$REPO_ROOT" worktree add "$TARGET_PATH" -b "$BRANCH_NAME" "$BASE_REF"`
+  - If a worktree already exists at the target path, reuse it after validating
+    that its branch matches.
+- In smoke mode, disable repository hooks only for each create/reuse command
+  invocation. Never mutate persistent Git configuration:
+
+  ```bash
+  # Existing branch
+  git -c core.hooksPath=/dev/null -C "$REPO_ROOT" worktree add \
+    "$TARGET_PATH" "$BRANCH_NAME"
+
+  # New branch
+  git -c core.hooksPath=/dev/null -C "$REPO_ROOT" worktree add \
+    "$TARGET_PATH" -b "$BRANCH_NAME" "$BASE_REF"
+
+  # Reused target validation uses the same invocation-scoped suppression.
+  git -c core.hooksPath=/dev/null -C "$TARGET_PATH" \
+    rev-parse --abbrev-ref HEAD
+  ```
+
+  Do not run `git config core.hooksPath ...`; the suppression must remain
+  invocation-scoped.
+
+After smoke-mode creation or reuse, require the tracked marker in the target
+before any propagation, sync, status, or test command:
+
+```bash
+git -C "$TARGET_PATH" ls-files --error-unmatch -- ".oat/smoke-bootstrap.json"
+SMOKE_MARKER="$TARGET_PATH/.oat/smoke-bootstrap.json"
+test -d "$TARGET_PATH/.oat"
+test ! -L "$TARGET_PATH/.oat"
+test -f "$SMOKE_MARKER"
+test ! -L "$SMOKE_MARKER"
+```
+
+Any failed check is a fatal containment failure with
+`reason: smoke-marker-invalid`, regardless of baseline policy. Do not fall
+through to normal mode.
 
 On failure: return structured error, do not prompt.
 
 ### Step 2.5: Propagate Local-Only Config + Local Paths
 
-After the worktree is created or reused, copy gitignored local-only config and sync configured local paths.
+**Smoke mode:** skip source config propagation and `oat local sync` entirely.
+The safe init path owns the only permitted config transfer. Do not read or copy
+the invoking checkout's local-only config here.
+
+**Normal mode:** after the worktree is created or reused, copy gitignored
+local-only config and sync configured local paths as before.
 
 **Config propagation:**
 
@@ -126,11 +199,7 @@ oat local sync "$TARGET_PATH" 2>/dev/null || true
 
 Before any baseline checks run, verify the worktree actually branched from the resolved base. This catches host-native or git-internal misbehavior that would otherwise silently land the worktree at the wrong base.
 
-1. Resolve the base SHA:
-
-   ```bash
-   RESOLVED_BASE_SHA=$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")
-   ```
+1. Reuse `RESOLVED_BASE_SHA` from Step 1.5.
 
 2. Capture the worktree HEAD:
 
@@ -149,12 +218,17 @@ Before any baseline checks run, verify the worktree actually branched from the r
 
 **On base mismatch:** treat as a bootstrap failure. Do **not** silently land at the wrong base, do **not** proceed to baseline checks. Apply the configured baseline policy to the failure:
 
+- `smoke` → return immediately with `status: failed` and
+  `reason: smoke-base-mismatch`. This is a containment failure and cannot be
+  downgraded by `allow-failing`.
 - `strict` → return immediately with `status: failed`, `reason: base-mismatch`, populated `expected_base_sha` and `observed_head_sha`, and the worktree path. The orchestrator is expected to cancel the dispatch and degrade.
 - `allow-failing` → emit a structured warning (`reason: base-mismatch`, with `expected_base_sha` and `observed_head_sha`), append a base-mismatch entry to `implementation.md` if an active project exists, and continue to Step 3 only if the caller has explicitly opted into a degraded outcome. In all other cases prefer fail-fast — base mismatch is rarely recoverable.
 
 ### Step 3: Run Baseline Checks
 
-Execute in the target worktree directory:
+Execute in the target worktree directory.
+
+**Normal mode:**
 
 ```bash
 pnpm run worktree:init          # install + build + sync
@@ -162,10 +236,32 @@ oat status --scope project
 pnpm test
 ```
 
-Continue to Step 4 for provider directory setup, the `git_clean` baseline
-check, and the all-scope sync. The `git_clean` check must run after provider
-directory creation but before the all-scope sync sweep, so it measures inherited
-worktree state plus setup output rather than the sync sweep's generated output.
+Continue to Step 4 for normal provider directory setup, the `git_clean`
+baseline check, and the all-scope sync. The `git_clean` check must run after
+provider directory creation but before the all-scope sync sweep, so it measures
+inherited worktree state plus setup output rather than the sync sweep's
+generated output.
+
+**Smoke mode:**
+
+In smoke mode, run `pnpm run worktree:init`; it owns marker validation,
+manifest journaling, hash-bound config copy, offline/frozen install, and build.
+Do not duplicate or precede those operations in this skill.
+
+```bash
+pnpm run worktree:init
+node packages/cli/dist/index.js status --scope project
+pnpm test
+git status --porcelain
+```
+
+The first command is the safe-init boundary. Any nonzero exit is a containment
+failure: return immediately with `status: failed` and
+`reason: smoke-init-failed`, regardless of whether the marker is missing,
+unsafe, or malformed or a journal/config/install/build check failed. Never
+apply `allow-failing` to that result. Run the remaining read-only/local checks
+only after safe init succeeds. Never run PATH-resolved `oat` in smoke mode; the
+built repository-local CLI entrypoint is the only permitted OAT executable.
 
 Check behavior per baseline policy:
 
@@ -183,8 +279,21 @@ Check behavior per baseline policy:
 
 ### Step 4: Create Provider Directories and Sync
 
-Worktrees do not inherit gitignored provider directories. Create them if
-missing, run the `git_clean` baseline check, and then run sync:
+**Smoke mode:** skip provider-directory creation, all-scope sync, staging, and
+sync commits. Do not run `mkdir` for provider views, `oat sync --scope all`,
+`git add`, or `git commit`. After the safe local status/test checks in Step 3,
+run only the final clean check:
+
+```bash
+git status --porcelain
+```
+
+Record `provider_sync: skip` and `sync_commit: skip`, plus every structured
+smoke skip listed in Step 5. Any dirty result is handled as the `git_clean`
+baseline check; it does not authorize cleanup, staging, or a commit.
+
+**Normal mode:** worktrees do not inherit gitignored provider directories.
+Create them if missing, run the `git_clean` baseline check, and then run sync:
 
 ```bash
 mkdir -p "{target-path}/.claude/skills"
@@ -224,6 +333,7 @@ branch: '{branch-name}'
 base_ref: '{base-ref}'
 resolved_base_sha: '{sha resolved from base-ref}'
 observed_head_sha: '{sha of worktree HEAD after add}'
+bootstrap_mode: normal | smoke
 checks:
   worktree_init: pass | fail | skip
   project_status: pass | fail | skip
@@ -231,14 +341,25 @@ checks:
   git_clean: pass | fail | skip
   provider_sync: pass | fail | skip
   sync_commit: pass | fail | skip
+smoke_skips:
+  local_config_propagation: true | false
+  local_paths_sync: true | false
+  provider_directory_creation: true | false
+  provider_sync: true | false
+  sync_staging: true | false
+  sync_commit: true | false
 warnings: [] # List of warning messages (allow-failing mode)
 error: null # Error message (strict mode failure)
-reason: null # Structured reason on failure (e.g., base-mismatch)
+reason: null # e.g., base-mismatch, smoke-marker-invalid, smoke-init-failed
 expected_base_sha: null # Populated when reason is base-mismatch
 baseline_policy: strict | allow-failing
 ```
 
 `resolved_base_sha` and `observed_head_sha` are populated on **every** terminal status (success, warning, error, failed) so callers can perform belt-and-suspenders post-verification on the success path as well as diagnose the failure path.
+
+`bootstrap_mode` is populated on every terminal status after Step 1.5.
+`smoke_skips` is explicit on every terminal status: all six values are `true`
+for smoke mode and `false` for normal mode.
 
 **Status determination:**
 
@@ -248,6 +369,11 @@ baseline_policy: strict | allow-failing
 - `error`: `sync_commit` failed under `strict` policy.
 - `warning`: `sync_commit` failed under `allow-failing` policy.
 - `failed` (with `reason: base-mismatch`): Step 2.7 base-resolution verification failed. Callers should treat this distinctly from a generic baseline error — it is a contract violation, not a flaky check.
+- `failed` (with `reason: smoke-marker-invalid`): smoke mode was detected from
+  the resolved base but the target marker is missing or unsafe.
+- `failed` (with `reason: smoke-init-failed`): the marker is malformed or the
+  safe-init containment path failed. Both smoke failure statuses are fatal
+  under `strict` and `allow-failing`.
 
 ## Error Handling
 
@@ -255,6 +381,8 @@ baseline_policy: strict | allow-failing
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | Worktree creation fails                    | Return error status with git error message                                                                                 |
 | Branch already checked out elsewhere       | Return error with worktree location info                                                                                   |
+| Smoke marker missing or unsafe             | Return `status: failed`, `reason: smoke-marker-invalid`; never run propagation, sync, status, or tests                     |
+| Smoke marker malformed or safe init fails  | Return `status: failed`, `reason: smoke-init-failed`; never downgrade under `allow-failing`                                |
 | Base mismatch (Step 2.7 fails, strict)     | Return `status: failed`, `reason: base-mismatch`, with `expected_base_sha` and `observed_head_sha`. Do not run baselines.  |
 | Base mismatch (Step 2.7 fails, allow-fail) | Emit structured warning with `reason: base-mismatch`, log to artifacts, prefer fail-fast unless caller opted into degrade. |
 | Baseline check fails (strict)              | Return error with check name and failure output                                                                            |
@@ -304,6 +432,10 @@ When a base mismatch is detected (Step 2.7) and an active project exists, append
 | `strict`        | Fail fast, return error immediately | Error in status output                     | `status: error`   |
 | `allow-failing` | Continue, collect warnings          | Append to `implementation.md` (or console) | `status: warning` |
 
+Containment failures are outside this table's baseline-failure policy. A
+missing, unsafe, or malformed smoke marker and any smoke safe-init failure are
+fatal under both policies.
+
 **Orchestrator integration:**
 
 - When invoked by `oat-project-implement` in parallel mode, the baseline policy is passed through from the orchestration run policy.
@@ -316,10 +448,15 @@ When a base mismatch is detected (Step 2.7) and an active project exists, append
 - **Never** create fallback artifact files — log to existing artifacts or console only.
 - **Never** modify implementation code — bootstrap and checks only.
 - **Never** override or conflict with `oat-worktree-bootstrap` manual-safe behavior.
+- **Never** propagate caller-local config, sync local paths/providers, stage, or
+  commit from smoke mode.
+- **Never** use a PATH-resolved `oat` executable for smoke checks.
 
 ## Success Criteria
 
 - Worktree exists and is on the correct branch.
+- Bootstrap mode was derived from the resolved base before creation.
 - Baseline checks executed per policy.
+- Smoke mode completed safe init without any skipped side-effect path running.
 - Structured status returned for orchestrator consumption.
 - Failures logged to appropriate destination without user interaction.

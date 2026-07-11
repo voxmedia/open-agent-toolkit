@@ -1001,6 +1001,112 @@ describe('validateOatSkills', () => {
     expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
   });
 
+  it('detects smoke bootstrap mode from the resolved base before worktree creation', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+    const detectionIndex = content.indexOf(
+      'git -C "$REPO_ROOT" ls-tree "$RESOLVED_BASE_SHA" -- ".oat/smoke-bootstrap.json"',
+    );
+    const creationIndex = content.indexOf(
+      '### Step 2: Create or Reuse Worktree',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
+    expect(detectionIndex).toBeGreaterThanOrEqual(0);
+    expect(creationIndex).toBeGreaterThan(detectionIndex);
+    expect(content).toContain('BOOTSTRAP_MODE=normal');
+    expect(content).toContain('BOOTSTRAP_MODE=smoke');
+    expect(content).toContain('bootstrap_mode: normal | smoke');
+  });
+
+  it('keeps smoke bootstrap creation hook-scoped and delegates containment to safe init', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+    const creation = content.slice(
+      content.indexOf('### Step 2: Create or Reuse Worktree'),
+      content.indexOf(
+        '### Step 2.5: Propagate Local-Only Config + Local Paths',
+      ),
+    );
+
+    expect(creation).toContain(
+      'git -c core.hooksPath=/dev/null -C "$REPO_ROOT" worktree add',
+    );
+    expect(creation).toMatch(/invocation-scoped/i);
+    expect(creation).not.toMatch(/^\s*git config .*core\.hooksPath/m);
+    expect(creation).toContain(
+      'git -C "$TARGET_PATH" ls-files --error-unmatch -- ".oat/smoke-bootstrap.json"',
+    );
+    expect(content).toMatch(
+      /smoke[\s\S]{0,320}`pnpm run worktree:init`[\s\S]{0,320}marker validation[\s\S]{0,180}manifest journaling[\s\S]{0,180}hash-bound config copy[\s\S]{0,180}offline\/frozen install[\s\S]{0,180}build/i,
+    );
+  });
+
+  it('keeps smoke bootstrap closed to local and provider sync side effects', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+    const propagation = content.slice(
+      content.indexOf(
+        '### Step 2.5: Propagate Local-Only Config + Local Paths',
+      ),
+      content.indexOf('### Step 2.7: Verify Resolved Base in Worktree HEAD'),
+    );
+    const smokePropagation = propagation.slice(
+      0,
+      propagation.indexOf('**Normal mode:**'),
+    );
+    const baseline = content.slice(
+      content.indexOf('### Step 3: Run Baseline Checks'),
+      content.indexOf('Check behavior per baseline policy:'),
+    );
+    const smokeBaseline = baseline.slice(baseline.indexOf('**Smoke mode:**'));
+    const providerSync = content.slice(
+      content.indexOf('### Step 4: Create Provider Directories and Sync'),
+      content.indexOf('### Step 5: Return Structured Status'),
+    );
+    const smokeProviderSync = providerSync.slice(
+      0,
+      providerSync.indexOf('**Normal mode:**'),
+    );
+
+    expect(propagation).toMatch(
+      /smoke mode[\s\S]{0,260}skip[\s\S]{0,160}config propagation[\s\S]{0,160}`oat local sync`/i,
+    );
+    expect(smokePropagation).not.toMatch(/^\s*(?:cp|oat local sync)\s/m);
+    expect(providerSync).toMatch(
+      /smoke mode[\s\S]{0,320}skip[\s\S]{0,240}provider[- ]director[\s\S]{0,240}all-scope sync[\s\S]{0,240}staging[\s\S]{0,160}sync commit/i,
+    );
+    expect(smokeProviderSync).not.toMatch(
+      /^\s*(?:mkdir|oat sync|git add|git commit)\s/m,
+    );
+    expect(content).toContain(
+      'node packages/cli/dist/index.js status --scope project',
+    );
+    expect(smokeBaseline).not.toMatch(/^\s*oat\s/m);
+    expect(content).toMatch(/never run\s+PATH-resolved `oat` in smoke mode/i);
+    expect(content).toMatch(
+      /missing,\s*unsafe,\s*or malformed smoke marker[\s\S]{0,320}(?:always )?fatal/i,
+    );
+    expect(content).toMatch(
+      /safe-init failure[\s\S]{0,320}fatal[\s\S]{0,240}(?:both policies|`allow-failing`)/i,
+    );
+    for (const skippedOperation of [
+      'local_config_propagation',
+      'local_paths_sync',
+      'provider_directory_creation',
+      'provider_sync',
+      'sync_staging',
+      'sync_commit',
+    ]) {
+      expect(content, `structured smoke skip ${skippedOperation}`).toContain(
+        `${skippedOperation}: true | false`,
+      );
+    }
+  });
+
   it('makes native Codex dispatch and launcher-owned provenance authoritative', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
