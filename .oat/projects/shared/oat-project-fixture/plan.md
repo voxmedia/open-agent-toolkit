@@ -146,7 +146,7 @@ Run: `node --test tools/smoke/runner/args.test.mjs` — Expected: fails.
 - Create: `tools/smoke/runner/preflight.mjs`
 - Modify: `tools/smoke/runner/run-smoke.mjs` (wire preflight)
 
-**Step 1: Write test (RED)** — `tools/smoke/runner/preflight.test.mjs`: with injected probes, preflight (a) reports each provider runtime's availability, (b) fails closed when the harness under test is unavailable, (c) detects a stale global `oat` shadowing the local build (PATH resolution vs local dist), (d) validates fixture integrity before any provisioning, (e) never creates files on failure, (f) honors `OAT_SMOKE_FORCE_UNAVAILABLE=<harness>` — a scoped override that forces exactly that harness's availability probe to report unavailable, giving the live negative control a deterministic route that does not depend on any runtime actually being missing.
+**Step 1: Write test (RED)** — `tools/smoke/runner/preflight.test.mjs`: with injected probes, preflight (a) reports each provider runtime's availability, (b) fails closed when the harness under test is unavailable, (c) detects a stale global `oat` shadowing the local build (PATH resolution vs local dist), (d) validates fixture integrity before any provisioning, (e) never creates files on failure, (f) honors `OAT_SMOKE_FORCE_UNAVAILABLE=<harness>` — a scoped override that forces exactly that harness's availability probe to report unavailable, giving the live negative control a deterministic route that does not depend on any runtime actually being missing, (g) distinguishes **installed from authenticated**: a non-mutating auth-readiness probe per harness (e.g. `codex login status` / `claude auth status` / `cursor-agent status` equivalents), an installed-but-unauthenticated test case that fails closed, auth results included in both human and JSON readiness reports, and auth failure creating no manifest, branch, or worktree.
 Run: `node --test tools/smoke/runner/preflight.test.mjs` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — probes: `command -v` + version/identity checks per provider CLI, local binary fingerprint, fixture test invocation. Readiness report to stdout (human) + JSON.
@@ -368,7 +368,15 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 **Step 2: Execute** — run `plan-review`, then `implement`, then one `full` scenario via `node tools/smoke/runner/run-smoke.mjs --harness codex --scenario <s>`.
 
-**Step 3: Verify** — the assertion profile matching each scenario passes: `plan-review` run → plan-review profile (resume discipline, review disposition, state transitions); `implement` run → implement profile (native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration); `full` run → union. `node --test 'tools/smoke/evidence/**/*.test.mjs'` still green.
+**Step 3: Verify** — exactly, each expecting exit 0, all three required before the task commit:
+
+```bash
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/plan-review/report.json
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/implement/report.json
+node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/full/report.json
+```
+
+The assertion profile matching each scenario applies: `plan-review` → plan-review profile (resume discipline, review disposition, state transitions); `implement` → implement profile (native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration); `full` → union. `node --test 'tools/smoke/evidence/**/*.test.mjs'` still green.
 
 **Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "feat(p05-t02): record codex live smoke evidence"`
 
@@ -500,18 +508,19 @@ Assert: nonzero exit, unavailability named in the preflight report, **no provisi
 
 _Sequential; depends on p05._
 
-### Task p06-t01: OAT docs — orchestration/subagents/programmatic execution
+### Task p06-t01: OAT docs — orchestration/subagents/programmatic execution + smoke runbook
 
 **Files:**
 
-- Create: docs pages under `apps/oat-docs/docs/` (orchestration model, subagent dispatch & selection contract, evidence layers, smoke workflow how-to) with the required mermaid diagram set from discovery Decision #9: per-harness coordinator/worker topology; dispatch selection flow (ladder ∩ ceiling ∩ native catalog, incl. the mismatch advisory); the four review flavors and their target resolution (planning self-review = inherit, implementation self-review = at-ceiling pin, phase review gate = gate target, lifecycle gate = cross-runtime CLI exec target with possible nested managed reviewer); three-layer evidence model; smoke runner data flow
+- Create: docs pages under `apps/oat-docs/docs/` — (a) orchestration model, subagent dispatch & selection contract, and evidence layers, with the required mermaid diagram set from discovery Decision #9: per-harness coordinator/worker topology; dispatch selection flow (ladder ∩ ceiling ∩ native catalog, incl. the mismatch advisory); the four review flavors and their target resolution (planning self-review = inherit, implementation self-review = at-ceiling pin, phase review gate = gate target, lifecycle gate = cross-runtime CLI exec target with possible nested managed reviewer); three-layer evidence model; smoke runner data flow; **(b) a dedicated smoke-testing runbook**: per-harness prerequisites and auth readiness, scenario selection (`plan-review`/`implement`/`full`), exact commands including the manual Cursor IDE prepare/collect flow and the negative control, evidence-report interpretation, cleanup/recovery after interrupted runs, and **when and how to update the fixture as workflows change** — the runbook's operational purpose is that future workflow adjustments have an unambiguous testing process
+- Modify: `apps/oat-docs/AGENTS.md` — refine the project-docs rule from hard prohibition to guidance: `oat-project-document` is the default end-of-project documentation flow (its guidance is valuable and should be generally followed), but an explicit in-plan doc-authoring task is sanctioned when documentation is central to the project's scope, provided the skill's core guidance (delta analysis, user approval of substantive content, nav sync, generated-index regeneration) is honored
 - Modify: docs nav per `apps/oat-docs/AGENTS.md` conventions; regenerate `apps/oat-docs/index.md` via `oat docs generate-index`
 
-**Step 1: Author** — pages draw on `design.md`, `tools/smoke/reports/SUMMARY.md`, and the project references; diagrams authored in mermaid.
+**Step 1: Author** — pages draw on `design.md`, `tools/smoke/reports/SUMMARY.md`, and the project references; diagrams authored in mermaid. Follow `oat-project-document` guidance generally: present the page/nav delta for user approval before finalizing. (Disposition of gate finding I3: doc authoring is deliberately an explicit phase here because documentation is a core project requirement per discovery Decision #9 — user-sanctioned 2026-07-11.)
 
 **Step 2: Verify** — `pnpm build:docs` green; generated index regenerated (not hand-edited); `pnpm lint && pnpm format`.
 
-**Step 3: Commit** — `git add apps/oat-docs && git commit -m "docs(p06-t01): add orchestration and smoke workflow documentation"`
+**Step 3: Commit** — `git add apps/oat-docs && git commit -m "docs(p06-t01): add orchestration docs and smoke runbook"`
 
 ---
 
@@ -544,11 +553,12 @@ _Sequential; depends on p05._
 **Files:**
 
 - Modify: five lockstep public package manifests (version bump — docs under `apps/oat-docs/docs` count as shipped functionality per repo policy)
-- Modify: `tools/smoke/README.md` (documents the runner as a manual/release-validation smoke, not default CI)
+- Modify: `tools/smoke/README.md` (documents the runner as a manual/release-validation smoke, not default CI; links the docs runbook as the authoritative operating guide)
+- Conditional: `tools/smoke/reports/codex/implement/` (refreshed post-merge re-verification evidence, when Step 2's condition fires)
 
 **Step 1: Bump & document** — lockstep bump all five public packages; author the README.
 
-**Step 2: Post-merge re-verification (conditional)** — if PR #137 (`codex-subagent-max-depth`) merged after p05 completed, merge main and re-run the Codex `implement` scenario once; commit the refreshed evidence report (sibling-sequencing policy in `## Parallelism`).
+**Step 2: Post-merge re-verification (conditional)** — if PR #137 (`codex-subagent-max-depth`) merged after p05 completed, merge main and re-run the Codex `implement` scenario once; verify with `node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/implement/report.json` (exit 0) and stage the refreshed evidence explicitly: `git add tools/smoke/reports/codex/implement && git commit -m "chore(p06-t03): refresh codex smoke evidence post-merge"` (sibling-sequencing policy in `## Parallelism`).
 
 **Step 3: Verify** — `pnpm build && pnpm test && pnpm release:validate`
 Expected: all green.
@@ -559,18 +569,18 @@ Expected: all green.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                                                                                                    |
-| ------ | -------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                                                                                                           |
-| p02    | code     | pending  | -          | -                                                                                                                                           |
-| p03    | code     | pending  | -          | -                                                                                                                                           |
-| p04    | code     | pending  | -          | -                                                                                                                                           |
-| p05    | code     | pending  | -          | -                                                                                                                                           |
-| p06    | code     | pending  | -          | -                                                                                                                                           |
-| final  | code     | pending  | -          | -                                                                                                                                           |
-| spec   | artifact | pending  | -          | -                                                                                                                                           |
-| design | artifact | pending  | -          | -                                                                                                                                           |
-| plan   | artifact | received | 2026-07-11 | reviews/artifact-plan-review-2026-07-11T170953Z.md — gate re-review found 3 Important + 1 Medium; blocking findings awaiting review receive |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| p02    | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| p03    | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| p04    | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| p05    | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| p06    | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| final  | code     | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| spec   | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| design | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| plan   | artifact | fixes_completed | 2026-07-11 | Round 1: reviews/artifact-plan-review-2026-07-11T165003Z.md (2I+2M, fixed; verified clean in round 2). Round 2: reviews/artifact-plan-review-2026-07-11T170953Z.md (3I+1M, all fixed: auth-readiness preflight, Codex report checks, explicit doc-authoring task w/ runbook + AGENTS.md nuance, p06-t03 conditional evidence scope). Gate maxAttempts exhausted; user decision 2026-07-11: accept with fixes recorded, no further gate runs. |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

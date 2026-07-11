@@ -131,7 +131,13 @@ mechanism for cross-cutting workflow changes.
    (planning self-review = inherit; implementation self-review = at-ceiling
    pin; phase review gate = gate target; lifecycle gate = cross-runtime CLI
    exec target, possibly with nested managed reviewer dispatch); three-layer
-   evidence model; smoke runner data flow.
+   evidence model; smoke runner data flow. A **dedicated smoke-testing
+   runbook** is a named deliverable: how to run it end to end, and when/how
+   to update the fixture as workflows change. Docs-workflow nuance (user,
+   2026-07-11): `oat-project-document` is the default end-of-project docs
+   flow, not a hard prohibition on in-plan doc authoring — an explicit
+   doc-authoring task is sanctioned when documentation is central to project
+   scope, provided the skill's guidance is generally followed.
 10. **Durable knowledge capture (Vault):** findings are mirrored into the
     user's Vault — `04 - Resources/Programmatic Agent Execution/Harnesses/`
     (per-harness dossiers created 2026-07-11) and

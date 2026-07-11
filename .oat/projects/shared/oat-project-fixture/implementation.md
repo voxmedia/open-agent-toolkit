@@ -31,6 +31,14 @@ oat_generated: false
   scope). Artifact: `reviews/artifact-plan-review-2026-07-11T170953Z.md`.
 - **Escalated to user 2026-07-11** with accumulated feedback per gate
   contract.
+- **User decision 2026-07-11:** apply all attempt-2 fixes, skip further gate
+  runs; plan accepted with fixes recorded. Docs-workflow nuance recorded: the
+  `oat-project-document` flow is default guidance, not a hard prohibition —
+  an explicit doc-authoring task is sanctioned when documentation is central
+  to project scope (as here), provided the skill's guidance is generally
+  followed. Core requirement reaffirmed: the smoke process must be documented
+  well enough that future workflow changes have a clear testing process and
+  fixture-update path (dedicated runbook is a named p06-t01 deliverable).
 
 > This document is used to resume interrupted implementation sessions.
 >
