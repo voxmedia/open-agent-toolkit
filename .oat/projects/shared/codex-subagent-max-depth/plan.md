@@ -565,15 +565,15 @@ git commit -m "chore(p03-t02): prepare codex depth release"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
-| p02    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
-| p03    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer                             |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-11 | reviews/archived/artifact-plan-review-2026-07-11T032911Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                         |
+| ------ | -------- | ------- | ---------- | -------------------------------- |
+| p01    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer  |
+| p02    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer  |
+| p03    | code     | passed  | 2026-07-11 | in-memory exact pinned reviewer  |
+| final  | code     | pending | -          | -                                |
+| spec   | artifact | pending | -          | -                                |
+| design | artifact | pending | -          | -                                |
+| plan   | artifact | passed  | 2026-07-11 | in-memory exact pinned re-review |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

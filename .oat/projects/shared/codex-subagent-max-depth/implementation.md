@@ -280,7 +280,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ### Review Received: plan
 
 **Date:** 2026-07-11
-**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-11T032911Z.md`
+**Review evidence:** in-memory exact pinned re-review; local gate artifact was
+archived after findings were resolved
 
 **Findings:**
 
