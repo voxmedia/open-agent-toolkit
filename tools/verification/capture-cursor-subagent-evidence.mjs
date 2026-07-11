@@ -18,6 +18,8 @@ const AUTHORIZATION_HEADER =
   /\b((?:proxy-)?authorization)\b["']?\s*[:=]\s*["']?([^\r\n,;'"`]+)/gi;
 const COOKIE_HEADER =
   /\b((?:set-)?cookie)\b["']?\s*[:=]\s*["']?[^\r\n,'"]+/gi;
+const LOCAL_PATH =
+  /(?:^|[\s"'`=(])(?:\/(?:Users|home|private|tmp|var|etc|opt|Volumes)(?:\/|$)|[A-Za-z]:[\\/]|\\\\[^\\/\s]+[\\/])/;
 const CREDENTIAL_ASSIGNMENT = new RegExp(
   String.raw`\b((?:[a-z0-9_.-]*(?:credential|api[_-]?key|token|secret|password)[a-z0-9_.-]*)|api key)\b["']?\s*[:=]\s*["']?[^\s,;}'"\x60]+`,
   'gi',
@@ -394,6 +396,23 @@ const EVENT_KEYS = new Set([
   'sentinelObserved',
   'terminalError',
 ]);
+const EVENT_TYPES = new Set([
+  'system',
+  'user',
+  'assistant',
+  'tool_call',
+  'result',
+]);
+const EVENT_SUBTYPES = new Set([
+  'init',
+  'started',
+  'completed',
+  'success',
+  'error',
+]);
+const TOOL_NAMES = new Set(['Task']);
+const TASK_RESULTS = new Set(['error', 'success', 'unknown']);
+const OPAQUE_MODEL = /^[\p{L}\p{N}][\p{L}\p{N}._:+/@-]{0,127}$/u;
 
 const CAPTURE_KEYS = new Set([
   'schemaVersion',
@@ -437,6 +456,50 @@ function requireExactKeys(value, allowed, required, label) {
 
 function sameValue(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function validatePublicString(value, label) {
+  if (typeof value !== 'string') {
+    fail(`${label} must be a string`);
+  }
+  if (redactString(value) !== value) {
+    fail(`${label} contains unsafe credential material`);
+  }
+  if (LOCAL_PATH.test(value)) {
+    fail(`${label} contains an unsafe local path`);
+  }
+}
+
+function validateStructuralValue(value, allowed, label) {
+  validatePublicString(value, label);
+  if (!allowed.has(value)) {
+    fail(`${label} has an unsafe structural value`);
+  }
+}
+
+function validateOpaqueModel(value, label) {
+  validatePublicString(value, label);
+  if (!OPAQUE_MODEL.test(value)) {
+    fail(`${label} model value is unsafe`);
+  }
+}
+
+function validatePublicValueSafety(value, label) {
+  if (typeof value === 'string') {
+    validatePublicString(value, label);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) =>
+      validatePublicValueSafety(entry, `${label}[${index}]`),
+    );
+    return;
+  }
+  if (isObject(value)) {
+    for (const [key, entry] of Object.entries(value)) {
+      validatePublicValueSafety(entry, `${label}.${key}`);
+    }
+  }
 }
 
 function deriveProbeProjection(probe, label) {
@@ -566,9 +629,46 @@ function validateProbeAllowlist(probe, label) {
       }
     }
     for (const [key, value] of Object.entries(event)) {
+      if (typeof value === 'string') {
+        validatePublicString(value, `${label}.events[${index}].${key}`);
+      }
       if (key.endsWith('Hash') && !/^sha256:[a-f0-9]{64}$/.test(value)) {
         fail(`${label}.events[${index}].${key} must be a non-reversible hash`);
       }
+    }
+    if ('eventType' in event) {
+      validateStructuralValue(
+        event.eventType,
+        EVENT_TYPES,
+        `${label}.events[${index}].eventType`,
+      );
+    }
+    if ('subtype' in event) {
+      validateStructuralValue(
+        event.subtype,
+        EVENT_SUBTYPES,
+        `${label}.events[${index}].subtype`,
+      );
+    }
+    if ('toolName' in event) {
+      validateStructuralValue(
+        event.toolName,
+        TOOL_NAMES,
+        `${label}.events[${index}].toolName`,
+      );
+    }
+    if ('taskResult' in event) {
+      validateStructuralValue(
+        event.taskResult,
+        TASK_RESULTS,
+        `${label}.events[${index}].taskResult`,
+      );
+    }
+    if ('requestedModel' in event) {
+      validateOpaqueModel(
+        event.requestedModel,
+        `${label}.events[${index}].requestedModel`,
+      );
     }
     if (
       'terminalError' in event &&
@@ -576,6 +676,19 @@ function validateProbeAllowlist(probe, label) {
     ) {
       fail(`${label}.events[${index}].terminalError must be a boolean`);
     }
+  }
+  if (probe.candidate !== null) {
+    validateOpaqueModel(probe.candidate, `${label}.candidate`);
+  }
+  if (probe.requestedModel !== null) {
+    validateOpaqueModel(probe.requestedModel, `${label}.requestedModel`);
+  }
+  if (probe.terminalSubtype !== null) {
+    validateStructuralValue(
+      probe.terminalSubtype,
+      EVENT_SUBTYPES,
+      `${label}.terminalSubtype`,
+    );
   }
   requireExactKeys(
     probe.correlation,
@@ -648,6 +761,7 @@ export function validateStructuredCapture(
   if (!isObject(capture) || capture.schemaVersion !== 2) {
     fail('structured capture schemaVersion must equal 2');
   }
+  validatePublicValueSafety(capture, 'structured capture');
   requireExactKeys(
     capture,
     CAPTURE_KEYS,
@@ -755,7 +869,13 @@ export function validateStructuredCapture(
     !Array.isArray(exploratoryCandidates) ||
     new Set(exploratoryCandidates).size !== exploratoryCandidates.length ||
     exploratoryCandidates.some(
-      (candidate) => typeof candidate !== 'string' || candidate.length === 0,
+      (candidate) => {
+        if (typeof candidate !== 'string') {
+          return true;
+        }
+        validateOpaqueModel(candidate, 'exploratory candidate');
+        return false;
+      },
     )
   ) {
     fail('structured capture exploratoryCandidates must be unique strings');

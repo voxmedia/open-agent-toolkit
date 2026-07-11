@@ -381,6 +381,71 @@ test('public projection is allowlisted and strips prose, paths, metadata, enviro
   ]);
 });
 
+test('rejects credentials and paths in every public string-valued event field', () => {
+  const fields = [
+    ['eventType', 2],
+    ['subtype', 2],
+    ['toolName', 2],
+    ['correlationHash', 2],
+    ['sessionHash', 2],
+    ['requestHash', 4],
+    ['requestedModel', 2],
+    ['taskResult', 3],
+  ];
+  const unsafeValues = [
+    'Authorization: Bearer PUBLIC_LEAK',
+    '/Users/private/path',
+  ];
+
+  for (const [field, eventIndex] of fields) {
+    for (const unsafeValue of unsafeValues) {
+      const capture = captureFixture();
+      capture.controls.positive.events[eventIndex][field] = unsafeValue;
+      assert.throws(
+        () => validateStructuredCapture(capture, validationOptions),
+        /unsafe|credential|path|hash|structural/i,
+        `${field}: ${unsafeValue}`,
+      );
+    }
+  }
+});
+
+test('constrains public structural values and opaque model strings', () => {
+  for (const [field, value] of [
+    ['eventType', 'unknown'],
+    ['subtype', 'unexpected'],
+    ['toolName', 'Shell'],
+    ['taskResult', 'maybe'],
+  ]) {
+    const capture = captureFixture();
+    capture.controls.positive.events[2][field] = value;
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /structural|unsafe/i,
+      field,
+    );
+  }
+
+  for (const unsafeModel of [
+    '',
+    'model with spaces',
+    '/Users/private/model',
+    'C:\\Users\\private\\model',
+    'x'.repeat(129),
+  ]) {
+    const capture = captureFixture();
+    capture.controls.positive.candidate = unsafeModel;
+    capture.controls.positive.requestedModel = unsafeModel;
+    capture.controls.positive.events[2].requestedModel = unsafeModel;
+    capture.controls.positive.events[3].requestedModel = unsafeModel;
+    assert.throws(
+      () => validateStructuredCapture(capture, validationOptions),
+      /model.*unsafe|unsafe.*model|unsafe local path/i,
+      unsafeModel,
+    );
+  }
+});
+
 test('recursively redacts credentials from private raw events without removing exact IDs', () => {
   const value = redactPrivateValue({
     session_id: sessionId,
@@ -668,7 +733,7 @@ test('rejects capture-level schema and environment privacy drift', () => {
   const extra = captureFixture({ privatePath: '/Users/private' });
   assert.throws(
     () => validateStructuredCapture(extra, validationOptions),
-    /capture.*allowlist/i,
+    /capture.*(?:allowlist|unsafe local path)/i,
   );
 
   for (const [key, value] of [
@@ -683,6 +748,23 @@ test('rejects capture-level schema and environment privacy drift', () => {
       () => validateStructuredCapture(unsafe, validationOptions),
       /environment/i,
       key,
+    );
+  }
+
+  for (const unsafeValue of [
+    'Authorization: Bearer PUBLIC_LEAK',
+    '/Users/private/path',
+  ]) {
+    const unsafe = captureFixture();
+    unsafe.recommendation.version = unsafeValue;
+    assert.throws(
+      () =>
+        validateStructuredCapture(unsafe, {
+          recommendation: { ...recommendation, version: unsafeValue },
+          recommendationSha256,
+        }),
+      /credential|path/i,
+      unsafeValue,
     );
   }
 });
