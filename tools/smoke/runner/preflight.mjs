@@ -1,16 +1,28 @@
 import { execFile } from 'node:child_process';
-import { access, realpath } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { access, readFile, readdir, stat } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
 const HARNESS_COMMANDS = {
-  codex: { auth: ['login', 'status'], executable: 'codex' },
-  claude: { auth: ['auth', 'status'], executable: 'claude' },
-  'cursor-ide': { auth: ['status'], executable: 'cursor' },
-  'cursor-cli': { auth: ['status'], executable: 'cursor-agent' },
+  codex: {
+    authentication: { args: ['login', 'status'], executable: 'codex' },
+    runtime: { args: ['--version'], executable: 'codex' },
+  },
+  claude: {
+    authentication: { args: ['auth', 'status'], executable: 'claude' },
+    runtime: { args: ['--version'], executable: 'claude' },
+  },
+  'cursor-ide': {
+    authentication: { args: ['agent', 'status'], executable: 'cursor' },
+    runtime: { args: ['--version'], executable: 'cursor' },
+  },
+  'cursor-cli': {
+    authentication: { args: ['status'], executable: 'cursor-agent' },
+    runtime: { args: ['--version'], executable: 'cursor-agent' },
+  },
 };
 
 const REQUIRED_FIXTURE_PATHS = [
@@ -46,13 +58,16 @@ function commandLabel(executable, args = []) {
 
 async function runCommand(executable, args) {
   try {
-    await execFileAsync(executable, args, {
+    const { stdout } = await execFileAsync(executable, args, {
       encoding: 'utf8',
       timeout: 10_000,
     });
-    return 0;
+    return { code: 0, stdout };
   } catch (error) {
-    return typeof error.code === 'number' ? error.code : 1;
+    return {
+      code: typeof error.code === 'number' ? error.code : 1,
+      stdout: error.stdout ?? '',
+    };
   }
 }
 
@@ -70,22 +85,13 @@ async function resolveCommand(executable) {
   }
 }
 
-async function pathsMatch(firstPath, secondPath) {
-  if (!firstPath || !secondPath) {
-    return false;
-  }
-
-  try {
-    return (await realpath(firstPath)) === (await realpath(secondPath));
-  } catch {
-    return false;
-  }
-}
-
-async function defaultRuntimeProbe(harness) {
-  const { executable } = HARNESS_COMMANDS[harness];
+async function defaultRuntimeProbe(
+  harness,
+  { commandRunner = runCommand } = {},
+) {
+  const { args, executable } = HARNESS_COMMANDS[harness].runtime;
   const path = await resolveCommand(executable);
-  const command = commandLabel(executable, ['--version']);
+  const command = commandLabel(executable, args);
 
   if (!path) {
     return { command, result: 'unavailable' };
@@ -95,15 +101,19 @@ async function defaultRuntimeProbe(harness) {
     command,
     path,
     result:
-      (await runCommand(executable, ['--version'])) === 0
+      (await commandRunner(executable, args)).code === 0
         ? 'installed'
         : 'unavailable',
   };
 }
 
-async function defaultAuthProbe(harness, installed) {
-  const { auth, executable } = HARNESS_COMMANDS[harness];
-  const command = commandLabel(executable, auth);
+async function defaultAuthProbe(
+  harness,
+  installed,
+  { commandRunner = runCommand } = {},
+) {
+  const { args, executable } = HARNESS_COMMANDS[harness].authentication;
+  const command = commandLabel(executable, args);
 
   if (installed.result !== 'installed') {
     return { command, result: 'not-run' };
@@ -112,49 +122,171 @@ async function defaultAuthProbe(harness, installed) {
   return {
     command,
     result:
-      (await runCommand(executable, auth)) === 0
+      (await commandRunner(executable, args)).code === 0
         ? 'authenticated'
         : 'unauthenticated',
   };
 }
 
-async function defaultOatProbe() {
-  const globalPath = await resolveCommand('oat');
-  const localExists = await access(defaultLocalOatPath)
-    .then(() => true)
-    .catch(() => false);
-  const matchesLocal = await pathsMatch(globalPath, defaultLocalOatPath);
+async function latestModifiedTime(path) {
+  const entry = await stat(path);
 
-  return {
-    globalPath,
-    localPath: defaultLocalOatPath,
-    result: localExists && matchesLocal ? 'local' : 'stale-global',
-  };
+  if (!entry.isDirectory()) {
+    return entry.mtimeMs;
+  }
+
+  const entries = await readdir(path, { withFileTypes: true });
+  const times = await Promise.all(
+    entries.map((child) => latestModifiedTime(join(path, child.name))),
+  );
+  return Math.max(entry.mtimeMs, ...times);
 }
 
-async function defaultFixtureProbe() {
+async function defaultOatProbe({
+  commandRunner = runCommand,
+  localOatPath = defaultLocalOatPath,
+  packagePath = resolve(repositoryRoot, 'packages/cli/package.json'),
+} = {}) {
+  try {
+    const packageJson = JSON.parse(await readFile(packagePath, 'utf8'));
+    const expectedVersion = packageJson.version;
+    const sourcePath = resolve(repositoryRoot, 'packages/cli/src');
+    const [
+      entry,
+      sourceModifiedAt,
+      packageModifiedAt,
+      versionResult,
+      revisionResult,
+    ] = await Promise.all([
+      stat(localOatPath),
+      latestModifiedTime(sourcePath),
+      stat(packagePath),
+      commandRunner(localOatPath, ['--version']),
+      commandRunner('git', ['rev-parse', 'HEAD']),
+    ]);
+    const revision = revisionResult.stdout.trim() || null;
+    const fresh =
+      entry.mtimeMs >= Math.max(sourceModifiedAt, packageModifiedAt.mtimeMs);
+    const version = versionResult.stdout.trim();
+
+    return {
+      expectedVersion,
+      freshness: fresh ? 'current-source' : 'stale-dist',
+      localPath: localOatPath,
+      revision,
+      result:
+        versionResult.code === 0 && version === expectedVersion && fresh
+          ? 'local'
+          : 'stale-global',
+      version,
+    };
+  } catch {
+    return {
+      localPath: localOatPath,
+      result: 'stale-global',
+    };
+  }
+}
+
+function validateFixtureContract(project) {
+  const plan = project.plan;
+  const tasks = [
+    ...plan.matchAll(
+      /^### Task (p(?<phase>\d{2})-t(?<task>\d{2})): .+?\n(?<body>[\s\S]*?)(?=^### Task |(?![\s\S]))/gm,
+    ),
+  ];
+  const requiredSections = [
+    '## Reviews',
+    '## Implementation Complete',
+    '## References',
+  ];
+
+  if (
+    !/^---\n[\s\S]*?^oat_plan_source: quick$/m.test(plan) ||
+    !/^---\n[\s\S]*?^oat_status: in_progress$/m.test(plan) ||
+    !/oat_plan_parallel_groups:\s*\[\s*\[\s*['"]?p01['"]?\s*,\s*['"]?p02['"]?\s*\]\s*\]/.test(
+      plan,
+    ) ||
+    requiredSections.some((section) => !plan.includes(section)) ||
+    tasks.length !== 9
+  ) {
+    return 'Fixture plan does not satisfy the smoke contract.';
+  }
+
+  if (
+    !/^---\n[\s\S]*?^oat_workflow_mode: quick$/m.test(project.state) ||
+    !/^---\n[\s\S]*?^oat_dispatch_policy:\n\s+mode: managed$/m.test(
+      project.state,
+    ) ||
+    ['discovery', 'design'].some(
+      (artifact) =>
+        !/^---\n[\s\S]*?^oat_status: complete$/m.test(project[artifact]) ||
+        !/^---\n[\s\S]*?^oat_template: false$/m.test(project[artifact]),
+    )
+  ) {
+    return 'Fixture artifacts do not satisfy the lifecycle contract.';
+  }
+
+  for (const task of tasks) {
+    const phaseId = `p${task.groups.phase}`;
+    const taskId = task[1];
+    if (
+      !new RegExp(
+        `^\\*\\*Write target:\\*\\* \`workspace/logs/${phaseId}\\.log\`$`,
+        'm',
+      ).test(task.groups.body) ||
+      !new RegExp(
+        `^\\*\\*Expected commit:\\*\\* \`feat\\(${taskId}\\): append fixture marker\`$`,
+        'm',
+      ).test(task.groups.body)
+    ) {
+      return `Fixture task ${taskId} does not satisfy its integrity contract.`;
+    }
+  }
+
+  return null;
+}
+
+async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
   const missingPaths = [];
 
   for (const path of REQUIRED_FIXTURE_PATHS) {
     try {
-      await access(resolve(defaultFixturePath, path));
+      await access(resolve(fixturePath, path));
     } catch {
       missingPaths.push(path);
     }
   }
 
-  return missingPaths.length === 0
-    ? { result: 'valid' }
-    : {
-        reason: `Missing fixture paths: ${missingPaths.join(', ')}`,
-        result: 'invalid',
-      };
+  if (missingPaths.length > 0) {
+    return {
+      reason: `Missing fixture paths: ${missingPaths.join(', ')}`,
+      result: 'invalid',
+    };
+  }
+
+  const project = Object.fromEntries(
+    await Promise.all(
+      [
+        'state.md',
+        'discovery.md',
+        'design.md',
+        'plan.md',
+        'implementation.md',
+      ].map(async (artifact) => [
+        artifact.replace('.md', ''),
+        await readFile(resolve(fixturePath, 'project', artifact), 'utf8'),
+      ]),
+    ),
+  );
+  const reason = validateFixtureContract(project);
+  return reason ? { reason, result: 'invalid' } : { result: 'valid' };
 }
 
 function unavailableResult(harness) {
-  const { executable } = HARNESS_COMMANDS[harness];
+  const { args, executable } = HARNESS_COMMANDS[harness].runtime;
   return {
-    command: commandLabel(executable, ['--version']),
+    command: commandLabel(executable, args),
     result: 'unavailable',
   };
 }
@@ -191,7 +323,7 @@ export function emitReadinessReport(report, write = console.log) {
 }
 
 export async function runPreflight(
-  { harness },
+  { fixturePath, harness, localOatPath, packagePath },
   { env = process.env, probes = {}, reporter } = {},
 ) {
   if (!HARNESS_COMMANDS[harness]) {
@@ -202,23 +334,42 @@ export async function runPreflight(
   const auth = probes.auth ?? defaultAuthProbe;
   const fixture = probes.fixture ?? defaultFixtureProbe;
   const oat = probes.oat ?? defaultOatProbe;
+  const commandRunner = probes.command ?? runCommand;
   const forcedHarness = env.OAT_SMOKE_FORCE_UNAVAILABLE;
+  if (forcedHarness && !HARNESS_COMMANDS[forcedHarness]) {
+    throw new PreflightError({
+      forcedUnavailable: forcedHarness,
+      reason: `Unknown forced-unavailable harness: ${forcedHarness}`,
+      selectedHarness: harness,
+      status: 'blocked',
+    });
+  }
   const harnesses = {};
 
   for (const currentHarness of Object.keys(HARNESS_COMMANDS)) {
     const installed =
       forcedHarness === currentHarness
         ? unavailableResult(currentHarness)
-        : await runtime(currentHarness);
-    const authenticated = await auth(currentHarness, installed);
+        : await runtime(currentHarness, { commandRunner });
+    const authenticated =
+      currentHarness === harness
+        ? await auth(currentHarness, installed, { commandRunner })
+        : {
+            command: commandLabel(
+              HARNESS_COMMANDS[currentHarness].authentication.executable,
+              HARNESS_COMMANDS[currentHarness].authentication.args,
+            ),
+            reason: 'Authentication is only probed for the selected harness.',
+            result: 'not-run',
+          };
     harnesses[currentHarness] = { authenticated, installed };
   }
 
   const report = {
-    fixture: await fixture(),
+    fixture: await fixture({ fixturePath }),
     forcedUnavailable: forcedHarness ?? null,
     harnesses,
-    oat: await oat(),
+    oat: await oat({ commandRunner, localOatPath, packagePath }),
     selectedHarness: harness,
   };
   report.status = isReady(report, harness) ? 'ready' : 'blocked';

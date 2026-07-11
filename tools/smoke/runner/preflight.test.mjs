@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  cp,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  utimes,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -12,6 +21,17 @@ import {
 import { runSmoke } from './run-smoke.mjs';
 
 const harnesses = ['codex', 'claude', 'cursor-ide', 'cursor-cli'];
+const fixturePath = join(import.meta.dirname, '..', 'fixture');
+const packagePath = join(
+  import.meta.dirname,
+  '..',
+  '..',
+  '..',
+  'packages',
+  'cli',
+  'package.json',
+);
+const packageVersion = JSON.parse(await readFile(packagePath, 'utf8')).version;
 
 function readyProbes(overrides = {}) {
   return {
@@ -44,26 +64,70 @@ async function assertNoFilesCreated(action) {
   }
 }
 
-test('reports installed and authenticated readiness for every distinct harness', async () => {
+test('probes authentication only for the selected harness', async () => {
+  const authenticated = [];
   const report = await runPreflight(
     { harness: 'codex' },
-    { probes: readyProbes() },
+    {
+      probes: readyProbes({
+        auth: async (harness) => {
+          authenticated.push(harness);
+          return { command: `${harness} auth status`, result: 'authenticated' };
+        },
+      }),
+    },
   );
 
   assert.equal(report.status, 'ready');
   assert.deepEqual(Object.keys(report.harnesses), harnesses);
+  assert.deepEqual(authenticated, ['codex']);
   for (const harness of harnesses) {
     assert.equal(report.harnesses[harness].installed.result, 'installed');
     assert.equal(
       report.harnesses[harness].authenticated.result,
-      'authenticated',
+      harness === 'codex' ? 'authenticated' : 'not-run',
     );
     assert.match(report.harnesses[harness].installed.command, /--version$/);
+  }
+  for (const harness of harnesses.filter((name) => name !== 'codex')) {
     assert.match(
-      report.harnesses[harness].authenticated.command,
-      /auth status$/,
+      report.harnesses[harness].authenticated.reason,
+      /only probed for the selected harness/,
     );
   }
+});
+
+test('uses the documented runtime and authentication argv for Cursor IDE', async () => {
+  const commands = [];
+  const report = await runPreflight(
+    { harness: 'cursor-ide' },
+    {
+      probes: {
+        command: async (executable, args) => {
+          commands.push([executable, args]);
+          if (executable === 'git') {
+            return { code: 0, stdout: 'test-revision\n' };
+          }
+          return { code: 0, stdout: '0.1.52\n' };
+        },
+        fixture: async () => ({ result: 'valid' }),
+        oat: async () => ({ result: 'local' }),
+      },
+    },
+  );
+
+  assert.equal(report.status, 'ready');
+  assert.deepEqual(commands, [
+    ['codex', ['--version']],
+    ['claude', ['--version']],
+    ['cursor', ['--version']],
+    ['cursor', ['agent', 'status']],
+    ['cursor-agent', ['--version']],
+  ]);
+  assert.equal(
+    report.harnesses['cursor-ide'].authenticated.command,
+    'cursor agent status',
+  );
 });
 
 test('fails closed for an unavailable selected harness without creating files', async () => {
@@ -162,6 +226,110 @@ test('scopes forced unavailability to exactly the named harness', async () => {
   assert.equal(report.harnesses['cursor-ide'].installed.result, 'unavailable');
   assert.equal(report.harnesses.codex.installed.result, 'installed');
   assert.equal(report.status, 'ready');
+});
+
+test('rejects an unknown forced-unavailable harness before running probes', async () => {
+  let probesRun = 0;
+
+  await assert.rejects(
+    () =>
+      runPreflight(
+        { harness: 'codex' },
+        {
+          env: { OAT_SMOKE_FORCE_UNAVAILABLE: 'not-a-harness' },
+          probes: readyProbes({
+            auth: async () => {
+              probesRun += 1;
+              return { result: 'authenticated' };
+            },
+            fixture: async () => {
+              probesRun += 1;
+              return { result: 'valid' };
+            },
+            oat: async () => {
+              probesRun += 1;
+              return { result: 'local' };
+            },
+            runtime: async () => {
+              probesRun += 1;
+              return { result: 'installed' };
+            },
+          }),
+        },
+      ),
+    PreflightError,
+  );
+  assert.equal(probesRun, 0);
+});
+
+test('runs fixture integrity validation against a corrupt copied fixture', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-fixture-copy-'));
+  const copiedFixture = join(directory, 'fixture');
+
+  try {
+    await cp(fixturePath, copiedFixture, { recursive: true });
+    await writeFile(
+      join(copiedFixture, 'project', 'plan.md'),
+      'corrupted fixture plan\n',
+    );
+    const probes = readyProbes();
+    delete probes.fixture;
+
+    await assert.rejects(
+      () =>
+        runPreflight(
+          { fixturePath: copiedFixture, harness: 'codex' },
+          { probes },
+        ),
+      (error) => {
+        assert.ok(error instanceof PreflightError);
+        assert.equal(error.report.fixture.result, 'invalid');
+        assert.match(error.report.fixture.reason, /contract/);
+        return true;
+      },
+    );
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+});
+
+test('executes the local dist entrypoint and rejects a stale build', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-local-cli-'));
+  const localOatPath = join(directory, 'oat');
+  const future = new Date(Date.now() + 60_000);
+  const past = new Date(0);
+
+  try {
+    await writeFile(
+      localOatPath,
+      `#!/bin/sh\n[ "$1" = "--version" ] || exit 1\necho ${packageVersion}\n`,
+    );
+    await chmod(localOatPath, 0o755);
+    await utimes(localOatPath, future, future);
+    const probes = readyProbes();
+    delete probes.oat;
+
+    const report = await runPreflight(
+      { harness: 'codex', localOatPath },
+      { probes },
+    );
+    assert.equal(report.oat.result, 'local');
+    assert.equal(report.oat.version, report.oat.expectedVersion);
+    assert.equal(report.oat.freshness, 'current-source');
+
+    await utimes(localOatPath, past, past);
+    await assert.rejects(
+      () => runPreflight({ harness: 'codex', localOatPath }, { probes }),
+      (error) => {
+        assert.ok(error instanceof PreflightError);
+        assert.equal(error.report.oat.result, 'stale-global');
+        assert.equal(error.report.oat.freshness, 'stale-dist');
+        return true;
+      },
+    );
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
 });
 
 test('emits deterministic human and JSON reports without secrets', async () => {
