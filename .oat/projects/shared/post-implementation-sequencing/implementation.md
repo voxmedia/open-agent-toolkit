@@ -20,10 +20,10 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | completed   | 2     | 2/2       |
-| p02   | in_progress | 3     | 1/3       |
-| p03   | pending     | 3     | 0/3       |
+| p02   | completed   | 3     | 3/3       |
+| p03   | in_progress | 3     | 0/3       |
 
-**Total:** 3/8 tasks completed
+**Total:** 5/8 tasks completed
 
 ## Phase 1: Structured Configuration Contract
 
@@ -75,13 +75,13 @@ resume routing satisfy their lifecycle contracts.
 
 ### Task p02-t02: Preserve sequence routing across PR and resume transitions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0c16164c
 
 ### Task p02-t03: Clarify optional Phase gate review setup
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5c92cd14
 
 ## Phase 3: Documentation and Release Surface
 
