@@ -15,6 +15,7 @@
 
 | ID                                       | Title                                                                | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | -------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260711-add-live-workflow-smoke        | Add live workflow smoke fixture                                      | open   | high     | feature | L        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews  | open   | high     | feature | M        |
 | BL-260709-split-post-implementation      | Split post-implementation sequence into pre- and post-approval steps | open   | high     | feature | M        |
 | BL-260709-add-dispatch-machine-schema    | Add dispatch machine schema and formatter                            | open   | medium   | feature | M        |
