@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_template: true
+oat_template: false
 ---
 
 # Discovery: Smoke Fixture

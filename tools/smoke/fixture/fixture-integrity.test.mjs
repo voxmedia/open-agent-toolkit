@@ -67,13 +67,32 @@ test("fixture plan has stable task IDs and an isolated parallel shape", () => {
 
   for (const match of tasks) {
     const phaseId = `p${match.groups.phase}`;
+    const taskId = match[1];
     assert.match(
       match.groups.body,
       new RegExp(
         `^\\*\\*Write target:\\*\\* \`workspace/logs/${phaseId}\\.log\`$`,
         "m",
       ),
-      `${match[1]} must write only to ${phaseId}.log`,
+      `${taskId} must write only to ${phaseId}.log`,
+    );
+    assert.match(
+      match.groups.body,
+      new RegExp(
+        `^\\*\\*Verification:\\*\\* \`node --input-type=module -e ".*${taskId} completed.*workspace/logs/${phaseId}\\.log.*"\`$`,
+        "m",
+      ),
+      `${taskId} must declare an exact runnable verification command`,
+    );
+    assert.match(
+      match.groups.body,
+      new RegExp(
+        `^\\*\\*Expected commit:\\*\\* \`feat\\(${taskId}\\): append fixture marker\`$`,
+        "m",
+      ),
+      `${taskId} must declare its expected task commit`,
     );
   }
+
+  assert.match(plan, /^## Phase 3: Fan-in Log\n\nDepends on: `p01`, `p02`\.$/m);
 });

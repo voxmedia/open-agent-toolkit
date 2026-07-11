@@ -1,16 +1,39 @@
 ---
+oat_current_task: null
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_template: true
 oat_template_name: smoke-fixture
+oat_kind: implementation
+oat_phase: plan
+oat_phase_status: in_progress
 oat_dispatch_policy:
   mode: managed
   policy: high
+  matrix:
+    codex:
+      high:
+        candidates:
+          - harness: codex
+            model: gpt-5.6-terra
+            effort: medium
+    claude:
+      high:
+        candidates:
+          - sonnet
+    cursor:
+      high:
+        candidates:
+          - fixture-cursor-opaque-medium
   source: project-state
+oat_workflow_mode: quick
+oat_workflow_origin: native
+oat_generated: false
 ---
 
 # Fixture State
 
 Canonical `pre-review` state for the smoke fixture. The named `high` ceiling
-is a budget maximum; exact provider targets are resolved at dispatch time.
+is a budget maximum. Its sparse provider matrix declares eligible lower
+candidates; launch resolution records the exact selected target separately.

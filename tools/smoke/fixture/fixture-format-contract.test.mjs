@@ -49,10 +49,16 @@ test("fixture plan preserves the canonical format contract", () => {
     "task headings must retain stable pNN-tNN identifiers",
   );
 
+  assert.match(
+    plan,
+    /^\| Scope\s+\| Type\s+\| Status\s+\| Date\s+\| Artifact \|$/m,
+    "reviews table must include the canonical Date column",
+  );
   for (const [scope, type] of [
     ["p01", "code"],
     ["p02", "code"],
     ["p03", "code"],
+    ["final", "code"],
     ["spec", "artifact"],
     ["design", "artifact"],
     ["plan", "artifact"],
@@ -60,7 +66,7 @@ test("fixture plan preserves the canonical format contract", () => {
     assert.match(
       plan,
       new RegExp(
-        `^\\|\\s*${scope}\\s*\\|\\s*${type}\\s*\\|\\s*pending\\s*\\|\\s*-\\s*\\|$`,
+        `^\\|\\s*${scope}\\s*\\|\\s*${type}\\s*\\|\\s*pending\\s*\\|\\s*-\\s*\\|\\s*-\\s*\\|$`,
         "m",
       ),
       `missing required review row for ${scope}`,
@@ -68,17 +74,60 @@ test("fixture plan preserves the canonical format contract", () => {
   }
 });
 
-test("fixture state keeps only a named dispatch ceiling", () => {
+test("fixture state preserves quick-mode lifecycle and sparse dispatch policy", () => {
   const state = readFileSync(path.join(projectRoot, "state.md"), "utf8");
   const yaml = frontmatter(state);
 
+  for (const [key, value] of [
+    ["oat_current_task", "null"],
+    ["oat_status", "in_progress"],
+    ["oat_ready_for", "null"],
+    ["oat_template", "true"],
+    ["oat_kind", "implementation"],
+    ["oat_phase", "plan"],
+    ["oat_phase_status", "in_progress"],
+    ["oat_workflow_mode", "quick"],
+    ["oat_workflow_origin", "native"],
+    ["oat_generated", "false"],
+  ]) {
+    assert.match(
+      yaml,
+      new RegExp(`^${key}: ${value}$`, "m"),
+      `state frontmatter must declare ${key}`,
+    );
+  }
   assert.match(yaml, /^oat_dispatch_policy:\n/m);
   assert.match(yaml, /^  mode: managed$/m);
   assert.match(yaml, /^  policy: high$/m);
   assert.match(yaml, /^  source: project-state$/m);
+  for (const [provider, candidate] of [
+    ["codex", "gpt-5.6-terra"],
+    ["claude", "sonnet"],
+    ["cursor", "fixture-cursor-opaque-medium"],
+  ]) {
+    assert.match(
+      yaml,
+      new RegExp(
+        `^    ${provider}:\\n      high:\\n        candidates:\\n[\\s\\S]*?${candidate}`,
+        "m",
+      ),
+      `state must retain the ${provider} sparse high-tier candidate`,
+    );
+  }
   assert.doesNotMatch(
     yaml,
-    /^\s*(?:matrix|providers|candidates|model|effort|target):/m,
-    "state must not persist compiled provider targets",
+    /^\s*(?:selection|requestedCandidate|resolved|dispatchArgs|target):/m,
+    "state must not persist compiled selection or dispatch results",
   );
+});
+
+test("completed fixture discovery and design are durable artifacts", () => {
+  for (const artifact of ["discovery.md", "design.md"]) {
+    const yaml = frontmatter(
+      readFileSync(path.join(projectRoot, artifact), "utf8"),
+    );
+
+    assert.match(yaml, /^oat_status: complete$/m);
+    assert.match(yaml, /^oat_template: false$/m);
+  }
 });
