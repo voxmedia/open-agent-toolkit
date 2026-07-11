@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T19:41:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T19:49:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 fixes complete; awaiting re-review
+Implementation — Phase 1 fix iteration 2
 
 ## Artifacts
 
@@ -78,7 +78,7 @@ Implementation — Phase 1 fixes complete; awaiting re-review
 - ✓ p01-t03 complete after one integration-verification fix
 - ⧗ Concurrent Codex/Claude dispatch-contract verification package ready
 - ✓ Phase 1 self-review fixes complete (iteration 1)
-- ⧗ Phase 1 re-review next
+- ⧗ Phase 1 re-review found one remaining dispatch-matrix blocker
 
 ## Blockers
 
@@ -86,4 +86,4 @@ None
 
 ## Next Milestone
 
-Pass Phase 1 re-review and external phase gate
+Fix monotonic fixture dispatch tiers and pass re-review

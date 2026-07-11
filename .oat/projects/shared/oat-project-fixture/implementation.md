@@ -237,6 +237,20 @@ oat_generated: false
   with `task_id=p01-t02` rather than launching a replacement.
 - Dispatch: `Dispatch: scope=p01-t02 action=fix role=fix producer=gpt-5.6-terra-medium provenance=declared model_axis=selected:gpt-5.6-terra-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-terra-medium`.
 
+### Phase 1 Re-Review — Fix Iteration 2
+
+**Reviewer:** native root Task, `gpt-5.6-sol-xhigh`
+
+**Verdict:** fail — 0 Critical, 1 Important, 0 Medium, 0 Minor.
+
+All iteration-1 lifecycle, task, review, log, preset, and rollback findings are
+fixed. The remaining blocker is dispatch semantics: lower candidates were
+placed inside the High cell, making them ceiling targets and violating Codex's
+nondecreasing tier rule. Iteration 2 moves candidates into monotonic tier cells
+and adds resolver-backed coverage.
+
+**Review dispatch:** `Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
+
 ---
 
 ## Phase 2: Smoke Runner Core
