@@ -61,6 +61,9 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
+    - Managed Codex roles require `agents.max_depth >= 2` for the native topology: root (depth 0) → phase coordinator (depth 1) → task worker (depth 2). Sync and direct materialization merge that floor without lowering a higher target value; project writes also preserve a higher inherited user value.
+    - Project sync or materialization writes only the project's `.codex/config.toml`; explicit user-scope materialization writes only `~/.codex/config.toml`. Project scope may read the lower-precedence user depth, but never mutates user configuration.
+    - When managed roles exist and effective depth is missing, invalid, or below `2`, `oat doctor` and managed implementation preflight explain the topology and recommend `oat sync --scope project` or `oat sync --scope user` for the affected scope. Direct materialization with the same scope is the single-role repair path.
     - `oat-phase-implementer` is dual-mode: Phase Scope makes it a phase coordinator, while Task Scope makes the exact materialized variant a one-task worker. The coordinator does not implement ordinary tasks itself.
 
 ## Managed dispatch views
@@ -84,10 +87,16 @@ that repository change.
 
 At implementation time, the phase coordinator passes the recorded named
 maximum through invocation-only `--ceiling-tier`, resolves one exact candidate
-per bounded task, and dispatches one task worker at a time. Codex uses the
-resolver-returned materialized role. Claude and Cursor bind the exact model
-arguments described above. A missing or unselectable managed target blocks
-rather than falling back to the coordinator or a base role.
+per bounded task, and dispatches one task worker at a time. Codex first
+attempts the resolver-returned materialized role as the native `agent_type`.
+The launcher records the target, model axis, and effort axis from that resolved
+payload; worker self-report is not provenance and cannot replace those values.
+Only an explicit pre-start native role-selection rejection permits a fresh
+pinned-child fallback. An accepted child, including one that later returns
+`BLOCKED` or lacks telemetry, is a task outcome rather than a fallback signal.
+Claude and Cursor bind the exact model arguments described above. A missing or
+unselectable managed target blocks rather than falling back to the coordinator
+or a base role.
 
 ## Scope rules
 
