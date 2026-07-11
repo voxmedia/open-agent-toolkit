@@ -133,6 +133,18 @@ model_reasoning_effort=max`); gate run `262c4812`.
   The model switch and tool-schema change are temporally correlated, but
   causation is not yet proven; proving it requires switching the root model
   again and comparing the newly injected Task schema.
+- **A/B result (root switched back to Fable 5, same conversation, ~30 min
+  later): root-model hypothesis refuted.** The Fable 5 root's Task catalog
+  was re-enumerated and is byte-identical to the Sol xhigh snapshot above —
+  it contains `gpt-5.6-sol-xhigh` and not `gpt-5.6-sol-high-fast`. Same root
+  model at two times yielded two different catalogs; two different root
+  models at adjacent times yielded the same catalog. Conclusion: the curated
+  native Task catalog is not a function of the selected root model. It
+  changed server-side during the session; the earlier correlation with the
+  model switch was coincidental. Operational consequence: agents must treat
+  the native catalog as a per-invocation snapshot read from the current tool
+  schema — it is not stable per session, per model, or per conversation, and
+  preflight-time catalog facts can go stale before dispatch time.
 - **Correction to preflight wording:** “not exposed by this session” was too
   broad. The exact high-fast slug was exposed and accepted earlier in this
   same conversation. It is absent only from the current root invocation's
