@@ -10,11 +10,13 @@
 - High-priority review throughput work now tracks `oat-reviewer` orchestration of cheaper/faster reconnaissance subagents while preserving primary-reviewer judgment for synthesis, severity, and final findings.
 - The `codex-family-subagents` dispatch UX supplement is split: human-facing display guidance is folded into project p03-t05, while reusable machine schema/formatter work is tracked as `BL-260709-add-dispatch-machine-schema`.
 - High-priority workflow follow-up now tracks structured post-implementation sequencing so final-review-passed projects can run summary/docs/PR preparation before final HiLL approval when configured, while stricter repos can defer selected actions until after approval.
+- High-priority workflow follow-up `BL-260711-add-live-workflow-smoke` tracks a disposable real-provider fixture for end-to-end dispatch, phase-review, and lifecycle-gate smoke validation.
 
 <!-- OAT BACKLOG-INDEX -->
 
 | ID                                       | Title                                                                | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | -------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260711-add-live-workflow-smoke        | Add live workflow smoke fixture                                      | open   | high     | feature | L        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews  | open   | high     | feature | M        |
 | BL-260709-split-post-implementation      | Split post-implementation sequence into pre- and post-approval steps | open   | high     | feature | M        |
 | BL-260709-add-dispatch-machine-schema    | Add dispatch machine schema and formatter                            | open   | medium   | feature | M        |
