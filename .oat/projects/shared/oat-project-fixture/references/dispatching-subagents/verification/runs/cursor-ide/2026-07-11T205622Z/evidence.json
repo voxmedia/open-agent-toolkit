@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "runId": "cursor-ide-2026-07-11T205622Z",
+    "runType": "pilot/noncanonical",
+    "scope": "combined-capability",
+    "harness": "cursor",
+    "flavor": "ide",
+    "freshSession": true,
+    "contamination": [
+      "Successful immutable provenance capture occurred after the native probe because two earlier read-only shell attempts returned no observable completion state.",
+      "The native probes ran in /Users/tstang/.cursor/worktrees/open-agent-toolkit__SSH__tstang-mini_/l4vt, while the CLI catalog command used /Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture. The original packet collapsed those locations into one workingDirectory value."
+    ],
+    "capturedAt": "2026-07-11T20:56:22Z",
+    "workingDirectory": "/Users/tstang/.cursor/worktrees/open-agent-toolkit__SSH__tstang-mini_/l4vt",
+    "nativeWorkingDirectory": "/Users/tstang/.cursor/worktrees/open-agent-toolkit__SSH__tstang-mini_/l4vt",
+    "cliWorkingDirectory": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture",
+    "repositoryCommit": "3111442a0831c3e5f1305968313f16fde7f2be40",
+    "inputHashes": {
+      "claims.md": "d2b47c872dcfc5558bddc25f93843ef83daf82f232e680a0fec767423d4dc781",
+      "protocol.md": "5efecc56a386331b771d0519ff5ed6ed20b125d1323b4c2678fbf572b750cfb7",
+      "provider-draft.md": "97c7f7ccd7453e5e0f98d6cf076b3cfb9ad5b0edd6fd660efa432ef4de0206c7"
+    },
+    "runtime": {
+      "rootModel": "GPT-5.6 Terra",
+      "versions": {
+        "cursor": "3.10.20",
+        "cursor-agent": "23b9fb205fe595ea2be29da7214e19762d037fc0",
+        "architecture": "arm64"
+      }
+    },
+    "redactionStatus": "reviewed"
+  },
+  "catalogSnapshots": [
+    {
+      "snapshotId": "root-native-1",
+      "dispatchContext": "root-native",
+      "source": "tool-schema",
+      "observedAt": "2026-07-11T20:51:00Z",
+      "roles": [
+        "generalPurpose",
+        "explore",
+        "shell",
+        "cursor-guide",
+        "ci-investigator",
+        "bugbot",
+        "security-review",
+        "best-of-n-runner",
+        "oat-codebase-mapper",
+        "oat-phase-implementer",
+        "oat-reviewer",
+        "skeptical-evaluator",
+        "codex-rescue",
+        "consensus-section-runner"
+      ],
+      "models": [
+        "claude-fable-5-thinking-high",
+        "claude-opus-4-8-thinking-high",
+        "claude-sonnet-5-thinking-high",
+        "composer-2.5-fast",
+        "glm-5.2-high",
+        "gpt-5.5-medium",
+        "gpt-5.6-sol-medium",
+        "gpt-5.6-terra-medium",
+        "grok-4.5-fast-xhigh"
+      ],
+      "efforts": [],
+      "inheritance": "When model is omitted, the nested agent uses the parent agent's model."
+    },
+    {
+      "snapshotId": "nested-native-1",
+      "dispatchContext": "nested-native",
+      "source": "tool-schema",
+      "observedAt": "2026-07-11T20:52:00Z",
+      "roles": [
+        "generalPurpose",
+        "explore",
+        "shell",
+        "cursor-guide",
+        "ci-investigator",
+        "bugbot",
+        "security-review",
+        "best-of-n-runner",
+        "oat-codebase-mapper",
+        "oat-phase-implementer",
+        "oat-reviewer",
+        "skeptical-evaluator",
+        "codex-rescue",
+        "consensus-section-runner"
+      ],
+      "models": [
+        "claude-fable-5-thinking-high",
+        "claude-opus-4-8-thinking-high",
+        "claude-sonnet-5-thinking-high",
+        "composer-2.5-fast",
+        "glm-5.2-high",
+        "gpt-5.5-medium",
+        "gpt-5.6-sol-medium",
+        "gpt-5.6-terra-medium",
+        "grok-4.5-fast-xhigh"
+      ],
+      "efforts": [],
+      "inheritance": "When model is omitted, the nested agent uses the parent agent's model."
+    },
+    {
+      "snapshotId": "cli-account-1",
+      "dispatchContext": "provider-cli",
+      "source": "cli-catalog",
+      "observedAt": "2026-07-11T20:56:10Z",
+      "roles": [],
+      "models": [],
+      "efforts": [],
+      "inheritance": "unknown; cursor-agent --list-models was blocked by a locked macOS login keychain."
+    }
+  ],
+  "launches": [
+    {
+      "probeId": "native-topology",
+      "verificationScope": "native-capability",
+      "role": "generalPurpose",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "gpt-5.6-terra-medium",
+      "modelSelectorGranularity": "opaque",
+      "effortSelector": "not-exposed",
+      "selectionSource": "explicit-call",
+      "catalogSnapshotId": "root-native-1",
+      "deadlineSeconds": 180,
+      "payload": {
+        "description": "Probe nested Cursor dispatch",
+        "subagent_type": "generalPurpose",
+        "model": "gpt-5.6-terra-medium",
+        "readonly": true,
+        "run_in_background": false,
+        "prompt": "You are a generic, read-only topology probe. Your deadline is 180 seconds. Do not use filesystem tools, shell tools, MCP, web, or make edits. You may inspect only your available native Task/Subagent tool schema. Report, in structured plain text: (1) your native Task/Subagent schema snapshot timestamp in UTC, (2) whether you have a nested Task/Subagent tool, (3) every exact model selector value exposed by that tool, byte-for-byte, and any available agent/role types, (4) documented omit-model behavior, and (5) if your nested catalog has a selector compatible with a bounded sentinel, launch exactly ONE nested leaf sentinel using one exact selector from YOUR OWN catalog, with this prompt exactly:\nReply with exactly this string and nothing else:\nOAT_CURSOR_NESTED_SENTINEL_OK. Do not use any tools.\nReport the leaf's complete launch payload, launch status, and verbatim result. If no compatible selector exists, state that and do not launch. Do not launch any other child. Also report runtime identity as not-reported unless the launcher specifically provides it."
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "Subagent launch returned a completed child response."
+      ],
+      "diagnostics": [],
+      "runtimeConfirmation": "not-reported",
+      "result": "Nested Task/Subagent available; nested catalog and one leaf-sentinel payload/result were reported by the accepted child.",
+      "continuationEvents": []
+    },
+    {
+      "probeId": "native-leaf",
+      "verificationScope": "native-capability",
+      "role": "generalPurpose",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "gpt-5.6-terra-medium",
+      "modelSelectorGranularity": "opaque",
+      "effortSelector": "not-exposed",
+      "selectionSource": "explicit-call",
+      "catalogSnapshotId": "nested-native-1",
+      "deadlineSeconds": 180,
+      "payload": {
+        "description": "Run nested sentinel",
+        "prompt": "Reply with exactly this string and nothing else:\nOAT_CURSOR_NESTED_SENTINEL_OK. Do not use any tools.",
+        "model": "gpt-5.6-terra-medium",
+        "subagent_type": "generalPurpose",
+        "readonly": true,
+        "run_in_background": false
+      },
+      "launchStatus": "accepted",
+      "childOutcome": "completed",
+      "configuredInvocationEvidence": [
+        "Accepted topology child reported nested launch completed successfully."
+      ],
+      "diagnostics": [],
+      "runtimeConfirmation": "not-reported",
+      "result": "OAT_CURSOR_NESTED_SENTINEL_OK",
+      "continuationEvents": []
+    },
+    {
+      "probeId": "cli-sentinel",
+      "verificationScope": "cli-capability",
+      "role": "none",
+      "agentDefinition": "none",
+      "forkTurns": "not-applicable",
+      "modelSelector": "none",
+      "modelSelectorGranularity": "none",
+      "effortSelector": "none",
+      "selectionSource": "cli",
+      "catalogSnapshotId": "cli-account-1",
+      "deadlineSeconds": 120,
+      "payload": {
+        "command": "cursor-agent --print --output-format json --model '<exact-opaque-model>' 'Reply with exactly this string and nothing else: OAT_CURSOR_CLI_SENTINEL_OK'"
+      },
+      "launchStatus": "not-launched",
+      "childOutcome": "not-observed",
+      "configuredInvocationEvidence": [
+        "CLI sentinel was declared independently before native launch."
+      ],
+      "diagnostics": [
+        "cursor-agent --list-models exited 1: Your macOS login keychain is locked."
+      ],
+      "runtimeConfirmation": "not-reported",
+      "result": "No launch: an exact account-catalog selector was unavailable.",
+      "continuationEvents": []
+    }
+  ],
+  "claims": [
+    {
+      "claimId": "CUR-M01",
+      "probeStatus": "executed",
+      "verdict": "inconclusive",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "cli-account-1"],
+      "rationale": "Native schema and a blocked CLI catalog control were observed, but UI role configuration was not."
+    },
+    {
+      "claimId": "CUR-M02",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "nested-native-1"],
+      "rationale": "Root and nested invocation schemas independently exposed exact opaque selector arrays."
+    },
+    {
+      "claimId": "CUR-M03",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "nested-native-1"],
+      "rationale": "Both schema observations documented parent-model behavior when model is omitted."
+    },
+    {
+      "claimId": "CUR-M04",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology"],
+      "rationale": "The explicit selector gpt-5.6-terra-medium was accepted for the generic native probe."
+    },
+    {
+      "claimId": "CUR-M05",
+      "probeStatus": "blocked",
+      "verdict": "inconclusive",
+      "observationKind": "mechanism",
+      "evidenceMode": "help",
+      "evidenceRefs": ["cli-account-1"],
+      "rationale": "The locked keychain blocked account catalog enumeration before an explicit-model CLI launch."
+    },
+    {
+      "claimId": "CUR-M06",
+      "probeStatus": "not_run",
+      "verdict": "inconclusive",
+      "observationKind": "mechanism",
+      "evidenceMode": "runtime-report",
+      "evidenceRefs": ["cli-account-1"],
+      "rationale": "No CLI sentinel could be launched; no structured Task-selection event surface was observed."
+    },
+    {
+      "claimId": "CUR-M07",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Configured selectors and not-reported runtime identity were retained as separate fields."
+    },
+    {
+      "claimId": "CUR-S01",
+      "probeStatus": "executed",
+      "verdict": "inconclusive",
+      "observationKind": "snapshot",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "nested-native-1", "cli-account-1"],
+      "rationale": "Root and nested catalogs were captured, but the CLI catalog was blocked."
+    },
+    {
+      "claimId": "U-M01",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "schema",
+      "evidenceRefs": ["root-native-1", "nested-native-1"],
+      "rationale": "Root and nested catalogs were separately timestamped per invocation."
+    },
+    {
+      "claimId": "U-M02",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Launcher acceptance and terminal child outcomes were separately recorded."
+    },
+    {
+      "claimId": "U-M03",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "mechanism",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Missing runtime identity was recorded as not-reported without negating accepted launches."
+    },
+    {
+      "claimId": "U-P05",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "cli-sentinel"],
+      "rationale": "CLI was declared as an independent pre-start control and not used as fallback after native acceptance."
+    },
+    {
+      "claimId": "U-P06",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Policy adherence: no fallback route was attempted after either accepted native launch."
+    },
+    {
+      "claimId": "U-P09",
+      "probeStatus": "executed",
+      "verdict": "confirmed",
+      "observationKind": "policy",
+      "evidenceMode": "launch",
+      "evidenceRefs": ["native-topology", "native-leaf"],
+      "rationale": "Policy adherence: no continuation or replacement dispatch was attempted."
+    }
+  ]
+}
