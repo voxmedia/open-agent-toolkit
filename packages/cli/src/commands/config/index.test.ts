@@ -911,6 +911,71 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it('sets and gets a structured workflow.postImplementSequence', async () => {
+      const root = await createRepoRoot();
+      const sequence = {
+        preApproval: ['summary'],
+        postApproval: ['document', 'pr'],
+      };
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.postImplementSequence',
+        JSON.stringify(sequence),
+      ]);
+
+      const raw = await readFile(
+        join(root, '.oat', 'config.local.json'),
+        'utf8',
+      );
+      expect(JSON.parse(raw).workflow.postImplementSequence).toEqual(sequence);
+
+      const plainHarness = createHarness({ cwd: root });
+      await runCommand(plainHarness.command, [
+        'get',
+        'workflow.postImplementSequence',
+      ]);
+      expect(plainHarness.capture.info[0]).toBe(JSON.stringify(sequence));
+
+      const jsonHarness = createHarness({ cwd: root });
+      await runCommand(
+        jsonHarness.command,
+        ['get', 'workflow.postImplementSequence'],
+        ['--json'],
+      );
+      expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.postImplementSequence',
+        value: sequence,
+        source: 'local',
+      });
+    });
+
+    it.each([
+      '{not-json',
+      JSON.stringify({ preApproval: ['summary'], postApproval: ['summary'] }),
+      JSON.stringify({ preApproval: ['unknown'], postApproval: [] }),
+    ])(
+      'does not write invalid structured workflow.postImplementSequence input: %s',
+      async (value) => {
+        const root = await createRepoRoot();
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, [
+          'set',
+          'workflow.postImplementSequence',
+          value,
+        ]);
+
+        expect(process.exitCode).toBe(1);
+        expect(capture.error[0]).toContain('workflow.postImplementSequence');
+        await expect(
+          readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+        ).rejects.toThrow();
+      },
+    );
+
     it('get workflow.archiveOnComplete resolves from user when only set at user level', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -2267,7 +2332,11 @@ describe('oat config', () => {
       await runCommand(command, ['describe', 'workflow.postImplementSequence']);
 
       expect(capture.info[0]).toContain('Key: workflow.postImplementSequence');
-      expect(capture.info[0]).toContain('wait | summary | pr | docs-pr');
+      expect(capture.info[0]).toContain(
+        'legacy string (wait | summary | pr | docs-pr) | structured JSON object',
+      );
+      expect(capture.info[0]).toContain('preApproval');
+      expect(capture.info[0]).toContain('get --json preserves the object');
       expect(process.exitCode).toBe(0);
     });
 
