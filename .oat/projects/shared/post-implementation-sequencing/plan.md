@@ -594,7 +594,7 @@ git commit -m "chore(pjm): close BL-260709 post-implementation sequencing"
 | ------ | -------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
 | p01    | code     | passed  | 2026-07-10 | Clean Phase 1 review                                                                                          |
 | p02    | code     | passed  | 2026-07-11 | Native post-fix review; final-checkpoint and Phase gate review boundaries verified                            |
-| p03    | code     | pending | -          | -                                                                                                             |
+| p03    | code     | passed  | 2026-07-11 | Covered by `final` review: `reviews/final-review-2026-07-11T113606Z.md`                                       |
 | final  | code     | passed  | 2026-07-11 | `reviews/final-review-2026-07-11T113606Z.md`                                                                  |
 | spec   | artifact | passed  | 2026-07-10 | N/A (quick mode; no spec required)                                                                            |
 | design | artifact | pending | -          | -                                                                                                             |
