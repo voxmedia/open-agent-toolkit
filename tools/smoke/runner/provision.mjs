@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { cp, mkdir, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,6 +18,38 @@ const tsxExecutable = join(repositoryRoot, 'node_modules/.bin/tsx');
 const SMOKE_CLOSEOUT_POLICY = Object.freeze({
   preApproval: Object.freeze([]),
   postApproval: Object.freeze([]),
+});
+const SMOKE_BOOTSTRAP_POLICY = Object.freeze({
+  build: Object.freeze({
+    allowed: true,
+    argv: Object.freeze(['run', 'build']),
+    outputScope: 'disposable-child-worktree',
+  }),
+  config: Object.freeze({
+    copy: 'marker-source-only',
+    preserveBytes: true,
+  }),
+  copyPrimary: Object.freeze({
+    archivedProjects: false,
+    environment: false,
+    localProjects: false,
+    mcp: false,
+  }),
+  dependencyInstall: Object.freeze({
+    argv: Object.freeze([
+      'install',
+      '--offline',
+      '--frozen-lockfile',
+      '--ignore-scripts',
+    ]),
+    lifecycleScripts: false,
+    lockfile: 'frozen',
+    network: 'offline',
+  }),
+  localPathSync: false,
+  providerViewSync: false,
+  s3ArchiveSync: false,
+  sharedHooks: false,
 });
 
 const SCENARIO_PRESETS = {
@@ -54,6 +86,22 @@ function assertScenario(scenario) {
 
 function relativeToAbsolute(path, cwd) {
   return isAbsolute(path) ? path : resolve(cwd, path);
+}
+
+function smokeConfigContents({ fixtureProjectPath, harness, scenario }) {
+  return `${JSON.stringify(
+    {
+      activeProject: fixtureProjectPath,
+      smoke: { harness, scenario },
+      workflow: { postImplementSequence: SMOKE_CLOSEOUT_POLICY },
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+function sha256(contents) {
+  return createHash('sha256').update(contents).digest('hex');
 }
 
 function writableRoots(harness, worktreePath, gitMetadataPath) {
@@ -122,16 +170,34 @@ function createManifest({
   sourceCommitSha,
   worktreePath,
 }) {
+  const configPath = join(worktreePath, '.oat/config.local.json');
+  const markerPath = join(worktreePath, '.oat/smoke-bootstrap.json');
+  const fixtureProjectPath = join(worktreePath, '.oat/projects/smoke-fixture');
+  const configSha256 = sha256(
+    smokeConfigContents({
+      fixtureProjectPath,
+      harness,
+      scenario: appliedScenario,
+    }),
+  );
+
   return {
     appliedScenario,
     baselineCommitSha: null,
     branch,
     createdPaths: [manifestPath, runPath],
-    fixtureProjectPath: join(worktreePath, '.oat/projects/smoke-fixture'),
+    fixtureProjectPath,
     harness,
     intendedCloseoutPolicy: {
       source: 'local',
       value: SMOKE_CLOSEOUT_POLICY,
+    },
+    intendedSmokeBootstrap: {
+      configSha256,
+      configSource: configPath,
+      manifestPath,
+      markerPath,
+      policy: SMOKE_BOOTSTRAP_POLICY,
     },
     manifestPath,
     provisioningState: 'initializing',
@@ -255,9 +321,53 @@ export async function provisionSmoke(
     await saveManifest(manifest, fileSystem);
 
     applyPreset(preset, manifest.fixtureProjectPath);
-    await git(['add', '--', '.oat/projects/smoke-fixture', 'workspace/logs'], {
-      cwd: worktreePath,
+    const configPath = join(worktreePath, '.oat/config.local.json');
+    const configContents = smokeConfigContents({
+      fixtureProjectPath: manifest.fixtureProjectPath,
+      harness,
+      scenario,
     });
+    await fileSystem.writeFile(configPath, configContents);
+    manifest.createdPaths.push(configPath);
+    await saveManifest(manifest, fileSystem);
+
+    const markerPath = join(worktreePath, '.oat/smoke-bootstrap.json');
+    await fileSystem.writeFile(
+      markerPath,
+      `${JSON.stringify(
+        {
+          configSha256: sha256(configContents),
+          configSource: configPath,
+          manifestPath,
+          policy: SMOKE_BOOTSTRAP_POLICY,
+          schemaVersion: 1,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    manifest.createdPaths.push(markerPath);
+    manifest.effectiveSmokeBootstrap = {
+      configSha256: sha256(configContents),
+      configSource: configPath,
+      manifestPath,
+      markerPath,
+      policy: SMOKE_BOOTSTRAP_POLICY,
+    };
+    await saveManifest(manifest, fileSystem);
+
+    await git(
+      [
+        'add',
+        '--',
+        '.oat/projects/smoke-fixture',
+        '.oat/smoke-bootstrap.json',
+        'workspace/logs',
+      ],
+      {
+        cwd: worktreePath,
+      },
+    );
     await git(['commit', '-m', 'test(smoke): establish fixture baseline'], {
       cwd: worktreePath,
     });
@@ -266,22 +376,6 @@ export async function provisionSmoke(
     });
     manifest.branchOwnership.expectedTipCommitSha = manifest.baselineCommitSha;
     manifest.provisioningState = 'baseline-committed';
-    await saveManifest(manifest, fileSystem);
-
-    const configPath = join(worktreePath, '.oat/config.local.json');
-    await fileSystem.writeFile(
-      configPath,
-      `${JSON.stringify(
-        {
-          activeProject: manifest.fixtureProjectPath,
-          smoke: { harness, scenario },
-          workflow: { postImplementSequence: SMOKE_CLOSEOUT_POLICY },
-        },
-        null,
-        2,
-      )}\n`,
-    );
-    manifest.createdPaths.push(configPath);
     await saveManifest(manifest, fileSystem);
 
     const effectiveCloseoutPolicy = await resolvePolicy(worktreePath);

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   cp,
   mkdir,
@@ -20,6 +21,33 @@ import { createBranchName, provisionSmoke } from './provision.mjs';
 const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
+const smokeBootstrapPolicy = {
+  build: {
+    allowed: true,
+    argv: ['run', 'build'],
+    outputScope: 'disposable-child-worktree',
+  },
+  config: {
+    copy: 'marker-source-only',
+    preserveBytes: true,
+  },
+  copyPrimary: {
+    archivedProjects: false,
+    environment: false,
+    localProjects: false,
+    mcp: false,
+  },
+  dependencyInstall: {
+    argv: ['install', '--offline', '--frozen-lockfile', '--ignore-scripts'],
+    lifecycleScripts: false,
+    lockfile: 'frozen',
+    network: 'offline',
+  },
+  localPathSync: false,
+  providerViewSync: false,
+  s3ArchiveSync: false,
+  sharedHooks: false,
+};
 
 async function git(args, { cwd } = {}) {
   const { stdout } = await execFileAsync('git', args, {
@@ -202,6 +230,20 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       source: 'local',
       value: { preApproval: [], postApproval: [] },
     });
+    const configPath = join(manifest.worktreePath, '.oat/config.local.json');
+    const markerPath = join(manifest.worktreePath, '.oat/smoke-bootstrap.json');
+    const configSha256 = createHash('sha256')
+      .update(await readFile(configPath))
+      .digest('hex');
+    const expectedSmokeBootstrap = {
+      configSha256,
+      configSource: configPath,
+      manifestPath: manifest.manifestPath,
+      markerPath,
+      policy: smokeBootstrapPolicy,
+    };
+    assert.deepEqual(manifest.intendedSmokeBootstrap, expectedSmokeBootstrap);
+    assert.deepEqual(manifest.effectiveSmokeBootstrap, expectedSmokeBootstrap);
     assert.deepEqual(manifest.createdPaths, [
       manifest.manifestPath,
       join(runsDirectory, manifest.branch),
@@ -210,7 +252,8 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       join(manifest.worktreePath, '.oat/projects'),
       manifest.fixtureProjectPath,
       join(manifest.worktreePath, 'workspace'),
-      join(manifest.worktreePath, '.oat/config.local.json'),
+      configPath,
+      markerPath,
     ]);
     assert.deepEqual(
       JSON.parse(await readFile(manifest.manifestPath, 'utf8')),
@@ -272,6 +315,7 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
         '.oat/projects/smoke-fixture/implementation.md',
         '.oat/projects/smoke-fixture/plan.md',
         '.oat/projects/smoke-fixture/state.md',
+        '.oat/smoke-bootstrap.json',
         'workspace/logs/p01.log',
         'workspace/logs/p02.log',
         'workspace/logs/p03.log',
@@ -320,6 +364,15 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     await assert.rejects(
       () => readFile(join(childWorktreePath, '.oat/config.local.json')),
       { code: 'ENOENT' },
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await readFile(
+          join(childWorktreePath, '.oat/smoke-bootstrap.json'),
+          'utf8',
+        ),
+      ),
+      JSON.parse(await readFile(markerPath, 'utf8')),
     );
     assert.deepEqual(
       await resolveLocalCloseoutPolicy(
@@ -410,7 +463,12 @@ test('preserves a partial manifest when fixture copying fails', async () => {
       source: 'local',
       value: { preApproval: [], postApproval: [] },
     });
+    assert.deepEqual(
+      manifest.intendedSmokeBootstrap.policy,
+      smokeBootstrapPolicy,
+    );
     assert.equal(Object.hasOwn(manifest, 'effectiveCloseoutPolicy'), false);
+    assert.equal(Object.hasOwn(manifest, 'effectiveSmokeBootstrap'), false);
     assert.equal(manifest.baselineCommitSha, null);
     assert.equal(manifest.provisioningState, 'failed');
     assert.equal(manifest.readiness.status, 'not-ready');

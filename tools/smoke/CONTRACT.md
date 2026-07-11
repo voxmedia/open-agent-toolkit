@@ -37,6 +37,51 @@ The runner writes one JSON provisioning manifest before drive. It includes:
       "postApproval": []
     }
   },
+  "intendedSmokeBootstrap": {
+    "configSha256": "64-character lowercase SHA-256 digest",
+    "configSource": "/absolute/disposable/worktree/.oat/config.local.json",
+    "manifestPath": "/absolute/disposable/run/provisioning-manifest.json",
+    "markerPath": "/absolute/disposable/worktree/.oat/smoke-bootstrap.json",
+    "policy": {
+      "build": {
+        "allowed": true,
+        "argv": ["run", "build"],
+        "outputScope": "disposable-child-worktree"
+      },
+      "config": {
+        "copy": "marker-source-only",
+        "preserveBytes": true
+      },
+      "copyPrimary": {
+        "archivedProjects": false,
+        "environment": false,
+        "localProjects": false,
+        "mcp": false
+      },
+      "dependencyInstall": {
+        "argv": [
+          "install",
+          "--offline",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "lifecycleScripts": false,
+        "lockfile": "frozen",
+        "network": "offline"
+      },
+      "localPathSync": false,
+      "providerViewSync": false,
+      "s3ArchiveSync": false,
+      "sharedHooks": false
+    }
+  },
+  "effectiveSmokeBootstrap": {
+    "configSha256": "64-character lowercase SHA-256 digest",
+    "configSource": "/absolute/disposable/worktree/.oat/config.local.json",
+    "manifestPath": "/absolute/disposable/run/provisioning-manifest.json",
+    "markerPath": "/absolute/disposable/worktree/.oat/smoke-bootstrap.json",
+    "policy": "identical to intendedSmokeBootstrap.policy"
+  },
   "writableRoots": []
 }
 ```
@@ -55,10 +100,23 @@ for drive.
 
 `sourceCommitSha` is the commit from which the disposable branch was created.
 After applying the selected preset, provisioning commits the fixture project
-and workspace seed logs as `baselineCommitSha`. The local config is excluded
-from that commit and remains local to the disposable worktree, so child
-worktrees created from the baseline inherit fixture content but not the local
-override.
+and workspace seed logs as `baselineCommitSha`. The baseline also contains the
+tracked `.oat/smoke-bootstrap.json` marker. The local config is written before
+that commit but excluded from it, so the provisioning worktree remains clean
+except for the expected untracked `.oat/config.local.json`. Child worktrees
+inherit the marker, fixture, and workspace while the marker identifies the
+absolute config source, its SHA-256 digest, and the provisioning manifest.
+
+Before normal worktree initialization performs any copy, the init script checks
+for the tracked smoke marker and validates it against the ready manifest and
+baseline commit. A valid marker selects a closed bootstrap path: copy only the
+recorded smoke config and byte-compare it, run
+`pnpm install --offline --frozen-lockfile --ignore-scripts`, then run
+`pnpm run build`. The build is allowed because generated content stays inside
+the disposable child worktree. Primary environment, MCP, local-project, and
+archive copies remain disabled, as do S3 archive sync, shared-hook setup,
+local-path sync, and provider-view sync. Missing, malformed, untracked, or
+out-of-run marker/config bindings fail before normal bootstrap can begin.
 
 `branchOwnership` is absent until this run successfully creates the branch. Its
 base and expected-tip SHAs bind cleanup authority to the created ref; a
