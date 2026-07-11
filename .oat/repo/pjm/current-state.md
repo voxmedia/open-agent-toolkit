@@ -32,6 +32,15 @@ copying their content here. -->
 - Managed dispatch uses ordered provider candidate ladders with project/phase
   named maximum ceilings; Codex variants materialize by configuration ownership,
   while Claude and Cursor receive exact selected model values at invocation.
+- Managed Codex role materialization enforces an effective
+  `agents.max_depth >= 2` without lowering higher project or inherited user
+  values, enabling native coordinator-to-worker delegation. Doctor and managed
+  preflight provide scope-correct remediation when effective depth is
+  insufficient.
+- Exact native Codex `agent_type` dispatch is primary for coordinators, workers,
+  and reviewers. Launcher-owned configured invocation remains separate from
+  runtime producer identity, and pinned fallback is allowed only after explicit
+  pre-start role-selection rejection.
 - Dispatch matrix normalization and provenance-rich traversal are shared across
   layered configuration, sparse project state, config adoption, and doctor.
 - Dispatch Report V1 provides deterministic machine and human output while
@@ -58,4 +67,6 @@ GPT-5.6 Cursor Task/subagent eligibility after a client rollout exposes Task in
 headless mode or Cursor support confirms the private requests (review by
 2026-08-08), add root-owned exact dispatch with launcher-owned provenance,
 enable reviewer reconnaissance subagents, and structure post-implementation
-sequencing.
+sequencing. Review-efficiency follow-up also tracks skipping redundant
+re-review after narrowly classified, deterministically validated
+bookkeeping-only fixes across direct/subagent and gate-originated review flows.

@@ -113,6 +113,19 @@ An unresolved non-interactive preflight blocks. Managed `Uncapped` and
 `Inherit Host Defaults` are explicit modes; omitted policy state is not an
 implicit fallback.
 
+For a managed Codex implementer, preflight also resolves the effective
+`agents.max_depth`. Native `root (0) → phase coordinator (1) → task worker (2)`
+execution requires a depth of at least `2`. Missing, invalid, or lower values
+block before dispatch and identify the owning scope:
+
+- Project scope: run `oat sync --scope project`
+- User scope: run `oat sync --scope user`
+- Single-role repair: rerun `oat providers codex materialize` with the required
+  agent name, model, effort, and matching scope
+
+Project preflight may inherit a valid higher user depth, but remediation never
+writes across the project/user boundary.
+
 ## Resolve the Effective Named Maximum
 
 For each phase, the orchestrator determines the task maximum:

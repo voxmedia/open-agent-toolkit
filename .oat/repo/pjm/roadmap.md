@@ -21,6 +21,7 @@ bullet lines over rewriting whole sections, and reference backlog records by ID
 -->
 
 - **BL-260708-enable-oat-reviewer-subagent: Enable oat-reviewer subagent orchestration for faster broad reviews** — Delegate bounded reconnaissance while retaining primary-reviewer judgment.
+- **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** — Avoid redundant reviewer dispatch after narrowly classified, deterministically validated bookkeeping fixes across direct/subagent and gate-originated review flows.
 - **BL-260709-split-post-implementation: Split post-implementation sequence into pre- and post-approval steps** — Make summary, documentation, PR preparation, and final approval ordering explicit.
 
 ## Later (Directional Intent)
