@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t05
 oat_generated: false
 ---
 
@@ -73,13 +73,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 4     | 4/4       |
+| Phase 2 | in_progress | 5     | 4/5       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 7/22 tasks completed
+**Total:** 7/23 tasks completed
 
 ---
 
@@ -435,6 +435,19 @@ corrected in this bookkeeping update.
 
 **Dispatch:** `Dispatch: scope=p02-t04 action=implementation role=implementer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor-native:gpt-5.6-sol-xhigh`.
 
+### Task p02-t05: Isolate approval-aware closeout configuration
+
+**Status:** pending
+**Commit:** -
+
+**Reason added:**
+
+- PR #135 merged after the original Phase 2 tasks completed and changed the
+  repository default to run summary, documentation, and PR before final
+  approval.
+- Disposable smoke runs must retain the new final-closeout ordering without
+  becoming eligible for those external side effects.
+
 ### Phase 2 Summary
 
 **Outcome:**
@@ -466,6 +479,11 @@ corrected in this bookkeeping update.
 - The shared draft now states explicitly that a below-ceiling Cursor phase
   coordinator whose nested catalog lacks the ceiling reviewer must make a
   recorded pre-start CLI reviewer selection.
+- Fresh canonical verification was synthesized in `2a45ea93`, then main was
+  merged as `9e93aeca` without conflicts so every verification provenance
+  commit remains an ancestor.
+- Phase 2 self-review remains paused until p02-t05 isolates the merged
+  approval-aware closeout configuration.
 
 ---
 

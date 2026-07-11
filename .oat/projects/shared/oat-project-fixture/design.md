@@ -127,7 +127,12 @@ Scenarios:
    `implementation-ready` preset: parallel p01/p02 worktree phases, task
    workers, phase self-reviews, fan-in, p03, final gate.
 3. **Full workflow** — `plan-review` followed by `implement` in one run (the
-   real lifecycle sequence); cheap runs stop after `plan-review`.
+   real lifecycle sequence); cheap runs stop after `plan-review`. The
+   disposable local config atomically sets
+   `workflow.postImplementSequence` to empty pre/post-approval arrays. This
+   preserves PR #135's final verification → final review → final approval
+   ordering while preventing summary, documentation, PR, or other external
+   closeout side effects during smoke.
 
 Authoring-phase smoke (live discovery/design/plan generation) is explicitly
 out of scope; documented as a possible future variant.
@@ -167,8 +172,11 @@ out of scope; documented as a possible future variant.
      binary is the one on PATH (stale-global guard); verify fixture
      integrity; exit with a readiness report; never start a partial workflow.
   2. **Provision** — create disposable worktree, copy fixture into
-     `.oat/projects/`, write isolated `config.local`, apply the scenario's
-     state preset, write a provisioning manifest (basis for safe cleanup).
+     `.oat/projects/`, write isolated `config.local`, atomically override the
+     approval-aware closeout sequence with empty arrays, apply the scenario's
+     state preset, and write a provisioning manifest (basis for safe cleanup).
+     The manifest records the effective closeout policy so evidence can prove
+     no external child step was eligible.
   3. **Drive** — per-harness protocol (below); prints the canned root prompt
      or invokes the headless root where reliable.
   4. **Collect** — always runs, even after failure/interrupt.
@@ -295,7 +303,9 @@ failed runs still produce diagnosable reports.
   and are inverses of each other; fixture never drifts from the plan-writing
   canonical format (contract test against the plan-format validators).
 - **Runner logic:** preflight checks, provisioning-manifest completeness,
-  cleanup idempotence — via a dry-run mode with providers mocked.
+  approval-aware closeout isolation, cleanup idempotence — via a dry-run mode
+  with providers mocked. Root verification runs this entire unit/static
+  surface; only authenticated live-provider execution remains manual.
 - **Evidence collector:** assertion table computed correctly from golden
   inputs (recorded dispatch records, review artifacts with known
   corroboration fields, git histories with known shapes).
@@ -305,7 +315,8 @@ failed runs still produce diagnosable reports.
 Full runner pass with a no-op drive step: provision → preset → collect
 (empty evidence) → cleanup. Asserts the isolation guarantees directly: the
 user's persisted OAT config is byte-identical before/after, the source repo
-is untouched, and the disposable worktree is fully removed. Interrupt
+is untouched, the effective local post-implementation sequence contains no
+external child steps, and the disposable worktree is fully removed. Interrupt
 control: kill the runner mid-provision and mid-drive; verify cleanup from
 the manifest leaves no orphans and never touches unrelated worktrees.
 

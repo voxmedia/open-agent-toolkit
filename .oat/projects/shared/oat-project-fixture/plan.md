@@ -200,6 +200,42 @@ Run: `node --test tools/smoke/runner/cleanup.test.mjs` — Expected: fails.
 
 ---
 
+### Task p02-t05: (recovery) Isolate approval-aware closeout configuration
+
+**Files:**
+
+- Modify: `tools/smoke/runner/provision.mjs`
+- Modify: `tools/smoke/runner/provision.test.mjs`
+
+**Step 1: Write test (RED)** — extend provisioning tests with a repository-level
+`workflow.postImplementSequence` containing `summary`, `document`, and `pr`.
+Assert the disposable worktree's local config atomically overrides it with
+`{ preApproval: [], postApproval: [] }`, while preserving `activeProject` and
+smoke markers. Resolve the effective local value through the repository CLI or
+config resolver and assert that no inherited pre/post-approval child step can
+run. The user config byte comparison remains unchanged.
+Run: `node --test tools/smoke/runner/provision.test.mjs` — Expected: fails
+before the local workflow override exists.
+
+**Step 2: Implement (GREEN)** — write the empty structured sequence into the
+isolated `config.local.json`. Record the effective closeout policy in the
+provisioning manifest so later evidence can prove that full smoke runs exercise
+final approval ordering without summary, documentation, PR, or other external
+side effects.
+
+**Step 3: Refactor** — keep the override as a named immutable safety constant;
+do not copy the repository or user sequence into the disposable run.
+
+**Step 4: Verify** —
+`node --test 'tools/smoke/runner/**/*.test.mjs'`,
+`pnpm exec oxlint tools/smoke/runner`, and
+`pnpm exec oxfmt --check 'tools/smoke/runner/**/*.mjs'`.
+
+**Step 5: Commit** —
+`git add tools/smoke/runner && git commit -m "fix(p02-t05): isolate smoke closeout sequence"`.
+
+---
+
 ## Phase 3: Evidence Collector & Report
 
 ### Task p03-t01: Evidence collection module
@@ -270,11 +306,16 @@ Run: `node --test tools/smoke/evidence/assertions.test.mjs` — Expected: fails.
 
 ## Phase 4: Orchestration Contract (Cross-Harness Native-First Selection)
 
-_Sequential; depends on p01–p03 conceptually only through plan order — its write set is skills/agents, disjoint from `tools/smoke/`. Kept sequential (not grouped) because PR #137 may merge mid-project and this phase must reconcile against the merged contract language, not race it._
+_Sequential; depends on p01–p03 conceptually only through plan order — its write set is skills/agents, disjoint from `tools/smoke/`. PRs #135–#137 are merged. This phase must preserve PR #135's approval-aware final-closeout state machine and PR #137's native depth/fallback discipline while extracting only subagent target selection into the shared skill._
 
 _Skill version-bump policy: one frontmatter `version:` bump per changed canonical skill in the final PR diff. Bump each skill on its first p04 edit (p04-t01); p04-t02 and p04-t03 do not bump again unless they touch a skill not already bumped in this phase._
 
 _Draft-first validation: the provider-neutral contract, Cursor/Codex/Claude harness drafts, and concurrent verification prompts were committed under `references/` during p01. Concurrent harness sessions may return verification reports before p04. These files are inputs, not active runtime contracts. Phase p04 refines confirmed claims and promotes them into a canonical internal skill with one-level provider references._
+
+_Managed-view policy: after every p04 canonical skill or agent edit, run
+`oat sync --scope all` and include changed provider-linked views plus
+`.oat/sync/manifest.json` in that task's commit. The shared dispatch skill must
+be available explicitly to every supported harness._
 
 ### Task p04-t01: Promote the validated coordinator selection contract
 
@@ -285,18 +326,19 @@ _Draft-first validation: the provider-neutral contract, Cursor/Codex/Claude harn
 - Modify: `.agents/skills/oat-project-plan-writing/SKILL.md` (version bump)
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Reconcile evidence** — read the committed dispatch drafts plus every returned Codex/Claude/Cursor verification report. Classify each provider claim as confirmed, unsupported, or inconclusive; record contradictions in `references/orchestration-execution-log.md`. Do not promote unverified provider behavior as universal.
+**Step 1: Reconcile evidence** — use the verified synthesis in `references/dispatching-subagents/{contract.md,providers/*.md,verification/summary.md}` and retain the flat drafts/run packets as immutable evidence. Reconcile it against merged PR #135 and #137 language. Do not promote unverified provider behavior as universal, move final-closeout sequencing into task workers, or weaken exact target selection.
 
-**Step 2: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting: the canonical internal dispatch skill exists; implementation, phase-coordinator, and plan-writing consumers explicitly load it; the core contract includes per-dispatch catalog snapshots, full-information selection (ladder ∩ ceiling ∩ current dispatcher native catalog), task workers never silently inheriting the root model, recorded pre-start CLI selection with reason + candidates considered, accepted-launch terminality, and **phase-scoped review dispatch semantics** (discovery Decision #11, invariant "reviewer at or above ceiling"): planning-phase artifact self-reviews inherit the parent model by default; implementation-phase self-reviews target the ceiling, allowing inheritance only when the root is known at or above it; gates pin independent cross-family CLI exec targets. (If PR #137 relocates the skill contract tests, re-pin this path in the plan before implementing — see References.)
+**Step 2: Write test (RED)** — extend the skill contract tests in `packages/cli/src/validation/skills.test.ts` asserting: the canonical internal dispatch skill exists; implementation, phase-coordinator, and plan-writing consumers explicitly load it; the core contract includes per-dispatch catalog snapshots, full-information selection (ladder ∩ ceiling ∩ current dispatcher native catalog), task workers never silently inheriting the root model, recorded pre-start CLI selection with reason + candidates considered, accepted-launch terminality, and **phase-scoped review dispatch semantics** (discovery Decision #11, invariant "reviewer at or above ceiling"): planning-phase artifact self-reviews inherit the parent model by default; implementation-phase self-reviews target the ceiling, allowing inheritance only when the review-owning dispatcher is known at or above it; a below-ceiling Cursor phase coordinator whose nested catalog lacks the ceiling reviewer makes a recorded pre-start CLI reviewer selection; gates pin independent cross-family CLI exec targets. Also preserve the merged post-implementation sequence contract tests so dispatch refactoring cannot remove or reorder final-closeout behavior.
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` — Expected: fails.
 
 **Step 3: Implement (GREEN)** — promote the verified provider-neutral contract from `references/dispatching-subagents-draft.md` into a concise, non-user-facing `oat-dispatch-subagents` skill. Keep only non-negotiable safety invariants in consumer skills and require explicit loading before dispatch; do not rely on ambient skill discovery. Keep Codex-specific language consistent with the current merged state.
 
 **Step 4: Refactor** — run the cross-skill drift check **report-only**: verify review-provide skills do not contradict the updated contract. If drift is found, do not edit those skills in this task — record the finding in `implementation.md` and add a new monotonic p04 task (continuing the sequence, e.g. `p04-t04`) with enumerated files, its own verification, version-bump obligations, and commit message.
 
-**Step 5: Verify** — `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm lint && pnpm format`
+**Step 5: Verify** — run `oat sync --scope all`, then
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts && pnpm lint && pnpm format`.
 
-**Step 6: Commit** — `git add .agents packages/cli && git commit -m "feat(p04-t01): promote shared subagent dispatch contract"`
+**Step 6: Commit** — `git add .agents .claude .codex .oat/sync/manifest.json packages/cli && git commit -m "feat(p04-t01): promote shared subagent dispatch contract"`
 
 ---
 
@@ -308,16 +350,18 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skill
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/agents/oat-phase-implementer.md`
 
-**Step 1: Write test (RED)** — extend the same contract tests: the shared skill links directly to one-level harness references; consumers read exactly the active-provider reference; per-harness guidance preserves confirmed mechanics and explicit inconclusive findings. Cursor guidance covers native Task, omit-model inheritance, per-dispatch volatile root/nested catalogs, opaque strings, deliberate pre-start CLI leaf selection, and the **native-catalog mismatch advisory** from discovery Decision #12. Codex guidance covers materialized roles, native depth, scoped writable roots, and configured-invocation evidence. Claude guidance records the topology actually observed by the concurrent verification report; if still inconclusive, it retains a confirmation obligation rather than assuming nesting.
+**Step 1: Write test (RED)** — extend the same contract tests: the shared skill links directly to one-level harness references; consumers read exactly the active-provider reference; per-harness guidance preserves confirmed mechanics and explicit inconclusive findings. Cursor guidance covers native Task, omit-model inheritance, per-dispatch volatile root/nested catalogs, opaque strings, deliberate pre-start CLI leaf selection, coordinator-owned CLI review when the nested catalog cannot satisfy the ceiling, and the **native-catalog mismatch advisory** from discovery Decision #12. Codex guidance covers materialized roles, native depth, scoped writable roots, and configured-invocation evidence. Claude guidance records the verified native and CLI surfaces without conflating capability evidence with p05 production workflow evidence.
 Run: scoped vitest as in p04-t01 — Expected: fails.
 
-**Step 2: Implement (GREEN)** — refine and promote `references/dispatching-subagents-{cursor,codex,claude}-draft.md`; align vocabulary with `references/subagent-catalog-and-selection-findings.md` and returned harness reports.
+**Step 2: Implement (GREEN)** — promote the verified provider references from `references/dispatching-subagents/providers/`; use the flat drafts and immutable run packets only for provenance and contradiction checks.
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — scoped vitest + `pnpm lint && pnpm format`
+**Step 4: Verify** — run `oat sync --scope all`, scoped skill-contract vitest,
+the post-implementation sequence contract test, and
+`pnpm lint && pnpm format`.
 
-**Step 5: Commit** — `git add .agents packages/cli && git commit -m "feat(p04-t02): add cursor and claude native topology guidance"`
+**Step 5: Commit** — `git add .agents .claude .codex .oat/sync/manifest.json packages/cli && git commit -m "feat(p04-t02): add cursor and claude native topology guidance"`
 
 ---
 
@@ -336,9 +380,12 @@ Run: scoped vitest + `node --test 'tools/smoke/evidence/**/*.test.mjs'` — Expe
 
 **Step 3: Refactor** — none.
 
-**Step 4: Verify** — scoped vitest + `node --test 'tools/smoke/**/*.test.mjs'` + `pnpm lint && pnpm format`
+**Step 4: Verify** — run `oat sync --scope all`, scoped skill-contract vitest,
+the post-implementation sequence contract test,
+`node --test 'tools/smoke/**/*.test.mjs'`, and
+`pnpm lint && pnpm format`.
 
-**Step 5: Commit** — `git add .agents tools/smoke packages/cli && git commit -m "feat(p04-t03): define selection-record fields for dispatch evidence"`
+**Step 5: Commit** — `git add .agents .claude .codex .oat/sync/manifest.json tools/smoke packages/cli && git commit -m "feat(p04-t03): define selection-record fields for dispatch evidence"`
 
 ---
 
@@ -561,12 +608,25 @@ _Sequential; depends on p05._
 **Files:**
 
 - Modify: five lockstep public package manifests (version bump — docs under `apps/oat-docs/docs` count as shipped functionality per repo policy)
+- Modify: root `package.json` (enroll smoke unit/static tests and direct
+  smoke lint/format in normal repository verification; live-provider smoke
+  remains manual)
 - Modify: `tools/smoke/README.md` (documents the runner as a manual/release-validation smoke, not default CI; links the docs runbook as the authoritative operating guide)
-- Conditional: `tools/smoke/reports/codex/implement/` (refreshed post-merge re-verification evidence, when Step 2's condition fires)
+- Conditional: affected `tools/smoke/reports/<harness>/<scenario>/` packets
+  when Step 2's condition fires
 
-**Step 1: Bump & document** — lockstep bump all five public packages; author the README.
+**Step 1: Bump, enroll, and document** — merged main establishes public package
+baseline `0.1.52`; unless main advances again, bump all five lockstep packages
+to `0.1.53`. Enroll the completed smoke unit/static suite and direct smoke
+lint/format in the normal root commands, resolving deferred finding `p01-M2`.
+Keep authenticated live-provider scenarios opt-in/manual. Author the README.
 
-**Step 2: Post-merge re-verification (conditional)** — if PR #137 (`codex-subagent-max-depth`) merged after p05 completed, merge main and re-run the Codex `implement` scenario once; verify with `node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/implement/report.json` (exit 0) and stage the refreshed evidence explicitly: `git add tools/smoke/reports/codex/implement && git commit -m "chore(p06-t03): refresh codex smoke evidence post-merge"` (sibling-sequencing policy in `## Parallelism`).
+**Step 2: Post-evidence re-verification (conditional)** — PRs #135–#137 were
+merged before p05 and are part of its baseline. If main later changes dispatch,
+review, gate, or final-closeout behavior after p05 evidence completes, merge
+main and re-run only the affected harness/scenario packets. Validate each with
+`report.mjs --check` and commit refreshed evidence explicitly before release
+validation.
 
 **Step 3: Verify** — `pnpm build && pnpm test && pnpm release:validate`
 Expected: all green.
@@ -606,13 +666,14 @@ Expected: all green.
 **Summary:**
 
 - Phase 1: 3 tasks — Fixture project template, state presets, format contract
-- Phase 2: 4 tasks — Runner skeleton, preflight, provisioning, cleanup/dry-run
+- Phase 2: 5 tasks — Runner skeleton, preflight, provisioning, cleanup/dry-run,
+  isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
 - Phase 5: 6 tasks — Harness protocols + live smoke evidence (Codex, Claude, Cursor IDE, Cursor CLI) + summary
 - Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 
