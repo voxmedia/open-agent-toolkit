@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-11
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase); confirmed at implement start
 oat_plan_parallel_groups: [['p02', 'p03']] # runner core and evidence collector are file-disjoint
 oat_phase_review_gate:
@@ -17,7 +17,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 oat_template_name: plan
 ---
 
@@ -60,7 +60,7 @@ oat_template_name: plan
 
 - Create: `tools/smoke/fixture/project/{state.md,discovery.md,design.md,plan.md,implementation.md}`
 - Create: `tools/smoke/fixture/workspace/logs/{p01.log,p02.log,p03.log}` (seed headers)
-- Create: `tools/smoke/CONTRACT.md` (runner⇄evidence interface: provisioning-manifest shape, evidence paths, collector invocation)
+- Create: `tools/smoke/CONTRACT.md` (runner⇄evidence interface: provisioning-manifest shape incl. the applied scenario, evidence paths, collector invocation)
 
 **Step 1: Write test (RED)** — `tools/smoke/fixture/fixture-integrity.test.mjs`: asserts fixture plan has stable `pNN-tNN` IDs (3 phases × 3 tasks), declares `oat_plan_parallel_groups: [['p01','p02']]`, includes `## Reviews`/`## Implementation Complete`/`## References` sections, and each task's write target is confined to its own phase log file.
 Run: `node --test tools/smoke/fixture/fixture-integrity.test.mjs` — Expected: fails (fixture absent).
@@ -166,7 +166,7 @@ Run: `node --test tools/smoke/runner/preflight.test.mjs` — Expected: fails.
 - Create: `tools/smoke/runner/provision.mjs`
 - Modify: `tools/smoke/runner/run-smoke.mjs`
 
-**Step 1: Write test (RED)** — `tools/smoke/runner/provision.test.mjs`: provisioning (a) creates a disposable worktree with a flat collision-resistant branch name, (b) copies the fixture into `.oat/projects/`, (c) writes isolated `config.local.json` (activeProject + smoke markers) without reading or writing the user's `~/.oat/config.json`, (d) applies the scenario's state preset, (e) records every created path/branch/worktree in a provisioning manifest per `CONTRACT.md`, (f) resolves and records the per-harness writable-root requirements (worktree content, shared Git metadata dir, `.agents`) in the manifest so drive protocols can provision Codex scoped writable roots before launch.
+**Step 1: Write test (RED)** — `tools/smoke/runner/provision.test.mjs`: provisioning (a) creates a disposable worktree with a flat collision-resistant branch name, (b) copies the fixture into `.oat/projects/`, (c) writes isolated `config.local.json` (activeProject + smoke markers) without reading or writing the user's `~/.oat/config.json`, (d) applies the scenario's state preset, (e) records every created path/branch/worktree in a provisioning manifest per `CONTRACT.md`, (f) resolves and records the per-harness writable-root requirements (worktree content, shared Git metadata dir, `.agents`) in the manifest so drive protocols can provision Codex scoped writable roots before launch, (g) records the applied scenario in the manifest (the field p03's assertion-profile selection reads).
 Run: `node --test tools/smoke/runner/provision.test.mjs` — Expected: fails.
 
 **Step 2: Implement (GREEN)** — same test passes.
@@ -507,18 +507,18 @@ Expected: all green.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| p06    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact                                                                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                                                                           |
+| p02    | code     | pending | -          | -                                                                                                           |
+| p03    | code     | pending | -          | -                                                                                                           |
+| p04    | code     | pending | -          | -                                                                                                           |
+| p05    | code     | pending | -          | -                                                                                                           |
+| p06    | code     | pending | -          | -                                                                                                           |
+| final  | code     | pending | -          | -                                                                                                           |
+| spec   | artifact | pending | -          | -                                                                                                           |
+| design | artifact | pending | -          | -                                                                                                           |
+| plan   | artifact | passed  | 2026-07-11 | structured in-memory review, 3 rounds (initial + 2 re-reviews); final round clean except one Minor, applied |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
