@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: e7b14cccef453991909eacb5134011cd082e1464
+oat_last_commit: 7fdb7a8f445aa39185144b5ac46a23339a5847f0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-11T20:40:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-11T20:44:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -76,8 +76,9 @@ Implementation — Phase 2 tasks complete; paused before self-review
 - ✓ p01-t01 complete
 - ✓ p01-t02 complete through operator-authorized native root recovery
 - ✓ p01-t03 complete after one integration-verification fix
-- ✓ Claude dispatch-contract verification packet committed; Codex/Cursor
-  verification workspace remains ready
+- ✓ Protocol v2, canned prompts, and Claude/Codex pilot packets committed
+- ⧗ Fresh canonical Claude/Codex/Cursor IDE/Cursor CLI verification against
+  stable HEAD
 - ✓ Phase 1 self-review fixes complete (iteration 1)
 - ✓ Phase 1 dispatch-matrix blocker fixed with resolver-backed coverage
 - ✓ Final p01 self-review passed (0 Critical / 0 Important)

@@ -439,6 +439,16 @@ corrected in this bookkeeping update.
 - Direct runner oxlint/oxfmt — passed.
 - Worktree inspection — no smoke test orphans.
 
+**Pre-review verification pause:**
+
+- User requested a stable HEAD before Phase 2 self-review to run fresh
+  subagent-verification sessions.
+- Protocol v2, canned harness prompts, and Claude/Codex pilot packets were
+  stabilized in `7fdb7a8f445aa39185144b5ac46a23339a5847f0`.
+- The shared draft now states explicitly that a below-ceiling Cursor phase
+  coordinator whose nested catalog lacks the ceiling reviewer must make a
+  recorded pre-start CLI reviewer selection.
+
 ---
 
 ## Phase 3: Evidence Collector & Report
