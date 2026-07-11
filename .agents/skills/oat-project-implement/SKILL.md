@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.35
+version: 2.0.36
 description: Use when plan.md is ready for execution. Dispatches phase coordinators that select one exact target-pinned worker per task; supports bounded fix loops and plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -1451,7 +1451,7 @@ git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/
 git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
 ```
 
-Then run the optional external phase review gate for the completed phase when `oat_phase_review_gate` selects it. After the gate passes or is skipped, check HiLL checkpoint — if the phase ID is in `oat_plan_hill_phases`, pause for user approval before continuing.
+Then run the optional external phase review gate for the completed phase when `oat_phase_review_gate` selects it. After the gate passes or is skipped, check the HiLL checkpoint. A non-final checkpoint pauses at this boundary; defer a final-phase checkpoint to **Final HiLL Closeout Sequence** after final verification, final review, and any configured pre-approval steps succeed.
 
 ### Step 8: Check Plan Phase Completion
 
@@ -1495,11 +1495,19 @@ Before pausing at a checkpoint, check if auto-review is enabled:
 
 3. If disabled: skip directly to the checkpoint pause.
 
-When pausing:
+When pausing at a non-final checkpoint:
 
 - Output phase summary (tasks completed, commits made)
 - Ask user: "Phase {N} ({phase_name}) complete. Continue to next phase?"
 - Wait for user approval before proceeding to next plan phase
+
+**Final checkpoint deferral:** If the current phase is the final implementation
+phase and it is configured as a HiLL checkpoint, do not ask the generic
+"Continue to next phase?" question. Final checkpoint auto-review above still
+runs exactly as written, including `oat-project-review-provide code final` and
+its no-duplicate-final-review rule. Then continue through Steps 9–14. Final
+approval occurs only in **Final HiLL Closeout Sequence**, after final review and
+the stored pre-approval sequence complete.
 
 **Restart safety (required):**
 
@@ -1541,7 +1549,7 @@ Do not use `git add -A` or glob patterns. Only commit the three project artifact
 **Note on HiLL types:**
 
 - **Workflow HiLL** (`oat_hill_checkpoints` in state.md): Gates between workflow phases (discovery → spec → design → plan → implement). Checked by oat-project-progress router.
-- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. `[]` means pause after every phase; a populated array pauses only after listed phases. The field may be absent only before the first implementation-run confirmation. Listed phases are where you stop AFTER completing them.
+- **Plan phase checkpoints** (`oat_plan_hill_phases` in plan.md): Gates at plan phase boundaries during implementation. `[]` means pause after every phase; a populated array pauses only after listed phases. The field may be absent only before the first implementation-run confirmation. Listed phases are where you stop AFTER completing them. A checkpoint on the final implementation phase is deferred to final closeout so final verification, final review, and configured pre-approval work finish before explicit approval.
 - **Phase review gate** (`oat_phase_review_gate` in plan.md): Optional non-pausing external review gate after a completed phase passes the standard reviewer. Missing/disabled means skip; `phases: []` means gate every implementation phase. Passing gates continue automatically; blocking gates are received/fixed before execution proceeds.
 
 **Revision phase completion handling:**
@@ -1718,7 +1726,8 @@ echo "$FINAL_ROW"
   ```bash
   echo "$FINAL_ROW" | grep -qE "^\\|\\s*final\\s*\\|.*\\|\\s*passed\\s*\\|" && echo "passed"
   ```
-- Skip to Step 15 (PR prompt)
+
+  - Continue to Step 15 (final closeout)
 
 **If final review is not marked `passed`:**
 
@@ -1807,36 +1816,99 @@ To run in a separate session use: oat-project-review-provide code final
 
 **After final review is marked `passed`:**
 
-- Update `"$PROJECT_PATH/state.md"` frontmatter:
-  - `oat_phase: implement`
-  - `oat_phase_status: complete`
-  - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
-  - Append `"implement"` to `oat_hill_completed` (only if configured as a HiLL gate)
-- Update state content to "Implementation complete".
-- Update `"$PROJECT_PATH/plan.md"`:
-  - Set the `final` review row status to `passed` (if not already)
-  - Ensure `## Implementation Complete` totals reflect any review fix tasks that were added
-- Update `"$PROJECT_PATH/implementation.md"`:
-  - Ensure `oat_current_task_id: null`
-  - Ensure the "Review Received" section reflects completed fixes and points to the next action (PR) rather than "execute fix tasks"
+- Record the passed final review and keep the project in implementation closeout.
+- Do not append `"implement"` to `oat_hill_completed`, set
+  `oat_phase_status: complete`, or offer the normal next-step prompt yet.
+- Continue to **Final HiLL Closeout Sequence**.
 
-### Step 15: Prompt for Next Steps
+### Step 15: Final HiLL Closeout Sequence
 
-After final review passes (no Critical/Important findings):
+The final-closeout orchestrator owns this sequence after the rebased phase
+coordinator has finished. Do not move lifecycle sequencing into task workers or
+weaken exact target selection for child dispatches.
 
-**Workflow preference check (before prompting):**
+Identify the final implementation phase from the plan. A final HiLL checkpoint
+exists only when that phase ID is present in `oat_plan_hill_phases`. Defer only
+a checkpoint on the final implementation phase; non-final checkpoint behavior
+remains unchanged.
 
-```bash
-POST_IMPL=$(oat config get workflow.postImplementSequence 2>/dev/null || true)
+Run final verification (Step 13). Final review must be `passed` before any
+pre-approval dispatch. If final checkpoint auto-review is enabled, Step 8 has
+already run `oat-project-review-provide code final`; do not run a duplicate
+final review here.
+
+Read the effective `workflow.postImplementSequence` once. For a configured
+legacy or structured preference, normalize legacy values before snapshotting:
+`wait` → `{ preApproval: [], postApproval: [] }`, `summary` →
+`{ preApproval: ["summary"], postApproval: [] }`, `pr` → `{ preApproval:
+["summary", "pr"], postApproval: [] }`, and `docs-pr` → `{ preApproval:
+["summary", "document", "pr"], postApproval: [] }`.
+
+Persist this immutable state before dispatching a child:
+
+```yaml
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  final_phase: pNN
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending # pending | approved | not_required
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 ```
 
-- **If `POST_IMPL` is `wait`:** Print `Post-implementation: wait (from workflow.postImplementSequence). Run follow-up skills manually when ready.` Exit without auto-chaining.
-- **If `POST_IMPL` is `summary`:** Print `Post-implementation: summary (from workflow.postImplementSequence).` Invoke `oat-project-summary`. Stop after summary completes.
-- **If `POST_IMPL` is `pr`:** Print `Post-implementation: pr (from workflow.postImplementSequence).` Invoke `oat-project-pr-final` (which auto-generates `summary.md` as part of its flow).
-- **If `POST_IMPL` is `docs-pr`:** Print `Post-implementation: docs-pr (from workflow.postImplementSequence).` Invoke `oat-project-document` then `oat-project-pr-final` (summary included via pr-final).
-- **If unset or invalid:** Fall through to the standard prompt below.
+The snapshot is immutable for this closeout: never re-resolve
+`workflow.postImplementSequence` while it is incomplete. Iterate
+`pre_approval` and `post_approval` in their stored array order; do not sort or
+substitute a vocabulary order. Resume from the first incomplete stored step,
+including a partially completed noncanonical order.
 
-**Rationale:** `oat-project-pr-final` already auto-generates/refreshes `summary.md` as part of its flow, so `pr` and `docs-pr` do not need a separate summary step. The `summary` value exists as a standalone option for the rare case where you want just the summary without PR.
+For every pending `summary`, `document`, or `pr`, dispatch respectively
+`oat-project-summary`, `oat-project-document`, or `oat-project-pr-final`.
+Every `summary`, `document`, and `pr` child receives the authoritative snapshot
+and must merge state updates without replacing `oat_post_implement_sequence`.
+Re-read and verify the snapshot after every child returns before recording step
+success. If a child removed or altered it, restore the authoritative snapshot,
+record that step as failed, and stop with the boundary, failed step, and exact
+resume command: `oat-project-implement`.
+
+Commit each completed step before dispatching the next step. On failure, persist
+`status: failed`, the boundary, the failed step, and concise recovery context.
+A pre-approval failure leaves `approval: pending`; a post-approval failure
+retains `approval: approved`. Fail fast with the boundary, failed step, and
+exact resume command: `oat-project-implement`.
+
+1. Dispatch incomplete `pre_approval` steps in stored order.
+2. When they succeed and a final checkpoint exists, commit `status:
+awaiting_approval` with `approval: pending` before asking for final HiLL
+   approval.
+3. Record explicit approval as `approval: approved` and `status: post_approval`
+   before any post-approval dispatch. Then dispatch incomplete `post_approval`
+   steps in stored order.
+4. A decline or defer keeps `status: awaiting_approval` and `approval: pending`;
+   record neither approval nor failure and run no post-approval step. State the
+   boundary and exact resume command: `oat-project-implement`.
+5. If no final checkpoint exists, commit `approval: not_required` before
+   post-approval dispatch. `approval: not_required` is valid only when no final
+   checkpoint exists.
+6. After all stored steps finish, commit `status: complete`. Only then complete
+   implementation state, append the configured final HiLL completion, and
+   continue to the existing next-step behavior.
+
+If the preference is unset, do not create a sequence snapshot. When the
+preference is unset, retain the existing next-step prompt only after final
+approval when a final checkpoint is configured.
+
+### Step 16: Prompt for Next Steps
+
+Run this prompt only when `workflow.postImplementSequence` was unset and no
+sequence snapshot was created. It occurs after final approval when a final
+checkpoint is configured. A configured legacy or structured preference has
+already completed through **Final HiLL Closeout Sequence**; do not re-dispatch
+its steps here. For configured `wait`, print `Post-implementation: wait (from
+workflow.postImplementSequence). Run follow-up skills manually when ready.` and
+exit without auto-chaining.
 
 **Standard prompt (when preference is unset):**
 
@@ -1869,7 +1941,7 @@ Do not route directly to `oat-project-complete`. The `pr_open` status set by pr-
 
 Tell user: "Run the skills individually when ready: oat-project-summary → oat-project-document → oat-project-pr-final"
 
-### Step 16: Output Summary
+### Step 17: Output Summary
 
 ```
 Implementation complete for {project-name}.
