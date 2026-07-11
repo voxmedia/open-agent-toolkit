@@ -5,8 +5,8 @@ quick-start session (brainstorm → discovery → design → plan → gate), wit
 outcomes and evidence-based classifications in the style of
 `codex-subagent-max-depth`'s `subagent-orchestration-learnings.md`. Initial
 root: Cursor IDE harness (Fable 5); implementation resumed after a user model
-switch under GPT-5.6 Sol. Intended to feed the end-of-project review and the
-p06 docs deliverable.
+switch under a GPT-5.6 Sol xhigh root agent. Intended to feed the
+end-of-project review and the p06 docs deliverable.
 
 ## Dispatch Log
 
@@ -121,7 +121,7 @@ model_reasoning_effort=max`); gate run `262c4812`.
   `claude-4.6-sonnet-medium-thinking`,
   `claude-sonnet-5-thinking-high`, `claude-fable-5-thinking-high`,
   `claude-opus-4-8-thinking-high`.
-- **Current root catalog snapshot (GPT-5.6 Sol):**
+- **Catalog available to the GPT-5.6 Sol xhigh root agent:**
   `gpt-5.6-terra-medium`, `gpt-5.6-sol-xhigh`,
   `composer-2.5-fast`, `composer-2.5`, `gpt-5.3-codex`,
   `gpt-5.5-extra-high`, `grok-4.5-fast-xhigh`,
