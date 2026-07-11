@@ -228,6 +228,13 @@ mechanism for cross-cutting workflow changes.
 
 ## Deferred Ideas
 
+- Activity-aware gate timeouts (idle-activity hang detection, early
+  artifact-template write for liveness/correlation, hard cap,
+  artifact-aware timeout recovery) — captured as
+  `BL-260711-add-activity-aware-gate` after two live fixed-timeout kills of
+  healthy gate reviews; gate infrastructure is outside this project's write
+  set, but the smoke fixture is its future verification surface.
+
 - Cursor UI-configurable native subagent catalog (the settings "Edit"
   affordance) as a way to close the native tier-fidelity gap — verify before
   relying on it.

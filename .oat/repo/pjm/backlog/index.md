@@ -16,6 +16,7 @@
 
 | ID                                       | Title                                                                | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | -------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                     | open   | high     | feature | M        |
 | BL-260711-add-live-workflow-smoke        | Add live workflow smoke fixture                                      | open   | high     | feature | L        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches       | open   | high     | feature | M        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews  | open   | high     | feature | M        |
