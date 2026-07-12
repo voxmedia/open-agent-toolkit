@@ -75,6 +75,22 @@ At minimum, the skill contract should:
 - Stop before side effects if delegation is required for correctness and authorization remains unresolved.
 - Document the fallback path and any quality or independence tradeoff.
 
+OAT-specific skills should compose with the internal
+`oat-dispatch-subagents` contract instead of copying provider selection and
+recovery rules. The caller still owns decomposition, user interaction,
+verification of load-bearing claims, cross-lane synthesis, and artifact
+writes. The dispatch contract owns capability and authorization checks, live
+catalog evidence, route/model/effort selection, launch acceptance, recovery,
+and the neutral dispatch record.
+
+Keep project lifecycle policy out of that general layer. A lifecycle caller
+loads `oat-project-dispatch-subagents` to resolve project, phase/task, gate,
+write-boundary, commit, and worktree context, then passes a generic request to
+`oat-dispatch-subagents`. Analytical callers such as repository audits can use
+the general contract directly without requiring an active project. In either
+case, resolve the provider first and load exactly one provider-specific
+reference rather than merging provider mechanics into a universal catalog.
+
 Use `create-agnostic-skill` or `create-oat-skill` as the starting point; both include the current delegation guidance and optional capability-detection template.
 
 ## Gate-aware skills

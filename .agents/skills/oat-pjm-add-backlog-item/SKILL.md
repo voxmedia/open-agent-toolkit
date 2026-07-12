@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-add-backlog-item
-version: 1.2.0
+version: 1.3.0
 description: Use when the user requests or confirms adding a new repo backlog item — e.g. "add a backlog item for X", "capture that as backlog", "track that follow-up", "file a backlog ticket", or confirms a previously offered backlog capture. Do NOT auto-invoke when a follow-up is mentioned. Creates the item file in the file-per-item backlog structure, regenerates the index, and prompts for curated overview updates.
 disable-model-invocation: false
 user-invocable: true
@@ -98,8 +98,10 @@ ITEM_PATH=".oat/repo/pjm/backlog/items/{id}.md"
    - `labels`
    - `assignee`
    - `associated_issues`
-3. The agent should propose an initial `scope_estimate` based on the described work, then ask the user to confirm or adjust it.
-4. Write the item body with:
+   - `external_plans` (initialize to `[]`; `oat-repo-improve` owns later reverse-link additions)
+3. Keep `external_plans` as a YAML string array of repo-relative paths under `.oat/repo/reference/external-plans/`. Do not pre-populate it from discussion or anticipated work.
+4. The agent should propose an initial `scope_estimate` based on the described work, then ask the user to confirm or adjust it.
+5. Write the item body with:
    - `## Description`
    - `## Acceptance Criteria`
 
@@ -147,6 +149,7 @@ Report:
 
 - New item file exists under `.oat/repo/pjm/backlog/items/` with a `BL-YYMMDD-slug` filename matching its `id`
 - Item includes populated frontmatter and both required body sections
+- Item initializes `external_plans: []` for future reverse links
 - `scope_estimate` was proposed and confirmed
 - `oat backlog regenerate-index` ran successfully
 - `.oat/repo/pjm/backlog/index.md` remains valid, with managed section untouched except by regeneration

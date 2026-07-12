@@ -48,3 +48,18 @@ Consumer OAT skills: `oat-brainstorm`.
 The MIT license does not require in-derived-work attribution notices;
 this record is kept for transparency and to make the provenance
 discoverable without reading the `oat-project-design` history.
+
+## shadcn/improve
+
+**Source:** https://github.com/shadcn/improve/tree/main/skills/improve
+**License:** MIT
+**Version referenced:** `main` (retrieved 2026-07-12)
+
+### `improve` skill
+
+Source files: `skills/improve/SKILL.md` and
+`skills/improve/references/{audit-playbook.md,closing-the-loop.md,plan-template.md}`.
+
+Files copied into `.agents/skills/oat-repo-improve/`; the skill identifier,
+heading, invocation examples, and generated-plan attribution were renamed for
+the OAT repository namespace.

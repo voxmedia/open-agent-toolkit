@@ -1,7 +1,7 @@
 ---
 name: oat-repo-maintainability-review
-version: 1.2.0
-description: Use when you need a structured maintainability analysis for a repository or directory target with actionable findings.
+version: 1.3.0
+description: Use when you need a structured maintainability analysis for a repository or directory target with actionable findings and an optional external-plan handoff.
 argument-hint: '[--scope repo|directory] [--target <path>] [--mode auto|tracked|local|inline] [--output <path>] [--focus <areas>] [--analysis-mode full] [--fan-out]'
 disable-model-invocation: true
 user-invocable: true
@@ -42,11 +42,12 @@ Analyze repository maintainability and developer experience using a deterministi
   - ` OAT ▸ REPO MAINTAINABILITY REVIEW`
   - `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
 - Print step indicators before major work:
-  - `[1/5] Resolving scope, arguments, and output policy...`
-  - `[2/5] Collecting repository evidence...`
-  - `[3/5] Running dimension analysis (single-agent or multi-agent)...`
-  - `[4/5] Synthesizing findings and scoring...`
-  - `[5/5] Rendering artifact and summary...`
+  - `[1/6] Resolving scope, arguments, and output policy...`
+  - `[2/6] Collecting repository evidence...`
+  - `[3/6] Running dimension analysis (single-agent or multi-agent)...`
+  - `[4/6] Synthesizing findings and scoring...`
+  - `[5/6] Rendering artifact and summary...`
+  - `[6/6] (Optional) Handing selected findings to repo improve...` — only print after the user accepts the offer
 - For long-running fan-out or large scans, print start + completion lines.
 - Print a resolved run-options summary before evidence collection begins.
 
@@ -58,6 +59,7 @@ Analyze repository maintainability and developer experience using a deterministi
 4. Gather evidence across required dimensions.
 5. Synthesize findings into prioritized recommendations.
 6. Render artifact or return inline output.
+7. Offer a scoped external-plan handoff when a file artifact exists.
 
 ### Output Policy Resolution
 
@@ -190,9 +192,22 @@ Final user-facing summary must include:
 - Artifact path (`inline-only` when no file is emitted)
 - Execution mode (`single-agent` or `multi-agent`)
 
+### Optional Repo Improve Handoff
+
+When tracked or local output produced a file artifact, offer one bounded next step after the completion summary:
+
+> Want to turn selected findings from this maintainability review into self-contained external implementation plans with `oat-repo-improve`?
+
+If the user accepts, invoke `oat-repo-improve` in `maintainability-review` mode and pass the exact artifact path. That skill must use this artifact as its candidate source and perform only bounded live-evidence verification; it must not repeat a full repository audit. The user selects which findings become plans.
+
+If output was inline-only, explain that the handoff requires a file-backed review artifact. Offer to render the completed review to the normal tracked/local destination before invoking `oat-repo-improve`; do not silently create it.
+
+The maintainability-review skill never writes external plans itself. `oat-repo-improve` is the sole owner of `.oat/repo/reference/external-plans/` output for this flow.
+
 ## Success Criteria
 
 - Output includes required sections and metadata.
 - Findings include scoring fields and evidence.
 - Result includes now/next/later execution guidance.
 - Required arguments are explicitly resolved before analysis execution.
+- File-backed runs offer an optional, source-scoped `oat-repo-improve maintainability-review <artifact>` handoff without re-auditing the repository.

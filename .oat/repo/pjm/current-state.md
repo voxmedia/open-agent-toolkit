@@ -55,6 +55,16 @@ copying their content here. -->
   raw identifiers. The current headless client exposed no Task events, so the
   controls were inconclusive and the configured recommendation remains
   explicitly unvalidated.
+- Reusable OAT subagent dispatch is split into a provider-neutral utility
+  engine and a project lifecycle adapter. The engine owns capability,
+  authorization, catalog, route/model/effort selection, launch evidence, and
+  recovery; the adapter adds project, phase/task, gate, write-boundary,
+  commit, and worktree semantics without duplicating provider mechanics.
+- `oat-repo-improve` now owns external-plan generation across repo audits,
+  maintainability reviews, backlog reviews, backlog directories, and individual
+  backlog items. It composes broad reconnaissance with the reusable dispatch
+  engine, writes only durable external plans, maintains backlog reverse links,
+  and leaves OAT project import optional.
 
 ## What's Next
 
