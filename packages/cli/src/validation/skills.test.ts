@@ -2457,6 +2457,46 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('loads exactly one active-provider subagent dispatch reference', async () => {
+    const root = '.agents/skills/oat-dispatch-subagents';
+    const contract = await readRepoFile(`${root}/SKILL.md`);
+    const cursor = await readRepoFile(`${root}/references/cursor.md`);
+    const codex = await readRepoFile(`${root}/references/codex.md`);
+    const claude = await readRepoFile(`${root}/references/claude.md`);
+    const consumers = [
+      await readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      await readRepoFile('.agents/agents/oat-phase-implementer.md'),
+    ];
+
+    for (const provider of ['cursor', 'codex', 'claude']) {
+      expect(contract).toContain(`references/${provider}.md`);
+    }
+    for (const consumer of consumers) {
+      expect(consumer).toMatch(
+        /read exactly one[\s\S]{0,180}active-provider[\s\S]{0,180}oat-dispatch-subagents\/references/i,
+      );
+    }
+
+    expect(cursor).toMatch(/native[\s\S]{0,160}opaque/i);
+    expect(cursor).toMatch(/omit(?:ted)? model[\s\S]{0,120}inherit/i);
+    expect(cursor).toMatch(
+      /root and nested catalogs[\s\S]{0,180}(?:volatile|independent|snapshot)/i,
+    );
+    expect(cursor).toMatch(
+      /pre-start CLI[\s\S]{0,180}(?:leaf|worker)[\s\S]{0,260}coordinator-owned CLI review/i,
+    );
+    expect(cursor).toMatch(
+      /catalog-mismatch advisory[\s\S]{0,320}possible additions[\s\S]{0,240}(?:do not remove|must not remove)/i,
+    );
+    expect(codex).toMatch(/materialized role/i);
+    expect(codex).toMatch(/maximum nesting depth/i);
+    expect(codex).toMatch(/scoped writable roots/i);
+    expect(codex).toMatch(/configured-invocation evidence/i);
+    expect(claude).toMatch(
+      /native[\s\S]{0,180}CLI[\s\S]{0,240}production workflow evidence remains[^.]*p05/i,
+    );
+  });
+
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const skillPath = join(

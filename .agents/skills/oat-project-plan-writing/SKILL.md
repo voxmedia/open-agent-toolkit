@@ -32,6 +32,10 @@ inherits the planning parent by default. The shared contract owns any
 catalog-aware exception, launch acceptance boundary, and dispatch record; this
 skill continues to own plan readiness and review disposition.
 
+After resolving the review provider, read exactly one active-provider
+reference from `.agents/skills/oat-dispatch-subagents/references/`
+(`cursor.md`, `codex.md`, or `claude.md`). Do not merge provider mechanics.
+
 ## Managed Dispatch Readiness and Review Contract
 
 All plan-producing workflows and their artifact reviews use this contract:

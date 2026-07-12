@@ -19,6 +19,15 @@ Read this file before every coordinator, task worker, fix worker, or self-review
 dispatch. Provider-specific mechanics are loaded separately; do not infer one
 provider's surface from another.
 
+After resolving the active provider, read exactly one provider reference:
+
+- Cursor: `references/cursor.md`
+- Codex: `references/codex.md`
+- Claude: `references/claude.md`
+
+Do not load all provider references as one merged policy. Unsupported providers
+retain the provider-neutral fail-closed contract.
+
 ## Dispatch Axes
 
 Keep these controls independent:

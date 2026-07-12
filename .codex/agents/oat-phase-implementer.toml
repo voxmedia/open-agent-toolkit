@@ -28,6 +28,10 @@ current-dispatcher catalog evidence, full-information route selection,
 accepted-launch terminality, and structured dispatch records. This agent keeps
 phase ordering, bounded Task Scopes, verification, and integration authority.
 
+After resolving `active_provider`, read exactly one active-provider reference
+from `.agents/skills/oat-dispatch-subagents/references/` (`cursor.md`,
+`codex.md`, or `claude.md`). Do not merge provider mechanics.
+
 ## Inputs
 
 ### Phase Scope

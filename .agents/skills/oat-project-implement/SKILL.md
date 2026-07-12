@@ -28,6 +28,10 @@ terminality, and structured dispatch evidence. This implementation skill
 retains lifecycle sequencing, task boundaries, verification, integration, and
 approval-aware final closeout.
 
+After resolving `ACTIVE_PROVIDER`, read exactly one active-provider reference
+from `.agents/skills/oat-dispatch-subagents/references/` (`cursor.md`,
+`codex.md`, or `claude.md`). Do not merge provider mechanics.
+
 ## Mode Assertion
 
 **OAT MODE: Implementation**
