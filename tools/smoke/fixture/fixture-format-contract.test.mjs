@@ -96,20 +96,10 @@ test('fixture plan preserves the canonical format contract', () => {
   }
 
   const taskHeadings = [...plan.matchAll(/^### Task (p\d{2}-t\d{2}): .+$/gm)];
-  assert.equal(taskHeadings.length, 9, 'fixture must have nine task headings');
+  assert.equal(taskHeadings.length, 5, 'fixture must have five task headings');
   assert.deepEqual(
     taskHeadings.map((match) => match[1]),
-    [
-      'p01-t01',
-      'p01-t02',
-      'p01-t03',
-      'p02-t01',
-      'p02-t02',
-      'p02-t03',
-      'p03-t01',
-      'p03-t02',
-      'p03-t03',
-    ],
+    ['p01-t01', 'p01-t02', 'p02-t01', 'p02-t02', 'p03-t01'],
     'task headings must retain stable pNN-tNN identifiers',
   );
 

@@ -60,6 +60,15 @@ test('selects one protocol and invocation shape for every harness', async () => 
     assert.match(protocol.path, new RegExp(`${harness}\\.md$`));
     assert.match(protocol.prompt, /scenario implement/);
     assert.doesNotMatch(protocol.prompt, /\{\{/);
+    assert.match(
+      protocol.prompt,
+      /exactly one external final code gate after p03/,
+    );
+    assert.match(
+      protocol.prompt,
+      /one coordinator-owned self-review per phase/,
+    );
+    assert.match(protocol.prompt, /Gate count is fixed:/);
 
     const automated = createInvocationPlan({
       driveMode: 'automated',

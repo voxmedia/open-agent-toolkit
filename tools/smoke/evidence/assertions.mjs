@@ -2,13 +2,9 @@ const SCENARIOS = new Set(['plan-review', 'implement', 'full']);
 const EXPECTED_TASK_IDS = [
   'p01-t01',
   'p01-t02',
-  'p01-t03',
   'p02-t01',
   'p02-t02',
-  'p02-t03',
   'p03-t01',
-  'p03-t02',
-  'p03-t03',
 ];
 
 export class EvidenceAssertionError extends Error {
@@ -240,7 +236,7 @@ function dispatchMatchesCommittedPolicy(selected, dispatchPolicy) {
   return Boolean(candidate && ceiling && targetMatches);
 }
 
-function implementAssertions(bundle, { includeFinal = false } = {}) {
+function implementAssertions(bundle) {
   const taskIds = bundle.fixture?.taskIds ?? [];
   const implementationDispatches = (bundle.dispatches ?? []).filter(
     (dispatch) => dispatch.action === 'implementation',
@@ -331,7 +327,7 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
         expectedSubjects.includes(commit.subject),
       );
       return (
-        taskCommits.length === 3 &&
+        taskCommits.length === expectedSubjects.length &&
         expectedSubjects.every((subject) =>
           taskCommits.some((commit) => commit.subject === subject),
         ) &&
@@ -399,14 +395,12 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
     Object.values(mergeIndexes).every((index) => index >= 0) &&
     fanInIndexes.every((index) => index >= 0) &&
     Math.max(...Object.values(mergeIndexes)) < Math.min(...fanInIndexes);
-  const requiredReviewScopes = includeFinal
-    ? ['p01', 'p02', 'p03', 'final']
-    : ['p01', 'p02', 'p03'];
+  const requiredReviewScopes = ['final'];
 
   return [
     assertion(
       'implement-dispatch-completeness',
-      'Every one of the nine fixture tasks has exactly one accepted completed launch.',
+      'Every one of the five fixture tasks has exactly one accepted completed launch.',
       JSON.stringify(taskIds) === JSON.stringify(EXPECTED_TASK_IDS) &&
         launchFailures.length === 0,
       { failingTasks: launchFailures, taskIds },
@@ -449,7 +443,7 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
     ...reviewAssertions(
       bundle,
       requiredReviewScopes,
-      includeFinal ? 'full' : 'implementation',
+      bundle.scenario === 'full' ? 'full' : 'implementation',
     ),
     assertion(
       'implement-runtime-identity-status',
@@ -590,11 +584,7 @@ export function evaluateEvidence(bundle) {
       assertions.push(...planReviewAssertions(bundle));
     }
     if (bundle.scenario === 'implement' || bundle.scenario === 'full') {
-      assertions.push(
-        ...implementAssertions(bundle, {
-          includeFinal: bundle.scenario === 'full',
-        }),
-      );
+      assertions.push(...implementAssertions(bundle));
     }
   }
   const uniqueAssertions = [

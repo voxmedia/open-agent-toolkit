@@ -230,7 +230,7 @@ function validateFixtureContract(project) {
       plan,
     ) ||
     requiredSections.some((section) => !plan.includes(section)) ||
-    tasks.length !== 9
+    tasks.length !== 5
   ) {
     return 'Fixture plan does not satisfy the smoke contract.';
   }

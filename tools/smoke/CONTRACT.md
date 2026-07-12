@@ -351,8 +351,10 @@ provider launches and saving gate JSON. Fixture logs, exact task commits,
 review artifacts/rows, Git topology, and the provisioning ownership journal
 are independent durable corroboration; assertion logic does not accept
 launcher booleans as proof of those outcomes. The collector-to-report
-integration test exercises the full nine-task fixture shape before p05 wires
-the provider-specific drive commands.
+integration test exercises the minimum five-task fixture shape: two serial
+workers inside each parallel phase coordinator and one fan-in worker. This
+preserves root → coordinator → worker depth evidence while bounding provider
+cost before p05 wires the provider-specific drive commands.
 
 ## Normalization and Containment
 

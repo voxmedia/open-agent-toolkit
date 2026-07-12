@@ -17,17 +17,7 @@ import {
 const execFileAsync = promisify(execFile);
 const goldenDirectory = join(import.meta.dirname, 'golden/bundles');
 const reportPath = join(import.meta.dirname, 'report.mjs');
-const taskIds = [
-  'p01-t01',
-  'p01-t02',
-  'p01-t03',
-  'p02-t01',
-  'p02-t02',
-  'p02-t03',
-  'p03-t01',
-  'p03-t02',
-  'p03-t03',
-];
+const taskIds = ['p01-t01', 'p01-t02', 'p02-t01', 'p02-t02', 'p03-t01'];
 
 function reviewEvidence(scope) {
   const runId = `${scope}-gate`;
@@ -98,21 +88,19 @@ function productionShape(bundle) {
   const scenario = bundle.scenario;
   const reviewScopes = [
     ...(scenario === 'plan-review' || scenario === 'full' ? ['plan'] : []),
-    ...(scenario === 'implement' || scenario === 'full'
-      ? ['p01', 'p02', 'p03']
-      : []),
-    ...(scenario === 'full' ? ['final'] : []),
+    ...(scenario === 'implement' || scenario === 'full' ? ['final'] : []),
   ];
   const evidence = reviewScopes.map(reviewEvidence);
   const taskCommits = taskIds.map((taskId, index) => {
-    const phaseIndex = index % 3;
     const phase = taskId.slice(0, 3);
     const parent =
-      phaseIndex > 0
-        ? `task-${index}`
-        : phase === 'p03'
-          ? 'merge-p02'
-          : 'baseline';
+      taskId === 'p01-t02'
+        ? 'task-1'
+        : taskId === 'p02-t02'
+          ? 'task-3'
+          : phase === 'p03'
+            ? 'merge-p02'
+            : 'baseline';
     return {
       files: [`workspace/logs/${phase}.log`],
       parents: [parent],
@@ -160,23 +148,23 @@ function productionShape(bundle) {
   const mergeCommits = [
     {
       files: [],
-      parents: ['baseline', 'task-3'],
+      parents: ['baseline', 'task-2'],
       sha: 'merge-p01',
       subject: 'merge p01',
     },
     {
       files: [],
-      parents: ['merge-p01', 'task-6'],
+      parents: ['merge-p01', 'task-4'],
       sha: 'merge-p02',
       subject: 'merge p02',
     },
   ];
   const currentTaskCommits = [
-    ...taskCommits.slice(0, 3),
+    ...taskCommits.slice(0, 2),
     mergeCommits[0],
-    ...taskCommits.slice(3, 6),
+    ...taskCommits.slice(2, 4),
     mergeCommits[1],
-    ...taskCommits.slice(6),
+    ...taskCommits.slice(4),
   ];
 
   return {
@@ -244,18 +232,18 @@ function productionShape(bundle) {
         {
           ancestorBranches: [],
           branch: 'smoke-p01',
-          commits: taskCommits.slice(0, 3),
-          head: 'task-3',
+          commits: taskCommits.slice(0, 2),
+          head: 'task-2',
           mergeBase: 'baseline',
           start: { parent: 'baseline', sha: 'task-1' },
         },
         {
           ancestorBranches: [],
           branch: 'smoke-p02',
-          commits: taskCommits.slice(3, 6),
-          head: 'task-6',
+          commits: taskCommits.slice(2, 4),
+          head: 'task-4',
           mergeBase: 'baseline',
-          start: { parent: 'baseline', sha: 'task-4' },
+          start: { parent: 'baseline', sha: 'task-3' },
         },
       ],
       commits: [
@@ -538,7 +526,7 @@ test('terminal review proof rejects changed archive bytes and missing receive co
   const missingReceive = await readGolden('implement');
   missingReceive.git.currentBranchCommits.splice(
     missingReceive.git.currentBranchCommits.findIndex(
-      (commit) => commit.sha === 'receive-p01',
+      (commit) => commit.sha === 'receive-final',
     ),
     1,
   );

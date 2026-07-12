@@ -4,13 +4,23 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 function readImplementSkill(): string {
-  return readFileSync(
-    join(
-      import.meta.dirname,
-      '../../../../../../../.agents/skills/oat-project-implement/SKILL.md',
-    ),
-    'utf8',
+  const root = join(
+    import.meta.dirname,
+    '../../../../../../../.agents/skills/oat-project-implement',
   );
+  const entry = readFileSync(join(root, 'SKILL.md'), 'utf8');
+  const successIndex = entry.indexOf('## Success Criteria');
+  const references = [
+    'dispatch-and-dry-run.md',
+    'plan-and-resume.md',
+    'phase-execution.md',
+    'completion-and-closeout.md',
+  ].map((path) => readFileSync(join(root, 'references', path), 'utf8'));
+  return [
+    entry.slice(0, successIndex),
+    ...references,
+    entry.slice(successIndex),
+  ].join('\n\n');
 }
 
 function normalizeWhitespace(value: string): string {

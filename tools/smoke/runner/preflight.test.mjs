@@ -359,7 +359,7 @@ test('rejects copied fixtures with preset or dispatch-matrix defects', async () 
         source.replace(
           replacement,
           name === 'preset'
-            ? '"oat_current_task": "p03-t03"'
+            ? '"oat_current_task": "p99-t99"'
             : 'fixture-cursor-opaque-corrupt',
         ),
       );

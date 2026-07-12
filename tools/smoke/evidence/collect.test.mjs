@@ -369,13 +369,9 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.deepEqual(bundle.fixture.taskIds, [
       'p01-t01',
       'p01-t02',
-      'p01-t03',
       'p02-t01',
       'p02-t02',
-      'p02-t03',
       'p03-t01',
-      'p03-t02',
-      'p03-t03',
     ]);
     assert.match(bundle.fixture.planHash, /^[0-9a-f]{64}$/u);
     assert.deepEqual(
@@ -585,20 +581,10 @@ test('normalizes a terminal failed gate without an artifact', async () => {
   }
 });
 
-test('collector output drives nine-task assertions and a bound report', async () => {
+test('collector output drives five-task assertions and a bound report', async () => {
   const run = await createGoldenRun();
   const outputDirectory = join(run.repository, 'pipeline-evidence');
-  const taskIds = [
-    'p01-t01',
-    'p01-t02',
-    'p01-t03',
-    'p02-t01',
-    'p02-t02',
-    'p02-t03',
-    'p03-t01',
-    'p03-t02',
-    'p03-t03',
-  ];
+  const taskIds = ['p01-t01', 'p01-t02', 'p02-t01', 'p02-t02', 'p03-t01'];
   const reviewDirectory = join(run.fixtureProjectPath, 'reviews');
   const gateDirectory = join(run.worktreePath, 'workspace/evidence/gates');
 
@@ -673,7 +659,7 @@ test('collector output drives nine-task assertions and a bound report', async ()
       });
     }
 
-    for (const scope of ['p01', 'p02']) {
+    for (const scope of ['final']) {
       const runId = `${scope}-gate-run`;
       const target = 'claude-fable-skip-permissions';
       const reviewPath = join(reviewDirectory, `${scope}-review.md`);
@@ -744,28 +730,23 @@ test('collector output drives nine-task assertions and a bound report', async ()
       );
     }
     await git(
-      [
-        'add',
-        '--',
-        '.oat/projects/smoke-fixture/reviews/p01-review.md',
-        '.oat/projects/smoke-fixture/reviews/p02-review.md',
-      ],
+      ['add', '--', '.oat/projects/smoke-fixture/reviews/final-review.md'],
       run.worktreePath,
     );
     await git(
-      ['commit', '-m', 'chore: record fixture phase reviews'],
+      ['commit', '-m', 'chore: record fixture final review'],
       run.worktreePath,
     );
     const archivedReviewDirectory = join(reviewDirectory, 'archived');
     await mkdir(archivedReviewDirectory, { recursive: true });
-    for (const scope of ['p01', 'p02', 'p03']) {
+    for (const scope of ['p03', 'final']) {
       await rename(
         join(reviewDirectory, `${scope}-review.md`),
         join(archivedReviewDirectory, `${scope}-review.md`),
       );
     }
     let plan = await readFile(join(run.fixtureProjectPath, 'plan.md'), 'utf8');
-    for (const scope of ['p01', 'p02', 'p03']) {
+    for (const scope of ['p03', 'final']) {
       plan = plan.replace(
         new RegExp(
           `^\\| ${scope}\\s+\\| code\\s+\\| pending \\| -\\s+\\| -\\s+\\|$`,
@@ -784,7 +765,7 @@ test('collector output drives nine-task assertions and a bound report', async ()
       run.worktreePath,
     );
     await git(
-      ['commit', '-m', 'chore: receive fixture phase reviews'],
+      ['commit', '-m', 'chore: receive fixture final review'],
       run.worktreePath,
     );
 

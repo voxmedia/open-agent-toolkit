@@ -50,19 +50,15 @@ test('fixture plan has stable task IDs and an isolated parallel shape', () => {
       /^### Task (p(?<phase>\d{2})-t(?<task>\d{2})): .+?\n(?<body>[\s\S]*?)(?=^### Task |(?![\s\S]))/gm,
     ),
   ];
-  assert.equal(tasks.length, 9, 'fixture must contain exactly nine tasks');
+  assert.equal(tasks.length, 5, 'fixture must contain exactly five tasks');
 
   const taskIds = tasks.map((match) => match[1]);
   assert.deepEqual(taskIds, [
     'p01-t01',
     'p01-t02',
-    'p01-t03',
     'p02-t01',
     'p02-t02',
-    'p02-t03',
     'p03-t01',
-    'p03-t02',
-    'p03-t03',
   ]);
 
   for (const match of tasks) {

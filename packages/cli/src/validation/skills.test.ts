@@ -93,8 +93,36 @@ function currentSkillContent(
   ].join('\n');
 }
 
-async function readRepoFile(relativePath: string): Promise<string> {
+const implementSkillPath = '.agents/skills/oat-project-implement/SKILL.md';
+const implementReferencePaths = [
+  'dispatch-and-dry-run.md',
+  'plan-and-resume.md',
+  'phase-execution.md',
+  'completion-and-closeout.md',
+] as const;
+
+async function readRawRepoFile(relativePath: string): Promise<string> {
   return readFile(join(process.cwd(), '..', '..', relativePath), 'utf8');
+}
+
+async function readRepoFile(relativePath: string): Promise<string> {
+  const content = await readRawRepoFile(relativePath);
+  if (relativePath !== implementSkillPath) {
+    return content;
+  }
+  const successIndex = content.indexOf('## Success Criteria');
+  const references = await Promise.all(
+    implementReferencePaths.map((path) =>
+      readRawRepoFile(
+        `.agents/skills/oat-project-implement/references/${path}`,
+      ),
+    ),
+  );
+  return [
+    content.slice(0, successIndex),
+    ...references,
+    content.slice(successIndex),
+  ].join('\n\n');
 }
 
 function getFrontmatterForTest(content: string): string {
@@ -998,7 +1026,22 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.38');
+  });
+
+  it('routes implementation phases through bounded progressive disclosure', async () => {
+    const entry = await readRawRepoFile(implementSkillPath);
+
+    expect(entry.split('\n').length).toBeLessThanOrEqual(220);
+    for (const path of implementReferencePaths) {
+      expect(entry).toContain(`references/${path}`);
+    }
+    expect(entry).toContain('Never preload a later route');
+    expect(entry).toContain(
+      'Reviewers receive only the bounded review scope, commit range, allowed files',
+    );
+    expect(entry).not.toContain('### Step 5: Per-Phase Execution');
+    expect(entry).not.toContain('### Step 14: Trigger Final Review');
   });
 
   it('detects smoke bootstrap mode from the resolved base before worktree creation', async () => {
@@ -1161,7 +1204,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.38');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1482,7 +1525,7 @@ describe('validateOatSkills', () => {
       /phase coordinator/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.38');
 
     const coordinator = agent.slice(
       agent.indexOf('### Mode: Phase Coordinator'),
@@ -2405,7 +2448,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.0.37'],
+      ['oat-project-implement', '2.0.38'],
       ['oat-project-review-provide', '1.3.15'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;

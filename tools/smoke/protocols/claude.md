@@ -47,6 +47,12 @@ with `--target {{GATE_TARGET}}`. You may inspect `oat gate target list`, but
 never invoke a gate as a probe. An accepted failed gate is terminal for that
 gate and must not be replaced.
 
+Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
+final code gate after p03, and `full` runs those two gates. Phase self-reviews
+still run once per phase, but each reviewer receives only that phase's commit
+range and acceptance criteria. Do not turn a fixture review into repository-wide
+diagnosis, workflow redesign, or unrelated cleanup.
+
 Do not modify the parent worktree or persisted user configuration. Work only in
 this disposable worktree, commit each fixture task exactly as planned, and do
 not replace any accepted child launch.

@@ -33,17 +33,6 @@ once.
 
 **Expected commit:** `feat(p01-t02): append fixture marker`
 
-### Task p01-t03: Append fixture marker
-
-**Write target:** `workspace/logs/p01.log`
-
-Append `p01-t03 completed` to the write target. Verify the exact line occurs
-once.
-
-**Verification:** `node --input-type=module -e "import { readFileSync } from 'node:fs'; const line = 'p01-t03 completed'; if (readFileSync('workspace/logs/p01.log', 'utf8').split('\n').filter((entry) => entry === line).length !== 1) process.exit(1);"`
-
-**Expected commit:** `feat(p01-t03): append fixture marker`
-
 ## Phase 2: Parallel Log B
 
 ### Task p02-t01: Append fixture marker
@@ -68,17 +57,6 @@ once.
 
 **Expected commit:** `feat(p02-t02): append fixture marker`
 
-### Task p02-t03: Append fixture marker
-
-**Write target:** `workspace/logs/p02.log`
-
-Append `p02-t03 completed` to the write target. Verify the exact line occurs
-once.
-
-**Verification:** `node --input-type=module -e "import { readFileSync } from 'node:fs'; const line = 'p02-t03 completed'; if (readFileSync('workspace/logs/p02.log', 'utf8').split('\n').filter((entry) => entry === line).length !== 1) process.exit(1);"`
-
-**Expected commit:** `feat(p02-t03): append fixture marker`
-
 ## Phase 3: Fan-in Log
 
 Depends on: `p01`, `p02`.
@@ -94,28 +72,6 @@ once.
 
 **Expected commit:** `feat(p03-t01): append fixture marker`
 
-### Task p03-t02: Append fixture marker
-
-**Write target:** `workspace/logs/p03.log`
-
-Append `p03-t02 completed` to the write target. Verify the exact line occurs
-once.
-
-**Verification:** `node --input-type=module -e "import { readFileSync } from 'node:fs'; const line = 'p03-t02 completed'; if (readFileSync('workspace/logs/p03.log', 'utf8').split('\n').filter((entry) => entry === line).length !== 1) process.exit(1);"`
-
-**Expected commit:** `feat(p03-t02): append fixture marker`
-
-### Task p03-t03: Append fixture marker
-
-**Write target:** `workspace/logs/p03.log`
-
-Append `p03-t03 completed` to the write target. Verify the exact line occurs
-once.
-
-**Verification:** `node --input-type=module -e "import { readFileSync } from 'node:fs'; const line = 'p03-t03 completed'; if (readFileSync('workspace/logs/p03.log', 'utf8').split('\n').filter((entry) => entry === line).length !== 1) process.exit(1);"`
-
-**Expected commit:** `feat(p03-t03): append fixture marker`
-
 ## Reviews
 
 | Scope  | Type     | Status  | Date | Artifact |
@@ -130,8 +86,8 @@ once.
 
 ## Implementation Complete
 
-Nine deterministic log-append tasks complete after all phase logs contain their
-three markers.
+Five deterministic log-append tasks complete after the two parallel phase logs
+contain two markers each and the fan-in log contains one marker.
 
 ## References
 

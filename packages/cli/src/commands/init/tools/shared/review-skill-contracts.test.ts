@@ -8,7 +8,27 @@ function repoFilePath(relativePath: string): string {
 }
 
 function readRepoFile(relativePath: string): string {
-  return readFileSync(repoFilePath(relativePath), 'utf8');
+  const content = readFileSync(repoFilePath(relativePath), 'utf8');
+  if (relativePath !== '.agents/skills/oat-project-implement/SKILL.md') {
+    return content;
+  }
+  const successIndex = content.indexOf('## Success Criteria');
+  const references = [
+    'dispatch-and-dry-run.md',
+    'plan-and-resume.md',
+    'phase-execution.md',
+    'completion-and-closeout.md',
+  ].map((path) =>
+    readFileSync(
+      repoFilePath(`.agents/skills/oat-project-implement/references/${path}`),
+      'utf8',
+    ),
+  );
+  return [
+    content.slice(0, successIndex),
+    ...references,
+    content.slice(successIndex),
+  ].join('\n\n');
 }
 
 function actionableResolverInvocations(content: string): string[] {
@@ -118,10 +138,9 @@ describe('review skill contracts', () => {
   });
 
   it('defines auto-review checkpoint scope from the last passed whole-phase review', () => {
-    const skillPath = repoFilePath(
+    const content = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
-    const content = readFileSync(skillPath, 'utf8');
 
     expect(content).toContain(
       'Count only whole-phase scopes: `pNN` or `pNN-pMM`',
@@ -284,7 +303,7 @@ describe('review skill contracts', () => {
     );
 
     const reviewScopeBlock = implementerContent.match(
-      /Tier 1: dispatch the selected reviewer target[\s\S]*?```(?<scope>[\s\S]*?)```/,
+      /Include resolved dispatch context in scope packets when known:[\s\S]*?```yaml(?<scope>[\s\S]*?)```/,
     )?.groups?.scope;
     expect(reviewScopeBlock).toBeDefined();
     expect(reviewScopeBlock).toContain(
@@ -293,8 +312,8 @@ describe('review skill contracts', () => {
     expect(reviewScopeBlock).not.toContain(
       'model_axis: {inherited | selected:<Claude model>}',
     );
-    expect(implementerContent).toContain(
-      'Codex materialized reviewer role selected from a model+effort target',
+    expect(implementerContent).toMatch(
+      /For review dispatch:[\s\S]{0,240}providers\.codex\.dispatchArgs\.variant[\s\S]{0,160}providers\.codex\.selection\.target/,
     );
 
     const inheritedMaterializedCodexExamples = Array.from(
