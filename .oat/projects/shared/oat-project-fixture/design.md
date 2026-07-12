@@ -300,6 +300,37 @@ Preflight fails closed before provisioning; the provisioning manifest makes
 cleanup safe after interrupts; evidence collection runs unconditionally so
 failed runs still produce diagnosable reports.
 
+## Accepted Topology Revision (2026-07-12)
+
+The passing Codex `implement` smoke established that mandatory
+root → coordinator → task-worker nesting is functionally correct but
+operationally disproportionate: five trivial task edits completed in a 38m22s
+run dominated by orchestration ceremony.
+
+The shipped default therefore returns to:
+
+```text
+root → phase implementer
+root → phase reviewer → findings → original phase implementer
+phase implementer → optional bounded child only when beneficial
+```
+
+The phase implementer directly executes tasks sequentially and preserves one
+verified commit per task, inline between-task self-checks, and phase-wide
+verification. The root owns reviewer selection and bounded fix/re-review loops.
+Optional nested recon, fanout, or specialist dispatch remains available through
+the project adapter and generic engine, with exact launcher-owned records.
+
+This revision supersedes mandatory coordinator/worker topology statements
+earlier in this design. It does not change dispatch ladders/ceilings, selection
+reasons, accepted-launch terminality, `invalid-run-abort`, gate independence or
+liveness, evidence layering, repository-defined bootstrap, parallel phase
+worktrees, fan-in, or cleanup.
+
+Exactly one revised automated Codex `implement` run is the remaining live ship
+gate. Claude, Cursor IDE, Cursor CLI, cross-harness synthesis, and TTY
+comparisons are post-ship operator follow-up.
+
 ## Testing Strategy
 
 ### Level 1 — Unit/static (no providers, runs in CI)
@@ -326,19 +357,17 @@ external child steps, and the disposable worktree is fully removed. Interrupt
 control: kill the runner mid-provision and mid-drive; verify cleanup from
 the manifest leaves no orphans and never touches unrelated worktrees.
 
-### Level 3 — Live smoke (the deliverable itself, opt-in)
+### Level 3 — Live smoke (bounded ship gate plus operator follow-up)
 
-Per harness target (Codex, Claude, Cursor IDE, Cursor CLI): `plan-review` and
-`implement` scenarios. Codex, Claude, and Cursor CLI run both automated and
-operator-interactive modes; Cursor IDE is operator-driven. Full-workflow runs
-(plan-review → implement in one pass) are required in both Codex modes and on
-Cursor IDE; they are explicitly deferred for Claude and Cursor CLI to bound
-live-provider cost, with the deferral recorded in the cross-harness evidence
-summary. Two negative controls: preflight against a deliberately unavailable target (must
-report and exit without provisioning), and — where cheap — one observed
-reviewer/worker failure path confirming no-fallback-after-acceptance holds.
-Evidence reports are committed as the project's acceptance artifacts (these
-also record the per-harness topology answers, e.g. Claude nesting).
+The project ship gate is one automated Codex `implement` scenario using the
+restored phase-agent topology. Its report must pass the revised profile and
+record elapsed-time and launch-count comparison against the preserved 38m22s
+three-tier baseline.
+
+Claude, Cursor IDE, Cursor CLI, full-workflow permutations, cross-harness
+synthesis, and automated-versus-interactive comparisons are deferred to
+post-ship operator execution using the committed smoke runbook. The committed
+Codex unavailable-target control remains valid.
 
 ### Level 4 — Docs
 

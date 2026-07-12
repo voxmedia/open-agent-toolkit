@@ -13,6 +13,7 @@
 | DR-260712-accepted-launches-are-not      | 2026-07-12 | accepted | Accepted launches are not silently replaced                             | -      |
 | DR-260712-generic-dispatch-remains       | 2026-07-12 | accepted | Generic dispatch remains separate from project lifecycle policy         | -      |
 | DR-260712-provider-mechanics-remain-load | 2026-07-12 | accepted | Provider mechanics remain load-one-only references                      | -      |
+| DR-260712-restore-phase-agent            | 2026-07-12 | accepted | Restore phase-agent implementation topology                             | -      |
 | DR-260711-atomic-legacy-or-structured    | 2026-07-11 | accepted | Atomic legacy-or-structured workflow preference                         | -      |
 | DR-260711-configured-invocation-is       | 2026-07-11 | accepted | Configured invocation is separate from runtime identity                 | -      |
 | DR-260711-cursor-candidate-probes        | 2026-07-11 | accepted | Cursor candidate probes require passed structured controls              | -      |

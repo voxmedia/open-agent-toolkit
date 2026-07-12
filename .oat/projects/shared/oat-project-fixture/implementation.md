@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 10    | 3/10      |
+| Phase 5 | in_progress | 13    | 6/13      |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 17/27 tasks completed
+**Total:** 20/30 tasks completed
 
 ---
 
@@ -1179,61 +1179,59 @@ and a complete Codex dry-run lifecycle passed.
 
 ---
 
-### Task p05-t02: Codex live smoke runs
+### Task p05-t02: Codex three-tier baseline smoke evidence
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** pending bookkeeping commit
 
-**Automated plan-review:** the prior nine-task fixture run passed, but p05-t07
-changed the fixture contract before its evidence was committed. A current
-five-task plan-review run is therefore still required.
+**Outcome:**
 
-**Automated implement recovery:** The first implementation attempt exposed two
-separate defects: the outer drive's final manifest write could erase child
-ownership registrations, and a subsequent recovery incorrectly moved pnpm
-dependency/store policy into the generic smoke runner. The ownership race fix
-is retained. The dependency coupling and schema-v3 marker are removed:
+- The current five-task automated plan-review passed and is committed.
+- The automated three-tier `implement` run passed all nine original assertions
+  in 38m22s (`2,302,342 ms`).
+- The run proved coordinator → task-worker nesting, task commits, phase
+  reviews, p01∥p02 isolation, p03 fan-in, and final gate behavior.
+- The report is preserved under
+  `tools/smoke/reports/codex/legacy-three-tier/implement/` as historical timing
+  and topology evidence.
 
-- the runner owns only containment, ownership journaling, and evidence;
-- both worktree-bootstrap skills discover a repository-declared bootstrap
-  command, or derive setup from repository context when none exists;
-- dependency installation, build, and baseline commands remain
-  repository-owned; this repository's `AGENTS.md` and `package.json` select its
-  `worktree:init` command;
-- the invalid implementation run was canceled after confirming the coupling
-  also omitted package-local pnpm workspace links.
-
-**Verification:** 103/103 smoke/bootstrap tests and 81/81 skill-contract tests
-passed, along with repository lint, formatting, type checking, and
-public-package release validation.
+**Disposition:** Functionally valid but operationally unacceptable. The result
+triggered p05-t11 through p05-t13 to restore root-owned phase agents and
+recollect one revised live `implement` report.
 
 ---
 
 ### Task p05-t03: Claude live smoke runs
 
-**Status:** pending
+**Status:** deferred — post-ship operator verification
 **Commit:** -
 
 ---
 
 ### Task p05-t04: Cursor IDE live smoke runs
 
-**Status:** pending
+**Status:** deferred — post-ship operator verification
 **Commit:** -
 
 ---
 
 ### Task p05-t05: Cursor CLI live smoke runs
 
-**Status:** pending
+**Status:** deferred — post-ship operator verification
 **Commit:** -
 
 ---
 
 ### Task p05-t06: Live negative controls and cross-harness evidence summary
 
-**Status:** pending
+**Status:** partially complete; remaining work deferred to post-ship operator
+verification
 **Commit:** -
+
+**Completed:** Codex unavailable-target control.
+
+**Deferred:** Cross-harness summary, remaining live controls, and all
+automated-versus-TTY comparisons.
 
 ---
 
@@ -1345,6 +1343,37 @@ workspace build, lint, format, type-check, and all 2699 CLI tests passed.
 failed collection, interrupted cleanup, publication replacement, and
 deterministic no-residue cases. Workspace lint, format, and type-check passed;
 `.runs/` is ignored while `reports/` remains trackable.
+
+---
+
+### Task p05-t11: Restore root-owned phase-agent orchestration
+
+**Status:** in_progress
+**Commit:** -
+
+**Baseline:** `oat-phase-implementer` v1.0.3 at `3c244937`.
+
+**Scope:** Restore direct phase implementation and root-owned reviewer/fix
+routing while retaining the hardened dispatch, evidence, gate, bootstrap, and
+parallel-worktree substrate. Optional third-tier dispatch remains guarded and
+fully recorded.
+
+---
+
+### Task p05-t12: Realign deterministic smoke producers and assertions
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t13: Validate restored topology with one live Codex run
+
+**Status:** pending
+**Commit:** -
+
+**Comparison baseline:** 38m22s, nine passing assertions, mandatory three-tier
+topology.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t02
-oat_last_commit: 19840df6d49ffd70dc86e361afeb02cc247b3b3d
+oat_current_task: p05-t11
+oat_last_commit: f44b68baa8beac4f13b276e45a4dc8ee12d60d5f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T20:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T22:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,14 +57,14 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 5 live smoke evidence
+Implementation — Phase 5 root-owned phase-agent restoration
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 27 tasks)
+- **Plan:** `plan.md` (complete — 6 phases / 30 tasks)
 - **Implementation:** `implementation.md` (in progress — Phase 1 complete;
   Phase 2 complete; Phase 3 complete; Phase 4 complete)
 

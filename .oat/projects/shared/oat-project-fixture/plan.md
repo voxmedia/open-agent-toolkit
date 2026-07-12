@@ -425,34 +425,37 @@ Run: `node --test tools/smoke/runner/drive.test.mjs` — Expected: fails.
 
 ---
 
-### Task p05-t02: Codex live smoke runs
+### Task p05-t02: Codex three-tier baseline smoke evidence
 
 **Files:**
 
-- Create: `tools/smoke/reports/codex/` (canonical automated evidence: plan-review, implement, full; supplementary operator-interactive evidence under `operator/`)
+- Create: `tools/smoke/reports/codex/plan-review/`
+- Create: `tools/smoke/reports/codex/legacy-three-tier/implement/`
 
 **Step 1: Preconditions** — preflight passes for Codex; `agents.max_depth >= 2` effective; scoped writable roots per protocol doc.
 
-**Step 2: Execute** — run `plan-review`, then `implement`, then one `full` scenario via `node tools/smoke/runner/run-smoke.mjs --harness codex --scenario <s>`. Then, for each scenario, run `--drive-mode operator --stage prepare`; the operator executes the printed interactive Codex command and canned prompt in the disposable worktree; finish with the matching `--drive-mode operator --stage collect`. Operator reports write to `tools/smoke/reports/codex/operator/<scenario>/` and never replace canonical automated reports.
+**Step 2: Execute** — preserve the passing automated `plan-review` and
+three-tier `implement` reports. Label the latter historical baseline evidence;
+it passed all nine assertions in 38m22s (`2,302,342 ms`) while exercising three
+phase coordinators, five task workers, and three phase reviewers.
 
-**Step 3: Verify** — exactly, each expecting exit 0, all three required before the task commit:
+**Step 3: Verify** — both reports pass their original assertion profiles:
 
 ```bash
 node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/plan-review/report.json --expect-profile plan-review
-node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/implement/report.json --expect-profile implement
-node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/full/report.json --expect-profile full
-node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/operator/plan-review/report.json --expect-profile plan-review
-node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/operator/implement/report.json --expect-profile implement
-node tools/smoke/evidence/report.mjs --check tools/smoke/reports/codex/operator/full/report.json --expect-profile full
 ```
 
-The assertion profile matching each scenario applies: `plan-review` → plan-review profile (resume discipline, review disposition, state transitions); `implement` → implement profile (native coordinator→worker topology recorded, exact below-ceiling role selection, parallel p01∥p02 isolation, fan-in reconciliation, review/gate corroboration); `full` → union. Automated and operator reports are compared for TTY-dependent differences. `node --test 'tools/smoke/evidence/**/*.test.mjs'` still green.
+The historical implement packet is not rechecked with the revised profile after
+p05-t12; its immutable report records the old contract and remains the timing
+comparison source.
 
-**Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "feat(p05-t02): record codex live smoke evidence"`
+**Step 4: Commit** — `git add tools/smoke/reports/codex && git commit -m "test(p05-t02): preserve codex three-tier baseline"`
 
 ---
 
 ### Task p05-t03: Claude live smoke runs
+
+**Status:** Deferred to post-ship operator verification.
 
 **Files:**
 
@@ -489,6 +492,8 @@ The nesting answer (native coordinator→worker supported or the sanctioned alte
 
 ### Task p05-t04: Cursor IDE live smoke runs
 
+**Status:** Deferred to post-ship operator verification.
+
 **Files:**
 
 - Create: `tools/smoke/reports/cursor-ide/`
@@ -519,6 +524,8 @@ Profile assertions include: coordinator full-information selection recorded (nat
 ---
 
 ### Task p05-t05: Cursor CLI live smoke runs
+
+**Status:** Deferred to post-ship operator verification.
 
 **Files:**
 
@@ -552,6 +559,11 @@ Repeat `plan-review` through `--drive-mode operator --stage prepare`, the printe
 ---
 
 ### Task p05-t06: Live negative controls and cross-harness evidence summary
+
+**Status:** Partially complete and otherwise deferred. The unavailable-target
+Codex control is committed. Cross-harness synthesis and all remaining live
+controls move to post-ship operator verification and are not a project ship
+gate.
 
 **Files:**
 
@@ -709,6 +721,102 @@ interrupted-run, cleanup, and successful-publication cases all pass.
 
 ---
 
+### Task p05-t11: Restore root-owned phase-agent orchestration
+
+_Recovery task prompted by the passing 38m22s three-tier Codex run. Depends on
+p05-t10 and supersedes the mandatory coordinator → task-worker contract._
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/skills/oat-project-implement/{SKILL.md,references/*.md}`
+- Modify: `.agents/skills/oat-project-dispatch-subagents/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: focused skill, review, and post-implementation contract tests
+- Modify: canonical skill/agent versions, synchronized provider views, lockstep
+  package versions, and `.oat/sync/manifest.json`
+
+**Step 1: Restore the proven baseline** — use
+`git show 3c244937:.agents/agents/oat-phase-implementer.md` (v1.0.3) as the
+phase-agent base. Preserve its direct sequential task implementation, one commit
+per task, inline between-task self-checks, phase-wide self-review, fix mode, and
+compact report.
+
+**Step 2: Layer in the hardened substrate** — add only the two-skill dispatch
+load, launcher-owned dispatch records/stamps, parallel-worktree/base-mismatch
+awareness, accepted-launch terminality, invalid-run abort, and guarded optional
+third-tier dispatch. Optional recon/fanout/specialist children must be bounded,
+at or below the phase ceiling, and recorded; they are never mandatory per task.
+
+**Step 3: Restore root review ownership** — the root dispatches one phase
+reviewer at the review ceiling, parses findings, resumes the original phase
+handle in fix mode when possible, and otherwise launches at most one fresh
+same-target implementer linked to the original `request_id` through existing
+`continuation_events`. Delete, rather than demote, coordinator-owned review and
+the mandatory per-task worker protocol.
+
+**Step 4: Verify** — focused skill validation,
+`review-skill-contracts.test.ts`, and
+`post-implement-sequence-contracts.test.ts` prove direct phase writes,
+root-dispatched review, continuation semantics, task commit boundaries, and
+optional nested dispatch.
+
+**Step 5: Commit** — `git add .agents packages/cli .oat/sync/manifest.json && git commit -m "refactor(p05-t11): restore root-owned phase agents"`
+
+---
+
+### Task p05-t12: Realign deterministic smoke producers and assertions
+
+_Depends on p05-t11. Keeps evidence schema, collector, worktrees, bootstrap,
+gates, and report publication unchanged._
+
+**Files:**
+
+- Modify: `tools/smoke/{CONTRACT.md,protocols/*.md}`
+- Modify: `tools/smoke/deterministic/{provider.mjs,deterministic.test.mjs}`
+- Modify: `tools/smoke/evidence/{assertions.mjs,assertions.test.mjs}`
+- Modify: `tools/smoke/runner/{drive.mjs,drive.test.mjs}`
+
+**Step 1: Rewrite topology producers** — deterministic and live prompts record
+one accepted phase implementer and one root-owned phase reviewer per phase.
+They require zero task-worker launches by default. Optional nested records are
+validated when present.
+
+**Step 2: Rewrite the implement profile** — phase launch completeness and exact
+phase targets replace mandatory per-task launch assertions. Continue proving
+all five tasks through exact bounded commits and fixture markers. Preserve
+parallel isolation, fan-in, final gate corroboration, runtime identity, and
+accepted-launch terminality controls.
+
+**Step 3: Verify** — deterministic happy path and every failure injection pass
+in seconds; full fixture/runner/evidence suites remain green.
+
+**Step 4: Commit** — `git add tools/smoke && git commit -m "refactor(p05-t12): align smoke evidence with phase agents"`
+
+---
+
+### Task p05-t13: Validate the restored topology with one live Codex run
+
+_Depends on p05-t12. This is the only remaining automated live-provider ship
+gate._
+
+**Files:**
+
+- Create: `tools/smoke/reports/codex/implement/`
+- Modify: project implementation history with measured comparison
+
+**Step 1: Execute** —
+`node tools/smoke/runner/run-smoke.mjs --harness codex --scenario implement`.
+
+**Step 2: Verify** — the revised implement profile passes; the report contains
+three phase-implementer launches, three root-owned phase-reviewer launches, five
+bounded task commits, p01∥p02 worktree isolation, p03 fan-in, and one final
+gate. Record elapsed time and launch-count comparison against 38m22s.
+
+**Step 3: Commit** — `git add tools/smoke/reports/codex .oat/projects/shared/oat-project-fixture/implementation.md && git commit -m "test(p05-t13): validate restored codex phase topology"`
+
+---
+
 ## Phase 6: Documentation, Vault Capture & Release
 
 _Sequential; depends on p05._
@@ -717,11 +825,21 @@ _Sequential; depends on p05._
 
 **Files:**
 
-- Create: docs pages under `apps/oat-docs/docs/` — (a) orchestration model, subagent dispatch & selection contract, and evidence layers, with the required mermaid diagram set from discovery Decision #9: per-harness coordinator/worker topology; dispatch selection flow (ladder ∩ ceiling ∩ native catalog, incl. the mismatch advisory); the four review flavors and their target resolution (planning self-review = inherit, implementation self-review = at-ceiling pin, phase review gate = gate target, lifecycle gate = cross-runtime CLI exec target with possible nested managed reviewer); three-layer evidence model; smoke runner data flow; **(b) a dedicated smoke-testing runbook**: per-harness prerequisites and auth readiness, scenario selection (`plan-review`/`implement`/`full`), exact commands including the manual Cursor IDE prepare/collect flow and the negative control, evidence-report interpretation, cleanup/recovery after interrupted runs, and **when and how to update the fixture as workflows change** — the runbook's operational purpose is that future workflow adjustments have an unambiguous testing process
+- Merge: documentation commit `fe29809c` from branch
+  `oat-project-fixture-2`
+- Revise: orchestration model, implementation execution, review flavors,
+  dispatch/provider guidance, evidence layers, and smoke runbook for root-owned
+  phase implementation and review
 - Modify: `apps/oat-docs/AGENTS.md` — refine the project-docs rule from hard prohibition to guidance: `oat-project-document` is the default end-of-project documentation flow (its guidance is valuable and should be generally followed), but an explicit in-plan doc-authoring task is sanctioned when documentation is central to the project's scope, provided the skill's core guidance (delta analysis, user approval of substantive content, nav sync, generated-index regeneration) is honored
-- Modify: docs nav per `apps/oat-docs/AGENTS.md` conventions; regenerate `apps/oat-docs/index.md` via `oat docs generate-index`
+- Preserve: `programmatic-execution.md`, the AGENTS rule softening, and completed
+  navigation entries unless topology alignment requires a focused correction
+- Regenerate: `apps/oat-docs/index.md` via `oat docs generate-index`; never
+  hand-edit it
 
-**Step 1: Author** — pages draw on `design.md`, `tools/smoke/reports/SUMMARY.md`, and the project references; diagrams authored in mermaid. Follow `oat-project-document` guidance generally: present the page/nav delta for user approval before finalizing. (Disposition of gate finding I3: doc authoring is deliberately an explicit phase here because documentation is a core project requirement per discovery Decision #9 — user-sanctioned 2026-07-11.)
+**Step 1: Merge and align** — merge the validated sibling docs commit, then
+replace mandatory coordinator → worker language with the restored default
+topology. Document optional third-tier dispatch, root-owned review, unchanged
+selection/evidence/gate substrate, and post-ship operator protocols.
 
 **Step 2: Verify** — `pnpm build:docs` green; generated index regenerated (not hand-edited); `pnpm lint && pnpm format`.
 
@@ -820,11 +938,11 @@ Expected: all green.
   isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
-- Phase 5: 10 tasks — Harness protocols, deterministic/fail-fast recovery,
-  report publication, live smoke evidence, and cross-harness summary
+- Phase 5: 13 tasks — Harness protocols, deterministic/fail-fast recovery,
+  report publication, phase-agent restoration, and bounded live smoke evidence
 - Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
 
-**Total: 27 tasks**
+**Total: 30 tasks**
 
 Ready for code review and merge.
 
