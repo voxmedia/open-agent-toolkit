@@ -102,18 +102,29 @@ function validateBranchOwnership(manifest, branch) {
     ownership.baseCommitSha,
     'branchOwnership.baseCommitSha',
   );
-  const baselineCommitSha = requireCommitSha(
-    ownership.baselineCommitSha,
-    'branchOwnership.baselineCommitSha',
-  );
   if (baseCommitSha !== sourceCommitSha) {
     throw new CleanupRefusalError(
       'branch ownership base does not match the source commit.',
     );
   }
 
+  const manifestBaseline = manifest.baselineCommitSha;
+  const ownershipBaseline = ownership.baselineCommitSha;
+  if (manifestBaseline === null && ownershipBaseline === null) {
+    return {
+      baseCommitSha,
+      baselineCommitSha: null,
+      sourceCommitSha,
+      state: 'pre-baseline',
+    };
+  }
+
+  const baselineCommitSha = requireCommitSha(
+    ownershipBaseline,
+    'branchOwnership.baselineCommitSha',
+  );
   if (
-    requireCommitSha(manifest.baselineCommitSha, 'baselineCommitSha') !==
+    requireCommitSha(manifestBaseline, 'baselineCommitSha') !==
     baselineCommitSha
   ) {
     throw new CleanupRefusalError(
@@ -132,6 +143,8 @@ function validateBranchOwnership(manifest, branch) {
   return {
     baseCommitSha,
     baselineCommitSha,
+    sourceCommitSha,
+    state: 'completed',
   };
 }
 
@@ -513,6 +526,59 @@ async function validateOwnedResource(
   };
 }
 
+async function validatePreBaselineResource(
+  resource,
+  { canonicalWorktrees, fileSystem, git, branchMap, commonGitDir },
+) {
+  const branchRef = `refs/heads/${resource.branch}`;
+  const registeredAtPath = canonicalWorktrees.find(
+    (entry) => entry.canonicalPath === resource.worktreePath,
+  );
+  const branchRegistrations = canonicalWorktrees.filter(
+    (entry) => entry.branch === branchRef,
+  );
+  const branchTip = branchMap.get(resource.branch);
+
+  if (
+    !branchTip ||
+    !registeredAtPath ||
+    registeredAtPath.branch !== branchRef ||
+    branchRegistrations.some(
+      (entry) => entry.canonicalPath !== resource.worktreePath,
+    ) ||
+    branchTip !== resource.sourceCommitSha ||
+    registeredAtPath.HEAD !== resource.sourceCommitSha
+  ) {
+    throw new CleanupRefusalError(
+      `pre-baseline branch or worktree ${resource.branch} no longer exactly matches its source.`,
+    );
+  }
+  if (!(await pathExists(resource.worktreePath, fileSystem))) {
+    throw new CleanupRefusalError(
+      `pre-baseline worktree ${resource.worktreePath} is missing from disk.`,
+    );
+  }
+
+  let actualCommonDirectory;
+  try {
+    actualCommonDirectory = await gitCommonDirectory(resource.worktreePath, {
+      fileSystem,
+      git,
+    });
+  } catch (error) {
+    throw new CleanupRefusalError(
+      `could not corroborate the shared Git directory for ${resource.worktreePath}: ${error.message}`,
+    );
+  }
+  if (actualCommonDirectory !== commonGitDir) {
+    throw new CleanupRefusalError(
+      `worktree ${resource.worktreePath} belongs to a mismatched shared Git directory.`,
+    );
+  }
+
+  return { branchExists: true, registered: true };
+}
+
 function parseBranches(output) {
   const branches = new Map();
   for (const line of output.split('\n')) {
@@ -610,18 +676,78 @@ export async function cleanupSmoke(
     runIdentity: loaded.manifest.runIdentity,
     worktreePath: await canonicalPath(resources.worktreePath, fileSystem),
   };
-  const ownedResources = [...nestedOwnedResources, outerResource];
   if (!resources.branchOwnership) {
-    throw new CleanupRefusalError(
-      'outer branch or worktree exists without explicit run ownership.',
-    );
+    if (
+      resources.nestedResources.length > 0 ||
+      branchMap.has(resources.branch) ||
+      canonicalWorktrees.some(
+        (entry) => entry.canonicalPath === outerResource.worktreePath,
+      ) ||
+      (await pathExists(outerResource.worktreePath, fileSystem))
+    ) {
+      throw new CleanupRefusalError(
+        'outer branch or worktree exists without explicit run ownership.',
+      );
+    }
+
+    await fileSystem.rm(resources.manifestPath, { force: true });
+    actions.push(`path:${resources.manifestPath}`);
+    try {
+      await fileSystem.rmdir(resources.runPath);
+      actions.push(`directory:${resources.runPath}`);
+    } catch (error) {
+      if (error?.code !== 'ENOTEMPTY' && error?.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    return {
+      actions,
+      status: actions.length === 0 ? 'noop' : 'cleaned',
+    };
   }
 
+  const ownedResources = [...nestedOwnedResources, outerResource];
   const resourceStates = new Map();
-  for (const resource of ownedResources) {
+  for (const resource of nestedOwnedResources) {
     resourceStates.set(
       resource.branch,
       await validateOwnedResource(resource, {
+        branchMap,
+        canonicalWorktrees,
+        commonGitDir: resources.commonGitDir,
+        fileSystem,
+        git,
+        manifest: loaded.manifest,
+        repository,
+      }),
+    );
+  }
+  if (resources.branchOwnership.state === 'pre-baseline') {
+    if (nestedOwnedResources.length > 0) {
+      throw new CleanupRefusalError(
+        'pre-baseline ownership cannot contain nested journal resources.',
+      );
+    }
+    resourceStates.set(
+      outerResource.branch,
+      await validatePreBaselineResource(
+        {
+          ...outerResource,
+          sourceCommitSha: resources.branchOwnership.sourceCommitSha,
+        },
+        {
+          branchMap,
+          canonicalWorktrees,
+          commonGitDir: resources.commonGitDir,
+          fileSystem,
+          git,
+        },
+      ),
+    );
+  } else {
+    resourceStates.set(
+      outerResource.branch,
+      await validateOwnedResource(outerResource, {
         branchMap,
         canonicalWorktrees,
         commonGitDir: resources.commonGitDir,
@@ -639,30 +765,32 @@ export async function cleanupSmoke(
   const ownedBranches = new Set(
     ownedResources.map((resource) => resource.branch),
   );
-  const runBaseline = resources.branchOwnership.baselineCommitSha;
-  for (const entry of canonicalWorktrees) {
-    if (
-      !ownedPaths.has(entry.canonicalPath) &&
-      typeof entry.HEAD === 'string' &&
-      /^[0-9a-f]{40}$/u.test(entry.HEAD) &&
-      (await isCommitAncestor(runBaseline, entry.HEAD, {
-        cwd: repository,
-        git,
-      }))
-    ) {
-      throw new CleanupRefusalError(
-        `run-descendant worktree ${entry.canonicalPath} is not journaled.`,
-      );
+  if (resources.branchOwnership.state === 'completed') {
+    const runBaseline = resources.branchOwnership.baselineCommitSha;
+    for (const entry of canonicalWorktrees) {
+      if (
+        !ownedPaths.has(entry.canonicalPath) &&
+        typeof entry.HEAD === 'string' &&
+        /^[0-9a-f]{40}$/u.test(entry.HEAD) &&
+        (await isCommitAncestor(runBaseline, entry.HEAD, {
+          cwd: repository,
+          git,
+        }))
+      ) {
+        throw new CleanupRefusalError(
+          `run-descendant worktree ${entry.canonicalPath} is not journaled.`,
+        );
+      }
     }
-  }
-  for (const [branch, tip] of branchMap) {
-    if (
-      !ownedBranches.has(branch) &&
-      (await isCommitAncestor(runBaseline, tip, { cwd: repository, git }))
-    ) {
-      throw new CleanupRefusalError(
-        `run-descendant branch ${branch} is not journaled.`,
-      );
+    for (const [branch, tip] of branchMap) {
+      if (
+        !ownedBranches.has(branch) &&
+        (await isCommitAncestor(runBaseline, tip, { cwd: repository, git }))
+      ) {
+        throw new CleanupRefusalError(
+          `run-descendant branch ${branch} is not journaled.`,
+        );
+      }
     }
   }
 

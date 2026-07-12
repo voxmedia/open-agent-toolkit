@@ -7,6 +7,7 @@ import {
   readFile,
   readdir,
   realpath,
+  rename as renameFile,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -356,6 +357,152 @@ test('recovers from a manifest interrupted before created-path updates', async (
     assert.equal(await exists(manifest.worktreePath), false);
     assert.equal(await exists(dirname(manifest.manifestPath)), false);
     await assertNoSmokeGitResources(repository, baselineWorktrees);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+for (const { name, provisionOptions } of [
+  {
+    name: 'worktree creation',
+    provisionOptions: () => ({
+      git: async (args, options) => {
+        if (args.includes('worktree') && args.includes('add')) {
+          throw new Error('worktree add failed');
+        }
+        return git(args, options);
+      },
+    }),
+  },
+  {
+    name: 'fixture copy',
+    provisionOptions: () => ({
+      fileSystem: {
+        cp: async () => {
+          throw new Error('fixture copy failed');
+        },
+        mkdir,
+        realpath,
+        rename: renameFile,
+        rm,
+        writeFile,
+      },
+    }),
+  },
+  {
+    name: 'baseline commit',
+    provisionOptions: () => ({
+      git: async (args, options) => {
+        if (args.includes('commit')) {
+          throw new Error('baseline commit failed');
+        }
+        return git(args, options);
+      },
+    }),
+  },
+]) {
+  test(`cleanup recovers resources after ${name} fails`, async () => {
+    const repository = await createRepository(`oat-smoke-${name}-`);
+    const runsDirectory = join(repository, '.smoke-runs');
+    const baselineWorktrees = await git(['worktree', 'list', '--porcelain'], {
+      cwd: repository,
+    });
+    const collateralPath = join(repository, 'collateral.txt');
+    await writeFile(collateralPath, 'preserve me\n');
+    const branch = `smoke-2026-07-11T20-30-45-123Z-${name.replaceAll(' ', '-')}`;
+    const manifestPath = join(
+      runsDirectory,
+      branch,
+      'provisioning-manifest.json',
+    );
+
+    try {
+      await assert.rejects(
+        () =>
+          provisionSmoke(
+            { harness: 'codex', scenario: 'implement' },
+            {
+              clock: () => new Date('2026-07-11T20:30:45.123Z'),
+              fixture: fixturePath,
+              random: () => name.replaceAll(' ', '-'),
+              repository,
+              runsDirectory,
+              ...provisionOptions(repository),
+            },
+          ),
+        /failed/,
+      );
+
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const result = await cleanupSmoke(manifestPath, {
+        git,
+        repository,
+        runsDirectory,
+      });
+
+      assert.equal(result.status, 'cleaned');
+      assert.equal(await exists(dirname(manifestPath)), false);
+      assert.equal(await exists(manifest.worktreePath), false);
+      assert.equal(await readFile(collateralPath, 'utf8'), 'preserve me\n');
+      await assertNoSmokeGitResources(repository, baselineWorktrees);
+    } finally {
+      await rm(repository, { force: true, recursive: true });
+    }
+  });
+}
+
+test('refuses cleanup when a pre-baseline branch has advanced', async () => {
+  const repository = await createRepository('oat-smoke-pre-baseline-advance-');
+  const runsDirectory = join(repository, '.smoke-runs');
+  const branch = 'smoke-2026-07-11T20-30-45-123Z-pre-baseline-advance';
+  const manifestPath = join(
+    runsDirectory,
+    branch,
+    'provisioning-manifest.json',
+  );
+
+  try {
+    await assert.rejects(
+      () =>
+        provisionSmoke(
+          { harness: 'codex', scenario: 'implement' },
+          {
+            clock: () => new Date('2026-07-11T20:30:45.123Z'),
+            fileSystem: {
+              cp: async () => {
+                throw new Error('fixture copy failed');
+              },
+              mkdir,
+              realpath,
+              rename: renameFile,
+              rm,
+              writeFile,
+            },
+            fixture: fixturePath,
+            git,
+            random: () => 'pre-baseline-advance',
+            repository,
+            runsDirectory,
+          },
+        ),
+      /fixture copy failed/,
+    );
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    await writeFile(join(manifest.worktreePath, 'advanced.txt'), 'advanced\n');
+    await git(['add', 'advanced.txt'], { cwd: manifest.worktreePath });
+    await git(['commit', '-m', 'advance pre-baseline branch'], {
+      cwd: manifest.worktreePath,
+    });
+
+    await assert.rejects(
+      () => cleanupSmoke(manifestPath, { git, repository, runsDirectory }),
+      /pre-baseline branch or worktree .* no longer exactly matches its source/,
+    );
+    assert.equal(await exists(manifest.worktreePath), true);
+    assert.match(
+      await git(['branch', '--list', manifest.branch], { cwd: repository }),
+      new RegExp(manifest.branch),
+    );
   } finally {
     await rm(repository, { force: true, recursive: true });
   }
