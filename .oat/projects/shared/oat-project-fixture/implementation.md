@@ -1067,6 +1067,40 @@ provider sync passed.
 **Next:** run full validation, commit the second fix baseline, and re-review
 Phase 4.
 
+### Phase 4 Self-review — Iteration 3
+
+**Review artifact:** `reviews/p04-review-2026-07-12T134148Z.md`
+
+**Verdict:** failed — 0 Critical, 2 Important, 0 Medium, 0 Minor.
+
+**Findings:**
+
+- The coordinator reviewer resolver command passed reviewer-forbidden
+  `--ceiling-tier`, so the documented route exited before target selection.
+- `oat-project-review-provide` still treated timeout retry as a new same-payload
+  launch instead of continuing the accepted handle.
+
+### Phase 4 Self-review — Iteration 3 — Fix iteration 3 complete
+
+**Outcome:**
+
+- Coordinator reviewer resolution no longer passes task-only `--ceiling-tier`.
+  It verifies the returned configured review policy, target, and source against
+  the coordinator's project-ceiling inputs as a postcondition.
+- Executable resolver coverage now runs the reviewer command shape without an
+  invocation ceiling and verifies the configured Cursor reviewer target.
+- Project review payload reuse is limited to explicit pre-start transport or
+  role-selection rejection. After acceptance, timeout, interruption, and
+  `BLOCKED` continue only through the existing handle or block/escalate.
+- `oat-project-review-provide` received its one-time PR-scoped version bump and
+  provider/Codex views were regenerated.
+
+**Verification:** 192/192 focused skill, closeout, and resolver tests passed;
+repository-local provider sync passed.
+
+**Next:** run full validation, commit the third fix baseline, and re-review
+Phase 4.
+
 ---
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence

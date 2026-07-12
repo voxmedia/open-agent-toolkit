@@ -893,15 +893,21 @@ describe('oat project dispatch-ceiling resolve', () => {
         '--non-interactive',
         '--json',
       ]);
-      await runCommand(command, [
+      const reviewerArgs = [
         '--provider',
         'cursor',
         '--role',
         'reviewer',
         '--preflight',
         '--non-interactive',
+        '--report-scope',
+        'p04',
+        '--report-action',
+        'review',
         '--json',
-      ]);
+      ];
+      expect(reviewerArgs).not.toContain('--ceiling-tier');
+      await runCommand(command, reviewerArgs);
 
       for (const payload of capture.jsonPayloads) {
         expect(payload).toMatchObject({

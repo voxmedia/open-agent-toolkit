@@ -1163,7 +1163,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.14');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.15');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1429,8 +1429,11 @@ describe('validateOatSkills', () => {
       expect(content, `${name} Cursor payload`).toContain(
         'providers.cursor.dispatchArgs.model',
       );
-      expect(content, `${name} exact payload retry`).toMatch(
-        /(?:timeout|retry|re-dispatch)[\s\S]{0,420}(?:same|exact)[\s\S]{0,260}(?:payload|model argument)/i,
+      expect(content, `${name} accepted-handle continuation`).toMatch(
+        /(?:After acceptance|accepted reviewer)[\s\S]{0,220}(?:existing|same) (?:reviewer |child )?handle/i,
+      );
+      expect(content, `${name} terminal no replacement`).toMatch(
+        /terminal timeout[\s\S]{0,180}(?:block|escalate)[\s\S]{0,180}(?:without another launch|cannot launch a replacement)/i,
       );
     }
 
@@ -2370,7 +2373,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.3.14'],
       ['oat-project-quick-start', '2.1.15'],
       ['oat-project-import-plan', '1.4.6'],
-      ['oat-project-review-provide', '1.3.14'],
+      ['oat-project-review-provide', '1.3.15'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2386,7 +2389,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.0.37'],
-      ['oat-project-review-provide', '1.3.14'],
+      ['oat-project-review-provide', '1.3.15'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 
@@ -2599,7 +2602,10 @@ describe('validateOatSkills', () => {
     );
 
     expect(reviewRoute).toContain('--role reviewer');
-    expect(reviewRoute).toContain('--ceiling-tier "$REVIEW_CEILING_TIER"');
+    expect(reviewRoute).not.toContain('--ceiling-tier "$REVIEW_CEILING_TIER"');
+    expect(reviewRoute).toMatch(
+      /configured review ceiling[\s\S]{0,220}returned policy[\s\S]{0,220}REVIEW_CEILING_TIER[\s\S]{0,120}REVIEW_CEILING_SOURCE/i,
+    );
     expect(reviewRoute).toContain('cursor-agent --list-models');
     expect(reviewRoute).toContain(
       'selection_reason: native-catalog-unsatisfying',

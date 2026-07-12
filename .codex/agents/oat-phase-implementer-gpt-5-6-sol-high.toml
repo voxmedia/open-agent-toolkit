@@ -228,12 +228,16 @@ project ceiling, never the narrower task ceiling:
 oat project dispatch-ceiling resolve \\
   --provider "$ACTIVE_PROVIDER" \\
   --role reviewer \\
-  --ceiling-tier "$REVIEW_CEILING_TIER" \\
   --report-scope "$PHASE" \\
   --report-action review \\
   --project-path "$PROJECT_PATH" \\
   --json
 ```
+
+Reviewer resolution uses the configured review ceiling; `--ceiling-tier` is a
+task-dispatch-only option and must not be passed here. Verify the resolver's
+returned policy, selected target, and ceiling source equal
+`REVIEW_CEILING_TIER` / `REVIEW_CEILING_SOURCE`. A mismatch is `BLOCKED`.
 
 For capped managed policy, require the exact provider payload:
 `providers.codex.dispatchArgs.variant`,
