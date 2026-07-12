@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -74,12 +74,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
 | Phase 2 | in_progress | 5     | 5/5       |
-| Phase 3 | in_progress | 3     | 1/3       |
+| Phase 3 | in_progress | 3     | 2/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 9/23 tasks completed
+**Total:** 10/23 tasks completed
 
 ---
 
@@ -639,8 +639,23 @@ self-review; independent external gates remain enabled.
 
 ### Task p03-t02: Assertion engine and report emitters
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a9b36e6c
+
+**Outcome:**
+
+- Added scenario-aware `plan-review`, `implement`, and deduplicated `full`
+  assertion profiles.
+- Added deterministic JSON/Markdown report emitters and executable
+  `report.mjs --check` pass/fail semantics.
+- Golden bundles cover plan stability, atomic transitions, dispatch
+  completeness/ceiling selection, isolation, fan-in, gate corroboration, and
+  explicit runtime identity status.
+
+**Verification:**
+
+- Evidence collector/assertion/report tests — 10/10 passed.
+- Direct evidence lint/format and diff checks — passed.
 
 ---
 
