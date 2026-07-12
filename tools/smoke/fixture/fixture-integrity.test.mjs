@@ -32,10 +32,19 @@ test('fixture project has the required artifact surface', () => {
 
 test('fixture plan has stable task IDs and an isolated parallel shape', () => {
   const plan = readFileSync(path.join(projectRoot, 'plan.md'), 'utf8');
+  const discovery = readFileSync(
+    path.join(projectRoot, 'discovery.md'),
+    'utf8',
+  );
 
   assert.match(
     plan,
     /oat_plan_parallel_groups:\s*\[\s*\[\s*['"]?p01['"]?\s*,\s*['"]?p02['"]?\s*\]\s*\]/,
+  );
+  assert.match(
+    discovery,
+    /five tasks across three phases: two tasks each in `p01`\s+and `p02`, plus one task in `p03`/,
+    'fixture discovery must describe the same five-task shape as the plan',
   );
   for (const section of [
     '## Reviews',
