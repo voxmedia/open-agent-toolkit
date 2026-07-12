@@ -1,204 +1,156 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-summary
 oat_blockers: []
 oat_last_updated: 2026-07-12
 oat_phase: plan
-oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_phase_status: complete
+oat_plan_hill_phases: []
+oat_plan_parallel_groups: []
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
 ---
 
-# Implementation Plan: dispatch-subagents-abstraction
+# Retrospective Implementation Plan: Dispatch Subagent Abstraction
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Historical record only. The user explicitly chose direct skill authoring
+> with Claude review instead of `oat-project-implement`; this plan was
+> backfilled after implementation commit `bb3a942a` landed.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Separate reusable provider-neutral OAT subagent dispatch from
+project lifecycle policy so analytical skills can fan out bounded work without
+importing project phase, task, gate, commit, or worktree semantics.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** `oat-dispatch-subagents` owns generic selection, launch,
+evidence, and recovery. `oat-project-dispatch-subagents` resolves project
+lifecycle context and translates it into the generic dispatch contract.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Agent Skills Markdown, provider-specific reference files,
+OAT CLI skill distribution, pnpm workspace release validation.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Implementation Commit:** `bb3a942a7f0a79c6d60e1786b38673bba46a519c`
 
-## Planning Checklist
+## Execution Note
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+This task breakdown describes the work that actually shipped. It is not
+represented as a pre-execution plan and must not be passed to
+`oat-project-implement`.
 
----
+## Phase 1: Dispatch Contracts
 
-## Parallelism
-
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
-
----
-
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Create the reusable dispatch engine
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Create: `.agents/skills/oat-dispatch-subagents/SKILL.md`
+- Create: `.agents/skills/oat-dispatch-subagents/references/provider-claude.md`
+- Create: `.agents/skills/oat-dispatch-subagents/references/provider-codex.md`
+- Create: `.agents/skills/oat-dispatch-subagents/references/provider-cursor.md`
+- Create: `.agents/skills/oat-dispatch-subagents/references/record-schema.md`
 
-**Step 1: Write test (RED)**
+**Delivered behavior:**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+- Defines provider-neutral dispatch inputs, capability states, candidate
+  selection, launch acceptance, continuation, and fail-closed recovery.
+- Adds generic role classes including economical read-only reconnaissance and
+  homogeneous recon-wave evidence.
+- Loads exactly one provider reference after provider resolution.
+- Preserves exact route/model/effort/authority evidence without importing
+  project lifecycle state.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+**Verification:**
 
-**Step 2: Implement (GREEN)**
+- `pnpm oat:validate-skills`
+- Claude architectural and implementation review
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add the OAT project lifecycle adapter
 
 **Files:**
 
-- {File list}
+- Create: `.agents/skills/oat-project-dispatch-subagents/SKILL.md`
 
-**Step 1: Write test (RED)**
+**Delivered behavior:**
 
-{Test code}
+- Resolves active project, phase/task scope, dispatch policy, gates, write
+  boundaries, and project-specific role semantics.
+- Composes with `oat-dispatch-subagents` instead of duplicating provider
+  catalogs, selection, launch, or recovery logic.
+- Fails closed with installation guidance when the utility-pack engine is
+  unavailable.
 
-**Step 2: Implement (GREEN)**
+**Verification:**
 
-{Implementation code or signatures}
+- Static boundary review against the lightweight design
+- Claude implementation review with no remaining Critical or Important findings
 
-**Step 3: Refactor**
+## Phase 2: Distribution and Adoption Readiness
 
-{Optional cleanup}
+### Task p02-t01: Register, bundle, and expose the skills
 
-**Step 4: Verify**
+**Files:**
 
-Run: `{verification command}`
-Expected: {output}
+- Modify: `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+- Modify: `packages/cli/scripts/bundle-assets.sh`
+- Modify: `.oat/sync/manifest.json`
+- Create: `.claude/skills/oat-dispatch-subagents`
+- Create: `.claude/skills/oat-project-dispatch-subagents`
+- Create: `.cursor/skills/oat-dispatch-subagents`
+- Create: `.cursor/skills/oat-project-dispatch-subagents`
+- Modify: five public package manifests and bundled version metadata
 
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+**Delivered behavior:**
 
-**Step 5: Commit**
+- Places the generic engine in the utility pack and the project adapter in the
+  workflows pack.
+- Bundles both skills into CLI assets and synchronizes Claude/Cursor provider
+  views.
+- Applies the required lockstep public-package bump to `0.1.53`.
 
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+**Verification:**
 
----
+- `pnpm run cli -- sync --scope all`
+- `pnpm release:validate`
 
-## Phase 2: {Phase Name}
+### Task p02-t02: Prepare the improve consumer and finalize review evidence
 
-### Task p02-t01: {Task Name}
+**Files:**
 
-{Continue TDD pattern...}
+- Modify: `.agents/skills/oat-repo-improve/SKILL.md`
+- Modify: `.oat/projects/shared/dispatch-subagents-abstraction/discovery.md`
+- Modify: `.oat/projects/shared/dispatch-subagents-abstraction/design.md`
 
----
+**Delivered behavior:**
+
+- Adds OAT-compatible metadata and progress conventions to the preliminary
+  improve skill without performing the substantive improve redesign.
+- Records pack ownership, source provenance, cross-worktree drift handling,
+  missing-engine behavior, and provider filename safety.
+- Incorporates Claude's review findings before the implementation commit.
+
+**Verification:**
+
+- `git diff --check`
+- `pnpm oat:validate-skills` — 56 OAT skills validated
+- `pnpm release:validate` — five public packages validated
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+| Scope  | Type     | Status | Date       | Artifact                                              |
+| ------ | -------- | ------ | ---------- | ----------------------------------------------------- |
+| design | artifact | passed | 2026-07-12 | Live Claude/Codex collaboration review                |
+| final  | code     | passed | 2026-07-12 | Claude session `35331219-1cd2-4997-a032-68f5c33f701b` |
 
 ## Implementation Complete
 
-**Summary:**
-
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
-
-**Total: {N} tasks**
-
-Ready for code review and merge.
-
----
+- Phase 1: 2 tasks — reusable engine and project adapter
+- Phase 2: 2 tasks — distribution, validation, and adoption readiness
+- Total: 4 retrospective tasks, shipped in `bb3a942a`
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Design: `design.md`
+- Implementation: `implementation.md`
