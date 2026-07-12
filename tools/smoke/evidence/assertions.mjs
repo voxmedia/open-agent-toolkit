@@ -192,6 +192,64 @@ function commonAssertions(bundle) {
   ];
 }
 
+function negativeControlAssertions(bundle) {
+  const kind = bundle.control?.kind;
+  if (kind === 'unavailable-target') {
+    const noProvisioning =
+      bundle.preflight?.status === 'blocked' &&
+      bundle.preflight?.selectedHarness === bundle.control.harness &&
+      bundle.preflight?.selectedHarnessStatus === 'unavailable' &&
+      bundle.provisioningStarted === false &&
+      (bundle.manifest === null || bundle.manifest === undefined);
+    return [
+      assertion(
+        'negative-unavailable-target-no-provisioning',
+        'An unavailable selected target exits before provisioning.',
+        noProvisioning,
+        {
+          manifestPresent:
+            bundle.manifest !== null && bundle.manifest !== undefined,
+          preflight: bundle.preflight ?? null,
+          provisioningStarted: bundle.provisioningStarted ?? null,
+        },
+        'critical',
+      ),
+    ];
+  }
+
+  if (kind === 'post-acceptance-failure') {
+    const taskScope = bundle.control?.taskScope;
+    const launches = (bundle.dispatches ?? []).filter(
+      (dispatch) =>
+        dispatch.scope === taskScope && dispatch.action === 'implementation',
+    );
+    const acceptedFailure = launches.some(
+      (dispatch) =>
+        dispatch.launch?.accepted === true &&
+        dispatch.launch?.outcome === 'failed',
+    );
+    return [
+      assertion(
+        'negative-no-fallback-after-acceptance',
+        'An accepted child that later fails is not relaunched with another pinned target.',
+        acceptedFailure && launches.length === 1,
+        {
+          acceptedFailure,
+          launches: launches.map((dispatch) => ({
+            accepted: dispatch.launch?.accepted ?? null,
+            outcome: dispatch.launch?.outcome ?? null,
+            target: dispatch.configuredInvocation?.target ?? null,
+          })),
+          taskScope,
+        },
+        'critical',
+      ),
+    ];
+  }
+
+  throw new EvidenceAssertionError(`Unknown negative control: ${String(kind)}`);
+}
+
 export function evaluateEvidence(bundle) {
   if (!isPlainObject(bundle)) {
     throw new EvidenceAssertionError('Evidence bundle must be an object.');
@@ -202,12 +260,17 @@ export function evaluateEvidence(bundle) {
     );
   }
 
-  const assertions = commonAssertions(bundle);
-  if (bundle.scenario === 'plan-review' || bundle.scenario === 'full') {
-    assertions.push(...planReviewAssertions(bundle));
-  }
-  if (bundle.scenario === 'implement' || bundle.scenario === 'full') {
-    assertions.push(...implementAssertions(bundle));
+  const assertions = [];
+  if (bundle.control?.kind) {
+    assertions.push(...negativeControlAssertions(bundle));
+  } else {
+    assertions.push(...commonAssertions(bundle));
+    if (bundle.scenario === 'plan-review' || bundle.scenario === 'full') {
+      assertions.push(...planReviewAssertions(bundle));
+    }
+    if (bundle.scenario === 'implement' || bundle.scenario === 'full') {
+      assertions.push(...implementAssertions(bundle));
+    }
   }
   const uniqueAssertions = [
     ...new Map(assertions.map((entry) => [entry.id, entry])).values(),

@@ -1,0 +1,14 @@
+{
+  "scenario": "implement",
+  "control": {
+    "kind": "unavailable-target",
+    "harness": "cursor-cli"
+  },
+  "preflight": {
+    "status": "blocked",
+    "selectedHarness": "cursor-cli",
+    "selectedHarnessStatus": "unavailable"
+  },
+  "provisioningStarted": false,
+  "manifest": null
+}

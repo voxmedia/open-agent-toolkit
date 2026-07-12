@@ -117,6 +117,68 @@ test('rejects unknown or malformed evidence bundles', () => {
     () => evaluateEvidence({ scenario: 'unknown' }),
     /Unknown evidence scenario/,
   );
+  assert.throws(
+    () =>
+      evaluateEvidence({
+        scenario: 'implement',
+        control: { kind: 'unknown' },
+      }),
+    /Unknown negative control/,
+  );
+});
+
+test('unavailable-target control proves preflight exited without provisioning', async () => {
+  const bundle = JSON.parse(
+    await readFile(
+      join(goldenDirectory, '../negative/unavailable-target.json'),
+      'utf8',
+    ),
+  );
+  const passed = evaluateEvidence(bundle);
+  assert.equal(passed.status, 'passed');
+  assert.equal(
+    passed.assertions[0].id,
+    'negative-unavailable-target-no-provisioning',
+  );
+  assert.equal(passed.assertions[0].severity, 'critical');
+
+  bundle.provisioningStarted = true;
+  bundle.manifest = { provisioningState: 'initializing' };
+  const failed = evaluateEvidence(bundle);
+  assert.equal(failed.status, 'failed');
+  assert.deepEqual(failedIds(failed), [
+    'negative-unavailable-target-no-provisioning',
+  ]);
+});
+
+test('post-acceptance failure control rejects a second pinned launch', async () => {
+  const bundle = JSON.parse(
+    await readFile(
+      join(goldenDirectory, '../negative/post-acceptance-failure.json'),
+      'utf8',
+    ),
+  );
+  const passed = evaluateEvidence(bundle);
+  assert.equal(passed.status, 'passed');
+  assert.equal(
+    passed.assertions[0].id,
+    'negative-no-fallback-after-acceptance',
+  );
+  assert.equal(passed.assertions[0].severity, 'critical');
+
+  bundle.dispatches.push({
+    ...structuredClone(bundle.dispatches[0]),
+    configuredInvocation: {
+      modelAxis: 'selected:gpt-5.6-terra-medium',
+      target: 'cursor-cli:gpt-5.6-terra-medium',
+    },
+    launch: { accepted: true, outcome: 'completed' },
+  });
+  const failed = evaluateEvidence(bundle);
+  assert.equal(failed.status, 'failed');
+  assert.deepEqual(failedIds(failed), [
+    'negative-no-fallback-after-acceptance',
+  ]);
 });
 
 test('report emitters are deterministic and check mode reflects assertion status', async () => {
