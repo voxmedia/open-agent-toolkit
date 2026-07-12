@@ -55,6 +55,11 @@ copying their content here. -->
   raw identifiers. The current headless client exposed no Task events, so the
   controls were inconclusive and the configured recommendation remains
   explicitly unvalidated.
+- Reusable OAT subagent dispatch is split into a provider-neutral utility
+  engine and a project lifecycle adapter. The engine owns capability,
+  authorization, catalog, route/model/effort selection, launch evidence, and
+  recovery; the adapter adds project, phase/task, gate, write-boundary,
+  commit, and worktree semantics without duplicating provider mechanics.
 
 ## What's Next
 
@@ -66,7 +71,8 @@ Continue the remaining dispatch work through the active backlog: recheck live
 GPT-5.6 Cursor Task/subagent eligibility after a client rollout exposes Task in
 headless mode or Cursor support confirms the private requests (review by
 2026-08-08), add root-owned exact dispatch with launcher-owned provenance,
-enable reviewer reconnaissance subagents, and structure post-implementation
-sequencing. Review-efficiency follow-up also tracks skipping redundant
+adopt the reusable dispatch contracts in analytical callers such as
+`oat-repo-improve`, enable reviewer reconnaissance subagents, and structure
+post-implementation sequencing. Review-efficiency follow-up also tracks skipping redundant
 re-review after narrowly classified, deterministically validated
 bookkeeping-only fixes across direct/subagent and gate-originated review flows.

@@ -10,13 +10,14 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260712-generic-dispatch-remains       | 2026-07-12 | accepted | Generic dispatch remains separate from project lifecycle policy         | -      |
+| DR-260711-atomic-legacy-or-structured    | 2026-07-11 | accepted | Atomic legacy-or-structured workflow preference                         | -      |
 | DR-260711-configured-invocation-is       | 2026-07-11 | accepted | Configured invocation is separate from runtime identity                 | -      |
 | DR-260711-cursor-candidate-probes        | 2026-07-11 | accepted | Cursor candidate probes require passed structured controls              | -      |
 | DR-260711-cursor-catalog-presence-is     | 2026-07-11 | accepted | Cursor catalog presence is diagnostic only                              | -      |
+| DR-260711-immutable-final-closeout       | 2026-07-11 | accepted | Immutable final closeout snapshot                                       | -      |
 | DR-260711-managed-codex-roles-require    | 2026-07-11 | accepted | Managed Codex roles require depth two                                   | -      |
 | DR-260711-native-exact-role-dispatch     | 2026-07-11 | accepted | Native exact role dispatch precedes fallback                            | -      |
-| DR-260711-atomic-legacy-or-structured    | 2026-07-11 | accepted | Atomic legacy-or-structured workflow preference                         | -      |
-| DR-260711-immutable-final-closeout       | 2026-07-11 | accepted | Immutable final closeout snapshot                                       | -      |
 | DR-260711-phase-gate-review-terminology  | 2026-07-11 | accepted | Phase gate review terminology                                           | -      |
 | DR-260710-configured-gate-provenance-is  | 2026-07-10 | accepted | Configured gate provenance is separate from reviewer identity           | -      |
 | DR-260710-declared-gate-projects-require | 2026-07-10 | accepted | Declared gate projects require artifact corroboration                   | -      |

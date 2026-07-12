@@ -25,6 +25,26 @@ ceiling.
 
 ## Execution Layers
 
+### Reusable dispatch boundary
+
+OAT ships two internal contracts for lifecycle skills that need subagents:
+
+- `oat-project-dispatch-subagents` translates resolved project, phase/task,
+  gate, write-boundary, commit, and worktree policy into a generic dispatch
+  request.
+- `oat-dispatch-subagents` performs provider-neutral capability and
+  authorization checks, catalog-aware selection, launch evidence, and
+  recovery.
+
+The project adapter composes with the general engine; the engine never reads
+project state. Lifecycle callers remain responsible for phase scheduling,
+task boundaries, review and fix-loop policy, project artifacts, commits, and
+worktree fan-in. This is the extension contract for lifecycle dispatch—not a
+license for the general engine to mutate project bookkeeping or reinterpret
+worker results. Individual lifecycle skills may adopt the contract
+incrementally; their own reviewed process contracts remain authoritative until
+that wiring is explicit.
+
 ### Orchestrator
 
 The root `oat-project-implement` workflow resolves project state, chooses Tier
