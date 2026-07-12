@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-12
-oat_current_task_id: p05-t08
+oat_current_task_id: p05-t09
 oat_generated: false
 ---
 
 # Implementation: oat-project-fixture
 
 **Started:** 2026-07-11
-**Last Updated:** 2026-07-11
+**Last Updated:** 2026-07-12
 
 ## Gate Feedback Log (quick-start plan gate, `onFailure: block`, maxAttempts exhausted)
 
@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 10    | 2/10      |
+| Phase 5 | in_progress | 10    | 3/10      |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 19/27 tasks completed
+**Total:** 17/27 tasks completed
 
 ---
 
@@ -1264,8 +1264,8 @@ tests passed. Workspace lint, format, type-check, plan validation, and
 
 ### Task p05-t08: Deterministic orchestration contract tier
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** `839ada92`
 
 **Scope correction from smoke-effort feedback:**
 
@@ -1277,11 +1277,28 @@ tests passed. Workspace lint, format, type-check, plan validation, and
 - Deterministic failure injection must cover the contract defects that
   previously required costly live runs to expose.
 
+**Outcome:**
+
+- Added a first-class automated-only deterministic harness for the `implement`
+  scenario. It replaces provider/gate processes while retaining production
+  provisioning, real parallel worktrees, locked ownership journaling,
+  immutable dispatch records, Git history, evidence collection, assertions,
+  report generation, and cleanup.
+- Recorded all three orchestration levels: root-to-phase coordinator,
+  coordinator-to-task worker, and coordinator-owned per-phase self-review.
+- Changed immutable dispatch filenames to include action and role, preventing
+  legitimate coordinator/reviewer records at one phase scope from colliding.
+- Added deterministic controls for child-readiness abort, post-acceptance
+  terminality, concurrent manifest mutation, and transition-order rejection.
+
+**Verification:** deterministic happy and failure controls passed 4/4; the
+complete smoke suite passed 106/106; workspace lint and formatting passed.
+
 ---
 
 ### Task p05-t09: Fail-fast child execution and observable gates
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---

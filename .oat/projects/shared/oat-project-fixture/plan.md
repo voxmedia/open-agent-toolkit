@@ -820,10 +820,11 @@ Expected: all green.
   isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
-- Phase 5: 6 tasks — Harness protocols + live smoke evidence (Codex, Claude, Cursor IDE, Cursor CLI) + summary
+- Phase 5: 10 tasks — Harness protocols, deterministic/fail-fast recovery,
+  report publication, live smoke evidence, and cross-harness summary
 - Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
 
-**Total: 23 tasks**
+**Total: 27 tasks**
 
 Ready for code review and merge.
 
