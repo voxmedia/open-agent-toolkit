@@ -66,6 +66,9 @@ yarn-error.log*
 # Superpowers brainstorming artifacts
 .superpowers/
 
+# Local session-observer collaboration logs
+.session-observer/
+
 # OAT local paths
 .oat/**/analysis/
 .oat/**/pr/
