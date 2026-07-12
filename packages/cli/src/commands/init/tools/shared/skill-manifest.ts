@@ -43,6 +43,7 @@ export const WORKFLOW_SKILLS = [
   'oat-project-clear-active',
   'oat-project-complete',
   'oat-project-design',
+  'oat-project-dispatch-subagents',
   'oat-project-discover',
   'oat-project-document',
   'oat-project-implement',
@@ -125,6 +126,8 @@ export const DOCS_SCRIPTS = ['resolve-tracking.sh'] as const;
 
 export const UTILITY_SKILLS = [
   'create-agnostic-skill',
+  'oat-dispatch-subagents',
+  'oat-repo-improve',
   'oat-repo-maintainability-review',
   'oat-review-provide',
   'oat-review-provide-remote',
