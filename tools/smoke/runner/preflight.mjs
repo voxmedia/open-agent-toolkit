@@ -201,9 +201,10 @@ async function defaultOatProbe({
           : 'stale-global',
       version,
     };
-  } catch {
+  } catch (error) {
     return {
       localPath: localOatPath,
+      reason: error instanceof Error ? error.message : String(error),
       result: 'stale-global',
     };
   }

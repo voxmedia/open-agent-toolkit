@@ -441,6 +441,28 @@ test('executes the local dist entrypoint and rejects a stale build', async () =>
   }
 });
 
+test('reports the local build probe error when the dist entrypoint is missing', async () => {
+  const probes = readyProbes();
+  delete probes.oat;
+
+  await assert.rejects(
+    () =>
+      runPreflight(
+        {
+          harness: 'codex',
+          localOatPath: join(tmpdir(), 'missing-oat-dist-entrypoint'),
+        },
+        { probes },
+      ),
+    (error) => {
+      assert.ok(error instanceof PreflightError);
+      assert.equal(error.report.oat.result, 'stale-global');
+      assert.match(error.report.oat.reason, /ENOENT/);
+      return true;
+    },
+  );
+});
+
 test('rejects a PATH oat executable that differs from the local dist entrypoint', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-path-oat-'));
   const localOatPath = join(directory, 'local-oat');

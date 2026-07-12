@@ -26,8 +26,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bash scripts/bundle-assets.sh && tsc && tsc-alias",
-    "clean": "rm -rf dist",
+    "build": "bash scripts/bundle-assets.sh && tsc && tsc-alias && chmod +x dist/index.js",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "dev": "tsx watch src/index.ts",
     "check": "oxlint . && oxfmt --check .",
     "check:fix": "oxlint --fix . && oxfmt .",
