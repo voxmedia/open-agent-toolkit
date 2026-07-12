@@ -78,7 +78,7 @@ test('writes immutable attempt files and rejects duplicate attempts', async () =
       targetPath,
       join(
         await realpath(worktreePath),
-        'workspace/evidence/dispatch/p01-t01-001.json',
+        'workspace/evidence/dispatch/p01-t01-implementation-implementer-001.json',
       ),
     );
     assert.equal(

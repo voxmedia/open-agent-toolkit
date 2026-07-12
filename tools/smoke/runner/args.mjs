@@ -1,4 +1,10 @@
-const HARNESS_VALUES = ['codex', 'claude', 'cursor-ide', 'cursor-cli'];
+const HARNESS_VALUES = [
+  'deterministic',
+  'codex',
+  'claude',
+  'cursor-ide',
+  'cursor-cli',
+];
 const SCENARIO_VALUES = ['plan-review', 'implement', 'full'];
 const STAGE_VALUES = ['prepare', 'drive', 'collect'];
 const DRIVE_MODE_VALUES = ['automated', 'operator'];
@@ -100,6 +106,19 @@ export function parseArgs(argv) {
 
   if (!options.scenario) {
     throw new UsageError('--scenario is required.');
+  }
+  if (options.harness === 'deterministic' && options.scenario !== 'implement') {
+    throw new UsageError(
+      'The deterministic harness supports the implement scenario only.',
+    );
+  }
+  if (
+    options.harness === 'deterministic' &&
+    options.driveMode !== 'automated'
+  ) {
+    throw new UsageError(
+      'The deterministic harness supports automated drive mode only.',
+    );
   }
   if (options.driveMode === 'operator' && !seen.has('--stage')) {
     options.stages = ['prepare'];

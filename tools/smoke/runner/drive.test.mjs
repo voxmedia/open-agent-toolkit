@@ -15,6 +15,7 @@ import {
 } from './drive.mjs';
 
 const harnessExecutables = {
+  deterministic: process.execPath,
   claude: 'claude',
   codex: 'codex',
   'cursor-cli': 'cursor-agent',
@@ -78,19 +79,36 @@ test('selects one protocol and invocation shape for every harness', async () => 
       runMetadataPath: '/tmp/smoke-run',
       worktreePath: '/tmp/smoke-worktree',
     });
-    const operator = createInvocationPlan({
-      driveMode: 'operator',
-      gitMetadataPath: '/tmp/smoke-git',
-      harness,
-      prompt: protocol.prompt,
-      runMetadataPath: '/tmp/smoke-run',
-      worktreePath: '/tmp/smoke-worktree',
-    });
+    const operator =
+      harness === 'deterministic'
+        ? null
+        : createInvocationPlan({
+            driveMode: 'operator',
+            gitMetadataPath: '/tmp/smoke-git',
+            harness,
+            prompt: protocol.prompt,
+            runMetadataPath: '/tmp/smoke-run',
+            worktreePath: '/tmp/smoke-worktree',
+          });
     assert.equal(automated.executable, executable);
-    assert.equal(operator.executable, executable);
-    assert.equal(operator.operator, true);
+    if (operator) {
+      assert.equal(operator.executable, executable);
+      assert.equal(operator.operator, true);
+    }
     if (harness === 'cursor-ide') {
       assert.equal(automated.manualOnly, true);
+    }
+    if (harness === 'deterministic') {
+      assert.throws(
+        () =>
+          createInvocationPlan({
+            driveMode: 'operator',
+            harness,
+            prompt: protocol.prompt,
+            worktreePath: '/tmp/smoke-worktree',
+          }),
+        /automated drive mode only/,
+      );
     }
     if (harness === 'codex') {
       for (const plan of [automated, operator]) {

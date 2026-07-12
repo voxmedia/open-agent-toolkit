@@ -14,6 +14,10 @@ const repositoryRoot = resolve(runnerDirectory, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
 const GATE_TARGETS = {
+  deterministic: {
+    id: 'deterministic-fake-gate',
+    runtime: 'deterministic',
+  },
   claude: { id: 'codex-5-6-sol-max', runtime: 'codex' },
   codex: { id: 'cursor-gpt-5-6-sol-max', runtime: 'cursor' },
   'cursor-cli': { id: 'codex-5-6-sol-max', runtime: 'codex' },
@@ -313,6 +317,7 @@ export async function provisionSmoke(
     git = runGit,
     random,
     repository = repositoryRoot,
+    reportRepository = repository,
     resolvePolicy = resolveCloseoutPolicy,
     runsDirectory = runRoot,
   } = {},
@@ -323,7 +328,7 @@ export async function provisionSmoke(
   const worktreePath = join(runPath, 'worktree');
   const manifestPath = join(runPath, 'provisioning-manifest.json');
   const reportRoot = join(
-    repository,
+    reportRepository,
     'tools',
     'smoke',
     'reports',

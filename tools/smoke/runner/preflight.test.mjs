@@ -22,7 +22,13 @@ import {
 } from './preflight.mjs';
 import { runSmoke } from './run-smoke.mjs';
 
-const harnesses = ['codex', 'claude', 'cursor-ide', 'cursor-cli'];
+const harnesses = [
+  'deterministic',
+  'codex',
+  'claude',
+  'cursor-ide',
+  'cursor-cli',
+];
 const fixturePath = join(import.meta.dirname, '..', 'fixture');
 const packagePath = join(
   import.meta.dirname,
@@ -120,6 +126,7 @@ test('uses the documented runtime and authentication argv for Cursor IDE', async
 
   assert.equal(report.status, 'ready');
   assert.deepEqual(commands, [
+    [process.execPath, ['--version']],
     ['codex', ['--version']],
     ['claude', ['--version']],
     ['cursor', ['--version']],

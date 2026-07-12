@@ -25,10 +25,15 @@ const cursorBrokerLauncher = join(
   repositoryRoot,
   'tools/smoke/runner/cursor-broker-launch.mjs',
 );
+const deterministicProvider = join(
+  repositoryRoot,
+  'tools/smoke/deterministic/provider.mjs',
+);
 const PROMPT_START = '<!-- OAT_SMOKE_PROMPT_START -->';
 const PROMPT_END = '<!-- OAT_SMOKE_PROMPT_END -->';
 
 const PROTOCOL_FILES = Object.freeze({
+  deterministic: 'deterministic.md',
   claude: 'claude.md',
   codex: 'codex.md',
   'cursor-cli': 'cursor-cli.md',
@@ -136,6 +141,11 @@ export function createInvocationPlan({
   worktreePath,
 }) {
   const operator = driveMode === 'operator';
+  if (harness === 'deterministic' && operator) {
+    throw new DriveError(
+      'Deterministic smoke harness supports automated drive mode only.',
+    );
+  }
   if (
     harness === 'codex' &&
     (typeof gitMetadataPath !== 'string' ||
@@ -173,6 +183,10 @@ export function createInvocationPlan({
   }
 
   const command = {
+    deterministic: {
+      args: [deterministicProvider],
+      executable: process.execPath,
+    },
     claude: {
       args: [
         '-p',

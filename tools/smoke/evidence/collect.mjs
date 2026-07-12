@@ -293,7 +293,12 @@ function parsePlanContract(contents) {
 }
 
 function parseDispatchPolicy(contents, harness) {
-  const provider = harness?.startsWith('cursor') ? 'cursor' : harness;
+  const provider =
+    harness === 'deterministic'
+      ? 'cursor'
+      : harness?.startsWith('cursor')
+        ? 'cursor'
+        : harness;
   const policy = contents.match(/^\s+policy:\s*(\S+)\s*$/mu)?.[1] ?? null;
   const matrix = contents.match(
     new RegExp(

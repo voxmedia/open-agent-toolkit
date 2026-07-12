@@ -141,12 +141,17 @@ test('uses flat collision-resistant deterministic branch names', () => {
 });
 
 test('selects a deterministic cross-runtime gate target per harness', () => {
+  assert.equal(
+    gateTargetForHarness('deterministic'),
+    'deterministic-fake-gate',
+  );
   assert.equal(gateTargetForHarness('codex'), 'cursor-gpt-5-6-sol-max');
   assert.equal(gateTargetForHarness('claude'), 'codex-5-6-sol-max');
   assert.equal(gateTargetForHarness('cursor-cli'), 'codex-5-6-sol-max');
   assert.equal(gateTargetForHarness('cursor-ide'), 'codex-5-6-sol-max');
   assert.equal(gateRuntimeForHarness('codex'), 'cursor');
   assert.equal(gateRuntimeForHarness('claude'), 'codex');
+  assert.equal(gateRuntimeForHarness('deterministic'), 'deterministic');
   assert.throws(() => gateTargetForHarness('unknown'), /No independent/);
   assert.throws(() => gateRuntimeForHarness('unknown'), /No independent/);
 });

@@ -7,6 +7,13 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 
 const HARNESS_COMMANDS = {
+  deterministic: {
+    authentication: {
+      args: ['--eval', 'process.exit(0)'],
+      executable: process.execPath,
+    },
+    runtime: { args: ['--version'], executable: process.execPath },
+  },
   codex: {
     authentication: { args: ['login', 'status'], executable: 'codex' },
     runtime: { args: ['--version'], executable: 'codex' },

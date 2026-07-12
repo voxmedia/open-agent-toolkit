@@ -36,6 +36,12 @@ test('accepts every harness and scenario enum value', () => {
       );
     }
   }
+
+  assert.equal(
+    parseArgs(['--harness', 'deterministic', '--scenario', 'implement'])
+      .harness,
+    'deterministic',
+  );
 });
 
 test('parses each stage and boolean flag', () => {
@@ -72,6 +78,16 @@ test('rejects missing required option values and unknown values with usage', () 
     ['--scenario'],
     ['--harness', 'unknown', '--scenario', 'full'],
     ['--harness', 'codex', '--scenario', 'unknown'],
+    ['--harness', 'deterministic', '--scenario', 'plan-review'],
+    ['--harness', 'deterministic', '--scenario', 'full'],
+    [
+      '--harness',
+      'deterministic',
+      '--scenario',
+      'implement',
+      '--drive-mode',
+      'operator',
+    ],
     [...baseArgs, '--drive-mode', 'unknown'],
     [...baseArgs, '--stage', 'unknown'],
   ];

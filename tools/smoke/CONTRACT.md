@@ -1,5 +1,31 @@
 # Smoke Runner and Evidence Contract
 
+## Deterministic Contract Tier
+
+`--harness deterministic --scenario implement` is the seconds-scale contract
+tier. It replaces only provider and gate execution with local fakes. The run
+still uses production provisioning, real parallel Git worktrees, the locked
+ownership journal, immutable dispatch records, task commits and merges, review
+artifact handling, evidence collection, assertions, and cleanup.
+
+The deterministic topology records one root-to-coordinator launch per phase,
+one coordinator-to-worker launch per fixture task, one coordinator-owned
+self-review per phase, and one final fake gate. It requires no provider
+credential, network access, dependency installation, repository build, or
+repository-wide test inside a disposable child.
+
+Its failure controls prove:
+
+- a child readiness failure is terminal before any launch;
+- an accepted failed worker has exactly one attempt and no later reviewer or
+  gate;
+- concurrent manifest updates retain both mutations under the production lock;
+- an out-of-order state transition fails the production evidence assertion.
+
+Other scenarios and operator mode are rejected before provisioning. Live
+provider runs remain acceptance evidence for provider-specific behavior; they
+are not the first debugging surface for orchestration contracts.
+
 ## Provisioning Manifest
 
 The runner writes one JSON provisioning manifest before drive. It includes:
@@ -241,10 +267,11 @@ records, review artifacts, and Git history.
 
 The disposable workflow writes launcher-owned records before collection:
 
-- `workspace/evidence/dispatch/<scope>-<attempt>.json` — one immutable record
-  for every pre-start rejection or accepted launch. Create records only through
-  `node tools/smoke/evidence/record.mjs --kind dispatch --worktree <path>
---input <record.json>`.
+- `workspace/evidence/dispatch/<scope>-<action>-<role>-<attempt>.json` — one
+  immutable record for every pre-start rejection or accepted launch. Including
+  action and role prevents coordinator, worker, and reviewer records from
+  colliding at a shared phase scope. Create records only through
+  `tools/smoke/evidence/record.mjs` with `--kind dispatch`.
 - `workspace/evidence/orchestration/<sequence>-state-transition.json` —
   commit-bound plan-review transitions. Create records through the same command
   with `--kind state-transition`.

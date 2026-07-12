@@ -114,6 +114,13 @@ export function normalizeDispatchRecord(record) {
     );
   }
 
+  const role = requiredString(record.role, 'role');
+  if (!/^[a-z][a-z0-9-]*$/u.test(role)) {
+    throw new DispatchRecordError(
+      'role must be a lowercase kebab-case identifier.',
+    );
+  }
+
   return {
     action,
     attempt,
@@ -157,7 +164,7 @@ export function normalizeDispatchRecord(record) {
       outcome,
       status: launchStatus,
     },
-    role: requiredString(record.role, 'role'),
+    role,
     runtimeIdentity: isPlainObject(record.runtimeIdentity)
       ? {
           confidence: optionalString(record.runtimeIdentity.confidence),
@@ -221,7 +228,7 @@ export async function writeDispatchRecord({ inputPath, worktreePath }) {
   return publishImmutableRecord({
     canonicalWorktree,
     directory: 'workspace/evidence/dispatch',
-    fileName: `${record.scope}-${String(record.attempt).padStart(3, '0')}.json`,
+    fileName: `${record.scope}-${record.action}-${record.role}-${String(record.attempt).padStart(3, '0')}.json`,
     record,
   });
 }
