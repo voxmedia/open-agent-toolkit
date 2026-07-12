@@ -807,6 +807,37 @@ trusts Markdown.
 
 **Next:** final Phase 3 self-review.
 
+### Phase 3 Final Self-review
+
+**Review artifact:** `reviews/p03-review-2026-07-12T012414Z.md`
+**Review commit:** cfc5827d0f3e56f9a0ef303d35bd40e06f0f6c21
+**Verdict:** failed — 2 Critical, 2 Important, 1 Medium, 0 Minor
+
+**Blocking findings:**
+
+- Terminal review-receive archives the artifact, but gate normalization and
+  durability currently require the original active path and do not bind
+  archived bytes to the committed active blob.
+- Codex uses a materialized role target with separate model/effort axes; the
+  flattened committed-policy candidate comparison cannot accept that valid
+  representation.
+- Parallel isolation does not yet prove a shared pre-fan-out base,
+  cross-phase non-ancestry, multi-parent integrations, or bounded p03 writes.
+- Lifecycle transition corroboration validates only `plan.md` and `state.md`
+  subsets instead of complete preset fingerprints across plan, state, and
+  implementation artifacts.
+
+**Non-blocking finding:**
+
+- Design/plan still describe implementation-log orchestration input while the
+  implementation uses immutable orchestration events.
+
+**Disposition:**
+
+- The configured two fix retries are exhausted.
+- Phase 4 was not started. Human direction is required before another fix
+  iteration or a waiver.
+
 ---
 
 ## Phase 4: Orchestration Contract
