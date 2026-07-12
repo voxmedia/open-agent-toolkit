@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-12
@@ -8,135 +8,238 @@ oat_generated: false
 
 # Discovery: dispatch-subagents-abstraction
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Create two internal OAT skills that separate reusable provider-neutral subagent
+dispatch from OAT project lifecycle policy:
+
+- `oat-dispatch-subagents` — general dispatch engine for OAT skills and workflows.
+- `oat-project-dispatch-subagents` — project lifecycle adapter that composes
+  with the general engine.
+
+The immediate consumer is `oat-repo-improve`, which needs economical,
+read-only reconnaissance fan-out without importing phase/task/gate ceremony.
+The existing `oat-dispatch-subagents` draft in the
+`oat-project-fixture` worktree is the source abstraction to split and improve.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Ownership boundary
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should repo-audit orchestration live inside `oat-repo-improve` or use a
+shared OAT dispatch primitive?
+
+**A:** Use a shared primitive. Improve owns lane decomposition, evidence
+requirements, vetting, and plan generation; dispatch owns provider selection
+and launch mechanics.
+
+**Decision:** `oat-repo-improve` will eventually compose with the general
+dispatch skill rather than copy provider logic.
+
+### Question 2: Project lifecycle coupling
+
+**Q:** Should the shared dispatch skill retain phase coordinators, task/fix
+workers, project-state ceilings, and gate policy?
+
+**A:** No. Move those concerns into a project-specific adapter.
+
+**Decision:** The general layer accepts resolved policy/ceiling inputs but
+never reads OAT project state. The project adapter resolves project context and
+adds lifecycle semantics.
+
+### Question 3: Workflow and history
+
+**Q:** Should this work use the normal Quick plan → `oat-project-implement`
+path?
+
+**A:** No. Scaffold Quick discovery and lightweight design, author the skills
+directly with Claude reviewing, then backfill plan and implementation artifacts
+as a historical record.
+
+**Decision:** The scaffolded plan remains untouched until implementation is
+complete. `oat-project-implement` will not run.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Extend the existing dispatcher in place
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Description:** Add reconnaissance roles to the current fixture skill while
+retaining project lifecycle policy in the same contract.
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**When this is the right choice:** The dispatcher has only project lifecycle
+consumers and no broader analytical workflows.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Tradeoffs:** Minimal initial file movement, but every non-project consumer
+inherits task IDs, gates, write semantics, and lifecycle-heavy records.
 
-### Approach 2: {Strategy Name}
+### Approach 2: General engine plus project adapter _(Recommended)_
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Extract generic dispatch axes, catalog evidence, selection,
+launch evidence, provider references, and recovery into
+`oat-dispatch-subagents`. Move project role policies and state-derived behavior
+into `oat-project-dispatch-subagents`, which explicitly composes with the
+engine.
+
+**When this is the right choice:** Multiple OAT skills need subagents for
+reconnaissance, analysis, documentation, generation, implementation, or review.
+
+**Tradeoffs:** Introduces a two-skill loading chain and requires careful
+anti-duplication boundaries, but provides a stable reusable substrate.
+
+### Approach 3: Keep dispatch guidance inside each caller
+
+**Description:** Give `oat-repo-improve` a small provider-neutral orchestration
+reference and leave the fixture dispatcher project-specific.
+
+**When this is the right choice:** The general dispatcher is far from landing
+or caller needs are fundamentally incompatible.
+
+**Tradeoffs:** Ships independently but creates parallel dispatch contracts and
+a later convergence migration.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** General engine plus project adapter.
 
-## Options Considered
+**Rationale:** The split follows the seam already present in the fixture skill,
+supports future non-project OAT consumers, and makes the prerequisite small
+enough to land before the improve rewrite.
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**User validated:** Yes.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Canonical layers:** `oat-dispatch-subagents` is workflow-neutral;
+   `oat-project-dispatch-subagents` is the project lifecycle adapter.
+2. **Dependency direction:** Project adapter loads and invokes the general
+   engine. The general engine never imports project policy.
+3. **Project-state isolation:** The general layer may receive a resolved policy
+   or named ceiling, but it must not resolve active projects or read `state.md`.
+4. **Generic reconnaissance:** The general layer includes a first-class
+   read-only `recon` role and supports bounded dossier leads when one declared
+   scope needs context-heavy reconciliation.
+5. **Main-loop judgment:** Callers retain cross-lane synthesis, prioritization,
+   user dialogue, plan writing, and verification of load-bearing worker claims.
+6. **Provider mechanics:** Resolve the active provider and load exactly one
+   bundled provider reference. Do not merge provider surfaces into one policy.
+7. **Dispatch evidence:** Preserve model, effort, role, route, authority,
+   deadline, catalog source, selection reason, launch acceptance, and child
+   outcome as independent axes.
+8. **Recon wave records:** Homogeneous read-only fan-out may share one dispatch
+   wave record with a lane manifest; differing routes or authorities require
+   separate records.
+9. **No silent downgrade:** Authorization-required is not unavailable. Ask
+   once, lock the selected tier, and make every coverage/route downgrade
+   explicit.
+10. **Internal utility posture:** Both skills are internal dependencies with
+    `disable-model-invocation: true` and `user-invocable: false`.
+11. **OAT authoring conventions:** Follow `create-agnostic-skill` progressive
+    disclosure and apply `create-oat-skill` conventions where appropriate for
+    internal, non-standalone helpers.
+12. **Cross-worktree convergence:** Codex authors here, Claude reviews here,
+    and the fixture worktree adopts the reviewed files from an exact commit.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Keep each `SKILL.md` under 500 lines and move provider mechanics or detailed
+  schemas to one-level `references/` files.
+- Use imperative workflow language and `Use when…` descriptions.
+- Include `version: 1.0.0` for both new canonical skills.
+- Avoid nested user-facing mode banners when an internal helper is loaded by a
+  calling workflow; the caller owns the primary progress UI.
+- Do not hard-code a Codex `agent_type` unless guaranteed by the active host.
+- Preserve exact provider selector strings from live catalogs.
+- Do not launch diagnostic children solely to discover hidden catalogs.
+- Accepted launches are not eligible for automatic route replacement.
+- Keep project task IDs, gates, commits, worktrees, and state-derived policy out
+  of the general layer.
+- Do not duplicate provider references or generic selection/recovery logic in
+  the project adapter.
+- Treat the fixture skill as reference material, not as a second canonical copy.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- General skill supports OAT workflows without requiring an active project.
+- Project adapter composes with the general skill and owns all lifecycle-only
+  policy.
+- Generic records use neutral scope/action/role/authority fields.
+- Read-only reconnaissance can use economical bounded workers with per-wave
+  evidence and no expensive-root inheritance.
+- Exactly one provider reference is loaded per dispatch context.
+- Capability, authorization, fallback, and acceptance behavior are explicit.
+- Claude review finds no Critical or Important structural/architectural gaps.
+- OAT skill validation passes.
+- Provider views and distribution assets are synchronized.
+- The fixture worktree can adopt the reviewed files without semantic rewriting.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Rewriting `oat-repo-improve` in this prerequisite project.
+- Modifying `oat-repo-maintainability-review` or other future callers.
+- Adding new provider runtime APIs or CLI commands.
+- Running the implementation through `oat-project-implement`.
+- Maintaining two independently edited canonical copies across worktrees.
+- Finalizing the Session Observer Collaboration skill; that remains a separate
+  end-of-run synthesis deliverable.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Add callers such as docs analysis and deep research after the dispatch layers
+  stabilize.
+- Consider a deterministic validator for dispatch request/record schemas if
+  prose contracts prove insufficient.
+- Evaluate whether generic review and generation roles need specialized policy
+  rows after real consumers adopt the engine.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Distribution:** Confirm both internal skills should ship in the OAT utility
+  pack and bundled CLI assets.
+- **Record schema:** Decide whether the generic action/role taxonomy is closed
+  or extensible with required baseline classes.
+- **Project adapter:** Decide which current fixture fields remain general inputs
+  versus project-resolved metadata.
+- **Retrospective tracking:** Choose the exact metadata used when backfilling a
+  plan that was not the source of implementation execution.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The general dispatch skill will land before or with the improve rewrite.
+- Calling OAT skills remain responsible for their own artifact writes and
+  lifecycle sequencing.
+- Active harness instructions may override bundled provider examples when more
+  specific or newer.
+- The current fixture provider references are useful starting points but may be
+  revised by the fixture authoring agent before adoption.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Abstraction leakage:** Project concepts could drift back into the general
+  layer.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation:** Static review for project-state/task-ID terms and explicit
+    dependency-direction tests.
+- **Cross-worktree drift:** Both copies could evolve independently.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Adopt from an exact reviewed commit and compare file hashes.
+- **Dispatch ceremony:** Full lifecycle evidence could make cheap recon fan-out
+  unwieldy.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Per-wave records for homogeneous read-only lanes.
+- **Provider drift:** Model catalogs and dispatch surfaces can change.
+  - **Likelihood:** High
+  - **Impact:** Medium
+  - **Mitigation:** Live catalog evidence, exact selector preservation, and
+    active-instruction precedence.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+1. Review and approve the lightweight design.
+2. Author the two internal skills and supporting references directly.
+3. Ask Claude to review the concrete files.
+4. Address review findings and validate/sync/distribute the skills.
+5. Backfill `plan.md` and `implementation.md` as historical records.
+6. Hand the reviewed commit to the fixture worktree for review and adoption.
