@@ -778,6 +778,35 @@ trusts Markdown.
 
 **Action:** final configured fix iteration started in the root thread.
 
+### Phase 3 Fix Iteration 2
+
+**Commit:** b215de34900e1dffceab1d78c4e98a6650eb31d2
+
+**Outcome:**
+
+- Canonical gate envelopes now resolve repo-relative paths and cross-check
+  top-level, nested, corroboration, and artifact-frontmatter invocation fields.
+- Parallel isolation now requires task commits on distinct journaled p01/p02
+  refs whose heads are merged into outer `HEAD` before every p03 task commit.
+- Report checks require bundle kind/schema and a caller-supplied expected
+  profile, and ceiling eligibility is recomputed from committed fixture policy.
+- Plan-review transitions are corroborated from reachable parent/commit
+  artifact contents; review durability requires passed exact-artifact rows and
+  successful receive-eligible gates reachable from outer `HEAD`.
+- Normalized review evidence omits dates, and Markdown reports identify
+  themselves as non-authoritative derivatives of `report.json`.
+
+**Verification:**
+
+- `node --test 'tools/smoke/**/*.test.mjs'` — 80/80 passed.
+- `pnpm exec oxlint tools/smoke/evidence/*.mjs` — passed.
+- Targeted evidence/contract/plan formatting — passed.
+- `git diff --check` and project plan validation — passed.
+- Added a Git integration test proving transition states from committed
+  `plan.md`/`state.md` contents.
+
+**Next:** final Phase 3 self-review.
+
 ---
 
 ## Phase 4: Orchestration Contract
