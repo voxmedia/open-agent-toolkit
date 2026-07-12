@@ -138,6 +138,16 @@ enough to land before the improve rewrite.
     internal, non-standalone helpers.
 12. **Cross-worktree convergence:** Codex authors here, Claude reviews here,
     and the fixture worktree adopts the reviewed files from an exact commit.
+13. **Distribution:** Ship `oat-dispatch-subagents` in the utility pack and
+    `oat-project-dispatch-subagents` in the workflows pack; bundle both in CLI
+    assets. Place `oat-repo-improve` in the utility pack beside
+    `oat-repo-maintainability-review` when the improve rewrite lands.
+14. **Role taxonomy:** Specific role names are extensible but must map to a
+    required baseline class so authority and inheritance remain auditable.
+15. **Source provenance:** Record the fixture commit and aggregate source-skill
+    hash at adoption time, then repeat both checks before final handoff so
+    skill-specific changes from the other worktree are reviewed without
+    confusing unrelated commits for drift.
 
 ## Constraints
 
@@ -190,13 +200,11 @@ enough to land before the improve rewrite.
   prose contracts prove insufficient.
 - Evaluate whether generic review and generation roles need specialized policy
   rows after real consumers adopt the engine.
+- Consider installer-level pack dependencies so installing workflows can offer
+  or install the required utility-pack dispatch engine automatically.
 
 ## Open Questions
 
-- **Distribution:** Confirm both internal skills should ship in the OAT utility
-  pack and bundled CLI assets.
-- **Record schema:** Decide whether the generic action/role taxonomy is closed
-  or extensible with required baseline classes.
 - **Project adapter:** Decide which current fixture fields remain general inputs
   versus project-resolved metadata.
 - **Retrospective tracking:** Choose the exact metadata used when backfilling a

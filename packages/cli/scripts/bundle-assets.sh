@@ -19,6 +19,7 @@ mkdir -p "${ASSETS}/skills" "${ASSETS}/agents" "${ASSETS}/templates" "${ASSETS}/
 SKILLS=(
   authoring-docs
   create-agnostic-skill
+  oat-dispatch-subagents
   oat-agent-instructions-analyze
   oat-agent-instructions-apply
   oat-brainstorm
@@ -28,6 +29,7 @@ SKILLS=(
   oat-docs-authoring
   oat-docs-bootstrap
   oat-doctor
+  oat-repo-improve
   oat-repo-maintainability-review
   oat-idea-ideate
   oat-idea-new
@@ -41,6 +43,7 @@ SKILLS=(
   oat-project-clear-active
   oat-project-complete
   oat-project-design
+  oat-project-dispatch-subagents
   oat-project-discover
   oat-project-document
   oat-project-implement

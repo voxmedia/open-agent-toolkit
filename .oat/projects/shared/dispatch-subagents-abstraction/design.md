@@ -91,14 +91,18 @@ worktrees, project gates, artifact mutation, and caller result synthesis.
 
 **Locations:**
 
-- `references/claude.md`
-- `references/codex.md`
-- `references/cursor.md`
+- `references/provider-claude.md`
+- `references/provider-codex.md`
+- `references/provider-cursor.md`
 
 Resolve the active provider first, then load exactly one reference. Each file
 describes native controls, topology, exact selection mechanics, CLI/external
 routes when applicable, and provider-specific evidence boundaries. Provider
 files must not redefine generic selection or recovery policy.
+
+Provider reference filenames use the `provider-*` prefix to avoid
+case-insensitive collisions with harness instruction filenames such as
+`CLAUDE.md`.
 
 Active harness instructions take precedence over bundled model examples. The
 engine preserves task-shape intent: economical workers for bounded recon,
@@ -210,10 +214,10 @@ catalog_snapshot:
   source: tool-schema
   observed_at: 2026-07-12T00:00:00Z
 authority: read-only
-role_selector: generic-worker
+role_selector: oat-recon-worker
 model_selector: opaque-provider-selector
 model_selector_granularity: opaque
-effort_selector: high
+effort_selector: economical
 selection_source: explicit-call
 candidates_considered:
   - opaque-provider-selector
@@ -226,6 +230,10 @@ runtime_confirmation: not-reported
 diagnostics: []
 continuation_events: []
 ```
+
+`role_selector` is the exact provider or harness agent-type selector used for
+the launch, when that surface exists. The record-level `scope` is the aggregate
+wave boundary; lane entries may narrow it without forcing separate records.
 
 ### Recon Wave Extension
 
@@ -274,6 +282,8 @@ project metadata. It does not bypass the general selection engine.
   replace the route. Continue the same child only through its valid handle.
 - **Project-state resolution failure:** Project adapter blocks before invoking
   the general engine and reports the missing/invalid lifecycle context.
+- **General engine not installed:** Project adapter blocks before mutation or
+  launch and directs the user to install the utility pack at the same scope.
 - **Mixed recon wave axes:** Split the wave into separate dispatch records.
 - **Caller contract missing:** Reject requests without bounded scope,
   authority, expected output, or escalation conditions.
@@ -319,11 +329,28 @@ project metadata. It does not bypass the general selection engine.
 - Provide the reviewed commit hash to the fixture agent.
 - Compare adopted skill and reference file hashes across worktrees.
 
+### Source Provenance Checkpoint
+
+The initial split is based on the fixture worktree at commit
+`76ed3409823379b73f864a0f10b36065631a6533` on branch
+`oat-project-fixture`. At intake, the source skill directory had no tracked or
+untracked changes relative to that commit. Its aggregate SHA-256 was
+`ed9a72b93ea26ba114e0414b16d8d5dc9d7e9d8b5b3d97cf52ca8efc35e4c042`.
+
+Before final handoff, re-read the fixture worktree HEAD and recompute the
+aggregate directory hash. If either the skill contents or their source commit
+changed, inspect the intervening skill-specific diff and incorporate or
+explicitly disposition each adjustment. Unrelated fixture commits do not count
+as dispatch-skill drift.
+
 ### Distribution and Release Verification
 
 - Run `oat sync --scope all` after canonical files exist.
-- If approved for distribution, register both skills in bundled assets and the
-  utility pack.
+- Register `oat-dispatch-subagents` in the utility pack and
+  `oat-project-dispatch-subagents` in the workflows pack.
+- Bundle both canonical skill directories in CLI assets.
+- Apply the required lockstep version bump to all five public packages for any
+  `.agents/skills` change, independent of pack registration.
 - Run targeted skill tests plus `pnpm release:validate` before completion.
 
 ## Next Boundary
