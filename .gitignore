@@ -5,6 +5,7 @@ node_modules
 
 # testing
 coverage
+tools/smoke/.runs/
 
 # misc
 .DS_Store

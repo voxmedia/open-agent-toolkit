@@ -55,6 +55,16 @@ async function cleanupRun(run) {
       repository,
       runsDirectory: run.runsDirectory,
     });
+    const residue = await readdir(run.runsDirectory).catch((error) => {
+      if (error?.code === 'ENOENT') {
+        return [];
+      }
+      throw error;
+    });
+    assert.deepEqual(
+      residue.filter((entry) => entry.startsWith('smoke-')),
+      [],
+    );
   }
   await rm(run.root, { force: true, recursive: true });
 }

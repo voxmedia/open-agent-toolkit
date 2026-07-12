@@ -74,6 +74,46 @@ async function atomicWriteJson(path, value) {
   }
 }
 
+export async function publishReportDirectory(
+  stagingDirectory,
+  reportDirectory,
+  { fileSystem = { mkdir, rename, rm } } = {},
+) {
+  await fileSystem.mkdir(dirname(reportDirectory), { recursive: true });
+  const backupDirectory = join(
+    dirname(stagingDirectory),
+    `report-previous-${randomUUID()}`,
+  );
+  let previousMoved = false;
+  try {
+    await fileSystem.rename(reportDirectory, backupDirectory);
+    previousMoved = true;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+  try {
+    await fileSystem.rename(stagingDirectory, reportDirectory);
+  } catch (error) {
+    if (previousMoved) {
+      try {
+        await fileSystem.rename(backupDirectory, reportDirectory);
+      } catch (restoreError) {
+        throw new DriveError(
+          `Smoke report publication failed and prior evidence remains at ${backupDirectory}: ${restoreError.message}`,
+        );
+      }
+    }
+    throw error;
+  }
+  if (previousMoved) {
+    await fileSystem
+      .rm(backupDirectory, { force: true, recursive: true })
+      .catch(() => {});
+  }
+}
+
 function scenarioInstruction(scenario) {
   const instruction = SCENARIO_INSTRUCTIONS[scenario];
   if (!instruction) {
@@ -337,24 +377,28 @@ function assertReady(options, context, manifest) {
   }
 }
 
-async function saveDriveRecord(manifest, record) {
-  const updated = await updateSmokeManifest(
-    manifest.manifestPath,
-    (current) => ({
-      ...current,
-      createdPaths: [
-        ...new Set([
-          ...(current.createdPaths ?? []),
-          ...(manifest.createdPaths ?? []),
-        ]),
-      ],
-      drive: record,
-    }),
+async function saveManifestUpdate(manifest, update) {
+  const updated = await updateSmokeManifest(manifest.manifestPath, (current) =>
+    update(current),
   );
   for (const key of Object.keys(manifest)) {
     delete manifest[key];
   }
   Object.assign(manifest, updated);
+  return updated;
+}
+
+async function saveDriveRecord(manifest, record) {
+  return saveManifestUpdate(manifest, (current) => ({
+    ...current,
+    createdPaths: [
+      ...new Set([
+        ...(current.createdPaths ?? []),
+        ...(manifest.createdPaths ?? []),
+      ]),
+    ],
+    drive: record,
+  }));
 }
 
 export async function driveSmoke(
@@ -479,6 +523,7 @@ export async function collectSmoke(
   {
     collect = collectEvidence,
     emitReport = emitEvidenceReport,
+    publish = publishReportDirectory,
     repository = repositoryRoot,
     runsDirectory = runRoot,
   } = {},
@@ -493,8 +538,10 @@ export async function collectSmoke(
     );
   }
   if (options.dryRun) {
-    manifest.collection = { status: 'dry-run-stub' };
-    await atomicWriteJson(manifest.manifestPath, manifest);
+    await saveManifestUpdate(manifest, (current) => ({
+      ...current,
+      collection: { status: 'dry-run-stub' },
+    }));
     return manifest.collection;
   }
   if (!['awaiting-operator', 'completed'].includes(manifest.drive?.status)) {
@@ -503,29 +550,79 @@ export async function collectSmoke(
     );
   }
 
-  const collected = await collect({
-    manifestPath: manifest.manifestPath,
-    outDirectory: manifest.reportRoot,
-    worktreePath: manifest.worktreePath,
-  });
-  const report = await emitReport({
-    bundlePath: collected.outputPath,
-    outDirectory: manifest.reportRoot,
-  });
-  const passed = report.report.status === 'passed';
-  manifest.collection = {
-    bundlePath: collected.outputPath,
-    reportPath: report.jsonPath,
-    status: passed ? 'completed' : 'failed',
-  };
-  if (manifest.drive.status === 'awaiting-operator') {
-    manifest.drive.status = 'operator-returned';
+  const stagingDirectory = join(
+    dirname(manifest.manifestPath),
+    `report-staging-${randomUUID()}`,
+  );
+  await saveManifestUpdate(manifest, (current) => ({
+    ...current,
+    collection: { stagingDirectory, status: 'running' },
+    createdPaths: [
+      ...new Set([...(current.createdPaths ?? []), stagingDirectory]),
+    ],
+  }));
+
+  try {
+    const collected = await collect({
+      manifestPath: manifest.manifestPath,
+      outDirectory: stagingDirectory,
+      worktreePath: manifest.worktreePath,
+    });
+    const report = await emitReport({
+      bundlePath: collected.outputPath,
+      outDirectory: stagingDirectory,
+    });
+    if (report.report.status !== 'passed') {
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          bundlePath: collected.outputPath,
+          error: `Smoke evidence report failed ${report.report.summary.failed} assertion(s).`,
+          reportPath: report.jsonPath,
+          stagingDirectory,
+          status: 'failed',
+        },
+      }));
+      throw new DriveError(
+        `Smoke evidence report failed ${report.report.summary.failed} assertion(s).`,
+      );
+    }
+
+    await publish(stagingDirectory, manifest.reportRoot);
+    const publishedCollected = {
+      ...collected,
+      outputPath: join(manifest.reportRoot, 'bundle.json'),
+    };
+    const publishedReport = {
+      ...report,
+      jsonPath: join(manifest.reportRoot, 'report.json'),
+      markdownPath: join(manifest.reportRoot, 'report.md'),
+    };
+    await saveManifestUpdate(manifest, (current) => ({
+      ...current,
+      collection: {
+        bundlePath: publishedCollected.outputPath,
+        reportPath: publishedReport.jsonPath,
+        status: 'completed',
+      },
+      drive:
+        current.drive?.status === 'awaiting-operator'
+          ? { ...current.drive, status: 'operator-returned' }
+          : current.drive,
+    }));
+    return { collected: publishedCollected, report: publishedReport };
+  } catch (error) {
+    if (manifest.collection?.status !== 'failed') {
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          ...(current.collection ?? {}),
+          error: error instanceof Error ? error.message : String(error),
+          stagingDirectory,
+          status: 'failed',
+        },
+      }));
+    }
+    throw error;
   }
-  await atomicWriteJson(manifest.manifestPath, manifest);
-  if (!passed) {
-    throw new DriveError(
-      `Smoke evidence report failed ${report.report.summary.failed} assertion(s).`,
-    );
-  }
-  return { collected, report };
 }

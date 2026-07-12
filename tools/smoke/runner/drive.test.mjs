@@ -11,6 +11,7 @@ import {
   driveSmoke,
   loadPreparedManifest,
   loadProtocol,
+  publishReportDirectory,
   reportRootFor,
 } from './drive.mjs';
 
@@ -216,6 +217,41 @@ test('operator mode prints a handoff and never executes noninteractive drive', a
   }
 });
 
+test('publishes a complete staged report directory in one replacement', async () => {
+  const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-publish-'));
+  try {
+    const stagingDirectory = join(runDirectory, 'staging');
+    const reportDirectory = join(runDirectory, 'reports', 'codex');
+    await mkdir(stagingDirectory, { recursive: true });
+    await mkdir(reportDirectory, { recursive: true });
+    await writeFile(join(stagingDirectory, 'bundle.json'), '{"new":true}\n');
+    await writeFile(
+      join(stagingDirectory, 'report.json'),
+      '{"status":"passed"}\n',
+    );
+    await writeFile(join(reportDirectory, 'report.json'), '{"status":"old"}\n');
+
+    await publishReportDirectory(stagingDirectory, reportDirectory);
+
+    assert.equal(
+      await readFile(join(reportDirectory, 'bundle.json'), 'utf8'),
+      '{"new":true}\n',
+    );
+    assert.equal(
+      await readFile(join(reportDirectory, 'report.json'), 'utf8'),
+      '{"status":"passed"}\n',
+    );
+    await assert.rejects(
+      () => readFile(join(stagingDirectory, 'bundle.json')),
+      {
+        code: 'ENOENT',
+      },
+    );
+  } finally {
+    await rm(runDirectory, { force: true, recursive: true });
+  }
+});
+
 test('drive completion preserves ownership registered by child worktrees', async () => {
   const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
   try {
@@ -275,7 +311,7 @@ test('loads only the matching prepared drive mode identity', async () => {
   }
 });
 
-test('collects into the drive-mode report root and marks operator return', async () => {
+test('stages then publishes a passing report while preserving concurrent metadata', async () => {
   const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
   try {
     const repository = join(runDirectory, 'repository');
@@ -299,24 +335,36 @@ test('collects into the drive-mode report root and marks operator return', async
       {
         collect: async (received) => {
           calls.push(received);
-          return { outputPath: join(reportRoot, 'bundle.json') };
+          const latest = JSON.parse(
+            await readFile(manifest.manifestPath, 'utf8'),
+          );
+          latest.concurrentOwner = { retained: true };
+          await writeFile(manifest.manifestPath, `${JSON.stringify(latest)}\n`);
+          return { outputPath: join(received.outDirectory, 'bundle.json') };
         },
         emitReport: async (received) => {
           calls.push(received);
           return {
-            jsonPath: join(reportRoot, 'report.json'),
+            jsonPath: join(received.outDirectory, 'report.json'),
+            markdownPath: join(received.outDirectory, 'report.md'),
             report: { status: 'passed', summary: { failed: 0 } },
           };
+        },
+        publish: async (stagingDirectory, destination) => {
+          calls.push({ destination, stagingDirectory });
         },
         repository,
       },
     );
     const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
 
-    assert.equal(calls[0].outDirectory, reportRoot);
+    assert.match(calls[0].outDirectory, /report-staging-/);
+    assert.equal(calls[2].stagingDirectory, calls[0].outDirectory);
+    assert.equal(calls[2].destination, reportRoot);
     assert.equal(result.report.jsonPath, join(reportRoot, 'report.json'));
     assert.equal(persisted.drive.status, 'operator-returned');
     assert.equal(persisted.collection.status, 'completed');
+    assert.deepEqual(persisted.concurrentOwner, { retained: true });
   } finally {
     await rm(runDirectory, { force: true, recursive: true });
   }
@@ -332,6 +380,7 @@ test('persists and rejects a failed evidence report', async () => {
       drive: { status: 'completed' },
       reportRoot,
     });
+    let publications = 0;
 
     await assert.rejects(
       () =>
@@ -342,13 +391,16 @@ test('persists and rejects a failed evidence report', async () => {
             results: { preflight: { status: 'ready' } },
           },
           {
-            collect: async () => ({
-              outputPath: join(reportRoot, 'bundle.json'),
+            collect: async (received) => ({
+              outputPath: join(received.outDirectory, 'bundle.json'),
             }),
-            emitReport: async () => ({
-              jsonPath: join(reportRoot, 'report.json'),
+            emitReport: async (received) => ({
+              jsonPath: join(received.outDirectory, 'report.json'),
               report: { status: 'failed', summary: { failed: 2 } },
             }),
+            publish: async () => {
+              publications += 1;
+            },
             repository,
           },
         ),
@@ -356,6 +408,50 @@ test('persists and rejects a failed evidence report', async () => {
     );
     const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
     assert.equal(persisted.collection.status, 'failed');
+    assert.match(persisted.collection.stagingDirectory, /report-staging-/);
+    assert.equal(publications, 0);
+  } finally {
+    await rm(runDirectory, { force: true, recursive: true });
+  }
+});
+
+test('records collection failures in run-local staging without publication', async () => {
+  const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
+  try {
+    const repository = join(runDirectory, 'repository');
+    const automatedOptions = options({ dryRun: false });
+    const reportRoot = reportRootFor(automatedOptions, repository);
+    const manifest = await createManifest(runDirectory, {
+      drive: { status: 'completed' },
+      reportRoot,
+    });
+    let publications = 0;
+
+    await assert.rejects(
+      () =>
+        collectSmoke(
+          automatedOptions,
+          {
+            manifest,
+            results: { preflight: { status: 'ready' } },
+          },
+          {
+            collect: async () => {
+              throw new Error('injected collection interruption');
+            },
+            publish: async () => {
+              publications += 1;
+            },
+            repository,
+          },
+        ),
+      /injected collection interruption/,
+    );
+
+    const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
+    assert.equal(persisted.collection.status, 'failed');
+    assert.match(persisted.collection.stagingDirectory, /report-staging-/);
+    assert.equal(publications, 0);
   } finally {
     await rm(runDirectory, { force: true, recursive: true });
   }

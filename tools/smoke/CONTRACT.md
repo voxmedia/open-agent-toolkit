@@ -41,6 +41,24 @@ Gate execution tees target output while tracking activity. Every
 idle, and hard-budget milliseconds. Output activity resets idle time but never
 extends `OAT_GATE_EXEC_TIMEOUT_MS`; the hard timeout remains authoritative.
 
+## Run Metadata and Report Publication
+
+After provisioning creates the initial manifest, every drive, child,
+collection, failure, and operator-return mutation goes through the locked
+`updateSmokeManifest` journal API. Callers update the latest record under the
+lock; they never rewrite a stale in-memory manifest over child ownership.
+
+Collection writes `bundle.json`, `report.json`, and `report.md` to a unique
+run-local `report-staging-*` directory under `tools/smoke/.runs/`. The `.runs/`
+tree is ignored generated state and retains failed or interrupted evidence
+until cleanup. A failing assertion never writes to the report root.
+
+Only a fully bound passing report is directory-renamed into the
+version-controlled `tools/smoke/reports/<harness>[/operator]/<scenario>/`
+root. Published reports are acceptance evidence and must be committed; cleanup
+does not own or remove them. Cleanup removes every journal-owned run directory
+and refuses unjournaled run-descendant resources.
+
 ## Provisioning Manifest
 
 The runner writes one JSON provisioning manifest before drive. It includes:
@@ -324,6 +342,13 @@ Later sequences compare their direct parent. Evidence exposes this boundary as
 sequence 2 must bind directly to sequence 1's commit.
 
 Dispatch records use schema version 1 and contain:
+
+This is the smoke evidence projection, not a second dispatch policy. The
+project adapter preserves the provider-neutral engine record unchanged, then
+the launcher projects its exact selectors into `configuredInvocation`, its
+selection facts into `selection`, and acceptance/outcome into `launch`.
+Assertions consume only this stable projection and must not depend on skill
+file names, provider-reference paths, or frontmatter versions.
 
 ```json
 {
