@@ -44,7 +44,7 @@ function validRecord(overrides = {}) {
     scope: 'p01-t01',
     selection: {
       atOrBelowCeiling: true,
-      candidatesConsidered: ['gpt-5.6-sol-xhigh', 'gpt-5.6-terra-medium'],
+      candidatesConsidered: ['gpt-5.6-terra-medium', 'gpt-5.6-sol-xhigh'],
       reason: 'native-catalog-unsatisfying',
     },
     ...overrides,
@@ -57,8 +57,8 @@ test('normalizes a launcher-owned dispatch record', () => {
   assert.equal(record.launch.status, 'accepted');
   assert.equal(record.attempt, 1);
   assert.deepEqual(record.selection.candidatesConsidered, [
-    'gpt-5.6-sol-xhigh',
     'gpt-5.6-terra-medium',
+    'gpt-5.6-sol-xhigh',
   ]);
 });
 
@@ -124,6 +124,19 @@ test('rejects inconsistent, unsupported, or incomplete records', () => {
         }),
       ),
     /Invalid selection reason/,
+  );
+  assert.throws(
+    () =>
+      normalizeDispatchRecord(
+        validRecord({
+          selection: {
+            atOrBelowCeiling: true,
+            candidatesConsidered: ['gate-reviewer'],
+            reason: 'gate-target',
+          },
+        }),
+      ),
+    /Invalid selection reason: gate-target/,
   );
 });
 

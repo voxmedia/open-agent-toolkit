@@ -53,6 +53,8 @@ Coordinator mode receives:
 - `phase_ceiling_tier`: optional narrower phase maximum from Dispatch Profile
 - `task_ceiling_tier`: effective project or phase maximum to pass to the resolver
 - `task_ceiling_source`: `project` or `phase`
+- `review_ceiling_tier`: project named maximum for implementation self-review
+- `review_ceiling_source`: project
 - `commit_convention`: the plan's commit format
 - optional coordinator dispatch axes, target, policy, and provenance fields
 
@@ -95,8 +97,9 @@ return `BLOCKED`. Do not default to whole-phase implementation.
 
 ### Mode: Phase Coordinator
 
-The phase coordinator must not implement ordinary plan tasks itself. Its only
-write-producing execution path is an exact bounded Task Worker dispatch.
+The phase coordinator must not implement ordinary plan tasks itself. Ordinary
+code writes occur only through an exact bounded Task Worker dispatch. A
+coordinator-owned reviewer may write only its review artifact.
 
 #### 1. Read Phase Artifacts Once
 
@@ -210,24 +213,81 @@ An empty result, mismatched task ID, missing commit, failed verification,
 out-of-bound file, dirty worktree, or commit/HEAD mismatch blocks the phase. The
 coordinator must not repair ordinary task work in its own context.
 
-#### 6. Perform Phase Integration and Self-Review
+#### 6. Perform Phase Integration Verification
 
 After all worker commits are verified, run phase-wide verification and inspect
-the committed integration surface. Confirm the phase aligns with plan/design,
-task outputs compose correctly, and no dependency was skipped. This is
-verification and review, not permission to edit ordinary implementation files.
-Return concerns or a block for a new bounded fix dispatch.
+the committed integration surface. Confirm task outputs compose correctly and
+no dependency was skipped. This verification is not permission to edit
+ordinary implementation files.
 
-#### 7. Return Phase Summary
+#### 7. Dispatch the Coordinator-owned Ceiling Review
+
+The coordinator is the review-owning dispatcher. Resolve the reviewer at the
+project ceiling, never the narrower task ceiling:
+
+```bash
+oat project dispatch-ceiling resolve \
+  --provider "$ACTIVE_PROVIDER" \
+  --role reviewer \
+  --ceiling-tier "$REVIEW_CEILING_TIER" \
+  --report-scope "$PHASE" \
+  --report-action review \
+  --project-path "$PROJECT_PATH" \
+  --json
+```
+
+For capped managed policy, require the exact provider payload:
+`providers.codex.dispatchArgs.variant`,
+`providers.claude.dispatchArgs.model`, or
+`providers.cursor.dispatchArgs.model`. Bind it to the actual provider
+invocation before launch. If the coordinator cannot apply, pass, or bind the
+required role/model control, fail closed and return `BLOCKED`.
+
+Observe this coordinator's current native role/model catalog, then apply the
+shared full-information selection contract:
+
+1. Prefer the exact native reviewer target when the current nested catalog can
+   express it.
+2. Deliberate inheritance is allowed only when launcher-owned coordinator
+   model/effort evidence proves the coordinator is at or above the review
+   ceiling.
+3. If native selection is unsatisfactory and inheritance is not allowed,
+   select an exact provider-CLI reviewer before launch. For Cursor, verify the
+   opaque target in `cursor-agent --list-models`, then invoke
+   `cursor-agent --print --trust --model "<exact-target>"` with the complete
+   Review Scope. Record `selection_reason: native-catalog-unsatisfying` and the
+   ordered `candidates_considered`.
+4. Codex uses the exact materialized reviewer role when available; Claude uses
+   its exact native tier alias or a pre-selected `claude -p` route when native
+   cannot express the target.
+5. If no exact route exists, return `BLOCKED` before review launch.
+
+Send the reviewer a fresh, self-contained Review Scope with the authoritative
+phase commit range, task IDs, workflow artifacts, configured ceiling axes, and
+structured selection record. Require a timestamped artifact under the
+project's `reviews/` directory.
+
+After acceptance, poll, nudge, or continue only through the existing child
+handle; acceptance cannot launch a replacement route. A terminal timeout,
+interruption, `BLOCKED`, or contract refusal is the review outcome. Only explicit pre-start
+rejection permits another recorded selection.
+
+Parse the artifact verdict. Zero Critical and zero Important findings passes.
+Critical or Important findings return `REVIEW_FAILED` with the artifact path
+and structured findings so the outer workflow can create bounded fix scopes.
+
+#### 8. Return Phase Summary
 
 ```markdown
 ## Phase {phase-id} Coordination Report
 
-**Status:** DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
+**Status:** DONE | DONE_WITH_CONCERNS | REVIEW_FAILED | NEEDS_CONTEXT | BLOCKED
 **Phase:** {phase-id}
 **Tasks coordinated:** {N} of {N}
 **Commits:** {first sha}..{last sha}
 **Phase verification:** pass | fail
+**Review verdict:** pass | fail | blocked
+**Review artifact:** {project-relative review path}
 
 ### Task Dispatch Summary
 
@@ -238,6 +298,15 @@ Return concerns or a block for a new bounded fix dispatch.
 ### Integration Self-Review
 
 - {observation or None}
+
+### Review Dispatch Summary
+
+- `selection_reason`: {native-catalog | native-catalog-unsatisfying | pre-start-rejection | inherit}
+- `candidates_considered`: {ordered exact provider selectors}
+- route: {native | inherited | provider-cli | blocked}
+- target: {exact configured target}
+- launch status: {accepted | rejected-before-start | not-launched}
+- child outcome: {completed | failed | timeout | interrupted | blocked}
 
 ### Concerns or Block
 

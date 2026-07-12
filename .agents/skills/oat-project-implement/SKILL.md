@@ -27,6 +27,7 @@ catalog observation, full-information route selection, accepted-launch
 terminality, and structured dispatch evidence. This implementation skill
 retains lifecycle sequencing, task boundaries, verification, integration, and
 approval-aware final closeout.
+Correctness must not require a provider restart or hot reload.
 
 After resolving `ACTIVE_PROVIDER`, read exactly one active-provider reference
 from `.agents/skills/oat-dispatch-subagents/references/` (`cursor.md`,
@@ -209,11 +210,12 @@ result from an accepted child — including `BLOCKED` — is not role
 unavailability and is not a native role-selection rejection. Self-report is
 optional diagnostic data and cannot populate or overwrite launcher-owned
 `target`, `model_axis`, or `effort_axis` fields. An accepted child cannot
-trigger the fresh pinned-child or CLI fallback. If an accepted native reviewer
-later times out, retry the same already-selected native `agent_type` route. The
-fresh pinned-child route is eligible only when the original native attempt
-received explicit pre-start role-selection rejection; a timeout after native
-spawn acceptance never changes routes.
+trigger a fresh pinned-child, CLI fallback, or second launch on the same route.
+If an accepted native reviewer remains active, poll, nudge, or continue only
+through its existing handle. A terminal timeout records review failure and
+stops or escalates without another launch. A new launch is eligible only when
+the original attempt received explicit pre-start rejection before any child
+started.
 
 **Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
 
@@ -1111,6 +1113,8 @@ project_ceiling_tier: {named project maximum; omit when none}
 phase_ceiling_tier: {explicit narrower phase maximum; omit for auto/blank}
 task_ceiling_tier: {effective project or phase named ceiling}
 task_ceiling_source: {project|phase}
+review_ceiling_tier: {named project maximum; implementation review is not narrowed by phase task ceiling}
+review_ceiling_source: project
 commit_convention: {from plan.md}
 coordinator_target: {resolver-selected coordinator target}
 ```
@@ -1201,63 +1205,46 @@ For each task in dependency order, the coordinator must:
 If a candidate is missing or absent, exceeds or is above the named ceiling, or
 cannot be invoked with exact controls, fail closed and block the phase. Never
 fall back or downgrade to the coordinator target, base role, or inferred
-provider default. A transient retry reuses the same complete provider payload;
-a substantive escalation re-resolves within the same named maximum and bounded
+provider default. A pre-start transport retry reuses the same complete provider
+payload. After acceptance, continuation uses only the existing child handle; a
+terminal outcome cannot launch a replacement. A separately authorized
+substantive escalation re-resolves within the same named maximum and bounded
 retry limit.
 
 #### Handling Coordinator Status
 
-- **DONE:** verify the Task Dispatch Summary, then proceed to phase review.
-- **DONE_WITH_CONCERNS:** correctness concerns require a new bounded exact fix
-  worker before review; advisory concerns are recorded.
+- **DONE:** verify the Task Dispatch Summary and passing Review Dispatch
+  Summary, then proceed to review disposition.
+- **DONE_WITH_CONCERNS:** verify the passing review; record only non-blocking
+  Medium/Minor concerns.
+- **REVIEW_FAILED:** verify the review artifact and convert its
+  Critical/Important findings into bounded fix scopes.
 - **NEEDS_CONTEXT:** supply only the missing context and retry within the bound.
 - **BLOCKED:** stop and surface the phase, task, exact target, and reason. Do not
   proceed to later phases.
 
 ### Per-Phase Review
 
-After the implementer returns DONE (or DONE_WITH_CONCERNS without correctness concerns), dispatch the reviewer for the phase.
+The phase coordinator owns implementation self-review. Do not dispatch a second
+outer reviewer. Require its Coordination Report to include:
 
-**Dispatch:**
+- the authoritative phase commit range and review artifact;
+- a `Review Dispatch Summary` with ordered candidates, reason, route, exact
+  target, launch status, and child outcome;
+- proof that the reviewer used the project review ceiling, not a narrower phase
+  task ceiling;
+- for a Cursor CLI route, current nested-catalog mismatch plus exact
+  `cursor-agent --list-models` validation before launch;
+- no replacement launch after acceptance.
 
-- Use the same tier that was selected at start.
-- For Codex with a capped managed policy, first dispatch the materialized reviewer role returned in `providers.codex.dispatchArgs.variant` as native `agent_type` for deterministic quality gates. After spawn acceptance, record the review `target`, `model_axis`, and `effort_axis` from resolver output and the constructed launcher payload; reviewer self-report cannot populate or overwrite them.
-- Only if the exact registered reviewer role receives a native role-selection rejection may the launcher start a fresh Codex child with explicit model, reasoning effort, and canonical role instructions from `.agents/agents/oat-reviewer.md`; never substitute the managed base role and never require restart/hot reload. Missing reviewer telemetry or self-report is not a rejection, and an accepted reviewer that later returns `BLOCKED` cannot trigger fallback.
-- For Codex with managed `Uncapped` or inherit/default mode, no reviewer target exists; use base `oat-reviewer`, log `effort_axis=provider-default`, and explain that the base role follows the provider default.
-- For Claude Code with a capped managed policy, require `providers.claude.dispatchArgs.model` and pass that exact value as the review `model`; managed `Uncapped` or inherit/default mode omits `model` because no reviewer target exists. Always keep `effort_axis=not-applicable`.
-- For Cursor with a concrete managed reviewer target, require `providers.cursor.dispatchArgs.model` and pass that exact opaque, unnormalized string as the actual review invocation's `model` argument.
-- Build the actual provider invocation before logging the reviewer target. If the host cannot apply the required Claude or Cursor model argument, fail closed or block unless inline execution has verified equivalent current-host controls.
-- Tier 1: dispatch the selected reviewer target via provider-native subagent mechanism with Review Scope:
-
-  ```
-  project: {PROJECT_PATH}
-  type: code
-  scope: {pNN}
-  commits: {base_sha}..{head_sha}
-  files_changed: {optional hint from implementer's report}
-  workflow_mode: {from state.md}
-  artifact_paths: {same as Phase Scope}
-  tasks_in_scope: {list of pNN-tNN IDs in the phase}
-  dispatch_policy: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
-  dispatch_ceiling: {resolved cap value | null}
-  policy_source: {repo config | project state | preflight prompt}
-  ceiling_source: {repo config | project state | preflight prompt} # compatibility alias for policy_source
-  provider_default_effort: {value | unknown | not-applicable}
-  model_axis: { selected:<value> | inherited | not-applicable | host-auto }
-  effort_axis: {selected:<Codex value> | provider-default | not-applicable}
-  dispatch_rationale: {capped reviewer target | uncapped/inherit reviewer fallback}
-  ```
-
-  - For Codex Tier 1 dispatches, send the Review Scope block as a self-contained packet and keep fresh context (`fork_context: false`). The reviewer is expected to reconstruct context from git state and the OAT artifacts listed above.
-  - For Codex Tier 1 review dispatches, use the materialized Codex role name from `providers.codex.dispatchArgs.variant` only when the resolver returns a reviewer variant for a capped managed policy. A Codex materialized reviewer role selected from a model+effort target must carry `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant` for managed `Uncapped`, inherit/default mode, or provider-default fallback, and log `effort_axis=provider-default`. For Claude Code, pass `model: providers.claude.dispatchArgs.model` for a concrete managed reviewer and never pass a per-review effort override. For Cursor, pass `model: providers.cursor.dispatchArgs.model` byte-for-byte for a concrete managed reviewer.
-  - Treat the commit range as authoritative for review scope. `files_changed` is optional orientation metadata only.
-  - If a reviewer does not return a terminal result on the first wait, poll once more. If it still has not concluded, send one concise nudge to return immediately with current findings. If the reviewer still does not conclude, treat the target-preserving review dispatch as failed for this phase. When the original native reviewer spawn was accepted, retry the same already-selected native `agent_type` route within the retry bound; do not switch that timed-out reviewer to a fresh pinned child. The fresh pinned-child route is eligible only when the original native attempt received explicit pre-start role-selection rejection. Retry an already-selected pinned fresh-child route or complete Claude/Cursor invocation payload without changing routes, preserving the exact model argument; never downgrade a timed-out managed reviewer to unpinned inline execution.
-
-- Tier 2: read `.agents/agents/oat-reviewer.md` and review inline only with verified equivalent current-host model and effort controls, explicit inherit/default behavior, or the documented managed-uncapped reviewer behavior. Otherwise block.
+Verify the artifact exists, its scope and commit range match, and the summary is
+consistent with the shared dispatch contract. Missing or contradictory evidence
+blocks the phase.
 
 **Verdict outcomes:**
 
-Parse the reviewer's confirmation for verdict + finding severities. Map to pass / fail:
+Parse the coordinator-owned review artifact and Review Dispatch Summary for
+verdict + finding severities. Map to pass / fail:
 
 - **pass:** zero Critical and zero Important findings.
 - **fail:** one or more Critical or Important findings.
@@ -1276,7 +1263,10 @@ On reviewer verdict `fail`, run a bounded fix loop.
    a. Convert Critical/Important findings into bounded fix scopes associated with one planned task/file boundary at a time. Do not hand one worker the full phase finding list.
    b. Reuse the phase coordinator in `fix` mode. It selects an exact candidate under the same project or phase named ceiling with `--ceiling-tier`, then emits one Task Scope per bounded fix. Codex first uses `providers.codex.dispatchArgs.variant` as native `agent_type`; only a native role-selection rejection permits the exact fresh-child fallback. Claude and Cursor pass their exact `providers.<provider>.dispatchArgs.model` value on the actual invocation. After constructing the launcher payload, record the fix `target`, `model_axis`, and `effort_axis` from that payload and resolver output. Missing fix-worker telemetry or self-report is not unavailability, and an accepted fix worker — including one that returns `BLOCKED` — cannot trigger fallback. Every fix worker writes the formal `Dispatch: scope=<phase-or-task> action=fix role=fix producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>` stamp before execution.
    c. Receive and verify each fix result and commit. The coordinator must not apply fixes itself, and Tier 2 does not authorize inline task edits.
-   d. Re-dispatch the reviewer with the updated commit range.
+   d. Require the fix-mode coordinator to dispatch the coordinator-owned
+   reviewer with the updated commit range and return the new artifact and
+   Review Dispatch Summary. The outer workflow never launches a duplicate
+   reviewer.
    e. Parse the new verdict.
    f. If pass → exit the loop successfully.
    g. If fail and retries remain → continue.
@@ -1769,14 +1759,13 @@ and the constructed launcher payload, never from reviewer self-report. A
 concrete managed Claude or Cursor target must put
 `providers.claude.dispatchArgs.model` or
 `providers.cursor.dispatchArgs.model` respectively into the actual provider
-invocation as the exact `model` argument; Cursor strings remain opaque. On
-timeout or retry, preserve the already-selected route as well as its complete
-invocation payload: an accepted native reviewer retries the same native
-`agent_type`, while a fresh pinned-child route is eligible only when the
-original native attempt received explicit pre-start role-selection rejection.
-Preserve the exact model argument. If the host cannot apply the required role or
-model argument, fail closed or block unless verified equivalent current-host
-controls permit inline execution. The preference below chooses only among
+invocation as the exact `model` argument; Cursor strings remain opaque. Before
+acceptance, a transport retry preserves the exact payload. After acceptance,
+poll, nudge, or continue only through the existing reviewer handle. A terminal
+timeout stops or escalates without another launch; a fresh pinned-child route
+is eligible only after explicit pre-start role-selection rejection. If the host
+cannot apply the required role or model argument, fail closed or block unless
+verified equivalent current-host controls permit inline execution. The preference below chooses only among
 routes that preserve that target; it cannot authorize generic inline or base
 execution. Inline remains available only with verified equivalent current-host
 controls or an allowed explicit inherit/default or managed-uncapped reviewer

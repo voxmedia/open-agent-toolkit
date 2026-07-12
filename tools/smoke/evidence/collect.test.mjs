@@ -394,6 +394,10 @@ test('collects a deterministic normalized evidence bundle', async () => {
       bundle.dispatches[1].configuredInvocation.target,
       'cursor-cli:gpt-5.6-terra-medium',
     );
+    assert.deepEqual(bundle.dispatches[1].selection.candidatesConsidered, [
+      'gpt-5.6-terra-medium',
+      'gpt-5.6-sol-xhigh',
+    ]);
     assert.deepEqual(
       bundle.orchestrationEvents.map((event) => event.sequence),
       [1, 2, 3],

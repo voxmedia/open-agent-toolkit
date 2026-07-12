@@ -73,13 +73,13 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 5     | 5/5       |
-| Phase 3 | in_progress | 3     | 3/3       |
-| Phase 4 | pending     | 3     | 0/3       |
+| Phase 2 | complete    | 5     | 5/5       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | in_progress | 3     | 3/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 14/23 tasks completed
+**Total:** 17/23 tasks completed
 
 ---
 
@@ -986,6 +986,42 @@ of `oat-project-implement`.
   bookkeeping.
 
 **Next:** fix iteration 1, then Phase 4 re-review.
+
+### Phase 4 Self-review — Iteration 1 — Fix iteration 1 complete
+
+**Outcome:**
+
+- Planning artifact reviews now execute in the selected planning parent by
+  default; only an unknown or below-ceiling parent opens the managed
+  ceiling-targeted exception route.
+- Accepted reviewer launches are terminal: timeout recovery uses only the
+  existing child handle, and another launch is legal only after explicit
+  pre-start rejection.
+- The phase coordinator now owns ceiling-review target resolution, native/CLI
+  route selection, review launch, and the structured Review Dispatch Summary.
+  The outer implementation workflow validates that evidence instead of
+  launching a duplicate reviewer.
+- Smoke dispatch writers and collectors preserve
+  `selection.candidatesConsidered` order. `gate-target` is explicitly rejected
+  by that writer because lifecycle/phase gates retain their separate canonical
+  gate JSON and review artifact envelope.
+- Repository-local sync regenerated provider views and advanced
+  `.oat/sync/manifest.json` from OAT `0.1.51` to `0.1.53`.
+- Canonical skill changes now carry the required lockstep `0.1.53` version bump
+  across all five public packages.
+- Phase overview bookkeeping now records all three p04 tasks as complete.
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/validation/skills.test.ts
+src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` —
+  86/86 passed.
+- `node --test 'tools/smoke/**/*.test.mjs'` — 84/84 passed.
+- `pnpm run cli -- sync --scope all` — passed with repository-local generator.
+- `git diff --check` — passed.
+
+**Next:** commit the fix baseline, then run Phase 4 re-review.
 
 ---
 

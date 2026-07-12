@@ -171,9 +171,9 @@ export function normalizeDispatchRecord(record) {
     scope,
     selection: {
       atOrBelowCeiling: record.selection.atOrBelowCeiling,
-      candidatesConsidered: record.selection.candidatesConsidered
-        .map((candidate) => requiredString(candidate, 'candidate'))
-        .sort(),
+      candidatesConsidered: record.selection.candidatesConsidered.map(
+        (candidate) => requiredString(candidate, 'candidate'),
+      ),
       reason: selectionReason,
     },
   };

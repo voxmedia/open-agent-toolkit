@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-t01
+oat_current_task: p04-t03
 oat_last_commit: e73249c485cc16a52d65e346d48640fef5e0bc5e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T13:07:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T13:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -53,11 +53,11 @@ oat_generated: false
 
 **Status:** Implementation in progress
 **Started:** 2026-07-11
-**Last Updated:** 2026-07-11
+**Last Updated:** 2026-07-12
 
 ## Current Phase
 
-Implementation — Phase 4 self-review fixes, iteration 1
+Implementation — Phase 4 fixes complete; awaiting re-review
 
 ## Artifacts
 
@@ -115,7 +115,8 @@ Implementation — Phase 4 self-review fixes, iteration 1
 - ✓ p04-t01 promoted the shared full-information dispatch contract
 - ✓ p04-t02 added provider-specific native and CLI topology guidance
 - ✓ p04-t03 aligned workflow and smoke selection evidence fields
-- ⚠ Phase 4 self-review failed 0C/4I/2M/0m; fix iteration 1 in progress
+- ⚠ Phase 4 self-review failed 0C/4I/2M/0m
+- ✓ Phase 4 self-review fix iteration 1 complete and verified
 
 ## Blockers
 
@@ -123,4 +124,4 @@ None
 
 ## Next Milestone
 
-Apply Phase 4 self-review fixes
+Run Phase 4 re-review

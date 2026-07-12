@@ -242,6 +242,13 @@ Human workflow notes and machine records share these semantic fields:
 The names and mapping are normative. Evidence adapters must not introduce a
 second synonym or infer either value from child output.
 
+`candidates_considered` is ordered decision evidence and must never be sorted
+during writing or collection. `gate-target` is intentionally outside this
+dispatch-record wire schema: lifecycle/phase gates use the separate canonical
+gate JSON and review artifact envelope. The dispatch writer therefore rejects
+`selection.reason: "gate-target"` instead of conflating gate and
+implementation/self-review records.
+
 The launcher records configured invocation and acceptance; it does not infer
 runtime identity. Runtime identity is normalized to `reported` only when both
 producer and model are present and provenance is one of `runtime-observed`,

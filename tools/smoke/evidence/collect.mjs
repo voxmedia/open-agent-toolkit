@@ -258,9 +258,7 @@ function normalizeDispatch(record, index) {
           ? selection.atOrBelowCeiling
           : null,
       candidatesConsidered: Array.isArray(selection.candidatesConsidered)
-        ? selection.candidatesConsidered
-            .map((candidate) => String(candidate))
-            .sort()
+        ? selection.candidatesConsidered.map((candidate) => String(candidate))
         : [],
       reason: optionalString(selection.reason),
     },

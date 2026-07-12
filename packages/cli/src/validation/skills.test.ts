@@ -1139,20 +1139,22 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/launcher-selected\/config-declared/i);
   });
 
-  it('keeps timed-out native reviewer retries on the accepted route', async () => {
+  it('forbids replacement launches after reviewer acceptance', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
     expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
     expect(content).toMatch(
-      /accepted native reviewer[\s\S]{0,180}times out[\s\S]{0,180}retry the same already-selected native `agent_type` route/i,
+      /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
     expect(content).toMatch(
-      /fresh pinned-child route is eligible only when the original native attempt[\s\S]{0,160}explicit pre-start role-selection rejection/i,
+      /terminal timeout[\s\S]{0,180}(?:stop|escalate)[\s\S]{0,180}without another launch/i,
     );
-    expect(content).toMatch(
-      /original native reviewer spawn was accepted[\s\S]{0,180}retry the same already-selected native `agent_type` route[\s\S]{0,220}do not switch[\s\S]{0,160}fresh pinned child/i,
+    expect(content).toContain('A new launch is eligible only when');
+    expect(content).toMatch(/explicit pre-start rejection/i);
+    expect(content).not.toMatch(
+      /accepted native reviewer[\s\S]{0,220}retry the same already-selected native `agent_type` route/i,
     );
   });
 
@@ -1732,8 +1734,11 @@ describe('validateOatSkills', () => {
       ['oat-project-implement', implement],
       ['oat-project-review-provide', reviewProvide],
     ] as const) {
+      expect(content, `${skillName} concrete Codex target`).toMatch(
+        /concrete managed Codex target/i,
+      );
       expect(content, `${skillName} target-first precedence`).toMatch(
-        /concrete managed Codex target[\s\S]{0,500}(?:before|takes precedence over)[\s\S]{0,200}(?:tier|availability)/i,
+        /(?:before|takes precedence)[\s\S]{0,220}(?:tier|availability)/i,
       );
       expect(content, `${skillName} unavailable-role route`).toMatch(
         /(?:unavailable|cannot select|native role-selection rejection)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
@@ -1825,6 +1830,9 @@ describe('validateOatSkills', () => {
     const implement = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
+    const coordinator = await readRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
     const artifactReview = planWriting.slice(
       planWriting.indexOf('## Managed Dispatch Readiness and Review Contract'),
       planWriting.indexOf('## Shared Phase-Review Setup Contract'),
@@ -1835,9 +1843,11 @@ describe('validateOatSkills', () => {
       ),
       reviewProvide.indexOf('### Step 7: Determine Review Artifact Path'),
     );
-    const phaseReview = implement.slice(
-      implement.indexOf('### Per-Phase Review'),
-      implement.indexOf('**Verdict outcomes:**'),
+    const phaseReview = coordinator.slice(
+      coordinator.indexOf(
+        '#### 7. Dispatch the Coordinator-owned Ceiling Review',
+      ),
+      coordinator.indexOf('#### 8. Return Phase Summary'),
     );
     const finalReview = implement.slice(
       implement.indexOf('**Workflow preference check (before prompting):**'),
@@ -1859,9 +1869,18 @@ describe('validateOatSkills', () => {
       expect(content, `${name} actual model argument`).toMatch(
         /actual\s+(?:(?:provider|host)\s+)?invocation[\s\S]{0,280}(?:model|dispatchArgs\.model)/i,
       );
-      expect(content, `${name} target-preserving retry`).toMatch(
-        /(?:timeout|retry|re-dispatch)[\s\S]{0,500}(?:same|exact)[\s\S]{0,300}(?:model|payload|dispatch argument)/i,
-      );
+      if (name === 'phase review') {
+        expect(content, `${name} accepted handle`).toMatch(
+          /after acceptance[\s\S]{0,180}existing child/i,
+        );
+        expect(content, `${name} no replacement`).toMatch(
+          /acceptance cannot launch a replacement/i,
+        );
+      } else {
+        expect(content, `${name} target-preserving retry`).toMatch(
+          /(?:timeout|retry|re-dispatch)[\s\S]{0,500}(?:same|exact)[\s\S]{0,300}(?:model|payload|dispatch argument)/i,
+        );
+      }
       expect(content, `${name} unsupported model binding`).toMatch(
         /(?:cannot|unable to) (?:apply|pass|bind)[\s\S]{0,280}(?:fail closed|block)/i,
       );
@@ -2527,6 +2546,60 @@ describe('validateOatSkills', () => {
     expect(smoke).toMatch(
       /selection_reason[\s\S]{0,160}selection\.reason[\s\S]{0,240}candidates_considered[\s\S]{0,160}selection\.candidatesConsidered/,
     );
+    expect(smoke).toMatch(
+      /candidates_considered[\s\S]{0,120}ordered decision evidence[\s\S]{0,120}never be sorted/i,
+    );
+    expect(smoke).toContain('`gate-target` is intentionally outside this');
+    expect(smoke).toMatch(/separate canonical[\s\S]{0,40}gate JSON/i);
+  });
+
+  it('makes planning inheritance and coordinator-owned phase review executable', async () => {
+    const planning = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const coordinator = await readRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const autoLoop = planning.slice(
+      planning.indexOf('## Auto Artifact-Review Loop'),
+      planning.indexOf('## Canonical Plan Format'),
+    );
+    const reviewRoute = coordinator.slice(
+      coordinator.indexOf(
+        '#### 7. Dispatch the Coordinator-owned Ceiling Review',
+      ),
+      coordinator.indexOf('### Mode: Task Worker'),
+    );
+
+    expect(autoLoop).toMatch(
+      /Default:[\s\S]{0,220}parent-at-or-above-ceiling[\s\S]{0,180}omit the child model[\s\S]{0,120}selection_reason: inherit/i,
+    );
+    expect(autoLoop).toMatch(
+      /Exception:[\s\S]{0,180}planning parent is unknown or below the ceiling[\s\S]{0,180}concrete ceiling target/i,
+    );
+    expect(autoLoop).toMatch(
+      /terminal timeout[\s\S]{0,120}(?:blocks|escalates)[\s\S]{0,160}cannot launch a replacement/i,
+    );
+
+    expect(reviewRoute).toContain('--role reviewer');
+    expect(reviewRoute).toContain('--ceiling-tier "$REVIEW_CEILING_TIER"');
+    expect(reviewRoute).toContain('cursor-agent --list-models');
+    expect(reviewRoute).toContain(
+      'selection_reason: native-catalog-unsatisfying',
+    );
+    expect(reviewRoute).toContain('candidates_considered');
+    expect(reviewRoute).toMatch(/after acceptance[\s\S]{0,180}existing child/i);
+    expect(reviewRoute).toMatch(/acceptance cannot launch a replacement/i);
+    expect(implement).toContain(
+      'phase coordinator owns implementation self-review',
+    );
+    expect(implement).toContain('Do not dispatch a second');
+    expect(implement).toContain('fix-mode coordinator');
+    expect(implement).toContain('coordinator-owned');
+    expect(implement).toContain('never launches a duplicate');
   });
 
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
