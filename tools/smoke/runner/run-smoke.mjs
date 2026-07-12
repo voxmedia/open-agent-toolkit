@@ -475,8 +475,8 @@ export async function main(
   }
 }
 
-const invokedPath = process.argv[1] ? fileURLToPath(import.meta.url) : null;
-if (invokedPath === process.argv[1]) {
+const invokedPath = process.argv[1] ? resolve(process.argv[1]) : null;
+if (invokedPath === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     console.error(error.message);
     if (error.cleanupError) {
