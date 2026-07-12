@@ -470,14 +470,39 @@ async function listMarkdownFiles(directory) {
   return files;
 }
 
-async function collectReviews(fixtureProjectPath) {
+export function normalizeReviewFrontmatter(
+  frontmatter,
+  fixtureProjectPath,
+  worktreePath,
+) {
+  const projectPath = frontmatter.oat_project;
+  if (!isAbsolute(projectPath ?? '')) {
+    return frontmatter;
+  }
+  const normalizedProjectPath = resolve(projectPath);
+  if (normalizedProjectPath !== fixtureProjectPath) {
+    throw new EvidenceCollectionError(
+      'Review artifact oat_project is outside the fixture project.',
+    );
+  }
+  return {
+    ...frontmatter,
+    oat_project: relative(worktreePath, normalizedProjectPath),
+  };
+}
+
+async function collectReviews(fixtureProjectPath, worktreePath) {
   const reviewsDirectory = join(fixtureProjectPath, 'reviews');
   const paths = await listMarkdownFiles(reviewsDirectory);
 
   return Promise.all(
     paths.map(async (path) => {
-      const frontmatter = parseFrontmatter(
-        await safeReadFile(path, fixtureProjectPath, 'Review artifact'),
+      const frontmatter = normalizeReviewFrontmatter(
+        parseFrontmatter(
+          await safeReadFile(path, fixtureProjectPath, 'Review artifact'),
+        ),
+        fixtureProjectPath,
+        worktreePath,
       );
       const corroboration = Object.fromEntries(
         Object.entries(frontmatter).filter(
@@ -1727,7 +1752,7 @@ export async function collectEvidence({
     kind: 'workflow',
     manifest: normalizeManifest(manifest),
     orchestrationEvents,
-    reviews: await collectReviews(fixtureProjectPath),
+    reviews: await collectReviews(fixtureProjectPath, canonicalWorktree),
     scenario: manifest.appliedScenario,
     schemaVersion: 1,
     source: {

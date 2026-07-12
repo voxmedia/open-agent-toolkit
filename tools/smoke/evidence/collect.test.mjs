@@ -20,6 +20,7 @@ import { evaluateEvidence } from './assertions.mjs';
 import {
   collectEvidence,
   EvidenceCollectionError,
+  normalizeReviewFrontmatter,
   normalizeRuntimeIdentity,
   observedLifecycleState,
   parseCollectorArgs,
@@ -276,6 +277,38 @@ test('runtime identity requires independently observed provenance', () => {
       provenance: 'not-reported',
       status: 'not-reported',
     },
+  );
+});
+
+test('normalizes an absolute fixture project path in review frontmatter', () => {
+  const worktreePath = resolve('/tmp/oat-smoke-review-worktree');
+  const fixtureProjectPath = join(
+    worktreePath,
+    '.oat/projects/smoke-fixture',
+  );
+
+  assert.deepEqual(
+    normalizeReviewFrontmatter(
+      {
+        oat_project: fixtureProjectPath,
+        oat_review_scope: 'final',
+      },
+      fixtureProjectPath,
+      worktreePath,
+    ),
+    {
+      oat_project: '.oat/projects/smoke-fixture',
+      oat_review_scope: 'final',
+    },
+  );
+  assert.throws(
+    () =>
+      normalizeReviewFrontmatter(
+        { oat_project: resolve('/tmp/another-project') },
+        fixtureProjectPath,
+        worktreePath,
+      ),
+    /outside the fixture project/u,
   );
 });
 
