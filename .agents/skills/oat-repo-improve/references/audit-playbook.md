@@ -4,6 +4,12 @@ What to look for, per category. Each subagent (or direct audit pass) gets the re
 
 A finding is only a finding with evidence. "Probably has N+1 queries somewhere" is not a finding; `orders/api.ts:142 issues one query per order item inside a loop` is.
 
+## Audit scope boundary
+
+Use the inclusion and exclusion set resolved by `oat-repo-improve` for every category and reconnaissance lane. Broad audits exclude the canonical agent-configuration directories named `.agents/`, `.claude/`, `.codex/`, and `.cursor/` at any depth from findings and plan candidates unless the user includes selected names or all four. Also honor any additional repo-relative directories the user excludes for the run.
+
+Workers may read bounded instruction, convention, and intent files inside an excluded agent-configuration directory to understand the repository, but must not audit those files or use them as finding evidence or plan candidates. Do not let a worker otherwise broaden scope or traverse a symlinked provider view outside the repository. Explicit artifact-backed verification is governed by the source artifact rather than this broad-audit default.
+
 ---
 
 ## 1. Correctness / Bugs

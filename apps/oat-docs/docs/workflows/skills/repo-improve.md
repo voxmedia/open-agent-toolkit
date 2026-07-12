@@ -19,6 +19,20 @@ Use `oat-repo-improve` when the desired output is an executable implementation p
 
 With no source argument, the skill probes for available review and backlog artifacts, annotates all five options, and asks which source to use.
 
+## Set repo-audit boundaries
+
+Fresh repo audits exclude agent-configuration directories from findings and plan candidates by default. The canonical default directory names are `.agents/`, `.claude/`, `.codex/`, and `.cursor/` at any depth. These locations commonly contain provider configuration, generated views, or externally sourced skills rather than the product surfaces being reviewed.
+
+Before reconnaissance, improve shows that default and asks whether to:
+
+- Keep all four exclusions.
+- Include selected directory names.
+- Include all four directory names.
+
+It then asks whether any other repo-relative directories should be excluded and suggests other recognizable provider directories when present. The resolved scope is shown before work begins and is applied consistently to direct searches and delegated audit lanes.
+
+These are findings exclusions, not absolute read prohibitions. Improve may read bounded instruction, convention, or intent files inside an excluded directory to understand the repository, but it does not turn those files into findings or plan candidates unless the user includes or explicitly targets that directory. A file cited by an artifact-backed source can still be verified after scope confirmation; symlinked provider views are never followed outside the repository.
+
 ## Output boundary
 
 External plans are not canonical OAT project `plan.md` files. They contain self-contained context, scope, steps, verification, done criteria, and STOP conditions, but no OAT phase/task IDs or lifecycle bookkeeping.

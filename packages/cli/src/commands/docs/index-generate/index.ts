@@ -85,11 +85,16 @@ async function runIndexGenerate(
 
   const repoRoot = await deps.resolveRepoRoot(context.cwd);
   const config = await deps.readOatConfig(repoRoot);
-  config.documentation = {
-    ...config.documentation,
-    index: relative(repoRoot, outputPath) || 'index.md',
-  };
-  await deps.writeOatConfig(repoRoot, config);
+  const indexPath = relative(repoRoot, outputPath) || 'index.md';
+  if (config.documentation?.index !== indexPath) {
+    await deps.writeOatConfig(repoRoot, {
+      ...config,
+      documentation: {
+        ...config.documentation,
+        index: indexPath,
+      },
+    });
+  }
 
   if (context.json) {
     context.logger.json({
