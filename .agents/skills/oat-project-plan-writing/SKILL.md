@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.9
+version: 1.2.10
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -22,6 +22,15 @@ OAT ▸ PLAN WRITING
 This is a sub-phase indicator; the calling skill owns the top-level banner.
 
 - When invoked by a calling skill, print the sub-banner immediately before plan authoring begins.
+
+## Shared Subagent Dispatch Contract
+
+Before every artifact self-review dispatch, read and follow
+`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit load is
+mandatory; do not rely on ambient skill discovery. Planning self-review
+inherits the planning parent by default. The shared contract owns any
+catalog-aware exception, launch acceptance boundary, and dispatch record; this
+skill continues to own plan readiness and review disposition.
 
 ## Managed Dispatch Readiness and Review Contract
 

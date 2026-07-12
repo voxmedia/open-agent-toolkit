@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "oatVersion": "0.1.52",
+  "oatVersion": "0.1.51",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -1421,7 +1421,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-06-23T03:28:27.726Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-dispatch-subagents",
+      "providerPath": ".claude/skills/oat-dispatch-subagents",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T12:49:20.004Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-dispatch-subagents",
+      "providerPath": ".cursor/skills/oat-dispatch-subagents",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T12:49:20.005Z"
     }
   ],
-  "lastUpdated": "2026-06-23T03:28:27.726Z"
+  "lastUpdated": "2026-07-12T12:49:20.005Z"
 }

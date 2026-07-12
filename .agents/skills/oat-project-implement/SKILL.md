@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.36
+version: 2.0.37
 description: Use when plan.md is ready for execution. Dispatches phase coordinators that select one exact target-pinned worker per task; supports bounded fix loops and plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -16,6 +16,17 @@ Execute the implementation plan task-by-task with full state tracking.
 ## Prerequisites
 
 **Required:** Complete implementation plan. If missing, run the `oat-project-plan` skill first.
+
+## Shared Subagent Dispatch Contract
+
+Before resolving or launching any coordinator, task worker, fix worker, or
+self-reviewer, read and follow
+`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit load is
+mandatory; do not rely on ambient skill discovery. The shared skill owns
+catalog observation, full-information route selection, accepted-launch
+terminality, and structured dispatch evidence. This implementation skill
+retains lifecycle sequencing, task boundaries, verification, integration, and
+approval-aware final closeout.
 
 ## Mode Assertion
 

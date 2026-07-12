@@ -998,7 +998,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
   });
 
   it('detects smoke bootstrap mode from the resolved base before worktree creation', async () => {
@@ -1144,7 +1144,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,180}times out[\s\S]{0,180}retry the same already-selected native `agent_type` route/i,
     );
@@ -1459,7 +1459,7 @@ describe('validateOatSkills', () => {
       /phase coordinator/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.37');
 
     const coordinator = agent.slice(
       agent.indexOf('### Mode: Phase Coordinator'),
@@ -2337,7 +2337,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.9'],
+      ['oat-project-plan-writing', '1.2.10'],
       ['oat-project-plan', '1.3.13'],
       ['oat-project-quick-start', '2.1.14'],
       ['oat-project-import-plan', '1.4.5'],
@@ -2356,7 +2356,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.0.36'],
+      ['oat-project-implement', '2.0.37'],
       ['oat-project-review-provide', '1.3.14'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
@@ -2409,6 +2409,50 @@ describe('validateOatSkills', () => {
       );
       expect(content, `${skillName} runtime provenance`).toMatch(
         /runtime(?:Identity|\s+identity)/i,
+      );
+    }
+  });
+
+  it('loads one shared full-information subagent dispatch contract', async () => {
+    const contractPath = '.agents/skills/oat-dispatch-subagents/SKILL.md';
+    const contract = await readRepoFile(contractPath);
+    const consumers = [
+      '.agents/skills/oat-project-implement/SKILL.md',
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+      '.agents/agents/oat-phase-implementer.md',
+    ];
+
+    expect(contract).toMatch(/^name:\s*oat-dispatch-subagents$/m);
+    expect(contract).toMatch(/^version:\s*1\.0\.0$/m);
+    expect(contract).toMatch(/^user-invocable:\s*false$/m);
+    expect(contract).toMatch(
+      /configured candidates[\s\S]{0,180}named ceiling[\s\S]{0,180}(?:current|dispatcher)[\s\S]{0,120}(?:catalog|selectors)/i,
+    );
+    expect(contract).toMatch(/catalog snapshot[\s\S]{0,160}dispatch context/i);
+    expect(contract).toMatch(
+      /task or fix worker[\s\S]{0,180}never silently inherit/i,
+    );
+    expect(contract).toMatch(
+      /pre-start[\s\S]{0,180}CLI[\s\S]{0,180}(?:reason|candidates considered)/i,
+    );
+    expect(contract).toMatch(
+      /accepted launch[\s\S]{0,180}(?:terminal|no replacement)/i,
+    );
+    expect(contract).toMatch(
+      /planning (?:self-)?review[\s\S]{0,180}inherit[\s\S]{0,240}implementation (?:self-)?review[\s\S]{0,240}(?:named )?ceiling/i,
+    );
+    expect(contract).toMatch(
+      /below-ceiling Cursor phase coordinator[\s\S]{0,320}pre-start CLI reviewer selection/i,
+    );
+    expect(contract).toMatch(
+      /(?:phase|lifecycle) gate[\s\S]{0,220}independent[\s\S]{0,180}(?:cross-family|CLI|exec target)/i,
+    );
+
+    for (const path of consumers) {
+      const content = await readRepoFile(path);
+      expect(content, path).toContain(contractPath);
+      expect(content, path).toMatch(
+        /(?:read|load)[\s\S]{0,120}oat-dispatch-subagents\/SKILL\.md/i,
       );
     }
   });
