@@ -137,6 +137,9 @@ worktree-mailbox client; the parent broker launches `cursor-agent` with the
 retained API key.
 Operator handoffs wrap Codex in the same broker launcher. The key value must
 never enter config, manifests, the mailbox, logs, prompts, or evidence.
+Both automated and operator Codex commands pass the manifest's canonical
+`commonGitDir` through `--add-dir`; the primary worktree alone is insufficient
+because linked-worktree commits create locks under shared Git metadata.
 
 Manifest updates are published with a sibling temporary file and atomic rename.
 Nested ownership registrations additionally use a bounded exclusive sibling

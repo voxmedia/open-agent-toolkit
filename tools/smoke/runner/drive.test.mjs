@@ -37,6 +37,7 @@ async function createManifest(runDirectory, overrides = {}) {
   const manifestPath = join(runDirectory, 'provisioning-manifest.json');
   const manifest = {
     appliedScenario: 'plan-review',
+    commonGitDir: join(runDirectory, 'git'),
     createdPaths: [manifestPath],
     driveMode: 'automated',
     harness: 'codex',
@@ -62,12 +63,14 @@ test('selects one protocol and invocation shape for every harness', async () => 
 
     const automated = createInvocationPlan({
       driveMode: 'automated',
+      gitMetadataPath: '/tmp/smoke-git',
       harness,
       prompt: protocol.prompt,
       worktreePath: '/tmp/smoke-worktree',
     });
     const operator = createInvocationPlan({
       driveMode: 'operator',
+      gitMetadataPath: '/tmp/smoke-git',
       harness,
       prompt: protocol.prompt,
       worktreePath: '/tmp/smoke-worktree',
@@ -77,6 +80,17 @@ test('selects one protocol and invocation shape for every harness', async () => 
     assert.equal(operator.operator, true);
     if (harness === 'cursor-ide') {
       assert.equal(automated.manualOnly, true);
+    }
+    if (harness === 'codex') {
+      for (const plan of [automated, operator]) {
+        assert.deepEqual(
+          plan.args.slice(
+            plan.args.indexOf('--add-dir'),
+            plan.args.indexOf('--add-dir') + 2,
+          ),
+          ['--add-dir', '/tmp/smoke-git'],
+        );
+      }
     }
   }
 });
