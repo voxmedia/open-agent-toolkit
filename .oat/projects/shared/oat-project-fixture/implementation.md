@@ -693,7 +693,32 @@ self-review; independent external gates remain enabled.
 - `node --test 'tools/smoke/**/*.test.mjs' scripts/worktree/init.test.mjs` —
   72/72 passed.
 - Evidence oxlint/oxfmt and repository diff checks — passed.
-- Phase 3 is ready for self-review.
+- Phase 3 entered self-review.
+
+### Phase 3 Self-review — Iteration 1
+
+**Verdict:** failed — 3 Critical, 5 Important, 2 Medium
+
+**Findings:**
+
+- Report `--check` trusted report claims instead of validating schema and
+  recomputing assertions from a bound evidence bundle.
+- Scenario assertions trusted self-asserted booleans and did not prove exact
+  nine-task dispatch, accepted launches, review ordering, or final gate
+  evidence from durable sources.
+- Gate corroboration was incomplete and did not cross-check gate-owned fields.
+- Production evidence writers/adapters remained assigned to p05 but were not
+  yet represented by a tested p03 input contract.
+- Negative controls did not consume production-shaped preflight/launch
+  evidence and conflated pre-start rejection with post-acceptance fallback.
+- Runtime identity accepted self-reported/unknown provenance.
+- Collector input containment and Git revision validation were incomplete.
+- Three-task hand-authored assertion goldens did not exercise the nine-task
+  fixture or collector-to-report path.
+- Event/manifest normalization was not fully whitelisted.
+- Report JSON and Markdown publication could be interrupted between files.
+
+**Action:** bounded fix iteration 1 started in the root thread.
 
 ---
 
