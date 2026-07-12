@@ -8,6 +8,7 @@ const baseArgs = ['--harness', 'codex', '--scenario', 'plan-review'];
 
 test('parses required options with all stages by default', () => {
   assert.deepEqual(parseArgs(baseArgs), {
+    driveMode: 'automated',
     dryRun: false,
     harness: 'codex',
     keep: false,
@@ -25,6 +26,7 @@ test('accepts every harness and scenario enum value', () => {
       assert.deepEqual(
         parseArgs(['--harness', harness, '--scenario', scenario]),
         {
+          driveMode: 'automated',
           dryRun: false,
           harness,
           keep: false,
@@ -41,12 +43,24 @@ test('parses each stage and boolean flag', () => {
     assert.deepEqual(
       parseArgs([...baseArgs, '--stage', stage, '--dry-run', '--keep']),
       {
+        driveMode: 'automated',
         dryRun: true,
         harness: 'codex',
         keep: true,
         scenario: 'plan-review',
         stages: [stage],
       },
+    );
+  }
+});
+
+test('parses automated and operator drive modes', () => {
+  for (const driveMode of ['automated', 'operator']) {
+    const parsed = parseArgs([...baseArgs, '--drive-mode', driveMode]);
+    assert.equal(parsed.driveMode, driveMode);
+    assert.deepEqual(
+      parsed.stages,
+      driveMode === 'operator' ? ['prepare'] : ['prepare', 'drive', 'collect'],
     );
   }
 });
@@ -58,6 +72,7 @@ test('rejects missing required option values and unknown values with usage', () 
     ['--scenario'],
     ['--harness', 'unknown', '--scenario', 'full'],
     ['--harness', 'codex', '--scenario', 'unknown'],
+    [...baseArgs, '--drive-mode', 'unknown'],
     [...baseArgs, '--stage', 'unknown'],
   ];
 
@@ -75,6 +90,7 @@ test('rejects repeated options, flags, positional arguments, and unknown argumen
     [...baseArgs, '--harness', 'claude'],
     [...baseArgs, '--scenario', 'implement'],
     [...baseArgs, '--stage', 'prepare', '--stage', 'drive'],
+    [...baseArgs, '--drive-mode', 'operator', '--drive-mode', 'automated'],
     [...baseArgs, '--dry-run', '--dry-run'],
     [...baseArgs, '--keep', '--keep'],
     [...baseArgs, 'unexpected'],

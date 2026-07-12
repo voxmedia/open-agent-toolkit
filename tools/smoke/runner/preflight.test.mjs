@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   readdir,
   rm,
   utimes,
@@ -263,6 +264,19 @@ test('rejects an unknown forced-unavailable harness before running probes', asyn
   assert.equal(probesRun, 0);
 });
 
+test('accepts the canonical fixture seed headers and presets', async () => {
+  const probes = readyProbes();
+  delete probes.fixture;
+
+  const report = await runPreflight(
+    { fixturePath, harness: 'codex' },
+    { probes },
+  );
+
+  assert.equal(report.fixture.result, 'valid');
+  assert.equal(report.status, 'ready');
+});
+
 test('runs fixture integrity validation against a corrupt copied fixture', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-fixture-copy-'));
   const copiedFixture = join(directory, 'fixture');
@@ -337,6 +351,7 @@ test('rejects copied fixtures with preset or dispatch-matrix defects', async () 
           assert.equal(error.report.fixture.result, 'invalid');
           return true;
         },
+        `${name} corruption must fail preflight`,
       );
     }
   } finally {
@@ -434,6 +449,48 @@ test('rejects a PATH oat executable that differs from the local dist entrypoint'
         return true;
       },
     );
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+});
+
+test('accepts the repository-owned smoke OAT shim for local execution', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-path-oat-'));
+  const localOatPath = join(directory, 'local-oat');
+  const binDirectory = join(directory, 'bin');
+  const trustedOatCommandPath = join(binDirectory, 'oat');
+  const future = new Date(Date.now() + 60_000);
+
+  try {
+    await mkdir(binDirectory);
+    await Promise.all([
+      writeFile(
+        localOatPath,
+        `#!/bin/sh\n[ "$1" = "--version" ] || exit 1\necho ${packageVersion}\n`,
+      ),
+      writeFile(trustedOatCommandPath, '#!/bin/sh\nexit 99\n'),
+    ]);
+    await Promise.all([
+      chmod(localOatPath, 0o755),
+      chmod(trustedOatCommandPath, 0o755),
+      utimes(localOatPath, future, future),
+    ]);
+    const probes = readyProbes();
+    delete probes.oat;
+
+    const report = await runPreflight(
+      { harness: 'codex', localOatPath, trustedOatCommandPath },
+      {
+        env: {
+          ...process.env,
+          PATH: `${binDirectory}:${process.env.PATH}`,
+        },
+        probes,
+      },
+    );
+
+    assert.equal(report.oat.result, 'local');
+    assert.equal(report.oat.commandPath, await realpath(trustedOatCommandPath));
   } finally {
     await rm(directory, { force: true, recursive: true });
   }

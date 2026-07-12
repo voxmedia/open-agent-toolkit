@@ -1,10 +1,12 @@
 const HARNESS_VALUES = ['codex', 'claude', 'cursor-ide', 'cursor-cli'];
 const SCENARIO_VALUES = ['plan-review', 'implement', 'full'];
 const STAGE_VALUES = ['prepare', 'drive', 'collect'];
+const DRIVE_MODE_VALUES = ['automated', 'operator'];
 
 export const usage = `Usage: node tools/smoke/runner/run-smoke.mjs \
 --harness <${HARNESS_VALUES.join('|')}> \
 --scenario <${SCENARIO_VALUES.join('|')}> \
+[--drive-mode <${DRIVE_MODE_VALUES.join('|')}>] \
 [--stage <${STAGE_VALUES.join('|')}>] [--dry-run] [--keep]`;
 
 export class UsageError extends Error {
@@ -42,6 +44,7 @@ function assertNotRepeated(seen, option) {
 
 export function parseArgs(argv) {
   const options = {
+    driveMode: 'automated',
     dryRun: false,
     keep: false,
     stages: [...STAGE_VALUES],
@@ -54,6 +57,7 @@ export function parseArgs(argv) {
     if (
       option === '--harness' ||
       option === '--scenario' ||
+      option === '--drive-mode' ||
       option === '--stage'
     ) {
       assertNotRepeated(seen, option);
@@ -65,6 +69,9 @@ export function parseArgs(argv) {
       } else if (option === '--scenario') {
         assertEnum(option, value, SCENARIO_VALUES);
         options.scenario = value;
+      } else if (option === '--drive-mode') {
+        assertEnum(option, value, DRIVE_MODE_VALUES);
+        options.driveMode = value;
       } else {
         assertEnum(option, value, STAGE_VALUES);
         options.stages = [value];
@@ -94,8 +101,12 @@ export function parseArgs(argv) {
   if (!options.scenario) {
     throw new UsageError('--scenario is required.');
   }
+  if (options.driveMode === 'operator' && !seen.has('--stage')) {
+    options.stages = ['prepare'];
+  }
 
   return {
+    driveMode: options.driveMode,
     dryRun: options.dryRun,
     harness: options.harness,
     keep: options.keep,

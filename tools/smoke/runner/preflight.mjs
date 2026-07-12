@@ -146,6 +146,7 @@ async function defaultOatProbe({
   env = process.env,
   localOatPath = defaultLocalOatPath,
   packagePath = resolve(repositoryRoot, 'packages/cli/package.json'),
+  trustedCommandPath,
 } = {}) {
   try {
     const packageJson = JSON.parse(await readFile(packagePath, 'utf8'));
@@ -166,10 +167,12 @@ async function defaultOatProbe({
       resolveCommand('oat', env),
       commandRunner('git', ['rev-parse', 'HEAD']),
     ]);
-    const [resolvedLocalPath, resolvedCommandPath] = await Promise.all([
-      realpath(localOatPath),
-      oatCommandPath ? realpath(oatCommandPath) : null,
-    ]);
+    const [resolvedLocalPath, resolvedCommandPath, resolvedTrustedCommandPath] =
+      await Promise.all([
+        realpath(localOatPath),
+        oatCommandPath ? realpath(oatCommandPath) : null,
+        trustedCommandPath ? realpath(trustedCommandPath) : null,
+      ]);
     const revision = revisionResult.stdout.trim() || null;
     const fresh =
       entry.mtimeMs >= Math.max(sourceModifiedAt, packageModifiedAt.mtimeMs);
@@ -182,7 +185,8 @@ async function defaultOatProbe({
       localPath: resolvedLocalPath,
       revision,
       result:
-        resolvedCommandPath === resolvedLocalPath &&
+        (resolvedCommandPath === resolvedLocalPath ||
+          resolvedCommandPath === resolvedTrustedCommandPath) &&
         versionResult.code === 0 &&
         version === expectedVersion &&
         fresh
@@ -210,6 +214,14 @@ function validateFixtureContract(project) {
     '## Implementation Complete',
     '## References',
   ];
+  const requiredDispatchCandidates = [
+    'gpt-5.6-terra',
+    'gpt-5.6-sol',
+    'sonnet',
+    'opus',
+    'fixture-cursor-opaque-medium',
+    'fixture-cursor-opaque-high',
+  ];
 
   if (
     !/^---\n[\s\S]*?^oat_plan_source: quick$/m.test(plan) ||
@@ -227,6 +239,9 @@ function validateFixtureContract(project) {
     !/^---\n[\s\S]*?^oat_workflow_mode: quick$/m.test(project.state) ||
     !/^---\n[\s\S]*?^oat_dispatch_policy:\n\s+mode: managed$/m.test(
       project.state,
+    ) ||
+    requiredDispatchCandidates.some(
+      (candidate) => !project.state.includes(candidate),
     ) ||
     ['discovery', 'design'].some(
       (artifact) =>
@@ -282,9 +297,9 @@ async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
 
   const fixtureTestResult = await runCommand(process.execPath, [
     '--test',
-    ...fixtureTests.map((path) => resolve(defaultFixturePath, path)),
+    ...fixtureTests.map((path) => resolve(fixturePath, path)),
   ]);
-  if (fixturePath === defaultFixturePath && fixtureTestResult.code !== 0) {
+  if (fixtureTestResult.code !== 0) {
     return {
       reason: 'Repository fixture validators failed.',
       result: 'invalid',
@@ -326,6 +341,11 @@ async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
     const readyPreset = JSON.parse(implementationReady);
     const resetPreset = JSON.parse(preReview);
     const seedLogs = [p01, p02, p03];
+    const expectedSeedLogs = [
+      '# Smoke fixture phase p01 log',
+      '# Smoke fixture phase p02 log',
+      '# Smoke fixture phase p03 log',
+    ];
 
     if (
       readyPreset.name !== 'implementation-ready' ||
@@ -335,7 +355,7 @@ async function defaultFixtureProbe({ fixturePath = defaultFixturePath } = {}) {
       resetPreset.state?.frontmatter?.oat_phase !== 'plan' ||
       resetPreset.state?.frontmatter?.oat_current_task !== 'null' ||
       !/^oat_phase: plan$/m.test(state) ||
-      seedLogs.some((log) => log.trim() !== '')
+      seedLogs.some((log, index) => log.trim() !== expectedSeedLogs[index])
     ) {
       return {
         reason:
@@ -393,7 +413,7 @@ export function emitReadinessReport(report, write = console.log) {
 }
 
 export async function runPreflight(
-  { fixturePath, harness, localOatPath, packagePath },
+  { fixturePath, harness, localOatPath, packagePath, trustedOatCommandPath },
   { env = process.env, probes = {}, reporter } = {},
 ) {
   if (!HARNESS_COMMANDS[harness]) {
@@ -439,7 +459,13 @@ export async function runPreflight(
     fixture: await fixture({ fixturePath }),
     forcedUnavailable: forcedHarness ?? null,
     harnesses,
-    oat: await oat({ commandRunner, env, localOatPath, packagePath }),
+    oat: await oat({
+      commandRunner,
+      env,
+      localOatPath,
+      packagePath,
+      trustedCommandPath: trustedOatCommandPath,
+    }),
     selectedHarness: harness,
   };
   report.status = isReady(report, harness) ? 'ready' : 'blocked';

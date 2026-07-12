@@ -4,12 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 import { parseArgs } from './args.mjs';
 import { cleanupSmoke } from './cleanup.mjs';
+import { collectSmoke, driveSmoke, loadPreparedManifest } from './drive.mjs';
 import { runPreflight } from './preflight.mjs';
 import { provisionSmoke } from './provision.mjs';
 
 const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
+const smokeBinDirectory = join(repositoryRoot, 'tools/smoke/bin');
 const SIGNAL_EXIT_CODES = { SIGINT: 130, SIGTERM: 143 };
 
 export class HandlerUnavailableError extends Error {
@@ -205,6 +207,10 @@ function isCompleteLifecycle(stages) {
   );
 }
 
+function isCollectionOnly(stages) {
+  return stages.length === 1 && stages[0] === 'collect';
+}
+
 export async function runSmoke(
   options,
   {
@@ -318,7 +324,9 @@ export async function runSmoke(
     context.cleanupSafe &&
     !options.keep &&
     typeof cleanup === 'function' &&
-    (runError !== null || isCompleteLifecycle(options.stages));
+    (runError !== null ||
+      isCompleteLifecycle(options.stages) ||
+      isCollectionOnly(options.stages));
   let cleanupError = null;
 
   if (shouldCleanup) {
@@ -428,17 +436,16 @@ export async function main(
         runsDirectory,
       }));
   const defaultHandlers = {
-    async collect(collectOptions) {
-      if (!collectOptions.dryRun) {
-        throw new HandlerUnavailableError('collect');
-      }
-      return { evidence: 'empty', status: 'dry-run-stub' };
-    },
-    async drive(driveOptions) {
-      if (!driveOptions.dryRun) {
-        throw new HandlerUnavailableError('drive');
-      }
-      return { action: 'none', status: 'dry-run-stub' };
+    collect: (collectOptions, context) =>
+      collectSmoke(collectOptions, context, {
+        repository,
+        runsDirectory,
+      }),
+    async drive(driveOptions, context) {
+      context.manifest ??= await loadPreparedManifest(driveOptions, {
+        runsDirectory,
+      });
+      return driveSmoke(driveOptions, context);
     },
     async prepare(prepareOptions, context) {
       const pathsBefore = await listManifestPaths(runsDirectory);
@@ -447,6 +454,13 @@ export async function main(
       try {
         const manifest = await provision(prepareOptions, context);
         context.manifest = manifest;
+        if (
+          prepareOptions.driveMode === 'operator' ||
+          prepareOptions.harness === 'cursor-ide'
+        ) {
+          const handoff = await driveSmoke(prepareOptions, context);
+          return { handoff, manifest };
+        }
         return manifest;
       } catch (error) {
         context.manifest ??= await context.recoverManifest();
@@ -464,10 +478,20 @@ export async function main(
       preflight:
         preflight ??
         ((preflightOptions) =>
-          runPreflight(preflightOptions, {
-            probes: preflightOptions.dryRun ? dryRunProbes() : {},
-            reporter: console.log,
-          })),
+          runPreflight(
+            {
+              ...preflightOptions,
+              trustedOatCommandPath: join(smokeBinDirectory, 'oat'),
+            },
+            {
+              env: {
+                ...process.env,
+                PATH: `${smokeBinDirectory}:${process.env.PATH ?? ''}`,
+              },
+              probes: preflightOptions.dryRun ? dryRunProbes() : {},
+              reporter: console.log,
+            },
+          )),
       signalState,
     });
   } finally {

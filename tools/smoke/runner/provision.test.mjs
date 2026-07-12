@@ -124,8 +124,19 @@ test('uses flat collision-resistant deterministic branch names', () => {
     random: () => 'uuid/with:punctuation',
   });
 
-  assert.equal(branch, 'smoke-2026-07-11T20-30-45-123Z-uuidwithpunctuation');
+  assert.equal(
+    branch,
+    'smoke-automated-2026-07-11T20-30-45-123Z-uuidwithpunctuation',
+  );
   assert.doesNotMatch(branch, /\//);
+  assert.equal(
+    createBranchName({
+      clock: () => new Date('2026-07-11T20:30:45.123Z'),
+      driveMode: 'operator',
+      random: () => 'uuid/with:punctuation',
+    }),
+    'smoke-operator-2026-07-11T20-30-45-123Z-uuidwithpunctuation',
+  );
   assert.notEqual(
     branch,
     createBranchName({
@@ -138,7 +149,7 @@ test('uses flat collision-resistant deterministic branch names', () => {
 test('rejects a pre-existing branch collision without claiming or deleting it', async () => {
   const repository = await createRepository();
   const runsDirectory = join(repository, '.smoke-runs');
-  const branch = 'smoke-2026-07-11T20-30-45-123Z-collision';
+  const branch = 'smoke-automated-2026-07-11T20-30-45-123Z-collision';
   const manifestPath = join(
     runsDirectory,
     branch,
@@ -223,7 +234,15 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       },
     );
 
-    assert.equal(manifest.branch, 'smoke-2026-07-11T20-30-45-123Z-test-run');
+    assert.equal(
+      manifest.branch,
+      'smoke-automated-2026-07-11T20-30-45-123Z-test-run',
+    );
+    assert.equal(manifest.driveMode, 'automated');
+    assert.equal(
+      manifest.reportRoot,
+      join(repository, 'tools/smoke/reports/codex/implement'),
+    );
     assert.equal(manifest.appliedScenario, 'implement');
     assert.equal(manifest.sourceCommitSha, sourceCommitSha);
     assert.match(manifest.baselineCommitSha, /^[0-9a-f]{40}$/);
@@ -298,7 +317,11 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       ),
     );
     assert.equal(config.activeProject, manifest.fixtureProjectPath);
-    assert.deepEqual(config.smoke, { harness: 'codex', scenario: 'implement' });
+    assert.deepEqual(config.smoke, {
+      driveMode: 'automated',
+      harness: 'codex',
+      scenario: 'implement',
+    });
     assert.deepEqual(config.workflow.postImplementSequence, {
       preApproval: [],
       postApproval: [],
@@ -445,7 +468,7 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
 test('preserves a partial manifest when fixture copying fails', async () => {
   const repository = await createRepository();
   const runsDirectory = join(repository, '.smoke-runs');
-  const branch = 'smoke-2026-07-11T20-30-45-123Z-copy-fails';
+  const branch = 'smoke-automated-2026-07-11T20-30-45-123Z-copy-fails';
   const manifestPath = join(
     runsDirectory,
     branch,

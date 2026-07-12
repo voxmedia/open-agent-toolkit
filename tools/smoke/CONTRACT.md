@@ -7,6 +7,8 @@ The runner writes one JSON provisioning manifest before drive. It includes:
 ```json
 {
   "appliedScenario": "plan-review | implement | full",
+  "driveMode": "automated | operator",
+  "reportRoot": "/absolute/parent/tools/smoke/reports/<harness>[/operator]/<scenario>",
   "worktreePath": "/absolute/disposable/worktree",
   "fixtureProjectPath": "/absolute/disposable/worktree/.oat/projects/smoke-fixture",
   "createdPaths": [],
@@ -38,6 +40,12 @@ The runner writes one JSON provisioning manifest before drive. It includes:
   "provisioningState": "ready",
   "readiness": {
     "status": "ready"
+  },
+  "drive": {
+    "driveMode": "automated | operator",
+    "protocol": "tools/smoke/protocols/<harness>.md",
+    "promptSha256": "64-character lowercase SHA-256 digest",
+    "status": "dry-run-stub | awaiting-operator | running | completed | failed | operator-returned"
   },
   "intendedCloseoutPolicy": {
     "source": "local",
@@ -107,7 +115,10 @@ The runner writes one JSON provisioning manifest before drive. It includes:
 ```
 
 `appliedScenario` is the authoritative scenario selector for evidence
-assertions. `createdPaths`, `branch`, and `worktreePath` are the cleanup
+assertions. `driveMode` is part of the immutable run identity: branch names
+carry `automated` or `operator`, and report roots are disjoint. Operator reports
+always use the extra `operator/` path segment and never replace canonical
+automated reports. `createdPaths`, `branch`, and `worktreePath` are the cleanup
 allowlist.
 
 Manifest updates are published with a sibling temporary file and atomic rename.
@@ -131,6 +142,37 @@ that commit but excluded from it, so the provisioning worktree remains clean
 except for the expected untracked `.oat/config.local.json`. Child worktrees
 inherit the marker, fixture, and workspace while the marker identifies the
 absolute config source, its SHA-256 digest, and the provisioning manifest.
+
+Automated CLI drives run all stages by default:
+
+```sh
+node tools/smoke/runner/run-smoke.mjs \
+  --harness <codex|claude|cursor-cli> \
+  --scenario <plan-review|implement|full>
+```
+
+Preflight and every provider process prepend the committed
+`tools/smoke/bin/oat` shim to `PATH`. The shim resolves the current worktree's
+built `packages/cli/dist/index.js`; preflight accepts only that repository-owned
+shim or the dist entrypoint itself and still rejects an unrelated global
+executable. Printed operator handoffs include the same `PATH` prefix.
+
+Operator-interactive drives are split so a noninteractive command cannot run
+by accident:
+
+```sh
+node tools/smoke/runner/run-smoke.mjs \
+  --harness <harness> --scenario <scenario> \
+  --drive-mode operator --stage prepare
+# Run the printed command and prompt in the operator TTY.
+node tools/smoke/runner/run-smoke.mjs \
+  --harness <harness> --scenario <scenario> \
+  --drive-mode operator --stage collect
+```
+
+Cursor IDE uses the same prepare/collect shape without substituting a CLI drive;
+its canonical report root omits the `operator/` segment because IDE execution is
+operator-driven by definition.
 
 Before normal worktree initialization performs any copy, the init script checks
 for the tracked smoke marker and validates it against the ready manifest and

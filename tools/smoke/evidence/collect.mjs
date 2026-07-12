@@ -1402,6 +1402,8 @@ function normalizeManifest(manifest) {
     effectiveSmokeBootstrap: normalizeBootstrap(
       manifest.effectiveSmokeBootstrap,
     ),
+    driveMode: optionalString(manifest.driveMode),
+    driveStatus: optionalString(manifest.drive?.status),
     harness: optionalString(manifest.harness),
     ownershipJournal,
     provisioningState: optionalString(manifest.provisioningState),
@@ -1640,6 +1642,7 @@ export async function collectEvidence({
           (resource) => resource.worktreePath,
         ),
         manifestPath,
+        reportRoot: manifest.reportRoot ?? null,
         writableRoots: manifest.writableRoots ?? [],
         worktreePath: manifest.worktreePath,
       },

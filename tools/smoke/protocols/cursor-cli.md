@@ -1,0 +1,45 @@
+# Cursor CLI Smoke Drive Protocol
+
+## Expected topology
+
+Cursor CLI is a separate flavor from Cursor IDE. The run records its live root
+Subagent catalog and may claim native selection or nesting only when structured
+events prove it. An accepted interrupted child is terminal; it does not permit
+a replacement route.
+
+## Automated invocation
+
+The runner executes `cursor-agent --print --force --trust` with stream JSON and
+an explicit workspace. Canonical evidence writes to
+`tools/smoke/reports/cursor-cli/<scenario>/`.
+
+## Operator-interactive handoff
+
+`--drive-mode operator --stage prepare` prints an interactive `cursor-agent`
+command and canned prompt for the disposable worktree. Run it in a TTY and
+collect after completion. Operator evidence writes to
+`tools/smoke/reports/cursor-cli/operator/<scenario>/`.
+
+## Canned root prompt
+
+<!-- OAT_SMOKE_PROMPT_START -->
+
+```text
+Drive the active OAT smoke-fixture project for scenario {{SCENARIO}}.
+
+{{SCENARIO_INSTRUCTIONS}}
+
+Use the repository's normal OAT workflow skills. Treat Cursor CLI as its own
+harness: observe this invocation's native catalog, select exact native targets
+only from that snapshot, and select any CLI route before launch. Before every
+child launch, preserve launcher-owned selection, acceptance, outcome, and
+runtime-identity evidence as separate facts. Write immutable dispatch and
+state-transition records only through tools/smoke/evidence/record.mjs,
+following tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
+
+Do not infer Cursor IDE behavior, modify the parent worktree or persisted user
+configuration, or replace an accepted child launch. Work only in this
+disposable worktree and commit each fixture task exactly as planned.
+```
+
+<!-- OAT_SMOKE_PROMPT_END -->

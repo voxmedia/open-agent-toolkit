@@ -409,7 +409,7 @@ for (const { name, provisionOptions } of [
     });
     const collateralPath = join(repository, 'collateral.txt');
     await writeFile(collateralPath, 'preserve me\n');
-    const branch = `smoke-2026-07-11T20-30-45-123Z-${name.replaceAll(' ', '-')}`;
+    const branch = `smoke-automated-2026-07-11T20-30-45-123Z-${name.replaceAll(' ', '-')}`;
     const manifestPath = join(
       runsDirectory,
       branch,
@@ -454,7 +454,8 @@ for (const { name, provisionOptions } of [
 test('refuses cleanup when a pre-baseline branch has advanced', async () => {
   const repository = await createRepository('oat-smoke-pre-baseline-advance-');
   const runsDirectory = join(repository, '.smoke-runs');
-  const branch = 'smoke-2026-07-11T20-30-45-123Z-pre-baseline-advance';
+  const branch =
+    'smoke-automated-2026-07-11T20-30-45-123Z-pre-baseline-advance';
   const manifestPath = join(
     runsDirectory,
     branch,
@@ -562,7 +563,7 @@ test('full dry-run preserves repository and user config while cleaning all resou
       'cleanup',
     ]);
     assert.deepEqual(calls, ['preflight', 'provision', 'cleanup']);
-    assert.equal(result.drive.status, 'dry-run-stub');
+    assert.equal(result.drive.record.status, 'dry-run-stub');
     assert.equal(result.collect.status, 'dry-run-stub');
     assert.equal(result.cleanup.status, 'cleaned');
     assert.equal(

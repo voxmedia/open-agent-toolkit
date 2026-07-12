@@ -209,6 +209,8 @@ async function createGoldenRun() {
       runIdentity: 'smoke-golden',
     },
     commonGitDir,
+    drive: { status: 'completed' },
+    driveMode: 'automated',
     effectiveCloseoutPolicy: {
       source: 'local',
       value: { postApproval: [], preApproval: [] },
@@ -229,6 +231,7 @@ async function createGoldenRun() {
     },
     provisioningState: 'ready',
     readiness: { status: 'ready' },
+    reportRoot: join(runDirectory, 'reports'),
     runIdentity: 'smoke-golden',
     sourceCommitSha,
     worktreePath,
@@ -357,6 +360,8 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.deepEqual(JSON.parse(await readFile(outputPath, 'utf8')), bundle);
     assert.equal(bundle.schemaVersion, 1);
     assert.equal(bundle.scenario, 'implement');
+    assert.equal(bundle.manifest.driveMode, 'automated');
+    assert.equal(bundle.manifest.driveStatus, 'completed');
     assert.deepEqual(bundle.fixture.taskIds, [
       'p01-t01',
       'p01-t02',

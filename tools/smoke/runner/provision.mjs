@@ -89,11 +89,16 @@ function relativeToAbsolute(path, cwd) {
   return isAbsolute(path) ? path : resolve(cwd, path);
 }
 
-function smokeConfigContents({ fixtureProjectPath, harness, scenario }) {
+function smokeConfigContents({
+  driveMode,
+  fixtureProjectPath,
+  harness,
+  scenario,
+}) {
   return `${JSON.stringify(
     {
       activeProject: fixtureProjectPath,
-      smoke: { harness, scenario },
+      smoke: { driveMode, harness, scenario },
       workflow: { postImplementSequence: SMOKE_CLOSEOUT_POLICY },
     },
     null,
@@ -166,8 +171,10 @@ function createManifest({
   appliedScenario,
   branch,
   commonGitDir,
+  driveMode,
   harness,
   manifestPath,
+  reportRoot,
   runPath,
   sourceCommitSha,
   worktreePath,
@@ -178,6 +185,7 @@ function createManifest({
   const configSha256 = sha256(
     smokeConfigContents({
       fixtureProjectPath,
+      driveMode,
       harness,
       scenario: appliedScenario,
     }),
@@ -190,6 +198,7 @@ function createManifest({
     commonGitDir,
     createdPaths: [manifestPath, runPath],
     fixtureProjectPath,
+    driveMode,
     harness,
     intendedCloseoutPolicy: {
       source: 'local',
@@ -210,6 +219,7 @@ function createManifest({
       schemaVersion: 1,
     },
     provisioningState: 'initializing',
+    reportRoot,
     readiness: {
       reason: 'provisioning',
       status: 'not-ready',
@@ -238,8 +248,12 @@ async function saveManifest(manifest, fileSystem) {
 
 export function createBranchName({
   clock = () => new Date(),
+  driveMode = 'automated',
   random = randomUUID,
 } = {}) {
+  if (!['automated', 'operator'].includes(driveMode)) {
+    throw new TypeError(`Unknown smoke drive mode: ${driveMode}`);
+  }
   const timestamp = formatTimestamp(clock()).replace(/[^A-Za-z0-9-]/g, '-');
   const nonce = String(random()).replace(/[^A-Za-z0-9-]/g, '');
 
@@ -249,11 +263,11 @@ export function createBranchName({
     );
   }
 
-  return `smoke-${timestamp}-${nonce}`;
+  return `smoke-${driveMode}-${timestamp}-${nonce}`;
 }
 
 export async function provisionSmoke(
-  { harness, scenario },
+  { driveMode = 'automated', harness, scenario },
   {
     applyPreset = applyPresetToFixture,
     clock,
@@ -267,10 +281,19 @@ export async function provisionSmoke(
   } = {},
 ) {
   const preset = assertScenario(scenario);
-  const branch = createBranchName({ clock, random });
+  const branch = createBranchName({ clock, driveMode, random });
   const runPath = join(runsDirectory, branch);
   const worktreePath = join(runPath, 'worktree');
   const manifestPath = join(runPath, 'provisioning-manifest.json');
+  const reportRoot = join(
+    repository,
+    'tools',
+    'smoke',
+    'reports',
+    harness,
+    ...(driveMode === 'operator' ? ['operator'] : []),
+    scenario,
+  );
   const existingBranch = await git(['branch', '--list', branch], {
     cwd: repository,
   });
@@ -289,8 +312,10 @@ export async function provisionSmoke(
     appliedScenario: scenario,
     branch,
     commonGitDir,
+    driveMode,
     harness,
     manifestPath,
+    reportRoot,
     runPath,
     sourceCommitSha,
     worktreePath,
@@ -348,6 +373,7 @@ export async function provisionSmoke(
     applyPreset(preset, manifest.fixtureProjectPath);
     const configPath = join(worktreePath, '.oat/config.local.json');
     const configContents = smokeConfigContents({
+      driveMode,
       fixtureProjectPath: manifest.fixtureProjectPath,
       harness,
       scenario,
