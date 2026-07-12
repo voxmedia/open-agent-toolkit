@@ -1055,7 +1055,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -1082,6 +1082,12 @@ describe('validateOatSkills', () => {
     expect(creation).toContain(
       'git -C "$TARGET_PATH" ls-files --error-unmatch -- ".oat/smoke-bootstrap.json"',
     );
+    expect(creation).toContain(
+      'node "$TARGET_PATH/tools/smoke/runner/journal.mjs" register',
+    );
+    expect(creation.indexOf('journal.mjs" register')).toBeLessThan(
+      creation.indexOf('On failure: return structured error'),
+    );
     expect(content).toContain(
       'Prefer an explicit worktree bootstrap command when the repository declares',
     );
@@ -1090,6 +1096,8 @@ describe('validateOatSkills', () => {
     expect(content).toContain(
       'Source smoke preflight already owns dependency, build, and repository-wide test',
     );
+    expect(content).toContain('`bash scripts/worktree/init.sh`, not');
+    expect(content).toContain('`pnpm run worktree:init`');
     expect(content).not.toContain('source-commit-bound dependency');
   });
 

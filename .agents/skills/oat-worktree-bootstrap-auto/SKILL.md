@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.3
+version: 1.5.4
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -162,6 +162,26 @@ Any failed check is a fatal containment failure with
 `reason: smoke-marker-invalid`, regardless of baseline policy. Do not fall
 through to normal mode.
 
+Immediately after those marker checks, register the child from the parent
+orchestrator before running any command inside it:
+
+```bash
+SMOKE_MANIFEST=$(
+  node -e \
+    "const marker=require(process.argv[1]); process.stdout.write(marker.manifestPath)" \
+    "$SMOKE_MARKER"
+)
+node "$TARGET_PATH/tools/smoke/runner/journal.mjs" register \
+  --manifest "$SMOKE_MANIFEST" \
+  --marker "$SMOKE_MARKER" \
+  --worktree "$TARGET_PATH"
+```
+
+Registration is idempotent, so the repository's smoke-safe bootstrap may
+register the same child again. This parent-side registration must happen before
+the first child process: a package-manager, shell, or bootstrap-launch failure
+must not leave an unjournaled worktree that cleanup cannot safely own.
+
 On failure: return structured error, do not prompt.
 
 ### Step 2.5: Propagate Local-Only Config + Local Paths
@@ -280,6 +300,10 @@ unsafe, or malformed or a journal/config/bootstrap check failed. Never
 apply `allow-failing` to that result. Run the remaining read-only/local checks
 only after safe init succeeds. Never run PATH-resolved `oat` in smoke mode; the
 built repository-local CLI entrypoint is the only permitted OAT executable.
+Invoke the repository's direct smoke-safe entrypoint, not a package-manager
+wrapper that may perform installation before reaching it. In this repository
+that command is `bash scripts/worktree/init.sh`, not
+`pnpm run worktree:init`.
 
 Check behavior per baseline policy:
 

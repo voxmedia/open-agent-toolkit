@@ -244,19 +244,25 @@ Cursor IDE uses the same prepare/collect shape without substituting a CLI drive;
 its canonical report root omits the `operator/` segment because IDE execution is
 operator-driven by definition.
 
-Before normal worktree initialization performs any copy, the init script checks
-for the tracked smoke marker and validates it against the ready manifest and
-baseline commit. It then atomically journals the actual attached child branch,
+Immediately after a nested worktree is created, the parent orchestrator
+validates its tracked marker and journals the actual attached child branch,
 canonical worktree path, shared Git common directory, and child ownership
-baseline. Journal failure aborts before repository setup. A valid marker selects
-a closed containment path that copies only the recorded smoke config and
+baseline. No child process may start before this parent-side registration.
+Registration is idempotent, so the init script repeats the same validation and
+journal operation before any copy. Journal failure aborts before repository
+setup.
+
+For this repository, the first child command is the direct smoke-safe entrypoint
+`bash scripts/worktree/init.sh`. Provider agents must not invoke it through
+`pnpm run worktree:init`, because package-manager startup may perform a network
+fetch before the script can select its smoke path. A valid marker selects a
+closed containment path that copies only the recorded smoke config and
 byte-compares it. Dependency installation, build, and validation remain owned
-by the repository bootstrap procedure selected through the worktree-bootstrap
-skill; the runner does not prescribe a package manager, dependency store, or
-setup commands. Primary environment, MCP, local-project, and archive copies
-remain disabled, as do S3 archive sync, shared-hook setup, local-path sync, and
-provider-view sync. Missing, malformed, untracked, or out-of-run marker/config
-bindings fail before repository bootstrap can begin.
+by repository bootstrap outside smoke mode; the runner does not prescribe a
+package manager or dependency store. Primary environment, MCP, local-project,
+and archive copies remain disabled, as do S3 archive sync, shared-hook setup,
+local-path sync, and provider-view sync. Missing, malformed, untracked, or
+out-of-run marker/config bindings fail before repository bootstrap can begin.
 
 `branchOwnership` is absent until this run successfully creates the branch. Its
 source and immutable baseline SHAs bind cleanup authority to the created ref; a

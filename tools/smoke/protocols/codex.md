@@ -56,6 +56,13 @@ smoke run to sequential execution or replace an aborted handle. Gate liveness
 reports elapsed, idle, and hard-budget milliseconds; activity proves liveness,
 not completion, and never extends the hard budget.
 
+For each child worktree, follow `oat-worktree-bootstrap-auto` exactly. After
+`git worktree add`, register the child in the manifest ownership journal before
+running its first process. Then invoke the direct smoke-safe entrypoint with
+`bash scripts/worktree/init.sh` from the child. Do not invoke
+`pnpm run worktree:init`: Corepack or package-manager startup may fetch before
+the smoke-safe script can register ownership and short-circuit dependency work.
+
 Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
 final code gate after p03, and `full` runs those two gates. Phase self-reviews
 still run once per phase, but each reviewer receives only that phase's commit
