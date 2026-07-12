@@ -1,0 +1,89 @@
+{
+  "scenario": "implement",
+  "manifest": {
+    "appliedScenario": "implement",
+    "provisioningState": "ready",
+    "readiness": {
+      "status": "ready"
+    }
+  },
+  "fixture": {
+    "planHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "taskIds": ["p01-t01", "p02-t01", "p03-t01"]
+  },
+  "dispatches": [
+    {
+      "scope": "p01-t01",
+      "action": "implementation",
+      "configuredInvocation": {
+        "target": "cursor-native:sol",
+        "modelAxis": "selected:sol"
+      },
+      "selection": {
+        "atOrBelowCeiling": true
+      },
+      "runtimeIdentity": {
+        "status": "reported"
+      }
+    },
+    {
+      "scope": "p02-t01",
+      "action": "implementation",
+      "configuredInvocation": {
+        "target": "cursor-cli:terra",
+        "modelAxis": "selected:terra"
+      },
+      "selection": {
+        "atOrBelowCeiling": true
+      },
+      "runtimeIdentity": {
+        "status": "not-reported"
+      }
+    },
+    {
+      "scope": "p03-t01",
+      "action": "implementation",
+      "configuredInvocation": {
+        "target": "cursor-native:sol",
+        "modelAxis": "selected:sol"
+      },
+      "selection": {
+        "atOrBelowCeiling": true
+      },
+      "runtimeIdentity": {
+        "status": "not-reported"
+      }
+    }
+  ],
+  "reviews": [
+    {
+      "path": "reviews/p03-review.md",
+      "corroboration": {
+        "oat_gate_run_id": "implement-gate",
+        "oat_gate_target": "claude-fable",
+        "oat_gate_runtime": "claude"
+      }
+    }
+  ],
+  "orchestrationEvents": [
+    {
+      "sequence": 1,
+      "event": "parallel-isolation-verified",
+      "disjointWrites": true,
+      "separateWorktrees": true,
+      "flatBranchNames": true
+    },
+    {
+      "sequence": 2,
+      "event": "fan-in-completed",
+      "dependenciesComplete": true,
+      "reconciled": true
+    },
+    {
+      "sequence": 3,
+      "event": "review-disposition-committed",
+      "durable": true,
+      "committed": true
+    }
+  ]
+}
