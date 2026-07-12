@@ -41,6 +41,11 @@ The `oat` command is already bound to the preflight-verified source build
 through the smoke environment. Use it directly; do not install dependencies,
 bootstrap this outer worktree, or invoke `pnpm run cli`.
 
+For each required external review gate, invoke `oat gate review` exactly once
+with `--target {{GATE_TARGET}}`. You may inspect `oat gate target list`, but
+never invoke a gate as a probe. An accepted failed gate is terminal for that
+gate and must not be replaced.
+
 Do not infer Cursor IDE behavior, modify the parent worktree or persisted user
 configuration, or replace an accepted child launch. Work only in this
 disposable worktree and commit each fixture task exactly as planned.

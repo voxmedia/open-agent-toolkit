@@ -302,6 +302,7 @@ function validateManifest(manifest, runsDirectory) {
     const allowed =
       normalizedPath === runPath ||
       normalizedPath === manifestPath ||
+      isWithin(runPath, normalizedPath) ||
       isWithin(worktreePath, normalizedPath);
 
     if (!allowed || normalizedPath === smokeRoot) {

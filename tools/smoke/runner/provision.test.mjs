@@ -17,7 +17,11 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
-import { createBranchName, provisionSmoke } from './provision.mjs';
+import {
+  createBranchName,
+  gateTargetForHarness,
+  provisionSmoke,
+} from './provision.mjs';
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, '../../..');
@@ -146,6 +150,14 @@ test('uses flat collision-resistant deterministic branch names', () => {
   );
 });
 
+test('selects a deterministic cross-runtime gate target per harness', () => {
+  assert.equal(gateTargetForHarness('codex'), 'cursor-default');
+  assert.equal(gateTargetForHarness('claude'), 'codex-5-6-sol-max');
+  assert.equal(gateTargetForHarness('cursor-cli'), 'codex-5-6-sol-max');
+  assert.equal(gateTargetForHarness('cursor-ide'), 'codex-5-6-sol-max');
+  assert.throws(() => gateTargetForHarness('unknown'), /No independent/);
+});
+
 test('rejects a pre-existing branch collision without claiming or deleting it', async () => {
   const repository = await createRepository();
   const runsDirectory = join(repository, '.smoke-runs');
@@ -247,6 +259,7 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     assert.equal(manifest.sourceCommitSha, sourceCommitSha);
     assert.match(manifest.baselineCommitSha, /^[0-9a-f]{40}$/);
     assert.notEqual(manifest.baselineCommitSha, sourceCommitSha);
+    assert.equal(manifest.gateTarget, 'cursor-default');
     assert.deepEqual(manifest.branchOwnership, {
       baseCommitSha: sourceCommitSha,
       baselineCommitSha: manifest.baselineCommitSha,

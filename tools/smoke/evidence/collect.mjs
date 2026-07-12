@@ -547,7 +547,28 @@ function normalizeOrchestrationEvent(record, index) {
   });
 }
 
-async function readJsonDirectory(directory, root, label) {
+function parseJsonRecord(contents, { allowPreamble = false } = {}) {
+  try {
+    return JSON.parse(contents);
+  } catch (error) {
+    if (!allowPreamble) {
+      throw error;
+    }
+    const trimmed = contents.trim();
+    const envelopeStart = trimmed.lastIndexOf('\n{');
+    if (envelopeStart < 0) {
+      throw error;
+    }
+    return JSON.parse(trimmed.slice(envelopeStart + 1));
+  }
+}
+
+async function readJsonDirectory(
+  directory,
+  root,
+  label,
+  { allowPreamble = false } = {},
+) {
   let entries;
   try {
     entries = await readdir(directory, { withFileTypes: true });
@@ -567,7 +588,9 @@ async function readJsonDirectory(directory, root, label) {
     const path = join(directory, entry.name);
     let value;
     try {
-      value = JSON.parse(await safeReadFile(path, root, label));
+      value = parseJsonRecord(await safeReadFile(path, root, label), {
+        allowPreamble,
+      });
     } catch (error) {
       throw new EvidenceCollectionError(
         `${label} ${entry.name} is invalid: ${error.message}`,
@@ -722,6 +745,60 @@ async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
   const corroboration = isPlainObject(record.corroboration)
     ? record.corroboration
     : {};
+  const runId = requireString(record.runId, `gate[${index}].runId`);
+  const target = requireString(
+    record.target ?? invocation.targetId,
+    `gate[${index}].target`,
+  );
+  const runtime = requireString(invocation.runtime, `gate[${index}].runtime`);
+  const scope = requireString(
+    record.scope ?? record.dispatchReport?.route?.scope,
+    `gate[${index}].scope`,
+  );
+  if (typeof record.artifactPath !== 'string' || record.artifactPath === '') {
+    const projectPath = await normalizeProjectIdentity(
+      record.project,
+      worktreePath,
+      `gate[${index}].project`,
+    );
+    if (projectPath !== relative(worktreePath, fixtureProjectPath)) {
+      throw new EvidenceCollectionError(
+        `gate[${index}].project does not match the fixture project.`,
+      );
+    }
+    return {
+      activeArtifactPath: null,
+      archived: false,
+      artifactHash: null,
+      artifactPath: null,
+      blocking: record.blocking === true,
+      committedArtifact: null,
+      configuredInvocation: {
+        effort: optionalString(invocation.reasoningEffort),
+        model: optionalString(invocation.model),
+        source: optionalString(invocation.source),
+      },
+      corroboration: {
+        invocation: optionalString(corroboration.invocation),
+        project: optionalString(corroboration.project),
+        run: optionalString(corroboration.run),
+      },
+      invocation: optionalString(record.invocation),
+      invocationConsistent:
+        invocation.runId === runId &&
+        invocation.targetId === target &&
+        sameGateInvocation(invocation, record.dispatchReport?.gateInvocation),
+      outcome: optionalString(record.outcome),
+      projectPath,
+      receiveCommit: { rowMatched: false, sha: null },
+      receiveEligible: false,
+      runId,
+      runtime,
+      scope,
+      status: optionalString(record.status),
+      target,
+    };
+  }
   const artifactPath = requireString(
     record.artifactPath,
     `gate[${index}].artifactPath`,
@@ -832,11 +909,11 @@ async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
     projectPath,
     receiveCommit,
     receiveEligible: record.receiveEligible === true,
-    runId: requireString(record.runId, `gate[${index}].runId`),
-    runtime: requireString(invocation.runtime, `gate[${index}].runtime`),
-    scope: requireString(record.scope, `gate[${index}].scope`),
+    runId,
+    runtime,
+    scope,
     status: optionalString(record.status),
-    target: requireString(record.target, `gate[${index}].target`),
+    target,
   };
 }
 
@@ -1404,6 +1481,7 @@ function normalizeManifest(manifest) {
     ),
     driveMode: optionalString(manifest.driveMode),
     driveStatus: optionalString(manifest.drive?.status),
+    gateTarget: optionalString(manifest.gateTarget),
     harness: optionalString(manifest.harness),
     ownershipJournal,
     provisioningState: optionalString(manifest.provisioningState),
@@ -1584,6 +1662,7 @@ export async function collectEvidence({
           join(canonicalWorktree, GATE_DIRECTORY),
           canonicalWorktree,
           'Gate result',
+          { allowPreamble: true },
         )
       ).map((record, index) =>
         normalizeGate(record, index, fixtureProjectPath, canonicalWorktree),

@@ -104,7 +104,7 @@ async function createGoldenRun() {
   await mkdir(gateDirectory, { recursive: true });
   await writeFile(
     join(gateDirectory, 'p03.json'),
-    `${JSON.stringify(
+    `provider diagnostic before envelope\n${JSON.stringify(
       {
         artifactPath: '.oat/projects/smoke-fixture/reviews/p03-review.md',
         blocking: false,
@@ -216,6 +216,7 @@ async function createGoldenRun() {
       value: { postApproval: [], preApproval: [] },
     },
     fixtureProjectPath,
+    gateTarget: 'claude-fable-skip-permissions',
     harness: 'cursor-cli',
     manifestPath,
     ownershipJournal: {
@@ -362,6 +363,7 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.equal(bundle.scenario, 'implement');
     assert.equal(bundle.manifest.driveMode, 'automated');
     assert.equal(bundle.manifest.driveStatus, 'completed');
+    assert.equal(bundle.manifest.gateTarget, 'claude-fable-skip-permissions');
     assert.deepEqual(bundle.fixture.taskIds, [
       'p01-t01',
       'p01-t02',
@@ -506,6 +508,76 @@ test('collects a deterministic normalized evidence bundle', async () => {
       false,
       'normalized sections do not leak absolute temp paths',
     );
+  } finally {
+    await cleanupGoldenRun(run);
+  }
+});
+
+test('normalizes a terminal failed gate without an artifact', async () => {
+  const run = await createGoldenRun();
+  const gatePath = join(run.worktreePath, 'workspace/evidence/gates/p03.json');
+  const invocation = {
+    model: 'provider-default',
+    reasoningEffort: 'provider-default',
+    runId: 'failed-gate-run',
+    runtime: 'cursor',
+    source: 'exec-target-config',
+    targetId: 'cursor-default',
+  };
+
+  try {
+    await writeFile(
+      gatePath,
+      `provider diagnostic\n${JSON.stringify({
+        dispatchReport: {
+          gateInvocation: invocation,
+          route: { scope: 'plan' },
+        },
+        gateInvocation: invocation,
+        outcome: 'review_did_not_complete',
+        project: '.oat/projects/smoke-fixture',
+        runId: 'failed-gate-run',
+        status: 'review_failed',
+        target: 'cursor-default',
+      })}\n`,
+    );
+    const { bundle } = await collectEvidence({
+      manifestPath: run.manifestPath,
+      outDirectory: join(run.repository, 'failed-gate-evidence'),
+      worktreePath: run.worktreePath,
+    });
+
+    assert.deepEqual(bundle.gates, [
+      {
+        activeArtifactPath: null,
+        archived: false,
+        artifactHash: null,
+        artifactPath: null,
+        blocking: false,
+        committedArtifact: null,
+        configuredInvocation: {
+          effort: 'provider-default',
+          model: 'provider-default',
+          source: 'exec-target-config',
+        },
+        corroboration: {
+          invocation: null,
+          project: null,
+          run: null,
+        },
+        invocation: null,
+        invocationConsistent: true,
+        outcome: 'review_did_not_complete',
+        projectPath: '.oat/projects/smoke-fixture',
+        receiveCommit: { rowMatched: false, sha: null },
+        receiveEligible: false,
+        runId: 'failed-gate-run',
+        runtime: 'cursor',
+        scope: 'plan',
+        status: 'review_failed',
+        target: 'cursor-default',
+      },
+    ]);
   } finally {
     await cleanupGoldenRun(run);
   }

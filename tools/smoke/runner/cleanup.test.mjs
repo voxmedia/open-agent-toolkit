@@ -103,6 +103,16 @@ test('removes a lifecycle-advanced outer branch in dependency order and is idemp
     await git(['commit', '-m', 'test: complete smoke lifecycle'], {
       cwd: manifest.worktreePath,
     });
+    const driveOutputPath = join(
+      dirname(manifest.manifestPath),
+      'drive-output.json',
+    );
+    await writeFile(driveOutputPath, '{"status":"completed"}\n');
+    manifest.createdPaths.push(driveOutputPath);
+    await writeFile(
+      manifest.manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
     const result = await cleanup(repository, manifest);
 
     assert.equal(result.status, 'cleaned');

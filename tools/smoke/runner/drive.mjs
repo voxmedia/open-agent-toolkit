@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { collectEvidence } from '../evidence/collect.mjs';
 import { emitEvidenceReport } from '../evidence/report.mjs';
+import { gateTargetForHarness } from './provision.mjs';
 
 const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
@@ -108,14 +109,16 @@ function extractPromptTemplate(contents, path) {
 }
 
 export async function loadProtocol(
-  { harness, scenario },
+  { gateTarget, harness, scenario },
   { read = readFile } = {},
 ) {
+  gateTarget ??= gateTargetForHarness(harness);
   const path = protocolPathFor(harness);
   const contents = await read(path, 'utf8');
   const prompt = extractPromptTemplate(contents, path)
     .replaceAll('{{SCENARIO}}', scenario)
-    .replaceAll('{{SCENARIO_INSTRUCTIONS}}', scenarioInstruction(scenario));
+    .replaceAll('{{SCENARIO_INSTRUCTIONS}}', scenarioInstruction(scenario))
+    .replaceAll('{{GATE_TARGET}}', gateTarget);
   return { contents, path, prompt };
 }
 
@@ -279,7 +282,10 @@ export async function driveSmoke(
 ) {
   const manifest = context.manifest;
   assertReady(options, context, manifest);
-  const protocol = await loadProtocol(options);
+  const protocol = await loadProtocol({
+    ...options,
+    gateTarget: manifest.gateTarget,
+  });
   const plan = createInvocationPlan({
     ...options,
     prompt: protocol.prompt,
@@ -422,14 +428,20 @@ export async function collectSmoke(
     bundlePath: collected.outputPath,
     outDirectory: manifest.reportRoot,
   });
+  const passed = report.report.status === 'passed';
   manifest.collection = {
     bundlePath: collected.outputPath,
     reportPath: report.jsonPath,
-    status: 'completed',
+    status: passed ? 'completed' : 'failed',
   };
   if (manifest.drive.status === 'awaiting-operator') {
     manifest.drive.status = 'operator-returned';
   }
   await atomicWriteJson(manifest.manifestPath, manifest);
+  if (!passed) {
+    throw new DriveError(
+      `Smoke evidence report failed ${report.report.summary.failed} assertion(s).`,
+    );
+  }
   return { collected, report };
 }

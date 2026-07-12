@@ -8,6 +8,7 @@ The runner writes one JSON provisioning manifest before drive. It includes:
 {
   "appliedScenario": "plan-review | implement | full",
   "driveMode": "automated | operator",
+  "gateTarget": "exact independent review target for this harness",
   "reportRoot": "/absolute/parent/tools/smoke/reports/<harness>[/operator]/<scenario>",
   "worktreePath": "/absolute/disposable/worktree",
   "fixtureProjectPath": "/absolute/disposable/worktree/.oat/projects/smoke-fixture",
@@ -120,6 +121,12 @@ carry `automated` or `operator`, and report roots are disjoint. Operator reports
 always use the extra `operator/` path segment and never replace canonical
 automated reports. `createdPaths`, `branch`, and `worktreePath` are the cleanup
 allowlist.
+
+`gateTarget` is selected before the run starts and is cross-runtime relative to
+the root harness: Codex uses `cursor-default`; Claude and both Cursor surfaces
+use `codex-5-6-sol-max`. Every required gate invocation must pass this exact
+target. Listing targets is a valid probe; invoking `oat gate review` as a probe
+is not, because an accepted gate launch is terminal even when it fails.
 
 Manifest updates are published with a sibling temporary file and atomic rename.
 Nested ownership registrations additionally use a bounded exclusive sibling
@@ -241,9 +248,11 @@ The disposable workflow writes launcher-owned records before collection:
 - `workspace/evidence/orchestration/<sequence>-state-transition.json` —
   commit-bound plan-review transitions. Create records through the same command
   with `--kind state-transition`.
-- `workspace/evidence/gates/<scope>.json` — the unmodified JSON result from
-  `oat gate review --json`; the collector retains only gate-owned invocation
-  fields, artifact identity, and corroboration statuses.
+- `workspace/evidence/gates/<scope>.json` — the unmodified terminal output from
+  `oat gate review --json`. A provider diagnostic may precede the final JSON
+  envelope; the collector parses the terminal envelope without rewriting the
+  source bytes and retains only gate-owned invocation fields, artifact
+  identity, and corroboration statuses.
 
 Dispatch records use schema version 1 and contain:
 

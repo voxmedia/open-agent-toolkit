@@ -13,6 +13,12 @@ const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
+const GATE_TARGETS = {
+  claude: 'codex-5-6-sol-max',
+  codex: 'cursor-default',
+  'cursor-cli': 'codex-5-6-sol-max',
+  'cursor-ide': 'codex-5-6-sol-max',
+};
 const cliEntryPoint = join(repositoryRoot, 'packages/cli/src/index.ts');
 const cliTsconfig = join(repositoryRoot, 'packages/cli/tsconfig.json');
 const tsxExecutable = join(repositoryRoot, 'node_modules/.bin/tsx');
@@ -199,6 +205,7 @@ function createManifest({
     createdPaths: [manifestPath, runPath],
     fixtureProjectPath,
     driveMode,
+    gateTarget: gateTargetForHarness(harness),
     harness,
     intendedCloseoutPolicy: {
       source: 'local',
@@ -244,6 +251,14 @@ async function saveManifest(manifest, fileSystem) {
   } finally {
     await fileSystem.rm(temporaryPath, { force: true }).catch(() => {});
   }
+}
+
+export function gateTargetForHarness(harness) {
+  const target = GATE_TARGETS[harness];
+  if (!target) {
+    throw new TypeError(`No independent gate target for harness ${harness}.`);
+  }
+  return target;
 }
 
 export function createBranchName({

@@ -205,7 +205,10 @@ test('collects into the drive-mode report root and marks operator return', async
         },
         emitReport: async (received) => {
           calls.push(received);
-          return { jsonPath: join(reportRoot, 'report.json') };
+          return {
+            jsonPath: join(reportRoot, 'report.json'),
+            report: { status: 'passed', summary: { failed: 0 } },
+          };
         },
         repository,
       },
@@ -216,6 +219,45 @@ test('collects into the drive-mode report root and marks operator return', async
     assert.equal(result.report.jsonPath, join(reportRoot, 'report.json'));
     assert.equal(persisted.drive.status, 'operator-returned');
     assert.equal(persisted.collection.status, 'completed');
+  } finally {
+    await rm(runDirectory, { force: true, recursive: true });
+  }
+});
+
+test('persists and rejects a failed evidence report', async () => {
+  const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
+  try {
+    const repository = join(runDirectory, 'repository');
+    const automatedOptions = options({ dryRun: false });
+    const reportRoot = reportRootFor(automatedOptions, repository);
+    const manifest = await createManifest(runDirectory, {
+      drive: { status: 'completed' },
+      reportRoot,
+    });
+
+    await assert.rejects(
+      () =>
+        collectSmoke(
+          automatedOptions,
+          {
+            manifest,
+            results: { preflight: { status: 'ready' } },
+          },
+          {
+            collect: async () => ({
+              outputPath: join(reportRoot, 'bundle.json'),
+            }),
+            emitReport: async () => ({
+              jsonPath: join(reportRoot, 'report.json'),
+              report: { status: 'failed', summary: { failed: 2 } },
+            }),
+            repository,
+          },
+        ),
+      /failed 2 assertion/,
+    );
+    const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
+    assert.equal(persisted.collection.status, 'failed');
   } finally {
     await rm(runDirectory, { force: true, recursive: true });
   }
