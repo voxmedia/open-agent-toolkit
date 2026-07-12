@@ -44,13 +44,16 @@ function events(bundle, name) {
 }
 
 function matchingGate(bundle, review) {
+  if (!review) {
+    return undefined;
+  }
   const fields = review.frontmatter ?? {};
   return (bundle.gates ?? []).find(
     (gate) =>
       gate.runId === fields.oat_gate_run_id &&
       gate.target === fields.oat_gate_target &&
       gate.runtime === fields.oat_gate_runtime &&
-      gate.projectName === fields.oat_project &&
+      gate.projectPath === fields.oat_project &&
       gate.invocationConsistent === true &&
       gate.scope === fields.oat_review_scope &&
       gate.invocation === fields.oat_review_invocation &&
@@ -58,7 +61,11 @@ function matchingGate(bundle, review) {
       gate.configuredInvocation?.effort ===
         fields.oat_invocation_reasoning_effort &&
       gate.configuredInvocation?.source === fields.oat_invocation_source &&
+      gate.archived === true &&
       gate.artifactPath === review.path &&
+      gate.artifactHash === review.contentHash &&
+      gate.committedArtifact?.matchesArchived === true &&
+      gate.receiveCommit?.rowMatched === true &&
       gate.status === 'ok' &&
       gate.blocking === false &&
       gate.receiveEligible === true &&
@@ -79,17 +86,26 @@ function reviewAssertions(bundle, requiredScopes, suffix) {
     const review = reviews.find(
       (candidate) =>
         candidate.frontmatter?.oat_review_scope === scope &&
-        candidate.frontmatter?.oat_review_invocation === 'gate',
+        candidate.frontmatter?.oat_review_invocation === 'gate' &&
+        matchingGate(bundle, candidate),
     );
-    return review && matchingGate(bundle, review);
+    return Boolean(review);
   });
   const durableScopes = requiredScopes.filter((scope) => {
-    const review = reviews.find(
-      (candidate) => candidate.frontmatter?.oat_review_scope === scope,
-    );
     const row = reviewRows.find((candidate) => candidate.scope === scope);
-    const committed = (bundle.git?.currentBranchCommits ?? []).some((commit) =>
-      commit.files?.some((file) => file.endsWith(review?.path ?? '\0')),
+    const review = reviews.find(
+      (candidate) =>
+        candidate.frontmatter?.oat_review_scope === scope &&
+        candidate.path === row?.artifact &&
+        matchingGate(bundle, candidate),
+    );
+    const gate = matchingGate(bundle, review);
+    const currentCommits = bundle.git?.currentBranchCommits ?? [];
+    const artifactIndex = currentCommits.findIndex(
+      (commit) => commit.sha === gate?.committedArtifact?.commitSha,
+    );
+    const receiveIndex = currentCommits.findIndex(
+      (commit) => commit.sha === gate?.receiveCommit?.sha,
     );
     return (
       review &&
@@ -97,7 +113,8 @@ function reviewAssertions(bundle, requiredScopes, suffix) {
       bundle.fixture?.headPlanHash === bundle.fixture?.planHash &&
       row.status === 'passed' &&
       row.artifact === review.path &&
-      committed
+      artifactIndex >= 0 &&
+      receiveIndex > artifactIndex
     );
   });
   return [
@@ -169,6 +186,54 @@ function planReviewAssertions(bundle) {
   ];
 }
 
+function selectedAxis(axis) {
+  return typeof axis === 'string' && axis.startsWith('selected:')
+    ? axis.slice('selected:'.length)
+    : null;
+}
+
+function dispatchMatchesCommittedPolicy(selected, dispatchPolicy) {
+  if (
+    !selected ||
+    selected.configuredInvocation?.policy !== dispatchPolicy?.policy ||
+    !selected.configuredInvocation?.ceiling ||
+    !selected.selection?.candidatesConsidered?.includes(
+      selected.configuredInvocation?.target,
+    )
+  ) {
+    return false;
+  }
+  const invocation = selected.configuredInvocation;
+  const model = selectedAxis(invocation.modelAxis);
+  const effort =
+    invocation.effortAxis === 'not-applicable'
+      ? null
+      : selectedAxis(invocation.effortAxis);
+  const candidate = dispatchPolicy.eligibleCandidates?.find(
+    (entry) =>
+      entry.model === model &&
+      entry.effort === effort &&
+      entry.tier === invocation.candidateTier,
+  );
+  const ceilingModel = selectedAxis(invocation.ceilingModelAxis);
+  const ceilingEffort =
+    invocation.ceilingEffortAxis === 'not-applicable'
+      ? null
+      : selectedAxis(invocation.ceilingEffortAxis);
+  const ceiling = dispatchPolicy.ceilingCandidates?.find(
+    (entry) => entry.model === ceilingModel && entry.effort === ceilingEffort,
+  );
+  const codexTarget =
+    candidate && candidate.effort !== null
+      ? `oat-phase-implementer-${candidate.model.replaceAll('.', '-')}-${candidate.effort}`
+      : null;
+  const targetMatches =
+    dispatchPolicy.provider === 'codex'
+      ? invocation.target === codexTarget
+      : invocation.target === candidate?.model;
+  return Boolean(candidate && ceiling && targetMatches);
+}
+
 function implementAssertions(bundle, { includeFinal = false } = {}) {
   const taskIds = bundle.fixture?.taskIds ?? [];
   const implementationDispatches = (bundle.dispatches ?? []).filter(
@@ -205,18 +270,7 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
     if (
       !selected ||
       bundle.fixture?.headStateHash !== bundle.fixture?.stateHash ||
-      !dispatchPolicy?.eligibleCandidates?.includes(
-        selected.configuredInvocation?.target,
-      ) ||
-      !dispatchPolicy?.ceilingCandidates?.includes(
-        selected.configuredInvocation?.ceiling,
-      ) ||
-      selected.configuredInvocation?.policy !== dispatchPolicy?.policy ||
-      selected.configuredInvocation?.modelAxis !==
-        `selected:${selected.configuredInvocation?.target}` ||
-      !selected.selection?.candidatesConsidered?.includes(
-        selected.configuredInvocation?.target,
-      )
+      !dispatchMatchesCommittedPolicy(selected, dispatchPolicy)
     ) {
       targetSelectionFailures.push(taskId);
     }
@@ -246,7 +300,8 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
     const matches = (bundle.git?.commits ?? []).filter(
       (commit) =>
         commit.subject === `feat(${taskId}): append fixture marker` &&
-        commit.files?.includes(`workspace/logs/${taskId.slice(0, 3)}.log`),
+        commit.files?.length === 1 &&
+        commit.files[0] === `workspace/logs/${taskId.slice(0, 3)}.log`,
     );
     return matches.length !== 1;
   });
@@ -285,15 +340,22 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
   const phaseHeads = Object.fromEntries(
     Object.entries(phaseBranches).map(([phase, history]) => [
       phase,
-      history?.commits.findLast((commit) =>
-        commit.subject.startsWith(`feat(${phase}-t`),
-      )?.sha ?? null,
+      history?.head ?? null,
     ]),
   );
   const mergeIndexes = Object.fromEntries(
     Object.entries(phaseHeads).map(([phase, sha]) => [
       phase,
-      currentCommits.findIndex((commit) => commit.parents.includes(sha)),
+      currentCommits.findIndex(
+        (commit) => commit.parents.length >= 2 && commit.parents.includes(sha),
+      ),
+    ]),
+  );
+  const baselineCommit = bundle.manifest?.baselineCommitSha;
+  const phaseStarts = Object.fromEntries(
+    Object.entries(phaseBranches).map(([phase, history]) => [
+      phase,
+      history?.start?.parent ?? null,
     ]),
   );
   const isolation =
@@ -306,6 +368,12 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
         typeof branch === 'string' &&
         !branch.includes('/'),
     ) &&
+    Object.values(phaseBranches).every(
+      (history) => history.mergeBase === baselineCommit,
+    ) &&
+    Object.values(phaseStarts).every((start) => start === baselineCommit) &&
+    !phaseBranches.p01.ancestorBranches.includes(phaseBranches.p02.branch) &&
+    !phaseBranches.p02.ancestorBranches.includes(phaseBranches.p01.branch) &&
     Object.values(phaseHeads).every(
       (sha) =>
         typeof sha === 'string' &&
@@ -357,6 +425,7 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
       {
         journalBranches,
         mergeIndexes,
+        phaseStarts,
         phaseBranches: Object.fromEntries(
           Object.entries(phaseBranches).map(([phase, history]) => [
             phase,

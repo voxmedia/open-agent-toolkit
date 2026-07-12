@@ -31,11 +31,21 @@ const taskIds = [
 
 function reviewEvidence(scope) {
   const runId = `${scope}-gate`;
-  const path = `reviews/${scope}-review.md`;
+  const activePath = `reviews/${scope}-review.md`;
+  const path = `reviews/archived/${scope}-review.md`;
+  const contentHash = `${scope}-review-hash`;
   return {
     gate: {
+      activeArtifactPath: activePath,
+      archived: true,
       artifactPath: path,
+      artifactHash: contentHash,
       blocking: false,
+      committedArtifact: {
+        commitSha: `artifact-${scope}`,
+        contentHash,
+        matchesArchived: true,
+      },
       configuredInvocation: {
         effort: 'provider-default',
         model: 'fable',
@@ -49,8 +59,8 @@ function reviewEvidence(scope) {
       invocation: 'gate',
       invocationConsistent: true,
       outcome: 'review_completed_gate_passed',
-      projectName: 'smoke-fixture',
       projectPath: '.oat/projects/smoke-fixture',
+      receiveCommit: { rowMatched: true, sha: `receive-${scope}` },
       receiveEligible: true,
       runId,
       runtime: 'claude',
@@ -59,6 +69,7 @@ function reviewEvidence(scope) {
       target: 'claude-fable',
     },
     review: {
+      contentHash,
       frontmatter: {
         oat_gate_run_id: runId,
         oat_gate_runtime: 'claude',
@@ -66,7 +77,7 @@ function reviewEvidence(scope) {
         oat_invocation_model: 'fable',
         oat_invocation_reasoning_effort: 'provider-default',
         oat_invocation_source: 'exec-target-config',
-        oat_project: 'smoke-fixture',
+        oat_project: '.oat/projects/smoke-fixture',
         oat_review_invocation: 'gate',
         oat_review_scope: scope,
         oat_review_type: 'code',
@@ -93,19 +104,35 @@ function productionShape(bundle) {
     ...(scenario === 'full' ? ['final'] : []),
   ];
   const evidence = reviewScopes.map(reviewEvidence);
-  const taskCommits = taskIds.map((taskId, index) => ({
-    files: [`workspace/logs/${taskId.slice(0, 3)}.log`],
-    parents: index === 0 ? [] : [`task-${index}`],
-    sha: `task-${index + 1}`,
-    subject: `feat(${taskId}): append fixture marker`,
+  const taskCommits = taskIds.map((taskId, index) => {
+    const phaseIndex = index % 3;
+    const phase = taskId.slice(0, 3);
+    const parent =
+      phaseIndex > 0
+        ? `task-${index}`
+        : phase === 'p03'
+          ? 'merge-p02'
+          : 'baseline';
+    return {
+      files: [`workspace/logs/${phase}.log`],
+      parents: [parent],
+      sha: `task-${index + 1}`,
+      subject: `feat(${taskId}): append fixture marker`,
+    };
+  });
+  const artifactCommits = evidence.map((entry) => ({
+    files: [`.oat/projects/smoke-fixture/${entry.gate.activeArtifactPath}`],
+    parents: [],
+    sha: entry.gate.committedArtifact.commitSha,
+    subject: `chore: record ${entry.review.frontmatter.oat_review_scope} review`,
   }));
-  const reviewCommits = evidence.map((entry, index) => ({
+  const receiveCommits = evidence.map((entry) => ({
     files: [
-      `.oat/projects/smoke-fixture/${entry.review.path}`,
+      `.oat/projects/smoke-fixture/${entry.gate.activeArtifactPath}`,
       '.oat/projects/smoke-fixture/plan.md',
     ],
     parents: [],
-    sha: `review-${index + 1}`,
+    sha: `receive-${entry.review.frontmatter.oat_review_scope}`,
     subject: `chore: receive ${entry.review.frontmatter.oat_review_scope} review`,
   }));
   const transitionCommits = [
@@ -113,6 +140,7 @@ function productionShape(bundle) {
       files: [
         '.oat/projects/smoke-fixture/plan.md',
         '.oat/projects/smoke-fixture/state.md',
+        '.oat/projects/smoke-fixture/implementation.md',
       ],
       parents: [],
       sha: 'transition-reviewed',
@@ -122,6 +150,7 @@ function productionShape(bundle) {
       files: [
         '.oat/projects/smoke-fixture/plan.md',
         '.oat/projects/smoke-fixture/state.md',
+        '.oat/projects/smoke-fixture/implementation.md',
       ],
       parents: [],
       sha: 'transition-ready',
@@ -131,13 +160,13 @@ function productionShape(bundle) {
   const mergeCommits = [
     {
       files: [],
-      parents: ['task-3'],
+      parents: ['baseline', 'task-3'],
       sha: 'merge-p01',
       subject: 'merge p01',
     },
     {
       files: [],
-      parents: ['task-6'],
+      parents: ['merge-p01', 'task-6'],
       sha: 'merge-p02',
       subject: 'merge p02',
     },
@@ -161,9 +190,13 @@ function productionShape(bundle) {
             attempt: 1,
             configuredInvocation: {
               ceiling: 'sol',
-              modelAxis: 'selected:cursor-cli:terra',
+              candidateTier: 'balanced',
+              ceilingEffortAxis: 'not-applicable',
+              ceilingModelAxis: 'selected:sol',
+              effortAxis: 'not-applicable',
+              modelAxis: 'selected:terra',
               policy: 'high',
-              target: 'cursor-cli:terra',
+              target: 'terra',
             },
             launch: {
               accepted: true,
@@ -174,14 +207,17 @@ function productionShape(bundle) {
             scope: taskId,
             selection: {
               atOrBelowCeiling: true,
-              candidatesConsidered: ['cursor-cli:terra'],
+              candidatesConsidered: ['terra'],
             },
           })),
     fixture: {
       baselineSubstantivePlanHash: 'substantive',
       dispatchPolicy: {
-        ceilingCandidates: ['sol'],
-        eligibleCandidates: ['cursor-cli:terra', 'sol'],
+        ceilingCandidates: [{ effort: null, model: 'sol', tier: 'high' }],
+        eligibleCandidates: [
+          { effort: null, model: 'terra', tier: 'balanced' },
+          { effort: null, model: 'sol', tier: 'high' },
+        ],
         policy: 'high',
         provider: 'cursor',
       },
@@ -205,23 +241,40 @@ function productionShape(bundle) {
     gates: evidence.map((entry) => entry.gate),
     git: {
       branchHistories: [
-        { branch: 'smoke-p01', commits: taskCommits.slice(0, 3) },
-        { branch: 'smoke-p02', commits: taskCommits.slice(3, 6) },
+        {
+          ancestorBranches: [],
+          branch: 'smoke-p01',
+          commits: taskCommits.slice(0, 3),
+          head: 'task-3',
+          mergeBase: 'baseline',
+          start: { parent: 'baseline', sha: 'task-1' },
+        },
+        {
+          ancestorBranches: [],
+          branch: 'smoke-p02',
+          commits: taskCommits.slice(3, 6),
+          head: 'task-6',
+          mergeBase: 'baseline',
+          start: { parent: 'baseline', sha: 'task-4' },
+        },
       ],
       commits: [
         ...taskCommits,
         ...mergeCommits,
-        ...reviewCommits,
+        ...artifactCommits,
+        ...receiveCommits,
         ...transitionCommits,
       ],
       currentBranchCommits: [
         ...currentTaskCommits,
-        ...reviewCommits,
+        ...artifactCommits,
+        ...receiveCommits,
         ...transitionCommits,
       ],
     },
     manifest: {
       ...bundle.manifest,
+      baselineCommitSha: 'baseline',
       ownershipJournal: {
         resources: [{ branch: 'smoke-p01' }, { branch: 'smoke-p02' }],
       },
@@ -293,7 +346,12 @@ test('scenario profiles pass their complete golden evidence', async () => {
 test('plan-review profile detects plan drift, missing durability, and non-atomic transitions', async () => {
   const bundle = await readGolden('plan-review');
   bundle.fixture.substantivePlanHash = 'drifted';
-  bundle.git.commits.find((commit) => commit.sha === 'review-1').files = [];
+  bundle.git.currentBranchCommits.splice(
+    bundle.git.currentBranchCommits.findIndex(
+      (commit) => commit.sha === 'receive-plan',
+    ),
+    1,
+  );
   bundle.orchestrationEvents[0].contentChanged = false;
 
   assert.deepEqual(failedIds(evaluateEvidence(bundle)), [
@@ -321,7 +379,12 @@ test('implement profile detects incomplete dispatch, ceiling, isolation, fan-in,
   )[0];
   bundle.git.currentBranchCommits.push(mergeP02);
   bundle.gates[0].corroboration = {};
-  bundle.git.commits.find((commit) => commit.sha === 'review-1').files = [];
+  bundle.git.currentBranchCommits.splice(
+    bundle.git.currentBranchCommits.findIndex(
+      (commit) => commit.sha === 'receive-p01',
+    ),
+    1,
+  );
 
   assert.deepEqual(failedIds(evaluateEvidence(bundle)), [
     'implement-dispatch-completeness',
@@ -333,6 +396,155 @@ test('implement profile detects incomplete dispatch, ceiling, isolation, fan-in,
     'review-disposition-durable-implementation',
     'implement-runtime-identity-status',
   ]);
+});
+
+test('provider-specific targets preserve Codex roles and model axes separately', async () => {
+  const cases = [
+    {
+      ceiling: { effort: null, model: 'opus', tier: 'high' },
+      effortAxis: 'not-applicable',
+      harness: 'claude',
+      model: 'sonnet',
+      provider: 'claude',
+      target: 'sonnet',
+    },
+    {
+      ceiling: { effort: 'high', model: 'gpt-5.6-sol', tier: 'high' },
+      effortAxis: 'selected:medium',
+      harness: 'codex',
+      model: 'gpt-5.6-terra',
+      provider: 'codex',
+      target: 'oat-phase-implementer-gpt-5-6-terra-medium',
+    },
+    {
+      ceiling: { effort: null, model: 'sol', tier: 'high' },
+      effortAxis: 'not-applicable',
+      harness: 'cursor-ide',
+      model: 'terra',
+      provider: 'cursor',
+      target: 'terra',
+    },
+    {
+      ceiling: { effort: null, model: 'sol', tier: 'high' },
+      effortAxis: 'not-applicable',
+      harness: 'cursor-cli',
+      model: 'terra',
+      provider: 'cursor',
+      target: 'terra',
+    },
+  ];
+
+  for (const entry of cases) {
+    const bundle = await readGolden('implement');
+    bundle.manifest.harness = entry.harness;
+    bundle.fixture.dispatchPolicy = {
+      ceilingCandidates: [entry.ceiling],
+      eligibleCandidates: [
+        {
+          effort: entry.provider === 'codex' ? 'medium' : null,
+          model: entry.model,
+          tier: 'balanced',
+        },
+        entry.ceiling,
+      ],
+      policy: 'high',
+      provider: entry.provider,
+    };
+    for (const dispatch of bundle.dispatches) {
+      dispatch.configuredInvocation = {
+        candidateTier: 'balanced',
+        ceiling: `surface:${entry.ceiling.model}`,
+        ceilingEffortAxis:
+          entry.ceiling.effort === null
+            ? 'not-applicable'
+            : `selected:${entry.ceiling.effort}`,
+        ceilingModelAxis: `selected:${entry.ceiling.model}`,
+        effortAxis: entry.effortAxis,
+        modelAxis: `selected:${entry.model}`,
+        policy: 'high',
+        target: entry.target,
+      };
+      dispatch.selection.candidatesConsidered = [entry.target];
+    }
+    const targetAssertion = evaluateEvidence(bundle).assertions.find(
+      (assertion) => assertion.id === 'implement-exact-target-within-ceiling',
+    );
+    assert.equal(targetAssertion.status, 'passed', entry.harness);
+    if (entry.provider === 'codex') {
+      bundle.dispatches[0].configuredInvocation.target =
+        'oat-phase-implementer-unrelated-medium';
+      bundle.dispatches[0].selection.candidatesConsidered = [
+        'oat-phase-implementer-unrelated-medium',
+      ];
+      assert.equal(
+        evaluateEvidence(bundle).assertions.find(
+          (assertion) =>
+            assertion.id === 'implement-exact-target-within-ceiling',
+        ).status,
+        'failed',
+      );
+    }
+  }
+});
+
+test('parallel proof rejects serial ancestry, single-parent integration, and broad task commits', async () => {
+  const serial = await readGolden('implement');
+  serial.git.branchHistories[1].ancestorBranches.push('smoke-p01');
+  assert.equal(
+    evaluateEvidence(serial).assertions.find(
+      (assertion) => assertion.id === 'implement-parallel-isolation',
+    ).status,
+    'failed',
+  );
+
+  const fastForward = await readGolden('implement');
+  fastForward.git.currentBranchCommits.find(
+    (commit) => commit.sha === 'merge-p01',
+  ).parents = ['task-3'];
+  assert.equal(
+    evaluateEvidence(fastForward).assertions.find(
+      (assertion) => assertion.id === 'implement-parallel-isolation',
+    ).status,
+    'failed',
+  );
+
+  const broadWrite = await readGolden('implement');
+  broadWrite.git.commits
+    .find((commit) => commit.subject.startsWith('feat(p03-t01)'))
+    .files.push('unexpected.txt');
+  assert.equal(
+    evaluateEvidence(broadWrite).assertions.find(
+      (assertion) => assertion.id === 'implement-fixture-markers-and-commits',
+    ).status,
+    'failed',
+  );
+});
+
+test('terminal review proof rejects changed archive bytes and missing receive commits', async () => {
+  const changedArchive = await readGolden('implement');
+  changedArchive.gates[0].committedArtifact.matchesArchived = false;
+  assert.deepEqual(
+    failedIds(evaluateEvidence(changedArchive)).filter((id) =>
+      id.startsWith('review-'),
+    ),
+    [
+      'review-gate-corroborated-implementation',
+      'review-disposition-durable-implementation',
+    ],
+  );
+
+  const missingReceive = await readGolden('implement');
+  missingReceive.git.currentBranchCommits.splice(
+    missingReceive.git.currentBranchCommits.findIndex(
+      (commit) => commit.sha === 'receive-p01',
+    ),
+    1,
+  );
+  assert.ok(
+    failedIds(evaluateEvidence(missingReceive)).includes(
+      'review-disposition-durable-implementation',
+    ),
+  );
 });
 
 test('full profile is the deduplicated union of plan-review and implement', async () => {

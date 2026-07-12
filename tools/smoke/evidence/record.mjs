@@ -118,9 +118,21 @@ export function normalizeDispatchRecord(record) {
     action,
     attempt,
     configuredInvocation: {
+      candidateTier: requiredString(
+        record.configuredInvocation.candidateTier,
+        'configuredInvocation.candidateTier',
+      ),
       ceiling: requiredString(
         record.configuredInvocation.ceiling,
         'configuredInvocation.ceiling',
+      ),
+      ceilingEffortAxis: requiredString(
+        record.configuredInvocation.ceilingEffortAxis,
+        'configuredInvocation.ceilingEffortAxis',
+      ),
+      ceilingModelAxis: requiredString(
+        record.configuredInvocation.ceilingModelAxis,
+        'configuredInvocation.ceilingModelAxis',
       ),
       effortAxis: requiredString(
         record.configuredInvocation.effortAxis,

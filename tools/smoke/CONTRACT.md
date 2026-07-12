@@ -209,7 +209,10 @@ Dispatch records use schema version 1 and contain:
   "action": "implementation",
   "role": "implementer",
   "configuredInvocation": {
+    "candidateTier": "balanced",
     "ceiling": "configured ceiling",
+    "ceilingModelAxis": "selected:ceiling-model",
+    "ceilingEffortAxis": "selected:ceiling-effort | not-applicable",
     "target": "exact selected target",
     "modelAxis": "selected:model",
     "effortAxis": "selected:effort | not-applicable",
@@ -236,12 +239,14 @@ producer and model are present and provenance is one of `runtime-observed`,
 `provider-output`, or `gate-corroborated`. Every other value becomes
 `not-reported`.
 
-The collector reads the committed fixture dispatch matrix and recomputes
-eligible candidates through the named ceiling. A launch passes only when its
-exact target is in that committed eligible set, its ceiling is a candidate in
-the ceiling cell, and its policy, model-axis, and candidate fields are
-consistent. The launcher-provided `atOrBelowCeiling` boolean is retained as
-source evidence but is not trusted by assertions.
+The collector preserves structured provider candidates from the committed
+fixture dispatch matrix and recomputes eligible candidates through the named
+ceiling. A launch passes only when its candidate tier, selected model/effort
+axes, ceiling model/effort axes, policy, and exact target are mutually
+consistent. Claude and Cursor targets equal the selected opaque model string.
+Codex targets equal the materialized implementer role while model and effort
+remain separate axes. The launcher-provided `atOrBelowCeiling` boolean is
+retained as source evidence but is not trusted by assertions.
 
 The harness protocols added in p05 own invoking these writers around real
 provider launches and saving gate JSON. Fixture logs, exact task commits,
@@ -276,15 +281,23 @@ parallel branches, p01/p02-before-p03 fan-in, phase gate corroboration, and
 explicit runtime identity status. `full` adds the final gate and unions both
 profiles.
 
-Parallel proof maps p01 and p02 task commits to two distinct journaled refs,
-checks every task commit's bounded log-only write, requires both branch heads
-as merge parents reachable from outer `HEAD`, and then requires every p03 task
-commit after both merges. Review proof requires a `passed` row naming the exact
-artifact, artifact reachability from outer `HEAD`, successful non-blocking and
-receive-eligible gate output, and exact agreement among top-level gate JSON,
-nested `gateInvocation`, corroboration expected/actual invocation, artifact
-frontmatter, and matched run/project/invocation statuses. Repo-relative gate
-project and artifact paths resolve against the disposable worktree.
+Parallel proof maps p01 and p02 task commits to two distinct journaled refs
+created from the same manifest baseline, rejects cross-phase ancestry, checks
+every p01/p02/p03 task commit's exact log-only write, requires both branch
+heads as parents of true multi-parent integrations reachable from outer
+`HEAD`, and then requires every p03 task commit after both merges. Transition
+proof parses complete preset fingerprints from committed `plan.md`, `state.md`,
+and `implementation.md` parent/post images.
+
+Review proof models the normal receive lifecycle: the gate names the tracked
+active artifact, receive moves identical bytes to ignored
+`reviews/archived/`, and the terminal `passed` row names the archived path. The
+collector binds archived bytes to the latest committed active blob reachable
+from outer `HEAD` and requires a later receive commit touching the active path
+and plan. It also requires successful non-blocking and receive-eligible gate
+output plus exact agreement among top-level `gateInvocation`,
+`dispatchReport.gateInvocation`, corroboration expected/actual invocation,
+artifact frontmatter, and canonical repo-relative project identity.
 
 Generate and verify a report with:
 

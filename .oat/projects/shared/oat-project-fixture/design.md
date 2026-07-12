@@ -186,10 +186,12 @@ out of scope; documented as a possible future variant.
 ### 3. Evidence collector & report
 
 - **Inputs:** Dispatch Report V1 output / launcher-owned dispatch records,
-  `implementation.md` orchestration-run entries, review artifact frontmatter
-  (gate target, run ID, corroboration fields), fixture logs, disposable
-  worktree git history (flat phase branch names, per-task commits, fan-in
-  merge).
+  immutable launcher-owned orchestration event records under
+  `workspace/evidence/orchestration/`, review artifact frontmatter (gate
+  target, run ID, corroboration fields), fixture logs, disposable worktree Git
+  history (flat phase branch names, per-task commits, fan-in merge).
+  `implementation.md` remains human-readable lifecycle bookkeeping; p05
+  adapters write the immutable event stream consumed by assertions.
 - **Output:** per-run report (markdown + JSON) with a machine-checkable
   assertion table: phases/tasks dispatched; exact selected target per launch
   (below ceiling); parallel isolation proven (disjoint writes, separate
@@ -199,16 +201,20 @@ out of scope; documented as a possible future variant.
 
 ### 4. Per-harness drive protocols
 
-Each protocol is a short doc + canned root prompt; the runner prints the
-right one at drive time. **Four harness targets** (Cursor counts twice —
-IDE and CLI verifiably behave differently):
+Each protocol is a short doc + canned root prompt; the runner prints the right
+one at drive time. CLI protocols have distinct automated/noninteractive and
+operator-interactive drive modes with separate run identities and report
+roots, so TTY behavior is compared rather than conflated. **Four harness
+targets** (Cursor counts twice — IDE and CLI verifiably behave differently):
 
 - **Codex:** native `spawn_agent` topology (root → coordinator → exact
   materialized workers), `agents.max_depth >= 2`, scoped writable roots per
-  the max-depth learnings; headless root invocation acceptable.
+  the max-depth learnings; both headless and operator-interactive root
+  invocations are evidenced.
 - **Claude:** native Task subagents; whether coordinator→worker nesting is
   supported is an open question the first run answers and records — the
-  protocol documents the sanctioned topology once observed.
+  protocol documents the sanctioned topology once observed; automated and
+  operator-interactive runs are compared.
 - **Cursor IDE:** root session started manually with a canned prompt;
   coordinator applies the full-information selection contract against its
   native catalog; any CLI task dispatch must appear in evidence as a recorded
@@ -216,8 +222,8 @@ IDE and CLI verifiably behave differently):
 - **Cursor CLI (`cursor-agent`):** same fixture driven through the headless
   CLI flavor; known open question whether Task events are observable at all
   in this flavor (prior structured probes saw none, even for controls) — the
-  smoke run either produces the first positive evidence or documents the
-  flavor's actual sanctioned topology.
+  automated and operator-interactive smoke runs either produce positive
+  evidence or document the flavor's actual sanctioned topology.
 
 ### 5. Orchestration contract updates (cross-harness native-first selection)
 
@@ -323,10 +329,12 @@ the manifest leaves no orphans and never touches unrelated worktrees.
 ### Level 3 — Live smoke (the deliverable itself, opt-in)
 
 Per harness target (Codex, Claude, Cursor IDE, Cursor CLI): `plan-review` and
-`implement` scenarios. Full-workflow runs (plan-review → implement in one
-pass) are required on Codex and Cursor IDE; they are explicitly deferred for
-Claude and Cursor CLI to bound live-provider cost, with the deferral recorded
-in the cross-harness evidence summary. Two negative controls: preflight against a deliberately unavailable target (must
+`implement` scenarios. Codex, Claude, and Cursor CLI run both automated and
+operator-interactive modes; Cursor IDE is operator-driven. Full-workflow runs
+(plan-review → implement in one pass) are required in both Codex modes and on
+Cursor IDE; they are explicitly deferred for Claude and Cursor CLI to bound
+live-provider cost, with the deferral recorded in the cross-harness evidence
+summary. Two negative controls: preflight against a deliberately unavailable target (must
 report and exit without provisioning), and — where cheap — one observed
 reviewer/worker failure path confirming no-fallback-after-acceptance holds.
 Evidence reports are committed as the project's acceptance artifacts (these

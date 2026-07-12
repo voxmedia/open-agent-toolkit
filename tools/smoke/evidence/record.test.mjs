@@ -24,11 +24,14 @@ function validRecord(overrides = {}) {
     action: 'implementation',
     attempt: 1,
     configuredInvocation: {
+      candidateTier: 'balanced',
       ceiling: 'gpt-5.6-sol-xhigh',
+      ceilingEffortAxis: 'not-applicable',
+      ceilingModelAxis: 'selected:gpt-5.6-sol-xhigh',
       effortAxis: 'not-applicable',
       modelAxis: 'selected:gpt-5.6-terra-medium',
       policy: 'high',
-      target: 'cursor-cli:gpt-5.6-terra-medium',
+      target: 'gpt-5.6-terra-medium',
     },
     launch: {
       mechanism: 'cursor-cli',

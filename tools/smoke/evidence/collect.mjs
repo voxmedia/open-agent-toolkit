@@ -232,7 +232,10 @@ function normalizeDispatch(record, index) {
         ? record.attempt
         : index + 1,
     configuredInvocation: {
+      candidateTier: optionalString(configured.candidateTier),
       ceiling: optionalString(configured.ceiling ?? configured.dispatchCeiling),
+      ceilingEffortAxis: optionalString(configured.ceilingEffortAxis),
+      ceilingModelAxis: optionalString(configured.ceilingModelAxis),
       effortAxis: optionalString(
         configured.effortAxis ?? configured.effort_axis,
       ),
@@ -310,13 +313,21 @@ function parseDispatchPolicy(contents, harness) {
   ].map((match) => {
     const body = match[2];
     const simple = [...body.matchAll(/^\s+-\s+(?!harness:)(\S+)\s*$/gmu)].map(
-      (candidate) => candidate[1],
+      (candidate) => ({
+        effort: null,
+        model: candidate[1],
+        tier: match[1],
+      }),
     );
     const structured = [
       ...body.matchAll(
         /^\s+-\s+harness:\s+\S+\s*\n\s+model:\s+(\S+)\s*\n\s+effort:\s+(\S+)\s*$/gmu,
       ),
-    ].map((candidate) => `${candidate[1]}:${candidate[2]}`);
+    ].map((candidate) => ({
+      effort: candidate[2],
+      model: candidate[1],
+      tier: match[1],
+    }));
     return { candidates: [...simple, ...structured], name: match[1] };
   });
   const ceilingIndex = tiers.findIndex((tier) => tier.name === policy);
@@ -474,8 +485,14 @@ async function collectReviews(fixtureProjectPath) {
             key === 'oat_gate_runtime',
         ),
       );
+      const contents = await safeReadFile(
+        path,
+        fixtureProjectPath,
+        'Review artifact',
+      );
       return {
         corroboration,
+        contentHash: createHash('sha256').update(contents).digest('hex'),
         frontmatter,
         path: relative(fixtureProjectPath, path),
       };
@@ -583,6 +600,123 @@ function sameGateInvocation(left, right) {
   );
 }
 
+async function normalizeProjectIdentity(value, worktreePath, label) {
+  if (typeof value !== 'string' || value.length === 0) {
+    return null;
+  }
+  const candidate = isAbsolute(value) ? value : join(worktreePath, value);
+  let canonical;
+  try {
+    canonical = await realpath(candidate);
+  } catch (error) {
+    throw new EvidenceCollectionError(
+      `${label} is not readable: ${error.message}`,
+    );
+  }
+  if (!isWithin(worktreePath, canonical)) {
+    throw new EvidenceCollectionError(`${label} is outside the worktree.`);
+  }
+  return relative(worktreePath, canonical);
+}
+
+async function findCommittedArtifact(
+  worktreePath,
+  activeRepositoryPath,
+  archivedContents,
+) {
+  const commits = (
+    await runGit(
+      [
+        'log',
+        '--format=%H',
+        '--diff-filter=AM',
+        'HEAD',
+        '--',
+        activeRepositoryPath,
+      ],
+      worktreePath,
+    )
+  )
+    .split(/\r?\n/u)
+    .filter(Boolean);
+  const commitSha = commits[0]
+    ? validateSha(commits[0], 'gate artifact commit')
+    : null;
+  if (!commitSha) {
+    return { commitSha: null, contentHash: null, matchesArchived: false };
+  }
+  const committedContents = await runGitRaw(
+    ['show', `${commitSha}:${activeRepositoryPath}`],
+    worktreePath,
+  );
+  const committedHash = createHash('sha256')
+    .update(committedContents)
+    .digest('hex');
+  return {
+    commitSha,
+    contentHash: committedHash,
+    matchesArchived:
+      committedHash ===
+      createHash('sha256').update(archivedContents).digest('hex'),
+  };
+}
+
+async function findReceiveCommit({
+  activeRepositoryPath,
+  archivedArtifactPath,
+  artifactCommitSha,
+  fixtureProjectPath,
+  scope,
+  worktreePath,
+}) {
+  if (!artifactCommitSha) {
+    return { rowMatched: false, sha: null };
+  }
+  const planRepositoryPath = relative(
+    worktreePath,
+    join(fixtureProjectPath, 'plan.md'),
+  );
+  const candidates = (
+    await runGit(
+      [
+        'log',
+        '--format=%H',
+        '--diff-filter=D',
+        `${artifactCommitSha}..HEAD`,
+        '--',
+        activeRepositoryPath,
+      ],
+      worktreePath,
+    )
+  )
+    .split(/\r?\n/u)
+    .filter(Boolean);
+  for (const candidate of candidates) {
+    const sha = validateSha(candidate, 'gate receive commit');
+    const files = (
+      await runGit(
+        ['show', '--format=', '--name-only', sha, '--'],
+        worktreePath,
+      )
+    )
+      .split(/\r?\n/u)
+      .filter(Boolean);
+    if (!files.includes(planRepositoryPath)) {
+      continue;
+    }
+    const plan = parsePlanContract(
+      await runGitRaw(['show', `${sha}:${planRepositoryPath}`], worktreePath),
+    );
+    const row = plan.reviewRows.find((entry) => entry.scope === scope);
+    return {
+      rowMatched:
+        row?.status === 'passed' && row.artifact === archivedArtifactPath,
+      sha,
+    };
+  }
+  return { rowMatched: false, sha: null };
+}
+
 async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
   const invocation = isPlainObject(record.gateInvocation)
     ? record.gateInvocation
@@ -597,7 +731,24 @@ async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
   const artifactCandidate = isAbsolute(artifactPath)
     ? artifactPath
     : join(worktreePath, artifactPath);
-  const canonicalArtifactPath = await realpath(artifactCandidate);
+  if (!isWithin(fixtureProjectPath, resolve(artifactCandidate))) {
+    throw new EvidenceCollectionError(
+      `gate[${index}].artifactPath is outside the fixture project.`,
+    );
+  }
+  let canonicalArtifactPath;
+  let archived = false;
+  try {
+    canonicalArtifactPath = await realpath(artifactCandidate);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+    canonicalArtifactPath = await realpath(
+      join(fixtureProjectPath, 'reviews', 'archived', basename(artifactPath)),
+    );
+    archived = true;
+  }
   if (!isWithin(fixtureProjectPath, canonicalArtifactPath)) {
     throw new EvidenceCollectionError(
       `gate[${index}].artifactPath is outside the fixture project.`,
@@ -614,21 +765,59 @@ async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
     );
   }
   const projectPath = relative(worktreePath, canonicalProjectPath);
-  const projectName = basename(projectPath);
+  const expectedProjectPath = await normalizeProjectIdentity(
+    corroboration.expected?.project,
+    worktreePath,
+    `gate[${index}].corroboration.expected.project`,
+  );
+  const actualProjectPaths = await Promise.all(
+    [
+      corroboration.actual?.artifactProject,
+      corroboration.actual?.normalizedArtifactProject,
+    ].map((value, projectIndex) =>
+      normalizeProjectIdentity(
+        value,
+        worktreePath,
+        `gate[${index}].corroboration.actual.project[${projectIndex}]`,
+      ),
+    ),
+  );
+  const dispatchInvocation = record.dispatchReport?.gateInvocation;
   const invocationConsistent =
     invocation.runId === record.runId &&
     invocation.targetId === record.target &&
     sameGateInvocation(invocation, corroboration.expected?.invocation) &&
     sameGateInvocation(invocation, corroboration.actual?.invocation) &&
-    corroboration.expected?.project === project &&
-    [
-      corroboration.actual?.artifactProject,
-      corroboration.actual?.normalizedArtifactProject,
-    ].includes(projectName);
+    sameGateInvocation(invocation, dispatchInvocation) &&
+    expectedProjectPath === projectPath &&
+    actualProjectPaths.every((actual) => actual === projectPath);
+  const activeArtifactPath = relative(fixtureProjectPath, artifactCandidate);
+  const archivedContents = await safeReadFile(
+    canonicalArtifactPath,
+    fixtureProjectPath,
+    `gate[${index}] review artifact`,
+  );
+  const committedArtifact = await findCommittedArtifact(
+    worktreePath,
+    relative(worktreePath, artifactCandidate),
+    archivedContents,
+  );
+  const receiveCommit = await findReceiveCommit({
+    activeRepositoryPath: relative(worktreePath, artifactCandidate),
+    archivedArtifactPath: relative(fixtureProjectPath, canonicalArtifactPath),
+    artifactCommitSha: committedArtifact.commitSha,
+    fixtureProjectPath,
+    scope: requireString(record.scope, `gate[${index}].scope`),
+    worktreePath,
+  });
 
   return {
+    activeArtifactPath,
+    archived,
     artifactPath: relative(fixtureProjectPath, canonicalArtifactPath),
+    artifactHash: createHash('sha256').update(archivedContents).digest('hex'),
     blocking: record.blocking === true,
+    committedArtifact,
     configuredInvocation: {
       effort: optionalString(invocation.reasoningEffort),
       model: optionalString(invocation.model),
@@ -642,8 +831,8 @@ async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
     invocation: optionalString(record.invocation),
     invocationConsistent,
     outcome: optionalString(record.outcome),
-    projectName,
     projectPath,
+    receiveCommit,
     receiveEligible: record.receiveEligible === true,
     runId: requireString(record.runId, `gate[${index}].runId`),
     runtime: requireString(invocation.runtime, `gate[${index}].runtime`),
@@ -787,26 +976,65 @@ async function collectGitTopology(worktreePath, manifest) {
     manifest.sourceCommitSha,
     'manifest.sourceCommitSha',
   );
+  const baselineCommit = validateSha(
+    manifest.baselineCommitSha,
+    'manifest.baselineCommitSha',
+  );
   const branchHistories = [];
   for (const ref of existingRefs) {
-    branchHistories.push({
-      branch: ref.replace(/^refs\/heads\//u, ''),
-      commits: await addCommitFiles(
-        parseGitLog(
-          await runGit(
-            [
-              'log',
-              '--reverse',
-              '--topo-order',
-              '--format=%H%x09%P%x09%s',
-              `${sourceCommit}..${ref}`,
-              '--',
-            ],
-            worktreePath,
-          ),
-        ),
+    const head = validateSha(
+      await runGit(['rev-parse', ref], worktreePath),
+      `head of ${ref}`,
+    );
+    const ancestorBranches = [];
+    for (const candidateRef of existingRefs) {
+      if (candidateRef === ref) {
+        continue;
+      }
+      const isAncestor = await runGit(
+        ['merge-base', '--is-ancestor', candidateRef, ref],
         worktreePath,
+      ).then(
+        () => true,
+        () => false,
+      );
+      if (isAncestor) {
+        ancestorBranches.push(candidateRef.replace(/^refs\/heads\//u, ''));
+      }
+    }
+    const commits = await addCommitFiles(
+      parseGitLog(
+        await runGit(
+          [
+            'log',
+            '--reverse',
+            '--topo-order',
+            '--format=%H%x09%P%x09%s',
+            `${sourceCommit}..${ref}`,
+            '--',
+          ],
+          worktreePath,
+        ),
       ),
+      worktreePath,
+    );
+    const firstAfterBaseline = commits.find(
+      (commit) =>
+        commit.sha !== baselineCommit &&
+        commit.parents.includes(baselineCommit),
+    );
+    branchHistories.push({
+      ancestorBranches: ancestorBranches.sort(),
+      branch: ref.replace(/^refs\/heads\//u, ''),
+      commits,
+      head,
+      mergeBase: validateSha(
+        await runGit(['merge-base', baselineCommit, ref], worktreePath),
+        `merge base of ${ref}`,
+      ),
+      start: firstAfterBaseline
+        ? { parent: baselineCommit, sha: firstAfterBaseline.sha }
+        : null,
     });
   }
   const logArgs = [
@@ -876,22 +1104,120 @@ async function collectGitTopology(worktreePath, manifest) {
   };
 }
 
-function observedLifecycleState(stateContents, planContents) {
+const PRE_REVIEW_FINGERPRINT = {
+  implementation: {
+    oat_current_task_id: 'null',
+    oat_status: 'in_progress',
+    oat_template: 'true',
+  },
+  plan: {
+    oat_blockers: '[]',
+    oat_plan_parallel_groups: "[['p01', 'p02']]",
+    oat_ready_for: 'null',
+    oat_status: 'in_progress',
+    oat_template: 'true',
+  },
+  state: {
+    oat_current_task: 'null',
+    oat_phase: 'plan',
+    oat_phase_status: 'in_progress',
+    oat_ready_for: 'null',
+    oat_status: 'in_progress',
+    oat_template: 'true',
+  },
+};
+
+const IMPLEMENTATION_READY_FINGERPRINT = {
+  implementation: {
+    oat_current_task_id: 'p01-t01',
+    oat_status: 'in_progress',
+    oat_template: 'false',
+  },
+  plan: {
+    oat_blockers: '[]',
+    oat_plan_parallel_groups: "[['p01', 'p02']]",
+    oat_ready_for: 'oat-project-implement',
+    oat_status: 'complete',
+    oat_template: 'false',
+  },
+  state: {
+    oat_current_task: 'p01-t01',
+    oat_phase: 'implement',
+    oat_phase_status: 'in_progress',
+    oat_ready_for: 'null',
+    oat_status: 'in_progress',
+    oat_template: 'false',
+  },
+};
+
+function buildLifecycleFingerprints(preReviewPreset, readyPreset) {
+  const preReview = Object.fromEntries(
+    ['state', 'plan', 'implementation'].map((artifact) => [
+      artifact,
+      preReviewPreset?.[artifact]?.frontmatter ?? {},
+    ]),
+  );
+  const implementationReady = Object.fromEntries(
+    ['state', 'plan', 'implementation'].map((artifact) => [
+      artifact,
+      {
+        ...preReview[artifact],
+        ...(readyPreset?.[artifact]?.frontmatter ?? {}),
+      },
+    ]),
+  );
+  return { implementationReady, preReview };
+}
+
+function matchesFingerprint(actual, expected) {
+  return Object.entries(expected).every(
+    ([key, value]) => actual[key] === value,
+  );
+}
+
+export function observedLifecycleState(
+  stateContents,
+  planContents,
+  implementationContents,
+  fingerprints = {
+    implementationReady: IMPLEMENTATION_READY_FINGERPRINT,
+    preReview: PRE_REVIEW_FINGERPRINT,
+  },
+) {
   const state = parseAllFrontmatter(stateContents);
   const plan = parseAllFrontmatter(planContents);
+  const implementation = parseAllFrontmatter(implementationContents);
   const planReview = parsePlanContract(planContents).reviewRows.find(
     (row) => row.scope === 'plan',
   );
   if (
-    state.oat_phase === 'implement' &&
-    plan.oat_ready_for === 'oat-project-implement'
+    matchesFingerprint(state, fingerprints.implementationReady.state) &&
+    matchesFingerprint(plan, fingerprints.implementationReady.plan) &&
+    matchesFingerprint(
+      implementation,
+      fingerprints.implementationReady.implementation,
+    ) &&
+    planReview?.status === 'passed'
   ) {
     return 'implementation-ready';
   }
-  if (state.oat_phase === 'plan' && planReview?.status === 'passed') {
+  if (
+    matchesFingerprint(state, fingerprints.preReview.state) &&
+    matchesFingerprint(plan, fingerprints.preReview.plan) &&
+    matchesFingerprint(implementation, fingerprints.preReview.implementation) &&
+    planReview?.status === 'passed'
+  ) {
     return 'reviewed';
   }
-  return 'pre-review';
+  if (
+    matchesFingerprint(state, fingerprints.preReview.state) &&
+    matchesFingerprint(plan, fingerprints.preReview.plan) &&
+    matchesFingerprint(implementation, fingerprints.preReview.implementation) &&
+    planReview?.status === 'pending'
+  ) {
+    return 'pre-review';
+  }
+  return 'invalid';
 }
 
 async function corroborateTransitions(
@@ -908,6 +1234,29 @@ async function corroborateTransitions(
     join(fixtureProjectPath, 'state.md'),
   );
   const planPath = relative(worktreePath, join(fixtureProjectPath, 'plan.md'));
+  const implementationPath = relative(
+    worktreePath,
+    join(fixtureProjectPath, 'implementation.md'),
+  );
+  const [preReviewPreset, readyPreset] = await Promise.all(
+    ['pre-review', 'implementation-ready'].map(async (name) => {
+      const path = join(
+        worktreePath,
+        'tools/smoke/fixture/presets',
+        `${name}.json`,
+      );
+      try {
+        return JSON.parse(
+          await safeReadFile(path, worktreePath, `${name} fixture preset`),
+        );
+      } catch (error) {
+        throw new EvidenceCollectionError(
+          `Cannot load ${name} fixture preset: ${error.message}`,
+        );
+      }
+    }),
+  );
+  const fingerprints = buildLifecycleFingerprints(preReviewPreset, readyPreset);
   return Promise.all(
     events.map(async (event) => {
       if (event.event !== 'state-transition') {
@@ -921,20 +1270,44 @@ async function corroborateTransitions(
         await runGit(['rev-parse', `${commitSha}^`], worktreePath),
         'state transition parent',
       );
-      const [stateBefore, stateAfter, planBefore, planAfter] =
-        await Promise.all([
-          runGitRaw(['show', `${parentSha}:${statePath}`], worktreePath),
-          runGitRaw(['show', `${commitSha}:${statePath}`], worktreePath),
-          runGitRaw(['show', `${parentSha}:${planPath}`], worktreePath),
-          runGitRaw(['show', `${commitSha}:${planPath}`], worktreePath),
-        ]);
+      const [
+        stateBefore,
+        stateAfter,
+        planBefore,
+        planAfter,
+        implementationBefore,
+        implementationAfter,
+      ] = await Promise.all([
+        runGitRaw(['show', `${parentSha}:${statePath}`], worktreePath),
+        runGitRaw(['show', `${commitSha}:${statePath}`], worktreePath),
+        runGitRaw(['show', `${parentSha}:${planPath}`], worktreePath),
+        runGitRaw(['show', `${commitSha}:${planPath}`], worktreePath),
+        runGitRaw(['show', `${parentSha}:${implementationPath}`], worktreePath),
+        runGitRaw(['show', `${commitSha}:${implementationPath}`], worktreePath),
+      ]);
+      const artifactChanges = {
+        implementation: implementationBefore !== implementationAfter,
+        plan: planBefore !== planAfter,
+        state: stateBefore !== stateAfter,
+      };
       return {
+        artifactChanges,
         commitSha,
-        contentChanged: stateBefore !== stateAfter && planBefore !== planAfter,
+        contentChanged: Object.values(artifactChanges).every(Boolean),
         event: 'state-transition',
         from: optionalString(event.from),
-        observedFrom: observedLifecycleState(stateBefore, planBefore),
-        observedTo: observedLifecycleState(stateAfter, planAfter),
+        observedFrom: observedLifecycleState(
+          stateBefore,
+          planBefore,
+          implementationBefore,
+          fingerprints,
+        ),
+        observedTo: observedLifecycleState(
+          stateAfter,
+          planAfter,
+          implementationAfter,
+          fingerprints,
+        ),
         parentSha,
         reachableFromHead: currentShas.has(commitSha),
         sequence: event.sequence,
