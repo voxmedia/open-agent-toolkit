@@ -153,7 +153,7 @@ effort_selector: not-exposed
 selection_source: explicit-call
 candidates_considered:
   - opaque-provider-selector
-selection_reason: native-catalog
+selection_reason: native-catalog # native-catalog | native-catalog-unsatisfying | pre-start-rejection | inherit | gate-target
 selected_route: native
 deadline_seconds: 300
 payload: {}

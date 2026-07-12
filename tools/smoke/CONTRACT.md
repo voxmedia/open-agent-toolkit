@@ -233,6 +233,15 @@ Dispatch records use schema version 1 and contain:
 }
 ```
 
+Human workflow notes and machine records share these semantic fields:
+
+- `selection_reason` maps to the JSON wire path `selection.reason`.
+- `candidates_considered` maps to
+  `selection.candidatesConsidered`.
+
+The names and mapping are normative. Evidence adapters must not introduce a
+second synonym or infer either value from child output.
+
 The launcher records configured invocation and acceptance; it does not infer
 runtime identity. Runtime identity is normalized to `reported` only when both
 producer and model are present and provenance is one of `runtime-observed`,

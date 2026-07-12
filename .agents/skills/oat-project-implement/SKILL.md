@@ -528,6 +528,11 @@ Payload-first invariant:
 - For every coordinator, task-worker, fix, and review launch, record `target`,
   `model_axis`, and `effort_axis` from resolver output and the actual launcher
   payload after payload construction.
+- Record `selection_reason` and `candidates_considered` beside those axes.
+  Allowed reasons are `native-catalog`, `native-catalog-unsatisfying`,
+  `pre-start-rejection`, `inherit`, and `gate-target`. Derive the values from
+  the shared selection decision and Dispatch Report; never reconstruct them
+  from a child self-report.
 - Those fields are launcher-owned. Agent self-report cannot populate or
   overwrite them; it may only be retained separately as optional diagnostics.
 - Derive `Dispatch target` and `Effort axis` / `Model axis` from the payload.
@@ -1425,6 +1430,8 @@ Append a new entry to the `## Orchestration Runs` section between the `<!-- orch
 #### Dispatch Notes
 
 - Dispatch stamps: {formal `Dispatch: ...` records, plus route level and escalation rationale when applicable}
+- `selection_reason`: {`native-catalog` | `native-catalog-unsatisfying` | `pre-start-rejection` | `inherit` | `gate-target`}
+- `candidates_considered`: {exact ordered provider strings considered before launch}
 
 #### Outstanding Items
 

@@ -2497,6 +2497,38 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('aligns human selection fields with smoke evidence wire paths', async () => {
+    const contract = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const smoke = await readRepoFile('tools/smoke/CONTRACT.md');
+
+    for (const [name, content] of [
+      ['shared dispatch contract', contract],
+      ['implementation dispatch notes', implement],
+      ['smoke evidence contract', smoke],
+    ] as const) {
+      expect(content, `${name} selection reason`).toContain('selection_reason');
+      expect(content, `${name} candidates`).toContain('candidates_considered');
+    }
+    for (const reason of [
+      'native-catalog',
+      'native-catalog-unsatisfying',
+      'pre-start-rejection',
+      'inherit',
+    ]) {
+      expect(contract).toContain(reason);
+      expect(implement).toContain(reason);
+      expect(smoke).toContain(reason);
+    }
+    expect(smoke).toMatch(
+      /selection_reason[\s\S]{0,160}selection\.reason[\s\S]{0,240}candidates_considered[\s\S]{0,160}selection\.candidatesConsidered/,
+    );
+  });
+
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const skillPath = join(
