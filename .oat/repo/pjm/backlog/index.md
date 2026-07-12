@@ -4,6 +4,7 @@
 
 ## Curated Overview
 
+- Build reliability: concurrent CLI invocations race on in-place `packages/cli/assets` regeneration (five incidents on 2026-07-12, including one silent bundle corruption). `BL-260712-serialize-cli-asset-bundling` — Serialize CLI asset bundling with atomic staging — tracks atomic staging plus a portable lock; increasingly urgent as multi-agent workflows make concurrent invocations in one worktree routine.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
 - Dispatch matrix normalization consolidation, pass-scoped Cursor catalog caching, and the Dispatch Report V1 schema/formatter are shipped.
 - Reusable dispatch contracts are now split between a provider-neutral utility engine and a project lifecycle adapter. Analytical callers can use bounded reconnaissance without importing project phase/task/gate policy; the separate root-owned runtime broker remains active backlog work.
@@ -15,15 +16,14 @@
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
 
 <!-- OAT BACKLOG-INDEX -->
-
-| ID                                       | Title                                                               | Status | Priority | Scope   | Estimate |
-| ---------------------------------------- | ------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
-| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches      | open   | high     | feature | M        |
-| BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews | open   | high     | feature | M        |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                 | open   | high     | feature | M        |
-| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs   | open   | medium   | feature | L        |
-| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                          | open   | medium   | task    | S        |
-
+| ID | Title | Status | Priority | Scope | Estimate |
+| --- | --- | --- | --- | --- | --- |
+| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches | open | high | feature | M |
+| BL-260708-enable-oat-reviewer-subagent | Enable oat-reviewer subagent orchestration for faster broad reviews | open | high | feature | M |
+| BL-260712-serialize-cli-asset-bundling | Serialize CLI asset bundling with atomic staging | open | high | task | S |
+| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings | open | high | feature | M |
+| BL-260706-front-load-recurring-gate | Front-load recurring gate-finding classes into implementer briefs | open | medium | feature | L |
+| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs | open | medium | task | S |
 <!-- END OAT BACKLOG-INDEX -->
 
 ## Notes

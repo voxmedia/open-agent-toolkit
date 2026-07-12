@@ -3,7 +3,7 @@ export default {
   '*.{ts,tsx,js,jsx}': ['oxlint --fix', 'oxfmt --write'],
 
   // JSON files: format with oxfmt
-  '*.json': ['oxfmt --write'],
+  '*.json': ['oxfmt --write --no-error-on-unmatched-pattern'],
 
   // Markdown files: format with oxfmt
   '*.md': ['oxfmt --write'],
