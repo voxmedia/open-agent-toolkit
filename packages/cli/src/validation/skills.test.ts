@@ -2603,8 +2603,22 @@ describe('validateOatSkills', () => {
 
     expect(reviewRoute).toContain('--role reviewer');
     expect(reviewRoute).not.toContain('--ceiling-tier "$REVIEW_CEILING_TIER"');
+    expect(implement).toContain(
+      'Capture the Immutable Review-Ceiling Envelope',
+    );
+    expect(implement).toContain('review_expected_policy:');
+    expect(implement).toContain('review_expected_target:');
+    expect(implement).toContain('review_expected_dispatch_args:');
+    expect(implement).toContain('review_expected_model_axis:');
+    expect(implement).toContain('review_expected_effort_axis:');
+    expect(implement).toMatch(
+      /review_ceiling_source:[\s\S]{0,120}resolver vocabulary/i,
+    );
+    expect(reviewRoute).toContain('selection.ceilingTier');
+    expect(reviewRoute).toContain('selection.target');
+    expect(reviewRoute).toContain('dispatchArgs');
     expect(reviewRoute).toMatch(
-      /configured review ceiling[\s\S]{0,220}returned policy[\s\S]{0,220}REVIEW_CEILING_TIER[\s\S]{0,120}REVIEW_CEILING_SOURCE/i,
+      /policy,[\s\S]{0,120}source,[\s\S]{0,120}target,[\s\S]{0,160}mismatch[\s\S]{0,40}`BLOCKED`/i,
     );
     expect(reviewRoute).toContain('cursor-agent --list-models');
     expect(reviewRoute).toContain(

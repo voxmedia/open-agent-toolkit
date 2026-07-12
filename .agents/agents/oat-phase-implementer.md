@@ -54,7 +54,15 @@ Coordinator mode receives:
 - `task_ceiling_tier`: effective project or phase maximum to pass to the resolver
 - `task_ceiling_source`: `project` or `phase`
 - `review_ceiling_tier`: project named maximum for implementation self-review
-- `review_ceiling_source`: project
+- `review_expected_policy`: resolver-returned managed review policy
+- `review_ceiling_source`: immutable reviewer-envelope source in resolver
+  vocabulary (for example, `project-state`)
+- `review_expected_target`: exact
+  `providers.$ACTIVE_PROVIDER.selection.target` from that envelope
+- `review_expected_dispatch_args`: complete
+  `providers.$ACTIVE_PROVIDER.dispatchArgs` from that envelope
+- `review_expected_model_axis` and `review_expected_effort_axis`: exact
+  resolver-returned provider axes
 - `commit_convention`: the plan's commit format
 - optional coordinator dispatch axes, target, policy, and provenance fields
 
@@ -237,8 +245,13 @@ oat project dispatch-ceiling resolve \
 
 Reviewer resolution uses the configured review ceiling; `--ceiling-tier` is a
 task-dispatch-only option and must not be passed here. Verify the resolver's
-returned policy, selected target, and ceiling source equal
-`REVIEW_CEILING_TIER` / `REVIEW_CEILING_SOURCE`. A mismatch is `BLOCKED`.
+returned `policy`, `source`,
+`providers.$ACTIVE_PROVIDER.selection.ceilingTier`,
+`providers.$ACTIVE_PROVIDER.selection.target`, and
+`providers.$ACTIVE_PROVIDER.dispatchArgs`, `modelAxis`, and `effortAxis` equal
+the immutable Phase Scope review envelope. Compare target and dispatch
+arguments structurally without normalizing opaque provider values. Any policy,
+source, ceiling, target, dispatch-argument, or axis mismatch is `BLOCKED`.
 
 For capped managed policy, require the exact provider payload:
 `providers.codex.dispatchArgs.variant`,

@@ -1107,6 +1107,25 @@ The project or phase named ceiling is a maximum, not the coordinator target or
 an exact family preference. Under High, lower configured Economy, Balanced, and
 High candidates remain available for different tasks.
 
+#### Capture the Immutable Review-Ceiling Envelope
+
+Before coordinator dispatch, resolve the configured reviewer once with
+`--role reviewer --preflight --non-interactive --json` and the phase's
+`--report-scope`, `--report-action review`, and `--project-path`. Do not pass
+`--ceiling-tier`. Copy this immutable envelope into Phase Scope:
+
+- top-level `policy` and resolver-vocabulary `source` (for example,
+  `project-state`);
+- `providers.$ACTIVE_PROVIDER.selection.ceilingTier`;
+- the exact `providers.$ACTIVE_PROVIDER.selection.target`; and
+- the complete `providers.$ACTIVE_PROVIDER.dispatchArgs`, `modelAxis`, and
+  `effortAxis`.
+
+This preflight snapshot does not select native/CLI execution mechanics and does
+not launch a reviewer. The coordinator independently re-resolves the reviewer,
+validates the live result byte-for-byte against this envelope, then owns route
+selection and launch. An unresolved snapshot blocks coordinator dispatch.
+
 #### Build and Dispatch Phase Scope
 
 ```yaml
@@ -1125,8 +1144,13 @@ project_ceiling_tier: {named project maximum; omit when none}
 phase_ceiling_tier: {explicit narrower phase maximum; omit for auto/blank}
 task_ceiling_tier: {effective project or phase named ceiling}
 task_ceiling_source: {project|phase}
-review_ceiling_tier: {named project maximum; implementation review is not narrowed by phase task ceiling}
-review_ceiling_source: project
+review_ceiling_tier: {review envelope selection.ceilingTier; implementation review is not narrowed by phase task ceiling}
+review_expected_policy: {review envelope policy}
+review_ceiling_source: {review envelope source in resolver vocabulary}
+review_expected_target: {review envelope providers.$ACTIVE_PROVIDER.selection.target}
+review_expected_dispatch_args: {review envelope providers.$ACTIVE_PROVIDER.dispatchArgs}
+review_expected_model_axis: {review envelope providers.$ACTIVE_PROVIDER.modelAxis}
+review_expected_effort_axis: {review envelope providers.$ACTIVE_PROVIDER.effortAxis}
 commit_convention: {from plan.md}
 coordinator_target: {resolver-selected coordinator target}
 ```

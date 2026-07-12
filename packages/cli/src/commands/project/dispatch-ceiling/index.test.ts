@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -19,6 +20,38 @@ interface HarnessOptions {
   home: string;
   activeProjectPath?: string | null;
   processEnv?: NodeJS.ProcessEnv;
+}
+
+interface ReviewSelectionExpectation {
+  policy: string;
+  source: string;
+  ceilingTier: string;
+  target: unknown;
+  dispatchArgs: unknown;
+  modelAxis: string;
+  effortAxis: string;
+}
+
+function coordinatorReviewSelectionMatches(
+  payload: Record<string, unknown>,
+  providerName: string,
+  expected: ReviewSelectionExpectation,
+): boolean {
+  const providers = payload.providers as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  const provider = providers?.[providerName];
+  const selection = provider?.selection as Record<string, unknown> | undefined;
+
+  return (
+    payload.policy === expected.policy &&
+    payload.source === expected.source &&
+    selection?.ceilingTier === expected.ceilingTier &&
+    isDeepStrictEqual(selection?.target, expected.target) &&
+    isDeepStrictEqual(provider?.dispatchArgs, expected.dispatchArgs) &&
+    provider?.modelAxis === expected.modelAxis &&
+    provider?.effortAxis === expected.effortAxis
+  );
 }
 
 function createHarness(options: HarnessOptions): {
@@ -932,6 +965,87 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(process.exitCode).toBe(0);
     },
   );
+
+  it('matches the coordinator review envelope and rejects source or target drift', async () => {
+    const { root, home } = await setup();
+    const target = 'gpt-5.6-sol-xhigh';
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    cursor:',
+        `      high: ${target}`,
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--role',
+      'reviewer',
+      '--preflight',
+      '--non-interactive',
+      '--report-scope',
+      'p04',
+      '--report-action',
+      'review',
+      '--project-path',
+      '.oat/projects/shared/demo',
+      '--json',
+    ]);
+
+    const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+    const expected: ReviewSelectionExpectation = {
+      policy: 'high',
+      source: 'project-state',
+      ceilingTier: 'high',
+      target: {
+        harness: 'cursor',
+        crossHarness: false,
+        routeIndex: 0,
+        routeLength: 1,
+        model: target,
+      },
+      dispatchArgs: { model: target },
+      modelAxis: `selected:${target}`,
+      effortAxis: 'not-applicable',
+    };
+
+    expect(coordinatorReviewSelectionMatches(payload, 'cursor', expected)).toBe(
+      true,
+    );
+    expect(
+      coordinatorReviewSelectionMatches(payload, 'cursor', {
+        ...expected,
+        source: 'project',
+      }),
+    ).toBe(false);
+    expect(
+      coordinatorReviewSelectionMatches(payload, 'cursor', {
+        ...expected,
+        target: {
+          harness: 'cursor',
+          crossHarness: false,
+          routeIndex: 0,
+          routeLength: 1,
+          model: 'different-target',
+        },
+      }),
+    ).toBe(false);
+    expect(process.exitCode).toBe(0);
+  });
 
   it('keeps single-axis capped selection unchanged when escalation level is present', async () => {
     const { root, home } = await setup();

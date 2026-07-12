@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T13:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T14:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -121,6 +121,8 @@ Implementation — Phase 4 fixes complete; awaiting re-review
 - ✓ Phase 4 self-review fix iteration 2 complete and verified
 - ⚠ Phase 4 re-review iteration 3 failed 0C/2I/0M/0m
 - ✓ Phase 4 self-review fix iteration 3 complete and verified
+- ⚠ Phase 4 re-review iteration 4 failed 0C/1I/0M/0m
+- ✓ Phase 4 self-review fix iteration 4 complete and verified
 
 ## Blockers
 

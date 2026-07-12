@@ -1101,6 +1101,38 @@ repository-local provider sync passed.
 **Next:** run full validation, commit the third fix baseline, and re-review
 Phase 4.
 
+### Phase 4 Self-review — Iteration 4
+
+**Review artifact:** `reviews/p04-review-2026-07-12T135252Z.md`
+
+**Verdict:** failed — 0 Critical, 1 Important, 0 Medium, 0 Minor.
+
+**Finding:** The coordinator's new result postcondition could not validate its
+source or exact target: Phase Scope used `project` instead of resolver
+vocabulary such as `project-state` and supplied no immutable expected target.
+
+### Phase 4 Self-review — Iteration 4 — Fix iteration 4 complete
+
+**Outcome:**
+
+- Before phase dispatch, the outer workflow now captures one immutable
+  reviewer-ceiling envelope from a non-interactive reviewer preflight:
+  resolver policy/source, `selection.ceilingTier`, exact `selection.target`,
+  complete provider `dispatchArgs`, and model/effort axes.
+- Phase Scope passes that envelope in resolver vocabulary. The snapshot does
+  not choose native/CLI mechanics or launch a reviewer.
+- The coordinator independently re-resolves, structurally compares the live
+  result to the envelope without normalizing opaque targets, then retains route
+  selection and launch ownership. Any envelope-field mismatch blocks.
+- Executable resolver tests prove a matching envelope passes and altered source
+  or target values fail.
+
+**Verification:** 193/193 focused skill, closeout, and resolver tests passed;
+repository-local provider sync passed.
+
+**Next:** run full validation, commit the fourth fix baseline, and run the final
+configured Phase 4 re-review.
+
 ---
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
