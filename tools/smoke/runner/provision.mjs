@@ -15,7 +15,7 @@ const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
 const GATE_TARGETS = {
   claude: 'codex-5-6-sol-max',
-  codex: 'cursor-default',
+  codex: 'claude-default',
   'cursor-cli': 'codex-5-6-sol-max',
   'cursor-ide': 'codex-5-6-sol-max',
 };

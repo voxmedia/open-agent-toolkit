@@ -123,7 +123,7 @@ automated reports. `createdPaths`, `branch`, and `worktreePath` are the cleanup
 allowlist.
 
 `gateTarget` is selected before the run starts and is cross-runtime relative to
-the root harness: Codex uses `cursor-default`; Claude and both Cursor surfaces
+the root harness: Codex uses `claude-default`; Claude and both Cursor surfaces
 use `codex-5-6-sol-max`. Every required gate invocation must pass this exact
 target. Listing targets is a valid probe; invoking `oat gate review` as a probe
 is not, because an accepted gate launch is terminal even when it fails.
