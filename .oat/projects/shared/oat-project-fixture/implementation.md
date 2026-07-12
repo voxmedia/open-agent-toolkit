@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -74,12 +74,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
 | Phase 2 | in_progress | 5     | 5/5       |
-| Phase 3 | pending     | 3     | 0/3       |
+| Phase 3 | in_progress | 3     | 1/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 8/23 tasks completed
+**Total:** 9/23 tasks completed
 
 ---
 
@@ -607,13 +607,33 @@ corrected in this bookkeeping update.
 
 ## Phase 3: Evidence Collector & Report
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-11
 
 ### Task p03-t01: Evidence collection module
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 114d7660
+
+**Outcome:**
+
+- Added strict collector CLI and deterministic normalized bundle output.
+- Kept configured invocation and runtime-observed identity as separate evidence
+  layers, using `not-reported` rather than inference.
+- Collected gate corroboration, fixture logs, orchestration events, and
+  branch/worktree/commit topology from golden and real-shaped inputs.
+- Output survives cleanup outside the disposable worktree and is atomically
+  published.
+
+**Verification:**
+
+- Collector tests — 3/3 passed.
+- Complete smoke/bootstrap suite — 63/63 passed.
+- Direct evidence lint/format and diff checks — passed.
+
+**Execution deviation:** Per user direction, remaining implementation tasks run
+directly in the root thread. Subagents remain allowed only for phase
+self-review; independent external gates remain enabled.
 
 ---
 
