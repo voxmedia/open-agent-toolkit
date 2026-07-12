@@ -101,11 +101,40 @@ function smokeConfigContents({
   harness,
   scenario,
 }) {
+  const cursorBrokerGate =
+    harness === 'codex'
+      ? {
+          gates: {
+            execTargets: {
+              'cursor-gpt-5-6-sol-max': {
+                availabilityCommand: ['cursor-agent', '--version'],
+                baseCommand: [
+                  'node',
+                  'tools/smoke/runner/cursor-broker-client.mjs',
+                  '-p',
+                  '--force',
+                  '--model',
+                  'gpt-5.6-sol-max',
+                ],
+                invocation: {
+                  model: 'gpt-5.6-sol-max',
+                  reasoningEffort: 'provider-default',
+                },
+                priority: 120,
+                runtime: 'cursor',
+              },
+            },
+          },
+        }
+      : {};
   return `${JSON.stringify(
     {
       activeProject: fixtureProjectPath,
       smoke: { driveMode, harness, scenario },
-      workflow: { postImplementSequence: SMOKE_CLOSEOUT_POLICY },
+      workflow: {
+        ...cursorBrokerGate,
+        postImplementSequence: SMOKE_CLOSEOUT_POLICY,
+      },
     },
     null,
     2,

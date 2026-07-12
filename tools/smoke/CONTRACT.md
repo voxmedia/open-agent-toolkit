@@ -130,9 +130,13 @@ the root harness: Codex uses the trusted
 Listing targets is a valid probe; invoking `oat gate review` as a probe is not,
 because an accepted gate launch is terminal even when it fails.
 When either the root or gate runtime is Cursor, preflight requires only
-sanitized presence of `CURSOR_API_KEY`. The runner passes the inherited key
-through process environment; the value must never enter config, manifests,
-logs, prompts, or evidence.
+sanitized presence of `CURSOR_API_KEY`. Because Codex tool shells redact
+provider credentials, Codex drives run through a runner-owned local mailbox
+broker. The disposable local gate target invokes only the committed
+worktree-mailbox client; the parent broker launches `cursor-agent` with the
+retained API key.
+Operator handoffs wrap Codex in the same broker launcher. The key value must
+never enter config, manifests, the mailbox, logs, prompts, or evidence.
 
 Manifest updates are published with a sibling temporary file and atomic rename.
 Nested ownership registrations additionally use a bounded exclusive sibling

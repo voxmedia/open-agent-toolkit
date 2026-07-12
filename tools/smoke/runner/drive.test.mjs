@@ -118,6 +118,7 @@ test('dry-run records the selected protocol stub in the manifest', async () => {
     assert.equal(persisted.drive.invocation.executable, 'codex');
     assert.equal(reports.length, 1);
     assert.match(reports[0], /OAT_SMOKE_LOCAL_CLI=/);
+    assert.match(reports[0], /cursor-broker-launch\.mjs/);
   } finally {
     await rm(runDirectory, { force: true, recursive: true });
   }

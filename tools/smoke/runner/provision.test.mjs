@@ -344,6 +344,26 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       preApproval: [],
       postApproval: [],
     });
+    assert.deepEqual(
+      config.workflow.gates.execTargets['cursor-gpt-5-6-sol-max'],
+      {
+        availabilityCommand: ['cursor-agent', '--version'],
+        baseCommand: [
+          'node',
+          'tools/smoke/runner/cursor-broker-client.mjs',
+          '-p',
+          '--force',
+          '--model',
+          'gpt-5.6-sol-max',
+        ],
+        invocation: {
+          model: 'gpt-5.6-sol-max',
+          reasoningEffort: 'provider-default',
+        },
+        priority: 120,
+        runtime: 'cursor',
+      },
+    );
     assert.deepEqual(manifest.effectiveCloseoutPolicy, {
       source: 'local',
       value: { preApproval: [], postApproval: [] },
