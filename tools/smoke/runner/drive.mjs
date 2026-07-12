@@ -18,6 +18,7 @@ const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
 const protocolsDirectory = resolve(runnerDirectory, '../protocols');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
+const sourceOatEntryPoint = join(repositoryRoot, 'packages/cli/dist/index.js');
 const PROMPT_START = '<!-- OAT_SMOKE_PROMPT_START -->';
 const PROMPT_END = '<!-- OAT_SMOKE_PROMPT_END -->';
 
@@ -192,7 +193,11 @@ export function createInvocationPlan({
 
 export function renderHandoff(plan) {
   const invocation = [plan.executable, ...plan.args].map(shellQuote).join(' ');
-  const command = `export PATH=${shellQuote(join(plan.cwd, 'tools/smoke/bin'))}:"$PATH"; ${invocation}`;
+  const command = [
+    `export OAT_SMOKE_LOCAL_CLI=${shellQuote(sourceOatEntryPoint)}`,
+    `export PATH=${shellQuote(join(plan.cwd, 'tools/smoke/bin'))}:"$PATH"`,
+    invocation,
+  ].join('; ');
   return [
     `Working directory: ${plan.cwd}`,
     `Command: ${command}`,
@@ -209,6 +214,7 @@ async function executeInvocation(plan, { registerSubprocess } = {}) {
       cwd: plan.cwd,
       env: {
         ...process.env,
+        OAT_SMOKE_LOCAL_CLI: sourceOatEntryPoint,
         PATH: `${join(plan.cwd, 'tools/smoke/bin')}:${process.env.PATH ?? ''}`,
       },
       stdio: ['ignore', 'pipe', 'pipe'],

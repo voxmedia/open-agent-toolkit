@@ -152,10 +152,14 @@ node tools/smoke/runner/run-smoke.mjs \
 ```
 
 Preflight and every provider process prepend the committed
-`tools/smoke/bin/oat` shim to `PATH`. The shim resolves the current worktree's
-built `packages/cli/dist/index.js`; preflight accepts only that repository-owned
-shim or the dist entrypoint itself and still rejects an unrelated global
-executable. Printed operator handoffs include the same `PATH` prefix.
+`tools/smoke/bin/oat` shim to `PATH`. The runner binds that shim through
+`OAT_SMOKE_LOCAL_CLI` to the preflight-verified source workspace
+`packages/cli/dist/index.js`, so the unbootstrapped disposable outer worktree
+does not fall through to a global CLI. Child processes inherit the binding.
+Preflight accepts only the repository-owned shim or the dist entrypoint itself
+and still rejects an unrelated global executable. Printed operator handoffs
+include both environment bindings and require a stable source build until
+collection completes.
 
 Operator-interactive drives are split so a noninteractive command cannot run
 by accident:

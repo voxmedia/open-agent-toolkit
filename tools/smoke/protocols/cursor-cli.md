@@ -37,6 +37,10 @@ runtime-identity evidence as separate facts. Write immutable dispatch and
 state-transition records only through tools/smoke/evidence/record.mjs,
 following tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
 
+The `oat` command is already bound to the preflight-verified source build
+through the smoke environment. Use it directly; do not install dependencies,
+bootstrap this outer worktree, or invoke `pnpm run cli`.
+
 Do not infer Cursor IDE behavior, modify the parent worktree or persisted user
 configuration, or replace an accepted child launch. Work only in this
 disposable worktree and commit each fixture task exactly as planned.
