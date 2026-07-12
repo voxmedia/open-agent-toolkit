@@ -7,6 +7,7 @@ import {
   readFile,
   realpath,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -14,11 +15,15 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
+import { evaluateEvidence } from './assertions.mjs';
 import {
   collectEvidence,
   EvidenceCollectionError,
+  normalizeRuntimeIdentity,
   parseCollectorArgs,
 } from './collect.mjs';
+import { writeDispatchRecord } from './record.mjs';
+import { checkEvidenceReport, emitEvidenceReport } from './report.mjs';
 
 const execFileAsync = promisify(execFile);
 const evidenceDirectory = import.meta.dirname;
@@ -65,11 +70,47 @@ async function createGoldenRun() {
     recursive: true,
   });
   await cp(
+    join(evidenceDirectory, '../fixture/project/plan.md'),
+    join(fixtureProjectPath, 'plan.md'),
+  );
+  await cp(
     join(goldenDirectory, 'workspace'),
     join(worktreePath, 'workspace'),
     {
       recursive: true,
     },
+  );
+  const gateDirectory = join(worktreePath, 'workspace/evidence/gates');
+  await mkdir(gateDirectory, { recursive: true });
+  await writeFile(
+    join(gateDirectory, 'p03.json'),
+    `${JSON.stringify(
+      {
+        artifactPath: join(fixtureProjectPath, 'reviews/p03-review.md'),
+        corroboration: {
+          invocation: 'matched',
+          project: 'matched',
+          run: 'matched',
+        },
+        gateInvocation: {
+          model: 'fable',
+          reasoningEffort: 'provider-default',
+          runId: 'golden-gate-run',
+          runtime: 'claude',
+          source: 'exec-target-config',
+          targetId: 'claude-fable-skip-permissions',
+        },
+        invocation: 'gate',
+        outcome: 'review_completed_gate_passed',
+        project: fixtureProjectPath,
+        runId: 'golden-gate-run',
+        scope: 'p03',
+        status: 'ok',
+        target: 'claude-fable-skip-permissions',
+      },
+      null,
+      2,
+    )}\n`,
   );
   await git(['add', '.oat/projects/smoke-fixture', 'workspace'], worktreePath);
   await git(['commit', '-m', 'test: establish golden baseline'], worktreePath);
@@ -155,6 +196,25 @@ async function cleanupGoldenRun(run) {
   await rm(run.repository, { force: true, recursive: true });
 }
 
+test('runtime identity requires independently observed provenance', () => {
+  assert.deepEqual(
+    normalizeRuntimeIdentity({
+      confidence: 'low',
+      model: 'claimed-model',
+      producer: 'claimed-producer',
+      provenance: 'self-reported',
+    }),
+    {
+      confidence: 'not-reported',
+      effort: null,
+      model: null,
+      producer: null,
+      provenance: 'not-reported',
+      status: 'not-reported',
+    },
+  );
+});
+
 test('collects a deterministic normalized evidence bundle', async () => {
   const run = await createGoldenRun();
   const outputDirectory = join(run.repository, 'evidence');
@@ -176,8 +236,13 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.deepEqual(bundle.fixture.taskIds, [
       'p01-t01',
       'p01-t02',
+      'p01-t03',
       'p02-t01',
+      'p02-t02',
+      'p02-t03',
       'p03-t01',
+      'p03-t02',
+      'p03-t03',
     ]);
     assert.match(bundle.fixture.planHash, /^[0-9a-f]{64}$/u);
     assert.deepEqual(
@@ -190,7 +255,7 @@ test('collects a deterministic normalized evidence bundle', async () => {
       effort: 'xhigh',
       model: 'gpt-5.6-sol-xhigh',
       producer: 'gpt-5.6-sol-xhigh',
-      provenance: 'observed',
+      provenance: 'runtime-observed',
       status: 'reported',
     });
     assert.deepEqual(bundle.dispatches[1].runtimeIdentity, {
@@ -235,11 +300,35 @@ test('collects a deterministic normalized evidence bundle', async () => {
           oat_invocation_model: 'fable',
           oat_invocation_reasoning_effort: 'provider-default',
           oat_invocation_source: 'exec-target-config',
+          oat_project: 'smoke-fixture',
           oat_review_invocation: 'gate',
           oat_review_scope: 'p03',
           oat_review_type: 'code',
         },
         path: 'reviews/p03-review.md',
+      },
+    ]);
+    assert.deepEqual(bundle.gates, [
+      {
+        artifactPath: 'reviews/p03-review.md',
+        configuredInvocation: {
+          effort: 'provider-default',
+          model: 'fable',
+          source: 'exec-target-config',
+        },
+        corroboration: {
+          invocation: 'matched',
+          project: 'matched',
+          run: 'matched',
+        },
+        invocation: 'gate',
+        outcome: 'review_completed_gate_passed',
+        project: 'smoke-fixture',
+        runId: 'golden-gate-run',
+        runtime: 'claude',
+        scope: 'p03',
+        status: 'ok',
+        target: 'claude-fable-skip-permissions',
       },
     ]);
     assert.equal(bundle.git.branch, 'smoke-golden');
@@ -268,6 +357,166 @@ test('collects a deterministic normalized evidence bundle', async () => {
       false,
       'normalized sections do not leak absolute temp paths',
     );
+  } finally {
+    await cleanupGoldenRun(run);
+  }
+});
+
+test('collector output drives nine-task assertions and a bound report', async () => {
+  const run = await createGoldenRun();
+  const outputDirectory = join(run.repository, 'pipeline-evidence');
+  const taskIds = [
+    'p01-t01',
+    'p01-t02',
+    'p01-t03',
+    'p02-t01',
+    'p02-t02',
+    'p02-t03',
+    'p03-t01',
+    'p03-t02',
+    'p03-t03',
+  ];
+  const reviewDirectory = join(run.fixtureProjectPath, 'reviews');
+  const gateDirectory = join(run.worktreePath, 'workspace/evidence/gates');
+
+  try {
+    await rm(join(run.worktreePath, 'workspace/evidence/dispatch.jsonl'));
+    for (const taskId of taskIds) {
+      const logPath = join(
+        run.worktreePath,
+        `workspace/logs/${taskId.slice(0, 3)}.log`,
+      );
+      await writeFile(
+        logPath,
+        `${await readFile(logPath, 'utf8')}${taskId} completed\n`,
+      );
+      await git(
+        ['add', '--', `workspace/logs/${taskId.slice(0, 3)}.log`],
+        run.worktreePath,
+      );
+      await git(
+        ['commit', '-m', `feat(${taskId}): append fixture marker`],
+        run.worktreePath,
+      );
+
+      const inputPath = join(run.repository, `${taskId}-dispatch.json`);
+      await writeFile(
+        inputPath,
+        JSON.stringify({
+          action: 'implementation',
+          attempt: 1,
+          configuredInvocation: {
+            ceiling: 'gpt-5.6-sol-xhigh',
+            effortAxis: 'not-applicable',
+            modelAxis: 'selected:gpt-5.6-terra-medium',
+            policy: 'high',
+            target: 'cursor-cli:gpt-5.6-terra-medium',
+          },
+          launch: {
+            mechanism: 'cursor-cli',
+            outcome: 'completed',
+            status: 'accepted',
+          },
+          role: 'implementer',
+          runtimeIdentity: null,
+          schemaVersion: 1,
+          scope: taskId,
+          selection: {
+            atOrBelowCeiling: true,
+            candidatesConsidered: ['gpt-5.6-terra-medium'],
+            reason: 'native-catalog-unsatisfying',
+          },
+        }),
+      );
+      await writeDispatchRecord({
+        inputPath,
+        worktreePath: run.worktreePath,
+      });
+    }
+
+    for (const scope of ['p01', 'p02']) {
+      const runId = `${scope}-gate-run`;
+      const target = 'claude-fable-skip-permissions';
+      const reviewPath = join(reviewDirectory, `${scope}-review.md`);
+      await writeFile(
+        reviewPath,
+        `---\noat_review_scope: ${scope}\noat_review_type: code\noat_review_invocation: gate\noat_project: smoke-fixture\noat_gate_run_id: ${runId}\noat_gate_target: ${target}\noat_gate_runtime: claude\noat_invocation_model: fable\noat_invocation_reasoning_effort: provider-default\noat_invocation_source: exec-target-config\n---\n\n# ${scope} Review\n`,
+      );
+      await writeFile(
+        join(gateDirectory, `${scope}.json`),
+        JSON.stringify({
+          artifactPath: reviewPath,
+          corroboration: {
+            invocation: 'matched',
+            project: 'matched',
+            run: 'matched',
+          },
+          gateInvocation: {
+            model: 'fable',
+            reasoningEffort: 'provider-default',
+            runId,
+            runtime: 'claude',
+            source: 'exec-target-config',
+            targetId: target,
+          },
+          invocation: 'gate',
+          outcome: 'review_completed_gate_passed',
+          project: run.fixtureProjectPath,
+          runId,
+          scope,
+          status: 'ok',
+          target,
+        }),
+      );
+    }
+    let plan = await readFile(join(run.fixtureProjectPath, 'plan.md'), 'utf8');
+    for (const scope of ['p01', 'p02', 'p03']) {
+      plan = plan.replace(
+        new RegExp(
+          `^\\| ${scope}\\s+\\| code\\s+\\| pending \\| -\\s+\\| -\\s+\\|$`,
+          'mu',
+        ),
+        `| ${scope} | code | received | 2026-07-11 | reviews/${scope}-review.md |`,
+      );
+    }
+    await writeFile(join(run.fixtureProjectPath, 'plan.md'), plan);
+    await git(
+      [
+        'add',
+        '--',
+        '.oat/projects/smoke-fixture/plan.md',
+        '.oat/projects/smoke-fixture/reviews',
+      ],
+      run.worktreePath,
+    );
+    await git(
+      ['commit', '-m', 'chore: receive fixture phase reviews'],
+      run.worktreePath,
+    );
+
+    const { bundle, outputPath } = await collectEvidence({
+      manifestPath: run.manifestPath,
+      outDirectory: outputDirectory,
+      worktreePath: run.worktreePath,
+    });
+    const assessment = evaluateEvidence(bundle);
+    assert.equal(
+      assessment.status,
+      'passed',
+      JSON.stringify(
+        assessment.assertions.filter((entry) => entry.status === 'failed'),
+        null,
+        2,
+      ),
+    );
+    assert.equal(assessment.summary.failed, 0);
+
+    const result = await emitEvidenceReport({
+      bundlePath: outputPath,
+      outDirectory: outputDirectory,
+    });
+    assert.equal(result.report.status, 'passed');
+    assert.equal(await checkEvidenceReport(result.jsonPath), true);
   } finally {
     await cleanupGoldenRun(run);
   }
@@ -363,6 +612,45 @@ test('rejects invalid arguments and unsafe output locations', async () => {
           worktreePath: run.worktreePath,
         }),
       /Manifest worktreePath (?:is not readable|does not match --worktree)/,
+    );
+  } finally {
+    await cleanupGoldenRun(run);
+  }
+});
+
+test('rejects symlink input escapes and invalid Git identifiers', async () => {
+  const run = await createGoldenRun();
+  const dispatchPath = join(
+    run.worktreePath,
+    'workspace/evidence/dispatch.jsonl',
+  );
+  const outsidePath = join(run.repository, 'outside-dispatch.jsonl');
+
+  try {
+    await rm(dispatchPath);
+    await writeFile(outsidePath, '{}\n');
+    await symlink(outsidePath, dispatchPath);
+    await assert.rejects(
+      () =>
+        collectEvidence({
+          manifestPath: run.manifestPath,
+          outDirectory: join(run.repository, 'escaped-evidence'),
+          worktreePath: run.worktreePath,
+        }),
+      /escaped its allowed root/,
+    );
+
+    await rm(dispatchPath);
+    const invalidManifest = { ...run.manifest, branch: '--all' };
+    await writeFile(run.manifestPath, `${JSON.stringify(invalidManifest)}\n`);
+    await assert.rejects(
+      () =>
+        collectEvidence({
+          manifestPath: run.manifestPath,
+          outDirectory: join(run.repository, 'invalid-ref-evidence'),
+          worktreePath: run.worktreePath,
+        }),
+      /Invalid manifest branch/,
     );
   } finally {
     await cleanupGoldenRun(run);

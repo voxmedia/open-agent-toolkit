@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,8 @@ export class EvidenceReportError extends Error {
 
 async function readJson(path, label) {
   try {
-    return JSON.parse(await readFile(path, 'utf8'));
+    const contents = await readFile(path, 'utf8');
+    return { contents, value: JSON.parse(contents) };
   } catch (error) {
     throw new EvidenceReportError(
       `${label} is not readable JSON: ${error.message}`,
@@ -44,6 +45,7 @@ export function renderMarkdown(report) {
     `**Scenario:** ${report.scenario}`,
     `**Status:** ${report.status}`,
     `**Assertions:** ${report.summary.passed} passed / ${report.summary.failed} failed`,
+    `**Bundle SHA-256:** ${report.bundle.sha256}`,
     '',
     '| Assertion | Severity | Status | Description |',
     '| --------- | -------- | ------ | ----------- |',
@@ -68,7 +70,8 @@ export function renderMarkdown(report) {
 }
 
 export async function emitEvidenceReport({ bundlePath, outDirectory }) {
-  const bundle = await readJson(bundlePath, 'Evidence bundle');
+  const bundleSource = await readJson(bundlePath, 'Evidence bundle');
+  const bundle = bundleSource.value;
   let report;
   try {
     report = evaluateEvidence(bundle);
@@ -79,24 +82,57 @@ export async function emitEvidenceReport({ bundlePath, outDirectory }) {
     throw error;
   }
 
+  const boundBundlePath = join(outDirectory, 'bundle.json');
+  const bundleBinding = {
+    path: 'bundle.json',
+    sha256: createHash('sha256').update(bundleSource.contents).digest('hex'),
+  };
+  report = { ...report, bundle: bundleBinding };
   const jsonPath = join(outDirectory, 'report.json');
   const markdownPath = join(outDirectory, 'report.md');
+  if (resolve(bundlePath) !== resolve(boundBundlePath)) {
+    await atomicWrite(boundBundlePath, bundleSource.contents);
+  }
   await atomicWrite(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
   await atomicWrite(markdownPath, renderMarkdown(report));
   return { jsonPath, markdownPath, report };
 }
 
 export async function checkEvidenceReport(reportPath) {
-  const report = await readJson(reportPath, 'Evidence report');
+  const { value: report } = await readJson(reportPath, 'Evidence report');
   if (
-    report?.status !== 'passed' ||
-    !Array.isArray(report.assertions) ||
-    report.assertions.length === 0 ||
-    report.assertions.some((entry) => entry?.status !== 'passed')
+    report?.schemaVersion !== 1 ||
+    report?.bundle?.path !== 'bundle.json' ||
+    typeof report.bundle.sha256 !== 'string' ||
+    !/^[0-9a-f]{64}$/u.test(report.bundle.sha256)
   ) {
     return false;
   }
-  return true;
+  const bundlePath = join(dirname(reportPath), report.bundle.path);
+  let bundleSource;
+  try {
+    bundleSource = await readJson(bundlePath, 'Bound evidence bundle');
+  } catch {
+    return false;
+  }
+  const digest = createHash('sha256')
+    .update(bundleSource.contents)
+    .digest('hex');
+  if (digest !== report.bundle.sha256) {
+    return false;
+  }
+
+  let recomputed;
+  try {
+    recomputed = evaluateEvidence(bundleSource.value);
+  } catch {
+    return false;
+  }
+  const expected = { ...recomputed, bundle: report.bundle };
+  return (
+    recomputed.status === 'passed' &&
+    JSON.stringify(report) === JSON.stringify(expected)
+  );
 }
 
 export function parseReportArgs(argv) {

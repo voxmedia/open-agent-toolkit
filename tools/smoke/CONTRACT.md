@@ -183,3 +183,123 @@ node tools/smoke/evidence/collect.mjs \
 
 The collector reads the manifest's `appliedScenario`, fixture logs, dispatch
 records, review artifacts, and Git history.
+
+## Production Evidence Inputs
+
+The disposable workflow writes launcher-owned records before collection:
+
+- `workspace/evidence/dispatch/<scope>-<attempt>.json` — one immutable record
+  for every pre-start rejection or accepted launch. Create records only through
+  `node tools/smoke/evidence/record.mjs --kind dispatch --worktree <path>
+--input <record.json>`.
+- `workspace/evidence/orchestration/<sequence>-state-transition.json` —
+  commit-bound plan-review transitions. Create records through the same command
+  with `--kind state-transition`.
+- `workspace/evidence/gates/<scope>.json` — the unmodified JSON result from
+  `oat gate review --json`; the collector retains only gate-owned invocation
+  fields, artifact identity, and corroboration statuses.
+
+Dispatch records use schema version 1 and contain:
+
+```json
+{
+  "schemaVersion": 1,
+  "scope": "p01-t01",
+  "attempt": 1,
+  "action": "implementation",
+  "role": "implementer",
+  "configuredInvocation": {
+    "ceiling": "configured ceiling",
+    "target": "exact selected target",
+    "modelAxis": "selected:model",
+    "effortAxis": "selected:effort | not-applicable",
+    "policy": "dispatch policy"
+  },
+  "selection": {
+    "reason": "native-catalog | native-catalog-unsatisfying | pre-start-rejection | inherit",
+    "candidatesConsidered": [],
+    "atOrBelowCeiling": true
+  },
+  "launch": {
+    "status": "accepted | pre-start-rejected",
+    "accepted": true,
+    "mechanism": "native or CLI mechanism",
+    "outcome": "running | completed | failed | rejected"
+  },
+  "runtimeIdentity": null
+}
+```
+
+The launcher records configured invocation and acceptance; it does not infer
+runtime identity. Runtime identity is normalized to `reported` only when both
+producer and model are present and provenance is one of `runtime-observed`,
+`provider-output`, or `gate-corroborated`. Every other value becomes
+`not-reported`.
+
+The harness protocols added in p05 own invoking these writers around real
+provider launches and saving gate JSON. Fixture logs, exact task commits,
+review artifacts/rows, Git topology, and the provisioning ownership journal
+are independent durable corroboration; assertion logic does not accept
+launcher booleans as proof of those outcomes. The collector-to-report
+integration test exercises the full nine-task fixture shape before p05 wires
+the provider-specific drive commands.
+
+## Normalization and Containment
+
+Every worktree input is resolved before reading and must remain inside the
+disposable worktree or fixture project. Symlink escapes fail collection.
+Manifest branch names pass `git check-ref-format`; commit identifiers must be
+full lowercase SHAs; Git invocations use full refs and explicit argument
+boundaries.
+
+Normalized sections whitelist fields and omit timestamps and absolute paths.
+Contract-required absolute manifest, journal, and writable-root paths exist
+only under `source.rawPaths`. Configured invocation and runtime-observed
+identity remain separate objects.
+
+## Assertions and Report Binding
+
+The `plan-review` profile compares the baseline and current substantive plan,
+requires the canonical nine task IDs, verifies commit-bound atomic state
+transitions, and exactly cross-checks the plan gate artifact against gate JSON.
+The `implement` profile requires exactly one accepted completed launch per
+task (while allowing explicit rejections before acceptance), exact
+at-or-below-ceiling selection, nine marker commits/log lines, journaled flat
+parallel branches, p01/p02-before-p03 fan-in, phase gate corroboration, and
+explicit runtime identity status. `full` adds the final gate and unions both
+profiles.
+
+Generate and verify a report with:
+
+```sh
+node tools/smoke/evidence/report.mjs \
+  --bundle <out>/bundle.json \
+  --out <out>
+node tools/smoke/evidence/report.mjs --check <out>/report.json
+```
+
+`report.json` contains the SHA-256 digest and sibling path of its bound
+`bundle.json`. Check mode rereads that bundle, validates the digest, recomputes
+the scenario profile, and requires byte-equivalent structured results. It does
+not trust report status, assertion IDs, severities, or summary counts.
+
+## Negative Controls
+
+Unavailable-target evidence is built from the real `PreflightError.report`
+plus an explicit post-command inventory of manifests, branches, and worktrees;
+all inventories must be empty. Post-acceptance failure evidence consumes the
+same ordered dispatch attempts as positive runs. Any launch after an accepted
+failure is a Critical violation, while explicit pre-start rejections before
+the accepted launch remain valid.
+
+After capturing the failed runner's stdout/stderr, normalize the unavailable
+control with:
+
+```sh
+node tools/smoke/evidence/negative.mjs \
+  --harness <harness> \
+  --preflight <captured-output> \
+  --repository <repo-root> \
+  --runs-dir <repo-root>/tools/smoke/.runs \
+  --out tools/smoke/reports/negative-controls/<harness>
+```

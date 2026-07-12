@@ -23,5 +23,5 @@ Reconcile prior phases.
 ## Reviews
 
 | Scope | Status |
-| ----- | ------ |
-| p03   | passed |
+| ----- | ------ | -------- | ---------- | --------------------- |
+| p03   | code   | received | 2026-07-11 | reviews/p03-review.md |

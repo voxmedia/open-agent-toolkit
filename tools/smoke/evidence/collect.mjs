@@ -23,8 +23,31 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+const DISPATCH_DIRECTORY = 'workspace/evidence/dispatch';
 const DISPATCH_PATH = 'workspace/evidence/dispatch.jsonl';
+const GATE_DIRECTORY = 'workspace/evidence/gates';
+const ORCHESTRATION_DIRECTORY = 'workspace/evidence/orchestration';
 const ORCHESTRATION_PATH = 'workspace/evidence/orchestration.jsonl';
+const OBSERVED_IDENTITY_PROVENANCE = new Set([
+  'gate-corroborated',
+  'provider-output',
+  'runtime-observed',
+]);
+const ORCHESTRATION_EVENT_FIELDS = new Set([
+  'afterHash',
+  'beforeHash',
+  'commitSha',
+  'event',
+  'from',
+  'parallelGroupsAfter',
+  'parallelGroupsBefore',
+  'reviewPath',
+  'scope',
+  'sequence',
+  'taskIdsAfter',
+  'taskIdsBefore',
+  'to',
+]);
 const REVIEW_FRONTMATTER_KEYS = new Set([
   'oat_gate_run_id',
   'oat_gate_runtime',
@@ -32,6 +55,7 @@ const REVIEW_FRONTMATTER_KEYS = new Set([
   'oat_invocation_model',
   'oat_invocation_reasoning_effort',
   'oat_invocation_source',
+  'oat_project',
   'oat_review_invocation',
   'oat_review_scope',
   'oat_review_type',
@@ -101,6 +125,21 @@ function optionalString(value) {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
+async function safeReadFile(path, root, label) {
+  let canonicalPath;
+  try {
+    canonicalPath = await realpath(path);
+  } catch (error) {
+    throw new EvidenceCollectionError(
+      `${label} is not readable: ${error.message}`,
+    );
+  }
+  if (!isWithin(root, canonicalPath)) {
+    throw new EvidenceCollectionError(`${label} escaped its allowed root.`);
+  }
+  return readFile(canonicalPath, 'utf8');
+}
+
 async function readJson(path, label) {
   let value;
   try {
@@ -116,12 +155,12 @@ async function readJson(path, label) {
   return value;
 }
 
-async function readJsonLines(path, { optional = false } = {}) {
+async function readJsonLines(path, root, { optional = false } = {}) {
   let contents;
   try {
-    contents = await readFile(path, 'utf8');
+    contents = await safeReadFile(path, root, 'JSONL source');
   } catch (error) {
-    if (optional && error.code === 'ENOENT') {
+    if (optional && error.message.includes('ENOENT')) {
       return [];
     }
     throw new EvidenceCollectionError(
@@ -151,8 +190,13 @@ async function readJsonLines(path, { optional = false } = {}) {
     });
 }
 
-function normalizeRuntimeIdentity(value) {
-  if (!isPlainObject(value)) {
+export function normalizeRuntimeIdentity(value) {
+  const provenance = isPlainObject(value)
+    ? optionalString(value.provenance)
+    : null;
+  const producer = isPlainObject(value) ? optionalString(value.producer) : null;
+  const model = isPlainObject(value) ? optionalString(value.model) : null;
+  if (!OBSERVED_IDENTITY_PROVENANCE.has(provenance) || !producer || !model) {
     return {
       confidence: 'not-reported',
       effort: null,
@@ -163,26 +207,12 @@ function normalizeRuntimeIdentity(value) {
     };
   }
 
-  const reported = ['producer', 'model', 'effort'].some(
-    (key) => optionalString(value[key]) !== null,
-  );
-  if (!reported) {
-    return {
-      confidence: optionalString(value.confidence) ?? 'not-reported',
-      effort: null,
-      model: null,
-      producer: null,
-      provenance: optionalString(value.provenance) ?? 'not-reported',
-      status: 'not-reported',
-    };
-  }
-
   return {
     confidence: optionalString(value.confidence) ?? 'unknown',
     effort: optionalString(value.effort),
-    model: optionalString(value.model),
-    producer: optionalString(value.producer),
-    provenance: optionalString(value.provenance) ?? 'unknown',
+    model,
+    producer,
+    provenance,
     status: 'reported',
   };
 }
@@ -197,6 +227,10 @@ function normalizeDispatch(record, index) {
   return {
     acceptance: optionalString(launch.acceptance ?? record.acceptance),
     action: requireString(record.action, `dispatch[${index}].action`),
+    attempt:
+      Number.isSafeInteger(record.attempt) && record.attempt > 0
+        ? record.attempt
+        : index + 1,
     configuredInvocation: {
       ceiling: optionalString(configured.ceiling ?? configured.dispatchCeiling),
       effortAxis: optionalString(
@@ -210,6 +244,7 @@ function normalizeDispatch(record, index) {
       accepted: typeof launch.accepted === 'boolean' ? launch.accepted : null,
       mechanism: optionalString(launch.mechanism),
       outcome: optionalString(launch.outcome ?? record.outcome),
+      status: optionalString(launch.status),
     },
     role: requireString(record.role, `dispatch[${index}].role`),
     runtimeIdentity: normalizeRuntimeIdentity(record.runtimeIdentity),
@@ -229,13 +264,68 @@ function normalizeDispatch(record, index) {
   };
 }
 
-async function collectFixtureContract(fixtureProjectPath) {
-  const contents = await readFile(join(fixtureProjectPath, 'plan.md'), 'utf8');
+function parsePlanContract(contents) {
+  const tasks = [
+    ...contents.matchAll(
+      /^### Task (p\d+-t\d+):[^\n]*\n([\s\S]*?)(?=^### Task |^## |(?![\s\S]))/gmu,
+    ),
+  ].map((match) => ({ body: match[2].trim(), id: match[1] }));
+  const parallelGroups =
+    contents.match(/^oat_plan_parallel_groups:\s*(.+)$/mu)?.[1] ?? null;
+  const reviewRows = [
+    ...contents.matchAll(
+      /^\|\s*(p\d+|final|spec|design|plan)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/gmu,
+    ),
+  ].map((match) => ({
+    artifact: match[5].trim(),
+    date: match[4].trim(),
+    scope: match[1],
+    status: match[3].trim(),
+    type: match[2].trim(),
+  }));
+  const substantive = JSON.stringify({ parallelGroups, tasks });
   return {
     planHash: createHash('sha256').update(contents).digest('hex'),
-    taskIds: [...contents.matchAll(/^### Task (p\d+-t\d+):/gmu)].map(
-      (match) => match[1],
-    ),
+    reviewRows,
+    substantivePlanHash: createHash('sha256').update(substantive).digest('hex'),
+    taskIds: tasks.map((task) => task.id),
+  };
+}
+
+async function collectFixtureContract(
+  fixtureProjectPath,
+  worktreePath,
+  manifest,
+) {
+  const planPath = join(fixtureProjectPath, 'plan.md');
+  const contents = await safeReadFile(
+    planPath,
+    fixtureProjectPath,
+    'Fixture plan',
+  );
+  const current = parsePlanContract(contents);
+  const baselineCommitSha = validateSha(
+    manifest.baselineCommitSha,
+    'manifest.baselineCommitSha',
+  );
+  const repositoryPlanPath = relative(worktreePath, planPath);
+  const baselineContents = await runGitRaw(
+    ['show', `${baselineCommitSha}:${repositoryPlanPath}`],
+    worktreePath,
+  );
+  const headContents = await runGitRaw(
+    ['show', `HEAD:${repositoryPlanPath}`],
+    worktreePath,
+  );
+  const baseline = parsePlanContract(baselineContents);
+  return {
+    baselinePlanHash: baseline.planHash,
+    baselineSubstantivePlanHash: baseline.substantivePlanHash,
+    headPlanHash: createHash('sha256').update(headContents).digest('hex'),
+    planHash: current.planHash,
+    reviewRows: current.reviewRows,
+    substantivePlanHash: current.substantivePlanHash,
+    taskIds: current.taskIds,
   };
 }
 
@@ -295,7 +385,9 @@ async function collectReviews(fixtureProjectPath) {
 
   return Promise.all(
     paths.map(async (path) => {
-      const frontmatter = parseFrontmatter(await readFile(path, 'utf8'));
+      const frontmatter = parseFrontmatter(
+        await safeReadFile(path, fixtureProjectPath, 'Review artifact'),
+      );
       const corroboration = Object.fromEntries(
         Object.entries(frontmatter).filter(
           ([key]) =>
@@ -331,7 +423,13 @@ async function collectFixtureLogs(worktreePath) {
       .filter((entry) => entry.isFile() && entry.name.endsWith('.log'))
       .sort((left, right) => left.name.localeCompare(right.name))
       .map(async (entry) => ({
-        lines: (await readFile(join(logsDirectory, entry.name), 'utf8'))
+        lines: (
+          await safeReadFile(
+            join(logsDirectory, entry.name),
+            worktreePath,
+            'Fixture log',
+          )
+        )
           .split(/\r?\n/u)
           .map((line) => line.trimEnd())
           .filter(Boolean)
@@ -343,7 +441,11 @@ async function collectFixtureLogs(worktreePath) {
 }
 
 function normalizeOrchestrationEvent(record, index) {
-  const { timestamp: _timestamp, ...stable } = record;
+  const stable = Object.fromEntries(
+    Object.entries(record).filter(([key]) =>
+      ORCHESTRATION_EVENT_FIELDS.has(key),
+    ),
+  );
   return deepSort({
     ...stable,
     sequence:
@@ -351,6 +453,91 @@ function normalizeOrchestrationEvent(record, index) {
         ? record.sequence
         : index + 1,
   });
+}
+
+async function readJsonDirectory(directory, root, label) {
+  let entries;
+  try {
+    entries = await readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+  const records = [];
+  for (const entry of entries.sort((left, right) =>
+    left.name.localeCompare(right.name),
+  )) {
+    if (!entry.isFile() || !entry.name.endsWith('.json')) {
+      continue;
+    }
+    const path = join(directory, entry.name);
+    let value;
+    try {
+      value = JSON.parse(await safeReadFile(path, root, label));
+    } catch (error) {
+      throw new EvidenceCollectionError(
+        `${label} ${entry.name} is invalid: ${error.message}`,
+      );
+    }
+    if (!isPlainObject(value)) {
+      throw new EvidenceCollectionError(
+        `${label} ${entry.name} must be an object.`,
+      );
+    }
+    records.push(value);
+  }
+  return records;
+}
+
+async function normalizeGate(record, index, fixtureProjectPath) {
+  const invocation = isPlainObject(record.gateInvocation)
+    ? record.gateInvocation
+    : {};
+  const corroboration = isPlainObject(record.corroboration)
+    ? record.corroboration
+    : {};
+  const artifactPath = optionalString(record.artifactPath);
+  let normalizedArtifactPath = null;
+  if (artifactPath) {
+    let canonicalArtifactPath;
+    try {
+      canonicalArtifactPath = await realpath(artifactPath);
+    } catch {
+      canonicalArtifactPath = null;
+    }
+    if (
+      canonicalArtifactPath &&
+      isWithin(fixtureProjectPath, canonicalArtifactPath)
+    ) {
+      normalizedArtifactPath = relative(
+        fixtureProjectPath,
+        canonicalArtifactPath,
+      );
+    }
+  }
+  return {
+    artifactPath: normalizedArtifactPath,
+    corroboration: {
+      invocation: optionalString(corroboration.invocation),
+      project: optionalString(corroboration.project),
+      run: optionalString(corroboration.run),
+    },
+    configuredInvocation: {
+      effort: optionalString(invocation.reasoningEffort),
+      model: optionalString(invocation.model),
+      source: optionalString(invocation.source),
+    },
+    invocation: optionalString(record.invocation),
+    outcome: optionalString(record.outcome),
+    project: basename(requireString(record.project, `gate[${index}].project`)),
+    runId: requireString(record.runId, `gate[${index}].runId`),
+    runtime: requireString(invocation.runtime, `gate[${index}].runtime`),
+    scope: requireString(record.scope, `gate[${index}].scope`),
+    status: optionalString(record.status),
+    target: requireString(record.target, `gate[${index}].target`),
+  };
 }
 
 function parseWorktreeList(contents) {
@@ -388,15 +575,86 @@ async function runGit(args, cwd) {
   }
 }
 
+async function runGitRaw(args, cwd) {
+  try {
+    const { stdout } = await execFileAsync('git', args, {
+      cwd,
+      encoding: 'utf8',
+    });
+    return stdout;
+  } catch (error) {
+    throw new EvidenceCollectionError(
+      `Git evidence command failed (${args.join(' ')}): ${error.message}`,
+    );
+  }
+}
+
+function validateSha(value, label) {
+  const sha = requireString(value, label);
+  if (!/^[0-9a-f]{40}$/u.test(sha)) {
+    throw new EvidenceCollectionError(`${label} must be a full commit SHA.`);
+  }
+  return sha;
+}
+
+async function validateBranch(branch, worktreePath) {
+  if (
+    typeof branch !== 'string' ||
+    branch.length === 0 ||
+    branch.startsWith('-')
+  ) {
+    throw new EvidenceCollectionError(`Invalid manifest branch: ${branch}`);
+  }
+  try {
+    await runGit(['check-ref-format', `refs/heads/${branch}`], worktreePath);
+  } catch {
+    throw new EvidenceCollectionError(`Invalid manifest branch: ${branch}`);
+  }
+  return branch;
+}
+
+function parseGitLog(contents) {
+  return contents
+    ? contents.split(/\r?\n/u).map((line) => {
+        const [sha, parents = '', ...subject] = line.split('\t');
+        return {
+          parents: parents.split(' ').filter(Boolean),
+          sha,
+          subject: subject.join('\t'),
+        };
+      })
+    : [];
+}
+
+async function addCommitFiles(commits, worktreePath) {
+  return Promise.all(
+    commits.map(async (commit) => ({
+      ...commit,
+      files: (
+        await runGit(
+          ['show', '--format=', '--name-only', commit.sha, '--'],
+          worktreePath,
+        )
+      )
+        .split(/\r?\n/u)
+        .filter(Boolean)
+        .sort(),
+    })),
+  );
+}
+
 async function collectGitTopology(worktreePath, manifest) {
-  const branches = [
+  const rawBranches = [
     manifest.branch,
     ...(manifest.ownershipJournal?.resources ?? []).map(
       (resource) => resource.branch,
     ),
-  ]
-    .filter((branch) => typeof branch === 'string' && branch.length > 0)
-    .sort();
+  ].filter((branch) => branch !== null && branch !== undefined);
+  const branches = [];
+  for (const branch of rawBranches) {
+    branches.push(await validateBranch(branch, worktreePath));
+  }
+  branches.sort();
   const existingRefs = [];
   for (const branch of branches) {
     const exists = await runGit(
@@ -407,12 +665,15 @@ async function collectGitTopology(worktreePath, manifest) {
       () => false,
     );
     if (exists) {
-      existingRefs.push(branch);
+      existingRefs.push(`refs/heads/${branch}`);
     }
   }
 
   const revisionArgs = existingRefs.length > 0 ? existingRefs : ['HEAD'];
-  const sourceCommit = optionalString(manifest.sourceCommitSha);
+  const sourceCommit = validateSha(
+    manifest.sourceCommitSha,
+    'manifest.sourceCommitSha',
+  );
   const logArgs = [
     'log',
     '--reverse',
@@ -420,21 +681,30 @@ async function collectGitTopology(worktreePath, manifest) {
     '--format=%H%x09%P%x09%s',
     '--max-count=500',
     ...revisionArgs,
+    '--not',
+    sourceCommit,
+    '--',
   ];
-  if (sourceCommit) {
-    logArgs.push('--not', sourceCommit);
-  }
-  const log = await runGit(logArgs, worktreePath);
-  const commits = log
-    ? log.split(/\r?\n/u).map((line) => {
-        const [sha, parents = '', ...subject] = line.split('\t');
-        return {
-          parents: parents.split(' ').filter(Boolean),
-          sha,
-          subject: subject.join('\t'),
-        };
-      })
-    : [];
+  const commits = await addCommitFiles(
+    parseGitLog(await runGit(logArgs, worktreePath)),
+    worktreePath,
+  );
+  const currentBranchCommits = await addCommitFiles(
+    parseGitLog(
+      await runGit(
+        [
+          'log',
+          '--reverse',
+          '--topo-order',
+          '--format=%H%x09%P%x09%s',
+          `${sourceCommit}..HEAD`,
+          '--',
+        ],
+        worktreePath,
+      ),
+    ),
+    worktreePath,
+  );
 
   const branchSet = new Set(branches.map((branch) => `refs/heads/${branch}`));
   const worktrees = parseWorktreeList(
@@ -462,13 +732,43 @@ async function collectGitTopology(worktreePath, manifest) {
 
   return {
     branch: await runGit(['branch', '--show-current'], worktreePath),
+    branchRefs: existingRefs,
     commits,
+    currentBranchCommits,
     head: await runGit(['rev-parse', 'HEAD'], worktreePath),
     worktrees,
   };
 }
 
 function normalizeManifest(manifest) {
+  const branchOwnership = isPlainObject(manifest.branchOwnership)
+    ? {
+        baseCommitSha: optionalString(manifest.branchOwnership.baseCommitSha),
+        baselineCommitSha: optionalString(
+          manifest.branchOwnership.baselineCommitSha,
+        ),
+        branch: optionalString(manifest.branchOwnership.branch),
+        createdByRun: manifest.branchOwnership.createdByRun === true,
+        runIdentity: optionalString(manifest.branchOwnership.runIdentity),
+      }
+    : null;
+  const closeout = isPlainObject(manifest.effectiveCloseoutPolicy)
+    ? {
+        source: optionalString(manifest.effectiveCloseoutPolicy.source),
+        value: {
+          postApproval: Array.isArray(
+            manifest.effectiveCloseoutPolicy.value?.postApproval,
+          )
+            ? manifest.effectiveCloseoutPolicy.value.postApproval.map(String)
+            : [],
+          preApproval: Array.isArray(
+            manifest.effectiveCloseoutPolicy.value?.preApproval,
+          )
+            ? manifest.effectiveCloseoutPolicy.value.preApproval.map(String)
+            : [],
+        },
+      }
+    : null;
   const normalizeBootstrap = (bootstrap) =>
     isPlainObject(bootstrap)
       ? {
@@ -522,19 +822,46 @@ function normalizeManifest(manifest) {
     ),
     baselineCommitSha: optionalString(manifest.baselineCommitSha),
     branch: requireString(manifest.branch, 'manifest.branch'),
-    branchOwnership: manifest.branchOwnership ?? null,
-    effectiveCloseoutPolicy: manifest.effectiveCloseoutPolicy ?? null,
+    branchOwnership,
+    effectiveCloseoutPolicy: closeout,
     effectiveSmokeBootstrap: normalizeBootstrap(
       manifest.effectiveSmokeBootstrap,
     ),
     harness: optionalString(manifest.harness),
     ownershipJournal,
     provisioningState: optionalString(manifest.provisioningState),
-    readiness: manifest.readiness ?? null,
+    readiness: isPlainObject(manifest.readiness)
+      ? { status: optionalString(manifest.readiness.status) }
+      : null,
     runIdentity: optionalString(manifest.runIdentity),
     sourceCommitSha: optionalString(manifest.sourceCommitSha),
     writableRoots,
   });
+}
+
+function validateNormalizedContent(value, path = 'bundle') {
+  if (typeof value === 'string' && isAbsolute(value)) {
+    throw new EvidenceCollectionError(
+      `Normalized evidence contains an absolute path at ${path}.`,
+    );
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) =>
+      validateNormalizedContent(entry, `${path}[${index}]`),
+    );
+    return;
+  }
+  if (!isPlainObject(value)) {
+    return;
+  }
+  for (const [key, entry] of Object.entries(value)) {
+    if (/^(?:timestamp|generatedAt|registeredAt)$/u.test(key)) {
+      throw new EvidenceCollectionError(
+        `Normalized evidence contains a timestamp field at ${path}.${key}.`,
+      );
+    }
+    validateNormalizedContent(entry, `${path}.${key}`);
+  }
 }
 
 async function publishBundle(bundle, outputPath) {
@@ -646,29 +973,76 @@ export async function collectEvidence({
     );
   }
 
-  const dispatches = (
-    await readJsonLines(join(canonicalWorktree, DISPATCH_PATH), {
-      optional: true,
-    })
-  )
+  const dispatchRecords = [
+    ...(await readJsonLines(
+      join(canonicalWorktree, DISPATCH_PATH),
+      canonicalWorktree,
+      {
+        optional: true,
+      },
+    )),
+    ...(await readJsonDirectory(
+      join(canonicalWorktree, DISPATCH_DIRECTORY),
+      canonicalWorktree,
+      'Dispatch record',
+    )),
+  ];
+  const dispatches = dispatchRecords
     .map(normalizeDispatch)
     .sort((left, right) =>
-      [left.scope, left.action, left.role]
+      [left.scope, String(left.attempt).padStart(8, '0'), left.action]
         .join('\0')
-        .localeCompare([right.scope, right.action, right.role].join('\0')),
+        .localeCompare(
+          [
+            right.scope,
+            String(right.attempt).padStart(8, '0'),
+            right.action,
+          ].join('\0'),
+        ),
     );
-  const orchestrationEvents = (
-    await readJsonLines(join(canonicalWorktree, ORCHESTRATION_PATH), {
-      optional: true,
-    })
-  )
+  const gates = (
+    await Promise.all(
+      (
+        await readJsonDirectory(
+          join(canonicalWorktree, GATE_DIRECTORY),
+          canonicalWorktree,
+          'Gate result',
+        )
+      ).map((record, index) =>
+        normalizeGate(record, index, fixtureProjectPath),
+      ),
+    )
+  ).sort((left, right) =>
+    [left.scope, left.runId]
+      .join('\0')
+      .localeCompare([right.scope, right.runId].join('\0')),
+  );
+  const orchestrationEvents = [
+    ...(await readJsonLines(
+      join(canonicalWorktree, ORCHESTRATION_PATH),
+      canonicalWorktree,
+      {
+        optional: true,
+      },
+    )),
+    ...(await readJsonDirectory(
+      join(canonicalWorktree, ORCHESTRATION_DIRECTORY),
+      canonicalWorktree,
+      'Orchestration event',
+    )),
+  ]
     .map(normalizeOrchestrationEvent)
     .sort((left, right) => left.sequence - right.sequence);
 
   const bundle = {
     dispatches,
-    fixture: await collectFixtureContract(fixtureProjectPath),
+    fixture: await collectFixtureContract(
+      fixtureProjectPath,
+      canonicalWorktree,
+      manifest,
+    ),
     fixtureLogs: await collectFixtureLogs(canonicalWorktree),
+    gates,
     git: await collectGitTopology(canonicalWorktree, manifest),
     manifest: normalizeManifest(manifest),
     orchestrationEvents,
@@ -688,6 +1062,8 @@ export async function collectEvidence({
       },
     },
   };
+  const { source: _rawSource, ...normalizedContent } = bundle;
+  validateNormalizedContent(normalizedContent);
   const outputPath = join(canonicalOutput, 'bundle.json');
   await publishBundle(bundle, outputPath);
   return { bundle: deepSort(bundle), outputPath };

@@ -7,8 +7,17 @@
   "preflight": {
     "status": "blocked",
     "selectedHarness": "cursor-cli",
-    "selectedHarnessStatus": "unavailable"
+    "harnesses": {
+      "cursor-cli": {
+        "installed": {
+          "result": "unavailable"
+        }
+      }
+    }
   },
-  "provisioningStarted": false,
-  "manifest": null
+  "provisioningEvidence": {
+    "branches": [],
+    "manifests": [],
+    "worktrees": []
+  }
 }
