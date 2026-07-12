@@ -42,6 +42,13 @@ with `--target {{GATE_TARGET}}`. You may inspect `oat gate target list`, but
 never invoke a gate as a probe. An accepted failed gate is terminal for that
 gate and must not be replaced.
 
+Any child containment, ownership-registration, base, or fixture-readiness
+failure is run-fatal: record `invalid-run-abort`, terminate accepted handles,
+and stop before any later worker, review, or gate. Never degrade an invalid
+smoke run to sequential execution or replace an aborted handle. Gate liveness
+reports elapsed, idle, and hard-budget milliseconds; activity proves liveness,
+not completion, and never extends the hard budget.
+
 Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
 final code gate after p03, and `full` runs those two gates. Phase self-reviews
 still run once per phase, but each reviewer receives only that phase's commit

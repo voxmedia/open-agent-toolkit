@@ -394,15 +394,13 @@ NODE
     return 1
   fi
 
-  echo "installing dependencies from the repository lockfile"
-  GIT_HOOKS=0 pnpm install --frozen-lockfile --ignore-scripts
-
-  # Generated build content remains inside the disposable child worktree.
-  echo "building workspace"
-  pnpm run build
-
+  echo "verifying fixture-scoped child readiness"
+  test -f "${current_root}/.oat/projects/smoke-fixture/plan.md"
+  test -f "${current_root}/.oat/projects/smoke-fixture/state.md"
+  test -f "${current_root}/.oat/projects/smoke-fixture/implementation.md"
+  test -d "${current_root}/workspace/logs"
   if ! cmp -s "$config_source" "$config_destination"; then
-    echo "error: build changed the provisioned smoke config" >&2
+    echo "error: readiness checks changed the provisioned smoke config" >&2
     return 1
   fi
   echo "smoke bootstrap complete"

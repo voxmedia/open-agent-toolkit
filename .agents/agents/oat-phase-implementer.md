@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.0.5
+version: 1.0.6
 description: Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -26,15 +26,17 @@ changing scope.
 
 In Phase Coordinator mode, before selecting or launching a task worker, fix
 worker, or implementation self-reviewer, read and follow
-`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit load is
-mandatory; do not rely on ambient skill discovery. The shared skill owns
-current-dispatcher catalog evidence, full-information route selection,
-accepted-launch terminality, and structured dispatch records. This agent keeps
-phase ordering, bounded Task Scopes, verification, and integration authority.
+`.agents/skills/oat-project-dispatch-subagents/SKILL.md`. The adapter resolves
+project lifecycle authority and requires
+`.agents/skills/oat-dispatch-subagents/SKILL.md` for generic selection,
+accepted-launch terminality, and records. This explicit two-skill load is
+mandatory; do not rely on ambient skill discovery. This agent keeps phase
+ordering, bounded Task Scopes, verification, and integration authority.
 
 After resolving `active_provider`, read exactly one active-provider reference
-from `.agents/skills/oat-dispatch-subagents/references/` (`cursor.md`,
-`codex.md`, or `claude.md`). Do not merge provider mechanics.
+from `.agents/skills/oat-dispatch-subagents/references/`
+(`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
+merge provider mechanics.
 
 ## Inputs
 

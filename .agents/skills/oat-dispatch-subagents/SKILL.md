@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.1.0
+version: 1.1.1
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -238,6 +238,11 @@ aggregate wave boundary; each lane may narrow that boundary.
   policy.
 - Continuing the same accepted child through its valid handle is allowed.
   Record continuation separately and preserve selectors and route.
+- A caller may cancel accepted handles only after it proves that the enclosing
+  run itself is invalid under caller-owned containment or integrity policy.
+  Record `invalid-run-abort` and the invalidating evidence. Cancellation never
+  makes another route eligible and never authorizes replacement, fallback, or
+  a successful child outcome.
 - Operator-authorized recovery is a new explicit action, never automatic
   fallback.
 - Runtime identity is optional corroboration. Missing runtime identity does not

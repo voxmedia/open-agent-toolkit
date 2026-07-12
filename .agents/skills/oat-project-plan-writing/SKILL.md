@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.10
+version: 1.2.11
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -26,15 +26,17 @@ This is a sub-phase indicator; the calling skill owns the top-level banner.
 ## Shared Subagent Dispatch Contract
 
 Before every artifact self-review dispatch, read and follow
-`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit load is
-mandatory; do not rely on ambient skill discovery. Planning self-review
-inherits the planning parent by default. The shared contract owns any
+`.agents/skills/oat-project-dispatch-subagents/SKILL.md`, which then requires
+`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit two-skill load
+is mandatory; do not rely on ambient skill discovery. Planning self-review
+inherits the planning parent by default. The shared contracts own any
 catalog-aware exception, launch acceptance boundary, and dispatch record; this
 skill continues to own plan readiness and review disposition.
 
 After resolving the review provider, read exactly one active-provider
 reference from `.agents/skills/oat-dispatch-subagents/references/`
-(`cursor.md`, `codex.md`, or `claude.md`). Do not merge provider mechanics.
+(`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
+merge provider mechanics.
 
 ## Managed Dispatch Readiness and Review Contract
 

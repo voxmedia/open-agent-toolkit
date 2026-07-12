@@ -94,6 +94,7 @@ interface GateCommandDependencies {
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
   processEnv: NodeJS.ProcessEnv;
+  writeDiagnostic: (message: string) => void;
 }
 
 interface GateSetOptions {
@@ -142,14 +143,22 @@ interface ReviewGateOptions extends CrossProviderExecOptions {
 interface ProcessRunOptions {
   cwd: string;
   env: NodeJS.ProcessEnv;
+  livenessIntervalMs?: number;
+  onLiveness?: (snapshot: GateLivenessSnapshot) => void;
   purpose: 'host-detection' | 'availability' | 'execute';
-  stdio: 'ignore' | 'inherit';
+  stdio: 'ignore' | 'inherit' | 'pipe';
   timeoutMs: number;
 }
 
 interface ProcessRunResult {
   exitCode: number;
   timedOut?: boolean;
+}
+
+interface GateLivenessSnapshot {
+  elapsedMs: number;
+  hardBudgetMs: number;
+  idleMs: number;
 }
 
 type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
@@ -283,6 +292,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   runProcess: runChildProcess,
   parseReviewGateVerdict,
   processEnv: process.env,
+  writeDiagnostic: (message) => process.stderr.write(message),
 };
 
 const VALID_ON_FAILURE: readonly GateOnFailure[] = ['block', 'prompt', 'warn'];
@@ -312,6 +322,7 @@ const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
 const GATE_CHECK_TIMEOUT_MS = 5_000;
 const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
+const GATE_LIVENESS_INTERVAL_MS = 30_000;
 
 function reviewGateProjectContext(project: ResolvedReviewProject): string {
   return [
@@ -491,11 +502,37 @@ async function runChildProcess(
   return new Promise((resolve, reject) => {
     let timedOut = false;
     let killTimeout: NodeJS.Timeout | null = null;
+    const startedAt = Date.now();
+    let lastActivityAt = startedAt;
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env,
-      stdio: options.stdio,
+      stdio:
+        options.stdio === 'pipe' ? ['inherit', 'pipe', 'pipe'] : options.stdio,
     });
+    const recordActivity = (): void => {
+      lastActivityAt = Date.now();
+    };
+    child.stdout?.on('data', (chunk: Buffer) => {
+      recordActivity();
+      process.stdout.write(chunk);
+    });
+    child.stderr?.on('data', (chunk: Buffer) => {
+      recordActivity();
+      process.stderr.write(chunk);
+    });
+    const livenessInterval =
+      options.onLiveness && options.livenessIntervalMs
+        ? setInterval(() => {
+            const now = Date.now();
+            options.onLiveness?.({
+              elapsedMs: now - startedAt,
+              hardBudgetMs: options.timeoutMs,
+              idleMs: now - lastActivityAt,
+            });
+          }, options.livenessIntervalMs)
+        : null;
+    livenessInterval?.unref();
     const timeout = setTimeout(() => {
       timedOut = true;
       child.kill('SIGTERM');
@@ -508,6 +545,9 @@ async function runChildProcess(
 
     child.on('error', (error) => {
       clearTimeout(timeout);
+      if (livenessInterval) {
+        clearInterval(livenessInterval);
+      }
       if (killTimeout) {
         clearTimeout(killTimeout);
       }
@@ -515,6 +555,9 @@ async function runChildProcess(
     });
     child.on('close', (code) => {
       clearTimeout(timeout);
+      if (livenessInterval) {
+        clearInterval(livenessInterval);
+      }
       if (killTimeout) {
         clearTimeout(killTimeout);
       }
@@ -653,6 +696,20 @@ function resolveGateExecTimeoutMs(env: NodeJS.ProcessEnv): number {
   const parsed = Number(rawValue);
   if (!Number.isInteger(parsed) || parsed < 1) {
     return GATE_EXEC_TIMEOUT_MS;
+  }
+
+  return parsed;
+}
+
+function resolveGateLivenessIntervalMs(env: NodeJS.ProcessEnv): number {
+  const rawValue = env.OAT_GATE_LIVENESS_INTERVAL_MS?.trim();
+  if (!rawValue) {
+    return GATE_LIVENESS_INTERVAL_MS;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return GATE_LIVENESS_INTERVAL_MS;
   }
 
   return parsed;
@@ -1461,6 +1518,9 @@ async function executeTarget(
       ? ['--model', selected.model]
       : [];
   const timeoutMs = resolveGateExecTimeoutMs(dependencies.processEnv);
+  const livenessIntervalMs = resolveGateLivenessIntervalMs(
+    dependencies.processEnv,
+  );
 
   if (!context.json) {
     context.logger.info(
@@ -1475,8 +1535,25 @@ async function executeTarget(
       {
         cwd: context.cwd,
         env: dependencies.processEnv,
+        livenessIntervalMs,
+        onLiveness: ({ elapsedMs, hardBudgetMs, idleMs }) => {
+          const telemetry = {
+            elapsedMs,
+            hardBudgetMs,
+            idleMs,
+            target: selected.id,
+            type: 'gate-liveness',
+          };
+          if (context.json) {
+            dependencies.writeDiagnostic(`${JSON.stringify(telemetry)}\n`);
+          } else {
+            context.logger.info(
+              `Gate liveness: target=${selected.id} elapsed_ms=${elapsedMs} idle_ms=${idleMs} hard_budget_ms=${hardBudgetMs}.`,
+            );
+          }
+        },
         purpose: 'execute',
-        stdio: 'inherit',
+        stdio: 'pipe',
         timeoutMs,
       },
     );

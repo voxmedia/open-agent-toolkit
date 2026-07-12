@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.2
+version: 1.5.3
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -260,14 +260,18 @@ generated output.
 
 **Smoke mode:**
 
-In smoke mode, run the same repository-selected bootstrap command. The command
-must honor the tracked marker's containment contract: marker validation,
-manifest journaling, and hash-bound config copy happen before repository setup.
-Dependency installation and build behavior remain repository-owned. Do not
-duplicate, replace, or precede the selected bootstrap procedure in this skill.
+Source smoke preflight already owns dependency, build, and repository-wide test
+readiness for the source commit. A nested smoke child must run only the
+repository bootstrap's smoke-safe containment path: validate the marker,
+register ownership in the locked manifest journal, verify the expected base,
+copy and hash-check the provisioned config, and run fixture-scoped readiness
+checks.
 
-After it succeeds, run the selected readiness and proportionate baseline
-commands, then `git status --porcelain`.
+The smoke-safe path must not install dependencies, build the repository, run
+repository-wide tests, or invoke provider sync. Those operations are neither
+retried nor downgraded in a child. After containment succeeds, verify the
+fixture project artifacts and declared writable task files, then run
+`git status --porcelain`.
 
 The first command is the safe-init boundary. Any nonzero exit is a containment
 failure: return immediately with `status: failed` and
@@ -352,6 +356,7 @@ checks:
   repository_bootstrap: pass | fail | skip
   repository_readiness: pass | fail | skip
   baseline_verification: pass | fail | skip
+  smoke_child_readiness: pass | fail | skip
   git_clean: pass | fail | skip
   provider_sync: pass | fail | skip
   sync_commit: pass | fail | skip
@@ -364,7 +369,7 @@ smoke_skips:
   sync_commit: true | false
 warnings: [] # List of warning messages (allow-failing mode)
 error: null # Error message (strict mode failure)
-reason: null # e.g., base-mismatch, smoke-marker-invalid, smoke-init-failed
+reason: null # e.g., base-mismatch, smoke-marker-invalid, smoke-init-failed, smoke-readiness-failed
 expected_base_sha: null # Populated when reason is base-mismatch
 baseline_policy: strict | allow-failing
 ```
@@ -388,6 +393,9 @@ for smoke mode and `false` for normal mode.
 - `failed` (with `reason: smoke-init-failed`): the marker is malformed or the
   safe-init containment path failed. Both smoke failure statuses are fatal
   under `strict` and `allow-failing`.
+- `failed` (with `reason: smoke-readiness-failed`): fixture-scoped child
+  readiness failed after containment. Stop immediately; do not dispatch a
+  coordinator, reviewer, or gate and do not degrade to sequential execution.
 
 ## Error Handling
 
@@ -397,6 +405,7 @@ for smoke mode and `false` for normal mode.
 | Branch already checked out elsewhere       | Return error with worktree location info                                                                                   |
 | Smoke marker missing or unsafe             | Return `status: failed`, `reason: smoke-marker-invalid`; never run propagation, sync, status, or tests                     |
 | Smoke marker malformed or safe init fails  | Return `status: failed`, `reason: smoke-init-failed`; never downgrade under `allow-failing`                                |
+| Smoke fixture readiness fails              | Return `status: failed`, `reason: smoke-readiness-failed`; abort the run before any coordinator, reviewer, or gate launch  |
 | Base mismatch (Step 2.7 fails, strict)     | Return `status: failed`, `reason: base-mismatch`, with `expected_base_sha` and `observed_head_sha`. Do not run baselines.  |
 | Base mismatch (Step 2.7 fails, allow-fail) | Emit structured warning with `reason: base-mismatch`, log to artifacts, prefer fail-fast unless caller opted into degrade. |
 | Baseline check fails (strict)              | Return error with check name and failure output                                                                            |

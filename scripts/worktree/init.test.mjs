@@ -122,15 +122,8 @@ async function createFakeExecutables(binDirectory) {
     join(binDirectory, 'pnpm'),
     `#!/bin/sh
 printf '%s\\n' "$*" >> "$PNPM_RECORD"
-case "$*" in
-  "install --frozen-lockfile --ignore-scripts"|"run build")
-    exit 0
-    ;;
-  *)
-    printf 'forbidden pnpm invocation: %s\\n' "$*" >&2
-    exit 97
-    ;;
-esac
+printf 'forbidden pnpm invocation: %s\\n' "$*" >&2
+exit 97
 `,
     { mode: 0o755 },
   );
@@ -263,12 +256,7 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
         value: { postApproval: [], preApproval: [] },
       },
     );
-    assert.equal(
-      await readFile(pnpmRecord, 'utf8'),
-      ['install --frozen-lockfile --ignore-scripts', 'run build', ''].join(
-        '\n',
-      ),
-    );
+    await assert.rejects(() => readFile(pnpmRecord), { code: 'ENOENT' });
     for (const forbiddenPath of [
       '.env',
       '.mcp.json',
@@ -304,7 +292,7 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
     );
 
     await rm(childConfig);
-    await rm(pnpmRecord);
+    await rm(pnpmRecord, { force: true });
     const escapedConfig = join(repository, 'test-control/escaped-config.json');
     await writeFile(
       escapedConfig,

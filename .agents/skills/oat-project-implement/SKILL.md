@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.38
+version: 2.0.39
 description: Use when plan.md is ready for execution. Dispatches phase coordinators that select one exact target-pinned worker per task; supports bounded fix loops and plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -21,17 +21,19 @@ Execute the implementation plan task-by-task with full state tracking.
 
 Before resolving or launching any coordinator, task worker, fix worker, or
 self-reviewer, read and follow
-`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit load is
-mandatory; do not rely on ambient skill discovery. The shared skill owns
-catalog observation, full-information route selection, accepted-launch
-terminality, and structured dispatch evidence. This implementation skill
-retains lifecycle sequencing, task boundaries, verification, integration, and
-approval-aware final closeout.
+`.agents/skills/oat-project-dispatch-subagents/SKILL.md`. The project adapter
+resolves lifecycle scope and then requires
+`.agents/skills/oat-dispatch-subagents/SKILL.md` for provider-neutral
+selection, recovery, and evidence. This explicit two-skill load is mandatory;
+do not rely on ambient skill discovery. This implementation skill retains
+lifecycle sequencing, verification, integration, and approval-aware final
+closeout.
 Correctness must not require a provider restart or hot reload.
 
 After resolving `ACTIVE_PROVIDER`, read exactly one active-provider reference
-from `.agents/skills/oat-dispatch-subagents/references/` (`cursor.md`,
-`codex.md`, or `claude.md`). Do not merge provider mechanics.
+from `.agents/skills/oat-dispatch-subagents/references/`
+(`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
+merge provider mechanics.
 
 ## Mode Assertion
 

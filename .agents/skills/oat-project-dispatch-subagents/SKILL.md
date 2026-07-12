@@ -1,6 +1,6 @@
 ---
 name: oat-project-dispatch-subagents
-version: 1.1.0
+version: 1.1.1
 description: Use when an OAT project lifecycle skill needs to translate project state, phase or task scope, gates, and write authority into a provider-neutral subagent dispatch.
 disable-model-invocation: true
 user-invocable: false
@@ -121,6 +121,12 @@ Map each lifecycle role to a generic baseline class and add project policy:
 The calling lifecycle skill remains authoritative when its reviewed contract
 is stricter than this table.
 
+A below-ceiling Cursor phase coordinator whose nested native catalog cannot
+satisfy the resolved implementation-review ceiling must pass a
+policy-resolved pre-start CLI reviewer route to the generic engine. Record the
+native mismatch, exact target, selection reason, and ordered candidates; never
+silently downgrade the review.
+
 ## Adapt the Request
 
 For every lifecycle dispatch:
@@ -229,6 +235,12 @@ fields inside the lifecycle extension.
   engine.
 - Accepted child failure: return the terminal outcome to the lifecycle caller;
   do not select a replacement automatically.
+- A tracked smoke marker makes containment, ownership registration, expected
+  base, and fixture readiness run-validity conditions. Failure of any condition
+  triggers `invalid-run-abort`: terminate accepted child and gate handles owned
+  by that run, preserve the invalidating evidence, clean only journal-owned
+  resources, and stop before any later launch. Never replace an aborted handle
+  or degrade the invalid smoke run to sequential execution.
 - Required gate target unavailable: fail closed.
 - Verification or commit failure after worker completion: lifecycle caller owns
   repair and bookkeeping; do not falsify the child outcome.

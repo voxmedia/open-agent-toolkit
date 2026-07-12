@@ -167,6 +167,14 @@ terminal outcome cannot launch a replacement. A separately authorized
 substantive escalation re-resolves within the same named maximum and bounded
 retry limit.
 
+The sole termination exception is a **known-invalid run abort**: containment,
+ownership registration, base verification, or fixture-readiness evidence has
+proved that the run itself is invalid. Terminate every accepted live child or
+gate handle owned by that run, record `invalid-run-abort` with the invalidating
+evidence, and stop the run. This is cancellation, not a child outcome: it never
+authorizes fallback, replacement, sequential degradation, review receipt, or a
+passing verdict.
+
 #### Handling Coordinator Status
 
 - **DONE:** verify the Task Dispatch Summary and passing Review Dispatch
@@ -281,9 +289,19 @@ When the current schedule entry is a multi-phase group, execute as follows.
 1.  **Bootstrap worktrees:** for each phase in the group, invoke `oat-worktree-bootstrap-auto` with branch name `{project-name}/{pNN}` and base = orchestration branch.
 
     > ⚠️ **CRITICAL — DO NOT substitute host-native worktree primitives.** Bootstrap MUST go through `oat-worktree-bootstrap-auto` with an explicit `--base` set to the current orchestration branch HEAD (capture `EXPECTED_HEAD=$(git rev-parse HEAD)` from the orchestration cwd before dispatching). Do not use Claude Code's `Agent({ isolation: "worktree" })`, Cursor's equivalent, or any other host-native isolation primitive in lieu of this skill — those mechanisms may use the primary repo's checkout (often `main`) as the base regardless of the orchestrator's current branch, silently producing a worktree that cannot see prior phase commits and forcing the entire group to degrade to sequential.
-    - If **any** bootstrap fails, cancel any worktrees that bootstrapped successfully for this group and degrade the whole group to sequential target-preserving execution. Log the degradation reason to `implementation.md` Outstanding Items.
+    - Before launch, classify the run as smoke when the orchestration checkout
+      tracks `.oat/smoke-bootstrap.json`. If **any** smoke bootstrap,
+      ownership-registration, base-verification, or fixture-readiness check
+      fails, invoke known-invalid run abort immediately. Terminate accepted
+      handles, preserve failure evidence, clean only journal-owned resources,
+      and stop. No later coordinator, worker, self-review, or gate may launch,
+      and sequential degradation is forbidden.
+    - Outside smoke mode, if any bootstrap fails, cancel worktrees that
+      bootstrapped successfully for this group and degrade the whole group to
+      sequential target-preserving execution. Log the degradation reason to
+      `implementation.md` Outstanding Items.
 
-2.  **Verify worktree HEAD before dispatch (base-mismatch gate):** After bootstrap, verify each worktree is at the expected orchestration HEAD. From the orchestration cwd, capture `EXPECTED_HEAD=$(git rev-parse HEAD)` _before_ invoking bootstrap. After bootstrap, for each new worktree path, run `git -C {worktree-path} rev-parse HEAD` and confirm it matches `EXPECTED_HEAD`, or run `git -C {worktree-path} merge-base --is-ancestor "$EXPECTED_HEAD" HEAD` and confirm it succeeds (exit 0). If either check fails for any phase, treat the bootstrap as failed for that phase, cancel any successful sibling worktrees in this group, and degrade the entire group to sequential target-preserving execution — same mechanism as a primary bootstrap failure. Log the mismatch to `implementation.md` Outstanding Items, including the observed and expected SHAs (`expected={EXPECTED_HEAD}, observed={observed-head-sha}, phase={pNN}, worktree={path}`).
+2.  **Verify worktree HEAD before dispatch (base-mismatch gate):** After bootstrap, verify each worktree is at the expected orchestration HEAD. From the orchestration cwd, capture `EXPECTED_HEAD=$(git rev-parse HEAD)` _before_ invoking bootstrap. After bootstrap, for each new worktree path, run `git -C {worktree-path} rev-parse HEAD` and confirm it matches `EXPECTED_HEAD`, or run `git -C {worktree-path} merge-base --is-ancestor "$EXPECTED_HEAD" HEAD` and confirm it succeeds (exit 0). If either check fails for any phase, treat the bootstrap as failed for that phase. A smoke run uses known-invalid run abort and stops; a normal run cancels successful siblings and degrades to sequential target-preserving execution. Log the mismatch to `implementation.md` Outstanding Items, including the observed and expected SHAs (`expected={EXPECTED_HEAD}, observed={observed-head-sha}, phase={pNN}, worktree={path}`).
 
 3.  **Concurrent phase dispatch:** for each successfully bootstrapped worktree (passing the base-mismatch gate above), dispatch one `oat-phase-implementer` coordinator with the worktree as its working directory. Coordinators may run concurrently across these plan-declared phase worktrees, but every coordinator dispatches its own task workers serially in that one worktree. The outer orchestration loop retains review and bounded-fix handling.
 

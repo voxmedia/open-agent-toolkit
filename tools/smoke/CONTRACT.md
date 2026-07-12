@@ -26,6 +26,21 @@ Other scenarios and operator mode are rejected before provisioning. Live
 provider runs remain acceptance evidence for provider-specific behavior; they
 are not the first debugging surface for orchestration contracts.
 
+## Run Validity and Gate Liveness
+
+A tracked smoke marker makes child containment, ownership registration,
+expected-base verification, and fixture-scoped readiness run-validity
+conditions. Failure of any condition is immediately fatal. Record
+`invalid-run-abort`, terminate accepted handles owned by the run, preserve the
+invalidating evidence, and clean only journal-owned resources. Do not dispatch
+another worker, self-reviewer, or gate; do not degrade to sequential execution;
+and do not treat cancellation as a child outcome or replacement opportunity.
+
+Gate execution tees target output while tracking activity. Every
+`OAT_GATE_LIVENESS_INTERVAL_MS` (default 30 seconds), it emits target, elapsed,
+idle, and hard-budget milliseconds. Output activity resets idle time but never
+extends `OAT_GATE_EXEC_TIMEOUT_MS`; the hard timeout remains authoritative.
+
 ## Provisioning Manifest
 
 The runner writes one JSON provisioning manifest before drive. It includes:
