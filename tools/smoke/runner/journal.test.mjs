@@ -83,7 +83,7 @@ async function cleanup(repository, manifestPath) {
   });
 }
 
-test('accepts schema-v2 markers for interrupted-run cleanup', () => {
+test('accepts the current marker schema for interrupted-run cleanup', () => {
   const worktreePath = '/tmp/oat-smoke-legacy/worktree';
   const manifestPath = '/tmp/oat-smoke-legacy/provisioning-manifest.json';
   const marker = {

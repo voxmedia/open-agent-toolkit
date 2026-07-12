@@ -104,17 +104,13 @@ export function validateSmokeMarkerBinding(markerValue, manifestValue) {
     'runIdentity',
     'schemaVersion',
   ];
-  if (marker.schemaVersion === 3) {
-    expectedFields.push('dependencySource');
-    expectedFields.sort();
-  }
   if (!isDeepStrictEqual(Object.keys(marker).sort(), expectedFields)) {
     throw new OwnershipJournalError(
-      `marker fields do not match schema version ${marker.schemaVersion}.`,
+      'marker fields do not match schema version 2.',
     );
   }
-  if (![2, 3].includes(marker.schemaVersion)) {
-    throw new OwnershipJournalError('marker schemaVersion must equal 2 or 3.');
+  if (marker.schemaVersion !== 2) {
+    throw new OwnershipJournalError('marker schemaVersion must equal 2.');
   }
   if (
     typeof marker.configSha256 !== 'string' ||
@@ -133,10 +129,6 @@ export function validateSmokeMarkerBinding(markerValue, manifestValue) {
     marker.configSource,
     'marker.configSource',
   );
-  const dependencySource =
-    marker.schemaVersion === 3
-      ? requireAbsolutePath(marker.dependencySource, 'marker.dependencySource')
-      : null;
   if (
     typeof manifest.branch !== 'string' ||
     manifest.branch.length === 0 ||
@@ -173,8 +165,6 @@ export function validateSmokeMarkerBinding(markerValue, manifestValue) {
     bootstrap.configSha256 !== marker.configSha256 ||
     bootstrap.configSource !== configSource ||
     bootstrap.configSource !== expectedConfigSource ||
-    (marker.schemaVersion === 3 &&
-      bootstrap.dependencySource !== dependencySource) ||
     bootstrap.manifestPath !== manifestPath ||
     bootstrap.markerPath !== expectedMarkerPath ||
     bootstrap.runIdentity !== marker.runIdentity ||

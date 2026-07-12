@@ -24,14 +24,14 @@ For relative paths, resolve from repository root.
 
 ## Baseline Readiness
 
-Run baseline commands before reporting ready:
+Before reporting ready, resolve the repository's bootstrap contract from its
+agent instructions, setup/contributing guidance, task definitions, manifests,
+and lockfiles. Prefer an explicit worktree bootstrap command. If none exists,
+derive the minimum safe setup for a fresh worktree from that context.
 
-```bash
-pnpm run worktree:init
-oat status --scope project
-pnpm test
-git status --porcelain
-```
+Do not assume a package manager, dependency strategy, build command, or test
+command. Record the selected bootstrap and verification commands, run a
+proportionate baseline check, and finish with `git status --porcelain`.
 
 If checks fail, stop and report exact remediation.
 

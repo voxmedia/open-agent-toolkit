@@ -67,16 +67,10 @@ The runner writes one JSON provisioning manifest before drive. It includes:
     "branch": "flat-collision-resistant-name",
     "configSha256": "64-character lowercase SHA-256 digest",
     "configSource": "/absolute/disposable/worktree/.oat/config.local.json",
-    "dependencySource": "/absolute/source/workspace/node_modules",
     "manifestPath": "/absolute/disposable/run/provisioning-manifest.json",
     "markerPath": "/absolute/disposable/worktree/.oat/smoke-bootstrap.json",
     "runIdentity": "same immutable identity as branch",
     "policy": {
-      "build": {
-        "allowed": true,
-        "argv": ["run", "build"],
-        "outputScope": "disposable-child-worktree"
-      },
       "config": {
         "copy": "marker-source-only",
         "preserveBytes": true
@@ -86,12 +80,6 @@ The runner writes one JSON provisioning manifest before drive. It includes:
         "environment": false,
         "localProjects": false,
         "mcp": false
-      },
-      "dependencyMaterialization": {
-        "lifecycleScripts": false,
-        "mode": "source-tree-clone",
-        "network": "none",
-        "sourceBinding": "source-commit"
       },
       "localPathSync": false,
       "providerViewSync": false,
@@ -103,7 +91,6 @@ The runner writes one JSON provisioning manifest before drive. It includes:
     "branch": "flat-collision-resistant-name",
     "configSha256": "64-character lowercase SHA-256 digest",
     "configSource": "/absolute/disposable/worktree/.oat/config.local.json",
-    "dependencySource": "/absolute/source/workspace/node_modules",
     "manifestPath": "/absolute/disposable/run/provisioning-manifest.json",
     "markerPath": "/absolute/disposable/worktree/.oat/smoke-bootstrap.json",
     "runIdentity": "same immutable identity as branch",
@@ -156,7 +143,7 @@ for drive.
 `sourceCommitSha` is the commit from which the disposable branch was created.
 After applying the selected preset, provisioning commits the fixture project
 and workspace seed logs as `baselineCommitSha`. The baseline also contains the
-tracked schema-v3 `.oat/smoke-bootstrap.json` marker. The marker binds the
+tracked schema-v2 `.oat/smoke-bootstrap.json` marker. The marker binds the
 external manifest path, branch, and immutable run identity. The local config is written before
 that commit but excluded from it, so the provisioning worktree remains clean
 except for the expected untracked `.oat/config.local.json`. Child worktrees
@@ -202,16 +189,15 @@ Before normal worktree initialization performs any copy, the init script checks
 for the tracked smoke marker and validates it against the ready manifest and
 baseline commit. It then atomically journals the actual attached child branch,
 canonical worktree path, shared Git common directory, and child ownership
-baseline. Journal failure aborts before package tooling. A valid marker selects
-a closed bootstrap path: copy only the recorded smoke config and byte-compare
-it, clone the source-commit-bound dependency tree into the disposable child,
-verify its required tool entrypoints, then run `pnpm run build`. It performs no
-dependency installation or package download. The build is allowed because
-generated content stays inside the disposable child worktree. Primary
-environment, MCP, local-project, and archive copies remain disabled, as do S3
-archive sync, shared-hook setup, local-path sync, and provider-view sync.
-Missing, malformed, untracked, or out-of-run marker/config bindings fail before
-normal bootstrap can begin.
+baseline. Journal failure aborts before repository setup. A valid marker selects
+a closed containment path that copies only the recorded smoke config and
+byte-compares it. Dependency installation, build, and validation remain owned
+by the repository bootstrap procedure selected through the worktree-bootstrap
+skill; the runner does not prescribe a package manager, dependency store, or
+setup commands. Primary environment, MCP, local-project, and archive copies
+remain disabled, as do S3 archive sync, shared-hook setup, local-path sync, and
+provider-view sync. Missing, malformed, untracked, or out-of-run marker/config
+bindings fail before repository bootstrap can begin.
 
 `branchOwnership` is absent until this run successfully creates the branch. Its
 source and immutable baseline SHAs bind cleanup authority to the created ref; a

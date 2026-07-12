@@ -1012,7 +1012,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -1039,9 +1039,15 @@ describe('validateOatSkills', () => {
     expect(creation).toContain(
       'git -C "$TARGET_PATH" ls-files --error-unmatch -- ".oat/smoke-bootstrap.json"',
     );
-    expect(content).toContain('In smoke mode, run `pnpm run worktree:init`');
-    expect(content).toContain('source-commit-bound dependency');
-    expect(content).toContain('no dependency installation or package');
+    expect(content).toContain(
+      'Prefer an explicit worktree bootstrap command when the repository declares',
+    );
+    expect(content).toContain('If no command exists, derive the minimum safe');
+    expect(content).toContain('Never assume Node.js, pnpm, a dependency store');
+    expect(content).toContain(
+      'Dependency installation and build behavior remain repository-owned',
+    );
+    expect(content).not.toContain('source-commit-bound dependency');
   });
 
   it('keeps smoke bootstrap closed to local and provider sync side effects', async () => {
@@ -1082,9 +1088,6 @@ describe('validateOatSkills', () => {
     expect(smokeProviderSync).not.toMatch(
       /^\s*(?:mkdir|oat sync|git add|git commit)\s/m,
     );
-    expect(content).toContain(
-      'node packages/cli/dist/index.js status --scope project',
-    );
     expect(smokeBaseline).not.toMatch(/^\s*oat\s/m);
     expect(content).toMatch(/never run\s+PATH-resolved `oat` in smoke mode/i);
     expect(content).toMatch(
@@ -1105,6 +1108,20 @@ describe('validateOatSkills', () => {
         `${skippedOperation}: true | false`,
       );
     }
+  });
+
+  it('keeps manual worktree setup repository-defined', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content).toContain(
+      'Prefer an explicit worktree bootstrap command when the repository declares',
+    );
+    expect(content).toContain('If no command exists, derive the minimum safe');
+    expect(content).toContain('do not assume Node.js, pnpm');
+    expect(content).not.toMatch(/^\s*pnpm\s/m);
   });
 
   it('makes native Codex dispatch and launcher-owned provenance authoritative', async () => {

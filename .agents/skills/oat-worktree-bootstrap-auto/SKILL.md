@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.1
+version: 1.5.2
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -72,7 +72,7 @@ When this skill is executed, provide concise status updates:
 
 The baseline policy never downgrades smoke containment failures. A missing,
 unsafe, or malformed smoke marker, or failure of the smoke-safe
-`pnpm run worktree:init` path, is always fatal.
+repository bootstrap path, is always fatal.
 
 ## Process
 
@@ -228,13 +228,29 @@ Before any baseline checks run, verify the worktree actually branched from the r
 
 Execute in the target worktree directory.
 
+First resolve the repository bootstrap contract:
+
+1. Read the applicable agent instructions and contributing/setup guidance.
+2. Inspect repository task definitions, manifests, and lockfiles.
+3. Prefer an explicit worktree bootstrap command when the repository declares
+   one.
+4. If no command exists, derive the minimum safe setup for a fresh worktree
+   from repository context.
+5. Select the repository's documented readiness check and a proportionate
+   baseline verification. Do not default to a full test suite when setup
+   guidance specifies a narrower readiness check.
+6. Record the exact selected commands and the evidence used to choose them.
+
+Never assume Node.js, pnpm, a dependency store, or a particular install, build,
+or test command. For example, this repository declares its own `worktree:init`
+procedure in `AGENTS.md` and `package.json`; that repository context, not this
+skill, supplies the invocation.
+
 **Normal mode:**
 
-```bash
-pnpm run worktree:init          # install + build + sync
-oat status --scope project
-pnpm test
-```
+Run the selected repository bootstrap, readiness, and baseline commands. Run
+`oat status --scope project` when the initialized repository contains an OAT
+project.
 
 Continue to Step 4 for normal provider directory setup, the `git_clean`
 baseline check, and the all-scope sync. The `git_clean` check must run after
@@ -244,22 +260,19 @@ generated output.
 
 **Smoke mode:**
 
-In smoke mode, run `pnpm run worktree:init`; it owns marker validation,
-manifest journaling, hash-bound config copy, source-commit-bound dependency
-materialization, and build. It performs no dependency installation or package
-download. Do not duplicate or precede those operations in this skill.
+In smoke mode, run the same repository-selected bootstrap command. The command
+must honor the tracked marker's containment contract: marker validation,
+manifest journaling, and hash-bound config copy happen before repository setup.
+Dependency installation and build behavior remain repository-owned. Do not
+duplicate, replace, or precede the selected bootstrap procedure in this skill.
 
-```bash
-pnpm run worktree:init
-node packages/cli/dist/index.js status --scope project
-pnpm test
-git status --porcelain
-```
+After it succeeds, run the selected readiness and proportionate baseline
+commands, then `git status --porcelain`.
 
 The first command is the safe-init boundary. Any nonzero exit is a containment
 failure: return immediately with `status: failed` and
 `reason: smoke-init-failed`, regardless of whether the marker is missing,
-unsafe, or malformed or a journal/config/dependency/build check failed. Never
+unsafe, or malformed or a journal/config/bootstrap check failed. Never
 apply `allow-failing` to that result. Run the remaining read-only/local checks
 only after safe init succeeds. Never run PATH-resolved `oat` in smoke mode; the
 built repository-local CLI entrypoint is the only permitted OAT executable.
@@ -336,9 +349,9 @@ resolved_base_sha: '{sha resolved from base-ref}'
 observed_head_sha: '{sha of worktree HEAD after add}'
 bootstrap_mode: normal | smoke
 checks:
-  worktree_init: pass | fail | skip
-  project_status: pass | fail | skip
-  tests: pass | fail | skip
+  repository_bootstrap: pass | fail | skip
+  repository_readiness: pass | fail | skip
+  baseline_verification: pass | fail | skip
   git_clean: pass | fail | skip
   provider_sync: pass | fail | skip
   sync_commit: pass | fail | skip

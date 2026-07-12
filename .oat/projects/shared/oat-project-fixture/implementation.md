@@ -1187,20 +1187,23 @@ and a complete Codex dry-run lifecycle passed.
 **Automated plan-review:** passed.
 
 **Automated implement recovery:** The first implementation attempt exposed two
-closed-bootstrap defects before task execution: cloned `node_modules` was
-followed by an offline install that could still require an absent store
-tarball, and the outer drive's final manifest write could erase child
-ownership registrations. The repaired baseline:
+separate defects: the outer drive's final manifest write could erase child
+ownership registrations, and a subsequent recovery incorrectly moved pnpm
+dependency/store policy into the generic smoke runner. The ownership race fix
+is retained. The dependency coupling and schema-v3 marker are removed:
 
-- materializes dependencies solely by cloning the source-commit-bound tree,
-  validates its required tool entrypoint, and performs no install or download;
-- performs drive-record manifest updates under the shared journal lock while
-  preserving child registrations and newly created paths;
-- bumps the smoke marker contract to schema v3 and retains schema-v2 cleanup
-  compatibility for interrupted older runs.
+- the runner owns only containment, ownership journaling, and evidence;
+- both worktree-bootstrap skills discover a repository-declared bootstrap
+  command, or derive setup from repository context when none exists;
+- dependency installation, build, and baseline commands remain
+  repository-owned; this repository's `AGENTS.md` and `package.json` select its
+  `worktree:init` command;
+- the invalid implementation run was canceled after confirming the coupling
+  also omitted package-local pnpm workspace links.
 
-**Verification:** 103/103 smoke/bootstrap tests, repository lint, formatting,
-type checking, and public-package release validation passed.
+**Verification:** 103/103 smoke/bootstrap tests and 81/81 skill-contract tests
+passed, along with repository lint, formatting, type checking, and
+public-package release validation.
 
 ---
 

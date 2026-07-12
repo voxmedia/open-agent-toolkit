@@ -27,11 +27,6 @@ const SMOKE_CLOSEOUT_POLICY = Object.freeze({
   postApproval: Object.freeze([]),
 });
 const SMOKE_BOOTSTRAP_POLICY = Object.freeze({
-  build: Object.freeze({
-    allowed: true,
-    argv: Object.freeze(['run', 'build']),
-    outputScope: 'disposable-child-worktree',
-  }),
   config: Object.freeze({
     copy: 'marker-source-only',
     preserveBytes: true,
@@ -41,12 +36,6 @@ const SMOKE_BOOTSTRAP_POLICY = Object.freeze({
     environment: false,
     localProjects: false,
     mcp: false,
-  }),
-  dependencyMaterialization: Object.freeze({
-    lifecycleScripts: false,
-    mode: 'source-tree-clone',
-    network: 'none',
-    sourceBinding: 'source-commit',
   }),
   localPathSync: false,
   providerViewSync: false,
@@ -205,14 +194,12 @@ function createManifest({
   harness,
   manifestPath,
   reportRoot,
-  repository,
   runPath,
   sourceCommitSha,
   worktreePath,
 }) {
   const configPath = join(worktreePath, '.oat/config.local.json');
   const markerPath = join(worktreePath, '.oat/smoke-bootstrap.json');
-  const dependencySource = join(repository, 'node_modules');
   const fixtureProjectPath = join(worktreePath, '.oat/projects/smoke-fixture');
   const configSha256 = sha256(
     smokeConfigContents({
@@ -242,7 +229,6 @@ function createManifest({
       branch,
       configSha256,
       configSource: configPath,
-      dependencySource,
       manifestPath,
       markerPath,
       policy: SMOKE_BOOTSTRAP_POLICY,
@@ -367,7 +353,6 @@ export async function provisionSmoke(
     harness,
     manifestPath,
     reportRoot,
-    repository,
     runPath,
     sourceCommitSha,
     worktreePath,
@@ -442,11 +427,10 @@ export async function provisionSmoke(
           branch,
           configSha256: sha256(configContents),
           configSource: configPath,
-          dependencySource: manifest.intendedSmokeBootstrap.dependencySource,
           manifestPath,
           policy: SMOKE_BOOTSTRAP_POLICY,
           runIdentity: branch,
-          schemaVersion: 3,
+          schemaVersion: 2,
         },
         null,
         2,
@@ -457,7 +441,6 @@ export async function provisionSmoke(
       branch,
       configSha256: sha256(configContents),
       configSource: configPath,
-      dependencySource: manifest.intendedSmokeBootstrap.dependencySource,
       manifestPath,
       markerPath,
       policy: SMOKE_BOOTSTRAP_POLICY,

@@ -28,11 +28,6 @@ const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const smokeBootstrapPolicy = {
-  build: {
-    allowed: true,
-    argv: ['run', 'build'],
-    outputScope: 'disposable-child-worktree',
-  },
   config: {
     copy: 'marker-source-only',
     preserveBytes: true,
@@ -42,12 +37,6 @@ const smokeBootstrapPolicy = {
     environment: false,
     localProjects: false,
     mcp: false,
-  },
-  dependencyMaterialization: {
-    lifecycleScripts: false,
-    mode: 'source-tree-clone',
-    network: 'none',
-    sourceBinding: 'source-commit',
   },
   localPathSync: false,
   providerViewSync: false,
@@ -296,7 +285,6 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       branch: manifest.branch,
       configSha256,
       configSource: configPath,
-      dependencySource: join(repository, 'node_modules'),
       manifestPath: manifest.manifestPath,
       markerPath,
       policy: smokeBootstrapPolicy,
