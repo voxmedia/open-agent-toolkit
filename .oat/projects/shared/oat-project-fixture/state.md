@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T12:59:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T13:07:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 4 tasks complete; awaiting self-review
+Implementation — Phase 4 self-review fixes, iteration 1
 
 ## Artifacts
 
@@ -115,6 +115,7 @@ Implementation — Phase 4 tasks complete; awaiting self-review
 - ✓ p04-t01 promoted the shared full-information dispatch contract
 - ✓ p04-t02 added provider-specific native and CLI topology guidance
 - ✓ p04-t03 aligned workflow and smoke selection evidence fields
+- ⚠ Phase 4 self-review failed 0C/4I/2M/0m; fix iteration 1 in progress
 
 ## Blockers
 
@@ -122,4 +123,4 @@ None
 
 ## Next Milestone
 
-Run Phase 4 self-review
+Apply Phase 4 self-review fixes

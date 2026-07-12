@@ -966,6 +966,27 @@ of `oat-project-implement`.
 
 **Next:** Phase 4 self-review.
 
+### Phase 4 Self-review — Iteration 1
+
+**Review artifact:** `reviews/p04-review-2026-07-12T130011Z.md`
+
+**Verdict:** failed — 0 Critical, 4 Important, 2 Medium, 0 Minor.
+
+**Fix scope:**
+
+- Make default planning auto-review inheritance executable rather than
+  contradictory ceiling pinning.
+- Preserve accepted-launch terminality for reviewer timeouts.
+- Make the phase coordinator own and report the implementation ceiling review,
+  including Cursor pre-start CLI selection when its nested catalog is
+  unsatisfactory.
+- Preserve ordered selection candidates and explicitly keep gate targets in
+  the separate gate evidence schema.
+- Re-sync with the repository-local CLI and reconcile Phase 4 overview
+  bookkeeping.
+
+**Next:** fix iteration 1, then Phase 4 re-review.
+
 ---
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
