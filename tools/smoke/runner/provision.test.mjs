@@ -43,11 +43,11 @@ const smokeBootstrapPolicy = {
     localProjects: false,
     mcp: false,
   },
-  dependencyInstall: {
-    argv: ['install', '--offline', '--frozen-lockfile', '--ignore-scripts'],
+  dependencyMaterialization: {
     lifecycleScripts: false,
-    lockfile: 'frozen',
-    network: 'offline',
+    mode: 'source-tree-clone',
+    network: 'none',
+    sourceBinding: 'source-commit',
   },
   localPathSync: false,
   providerViewSync: false,

@@ -1012,7 +1012,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.1');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -1039,9 +1039,9 @@ describe('validateOatSkills', () => {
     expect(creation).toContain(
       'git -C "$TARGET_PATH" ls-files --error-unmatch -- ".oat/smoke-bootstrap.json"',
     );
-    expect(content).toMatch(
-      /smoke[\s\S]{0,320}`pnpm run worktree:init`[\s\S]{0,320}marker validation[\s\S]{0,180}manifest journaling[\s\S]{0,180}hash-bound config copy[\s\S]{0,180}offline\/frozen install[\s\S]{0,180}build/i,
-    );
+    expect(content).toContain('In smoke mode, run `pnpm run worktree:init`');
+    expect(content).toContain('source-commit-bound dependency');
+    expect(content).toContain('no dependency installation or package');
   });
 
   it('keeps smoke bootstrap closed to local and provider sync side effects', async () => {

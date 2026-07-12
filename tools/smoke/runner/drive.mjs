@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { collectEvidence } from '../evidence/collect.mjs';
 import { emitEvidenceReport } from '../evidence/report.mjs';
+import { updateSmokeManifest } from './journal.mjs';
 import { gateTargetForHarness } from './provision.mjs';
 
 const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
@@ -323,8 +324,23 @@ function assertReady(options, context, manifest) {
 }
 
 async function saveDriveRecord(manifest, record) {
-  manifest.drive = record;
-  await atomicWriteJson(manifest.manifestPath, manifest);
+  const updated = await updateSmokeManifest(
+    manifest.manifestPath,
+    (current) => ({
+      ...current,
+      createdPaths: [
+        ...new Set([
+          ...(current.createdPaths ?? []),
+          ...(manifest.createdPaths ?? []),
+        ]),
+      ],
+      drive: record,
+    }),
+  );
+  for (const key of Object.keys(manifest)) {
+    delete manifest[key];
+  }
+  Object.assign(manifest, updated);
 }
 
 export async function driveSmoke(

@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.0
+version: 1.5.1
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -245,8 +245,9 @@ generated output.
 **Smoke mode:**
 
 In smoke mode, run `pnpm run worktree:init`; it owns marker validation,
-manifest journaling, hash-bound config copy, offline/frozen install, and build.
-Do not duplicate or precede those operations in this skill.
+manifest journaling, hash-bound config copy, source-commit-bound dependency
+materialization, and build. It performs no dependency installation or package
+download. Do not duplicate or precede those operations in this skill.
 
 ```bash
 pnpm run worktree:init
@@ -258,7 +259,7 @@ git status --porcelain
 The first command is the safe-init boundary. Any nonzero exit is a containment
 failure: return immediately with `status: failed` and
 `reason: smoke-init-failed`, regardless of whether the marker is missing,
-unsafe, or malformed or a journal/config/install/build check failed. Never
+unsafe, or malformed or a journal/config/dependency/build check failed. Never
 apply `allow-failing` to that result. Run the remaining read-only/local checks
 only after safe init succeeds. Never run PATH-resolved `oat` in smoke mode; the
 built repository-local CLI entrypoint is the only permitted OAT executable.

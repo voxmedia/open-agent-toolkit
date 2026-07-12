@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -1181,8 +1181,26 @@ and a complete Codex dry-run lifecycle passed.
 
 ### Task p05-t02: Codex live smoke runs
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
+
+**Automated plan-review:** passed.
+
+**Automated implement recovery:** The first implementation attempt exposed two
+closed-bootstrap defects before task execution: cloned `node_modules` was
+followed by an offline install that could still require an absent store
+tarball, and the outer drive's final manifest write could erase child
+ownership registrations. The repaired baseline:
+
+- materializes dependencies solely by cloning the source-commit-bound tree,
+  validates its required tool entrypoint, and performs no install or download;
+- performs drive-record manifest updates under the shared journal lock while
+  preserving child registrations and newly created paths;
+- bumps the smoke marker contract to schema v3 and retains schema-v2 cleanup
+  compatibility for interrupted older runs.
+
+**Verification:** 103/103 smoke/bootstrap tests, repository lint, formatting,
+type checking, and public-package release validation passed.
 
 ---
 

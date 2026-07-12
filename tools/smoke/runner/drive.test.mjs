@@ -189,6 +189,43 @@ test('operator mode prints a handoff and never executes noninteractive drive', a
   }
 });
 
+test('drive completion preserves ownership registered by child worktrees', async () => {
+  const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
+  try {
+    const manifest = await createManifest(runDirectory, {
+      ownershipJournal: { resources: [], schemaVersion: 1 },
+    });
+    await driveSmoke(
+      options({ dryRun: false }),
+      {
+        manifest,
+        results: { preflight: { status: 'ready' } },
+      },
+      {
+        execute: async () => {
+          const latest = JSON.parse(
+            await readFile(manifest.manifestPath, 'utf8'),
+          );
+          latest.ownershipJournal.resources.push({
+            branch: 'smoke-child-p01',
+          });
+          await writeFile(manifest.manifestPath, `${JSON.stringify(latest)}\n`);
+          return { code: 0, signal: null, stderr: '', stdout: '' };
+        },
+        reporter: () => {},
+      },
+    );
+    const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
+
+    assert.deepEqual(persisted.ownershipJournal.resources, [
+      { branch: 'smoke-child-p01' },
+    ]);
+    assert.equal(persisted.drive.status, 'completed');
+  } finally {
+    await rm(runDirectory, { force: true, recursive: true });
+  }
+});
+
 test('loads only the matching prepared drive mode identity', async () => {
   const runsDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-runs-'));
   try {

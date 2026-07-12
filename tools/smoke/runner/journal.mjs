@@ -337,6 +337,32 @@ async function readManifest(manifestPath, fileSystem) {
   }
 }
 
+export async function updateSmokeManifest(
+  manifestPath,
+  update,
+  { fileSystem = defaultFileSystem, lockOptions } = {},
+) {
+  const normalizedManifestPath = requireAbsolutePath(
+    manifestPath,
+    'manifestPath',
+  );
+  if (typeof update !== 'function') {
+    throw new TypeError('update must be a function.');
+  }
+  const releaseLock = await acquireManifestLock(normalizedManifestPath, {
+    ...lockOptions,
+    fileSystem,
+  });
+  try {
+    const current = await readManifest(normalizedManifestPath, fileSystem);
+    const next = requirePlainObject(await update(current), 'updated manifest');
+    await writeJsonAtomic(normalizedManifestPath, next, { fileSystem });
+    return next;
+  } finally {
+    await releaseLock();
+  }
+}
+
 function validateJournal(manifest) {
   const journal = requirePlainObject(
     manifest.ownershipJournal,

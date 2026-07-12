@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T14:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T17:47:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -125,6 +125,9 @@ Implementation — Phase 5 live smoke evidence
 - ✓ Phase 4 self-review fix iteration 4 complete and verified
 - ✓ Final configured Phase 4 re-review passed 0C/0I/0M/0m
 - ✓ p05-t01 per-harness automated/operator protocols and runner wiring complete
+- ✓ Codex automated plan-review smoke passed
+- ✓ Codex implement bootstrap recovery baseline verified (103/103 tests plus
+  lint, format, type-check, and release validation)
 
 ## Blockers
 

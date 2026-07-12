@@ -42,16 +42,11 @@ const SMOKE_BOOTSTRAP_POLICY = Object.freeze({
     localProjects: false,
     mcp: false,
   }),
-  dependencyInstall: Object.freeze({
-    argv: Object.freeze([
-      'install',
-      '--offline',
-      '--frozen-lockfile',
-      '--ignore-scripts',
-    ]),
+  dependencyMaterialization: Object.freeze({
     lifecycleScripts: false,
-    lockfile: 'frozen',
-    network: 'offline',
+    mode: 'source-tree-clone',
+    network: 'none',
+    sourceBinding: 'source-commit',
   }),
   localPathSync: false,
   providerViewSync: false,

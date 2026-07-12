@@ -105,9 +105,15 @@ async function createRepository() {
   await mkdir(join(directory, 'node_modules/.smoke-seed'), {
     recursive: true,
   });
+  await mkdir(join(directory, 'node_modules/.bin'), { recursive: true });
   await writeFile(
     join(directory, 'node_modules/.smoke-seed/source.txt'),
     'dependency seed\n',
+  );
+  await writeFile(
+    join(directory, 'node_modules/.bin/tsx'),
+    '#!/bin/sh\nexit 0\n',
+    { mode: 0o755 },
   );
   await writeFile(join(directory, '.env'), 'PRIMARY_SECRET=do-not-copy\n');
   await writeFile(join(directory, '.mcp.json'), '{"primary":true}\n');
@@ -130,7 +136,7 @@ async function createFakeExecutables(binDirectory) {
     `#!/bin/sh
 printf '%s\\n' "$*" >> "$PNPM_RECORD"
 case "$*" in
-  "install --offline --frozen-lockfile --ignore-scripts"|"run build")
+  "run build")
     exit 0
     ;;
   *)
@@ -279,11 +285,7 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
     );
     assert.equal(
       await readFile(pnpmRecord, 'utf8'),
-      [
-        'install --offline --frozen-lockfile --ignore-scripts',
-        'run build',
-        '',
-      ].join('\n'),
+      ['run build', ''].join('\n'),
     );
     for (const forbiddenPath of [
       '.env',

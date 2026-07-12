@@ -87,16 +87,11 @@ The runner writes one JSON provisioning manifest before drive. It includes:
         "localProjects": false,
         "mcp": false
       },
-      "dependencyInstall": {
-        "argv": [
-          "install",
-          "--offline",
-          "--frozen-lockfile",
-          "--ignore-scripts"
-        ],
+      "dependencyMaterialization": {
         "lifecycleScripts": false,
-        "lockfile": "frozen",
-        "network": "offline"
+        "mode": "source-tree-clone",
+        "network": "none",
+        "sourceBinding": "source-commit"
       },
       "localPathSync": false,
       "providerViewSync": false,
@@ -210,13 +205,13 @@ canonical worktree path, shared Git common directory, and child ownership
 baseline. Journal failure aborts before package tooling. A valid marker selects
 a closed bootstrap path: copy only the recorded smoke config and byte-compare
 it, clone the source-commit-bound dependency tree into the disposable child,
-run
-`pnpm install --offline --frozen-lockfile --ignore-scripts`, then run
-`pnpm run build`. The build is allowed because generated content stays inside
-the disposable child worktree. Primary environment, MCP, local-project, and
-archive copies remain disabled, as do S3 archive sync, shared-hook setup,
-local-path sync, and provider-view sync. Missing, malformed, untracked, or
-out-of-run marker/config bindings fail before normal bootstrap can begin.
+verify its required tool entrypoints, then run `pnpm run build`. It performs no
+dependency installation or package download. The build is allowed because
+generated content stays inside the disposable child worktree. Primary
+environment, MCP, local-project, and archive copies remain disabled, as do S3
+archive sync, shared-hook setup, local-path sync, and provider-view sync.
+Missing, malformed, untracked, or out-of-run marker/config bindings fail before
+normal bootstrap can begin.
 
 `branchOwnership` is absent until this run successfully creates the branch. Its
 source and immutable baseline SHAs bind cleanup authority to the created ref; a

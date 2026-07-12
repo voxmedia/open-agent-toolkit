@@ -145,16 +145,11 @@ const expectedPolicy = {
     localProjects: false,
     mcp: false,
   },
-  dependencyInstall: {
-    argv: [
-      'install',
-      '--offline',
-      '--frozen-lockfile',
-      '--ignore-scripts',
-    ],
+  dependencyMaterialization: {
     lifecycleScripts: false,
-    lockfile: 'frozen',
-    network: 'offline',
+    mode: 'source-tree-clone',
+    network: 'none',
+    sourceBinding: 'source-commit',
   },
   localPathSync: false,
   providerViewSync: false,
@@ -427,7 +422,10 @@ NODE
     return 1
   fi
 
-  if [[ ! -e "${current_root}/node_modules" ]]; then
+  if [[ ! -x "${current_root}/node_modules/.bin/tsx" ]]; then
+    if [[ -e "${current_root}/node_modules" || -L "${current_root}/node_modules" ]]; then
+      rm -rf "${current_root}/node_modules"
+    fi
     echo "cloning the preflight-verified dependency tree"
     case "$(uname -s)" in
       Darwin)
@@ -445,9 +443,10 @@ NODE
     echo "error: smoke dependency destination is unsafe" >&2
     return 1
   fi
-
-  echo "installing dependencies offline with frozen lockfile"
-  GIT_HOOKS=0 pnpm install --offline --frozen-lockfile --ignore-scripts
+  if [[ ! -x "${current_root}/node_modules/.bin/tsx" ]]; then
+    echo "error: smoke dependency clone is incomplete" >&2
+    return 1
+  fi
 
   # Generated build content remains inside the disposable child worktree.
   echo "building workspace"
