@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-11
-oat_current_task_id: p05-t02
+oat_last_updated: 2026-07-12
+oat_current_task_id: p05-t08
 oat_generated: false
 ---
 
@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 6     | 1/6       |
+| Phase 5 | in_progress | 10    | 2/10      |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 18/23 tasks completed
+**Total:** 19/27 tasks completed
 
 ---
 
@@ -1184,7 +1184,9 @@ and a complete Codex dry-run lifecycle passed.
 **Status:** in_progress
 **Commit:** -
 
-**Automated plan-review:** passed.
+**Automated plan-review:** the prior nine-task fixture run passed, but p05-t07
+changed the fixture contract before its evidence was committed. A current
+five-task plan-review run is therefore still required.
 
 **Automated implement recovery:** The first implementation attempt exposed two
 separate defects: the outer drive's final manifest write could erase child
@@ -1229,6 +1231,62 @@ public-package release validation.
 ---
 
 ### Task p05-t06: Live negative controls and cross-harness evidence summary
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t07: Bound implementation context and live fixture cost
+
+**Status:** completed
+**Commit:** `b335aa1`
+
+**Outcome:**
+
+- Reduced the implementation entry skill from roughly 2,000 lines to 168
+  lines. Four phase-routed references preserve the original workflow contract
+  verbatim and are loaded only when execution reaches their route.
+- Added contract composition tests so existing behavioral assertions still
+  exercise the full routed workflow while a dedicated guard prevents the entry
+  skill from growing past 220 lines.
+- Reduced the live fixture from nine tasks to five: two serial workers in each
+  parallel phase and one fan-in worker. This retains root → phase coordinator →
+  task worker depth, parallel isolation, and fan-in evidence.
+- Fixed implementation/full protocols to one coordinator-owned self-review per
+  phase and exactly one external final code gate after p03.
+
+**Verification:** 98/98 smoke tests and 102/102 focused CLI skill-contract
+tests passed. Workspace lint, format, type-check, plan validation, and
+`pnpm release:validate` also passed.
+
+---
+
+### Task p05-t08: Deterministic orchestration contract tier
+
+**Status:** in_progress
+**Commit:** -
+
+**Scope correction from smoke-effort feedback:**
+
+- Live runs are paused until a fake-provider/fake-gate tier exercises the real
+  journal, evidence, assertion, and cleanup paths in seconds.
+- The dependency-policy revert is complete: no schema-v3 marker,
+  `dependencySource`, `dependencyMaterialization`, dependency-tree clone,
+  smoke pnpm shim, or fake-pnpm smoke scaffolding remains.
+- Deterministic failure injection must cover the contract defects that
+  previously required costly live runs to expose.
+
+---
+
+### Task p05-t09: Fail-fast child execution and observable gates
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t10: Single-owner run metadata and report publication
 
 **Status:** pending
 **Commit:** -

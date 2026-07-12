@@ -401,7 +401,9 @@ worktrees from that commit; the operator may drive them concurrently in
 separate terminals, subject to provider rate limits. Cursor IDE joins this
 operator batch because it has no automated path. Complete collection and the
 p05-t06 cross-harness summary only after every operator worktree has returned.
-The affected p05 tasks remain open while their operator evidence is deferred._
+The affected p05 tasks remain open while their operator evidence is deferred.
+Before any further live-provider run, complete defect-recovery tasks p05-t07
+through p05-t10 and establish one stable source HEAD._
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -556,7 +558,7 @@ Repeat `plan-review` through `--drive-mode operator --stage prepare`, the printe
 - Create: `tools/smoke/reports/negative-controls/` (live unavailable-target preflight evidence)
 - Create: `tools/smoke/reports/SUMMARY.md` (per-harness topology matrix, selection-contract observations, divergences, deferrals, defects observed)
 
-_This task is report-only outside `tools/smoke/reports/`. If live runs surfaced fixture/runner defects, record them in SUMMARY.md and `implementation.md` and add a new monotonic p05 task (e.g. `p05-t07`) with enumerated files, verification, and its own commit — do not bundle fixes into evidence commits._
+_This task is report-only outside `tools/smoke/reports/`. If live runs surface another fixture/runner defect, record it in SUMMARY.md and `implementation.md` and add the next monotonic p05 task (e.g. `p05-t11`) with enumerated files, verification, and its own commit — do not bundle fixes into evidence commits._
 
 **Step 1: Live negative control (unavailable target)** — run exactly:
 
@@ -575,6 +577,135 @@ Assert: nonzero exit, unavailability named in the preflight report, **no provisi
 **Step 4: Verify** — `node --test 'tools/smoke/**/*.test.mjs'` green; every claim in SUMMARY.md links a committed evidence report.
 
 **Step 5: Commit** — `git add tools/smoke && git commit -m "docs(p05-t06): add negative controls and cross-harness smoke evidence summary"`
+
+---
+
+### Task p05-t07: Bound implementation context and live fixture cost
+
+_Monotonic defect-recovery task discovered during p05-t02. Depends on p05-t01
+and must complete before retrying live implementation scenarios._
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Create: `.agents/skills/oat-project-implement/references/{dispatch-and-dry-run.md,plan-and-resume.md,phase-execution.md,completion-and-closeout.md}`
+- Modify: `packages/cli/src/validation/skills.test.ts`, `packages/cli/src/commands/init/tools/shared/{post-implement-sequence-contracts.test.ts,review-skill-contracts.test.ts}`
+- Modify: `tools/smoke/{CONTRACT.md,fixture/project/plan.md,evidence/assertions.mjs,evidence/assertions.test.mjs,evidence/collect.test.mjs,runner/drive.mjs,runner/drive.test.mjs,runner/preflight.mjs,runner/preflight.test.mjs,fixture/fixture-format-contract.test.mjs,fixture/fixture-integrity.test.mjs}`
+- Modify: `tools/smoke/protocols/{codex.md,claude.md,cursor-ide.md,cursor-cli.md}`
+- Modify: lockstep public package versions and `.oat/sync/manifest.json`
+
+**Step 1: Contract tests (RED)** — require the implementation entry skill to
+remain at most 220 lines, route into four phase-specific references, preserve
+the composed behavioral contract, reduce the fixture to five tasks
+(`p01:2`, `p02:2`, `p03:1`), and require exactly one final implementation gate.
+
+**Step 2: Mechanical extraction and fixture reduction (GREEN)** — move existing
+implementation workflow prose verbatim into route references; do not rewrite
+behavior. Keep a small entry router that forbids preloading later routes and
+limits coordinator/worker/reviewer context. Remove redundant fixture tasks
+while preserving root → phase coordinator → serial task-worker nesting,
+parallel p01∥p02 isolation, p03 fan-in, one self-review per phase, and one
+external final code gate.
+
+**Step 3: Verify** — `node --test tools/smoke/fixture/*.test.mjs tools/smoke/runner/*.test.mjs tools/smoke/evidence/*.test.mjs`; focused CLI skill-contract tests; workspace lint, format, type-check, and `pnpm release:validate`.
+
+**Step 4: Commit** — `git add .agents/skills/oat-project-implement packages/cli tools/smoke .oat/sync/manifest.json && git commit -m "refactor(p05-t07): bound implementation context and smoke cost"`
+
+---
+
+### Task p05-t08: Deterministic orchestration contract tier
+
+_Defect-recovery task from live-run economics feedback. Depends on p05-t07 and
+blocks every further live-provider run._
+
+**Files:**
+
+- Create: `tools/smoke/deterministic/` (fake provider and fake gate adapters)
+- Modify: `tools/smoke/runner/` and `tools/smoke/evidence/` only where needed to
+  expose production journaling/evidence seams without duplicating them
+- Modify: `tools/smoke/CONTRACT.md`
+
+**Step 1: Contract tests (RED)** — one seconds-scale deterministic run must use
+real provisioning ownership, locked journal updates, immutable dispatch/state
+records, evidence collection, assertions, and cleanup while replacing only the
+provider and gate processes. Failure injections must cover transition ordering,
+child-bootstrap failure, post-acceptance failure terminality, and concurrent
+manifest updates.
+
+**Step 2: Implement (GREEN)** — add a first-class deterministic tier that drives
+the five-task fixture through fake provider/coordinator/worker/gate adapters.
+It must produce the same normalized evidence profile as a live `implement`
+scenario and must never require provider credentials or network access.
+
+**Step 3: Verify** — deterministic happy path and all failure injections finish
+in seconds; the full smoke suite remains green.
+
+**Step 4: Commit** — `git add tools/smoke && git commit -m "feat(p05-t08): add deterministic orchestration contract tier"`
+
+---
+
+### Task p05-t09: Fail-fast child execution and observable gates
+
+_Defect-recovery task from invalid-run continuation and gate black-box
+feedback. Depends on p05-t08 and blocks every further live-provider run._
+
+**Files:**
+
+- Modify: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `packages/cli/src/commands/gate/{index.ts,index.test.ts}`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `tools/smoke/protocols/{codex.md,claude.md,cursor-ide.md,cursor-cli.md}`
+- Modify: `tools/smoke/CONTRACT.md`
+- Modify: lockstep public package versions and `.oat/sync/manifest.json`
+
+**Step 1: Contract tests (RED)** — prove that smoke child bootstrap,
+registration, or fixture-readiness failure is immediately run-fatal and cannot
+be downgraded; no later worker, self-review, or gate may launch. Prove that an
+already accepted child/gate may be terminated only as part of invalid-run
+abort, never replaced. Gate execution must emit periodic elapsed, idle, and
+hard-budget telemetry.
+
+**Step 2: Implement (GREEN)** — source preflight owns repository build/test
+readiness once. Smoke child worktrees perform only containment, ownership
+registration, base verification, and fixture-scoped task checks; they do not
+install dependencies, build the repository, or run repository-wide tests.
+Add gate heartbeat/liveness reporting without weakening the hard timeout.
+
+**Step 3: Verify** — deterministic failure injection proves immediate abort,
+zero post-failure launches, terminal no-replacement behavior, and observable
+gate liveness.
+
+**Step 4: Commit** — `git add .agents packages/cli tools/smoke .oat/sync/manifest.json && git commit -m "fix(p05-t09): fail fast and expose gate liveness"`
+
+---
+
+### Task p05-t10: Single-owner run metadata and report publication
+
+_Defect-recovery task from manifest races, cleanup residue, and generated-file
+policy feedback. Depends on p05-t09 and blocks every further live-provider run._
+
+**Files:**
+
+- Modify: `tools/smoke/runner/{journal.mjs,drive.mjs,cleanup.mjs}` and tests
+- Modify: `tools/smoke/CONTRACT.md`
+- Modify: repository ignore policy only where needed for `tools/smoke/.runs/`
+  and `tools/smoke/reports/`
+
+**Step 1: Contract tests (RED)** — all manifest mutations, including drive and
+collection failure paths, must go through the locked journal API. Failed or
+incomplete reports remain under ignored run-local staging. Only a passing,
+fully bound report is atomically published to the version-controlled report
+root. Cleanup must leave no unowned `.runs/` residue.
+
+**Step 2: Implement (GREEN)** — consolidate metadata writes behind one owner,
+stage evidence/report output beside the manifest, publish only after assertions
+pass, and document tracked-versus-generated paths.
+
+**Step 3: Verify** — deterministic concurrent-write, failed-collection,
+interrupted-run, cleanup, and successful-publication cases all pass.
+
+**Step 4: Commit** — `git add tools/smoke .gitignore && git commit -m "fix(p05-t10): centralize smoke metadata publication"`
 
 ---
 

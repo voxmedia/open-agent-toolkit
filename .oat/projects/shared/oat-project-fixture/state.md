@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t02
-oat_last_commit: 68bb7ea0d6461c9ddbe1a1d3502aeac08c973e47
+oat_current_task: p05-t08
+oat_last_commit: b335aa18ef63f65b86e50323fe4af47fd7ffee89
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T18:29:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T19:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -64,7 +64,7 @@ Implementation — Phase 5 live smoke evidence
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 23 tasks)
+- **Plan:** `plan.md` (complete — 6 phases / 27 tasks)
 - **Implementation:** `implementation.md` (in progress — Phase 1 complete;
   Phase 2 complete; Phase 3 complete; Phase 4 complete)
 
@@ -125,9 +125,18 @@ Implementation — Phase 5 live smoke evidence
 - ✓ Phase 4 self-review fix iteration 4 complete and verified
 - ✓ Final configured Phase 4 re-review passed 0C/0I/0M/0m
 - ✓ p05-t01 per-harness automated/operator protocols and runner wiring complete
-- ✓ Codex automated plan-review smoke passed
 - ✓ Invalid dependency-coupled Codex implement run canceled; bootstrap
   ownership restored to repository-defined skill instructions and verified
+- ✓ p05-t07 reduced the implementation entry skill to a 168-line router while
+  preserving its contract in four phase-loaded references
+- ✓ Live fixture reduced to five tasks with one final external code gate while
+  preserving root → coordinator → worker nesting evidence
+- ⚠ The prior Codex plan-review evidence passed against the superseded
+  nine-task fixture; the current five-task baseline still needs a fresh run
+- ✓ Dependency-policy revert confirmed complete: no schema-v3 marker,
+  dependency source/materialization fields, dependency-tree clone, or pnpm
+  smoke shim remains
+- → Live-provider runs paused behind p05-t08 through p05-t10 contract hardening
 
 ## Blockers
 
@@ -135,4 +144,6 @@ None
 
 ## Next Milestone
 
-Run p05-t02 Codex automated smoke scenarios, then prepare operator handoffs
+Complete p05-t08 deterministic orchestration coverage, then p05-t09 fail-fast
+child/gate liveness and p05-t10 single-owner metadata publication. Resume
+p05-t02 live runs only from the resulting stable source HEAD.
