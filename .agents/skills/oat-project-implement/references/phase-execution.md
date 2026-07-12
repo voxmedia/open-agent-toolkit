@@ -238,6 +238,11 @@ which execution pauses; an empty list means every phase.
 
 Before a configured non-final HiLL pause, run auto-review when enabled. Scope
 starts after the last passed whole-phase review and ends at the current phase.
+Count only whole-phase scopes: `pNN` or `pNN-pMM`.
+
+- Example: prior passed row `p01`, current checkpoint `p03` → review `p02-p03`.
+- Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`.
+
 For the final implementation phase use `oat-project-review-provide code final`
 and do not duplicate the already completed root-owned per-phase review.
 

@@ -179,11 +179,11 @@ describe('review skill contracts', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content).toContain(
-      'If this is the final implementation phase checkpoint, run `oat-project-review-provide code final`',
+    expect(content).toMatch(
+      /If this is the final implementation phase checkpoint, run\s+`oat-project-review-provide code final`/,
     );
-    expect(content).toContain(
-      'do not run a duplicate final phase-only lifecycle review',
+    expect(content).toMatch(
+      /do not run a duplicate final\s+phase-only lifecycle review/,
     );
   });
 
