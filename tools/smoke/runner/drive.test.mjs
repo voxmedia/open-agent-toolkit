@@ -66,6 +66,7 @@ test('selects one protocol and invocation shape for every harness', async () => 
       gitMetadataPath: '/tmp/smoke-git',
       harness,
       prompt: protocol.prompt,
+      runMetadataPath: '/tmp/smoke-run',
       worktreePath: '/tmp/smoke-worktree',
     });
     const operator = createInvocationPlan({
@@ -73,6 +74,7 @@ test('selects one protocol and invocation shape for every harness', async () => 
       gitMetadataPath: '/tmp/smoke-git',
       harness,
       prompt: protocol.prompt,
+      runMetadataPath: '/tmp/smoke-run',
       worktreePath: '/tmp/smoke-worktree',
     });
     assert.equal(automated.executable, executable);
@@ -89,6 +91,13 @@ test('selects one protocol and invocation shape for every harness', async () => 
             plan.args.indexOf('--add-dir') + 2,
           ),
           ['--add-dir', '/tmp/smoke-git'],
+        );
+        assert.deepEqual(
+          plan.args.slice(
+            plan.args.lastIndexOf('--add-dir'),
+            plan.args.lastIndexOf('--add-dir') + 2,
+          ),
+          ['--add-dir', '/tmp/smoke-run'],
         );
       }
     }

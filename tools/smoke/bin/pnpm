@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+exec corepack pnpm "$@"

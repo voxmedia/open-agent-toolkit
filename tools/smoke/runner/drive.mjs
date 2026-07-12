@@ -131,14 +131,20 @@ export function createInvocationPlan({
   gitMetadataPath,
   harness,
   prompt,
+  runMetadataPath,
   worktreePath,
 }) {
   const operator = driveMode === 'operator';
   if (
     harness === 'codex' &&
-    (typeof gitMetadataPath !== 'string' || gitMetadataPath.length === 0)
+    (typeof gitMetadataPath !== 'string' ||
+      gitMetadataPath.length === 0 ||
+      typeof runMetadataPath !== 'string' ||
+      runMetadataPath.length === 0)
   ) {
-    throw new DriveError('Codex smoke drive requires its Git metadata root.');
+    throw new DriveError(
+      'Codex smoke drive requires its Git and run metadata roots.',
+    );
   }
   if (operator) {
     const command = {
@@ -151,6 +157,8 @@ export function createInvocationPlan({
           'workspace-write',
           '--add-dir',
           gitMetadataPath,
+          '--add-dir',
+          runMetadataPath,
         ],
         executable: 'codex',
       },
@@ -184,6 +192,8 @@ export function createInvocationPlan({
         'workspace-write',
         '--add-dir',
         gitMetadataPath,
+        '--add-dir',
+        runMetadataPath,
         '--dangerously-bypass-hook-trust',
         '--json',
         '-C',
@@ -332,6 +342,7 @@ export async function driveSmoke(
     ...options,
     gitMetadataPath: manifest.commonGitDir,
     prompt: protocol.prompt,
+    runMetadataPath: dirname(manifest.manifestPath),
     worktreePath: manifest.worktreePath,
   });
   const record = {

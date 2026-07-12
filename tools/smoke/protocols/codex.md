@@ -11,17 +11,18 @@ launch.
 ## Automated invocation
 
 The runner executes
-`codex exec --ephemeral --sandbox workspace-write --add-dir <common-git-dir> --json`
+`codex exec --ephemeral --sandbox workspace-write --add-dir <common-git-dir> --add-dir <smoke-run-dir> --json`
 in the disposable worktree. This noninteractive run is canonical evidence and
 writes to `tools/smoke/reports/codex/<scenario>/`.
 
 ## Operator-interactive handoff
 
 `--drive-mode operator --stage prepare` prints a broker-wrapped
-`codex -C <worktree> --sandbox workspace-write --add-dir <common-git-dir>`
-command and the canned prompt. Run that command in a TTY, paste the prompt, wait
-for completion, then run the matching `--stage collect`. Operator evidence
-writes to `tools/smoke/reports/codex/operator/<scenario>/`.
+`codex -C <worktree> --sandbox workspace-write --add-dir <common-git-dir>
+--add-dir <smoke-run-dir>` command and the canned prompt. Run that command in a
+TTY, paste the prompt, wait for completion, then run the matching
+`--stage collect`. Operator evidence writes to
+`tools/smoke/reports/codex/operator/<scenario>/`.
 
 ## Canned root prompt
 
