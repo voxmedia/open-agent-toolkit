@@ -102,6 +102,8 @@ run_smoke_bootstrap() {
   local marker_path="$1"
   local validation_output
   local config_source
+  local dependency_source
+  local dependency_source_commit
   local baseline_commit
   local manifest_path
   local source_root
@@ -236,16 +238,17 @@ if (
     'branch',
     'configSha256',
     'configSource',
+    'dependencySource',
     'manifestPath',
     'policy',
     'runIdentity',
     'schemaVersion',
   ])
 ) {
-  fail('marker fields do not match schema version 2');
+  fail('marker fields do not match schema version 3');
 }
-if (marker.schemaVersion !== 2) {
-  fail('schemaVersion must equal 2');
+if (marker.schemaVersion !== 3) {
+  fail('schemaVersion must equal 3');
 }
 if (
   typeof marker.configSha256 !== 'string' ||
@@ -257,6 +260,10 @@ const configSource = requireAbsolutePath(
   marker.configSource,
   'configSource',
 );
+const dependencySource = requireAbsolutePath(
+  marker.dependencySource,
+  'dependencySource',
+);
 const manifestPath = requireAbsolutePath(
   marker.manifestPath,
   'manifestPath',
@@ -265,6 +272,7 @@ if (!isDeepStrictEqual(marker.policy, expectedPolicy)) {
   fail('policy does not match the closed smoke bootstrap policy');
 }
 requireRegularFile(configSource, 'configSource');
+requireRealDirectory(dependencySource, 'dependencySource');
 requireRegularFile(manifestPath, 'manifestPath');
 
 const manifest = requirePlainObject(
@@ -285,6 +293,7 @@ const expectedBootstrap = {
   branch: marker.branch,
   configSha256: marker.configSha256,
   configSource,
+  dependencySource,
   manifestPath,
   markerPath: sourceMarkerPath,
   policy: expectedPolicy,
@@ -306,6 +315,8 @@ if (
 if (
   manifest.provisioningState !== 'ready' ||
   manifest.readiness?.status !== 'ready' ||
+  typeof manifest.sourceCommitSha !== 'string' ||
+  !/^[0-9a-f]{40}$/u.test(manifest.sourceCommitSha) ||
   typeof manifest.baselineCommitSha !== 'string' ||
   !/^[0-9a-f]{40}$/u.test(manifest.baselineCommitSha)
 ) {
@@ -347,6 +358,7 @@ const config = requirePlainObject(
 if (
   config.activeProject !== fixtureProject ||
   !isDeepStrictEqual(config.smoke, {
+    driveMode: manifest.driveMode,
     harness: manifest.harness,
     scenario: manifest.appliedScenario,
   }) ||
@@ -359,12 +371,12 @@ if (
 }
 
 process.stdout.write(
-  `${configSource}\t${manifest.baselineCommitSha}\t${manifestPath}`,
+  `${configSource}\t${dependencySource}\t${manifest.sourceCommitSha}\t${manifest.baselineCommitSha}\t${manifestPath}`,
 );
 NODE
   )"
 
-  IFS=$'\t' read -r config_source baseline_commit manifest_path <<<"$validation_output"
+  IFS=$'\t' read -r config_source dependency_source dependency_source_commit baseline_commit manifest_path <<<"$validation_output"
   source_root="$(cd "$(dirname "$config_source")/.." && pwd -P)"
   source_common_git_dir="$(
     git -C "$source_root" rev-parse --path-format=absolute --git-common-dir
@@ -372,6 +384,14 @@ NODE
 
   if [[ "$source_common_git_dir" != "$common_git_dir" ]]; then
     echo "error: smoke config source belongs to a different repository" >&2
+    return 1
+  fi
+  if [[ "$(git -C "$(dirname "$dependency_source")" rev-parse --path-format=absolute --git-common-dir)" != "$common_git_dir" ]]; then
+    echo "error: smoke dependency source belongs to a different repository" >&2
+    return 1
+  fi
+  if [[ "$(git -C "$(dirname "$dependency_source")" rev-parse HEAD)" != "$dependency_source_commit" ]]; then
+    echo "error: smoke dependency source is not at the provisioned source commit" >&2
     return 1
   fi
   if ! git -C "$current_root" merge-base --is-ancestor "$baseline_commit" HEAD; then
@@ -404,6 +424,25 @@ NODE
   fi
   if ! cmp -s "$config_source" "$config_destination"; then
     echo "error: smoke config byte verification failed" >&2
+    return 1
+  fi
+
+  if [[ ! -e "${current_root}/node_modules" ]]; then
+    echo "cloning the preflight-verified dependency tree"
+    case "$(uname -s)" in
+      Darwin)
+        cp -cR "$dependency_source" "${current_root}/node_modules"
+        ;;
+      Linux)
+        cp -a --reflink=auto "$dependency_source" "${current_root}/node_modules"
+        ;;
+      *)
+        cp -R "$dependency_source" "${current_root}/node_modules"
+        ;;
+    esac
+  fi
+  if [[ ! -d "${current_root}/node_modules" || -L "${current_root}/node_modules" ]]; then
+    echo "error: smoke dependency destination is unsafe" >&2
     return 1
   fi
 

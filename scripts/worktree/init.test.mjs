@@ -81,6 +81,7 @@ async function createRepository() {
     )}\n`,
   );
   await writeFile(join(directory, 'README.md'), 'smoke init host\n');
+  await writeFile(join(directory, '.gitignore'), 'node_modules/\n');
   await writeFile(
     join(directory, 'scripts/sync-archived-projects-from-s3.sh'),
     '#!/usr/bin/env bash\nprintf "s3\\n" >> "$SMOKE_FORBIDDEN_LOG"\n',
@@ -89,6 +90,7 @@ async function createRepository() {
     [
       'add',
       '.oat/config.json',
+      '.gitignore',
       'README.md',
       'scripts/sync-archived-projects-from-s3.sh',
       'scripts/worktree/init.sh',
@@ -100,6 +102,13 @@ async function createRepository() {
 
   await mkdir(join(directory, '.oat/projects/local'), { recursive: true });
   await mkdir(join(directory, '.oat/projects/archived'), { recursive: true });
+  await mkdir(join(directory, 'node_modules/.smoke-seed'), {
+    recursive: true,
+  });
+  await writeFile(
+    join(directory, 'node_modules/.smoke-seed/source.txt'),
+    'dependency seed\n',
+  );
   await writeFile(join(directory, '.env'), 'PRIMARY_SECRET=do-not-copy\n');
   await writeFile(join(directory, '.mcp.json'), '{"primary":true}\n');
   await writeFile(
@@ -230,6 +239,13 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
       },
     });
 
+    assert.equal(
+      await readFile(
+        join(childWorktreePath, 'node_modules/.smoke-seed/source.txt'),
+        'utf8',
+      ),
+      'dependency seed\n',
+    );
     assert.deepEqual(
       await readFile(childConfig),
       await readFile(manifest.intendedSmokeBootstrap.configSource),

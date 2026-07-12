@@ -15,7 +15,10 @@ import test from 'node:test';
 import { promisify } from 'node:util';
 
 import { cleanupSmoke } from './cleanup.mjs';
-import { registerNestedSmokeResource } from './journal.mjs';
+import {
+  registerNestedSmokeResource,
+  validateSmokeMarkerBinding,
+} from './journal.mjs';
 import { provisionSmoke } from './provision.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -79,6 +82,35 @@ async function cleanup(repository, manifestPath) {
     runsDirectory: join(repository, '.smoke-runs'),
   });
 }
+
+test('accepts schema-v2 markers for interrupted-run cleanup', () => {
+  const worktreePath = '/tmp/oat-smoke-legacy/worktree';
+  const manifestPath = '/tmp/oat-smoke-legacy/provisioning-manifest.json';
+  const marker = {
+    branch: 'smoke-legacy',
+    configSha256: 'a'.repeat(64),
+    configSource: `${worktreePath}/.oat/config.local.json`,
+    manifestPath,
+    policy: { network: 'offline' },
+    runIdentity: 'smoke-legacy',
+    schemaVersion: 2,
+  };
+  const bootstrap = {
+    ...marker,
+    markerPath: `${worktreePath}/.oat/smoke-bootstrap.json`,
+  };
+  delete bootstrap.schemaVersion;
+  const manifest = {
+    branch: marker.branch,
+    effectiveSmokeBootstrap: bootstrap,
+    intendedSmokeBootstrap: bootstrap,
+    manifestPath,
+    runIdentity: marker.runIdentity,
+    worktreePath,
+  };
+
+  assert.deepEqual(validateSmokeMarkerBinding(marker, manifest), marker);
+});
 
 test('retains both concurrent child registrations with atomic manifest updates', async () => {
   const repository = await createRepository('oat-smoke-journal-race-');

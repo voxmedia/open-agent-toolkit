@@ -296,6 +296,7 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
       branch: manifest.branch,
       configSha256,
       configSource: configPath,
+      dependencySource: join(repository, 'node_modules'),
       manifestPath: manifest.manifestPath,
       markerPath,
       policy: smokeBootstrapPolicy,

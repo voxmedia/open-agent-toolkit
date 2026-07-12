@@ -67,6 +67,7 @@ The runner writes one JSON provisioning manifest before drive. It includes:
     "branch": "flat-collision-resistant-name",
     "configSha256": "64-character lowercase SHA-256 digest",
     "configSource": "/absolute/disposable/worktree/.oat/config.local.json",
+    "dependencySource": "/absolute/source/workspace/node_modules",
     "manifestPath": "/absolute/disposable/run/provisioning-manifest.json",
     "markerPath": "/absolute/disposable/worktree/.oat/smoke-bootstrap.json",
     "runIdentity": "same immutable identity as branch",
@@ -107,6 +108,7 @@ The runner writes one JSON provisioning manifest before drive. It includes:
     "branch": "flat-collision-resistant-name",
     "configSha256": "64-character lowercase SHA-256 digest",
     "configSource": "/absolute/disposable/worktree/.oat/config.local.json",
+    "dependencySource": "/absolute/source/workspace/node_modules",
     "manifestPath": "/absolute/disposable/run/provisioning-manifest.json",
     "markerPath": "/absolute/disposable/worktree/.oat/smoke-bootstrap.json",
     "runIdentity": "same immutable identity as branch",
@@ -156,7 +158,7 @@ for drive.
 `sourceCommitSha` is the commit from which the disposable branch was created.
 After applying the selected preset, provisioning commits the fixture project
 and workspace seed logs as `baselineCommitSha`. The baseline also contains the
-tracked schema-v2 `.oat/smoke-bootstrap.json` marker. The marker binds the
+tracked schema-v3 `.oat/smoke-bootstrap.json` marker. The marker binds the
 external manifest path, branch, and immutable run identity. The local config is written before
 that commit but excluded from it, so the provisioning worktree remains clean
 except for the expected untracked `.oat/config.local.json`. Child worktrees
@@ -203,8 +205,9 @@ for the tracked smoke marker and validates it against the ready manifest and
 baseline commit. It then atomically journals the actual attached child branch,
 canonical worktree path, shared Git common directory, and child ownership
 baseline. Journal failure aborts before package tooling. A valid marker selects
-a closed bootstrap path: copy only the
-recorded smoke config and byte-compare it, run
+a closed bootstrap path: copy only the recorded smoke config and byte-compare
+it, clone the source-commit-bound dependency tree into the disposable child,
+run
 `pnpm install --offline --frozen-lockfile --ignore-scripts`, then run
 `pnpm run build`. The build is allowed because generated content stays inside
 the disposable child worktree. Primary environment, MCP, local-project, and
