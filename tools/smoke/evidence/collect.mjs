@@ -1300,7 +1300,12 @@ async function corroborateTransitions(
   worktreePath,
   fixtureProjectPath,
   gitTopology,
+  baselineCommitSha,
 ) {
+  const baselineSha = validateSha(
+    baselineCommitSha,
+    'transition baseline commit',
+  );
   const currentShas = new Set(
     gitTopology.currentBranchCommits.map((commit) => commit.sha),
   );
@@ -1345,6 +1350,7 @@ async function corroborateTransitions(
         await runGit(['rev-parse', `${commitSha}^`], worktreePath),
         'state transition parent',
       );
+      const fromCommitSha = event.sequence === 1 ? baselineSha : parentSha;
       const [
         stateBefore,
         stateAfter,
@@ -1353,11 +1359,14 @@ async function corroborateTransitions(
         implementationBefore,
         implementationAfter,
       ] = await Promise.all([
-        runGitRaw(['show', `${parentSha}:${statePath}`], worktreePath),
+        runGitRaw(['show', `${fromCommitSha}:${statePath}`], worktreePath),
         runGitRaw(['show', `${commitSha}:${statePath}`], worktreePath),
-        runGitRaw(['show', `${parentSha}:${planPath}`], worktreePath),
+        runGitRaw(['show', `${fromCommitSha}:${planPath}`], worktreePath),
         runGitRaw(['show', `${commitSha}:${planPath}`], worktreePath),
-        runGitRaw(['show', `${parentSha}:${implementationPath}`], worktreePath),
+        runGitRaw(
+          ['show', `${fromCommitSha}:${implementationPath}`],
+          worktreePath,
+        ),
         runGitRaw(['show', `${commitSha}:${implementationPath}`], worktreePath),
       ]);
       const artifactChanges = {
@@ -1371,6 +1380,7 @@ async function corroborateTransitions(
         contentChanged: Object.values(artifactChanges).every(Boolean),
         event: 'state-transition',
         from: optionalString(event.from),
+        fromCommitSha,
         observedFrom: observedLifecycleState(
           stateBefore,
           planBefore,
@@ -1696,6 +1706,7 @@ export async function collectEvidence({
     canonicalWorktree,
     fixtureProjectPath,
     gitTopology,
+    manifest.baselineCommitSha,
   );
 
   const bundle = {

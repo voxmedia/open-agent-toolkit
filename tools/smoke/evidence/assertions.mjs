@@ -165,6 +165,8 @@ function planReviewAssertions(bundle) {
         event.to === event.observedTo,
     ) &&
     new Set(transitions.map((event) => event.commitSha)).size === 2 &&
+    transitions[0]?.fromCommitSha === bundle.manifest?.baselineCommitSha &&
+    transitions[1]?.fromCommitSha === transitions[0]?.commitSha &&
     transitionIndexes.every((index) => index >= 0) &&
     transitionIndexes[0] < transitionIndexes[1];
 

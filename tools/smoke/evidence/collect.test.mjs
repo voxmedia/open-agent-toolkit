@@ -911,8 +911,33 @@ test('collector corroborates transition states from committed artifact contents'
     let plan = await readFile(planPath, 'utf8');
     plan = plan.replace(
       /^\| plan\s+\| artifact \| pending \| -\s+\| -\s+\|$/mu,
-      '| plan | artifact | passed | 2026-07-11 | reviews/plan-review.md |',
+      '| plan | artifact | received | 2026-07-11 | reviews/plan-review.md |',
     );
+    await writeFile(planPath, plan);
+    await git(
+      [
+        'add',
+        '--',
+        '.oat/projects/smoke-fixture/plan.md',
+        '.oat/projects/smoke-fixture/reviews/plan-review.md',
+      ],
+      run.worktreePath,
+    );
+    await git(
+      ['commit', '-m', 'chore: record plan review artifact'],
+      run.worktreePath,
+    );
+
+    await mkdir(join(run.fixtureProjectPath, 'reviews/archived'), {
+      recursive: true,
+    });
+    await rename(
+      reviewPath,
+      join(run.fixtureProjectPath, 'reviews/archived/plan-review.md'),
+    );
+    plan = (await readFile(planPath, 'utf8'))
+      .replace('| plan | artifact | received |', '| plan | artifact | passed |')
+      .replace('reviews/plan-review.md', 'reviews/archived/plan-review.md');
     await writeFile(planPath, plan);
     await writeFile(
       statePath,
@@ -929,8 +954,11 @@ test('collector corroborates transition states from committed artifact contents'
         '.oat/projects/smoke-fixture/plan.md',
         '.oat/projects/smoke-fixture/state.md',
         '.oat/projects/smoke-fixture/implementation.md',
-        '.oat/projects/smoke-fixture/reviews/plan-review.md',
       ],
+      run.worktreePath,
+    );
+    await git(
+      ['add', '-u', '--', '.oat/projects/smoke-fixture/reviews'],
       run.worktreePath,
     );
     await git(
@@ -939,21 +967,13 @@ test('collector corroborates transition states from committed artifact contents'
     );
     const reviewedSha = await git(['rev-parse', 'HEAD'], run.worktreePath);
 
-    await mkdir(join(run.fixtureProjectPath, 'reviews/archived'), {
-      recursive: true,
-    });
-    await rename(
-      reviewPath,
-      join(run.fixtureProjectPath, 'reviews/archived/plan-review.md'),
-    );
     plan = (await readFile(planPath, 'utf8'))
       .replace(/^oat_status: in_progress$/mu, 'oat_status: complete')
       .replace(
         /^oat_ready_for: null$/mu,
         'oat_ready_for: oat-project-implement',
       )
-      .replace(/^oat_template: true$/mu, 'oat_template: false')
-      .replace('reviews/plan-review.md', 'reviews/archived/plan-review.md');
+      .replace(/^oat_template: true$/mu, 'oat_template: false');
     const state = (await readFile(statePath, 'utf8'))
       .replace(/^oat_current_task: null$/mu, 'oat_current_task: p01-t01')
       .replace(/^oat_phase: plan$/mu, 'oat_phase: implement')
@@ -975,10 +995,6 @@ test('collector corroborates transition states from committed artifact contents'
         '.oat/projects/smoke-fixture/state.md',
         '.oat/projects/smoke-fixture/implementation.md',
       ],
-      run.worktreePath,
-    );
-    await git(
-      ['add', '-u', '--', '.oat/projects/smoke-fixture/reviews'],
       run.worktreePath,
     );
     await git(

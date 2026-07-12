@@ -288,6 +288,12 @@ Never journal the gate artifact commit, combine the two journaled transitions
 into one commit, or publish a transition record before the collector-observed
 before/after states match its declared edge.
 
+For sequence 1, corroboration compares the immutable manifest baseline with the
+receive commit, intentionally spanning the unjournaled `received` gate commit.
+Later sequences compare their direct parent. Evidence exposes this boundary as
+`fromCommitSha`; sequence 1 must bind to `manifest.baselineCommitSha`, and
+sequence 2 must bind directly to sequence 1's commit.
+
 Dispatch records use schema version 1 and contain:
 
 ```json
