@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # This project intentionally skips planned lifecycle ex
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -30,23 +30,23 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/138' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-12T15:28:47.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T17:38:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T17:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: dispatch-subagents-abstraction
 
-**Status:** Implementation complete; fixture handoff ready
+**Status:** PR open; awaiting human review
 **Started:** 2026-07-12
 **Last Updated:** 2026-07-12
 
 ## Current Phase
 
-Implementation and release validation complete; retrospective tracking backfilled
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -67,6 +67,8 @@ Implementation and release validation complete; retrospective tracking backfille
 - ✓ Plan and implementation history backfilled
 - ✓ Fixture provenance rechecked with no skill-specific drift
 - ✓ Adoption handoff prepared for commit `bb3a942a`
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -74,4 +76,7 @@ None
 
 ## Next Milestone
 
-Fixture agent reviews and adopts implementation commit `bb3a942a`
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
