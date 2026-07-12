@@ -1421,7 +1421,27 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-06-23T03:28:27.726Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-repo-improve",
+      "providerPath": ".claude/skills/oat-repo-improve",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T14:39:29.327Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-repo-improve",
+      "providerPath": ".cursor/skills/oat-repo-improve",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T14:39:29.328Z"
     }
   ],
-  "lastUpdated": "2026-06-23T03:28:27.726Z"
+  "lastUpdated": "2026-07-12T14:39:29.328Z"
 }
