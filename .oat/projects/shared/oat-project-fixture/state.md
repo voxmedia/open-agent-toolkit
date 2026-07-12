@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t03
-oat_last_commit: e73249c485cc16a52d65e346d48640fef5e0bc5e
+oat_current_task: p05-t01
+oat_last_commit: 681c8d510928d72c4b2e837514864e70f37afb0c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T14:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T14:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 4 fixes complete; awaiting re-review
+Implementation — Phase 4 complete; Phase 5 next
 
 ## Artifacts
 
@@ -66,7 +66,7 @@ Implementation — Phase 4 fixes complete; awaiting re-review
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 23 tasks)
 - **Implementation:** `implementation.md` (in progress — Phase 1 complete;
-  Phase 2 complete; Phase 3 implementation and fixes complete)
+  Phase 2 complete; Phase 3 complete; Phase 4 complete)
 
 ## Progress
 
@@ -123,6 +123,7 @@ Implementation — Phase 4 fixes complete; awaiting re-review
 - ✓ Phase 4 self-review fix iteration 3 complete and verified
 - ⚠ Phase 4 re-review iteration 4 failed 0C/1I/0M/0m
 - ✓ Phase 4 self-review fix iteration 4 complete and verified
+- ✓ Final configured Phase 4 re-review passed 0C/0I/0M/0m
 
 ## Blockers
 
@@ -130,4 +131,4 @@ None
 
 ## Next Milestone
 
-Run Phase 4 re-review
+Implement p05-t01 per-harness automated and operator-interactive protocols

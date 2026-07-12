@@ -70,14 +70,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 5     | 5/5       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 3     | 3/3       |
-| Phase 5 | pending     | 6     | 0/6       |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 5     | 5/5       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | pending  | 6     | 0/6       |
+| Phase 6 | pending  | 3     | 0/3       |
 
 **Total:** 17/23 tasks completed
 
@@ -332,8 +332,9 @@ corrected in this bookkeeping update.
 
 ## Phase 2: Smoke Runner Core
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
+**Completed:** 2026-07-12
 
 ### Task p02-t01: Runner skeleton and argument contract
 
@@ -894,8 +895,9 @@ trusts Markdown.
 
 ## Phase 4: Orchestration Contract
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
+**Completed:** 2026-07-12
 
 ### Task p04-t01: Promote the validated coordinator selection contract
 
@@ -1132,6 +1134,20 @@ repository-local provider sync passed.
 
 **Next:** run full validation, commit the fourth fix baseline, and run the final
 configured Phase 4 re-review.
+
+### Phase 4 Final Configured Re-review
+
+**Review artifact:** `reviews/p04-review-2026-07-12T140718Z.md`
+
+**Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+
+All prior Phase 4 findings are resolved. The final reviewer verified the
+complete authoritative range through `681c8d51`, including the immutable
+reviewer envelope, coordinator-owned live comparison and launch, planning
+inheritance, native-first and accepted-handle constraints, evidence contracts,
+provider synchronization, package versions, and PR #135/#137 regressions.
+
+**Disposition:** Phase 4 is complete. Phase 5 (`p05-t01`) is next.
 
 ---
 
