@@ -720,6 +720,39 @@ self-review; independent external gates remain enabled.
 
 **Action:** bounded fix iteration 1 started in the root thread.
 
+### Phase 3 Fix Iteration 1
+
+**Commit:** f35a2bbc
+
+**Outcome:**
+
+- Bound each report to a sibling bundle digest and made `--check` recompute the
+  complete scenario profile instead of trusting report claims.
+- Replaced self-asserted workflow booleans with exact nine-task launch,
+  fixture-marker, commit, journaled-branch, fan-in, review-row, artifact-commit,
+  and gate-JSON corroboration.
+- Added immutable production writers for launcher dispatch and commit-bound
+  state-transition evidence; documented the p05 harness adapter boundary.
+- Added real-preflight unavailable-target normalization and ordered
+  post-acceptance failure controls.
+- Required observed runtime-identity provenance; all unsupported identity
+  claims normalize to `not-reported`.
+- Added symlink containment, full-SHA and branch-ref validation, whitelisted
+  normalization, and recursive absolute-path/timestamp rejection outside raw
+  source paths.
+- Added a collector-to-assertion-to-report integration test using the actual
+  nine-task fixture shape.
+
+**Verification:**
+
+- Complete smoke/bootstrap/evidence suite — 80/80 passed.
+- Evidence oxlint/oxfmt and repository diff checks — passed.
+
+**Remaining advisory:** JSON report output is authoritative and atomically
+published. Markdown is deterministic but independently replaced, so
+interruption may leave a stale human-readable derivative; `--check` never
+trusts Markdown.
+
 ---
 
 ## Phase 4: Orchestration Contract
