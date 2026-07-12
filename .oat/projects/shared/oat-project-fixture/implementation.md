@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p04-t03
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -79,7 +79,7 @@ oat_generated: false
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 13/23 tasks completed
+**Total:** 14/23 tasks completed
 
 ---
 
@@ -940,8 +940,31 @@ and synchronized provider views passed.
 
 ### Task p04-t03: Selection-record fields for dispatch evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e73249c485cc16a52d65e346d48640fef5e0bc5e
+
+**Outcome:**
+
+- Human workflow notes now require `selection_reason` and
+  `candidates_considered`.
+- The smoke contract maps those semantic fields normatively to
+  `selection.reason` and `selection.candidatesConsidered`; no duplicate wire
+  schema was introduced.
+- Cross-file tests enforce the accepted reason vocabulary and mapping.
+
+**Verification:** 85 skill/closeout tests, 84 smoke tests, repository lint,
+repository format, synchronized views, and diff checks passed.
+
+### Phase 4 Summary
+
+The provider-neutral dispatch contract is now a canonical internal skill with
+one-level provider references and explicit consumer loading. It preserves
+full-information selection, native-first routing, deliberate inheritance,
+pre-start CLI selection, review-at-ceiling semantics, accepted-launch
+terminality, and launcher-owned evidence without moving lifecycle closeout out
+of `oat-project-implement`.
+
+**Next:** Phase 4 self-review.
 
 ---
 

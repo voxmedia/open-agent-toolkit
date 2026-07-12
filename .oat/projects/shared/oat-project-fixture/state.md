@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t03
-oat_last_commit: 4b693e574ab545aa1cdd63a72726aad1ccf1b887
+oat_current_task: p05-t01
+oat_last_commit: e73249c485cc16a52d65e346d48640fef5e0bc5e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T12:55:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T12:59:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 4, p04-t03 dispatch evidence fields
+Implementation — Phase 4 tasks complete; awaiting self-review
 
 ## Artifacts
 
@@ -114,6 +114,7 @@ Implementation — Phase 4, p04-t03 dispatch evidence fields
 - ✓ Final Phase 3 self-review passed 0C/0I/0M/0m
 - ✓ p04-t01 promoted the shared full-information dispatch contract
 - ✓ p04-t02 added provider-specific native and CLI topology guidance
+- ✓ p04-t03 aligned workflow and smoke selection evidence fields
 
 ## Blockers
 
@@ -121,4 +122,4 @@ None
 
 ## Next Milestone
 
-Execute p04-t03: selection-record fields for dispatch evidence
+Run Phase 4 self-review
