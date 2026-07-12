@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-12
-oat_current_task_id: p05-t09
+oat_current_task_id: p05-t10
 oat_generated: false
 ---
 
@@ -1298,14 +1298,34 @@ complete smoke suite passed 106/106; workspace lint and formatting passed.
 
 ### Task p05-t09: Fail-fast child execution and observable gates
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** `e3262bf9`
+
+**Outcome:**
+
+- Made smoke containment, ownership-registration, expected-base, and
+  fixture-readiness failures run-fatal without replacement or sequential
+  degradation.
+- Restricted nested smoke bootstrap to containment and fixture-scoped
+  readiness; dependency installation, repository builds, provider sync, and
+  repository-wide tests remain source-preflight responsibilities.
+- Added periodic gate telemetry with target, elapsed, idle, and hard-budget
+  milliseconds. Output activity updates idle time but never extends the hard
+  timeout.
+- Reconciled implementation consumers with the merged provider-neutral
+  dispatch engine and project lifecycle adapter, including provider-reference
+  renames and invalid-run cancellation semantics.
+
+**Verification:** deterministic and runner contracts passed 48/48; bootstrap
+isolation passed; CLI gate tests passed 130/130; skill contracts passed 83/83;
+workspace build, lint, format, type-check, and all 2699 CLI tests passed.
+`pnpm release:validate` passed for all five public packages at 0.1.56.
 
 ---
 
 ### Task p05-t10: Single-owner run metadata and report publication
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t09
-oat_last_commit: 839ada92c0d66fa3105b3b5818e6394677b2fe01
+oat_current_task: p05-t10
+oat_last_commit: e3262bf99b46fd15a28d363975b5032ee069f9a0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T19:34:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T20:04:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -136,7 +136,9 @@ Implementation — Phase 5 live smoke evidence
 - ✓ Dependency-policy revert confirmed complete: no schema-v3 marker,
   dependency source/materialization fields, dependency-tree clone, or pnpm
   smoke shim remains
-- → Live-provider runs paused behind p05-t08 through p05-t10 contract hardening
+- ✓ p05-t08 deterministic orchestration contract tier complete
+- ✓ p05-t09 fail-fast child execution and observable gate telemetry complete
+- → Live-provider runs paused behind p05-t10 metadata/report publication
 
 ## Blockers
 
@@ -144,6 +146,5 @@ None
 
 ## Next Milestone
 
-Complete p05-t08 deterministic orchestration coverage, then p05-t09 fail-fast
-child/gate liveness and p05-t10 single-owner metadata publication. Resume
+Complete p05-t10 single-owner metadata and atomic report publication. Resume
 p05-t02 live runs only from the resulting stable source HEAD.
