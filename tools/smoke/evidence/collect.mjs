@@ -278,7 +278,6 @@ function parsePlanContract(contents) {
     ),
   ].map((match) => ({
     artifact: match[5].trim(),
-    date: match[4].trim(),
     scope: match[1],
     status: match[3].trim(),
     type: match[2].trim(),
@@ -292,16 +291,62 @@ function parsePlanContract(contents) {
   };
 }
 
+function parseDispatchPolicy(contents, harness) {
+  const provider = harness?.startsWith('cursor') ? 'cursor' : harness;
+  const policy = contents.match(/^\s+policy:\s*(\S+)\s*$/mu)?.[1] ?? null;
+  const matrix = contents.match(
+    new RegExp(
+      `^    ${provider}:\\n([\\s\\S]*?)(?=^    \\S+:|^  source:|^oat_)`,
+      'mu',
+    ),
+  )?.[1];
+  if (!provider || !policy || !matrix) {
+    return { ceilingCandidates: [], eligibleCandidates: [], policy, provider };
+  }
+  const tiers = [
+    ...matrix.matchAll(
+      /^      ([a-z][a-z0-9-]*):\n([\s\S]*?)(?=^      [a-z][a-z0-9-]*:|(?![\s\S]))/gmu,
+    ),
+  ].map((match) => {
+    const body = match[2];
+    const simple = [...body.matchAll(/^\s+-\s+(?!harness:)(\S+)\s*$/gmu)].map(
+      (candidate) => candidate[1],
+    );
+    const structured = [
+      ...body.matchAll(
+        /^\s+-\s+harness:\s+\S+\s*\n\s+model:\s+(\S+)\s*\n\s+effort:\s+(\S+)\s*$/gmu,
+      ),
+    ].map((candidate) => `${candidate[1]}:${candidate[2]}`);
+    return { candidates: [...simple, ...structured], name: match[1] };
+  });
+  const ceilingIndex = tiers.findIndex((tier) => tier.name === policy);
+  return {
+    ceilingCandidates: ceilingIndex >= 0 ? tiers[ceilingIndex].candidates : [],
+    eligibleCandidates:
+      ceilingIndex >= 0
+        ? tiers.slice(0, ceilingIndex + 1).flatMap((tier) => tier.candidates)
+        : [],
+    policy,
+    provider,
+  };
+}
+
 async function collectFixtureContract(
   fixtureProjectPath,
   worktreePath,
   manifest,
 ) {
   const planPath = join(fixtureProjectPath, 'plan.md');
+  const statePath = join(fixtureProjectPath, 'state.md');
   const contents = await safeReadFile(
     planPath,
     fixtureProjectPath,
     'Fixture plan',
+  );
+  const stateContents = await safeReadFile(
+    statePath,
+    fixtureProjectPath,
+    'Fixture state',
   );
   const current = parsePlanContract(contents);
   const baselineCommitSha = validateSha(
@@ -309,6 +354,7 @@ async function collectFixtureContract(
     'manifest.baselineCommitSha',
   );
   const repositoryPlanPath = relative(worktreePath, planPath);
+  const repositoryStatePath = relative(worktreePath, statePath);
   const baselineContents = await runGitRaw(
     ['show', `${baselineCommitSha}:${repositoryPlanPath}`],
     worktreePath,
@@ -317,14 +363,21 @@ async function collectFixtureContract(
     ['show', `HEAD:${repositoryPlanPath}`],
     worktreePath,
   );
+  const headStateContents = await runGitRaw(
+    ['show', `HEAD:${repositoryStatePath}`],
+    worktreePath,
+  );
   const baseline = parsePlanContract(baselineContents);
   return {
     baselinePlanHash: baseline.planHash,
     baselineSubstantivePlanHash: baseline.substantivePlanHash,
+    dispatchPolicy: parseDispatchPolicy(stateContents, manifest.harness),
     headPlanHash: createHash('sha256').update(headContents).digest('hex'),
+    headStateHash: createHash('sha256').update(headStateContents).digest('hex'),
     planHash: current.planHash,
     reviewRows: current.reviewRows,
     substantivePlanHash: current.substantivePlanHash,
+    stateHash: createHash('sha256').update(stateContents).digest('hex'),
     taskIds: current.taskIds,
   };
 }
@@ -352,6 +405,30 @@ function parseFrontmatter(contents) {
     values[key] = rawValue.replace(/^(['"])(.*)\1$/u, '$2');
   }
   return values;
+}
+
+function parseAllFrontmatter(contents) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(contents);
+  if (!match) {
+    return {};
+  }
+  return Object.fromEntries(
+    match[1]
+      .split(/\r?\n/u)
+      .map((line) => {
+        const separator = line.indexOf(':');
+        return separator > 0
+          ? [
+              line.slice(0, separator).trim(),
+              line
+                .slice(separator + 1)
+                .trim()
+                .replace(/^(['"])(.*)\1$/u, '$2'),
+            ]
+          : null;
+      })
+      .filter(Boolean),
+  );
 }
 
 async function listMarkdownFiles(directory) {
@@ -491,47 +568,83 @@ async function readJsonDirectory(directory, root, label) {
   return records;
 }
 
-async function normalizeGate(record, index, fixtureProjectPath) {
+function sameGateInvocation(left, right) {
+  return (
+    isPlainObject(left) &&
+    isPlainObject(right) &&
+    [
+      'runId',
+      'targetId',
+      'runtime',
+      'model',
+      'reasoningEffort',
+      'source',
+    ].every((key) => left[key] === right[key])
+  );
+}
+
+async function normalizeGate(record, index, fixtureProjectPath, worktreePath) {
   const invocation = isPlainObject(record.gateInvocation)
     ? record.gateInvocation
     : {};
   const corroboration = isPlainObject(record.corroboration)
     ? record.corroboration
     : {};
-  const artifactPath = optionalString(record.artifactPath);
-  let normalizedArtifactPath = null;
-  if (artifactPath) {
-    let canonicalArtifactPath;
-    try {
-      canonicalArtifactPath = await realpath(artifactPath);
-    } catch {
-      canonicalArtifactPath = null;
-    }
-    if (
-      canonicalArtifactPath &&
-      isWithin(fixtureProjectPath, canonicalArtifactPath)
-    ) {
-      normalizedArtifactPath = relative(
-        fixtureProjectPath,
-        canonicalArtifactPath,
-      );
-    }
+  const artifactPath = requireString(
+    record.artifactPath,
+    `gate[${index}].artifactPath`,
+  );
+  const artifactCandidate = isAbsolute(artifactPath)
+    ? artifactPath
+    : join(worktreePath, artifactPath);
+  const canonicalArtifactPath = await realpath(artifactCandidate);
+  if (!isWithin(fixtureProjectPath, canonicalArtifactPath)) {
+    throw new EvidenceCollectionError(
+      `gate[${index}].artifactPath is outside the fixture project.`,
+    );
   }
+  const project = requireString(record.project, `gate[${index}].project`);
+  const projectCandidate = isAbsolute(project)
+    ? project
+    : join(worktreePath, project);
+  const canonicalProjectPath = await realpath(projectCandidate);
+  if (canonicalProjectPath !== fixtureProjectPath) {
+    throw new EvidenceCollectionError(
+      `gate[${index}].project does not match the fixture project.`,
+    );
+  }
+  const projectPath = relative(worktreePath, canonicalProjectPath);
+  const projectName = basename(projectPath);
+  const invocationConsistent =
+    invocation.runId === record.runId &&
+    invocation.targetId === record.target &&
+    sameGateInvocation(invocation, corroboration.expected?.invocation) &&
+    sameGateInvocation(invocation, corroboration.actual?.invocation) &&
+    corroboration.expected?.project === project &&
+    [
+      corroboration.actual?.artifactProject,
+      corroboration.actual?.normalizedArtifactProject,
+    ].includes(projectName);
+
   return {
-    artifactPath: normalizedArtifactPath,
-    corroboration: {
-      invocation: optionalString(corroboration.invocation),
-      project: optionalString(corroboration.project),
-      run: optionalString(corroboration.run),
-    },
+    artifactPath: relative(fixtureProjectPath, canonicalArtifactPath),
+    blocking: record.blocking === true,
     configuredInvocation: {
       effort: optionalString(invocation.reasoningEffort),
       model: optionalString(invocation.model),
       source: optionalString(invocation.source),
     },
+    corroboration: {
+      invocation: optionalString(corroboration.invocation),
+      project: optionalString(corroboration.project),
+      run: optionalString(corroboration.run),
+    },
     invocation: optionalString(record.invocation),
+    invocationConsistent,
     outcome: optionalString(record.outcome),
-    project: basename(requireString(record.project, `gate[${index}].project`)),
+    projectName,
+    projectPath,
+    receiveEligible: record.receiveEligible === true,
     runId: requireString(record.runId, `gate[${index}].runId`),
     runtime: requireString(invocation.runtime, `gate[${index}].runtime`),
     scope: requireString(record.scope, `gate[${index}].scope`),
@@ -674,6 +787,28 @@ async function collectGitTopology(worktreePath, manifest) {
     manifest.sourceCommitSha,
     'manifest.sourceCommitSha',
   );
+  const branchHistories = [];
+  for (const ref of existingRefs) {
+    branchHistories.push({
+      branch: ref.replace(/^refs\/heads\//u, ''),
+      commits: await addCommitFiles(
+        parseGitLog(
+          await runGit(
+            [
+              'log',
+              '--reverse',
+              '--topo-order',
+              '--format=%H%x09%P%x09%s',
+              `${sourceCommit}..${ref}`,
+              '--',
+            ],
+            worktreePath,
+          ),
+        ),
+        worktreePath,
+      ),
+    });
+  }
   const logArgs = [
     'log',
     '--reverse',
@@ -732,12 +867,81 @@ async function collectGitTopology(worktreePath, manifest) {
 
   return {
     branch: await runGit(['branch', '--show-current'], worktreePath),
+    branchHistories,
     branchRefs: existingRefs,
     commits,
     currentBranchCommits,
     head: await runGit(['rev-parse', 'HEAD'], worktreePath),
     worktrees,
   };
+}
+
+function observedLifecycleState(stateContents, planContents) {
+  const state = parseAllFrontmatter(stateContents);
+  const plan = parseAllFrontmatter(planContents);
+  const planReview = parsePlanContract(planContents).reviewRows.find(
+    (row) => row.scope === 'plan',
+  );
+  if (
+    state.oat_phase === 'implement' &&
+    plan.oat_ready_for === 'oat-project-implement'
+  ) {
+    return 'implementation-ready';
+  }
+  if (state.oat_phase === 'plan' && planReview?.status === 'passed') {
+    return 'reviewed';
+  }
+  return 'pre-review';
+}
+
+async function corroborateTransitions(
+  events,
+  worktreePath,
+  fixtureProjectPath,
+  gitTopology,
+) {
+  const currentShas = new Set(
+    gitTopology.currentBranchCommits.map((commit) => commit.sha),
+  );
+  const statePath = relative(
+    worktreePath,
+    join(fixtureProjectPath, 'state.md'),
+  );
+  const planPath = relative(worktreePath, join(fixtureProjectPath, 'plan.md'));
+  return Promise.all(
+    events.map(async (event) => {
+      if (event.event !== 'state-transition') {
+        return event;
+      }
+      const commitSha = validateSha(
+        event.commitSha,
+        'state transition commitSha',
+      );
+      const parentSha = validateSha(
+        await runGit(['rev-parse', `${commitSha}^`], worktreePath),
+        'state transition parent',
+      );
+      const [stateBefore, stateAfter, planBefore, planAfter] =
+        await Promise.all([
+          runGitRaw(['show', `${parentSha}:${statePath}`], worktreePath),
+          runGitRaw(['show', `${commitSha}:${statePath}`], worktreePath),
+          runGitRaw(['show', `${parentSha}:${planPath}`], worktreePath),
+          runGitRaw(['show', `${commitSha}:${planPath}`], worktreePath),
+        ]);
+      return {
+        commitSha,
+        contentChanged: stateBefore !== stateAfter && planBefore !== planAfter,
+        event: 'state-transition',
+        from: optionalString(event.from),
+        observedFrom: observedLifecycleState(stateBefore, planBefore),
+        observedTo: observedLifecycleState(stateAfter, planAfter),
+        parentSha,
+        reachableFromHead: currentShas.has(commitSha),
+        sequence: event.sequence,
+        to: optionalString(event.to),
+      };
+    }),
+  );
 }
 
 function normalizeManifest(manifest) {
@@ -1009,7 +1213,7 @@ export async function collectEvidence({
           'Gate result',
         )
       ).map((record, index) =>
-        normalizeGate(record, index, fixtureProjectPath),
+        normalizeGate(record, index, fixtureProjectPath, canonicalWorktree),
       ),
     )
   ).sort((left, right) =>
@@ -1017,7 +1221,7 @@ export async function collectEvidence({
       .join('\0')
       .localeCompare([right.scope, right.runId].join('\0')),
   );
-  const orchestrationEvents = [
+  const rawOrchestrationEvents = [
     ...(await readJsonLines(
       join(canonicalWorktree, ORCHESTRATION_PATH),
       canonicalWorktree,
@@ -1033,6 +1237,13 @@ export async function collectEvidence({
   ]
     .map(normalizeOrchestrationEvent)
     .sort((left, right) => left.sequence - right.sequence);
+  const gitTopology = await collectGitTopology(canonicalWorktree, manifest);
+  const orchestrationEvents = await corroborateTransitions(
+    rawOrchestrationEvents,
+    canonicalWorktree,
+    fixtureProjectPath,
+    gitTopology,
+  );
 
   const bundle = {
     dispatches,
@@ -1043,7 +1254,8 @@ export async function collectEvidence({
     ),
     fixtureLogs: await collectFixtureLogs(canonicalWorktree),
     gates,
-    git: await collectGitTopology(canonicalWorktree, manifest),
+    git: gitTopology,
+    kind: 'workflow',
     manifest: normalizeManifest(manifest),
     orchestrationEvents,
     reviews: await collectReviews(fixtureProjectPath),

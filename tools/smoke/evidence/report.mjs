@@ -46,6 +46,7 @@ export function renderMarkdown(report) {
     `**Status:** ${report.status}`,
     `**Assertions:** ${report.summary.passed} passed / ${report.summary.failed} failed`,
     `**Bundle SHA-256:** ${report.bundle.sha256}`,
+    '**Authority:** `report.json` is authoritative; this Markdown is a derived view.',
     '',
     '| Assertion | Severity | Status | Description |',
     '| --------- | -------- | ------ | ----------- |',
@@ -98,7 +99,12 @@ export async function emitEvidenceReport({ bundlePath, outDirectory }) {
   return { jsonPath, markdownPath, report };
 }
 
-export async function checkEvidenceReport(reportPath) {
+export async function checkEvidenceReport(reportPath, { expectedProfile }) {
+  if (typeof expectedProfile !== 'string' || expectedProfile.length === 0) {
+    throw new EvidenceReportError(
+      'Report checks require an explicit expected profile.',
+    );
+  }
   const { value: report } = await readJson(reportPath, 'Evidence report');
   if (
     report?.schemaVersion !== 1 ||
@@ -130,6 +136,7 @@ export async function checkEvidenceReport(reportPath) {
   }
   const expected = { ...recomputed, bundle: report.bundle };
   return (
+    recomputed.profile === expectedProfile &&
     recomputed.status === 'passed' &&
     JSON.stringify(report) === JSON.stringify(expected)
   );
@@ -137,10 +144,23 @@ export async function checkEvidenceReport(reportPath) {
 
 export function parseReportArgs(argv) {
   if (argv[0] === '--check') {
-    if (argv.length !== 2 || !argv[1] || argv[1].startsWith('--')) {
-      throw new EvidenceReportError('Usage: report.mjs --check <report.json>');
+    if (
+      argv.length !== 4 ||
+      !argv[1] ||
+      argv[1].startsWith('--') ||
+      argv[2] !== '--expect-profile' ||
+      !argv[3] ||
+      argv[3].startsWith('--')
+    ) {
+      throw new EvidenceReportError(
+        'Usage: report.mjs --check <report.json> --expect-profile <profile>',
+      );
     }
-    return { checkPath: resolve(argv[1]), mode: 'check' };
+    return {
+      checkPath: resolve(argv[1]),
+      expectedProfile: argv[3],
+      mode: 'check',
+    };
   }
 
   const values = {};
@@ -174,7 +194,9 @@ export function parseReportArgs(argv) {
 async function main() {
   const options = parseReportArgs(process.argv.slice(2));
   if (options.mode === 'check') {
-    const passed = await checkEvidenceReport(options.checkPath);
+    const passed = await checkEvidenceReport(options.checkPath, {
+      expectedProfile: options.expectedProfile,
+    });
     if (!passed) {
       process.exitCode = 1;
     }

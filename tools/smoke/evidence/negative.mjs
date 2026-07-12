@@ -81,9 +81,11 @@ export async function buildUnavailableControl({
 
   return {
     control: { harness, kind: 'unavailable-target' },
+    kind: 'control',
     preflight,
     provisioningEvidence: { branches, manifests, worktrees },
     scenario: 'plan-review',
+    schemaVersion: 1,
   };
 }
 

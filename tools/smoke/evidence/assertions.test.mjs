@@ -35,6 +35,7 @@ function reviewEvidence(scope) {
   return {
     gate: {
       artifactPath: path,
+      blocking: false,
       configuredInvocation: {
         effort: 'provider-default',
         model: 'fable',
@@ -46,8 +47,11 @@ function reviewEvidence(scope) {
         run: 'matched',
       },
       invocation: 'gate',
+      invocationConsistent: true,
       outcome: 'review_completed_gate_passed',
-      project: 'smoke-fixture',
+      projectName: 'smoke-fixture',
+      projectPath: '.oat/projects/smoke-fixture',
+      receiveEligible: true,
       runId,
       runtime: 'claude',
       scope,
@@ -73,7 +77,7 @@ function reviewEvidence(scope) {
       artifact: path,
       date: '2026-07-11',
       scope,
-      status: 'received',
+      status: 'passed',
       type: 'code',
     },
   };
@@ -124,9 +128,31 @@ function productionShape(bundle) {
       subject: 'chore: record implementation-ready state',
     },
   ];
+  const mergeCommits = [
+    {
+      files: [],
+      parents: ['task-3'],
+      sha: 'merge-p01',
+      subject: 'merge p01',
+    },
+    {
+      files: [],
+      parents: ['task-6'],
+      sha: 'merge-p02',
+      subject: 'merge p02',
+    },
+  ];
+  const currentTaskCommits = [
+    ...taskCommits.slice(0, 3),
+    mergeCommits[0],
+    ...taskCommits.slice(3, 6),
+    mergeCommits[1],
+    ...taskCommits.slice(6),
+  ];
 
   return {
     ...bundle,
+    kind: 'workflow',
     dispatches:
       scenario === 'plan-review'
         ? []
@@ -135,7 +161,8 @@ function productionShape(bundle) {
             attempt: 1,
             configuredInvocation: {
               ceiling: 'sol',
-              modelAxis: 'selected:terra',
+              modelAxis: 'selected:cursor-cli:terra',
+              policy: 'high',
               target: 'cursor-cli:terra',
             },
             launch: {
@@ -145,14 +172,25 @@ function productionShape(bundle) {
             },
             runtimeIdentity: { status: 'not-reported' },
             scope: taskId,
-            selection: { atOrBelowCeiling: true },
+            selection: {
+              atOrBelowCeiling: true,
+              candidatesConsidered: ['cursor-cli:terra'],
+            },
           })),
     fixture: {
       baselineSubstantivePlanHash: 'substantive',
+      dispatchPolicy: {
+        ceilingCandidates: ['sol'],
+        eligibleCandidates: ['cursor-cli:terra', 'sol'],
+        policy: 'high',
+        provider: 'cursor',
+      },
       headPlanHash: 'current',
+      headStateHash: 'state',
       planHash: 'current',
       reviewRows: evidence.map((entry) => entry.row),
       substantivePlanHash: 'substantive',
+      stateHash: 'state',
       taskIds,
     },
     fixtureLogs: ['p01', 'p02', 'p03'].map((phase) => ({
@@ -166,8 +204,21 @@ function productionShape(bundle) {
     })),
     gates: evidence.map((entry) => entry.gate),
     git: {
-      commits: [...taskCommits, ...reviewCommits, ...transitionCommits],
-      currentBranchCommits: taskCommits,
+      branchHistories: [
+        { branch: 'smoke-p01', commits: taskCommits.slice(0, 3) },
+        { branch: 'smoke-p02', commits: taskCommits.slice(3, 6) },
+      ],
+      commits: [
+        ...taskCommits,
+        ...mergeCommits,
+        ...reviewCommits,
+        ...transitionCommits,
+      ],
+      currentBranchCommits: [
+        ...currentTaskCommits,
+        ...reviewCommits,
+        ...transitionCommits,
+      ],
     },
     manifest: {
       ...bundle.manifest,
@@ -180,19 +231,30 @@ function productionShape(bundle) {
         ? [
             {
               commitSha: 'transition-reviewed',
+              contentChanged: true,
               event: 'state-transition',
+              from: 'pre-review',
+              observedFrom: 'pre-review',
+              observedTo: 'reviewed',
+              reachableFromHead: true,
               sequence: 1,
               to: 'reviewed',
             },
             {
               commitSha: 'transition-ready',
+              contentChanged: true,
               event: 'state-transition',
+              from: 'reviewed',
+              observedFrom: 'reviewed',
+              observedTo: 'implementation-ready',
+              reachableFromHead: true,
               sequence: 2,
               to: 'implementation-ready',
             },
           ]
         : [],
     reviews: evidence.map((entry) => entry.review),
+    schemaVersion: 1,
   };
 }
 
@@ -232,9 +294,7 @@ test('plan-review profile detects plan drift, missing durability, and non-atomic
   const bundle = await readGolden('plan-review');
   bundle.fixture.substantivePlanHash = 'drifted';
   bundle.git.commits.find((commit) => commit.sha === 'review-1').files = [];
-  bundle.git.commits.find(
-    (commit) => commit.sha === 'transition-reviewed',
-  ).files = [];
+  bundle.orchestrationEvents[0].contentChanged = false;
 
   assert.deepEqual(failedIds(evaluateEvidence(bundle)), [
     'plan-review-substantive-plan-stable',
@@ -246,13 +306,20 @@ test('plan-review profile detects plan drift, missing durability, and non-atomic
 test('implement profile detects incomplete dispatch, ceiling, isolation, fan-in, review, and identity evidence', async () => {
   const bundle = await readGolden('implement');
   bundle.dispatches.pop();
-  bundle.dispatches[0].selection.atOrBelowCeiling = false;
+  bundle.dispatches[0].configuredInvocation.target = 'above-ceiling';
+  bundle.dispatches[0].configuredInvocation.modelAxis =
+    'selected:above-ceiling';
+  bundle.dispatches[0].selection.candidatesConsidered = ['above-ceiling'];
   bundle.dispatches[1].runtimeIdentity.status = 'unknown';
   bundle.fixtureLogs[0].lines.pop();
   bundle.manifest.ownershipJournal.resources[0].branch = 'nested/p01';
-  bundle.git.currentBranchCommits.unshift(
-    bundle.git.currentBranchCommits.pop(),
-  );
+  const mergeP02 = bundle.git.currentBranchCommits.splice(
+    bundle.git.currentBranchCommits.findIndex(
+      (commit) => commit.sha === 'merge-p02',
+    ),
+    1,
+  )[0];
+  bundle.git.currentBranchCommits.push(mergeP02);
   bundle.gates[0].corroboration = {};
   bundle.git.commits.find((commit) => commit.sha === 'review-1').files = [];
 
@@ -283,13 +350,24 @@ test('full profile is the deduplicated union of plan-review and implement', asyn
 test('rejects unknown or malformed evidence bundles', () => {
   assert.throws(() => evaluateEvidence(null), EvidenceAssertionError);
   assert.throws(
-    () => evaluateEvidence({ scenario: 'unknown' }),
+    () => evaluateEvidence({ kind: 'control', scenario: 'implement' }),
+    /schemaVersion 1/,
+  );
+  assert.throws(
+    () =>
+      evaluateEvidence({
+        kind: 'workflow',
+        scenario: 'unknown',
+        schemaVersion: 1,
+      }),
     /Unknown evidence scenario/,
   );
   assert.throws(
     () =>
       evaluateEvidence({
+        kind: 'control',
         scenario: 'implement',
+        schemaVersion: 1,
         control: { kind: 'unknown' },
       }),
     /Unknown negative control/,
@@ -387,12 +465,25 @@ test('report emitters are deterministic and check mode reflects assertion status
     assert.equal(await readFile(second.markdownPath, 'utf8'), firstMarkdown);
     assert.equal(renderMarkdown(first.report), firstMarkdown);
     assert.match(firstMarkdown, /\*\*Status:\*\* passed/u);
-    assert.equal(await checkEvidenceReport(first.jsonPath), true);
+    assert.equal(
+      await checkEvidenceReport(first.jsonPath, {
+        expectedProfile: 'full',
+      }),
+      true,
+    );
+    assert.equal(
+      await checkEvidenceReport(first.jsonPath, {
+        expectedProfile: 'implement',
+      }),
+      false,
+    );
 
     await execFileAsync(process.execPath, [
       reportPath,
       '--check',
       first.jsonPath,
+      '--expect-profile',
+      'full',
     ]);
 
     const fabricatedPath = join(outputDirectory, 'fabricated-report.json');
@@ -405,7 +496,12 @@ test('report emitters are deterministic and check mode reflects assertion status
         status: 'passed',
       }),
     );
-    assert.equal(await checkEvidenceReport(fabricatedPath), false);
+    assert.equal(
+      await checkEvidenceReport(fabricatedPath, {
+        expectedProfile: 'full',
+      }),
+      false,
+    );
 
     const failedReport = {
       ...first.report,
@@ -416,10 +512,19 @@ test('report emitters are deterministic and check mode reflects assertion status
     };
     const failedPath = join(directory, 'failed-report.json');
     await writeFile(failedPath, JSON.stringify(failedReport));
-    assert.equal(await checkEvidenceReport(failedPath), false);
+    assert.equal(
+      await checkEvidenceReport(failedPath, { expectedProfile: 'full' }),
+      false,
+    );
     await assert.rejects(
       () =>
-        execFileAsync(process.execPath, [reportPath, '--check', failedPath]),
+        execFileAsync(process.execPath, [
+          reportPath,
+          '--check',
+          failedPath,
+          '--expect-profile',
+          'full',
+        ]),
       (error) => error.code === 1,
     );
   } finally {
@@ -428,10 +533,19 @@ test('report emitters are deterministic and check mode reflects assertion status
 });
 
 test('report CLI argument parsing fails closed', () => {
-  assert.deepEqual(parseReportArgs(['--check', 'report.json']), {
-    checkPath: join(process.cwd(), 'report.json'),
-    mode: 'check',
-  });
+  assert.deepEqual(
+    parseReportArgs([
+      '--check',
+      'report.json',
+      '--expect-profile',
+      'implement',
+    ]),
+    {
+      checkPath: join(process.cwd(), 'report.json'),
+      expectedProfile: 'implement',
+      mode: 'check',
+    },
+  );
   assert.throws(() => parseReportArgs(['--check']), /Usage/);
   assert.throws(() => parseReportArgs(['--bundle', 'bundle.json']), /Usage/);
   assert.throws(

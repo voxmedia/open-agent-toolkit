@@ -22,7 +22,7 @@ import {
   normalizeRuntimeIdentity,
   parseCollectorArgs,
 } from './collect.mjs';
-import { writeDispatchRecord } from './record.mjs';
+import { writeDispatchRecord, writeStateTransitionRecord } from './record.mjs';
 import { checkEvidenceReport, emitEvidenceReport } from './report.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -74,6 +74,10 @@ async function createGoldenRun() {
     join(fixtureProjectPath, 'plan.md'),
   );
   await cp(
+    join(evidenceDirectory, '../fixture/project/state.md'),
+    join(fixtureProjectPath, 'state.md'),
+  );
+  await cp(
     join(goldenDirectory, 'workspace'),
     join(worktreePath, 'workspace'),
     {
@@ -86,8 +90,32 @@ async function createGoldenRun() {
     join(gateDirectory, 'p03.json'),
     `${JSON.stringify(
       {
-        artifactPath: join(fixtureProjectPath, 'reviews/p03-review.md'),
+        artifactPath: '.oat/projects/smoke-fixture/reviews/p03-review.md',
+        blocking: false,
         corroboration: {
+          actual: {
+            artifactProject: 'smoke-fixture',
+            invocation: {
+              model: 'fable',
+              reasoningEffort: 'provider-default',
+              runId: 'golden-gate-run',
+              runtime: 'claude',
+              source: 'exec-target-config',
+              targetId: 'claude-fable-skip-permissions',
+            },
+            normalizedArtifactProject: 'smoke-fixture',
+          },
+          expected: {
+            invocation: {
+              model: 'fable',
+              reasoningEffort: 'provider-default',
+              runId: 'golden-gate-run',
+              runtime: 'claude',
+              source: 'exec-target-config',
+              targetId: 'claude-fable-skip-permissions',
+            },
+            project: '.oat/projects/smoke-fixture',
+          },
           invocation: 'matched',
           project: 'matched',
           run: 'matched',
@@ -102,7 +130,8 @@ async function createGoldenRun() {
         },
         invocation: 'gate',
         outcome: 'review_completed_gate_passed',
-        project: fixtureProjectPath,
+        project: '.oat/projects/smoke-fixture',
+        receiveEligible: true,
         runId: 'golden-gate-run',
         scope: 'p03',
         status: 'ok',
@@ -311,6 +340,7 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.deepEqual(bundle.gates, [
       {
         artifactPath: 'reviews/p03-review.md',
+        blocking: false,
         configuredInvocation: {
           effort: 'provider-default',
           model: 'fable',
@@ -322,8 +352,11 @@ test('collects a deterministic normalized evidence bundle', async () => {
           run: 'matched',
         },
         invocation: 'gate',
+        invocationConsistent: true,
         outcome: 'review_completed_gate_passed',
-        project: 'smoke-fixture',
+        projectName: 'smoke-fixture',
+        projectPath: '.oat/projects/smoke-fixture',
+        receiveEligible: true,
         runId: 'golden-gate-run',
         runtime: 'claude',
         scope: 'p03',
@@ -382,8 +415,21 @@ test('collector output drives nine-task assertions and a bound report', async ()
   try {
     await rm(join(run.worktreePath, 'workspace/evidence/dispatch.jsonl'));
     for (const taskId of taskIds) {
+      if (taskId === 'p03-t01') {
+        for (const child of run.children) {
+          await git(
+            ['merge', '--no-ff', child.branch, '-m', `merge ${child.branch}`],
+            run.worktreePath,
+          );
+        }
+      }
+      const taskWorktree = taskId.startsWith('p01')
+        ? run.children[0].path
+        : taskId.startsWith('p02')
+          ? run.children[1].path
+          : run.worktreePath;
       const logPath = join(
-        run.worktreePath,
+        taskWorktree,
         `workspace/logs/${taskId.slice(0, 3)}.log`,
       );
       await writeFile(
@@ -392,11 +438,11 @@ test('collector output drives nine-task assertions and a bound report', async ()
       );
       await git(
         ['add', '--', `workspace/logs/${taskId.slice(0, 3)}.log`],
-        run.worktreePath,
+        taskWorktree,
       );
       await git(
         ['commit', '-m', `feat(${taskId}): append fixture marker`],
-        run.worktreePath,
+        taskWorktree,
       );
 
       const inputPath = join(run.repository, `${taskId}-dispatch.json`);
@@ -406,11 +452,11 @@ test('collector output drives nine-task assertions and a bound report', async ()
           action: 'implementation',
           attempt: 1,
           configuredInvocation: {
-            ceiling: 'gpt-5.6-sol-xhigh',
+            ceiling: 'fixture-cursor-opaque-high',
             effortAxis: 'not-applicable',
-            modelAxis: 'selected:gpt-5.6-terra-medium',
+            modelAxis: 'selected:fixture-cursor-opaque-medium',
             policy: 'high',
-            target: 'cursor-cli:gpt-5.6-terra-medium',
+            target: 'fixture-cursor-opaque-medium',
           },
           launch: {
             mechanism: 'cursor-cli',
@@ -423,7 +469,7 @@ test('collector output drives nine-task assertions and a bound report', async ()
           scope: taskId,
           selection: {
             atOrBelowCeiling: true,
-            candidatesConsidered: ['gpt-5.6-terra-medium'],
+            candidatesConsidered: ['fixture-cursor-opaque-medium'],
             reason: 'native-catalog-unsatisfying',
           },
         }),
@@ -445,8 +491,32 @@ test('collector output drives nine-task assertions and a bound report', async ()
       await writeFile(
         join(gateDirectory, `${scope}.json`),
         JSON.stringify({
-          artifactPath: reviewPath,
+          artifactPath: `.oat/projects/smoke-fixture/reviews/${scope}-review.md`,
+          blocking: false,
           corroboration: {
+            actual: {
+              artifactProject: 'smoke-fixture',
+              invocation: {
+                model: 'fable',
+                reasoningEffort: 'provider-default',
+                runId,
+                runtime: 'claude',
+                source: 'exec-target-config',
+                targetId: target,
+              },
+              normalizedArtifactProject: 'smoke-fixture',
+            },
+            expected: {
+              invocation: {
+                model: 'fable',
+                reasoningEffort: 'provider-default',
+                runId,
+                runtime: 'claude',
+                source: 'exec-target-config',
+                targetId: target,
+              },
+              project: '.oat/projects/smoke-fixture',
+            },
             invocation: 'matched',
             project: 'matched',
             run: 'matched',
@@ -461,7 +531,8 @@ test('collector output drives nine-task assertions and a bound report', async ()
           },
           invocation: 'gate',
           outcome: 'review_completed_gate_passed',
-          project: run.fixtureProjectPath,
+          project: '.oat/projects/smoke-fixture',
+          receiveEligible: true,
           runId,
           scope,
           status: 'ok',
@@ -476,7 +547,7 @@ test('collector output drives nine-task assertions and a bound report', async ()
           `^\\| ${scope}\\s+\\| code\\s+\\| pending \\| -\\s+\\| -\\s+\\|$`,
           'mu',
         ),
-        `| ${scope} | code | received | 2026-07-11 | reviews/${scope}-review.md |`,
+        `| ${scope} | code | passed | 2026-07-11 | reviews/${scope}-review.md |`,
       );
     }
     await writeFile(join(run.fixtureProjectPath, 'plan.md'), plan);
@@ -516,7 +587,182 @@ test('collector output drives nine-task assertions and a bound report', async ()
       outDirectory: outputDirectory,
     });
     assert.equal(result.report.status, 'passed');
-    assert.equal(await checkEvidenceReport(result.jsonPath), true);
+    assert.equal(
+      await checkEvidenceReport(result.jsonPath, {
+        expectedProfile: 'implement',
+      }),
+      true,
+    );
+  } finally {
+    await cleanupGoldenRun(run);
+  }
+});
+
+test('collector corroborates transition states from committed artifact contents', async () => {
+  const run = await createGoldenRun();
+  const outputDirectory = join(run.repository, 'transition-evidence');
+  const planPath = join(run.fixtureProjectPath, 'plan.md');
+  const statePath = join(run.fixtureProjectPath, 'state.md');
+  const reviewPath = join(run.fixtureProjectPath, 'reviews/plan-review.md');
+  const gatePath = join(run.worktreePath, 'workspace/evidence/gates/plan.json');
+
+  try {
+    const runId = 'plan-gate-run';
+    const target = 'claude-fable-skip-permissions';
+    await writeFile(
+      reviewPath,
+      `---\noat_review_scope: plan\noat_review_type: artifact\noat_review_invocation: gate\noat_project: smoke-fixture\noat_gate_run_id: ${runId}\noat_gate_target: ${target}\noat_gate_runtime: claude\noat_invocation_model: fable\noat_invocation_reasoning_effort: provider-default\noat_invocation_source: exec-target-config\n---\n\n# Plan Review\n`,
+    );
+    await writeFile(
+      gatePath,
+      JSON.stringify({
+        artifactPath: '.oat/projects/smoke-fixture/reviews/plan-review.md',
+        blocking: false,
+        corroboration: {
+          actual: {
+            artifactProject: 'smoke-fixture',
+            invocation: {
+              model: 'fable',
+              reasoningEffort: 'provider-default',
+              runId,
+              runtime: 'claude',
+              source: 'exec-target-config',
+              targetId: target,
+            },
+            normalizedArtifactProject: 'smoke-fixture',
+          },
+          expected: {
+            invocation: {
+              model: 'fable',
+              reasoningEffort: 'provider-default',
+              runId,
+              runtime: 'claude',
+              source: 'exec-target-config',
+              targetId: target,
+            },
+            project: '.oat/projects/smoke-fixture',
+          },
+          invocation: 'matched',
+          project: 'matched',
+          run: 'matched',
+        },
+        gateInvocation: {
+          model: 'fable',
+          reasoningEffort: 'provider-default',
+          runId,
+          runtime: 'claude',
+          source: 'exec-target-config',
+          targetId: target,
+        },
+        invocation: 'gate',
+        outcome: 'review_completed_gate_passed',
+        project: '.oat/projects/smoke-fixture',
+        receiveEligible: true,
+        runId,
+        scope: 'plan',
+        status: 'ok',
+        target,
+      }),
+    );
+
+    let plan = await readFile(planPath, 'utf8');
+    plan = plan.replace(
+      /^\| plan\s+\| artifact \| pending \| -\s+\| -\s+\|$/mu,
+      '| plan | artifact | passed | 2026-07-11 | reviews/plan-review.md |',
+    );
+    await writeFile(planPath, plan);
+    await writeFile(
+      statePath,
+      `${await readFile(statePath, 'utf8')}\nPlan review received.\n`,
+    );
+    await git(
+      [
+        'add',
+        '--',
+        '.oat/projects/smoke-fixture/plan.md',
+        '.oat/projects/smoke-fixture/state.md',
+        '.oat/projects/smoke-fixture/reviews/plan-review.md',
+      ],
+      run.worktreePath,
+    );
+    await git(
+      ['commit', '-m', 'chore: record reviewed fixture plan'],
+      run.worktreePath,
+    );
+    const reviewedSha = await git(['rev-parse', 'HEAD'], run.worktreePath);
+
+    plan = (await readFile(planPath, 'utf8'))
+      .replace(/^oat_status: in_progress$/mu, 'oat_status: complete')
+      .replace(
+        /^oat_ready_for: null$/mu,
+        'oat_ready_for: oat-project-implement',
+      );
+    let state = await readFile(statePath, 'utf8');
+    state = state.replace(/^oat_phase: plan$/mu, 'oat_phase: implement');
+    await writeFile(planPath, plan);
+    await writeFile(statePath, `${state}\nImplementation ready.\n`);
+    await git(
+      [
+        'add',
+        '--',
+        '.oat/projects/smoke-fixture/plan.md',
+        '.oat/projects/smoke-fixture/state.md',
+      ],
+      run.worktreePath,
+    );
+    await git(
+      ['commit', '-m', 'chore: mark fixture implementation ready'],
+      run.worktreePath,
+    );
+    const readySha = await git(['rev-parse', 'HEAD'], run.worktreePath);
+
+    for (const [sequence, from, to, commitSha] of [
+      [1, 'pre-review', 'reviewed', reviewedSha],
+      [2, 'reviewed', 'implementation-ready', readySha],
+    ]) {
+      const inputPath = join(run.repository, `transition-${sequence}.json`);
+      await writeFile(
+        inputPath,
+        JSON.stringify({
+          commitSha,
+          event: 'state-transition',
+          from,
+          schemaVersion: 1,
+          sequence,
+          to,
+        }),
+      );
+      await writeStateTransitionRecord({
+        inputPath,
+        worktreePath: run.worktreePath,
+      });
+    }
+
+    const manifest = {
+      ...run.manifest,
+      appliedScenario: 'plan-review',
+    };
+    await writeFile(run.manifestPath, JSON.stringify(manifest));
+    const { bundle } = await collectEvidence({
+      manifestPath: run.manifestPath,
+      outDirectory: outputDirectory,
+      worktreePath: run.worktreePath,
+    });
+    assert.deepEqual(
+      bundle.orchestrationEvents
+        .filter((event) => event.event === 'state-transition')
+        .map((event) => [
+          event.observedFrom,
+          event.observedTo,
+          event.reachableFromHead,
+          event.contentChanged,
+        ]),
+      [
+        ['pre-review', 'reviewed', true, true],
+        ['reviewed', 'implementation-ready', true, true],
+      ],
+    );
+    assert.equal(evaluateEvidence(bundle).status, 'passed');
   } finally {
     await cleanupGoldenRun(run);
   }

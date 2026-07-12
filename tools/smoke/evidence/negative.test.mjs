@@ -61,7 +61,12 @@ test('builds unavailable evidence from real preflight shape and empty inventory'
       runsDirectory,
     });
     assert.equal(result.report.status, 'passed');
-    assert.equal(await checkEvidenceReport(result.jsonPath), true);
+    assert.equal(
+      await checkEvidenceReport(result.jsonPath, {
+        expectedProfile: 'unavailable-target',
+      }),
+      true,
+    );
 
     await mkdir(join(runsDirectory, 'smoke-leak'), { recursive: true });
     const leaked = await buildUnavailableControl({

@@ -236,6 +236,13 @@ producer and model are present and provenance is one of `runtime-observed`,
 `provider-output`, or `gate-corroborated`. Every other value becomes
 `not-reported`.
 
+The collector reads the committed fixture dispatch matrix and recomputes
+eligible candidates through the named ceiling. A launch passes only when its
+exact target is in that committed eligible set, its ceiling is a candidate in
+the ceiling cell, and its policy, model-axis, and candidate fields are
+consistent. The launcher-provided `atOrBelowCeiling` boolean is retained as
+source evidence but is not trusted by assertions.
+
 The harness protocols added in p05 own invoking these writers around real
 provider launches and saving gate JSON. Fixture logs, exact task commits,
 review artifacts/rows, Git topology, and the provisioning ownership journal
@@ -269,19 +276,32 @@ parallel branches, p01/p02-before-p03 fan-in, phase gate corroboration, and
 explicit runtime identity status. `full` adds the final gate and unions both
 profiles.
 
+Parallel proof maps p01 and p02 task commits to two distinct journaled refs,
+checks every task commit's bounded log-only write, requires both branch heads
+as merge parents reachable from outer `HEAD`, and then requires every p03 task
+commit after both merges. Review proof requires a `passed` row naming the exact
+artifact, artifact reachability from outer `HEAD`, successful non-blocking and
+receive-eligible gate output, and exact agreement among top-level gate JSON,
+nested `gateInvocation`, corroboration expected/actual invocation, artifact
+frontmatter, and matched run/project/invocation statuses. Repo-relative gate
+project and artifact paths resolve against the disposable worktree.
+
 Generate and verify a report with:
 
 ```sh
 node tools/smoke/evidence/report.mjs \
   --bundle <out>/bundle.json \
   --out <out>
-node tools/smoke/evidence/report.mjs --check <out>/report.json
+node tools/smoke/evidence/report.mjs --check <out>/report.json \
+  --expect-profile <plan-review|implement|full|unavailable-target|post-acceptance-failure>
 ```
 
 `report.json` contains the SHA-256 digest and sibling path of its bound
 `bundle.json`. Check mode rereads that bundle, validates the digest, recomputes
-the scenario profile, and requires byte-equivalent structured results. It does
-not trust report status, assertion IDs, severities, or summary counts.
+the scenario profile, requires bundle kind and schema version 1, requires the
+caller's explicit expected profile, and requires byte-equivalent structured
+results. It does not trust report status, assertion IDs, severities, summary
+counts, or the bundle's scenario as the caller's intent.
 
 ## Negative Controls
 

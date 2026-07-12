@@ -50,7 +50,8 @@ function matchingGate(bundle, review) {
       gate.runId === fields.oat_gate_run_id &&
       gate.target === fields.oat_gate_target &&
       gate.runtime === fields.oat_gate_runtime &&
-      gate.project === fields.oat_project &&
+      gate.projectName === fields.oat_project &&
+      gate.invocationConsistent === true &&
       gate.scope === fields.oat_review_scope &&
       gate.invocation === fields.oat_review_invocation &&
       gate.configuredInvocation?.model === fields.oat_invocation_model &&
@@ -58,6 +59,13 @@ function matchingGate(bundle, review) {
         fields.oat_invocation_reasoning_effort &&
       gate.configuredInvocation?.source === fields.oat_invocation_source &&
       gate.artifactPath === review.path &&
+      gate.status === 'ok' &&
+      gate.blocking === false &&
+      gate.receiveEligible === true &&
+      [
+        'review_completed_gate_passed',
+        'review_completed_artifact_normalized_gate_passed',
+      ].includes(gate.outcome) &&
       gate.corroboration?.run === 'matched' &&
       gate.corroboration?.project === 'matched' &&
       gate.corroboration?.invocation === 'matched',
@@ -80,15 +88,15 @@ function reviewAssertions(bundle, requiredScopes, suffix) {
       (candidate) => candidate.frontmatter?.oat_review_scope === scope,
     );
     const row = reviewRows.find((candidate) => candidate.scope === scope);
-    const committed = (bundle.git?.commits ?? []).some((commit) =>
+    const committed = (bundle.git?.currentBranchCommits ?? []).some((commit) =>
       commit.files?.some((file) => file.endsWith(review?.path ?? '\0')),
     );
     return (
       review &&
       row &&
       bundle.fixture?.headPlanHash === bundle.fixture?.planHash &&
-      ['passed', 'received'].includes(row.status) &&
-      row.artifact !== '-' &&
+      row.status === 'passed' &&
+      row.artifact === review.path &&
       committed
     );
   });
@@ -119,19 +127,25 @@ function planReviewAssertions(bundle) {
       bundle.fixture?.substantivePlanHash &&
     JSON.stringify(bundle.fixture?.taskIds) ===
       JSON.stringify(EXPECTED_TASK_IDS);
-  const commits = new Map(
-    (bundle.git?.commits ?? []).map((commit) => [commit.sha, commit]),
+  const transitionIndexes = transitions.map((event) =>
+    (bundle.git?.currentBranchCommits ?? []).findIndex(
+      (commit) => commit.sha === event.commitSha,
+    ),
   );
   const transitionsAtomic =
     JSON.stringify(observedStates) === JSON.stringify(expectedStates) &&
-    transitions.every((event) => {
-      const commit = commits.get(event.commitSha);
-      return (
-        commit &&
-        commit.files.some((file) => file.endsWith('/plan.md')) &&
-        commit.files.some((file) => file.endsWith('/state.md'))
-      );
-    });
+    JSON.stringify(transitions.map((event) => event.from)) ===
+      JSON.stringify(['pre-review', 'reviewed']) &&
+    transitions.every(
+      (event) =>
+        event.reachableFromHead === true &&
+        event.contentChanged === true &&
+        event.from === event.observedFrom &&
+        event.to === event.observedTo,
+    ) &&
+    new Set(transitions.map((event) => event.commitSha)).size === 2 &&
+    transitionIndexes.every((index) => index >= 0) &&
+    transitionIndexes[0] < transitionIndexes[1];
 
   return [
     assertion(
@@ -150,7 +164,7 @@ function planReviewAssertions(bundle) {
       'plan-review-state-transitions',
       'Pre-review state advances atomically through reviewed to implementation-ready.',
       transitionsAtomic,
-      { expectedStates, transitions },
+      { expectedStates, transitionIndexes, transitions },
     ),
   ];
 }
@@ -160,6 +174,7 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
   const implementationDispatches = (bundle.dispatches ?? []).filter(
     (dispatch) => dispatch.action === 'implementation',
   );
+  const dispatchPolicy = bundle.fixture?.dispatchPolicy;
   const launchFailures = [];
   const targetSelectionFailures = [];
   for (const taskId of EXPECTED_TASK_IDS) {
@@ -189,10 +204,19 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
     const selected = accepted[0];
     if (
       !selected ||
-      selected.selection?.atOrBelowCeiling !== true ||
-      !selected.configuredInvocation?.target ||
-      !selected.configuredInvocation?.modelAxis ||
-      !selected.configuredInvocation?.ceiling
+      bundle.fixture?.headStateHash !== bundle.fixture?.stateHash ||
+      !dispatchPolicy?.eligibleCandidates?.includes(
+        selected.configuredInvocation?.target,
+      ) ||
+      !dispatchPolicy?.ceilingCandidates?.includes(
+        selected.configuredInvocation?.ceiling,
+      ) ||
+      selected.configuredInvocation?.policy !== dispatchPolicy?.policy ||
+      selected.configuredInvocation?.modelAxis !==
+        `selected:${selected.configuredInvocation?.target}` ||
+      !selected.selection?.candidatesConsidered?.includes(
+        selected.configuredInvocation?.target,
+      )
     ) {
       targetSelectionFailures.push(taskId);
     }
@@ -230,30 +254,77 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
     bundle.manifest?.ownershipJournal?.resources?.map(
       (resource) => resource.branch,
     ) ?? [];
-  const isolation =
-    journalBranches.length >= 2 &&
-    new Set(journalBranches).size === journalBranches.length &&
-    journalBranches.every(
-      (branch) => typeof branch === 'string' && !branch.includes('/'),
-    );
-  const currentSubjects = (bundle.git?.currentBranchCommits ?? []).map(
-    (commit) => commit.subject,
+  const branchHistories = bundle.git?.branchHistories ?? [];
+  const currentCommits = bundle.git?.currentBranchCommits ?? [];
+  const currentSubjects = currentCommits.map((commit) => commit.subject);
+  const phaseBranches = {};
+  for (const phase of ['p01', 'p02']) {
+    const expectedSubjects = EXPECTED_TASK_IDS.filter((taskId) =>
+      taskId.startsWith(phase),
+    ).map((taskId) => `feat(${taskId}): append fixture marker`);
+    phaseBranches[phase] = branchHistories.find((history) => {
+      if (history.branch === bundle.git?.branch) {
+        return false;
+      }
+      const taskCommits = history.commits.filter((commit) =>
+        expectedSubjects.includes(commit.subject),
+      );
+      return (
+        taskCommits.length === 3 &&
+        expectedSubjects.every((subject) =>
+          taskCommits.some((commit) => commit.subject === subject),
+        ) &&
+        taskCommits.every(
+          (commit) =>
+            commit.files.length === 1 &&
+            commit.files[0] === `workspace/logs/${phase}.log`,
+        )
+      );
+    });
+  }
+  const phaseHeads = Object.fromEntries(
+    Object.entries(phaseBranches).map(([phase, history]) => [
+      phase,
+      history?.commits.findLast((commit) =>
+        commit.subject.startsWith(`feat(${phase}-t`),
+      )?.sha ?? null,
+    ]),
   );
+  const mergeIndexes = Object.fromEntries(
+    Object.entries(phaseHeads).map(([phase, sha]) => [
+      phase,
+      currentCommits.findIndex((commit) => commit.parents.includes(sha)),
+    ]),
+  );
+  const isolation =
+    phaseBranches.p01 &&
+    phaseBranches.p02 &&
+    phaseBranches.p01.branch !== phaseBranches.p02.branch &&
+    [phaseBranches.p01.branch, phaseBranches.p02.branch].every(
+      (branch) =>
+        journalBranches.includes(branch) &&
+        typeof branch === 'string' &&
+        !branch.includes('/'),
+    ) &&
+    Object.values(phaseHeads).every(
+      (sha) =>
+        typeof sha === 'string' &&
+        currentCommits.some((commit) => commit.sha === sha),
+    ) &&
+    Object.values(mergeIndexes).every((index) => index >= 0);
   const indexes = Object.fromEntries(
     EXPECTED_TASK_IDS.map((taskId) => [
       taskId,
       currentSubjects.indexOf(`feat(${taskId}): append fixture marker`),
     ]),
   );
-  const dependencyIndexes = EXPECTED_TASK_IDS.filter(
-    (taskId) => !taskId.startsWith('p03'),
-  ).map((taskId) => indexes[taskId]);
   const fanInIndexes = EXPECTED_TASK_IDS.filter((taskId) =>
     taskId.startsWith('p03'),
   ).map((taskId) => indexes[taskId]);
   const fanIn =
-    [...dependencyIndexes, ...fanInIndexes].every((index) => index >= 0) &&
-    Math.max(...dependencyIndexes) < Math.min(...fanInIndexes);
+    Object.values(mergeIndexes).every((index) => index >= 0) &&
+    fanInIndexes.every((index) => index >= 0) &&
+    Math.max(...Object.values(mergeIndexes)) < Math.min(...fanInIndexes);
   const requiredReviewScopes = includeFinal
     ? ['p01', 'p02', 'p03', 'final']
     : ['p01', 'p02', 'p03'];
@@ -283,7 +354,16 @@ function implementAssertions(bundle, { includeFinal = false } = {}) {
       'implement-parallel-isolation',
       'Parallel phases used disjoint writes, separate worktrees, and flat branch names.',
       isolation,
-      { journalBranches },
+      {
+        journalBranches,
+        mergeIndexes,
+        phaseBranches: Object.fromEntries(
+          Object.entries(phaseBranches).map(([phase, history]) => [
+            phase,
+            history?.branch ?? null,
+          ]),
+        ),
+      },
     ),
     assertion(
       'implement-fan-in-reconciliation',
@@ -405,6 +485,11 @@ export function evaluateEvidence(bundle) {
   if (!isPlainObject(bundle)) {
     throw new EvidenceAssertionError('Evidence bundle must be an object.');
   }
+  if (bundle.schemaVersion !== 1) {
+    throw new EvidenceAssertionError(
+      'Evidence bundle must use schemaVersion 1.',
+    );
+  }
   if (!SCENARIOS.has(bundle.scenario)) {
     throw new EvidenceAssertionError(
       `Unknown evidence scenario: ${String(bundle.scenario)}`,
@@ -413,8 +498,18 @@ export function evaluateEvidence(bundle) {
 
   const assertions = [];
   if (bundle.control?.kind) {
+    if (bundle.kind !== 'control') {
+      throw new EvidenceAssertionError(
+        'Negative controls require bundle kind control.',
+      );
+    }
     assertions.push(...negativeControlAssertions(bundle));
   } else {
+    if (bundle.kind !== 'workflow') {
+      throw new EvidenceAssertionError(
+        'Workflow evidence requires bundle kind workflow.',
+      );
+    }
     assertions.push(...commonAssertions(bundle));
     if (bundle.scenario === 'plan-review' || bundle.scenario === 'full') {
       assertions.push(...planReviewAssertions(bundle));
@@ -434,6 +529,8 @@ export function evaluateEvidence(bundle) {
 
   return {
     assertions: uniqueAssertions,
+    bundleKind: bundle.kind,
+    profile: bundle.control?.kind ?? bundle.scenario,
     scenario: bundle.scenario,
     schemaVersion: 1,
     status: failed.length === 0 ? 'passed' : 'failed',
