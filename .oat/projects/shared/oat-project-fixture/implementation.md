@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-12
-oat_current_task_id: p05-t10
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -1325,8 +1325,26 @@ workspace build, lint, format, type-check, and all 2699 CLI tests passed.
 
 ### Task p05-t10: Single-owner run metadata and report publication
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** `19840df6`
+
+**Outcome:**
+
+- Routed drive, collection, failure, and operator-return manifest mutations
+  through the locked journal updater so stale parent state cannot overwrite
+  child ownership records.
+- Moved collection output to unique ignored run-local staging directories.
+  Failed or interrupted evidence remains generated run state and is never
+  published as acceptance evidence.
+- Added whole-directory publication for fully bound passing reports. Published
+  reports remain tracked outside cleanup ownership.
+- Documented the provider-neutral dispatch record to smoke-wire projection so
+  evidence assertions do not depend on skill paths or versions.
+
+**Verification:** all 108 smoke tests passed, including concurrent metadata,
+failed collection, interrupted cleanup, publication replacement, and
+deterministic no-residue cases. Workspace lint, format, and type-check passed;
+`.runs/` is ignored while `reports/` remains trackable.
 
 ---
 
