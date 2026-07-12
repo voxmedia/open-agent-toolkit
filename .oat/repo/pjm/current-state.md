@@ -60,6 +60,11 @@ copying their content here. -->
   authorization, catalog, route/model/effort selection, launch evidence, and
   recovery; the adapter adds project, phase/task, gate, write-boundary,
   commit, and worktree semantics without duplicating provider mechanics.
+- `oat-repo-improve` now owns external-plan generation across repo audits,
+  maintainability reviews, backlog reviews, backlog directories, and individual
+  backlog items. It composes broad reconnaissance with the reusable dispatch
+  engine, writes only durable external plans, maintains backlog reverse links,
+  and leaves OAT project import optional.
 
 ## What's Next
 
@@ -71,8 +76,7 @@ Continue the remaining dispatch work through the active backlog: recheck live
 GPT-5.6 Cursor Task/subagent eligibility after a client rollout exposes Task in
 headless mode or Cursor support confirms the private requests (review by
 2026-08-08), add root-owned exact dispatch with launcher-owned provenance,
-adopt the reusable dispatch contracts in analytical callers such as
-`oat-repo-improve`, enable reviewer reconnaissance subagents, and structure
-post-implementation sequencing. Review-efficiency follow-up also tracks skipping redundant
+enable reviewer reconnaissance subagents, and structure post-implementation
+sequencing. Review-efficiency follow-up also tracks skipping redundant
 re-review after narrowly classified, deterministically validated
 bookkeeping-only fixes across direct/subagent and gate-originated review flows.
