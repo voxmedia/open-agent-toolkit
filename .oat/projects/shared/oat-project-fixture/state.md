@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: c8aebc68a6f2ee13a06ee5a2a479f177673f9d1a
+oat_last_commit: 9ba2ab03
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T00:02:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T00:11:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 external gate pending
+Implementation — Phase 3, p03-t01 evidence collection
 
 ## Artifacts
 
@@ -66,7 +66,7 @@ Implementation — Phase 2 external gate pending
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 23 tasks)
 - **Implementation:** `implementation.md` (in progress — Phase 1 complete;
-  Phase 2 recovery task pending before self-review)
+  Phase 2 complete; Phase 3 next)
 
 ## Progress
 
@@ -99,7 +99,9 @@ Implementation — Phase 2 external gate pending
 - ✓ Phase 2 fix iteration 2 complete
 - ✓ User-authorized terminal Phase 2 fix complete; additional self-review
   waived
-- ⧗ External Phase 2 gate pending
+- ✓ External Phase 2 gate passed 0C/0I/0M/2m
+- ✓ Phase 2 gate judgment sweep consumed and archived
+- ⧗ p03-t01 evidence collection next
 
 ## Blockers
 
@@ -107,4 +109,4 @@ None
 
 ## Next Milestone
 
-Pass external Phase 2 gate
+Complete p03-t01 evidence collection module

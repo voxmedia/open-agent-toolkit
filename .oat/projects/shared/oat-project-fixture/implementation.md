@@ -574,7 +574,34 @@ corrected in this bookkeeping update.
 - Direct acceptance: 60/60 smoke/bootstrap tests, including actual failures at
   worktree add, fixture copy, and baseline commit; direct lint/format passed.
 - Phase 2 self-review requirement is recorded as user-waived after the bounded
-  fix. External phase gate remains required.
+  fix.
+
+### Review Received: p02
+
+**Date:** 2026-07-11
+**Review artifact:** `reviews/archived/p02-review-2026-07-12T000418Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Judgment-sweep dispositions:**
+
+- `m1` rejected with rationale — the parent-relative imports are in standalone
+  `.mjs` tooling with no configured alias infrastructure; changing module
+  layout or adding an alias solely for convention compliance would add churn
+  without functional benefit. Revisit if `tools/smoke` becomes a package with
+  supported aliases.
+- `m2` addressed now — normalized the runner entrypoint path to match the
+  sibling journal CLI pattern in `9ba2ab03`; focused tests and lint/format
+  passed.
+
+**Gate result:** passed 0C/0I/0M/2m. Gate run
+`38677f6b-b860-4e80-8bb1-cea5e8b702ee`; cross-family reviewer
+`claude-fable-skip-permissions`.
 
 ---
 
