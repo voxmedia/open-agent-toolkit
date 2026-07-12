@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 5     | 5/5       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 3     | 3/3       |
-| Phase 5 | pending  | 6     | 0/6       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 5     | 5/5       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 3     | 3/3       |
+| Phase 5 | in_progress | 6     | 1/6       |
+| Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 17/23 tasks completed
+**Total:** 18/23 tasks completed
 
 ---
 
@@ -1153,13 +1153,29 @@ provider synchronization, package versions, and PR #135/#137 regressions.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-12
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `68bb7ea0`
+
+**Outcome:**
+
+- Added harness-specific Codex, Claude, Cursor IDE, and Cursor CLI protocols
+  with canned root prompts and explicit topology/evidence expectations.
+- Added separate automated and operator run identities and report roots.
+  Operator mode defaults safely to prepare-only and cannot invoke a
+  noninteractive drive.
+- Wired automated provider commands, operator prepare/collect handoffs,
+  manifest drive records, evidence collection/reporting, and cleanup.
+- Added a repository-owned OAT shim so preflight and provider sessions use the
+  current disposable worktree build instead of an unrelated global CLI.
+- Strengthened canonical fixture preflight and drive-mode evidence metadata.
+
+**Verification:** 93/93 smoke tests, direct smoke lint, workspace lint/format,
+and a complete Codex dry-run lifecycle passed.
 
 ---
 

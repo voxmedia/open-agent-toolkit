@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 681c8d510928d72c4b2e837514864e70f37afb0c
+oat_current_task: p05-t02
+oat_last_commit: 68bb7ea0d6461c9ddbe1a1d3502aeac08c973e47
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T14:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T14:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 4 complete; Phase 5 next
+Implementation — Phase 5 live smoke evidence
 
 ## Artifacts
 
@@ -124,6 +124,7 @@ Implementation — Phase 4 complete; Phase 5 next
 - ⚠ Phase 4 re-review iteration 4 failed 0C/1I/0M/0m
 - ✓ Phase 4 self-review fix iteration 4 complete and verified
 - ✓ Final configured Phase 4 re-review passed 0C/0I/0M/0m
+- ✓ p05-t01 per-harness automated/operator protocols and runner wiring complete
 
 ## Blockers
 
@@ -131,4 +132,4 @@ None
 
 ## Next Milestone
 
-Implement p05-t01 per-harness automated and operator-interactive protocols
+Run p05-t02 Codex automated smoke scenarios, then prepare operator handoffs
