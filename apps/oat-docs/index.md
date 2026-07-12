@@ -18,6 +18,7 @@
   - [Hooks and Safety](contributing/hooks-and-safety.md) — Pre-commit hooks and safety contracts for provider sync mutations.
   - [Markdown Features](contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, and code blocks.
   - [Writing Skills](contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.
+  - [Smoke Testing](contributing/smoke-testing.md) — Runbook for the OAT live workflow smoke runner: preflight, scenarios, evidence, cleanup, and fixture maintenance.
 - Docs Tooling
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
   - [Add Docs to a New Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.
@@ -50,12 +51,16 @@
     - [Workflow & Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - [Project Artifacts](workflows/projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
     - [Design Modes](workflows/projects/design-modes.md) — How oat-project-design balances section-by-section collaboration, selective review, and draft-and-review.
-    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT combines owned provider candidate ladders, project and phase named maximum ceilings, exact task dispatch, and provider-specific enforcement.
+    - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT combines provider candidate ladders, project and phase named ceilings, exact phase-agent dispatch, and provider-specific enforcement.
+    - [Evidence Layers](workflows/projects/evidence-layers.md) — The three-layer dispatch evidence model — policy resolution, launcher-owned configured invocation, and optional runtime-observed identity — used across dispatch records and smoke verification.
     - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
-    - [Implementation Execution](workflows/projects/implementation-execution.md) — Phase coordination, exact task-worker dispatch, named maximum ceilings, reviews, bounded fixes, plan-declared parallel worktrees, and resumption in oat-project-implement.
+    - [Implementation Execution](workflows/projects/implementation-execution.md) — How OAT executes plans with root-owned phase agents, independent phase review, bounded fixes, and worktree fan-out.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
+    - [Orchestration Model](workflows/projects/orchestration-model.md) — Root-owned phase execution, optional nested work, independent reviews, and provider-neutral dispatch in OAT projects.
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
+    - [Programmatic Execution](workflows/projects/programmatic-execution.md) — How OAT launches agents through provider CLI/headless surfaces — per-harness execution shapes, cross-runtime gate exec targets, credential isolation, and the launcher-owned evidence they share.
     - [Repository PR Comment Analysis](workflows/projects/repo-analysis.md) — Repository-level PR comment analysis commands for collecting and triaging review feedback.
+    - [Review Flavors](workflows/projects/review-flavors.md) — The four OAT project review flavors, when each fires in the lifecycle, and who resolves its reviewer target.
     - [Reviews](workflows/projects/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.
     - [Project Splitting](workflows/projects/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
