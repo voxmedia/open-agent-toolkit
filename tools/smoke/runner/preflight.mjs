@@ -219,8 +219,8 @@ function validateFixtureContract(project) {
     'gpt-5.6-sol',
     'sonnet',
     'opus',
-    'fixture-cursor-opaque-medium',
-    'fixture-cursor-opaque-high',
+    'gpt-5.6-terra-medium',
+    'gpt-5.6-sol-max',
   ];
 
   if (

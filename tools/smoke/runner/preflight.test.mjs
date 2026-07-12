@@ -348,11 +348,7 @@ test('rejects copied fixtures with preset or dispatch-matrix defects', async () 
         join('presets', 'implementation-ready.json'),
         '"oat_current_task": "p01-t01"',
       ],
-      [
-        'dispatch matrix',
-        join('project', 'state.md'),
-        'fixture-cursor-opaque-high',
-      ],
+      ['dispatch matrix', join('project', 'state.md'), 'gpt-5.6-sol-max'],
     ]) {
       const copiedFixture = join(directory, name);
       await cp(fixturePath, copiedFixture, { recursive: true });

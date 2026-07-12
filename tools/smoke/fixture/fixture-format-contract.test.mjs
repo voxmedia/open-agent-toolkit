@@ -167,7 +167,7 @@ test('fixture state preserves quick-mode lifecycle and monotonic dispatch policy
   for (const [provider, lowerCandidate, highCandidate] of [
     ['codex', 'gpt-5.6-terra', 'gpt-5.6-sol'],
     ['claude', 'sonnet', 'opus'],
-    ['cursor', 'fixture-cursor-opaque-medium', 'fixture-cursor-opaque-high'],
+    ['cursor', 'gpt-5.6-terra-medium', 'gpt-5.6-sol-max'],
   ]) {
     assert.match(
       yaml,
@@ -199,8 +199,8 @@ test('fixture dispatch matrix supports exact lower candidates under High', () =>
     },
     {
       provider: 'cursor',
-      lower: { model: 'fixture-cursor-opaque-medium' },
-      high: { model: 'fixture-cursor-opaque-high' },
+      lower: { model: 'gpt-5.6-terra-medium' },
+      high: { model: 'gpt-5.6-sol-max' },
     },
   ];
 

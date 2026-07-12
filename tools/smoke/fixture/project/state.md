@@ -33,10 +33,10 @@ oat_dispatch_policy:
     cursor:
       balanced:
         candidates:
-          - fixture-cursor-opaque-medium
+          - gpt-5.6-terra-medium
       high:
         candidates:
-          - fixture-cursor-opaque-high
+          - gpt-5.6-sol-max
   source: project-state
 oat_workflow_mode: quick
 oat_workflow_origin: native
