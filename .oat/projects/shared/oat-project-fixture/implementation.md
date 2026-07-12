@@ -838,6 +838,39 @@ trusts Markdown.
 - Phase 4 was not started. Human direction is required before another fix
   iteration or a waiver.
 
+### Phase 3 Operator-authorized Fix Iteration 3
+
+**Commit:** 4bdc22cfbc81619d36cdcebf8e13d2d9e46ac284
+
+**Outcome:**
+
+- Terminal gate evidence now follows the real receive lifecycle: archived
+  local-only bytes are bound to a committed active blob, canonical
+  repo-relative project identity, complete gate invocation envelope, and a
+  later receive commit whose plan row is already passed and archived.
+- Dispatch evidence preserves structured provider candidates. Codex
+  materialized roles, selected model/effort, candidate tier, and ceiling axes
+  are validated separately; Claude and both Cursor flavors have
+  provider-shaped positive coverage.
+- Parallel evidence requires both journaled phase refs to share the manifest
+  baseline, rejects cross-phase ancestry, requires multi-parent outer merges,
+  and bounds all nine task commits to their exact phase log.
+- Lifecycle evidence derives complete plan/state/implementation fingerprints
+  from the fixture presets and rejects omitted artifacts or fields.
+- Design and plan now identify immutable orchestration events as the p05
+  adapter boundary. Phase 5 also records automated and operator-interactive
+  CLI evidence separately to expose TTY-dependent differences.
+- Per operator direction, `oat_orchestration_retry_limit` is now `5`.
+
+**Verification:**
+
+- `node --test 'tools/smoke/**/*.test.mjs' 'scripts/worktree/init.test.mjs'` —
+  85/85 passed.
+- Evidence oxlint/oxfmt, repository diff checks, and project plan validation —
+  passed.
+
+**Next:** final Phase 3 self-review under the expanded retry policy.
+
 ---
 
 ## Phase 4: Orchestration Contract
