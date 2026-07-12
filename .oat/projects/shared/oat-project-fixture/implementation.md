@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -79,7 +79,7 @@ oat_generated: false
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 11/23 tasks completed
+**Total:** 12/23 tasks completed
 
 ---
 
@@ -894,13 +894,27 @@ trusts Markdown.
 
 ## Phase 4: Orchestration Contract
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-11
 
-### Task p04-t01: Coordinator selection contract in workflow skills
+### Task p04-t01: Promote the validated coordinator selection contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5edfb27bf25027200d90803972d71b79fc7d1c44
+
+**Outcome:**
+
+- Added the non-user-facing `oat-dispatch-subagents` skill with
+  current-dispatcher catalog evidence, full-information route selection,
+  accepted-launch terminality, role-specific review policy, and structured
+  dispatch records.
+- Planning, implementation, and phase-coordinator consumers now load the
+  shared contract explicitly without moving lifecycle or closeout ownership.
+- Synced Claude/Cursor skill views and Codex phase-agent materializations.
+
+**Verification:** 83 scoped skill/closeout tests passed; repository lint and
+format passed. Cross-skill drift checks found no contradiction requiring a new
+p04 task.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 4bdc22cfbc81619d36cdcebf8e13d2d9e46ac284
+oat_current_task: p04-t02
+oat_last_commit: 5edfb27bf25027200d90803972d71b79fc7d1c44
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T12:46:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T12:51:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 self-review passed; Phase 4 ready
+Implementation — Phase 4, p04-t02 provider topology guidance
 
 ## Artifacts
 
@@ -112,6 +112,7 @@ Implementation — Phase 3 self-review passed; Phase 4 ready
 - ✓ Operator-authorized Phase 3 fix iteration 3 complete
 - ✓ Review retry cap raised to 5
 - ✓ Final Phase 3 self-review passed 0C/0I/0M/0m
+- ✓ p04-t01 promoted the shared full-information dispatch contract
 
 ## Blockers
 
@@ -119,4 +120,4 @@ None
 
 ## Next Milestone
 
-Execute p04-t01: promote the validated coordinator selection contract
+Execute p04-t02: Cursor and Claude native topology guidance
