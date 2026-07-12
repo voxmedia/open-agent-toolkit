@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p03-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -74,12 +74,12 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 3     | 3/3       |
 | Phase 2 | in_progress | 5     | 5/5       |
-| Phase 3 | in_progress | 3     | 2/3       |
+| Phase 3 | in_progress | 3     | 3/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 10/23 tasks completed
+**Total:** 11/23 tasks completed
 
 ---
 
@@ -661,8 +661,39 @@ self-review; independent external gates remain enabled.
 
 ### Task p03-t03: Negative-control assertions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f68c2518
+
+**Outcome:**
+
+- Added a Critical unavailable-target control proving preflight exits before
+  any provisioning manifest or side effect.
+- Added a Critical no-fallback-after-acceptance control proving an accepted
+  failed child cannot receive a second pinned launch.
+- Report check mode fails on either control violation.
+
+**Verification:**
+
+- Evidence tests — 12/12 passed.
+- Complete smoke/bootstrap/evidence suite — 72/72 passed.
+- Direct evidence lint/format and diff checks — passed.
+
+### Phase 3 Summary
+
+**Outcome:**
+
+- Added deterministic, cleanup-surviving collection of dispatch, review/gate,
+  fixture log, orchestration, and Git topology evidence.
+- Added scenario-aware assertion profiles and stable JSON/Markdown reports.
+- Added executable positive and negative acceptance checks for live smoke
+  tasks.
+
+**Phase verification:**
+
+- `node --test 'tools/smoke/**/*.test.mjs' scripts/worktree/init.test.mjs` —
+  72/72 passed.
+- Evidence oxlint/oxfmt and repository diff checks — passed.
+- Phase 3 is ready for self-review.
 
 ---
 

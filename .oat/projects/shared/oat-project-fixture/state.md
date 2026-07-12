@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t03
-oat_last_commit: a9b36e6c
+oat_current_task: p04-t01
+oat_last_commit: f68c2518
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T00:25:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T00:27:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3, p03-t03 negative controls
+Implementation — Phase 3 tasks complete; awaiting self-review
 
 ## Artifacts
 
@@ -103,7 +103,8 @@ Implementation — Phase 3, p03-t03 negative controls
 - ✓ Phase 2 gate judgment sweep consumed and archived
 - ✓ p03-t01 evidence collection complete
 - ✓ p03-t02 assertions and reports complete
-- ⧗ p03-t03 negative controls next
+- ✓ p03-t03 negative controls complete
+- ⧗ Phase 3 self-review next
 
 ## Blockers
 
@@ -111,4 +112,4 @@ None
 
 ## Next Milestone
 
-Complete p03-t03 negative-control assertions
+Pass Phase 3 self-review and external phase gate
