@@ -173,31 +173,35 @@ function productionShape(bundle) {
     dispatches:
       scenario === 'plan-review'
         ? []
-        : taskIds.map((taskId) => ({
-            action: 'implementation',
-            attempt: 1,
-            configuredInvocation: {
-              ceiling: 'sol',
-              candidateTier: 'balanced',
-              ceilingEffortAxis: 'not-applicable',
-              ceilingModelAxis: 'selected:sol',
-              effortAxis: 'not-applicable',
-              modelAxis: 'selected:terra',
-              policy: 'high',
-              target: 'terra',
-            },
-            launch: {
-              accepted: true,
-              outcome: 'completed',
-              status: 'accepted',
-            },
-            runtimeIdentity: { status: 'not-reported' },
-            scope: taskId,
-            selection: {
-              atOrBelowCeiling: true,
-              candidatesConsidered: ['terra'],
-            },
-          })),
+        : ['p01', 'p02', 'p03'].flatMap((phase) =>
+            ['phase-implementer', 'reviewer'].map((role) => ({
+              action: role === 'reviewer' ? 'review' : 'implementation',
+              attempt: 1,
+              configuredInvocation: {
+                ceiling: 'sol',
+                candidateTier: 'high',
+                ceilingEffortAxis: 'not-applicable',
+                ceilingModelAxis: 'selected:sol',
+                effortAxis: 'not-applicable',
+                modelAxis: 'selected:sol',
+                policy: 'high',
+                target: 'sol',
+              },
+              launch: {
+                accepted: true,
+                outcome: 'completed',
+                status: 'accepted',
+              },
+              role,
+              runtimeIdentity: { status: 'not-reported' },
+              scope: phase,
+              selection: {
+                atOrBelowCeiling: true,
+                candidatesConsidered: ['sol'],
+                reason: 'native-catalog',
+              },
+            })),
+          ),
     fixture: {
       baselineSubstantivePlanHash: 'substantive',
       dispatchPolicy: {
@@ -441,20 +445,31 @@ test('provider-specific targets preserve Codex roles and model axes separately',
       provider: entry.provider,
     };
     for (const dispatch of bundle.dispatches) {
+      const reviewer = dispatch.role === 'reviewer';
+      const model = reviewer ? entry.ceiling.model : entry.model;
+      const effort = reviewer
+        ? entry.ceiling.effort
+        : entry.provider === 'codex'
+          ? 'medium'
+          : null;
+      const target =
+        entry.provider === 'codex'
+          ? `${reviewer ? 'oat-reviewer' : 'oat-phase-implementer'}-${model.replaceAll('.', '-')}-${effort}`
+          : model;
       dispatch.configuredInvocation = {
-        candidateTier: 'balanced',
+        candidateTier: reviewer ? 'high' : 'balanced',
         ceiling: `surface:${entry.ceiling.model}`,
         ceilingEffortAxis:
           entry.ceiling.effort === null
             ? 'not-applicable'
             : `selected:${entry.ceiling.effort}`,
         ceilingModelAxis: `selected:${entry.ceiling.model}`,
-        effortAxis: entry.effortAxis,
-        modelAxis: `selected:${entry.model}`,
+        effortAxis: effort === null ? 'not-applicable' : `selected:${effort}`,
+        modelAxis: `selected:${model}`,
         policy: 'high',
-        target: entry.target,
+        target,
       };
-      dispatch.selection.candidatesConsidered = [entry.target];
+      dispatch.selection.candidatesConsidered = [target];
     }
     const targetAssertion = evaluateEvidence(bundle).assertions.find(
       (assertion) => assertion.id === 'implement-exact-target-within-ceiling',
@@ -475,6 +490,34 @@ test('provider-specific targets preserve Codex roles and model axes separately',
       );
     }
   }
+});
+
+test('optional nested dispatch is validated when present but not required', async () => {
+  const bundle = await readGolden('implement');
+  assert.equal(evaluateEvidence(bundle).status, 'passed');
+
+  const optional = structuredClone(bundle.dispatches[0]);
+  optional.role = 'task-worker';
+  optional.scope = 'p01-t01';
+  optional.configuredInvocation = {
+    ...optional.configuredInvocation,
+    candidateTier: 'balanced',
+    modelAxis: 'selected:terra',
+    target: 'terra',
+  };
+  optional.selection.candidatesConsidered = ['terra'];
+  bundle.dispatches.push(optional);
+  assert.equal(evaluateEvidence(bundle).status, 'passed');
+
+  optional.configuredInvocation.target = 'above-ceiling';
+  optional.configuredInvocation.modelAxis = 'selected:above-ceiling';
+  optional.selection.candidatesConsidered = ['above-ceiling'];
+  assert.equal(
+    evaluateEvidence(bundle).assertions.find(
+      (assertion) => assertion.id === 'implement-exact-target-within-ceiling',
+    ).status,
+    'failed',
+  );
 });
 
 test('parallel proof rejects serial ancestry, single-parent integration, and broad task commits', async () => {

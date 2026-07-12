@@ -2,10 +2,10 @@
 
 ## Expected topology
 
-The root uses native `Agent` dispatch for the phase coordinator and exact
-tier-alias workers. The live run records whether production coordinator nesting
-works; if it does not, the report must identify the sanctioned alternative
-without silently changing routes after acceptance.
+The root uses native `Agent` dispatch for one phase implementer and one
+independent reviewer per phase. The phase implementer executes tasks directly.
+Nested Agent dispatch is optional evidence when useful, not a required live-run
+condition.
 
 ## Automated invocation
 
@@ -30,13 +30,13 @@ Drive the active OAT smoke-fixture project for scenario {{SCENARIO}}.
 {{SCENARIO_INSTRUCTIONS}}
 
 Use the repository's normal OAT workflow skills. Prefer the provider-native
-coordinator-to-worker topology, observe the live Agent model catalog at each
-dispatcher, and record whether the production coordinator can launch exact
-workers. Before every child launch, preserve launcher-owned selection,
-acceptance, outcome, and runtime-identity evidence as separate facts. Write
-immutable dispatch and state-transition records only through
-tools/smoke/evidence/record.mjs, following tools/smoke/CONTRACT.md. Preserve
-gate JSON without rewriting it.
+root-owned phase-agent topology: one phase implementer directly executes the
+phase, then the root dispatches its independent reviewer. Optional nested work
+must have a concrete benefit and bounded scope. Before every child launch,
+preserve launcher-owned selection, acceptance, outcome, and runtime-identity
+evidence as separate facts. Write immutable dispatch and state-transition
+records only through tools/smoke/evidence/record.mjs, following
+tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
 
 The `oat` command is already bound to the preflight-verified source build
 through the smoke environment. Use it directly; do not install dependencies,
@@ -49,16 +49,17 @@ gate and must not be replaced.
 
 Any child containment, ownership-registration, base, or fixture-readiness
 failure is run-fatal: record `invalid-run-abort`, terminate accepted handles,
-and stop before any later worker, review, or gate. Never degrade an invalid
-smoke run to sequential execution or replace an aborted handle. Gate liveness
-reports elapsed, idle, and hard-budget milliseconds; activity proves liveness,
-not completion, and never extends the hard budget.
+and stop before any later phase implementer, optional worker, review, or gate.
+Never degrade an invalid smoke run to sequential execution or replace an
+aborted handle. Gate liveness reports elapsed, idle, and hard-budget
+milliseconds; activity proves liveness, not completion, and never extends the
+hard budget.
 
 Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
 final code gate after p03, and `full` runs those two gates. Phase self-reviews
-still run once per phase, but each reviewer receives only that phase's commit
-range and acceptance criteria. Do not turn a fixture review into repository-wide
-diagnosis, workflow redesign, or unrelated cleanup.
+still run once per phase from the root, and each reviewer receives only that
+phase's commit range and acceptance criteria. Do not turn a fixture review into
+repository-wide diagnosis, workflow redesign, or unrelated cleanup.
 
 Do not modify the parent worktree or persisted user configuration. Work only in
 this disposable worktree, commit each fixture task exactly as planned, and do

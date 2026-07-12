@@ -620,43 +620,51 @@ test('collector output drives five-task assertions and a bound report', async ()
         ['commit', '-m', `feat(${taskId}): append fixture marker`],
         taskWorktree,
       );
+    }
 
-      const inputPath = join(run.repository, `${taskId}-dispatch.json`);
-      await writeFile(
-        inputPath,
-        JSON.stringify({
-          action: 'implementation',
-          attempt: 1,
-          configuredInvocation: {
-            candidateTier: 'balanced',
-            ceiling: 'gpt-5.6-sol-max',
-            ceilingEffortAxis: 'not-applicable',
-            ceilingModelAxis: 'selected:gpt-5.6-sol-max',
-            effortAxis: 'not-applicable',
-            modelAxis: 'selected:gpt-5.6-terra-medium',
-            policy: 'high',
-            target: 'gpt-5.6-terra-medium',
-          },
-          launch: {
-            mechanism: 'cursor-cli',
-            outcome: 'completed',
-            status: 'accepted',
-          },
-          role: 'implementer',
-          runtimeIdentity: null,
-          schemaVersion: 1,
-          scope: taskId,
-          selection: {
-            atOrBelowCeiling: true,
-            candidatesConsidered: ['gpt-5.6-terra-medium'],
-            reason: 'native-catalog-unsatisfying',
-          },
-        }),
-      );
-      await writeDispatchRecord({
-        inputPath,
-        worktreePath: run.worktreePath,
-      });
+    for (const phase of ['p01', 'p02', 'p03']) {
+      for (const role of ['phase-implementer', 'reviewer']) {
+        const action = role === 'reviewer' ? 'review' : 'implementation';
+        const inputPath = join(
+          run.repository,
+          `${phase}-${action}-${role}-dispatch.json`,
+        );
+        await writeFile(
+          inputPath,
+          JSON.stringify({
+            action,
+            attempt: 1,
+            configuredInvocation: {
+              candidateTier: 'high',
+              ceiling: 'gpt-5.6-sol-max',
+              ceilingEffortAxis: 'not-applicable',
+              ceilingModelAxis: 'selected:gpt-5.6-sol-max',
+              effortAxis: 'not-applicable',
+              modelAxis: 'selected:gpt-5.6-sol-max',
+              policy: 'high',
+              target: 'gpt-5.6-sol-max',
+            },
+            launch: {
+              mechanism: 'cursor-cli',
+              outcome: 'completed',
+              status: 'accepted',
+            },
+            role,
+            runtimeIdentity: null,
+            schemaVersion: 1,
+            scope: phase,
+            selection: {
+              atOrBelowCeiling: true,
+              candidatesConsidered: ['gpt-5.6-sol-max'],
+              reason: 'native-catalog-unsatisfying',
+            },
+          }),
+        );
+        await writeDispatchRecord({
+          inputPath,
+          worktreePath: run.worktreePath,
+        });
+      }
     }
 
     for (const scope of ['final']) {

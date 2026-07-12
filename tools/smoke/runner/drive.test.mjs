@@ -68,7 +68,7 @@ test('selects one protocol and invocation shape for every harness', async () => 
     );
     assert.match(
       protocol.prompt,
-      /one coordinator-owned self-review per phase/,
+      /one root-owned phase review per phase|Phase self-reviews\s+still run once per phase from the root/,
     );
     assert.match(protocol.prompt, /Gate count is fixed:/);
 

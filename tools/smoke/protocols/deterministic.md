@@ -2,11 +2,13 @@
 
 ## Expected topology
 
-The in-process fake provider records one accepted root-to-coordinator launch
-for each fixture phase and one accepted coordinator-to-worker launch for every
-fixture task. Parallel phases use real Git worktrees and the production locked
-ownership journal. The fake gate writes the same gate envelope and review
-artifact shape consumed by live evidence collection.
+The in-process fake provider records one accepted root-to-phase-implementer
+launch and one root-owned reviewer launch for each fixture phase. The phase
+implementer directly produces each planned task commit. Optional nested
+dispatch is validated when present but is not required. Parallel phases use
+real Git worktrees and the production locked ownership journal. The fake gate
+writes the same gate envelope and review artifact shape consumed by live
+evidence collection.
 
 ## Automated invocation
 
@@ -37,7 +39,7 @@ test is permitted.
 
 Gate target: {{GATE_TARGET}}.
 Gate count is fixed: the implement scenario runs exactly one external final
-code gate after p03 and one coordinator-owned self-review per phase.
+code gate after p03 and one root-owned phase review per phase.
 ```
 
 <!-- OAT_SMOKE_PROMPT_END -->

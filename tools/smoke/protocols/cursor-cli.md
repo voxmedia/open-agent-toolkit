@@ -3,9 +3,10 @@
 ## Expected topology
 
 Cursor CLI is a separate flavor from Cursor IDE. The run records its live root
-Subagent catalog and may claim native selection or nesting only when structured
-events prove it. An accepted interrupted child is terminal; it does not permit
-a replacement route.
+Subagent catalog, dispatches one phase implementer and one root-owned reviewer
+per phase, and may claim optional nesting only when structured events prove it.
+An accepted interrupted child is terminal; it does not permit a replacement
+route.
 
 ## Automated invocation
 
@@ -31,11 +32,14 @@ Drive the active OAT smoke-fixture project for scenario {{SCENARIO}}.
 
 Use the repository's normal OAT workflow skills. Treat Cursor CLI as its own
 harness: observe this invocation's native catalog, select exact native targets
-only from that snapshot, and select any CLI route before launch. Before every
-child launch, preserve launcher-owned selection, acceptance, outcome, and
-runtime-identity evidence as separate facts. Write immutable dispatch and
-state-transition records only through tools/smoke/evidence/record.mjs,
-following tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
+only from that snapshot, and select any CLI route before launch. Dispatch one
+phase implementer that directly executes its tasks, then dispatch its
+independent reviewer from the root. Nested work is optional and requires a
+bounded benefit. Before every child launch, preserve launcher-owned selection,
+acceptance, outcome, and runtime-identity evidence as separate facts. Write
+immutable dispatch and state-transition records only through
+tools/smoke/evidence/record.mjs, following tools/smoke/CONTRACT.md. Preserve
+gate JSON without rewriting it.
 
 The `oat` command is already bound to the preflight-verified source build
 through the smoke environment. Use it directly; do not install dependencies,
@@ -48,16 +52,17 @@ gate and must not be replaced.
 
 Any child containment, ownership-registration, base, or fixture-readiness
 failure is run-fatal: record `invalid-run-abort`, terminate accepted handles,
-and stop before any later worker, review, or gate. Never degrade an invalid
-smoke run to sequential execution or replace an aborted handle. Gate liveness
-reports elapsed, idle, and hard-budget milliseconds; activity proves liveness,
-not completion, and never extends the hard budget.
+and stop before any later phase implementer, optional worker, review, or gate.
+Never degrade an invalid smoke run to sequential execution or replace an
+aborted handle. Gate liveness reports elapsed, idle, and hard-budget
+milliseconds; activity proves liveness, not completion, and never extends the
+hard budget.
 
 Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
 final code gate after p03, and `full` runs those two gates. Phase self-reviews
-still run once per phase, but each reviewer receives only that phase's commit
-range and acceptance criteria. Do not turn a fixture review into repository-wide
-diagnosis, workflow redesign, or unrelated cleanup.
+still run once per phase from the root, and each reviewer receives only that
+phase's commit range and acceptance criteria. Do not turn a fixture review into
+repository-wide diagnosis, workflow redesign, or unrelated cleanup.
 
 Do not infer Cursor IDE behavior, modify the parent worktree or persisted user
 configuration, or replace an accepted child launch. Work only in this

@@ -2,11 +2,13 @@
 
 ## Expected topology
 
-The root uses native `spawn_agent` with the exact materialized phase
-coordinator, which launches exact task workers. Effective
-`agents.max_depth >= 2` and the manifest's scoped writable roots are
-preconditions. A CLI route is valid only when selected and recorded before
-launch.
+The root uses native `spawn_agent` with one exact materialized phase
+implementer per phase and one independent reviewer per phase. Phase
+implementers execute planned tasks directly. Effective `agents.max_depth >= 1`
+and the manifest's scoped writable roots are preconditions. Depth two is
+optional capability for benefit-driven nested work, not a default-topology
+preflight requirement. A CLI route is valid only when selected and recorded
+before launch.
 
 ## Automated invocation
 
@@ -33,12 +35,15 @@ Drive the active OAT smoke-fixture project for scenario {{SCENARIO}}.
 
 {{SCENARIO_INSTRUCTIONS}}
 
-Use the repository's normal OAT workflow skills and provider-native
-coordinator-to-worker topology. Before every child launch, apply the configured
+Use the repository's normal OAT workflow skills and root-owned phase-agent
+topology. Dispatch one phase implementer that directly executes each phase,
+then dispatch the independent phase reviewer from the root. Optional nested
+work is allowed only when it provides a concrete benefit and is not required
+for ordinary fixture tasks. Before every child launch, apply the configured
 dispatch contract and preserve launcher-owned selection, acceptance, outcome,
 and runtime-identity evidence as separate facts. Write immutable dispatch and
-state-transition records only through tools/smoke/evidence/record.mjs, following
-tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
+state-transition records only through tools/smoke/evidence/record.mjs,
+following tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
 
 The `oat` command is already bound to the preflight-verified source build
 through the smoke environment. Use it directly; do not install dependencies,
@@ -51,10 +56,11 @@ gate and must not be replaced.
 
 Any child containment, ownership-registration, base, or fixture-readiness
 failure is run-fatal: record `invalid-run-abort`, terminate accepted handles,
-and stop before any later worker, review, or gate. Never degrade an invalid
-smoke run to sequential execution or replace an aborted handle. Gate liveness
-reports elapsed, idle, and hard-budget milliseconds; activity proves liveness,
-not completion, and never extends the hard budget.
+and stop before any later phase implementer, optional worker, review, or gate.
+Never degrade an invalid smoke run to sequential execution or replace an
+aborted handle. Gate liveness reports elapsed, idle, and hard-budget
+milliseconds; activity proves liveness, not completion, and never extends the
+hard budget.
 
 For each child worktree, follow `oat-worktree-bootstrap-auto` exactly. After
 `git worktree add`, register the child in the manifest ownership journal before
@@ -65,9 +71,9 @@ the smoke-safe script can register ownership and short-circuit dependency work.
 
 Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
 final code gate after p03, and `full` runs those two gates. Phase self-reviews
-still run once per phase, but each reviewer receives only that phase's commit
-range and acceptance criteria. Do not turn a fixture review into repository-wide
-diagnosis, workflow redesign, or unrelated cleanup.
+still run once per phase from the root, and each reviewer receives only that
+phase's commit range and acceptance criteria. Do not turn a fixture review into
+repository-wide diagnosis, workflow redesign, or unrelated cleanup.
 
 Before a Cursor gate, run
 `[ -d "${OAT_SMOKE_CURSOR_BROKER_DIRECTORY:-}" ]`. If it fails, stop before

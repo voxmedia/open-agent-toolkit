@@ -6,6 +6,7 @@ const EXPECTED_TASK_IDS = [
   'p02-t02',
   'p03-t01',
 ];
+const EXPECTED_PHASE_IDS = ['p01', 'p02', 'p03'];
 
 export class EvidenceAssertionError extends Error {
   constructor(message) {
@@ -225,9 +226,11 @@ function dispatchMatchesCommittedPolicy(selected, dispatchPolicy) {
   const ceiling = dispatchPolicy.ceilingCandidates?.find(
     (entry) => entry.model === ceilingModel && entry.effort === ceilingEffort,
   );
+  const codexRole =
+    selected.role === 'reviewer' ? 'oat-reviewer' : 'oat-phase-implementer';
   const codexTarget =
     candidate && candidate.effort !== null
-      ? `oat-phase-implementer-${candidate.model.replaceAll('.', '-')}-${candidate.effort}`
+      ? `${codexRole}-${candidate.model.replaceAll('.', '-')}-${candidate.effort}`
       : null;
   const targetMatches =
     dispatchPolicy.provider === 'codex'
@@ -239,14 +242,24 @@ function dispatchMatchesCommittedPolicy(selected, dispatchPolicy) {
 function implementAssertions(bundle) {
   const taskIds = bundle.fixture?.taskIds ?? [];
   const implementationDispatches = (bundle.dispatches ?? []).filter(
-    (dispatch) => dispatch.action === 'implementation',
+    (dispatch) =>
+      dispatch.action === 'implementation' &&
+      dispatch.role === 'phase-implementer',
+  );
+  const phaseReviewDispatches = (bundle.dispatches ?? []).filter(
+    (dispatch) => dispatch.action === 'review' && dispatch.role === 'reviewer',
+  );
+  const optionalNestedDispatches = (bundle.dispatches ?? []).filter(
+    (dispatch) =>
+      dispatch.action === 'implementation' &&
+      dispatch.role !== 'phase-implementer',
   );
   const dispatchPolicy = bundle.fixture?.dispatchPolicy;
   const launchFailures = [];
   const targetSelectionFailures = [];
-  for (const taskId of EXPECTED_TASK_IDS) {
-    const attempts = implementationDispatches
-      .filter((dispatch) => dispatch.scope === taskId)
+  const validateScope = (scope, role, dispatches) => {
+    const attempts = dispatches
+      .filter((dispatch) => dispatch.scope === scope)
       .sort((left, right) => left.attempt - right.attempt);
     const accepted = attempts.filter(
       (dispatch) => dispatch.launch?.accepted === true,
@@ -266,18 +279,40 @@ function implementAssertions(bundle) {
             dispatch.launch?.outcome !== 'rejected',
         )
     ) {
-      launchFailures.push(taskId);
+      launchFailures.push(`${scope}:${role}`);
     }
     const selected = accepted[0];
     if (
       !selected ||
       bundle.fixture?.headStateHash !== bundle.fixture?.stateHash ||
-      !dispatchMatchesCommittedPolicy(selected, dispatchPolicy)
+      !dispatchMatchesCommittedPolicy(selected, dispatchPolicy) ||
+      (role === 'reviewer' &&
+        selected.configuredInvocation?.candidateTier !== dispatchPolicy?.policy)
     ) {
-      targetSelectionFailures.push(taskId);
+      targetSelectionFailures.push(`${scope}:${role}`);
+    }
+  };
+  for (const phase of EXPECTED_PHASE_IDS) {
+    validateScope(phase, 'phase-implementer', implementationDispatches);
+    validateScope(phase, 'reviewer', phaseReviewDispatches);
+  }
+  for (const dispatch of optionalNestedDispatches) {
+    if (
+      dispatch.launch?.accepted !== true ||
+      dispatch.launch?.outcome !== 'completed'
+    ) {
+      launchFailures.push(`${dispatch.scope}:${dispatch.role}`);
+    }
+    if (!dispatchMatchesCommittedPolicy(dispatch, dispatchPolicy)) {
+      targetSelectionFailures.push(`${dispatch.scope}:${dispatch.role}`);
     }
   }
-  const invalidRuntimeIdentity = implementationDispatches
+  const requiredDispatches = [
+    ...implementationDispatches,
+    ...phaseReviewDispatches,
+    ...optionalNestedDispatches,
+  ];
+  const invalidRuntimeIdentity = requiredDispatches
     .filter(
       (dispatch) =>
         !['reported', 'not-reported'].includes(
@@ -400,16 +435,19 @@ function implementAssertions(bundle) {
   return [
     assertion(
       'implement-dispatch-completeness',
-      'Every one of the five fixture tasks has exactly one accepted completed launch.',
+      'Every phase has one accepted completed phase implementer and one root-owned reviewer launch.',
       JSON.stringify(taskIds) === JSON.stringify(EXPECTED_TASK_IDS) &&
         launchFailures.length === 0,
-      { failingTasks: launchFailures, taskIds },
+      {
+        failingDispatches: launchFailures,
+        phaseIds: EXPECTED_PHASE_IDS,
+        taskIds,
+      },
     ),
     assertion(
       'implement-exact-target-within-ceiling',
-      'Every task records an exact selected target at or below the named ceiling.',
-      implementationDispatches.length > 0 &&
-        targetSelectionFailures.length === 0,
+      'Every phase implementer, reviewer, and optional nested launch records an exact target at or below the named ceiling.',
+      requiredDispatches.length > 0 && targetSelectionFailures.length === 0,
       { failingScopes: targetSelectionFailures },
     ),
     assertion(
@@ -448,8 +486,7 @@ function implementAssertions(bundle) {
     assertion(
       'implement-runtime-identity-status',
       'Runtime identity is recorded or explicitly marked not-reported.',
-      implementationDispatches.length > 0 &&
-        invalidRuntimeIdentity.length === 0,
+      requiredDispatches.length > 0 && invalidRuntimeIdentity.length === 0,
       { invalidScopes: invalidRuntimeIdentity },
     ),
   ];

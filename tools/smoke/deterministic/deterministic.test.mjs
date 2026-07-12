@@ -89,17 +89,14 @@ test('deterministic tier exercises production evidence paths without providers',
     assert.equal(result.report.report.status, 'passed');
     assert.deepEqual(
       bundle.dispatches
-        .filter((dispatch) => dispatch.role === 'phase-coordinator')
+        .filter((dispatch) => dispatch.role === 'phase-implementer')
         .map((dispatch) => dispatch.scope)
         .sort(),
       ['p01', 'p02', 'p03'],
     );
-    assert.deepEqual(
-      bundle.dispatches
-        .filter((dispatch) => dispatch.role === 'task-worker')
-        .map((dispatch) => dispatch.scope)
-        .sort(),
-      ['p01-t01', 'p01-t02', 'p02-t01', 'p02-t02', 'p03-t01'],
+    assert.equal(
+      bundle.dispatches.some((dispatch) => dispatch.role === 'task-worker'),
+      false,
     );
     assert.deepEqual(
       bundle.dispatches
@@ -178,7 +175,7 @@ test('deterministic accepted failure is terminal without replacement', async () 
           failureMode: 'post-acceptance',
           worktreePath: run.manifest.worktreePath,
         }),
-      /accepted worker failure/,
+      /accepted phase implementer failure/,
     );
     const manifest = JSON.parse(
       await readFile(run.manifest.manifestPath, 'utf8'),
@@ -198,13 +195,15 @@ test('deterministic accepted failure is terminal without replacement', async () 
         JSON.parse(await readFile(join(dispatchDirectory, name), 'utf8')),
       ),
     );
-    const failedTaskLaunches = records.filter(
+    const failedPhaseLaunches = records.filter(
       (record) =>
-        record.scope === 'p01-t01' && record.action === 'implementation',
+        record.scope === 'p01' &&
+        record.role === 'phase-implementer' &&
+        record.action === 'implementation',
     );
-    assert.equal(failedTaskLaunches.length, 1);
-    assert.equal(failedTaskLaunches[0].launch.status, 'accepted');
-    assert.equal(failedTaskLaunches[0].launch.outcome, 'failed');
+    assert.equal(failedPhaseLaunches.length, 1);
+    assert.equal(failedPhaseLaunches[0].launch.status, 'accepted');
+    assert.equal(failedPhaseLaunches[0].launch.outcome, 'failed');
     assert.equal(
       records.some((record) => record.role === 'reviewer'),
       false,

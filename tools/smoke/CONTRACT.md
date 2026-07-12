@@ -8,17 +8,18 @@ still uses production provisioning, real parallel Git worktrees, the locked
 ownership journal, immutable dispatch records, task commits and merges, review
 artifact handling, evidence collection, assertions, and cleanup.
 
-The deterministic topology records one root-to-coordinator launch per phase,
-one coordinator-to-worker launch per fixture task, one coordinator-owned
-self-review per phase, and one final fake gate. It requires no provider
-credential, network access, dependency installation, repository build, or
-repository-wide test inside a disposable child.
+The deterministic topology records one root-to-phase-implementer launch per
+phase, one root-owned reviewer launch per phase, five direct task commits, and
+one final fake gate. Optional nested launches are validated when present but
+are not required. It requires no provider credential, network access,
+dependency installation, repository build, or repository-wide test inside a
+disposable child.
 
 Its failure controls prove:
 
 - a child readiness failure is terminal before any launch;
-- an accepted failed worker has exactly one attempt and no later reviewer or
-  gate;
+- an accepted failed phase implementer has exactly one attempt and no later
+  reviewer or gate;
 - concurrent manifest updates retain both mutations under the production lock;
 - an out-of-order state transition fails the production evidence assertion.
 
@@ -33,8 +34,9 @@ expected-base verification, and fixture-scoped readiness run-validity
 conditions. Failure of any condition is immediately fatal. Record
 `invalid-run-abort`, terminate accepted handles owned by the run, preserve the
 invalidating evidence, and clean only journal-owned resources. Do not dispatch
-another worker, self-reviewer, or gate; do not degrade to sequential execution;
-and do not treat cancellation as a child outcome or replacement opportunity.
+another phase implementer, optional worker, reviewer, or gate; do not degrade
+to sequential execution; and do not treat cancellation as a child outcome or
+replacement opportunity.
 
 Gate execution tees target output while tracking activity. Every
 `OAT_GATE_LIVENESS_INTERVAL_MS` (default 30 seconds), it emits target, elapsed,
@@ -308,7 +310,7 @@ The disposable workflow writes launcher-owned records before collection:
 
 - `workspace/evidence/dispatch/<scope>-<action>-<role>-<attempt>.json` — one
   immutable record for every pre-start rejection or accepted launch. Including
-  action and role prevents coordinator, worker, and reviewer records from
+  action and role prevents phase-implementer, optional-worker, and reviewer records from
   colliding at a shared phase scope. Create records only through
   `tools/smoke/evidence/record.mjs` with `--kind dispatch`.
 - `workspace/evidence/orchestration/<sequence>-state-transition.json` —
@@ -359,12 +361,12 @@ file names, provider-reference paths, or frontmatter versions.
 ```json
 {
   "schemaVersion": 1,
-  "scope": "p01-t01",
+  "scope": "p01",
   "attempt": 1,
   "action": "implementation",
-  "role": "implementer",
+  "role": "phase-implementer",
   "configuredInvocation": {
-    "candidateTier": "balanced",
+    "candidateTier": "high",
     "ceiling": "configured ceiling",
     "ceilingModelAxis": "selected:ceiling-model",
     "ceilingEffortAxis": "selected:ceiling-effort | not-applicable",
@@ -415,19 +417,20 @@ fixture dispatch matrix and recomputes eligible candidates through the named
 ceiling. A launch passes only when its candidate tier, selected model/effort
 axes, ceiling model/effort axes, policy, and exact target are mutually
 consistent. Claude and Cursor targets equal the selected opaque model string.
-Codex targets equal the materialized implementer role while model and effort
-remain separate axes. The launcher-provided `atOrBelowCeiling` boolean is
-retained as source evidence but is not trusted by assertions.
+Codex targets equal the materialized phase-implementer or reviewer role while
+model and effort remain separate axes. The launcher-provided
+`atOrBelowCeiling` boolean is retained as source evidence but is not trusted by
+assertions.
 
 The harness protocols added in p05 own invoking these writers around real
 provider launches and saving gate JSON. Fixture logs, exact task commits,
 review artifacts/rows, Git topology, and the provisioning ownership journal
 are independent durable corroboration; assertion logic does not accept
 launcher booleans as proof of those outcomes. The collector-to-report
-integration test exercises the minimum five-task fixture shape: two serial
-workers inside each parallel phase coordinator and one fan-in worker. This
-preserves root → coordinator → worker depth evidence while bounding provider
-cost before p05 wires the provider-specific drive commands.
+integration test exercises the minimum five-task fixture shape: two direct task
+commits inside each parallel phase implementer and one direct fan-in task. This
+preserves root-owned phase execution and independent phase review evidence
+while making third-tier dispatch optional and benefit-driven.
 
 ## Normalization and Containment
 

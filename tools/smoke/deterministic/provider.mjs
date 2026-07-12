@@ -32,10 +32,10 @@ async function git(args, cwd) {
 }
 
 function invocationFor(role) {
-  const worker = role === 'task-worker';
-  const target = worker ? 'gpt-5.6-terra-medium' : 'gpt-5.6-sol-max';
+  const optionalChild = role === 'task-worker' || role === 'recon';
+  const target = optionalChild ? 'gpt-5.6-terra-medium' : 'gpt-5.6-sol-max';
   return {
-    candidateTier: worker ? 'balanced' : 'high',
+    candidateTier: optionalChild ? 'balanced' : 'high',
     ceiling: 'gpt-5.6-sol-max',
     ceilingEffortAxis: 'not-applicable',
     ceilingModelAxis: 'selected:gpt-5.6-sol-max',
@@ -289,27 +289,19 @@ export async function runDeterministicProvider({
     }
 
     for (const phaseWorktree of phaseWorktrees) {
+      const injectedFailure =
+        failureMode === 'post-acceptance' && phaseWorktree.phase === 'p01';
       await recordDispatch({
         manifest,
-        role: 'phase-coordinator',
+        outcome: injectedFailure ? 'failed' : 'completed',
+        role: 'phase-implementer',
         scope: phaseWorktree.phase,
       });
-      if (failureMode === 'post-acceptance' && phaseWorktree.phase === 'p01') {
-        await recordDispatch({
-          manifest,
-          outcome: 'failed',
-          role: 'task-worker',
-          scope: 'p01-t01',
-        });
-        throw new Error('Injected accepted worker failure.');
+      if (injectedFailure) {
+        throw new Error('Injected accepted phase implementer failure.');
       }
       for (const taskId of PHASE_TASKS[phaseWorktree.phase]) {
         await commitTask(phaseWorktree.worktreePath, taskId);
-        await recordDispatch({
-          manifest,
-          role: 'task-worker',
-          scope: taskId,
-        });
       }
     }
     for (const phaseWorktree of phaseWorktrees) {
@@ -318,15 +310,10 @@ export async function runDeterministicProvider({
 
     await recordDispatch({
       manifest,
-      role: 'phase-coordinator',
+      role: 'phase-implementer',
       scope: 'p03',
     });
     await commitTask(manifest.worktreePath, 'p03-t01');
-    await recordDispatch({
-      manifest,
-      role: 'task-worker',
-      scope: 'p03-t01',
-    });
     for (const scope of ['p01', 'p02', 'p03']) {
       await recordDispatch({
         action: 'review',
