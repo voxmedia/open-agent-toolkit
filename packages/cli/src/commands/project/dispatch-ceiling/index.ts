@@ -1963,7 +1963,7 @@ function managedCodexDepthBlockMessage(
     : validDepth
       ? `agents.max_depth is ${entry.value}`
       : 'agents.max_depth is not a valid number';
-  return `BLOCKED: Codex ${state}; managed implementation requires root (0) → phase coordinator (1) → task worker (2).\nRun \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope ${scope}\`.`;
+  return `BLOCKED: Codex ${state}; managed implementation requires root (0) → phase implementer (1). Depth 2 is optional capacity for benefit-driven nested work.\nRun \`oat sync --scope ${scope}\`, or materialize a single role with \`oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope ${scope}\`.`;
 }
 
 async function resolveCodexProviderDefaultEffort(
@@ -2078,7 +2078,7 @@ async function resolveDispatchCeiling(
         typeof depth.value === 'number' && Number.isFinite(depth.value)
           ? depth.value
           : null;
-      if (numericDepth === null || numericDepth < 2) {
+      if (depth.present && (numericDepth === null || numericDepth < 1)) {
         return {
           status: 'blocked',
           provider,

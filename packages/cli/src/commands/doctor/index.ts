@@ -528,12 +528,14 @@ function createCodexMaxDepthCheck(
   scope: ConcreteScope,
   entry: CodexMaxDepthEntry,
 ): DoctorCheck {
-  const topology = 'root (0) → phase coordinator (1) → task worker (2)';
+  const topology = 'root (0) → phase implementer (1)';
+  const optionalTopology = 'optional nested child (2)';
   const numericDepth =
     typeof entry.value === 'number' && Number.isFinite(entry.value)
       ? entry.value
       : null;
-  const sufficient = numericDepth !== null && numericDepth >= 2;
+  const sufficient =
+    !entry.present || (numericDepth !== null && numericDepth >= 1);
   let state: string;
   if (!entry.present) {
     state = 'agents.max_depth is missing';
@@ -545,10 +547,12 @@ function createCodexMaxDepthCheck(
 
   return {
     name: `${scope}:codex_max_depth`,
-    description: 'Codex managed-role nested dispatch depth',
+    description: 'Codex managed-role phase dispatch depth',
     status: sufficient ? 'pass' : 'warn',
     message: sufficient
-      ? `${state}; sufficient for ${topology}.`
+      ? numericDepth !== null && numericDepth >= 2
+        ? `${state}; sufficient for ${topology} and ${optionalTopology}.`
+        : `${state}; sufficient for ${topology}. Depth 2 enables ${optionalTopology} when useful.`
       : `${state}; OAT managed implementation requires ${topology}.`,
     fix: sufficient
       ? undefined

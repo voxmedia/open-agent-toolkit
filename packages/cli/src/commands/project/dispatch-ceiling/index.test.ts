@@ -2910,9 +2910,8 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
-    ['missing', ''],
     ['invalid', 'max_depth = "invalid"'],
-    ['below the required floor', 'max_depth = 1'],
+    ['below the required floor', 'max_depth = 0'],
   ])(
     'blocks managed codex implementation preflight when project max depth is %s',
     async (_label, depthLine) => {
@@ -2961,7 +2960,10 @@ describe('oat project dispatch-ceiling resolve', () => {
       });
       expect(
         (capture.jsonPayloads[0] as { message?: string }).message,
-      ).toContain('root (0) → phase coordinator (1) → task worker (2)');
+      ).toContain('root (0) → phase implementer (1)');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('Depth 2 is optional');
       expect(
         (capture.jsonPayloads[0] as { message?: string }).message,
       ).toContain('oat sync --scope project');
@@ -2974,9 +2976,14 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
   );
 
-  it.each([2, 4])(
-    'passes managed codex implementation preflight at project max depth %i',
-    async (maxDepth) => {
+  it.each([
+    ['missing', null],
+    ['one', 1],
+    ['two', 2],
+    ['four', 4],
+  ])(
+    'passes managed codex implementation preflight when project max depth is %s',
+    async (_label, maxDepth) => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
@@ -3000,7 +3007,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       await mkdir(join(root, '.codex'), { recursive: true });
       await writeFile(
         join(root, '.codex', 'config.toml'),
-        `[agents]\nmax_depth = ${maxDepth}\n`,
+        `[agents]\n${maxDepth === null ? '' : `max_depth = ${maxDepth}`}\n`,
         'utf8',
       );
 
@@ -3129,7 +3136,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('uses user-scoped depth and remediation for user implementation preflight', async () => {
+  it('accepts user-scoped depth one for default phase implementation', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
       version: 1,
@@ -3179,17 +3186,11 @@ describe('oat project dispatch-ceiling resolve', () => {
     );
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'blocked',
+      status: 'resolved',
       provider: 'codex',
-      unresolved: true,
+      unresolved: false,
     });
-    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'oat sync --scope user',
-    );
-    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope user',
-    );
-    expect(process.exitCode).toBe(1);
+    expect(process.exitCode).toBe(0);
   });
 
   it('does not use harness as a same-harness route dispatch value', async () => {
