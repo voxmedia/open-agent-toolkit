@@ -70,6 +70,7 @@ test('selects one protocol and invocation shape for every harness', async () => 
       protocol.prompt,
       /one root-owned phase review per phase|Phase self-reviews\s+still run once per phase from the root/,
     );
+    assert.doesNotMatch(protocol.prompt, /coordinator-owned self-review/);
     assert.match(protocol.prompt, /Gate count is fixed:/);
 
     const automated = createInvocationPlan({

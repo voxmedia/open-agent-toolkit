@@ -41,9 +41,9 @@ const PROTOCOL_FILES = Object.freeze({
 });
 
 const SCENARIO_INSTRUCTIONS = Object.freeze({
-  full: 'Complete one plan review gate first, then implement all fixture phases with one coordinator-owned self-review per phase and exactly one external final code gate after p03. Stop when implementation is complete; do not run final closeout.',
+  full: 'Complete one plan review gate first, then implement all fixture phases with one root-owned phase review per phase and exactly one external final code gate after p03. Stop when implementation is complete; do not run final closeout.',
   implement:
-    'Implement all fixture phases from the implementation-ready state with one coordinator-owned self-review per phase and exactly one external final code gate after p03. Stop when implementation is complete; do not run final closeout.',
+    'Implement all fixture phases from the implementation-ready state with one root-owned phase review per phase and exactly one external final code gate after p03. Stop when implementation is complete; do not run final closeout.',
   'plan-review':
     'Complete the active plan review and receive path until the project is implementation-ready. Follow CONTRACT.md plan-review transition ordering exactly: do not journal the gate received-row commit; commit and journal receive as pre-review → reviewed; then separately commit and journal readiness as reviewed → implementation-ready. Verify each observed edge before publishing its immutable record. Do not implement any fixture task.',
 });
