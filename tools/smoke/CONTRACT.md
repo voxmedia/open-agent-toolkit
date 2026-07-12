@@ -267,6 +267,27 @@ The disposable workflow writes launcher-owned records before collection:
   source bytes and retains only gate-owned invocation fields, artifact
   identity, and corroboration statuses.
 
+### Plan-review transition ordering
+
+The plan-review scenario has three durable commits but only two journaled state
+transitions:
+
+1. The gate commits its active review artifact and changes the plan row from
+   `pending` to `received`. This commit is **not** a state transition; the
+   collector intentionally classifies that intermediate shape as `invalid`.
+2. Review receive archives the unchanged review bytes and commits the terminal
+   `passed` row while preserving the pre-review lifecycle frontmatter in
+   `state.md`, `plan.md`, and `implementation.md`. Record this exact commit as
+   sequence 1, `pre-review` → `reviewed`.
+3. A separate readiness commit updates all three lifecycle artifacts to the
+   implementation-ready preset without changing task IDs, task bodies, or
+   parallel groups. Record this exact commit as sequence 2, `reviewed` →
+   `implementation-ready`.
+
+Never journal the gate artifact commit, combine the two journaled transitions
+into one commit, or publish a transition record before the collector-observed
+before/after states match its declared edge.
+
 Dispatch records use schema version 1 and contain:
 
 ```json

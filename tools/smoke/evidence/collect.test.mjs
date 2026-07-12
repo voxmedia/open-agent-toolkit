@@ -643,13 +643,13 @@ test('collector output drives nine-task assertions and a bound report', async ()
           attempt: 1,
           configuredInvocation: {
             candidateTier: 'balanced',
-            ceiling: 'fixture-cursor-opaque-high',
+            ceiling: 'gpt-5.6-sol-max',
             ceilingEffortAxis: 'not-applicable',
-            ceilingModelAxis: 'selected:fixture-cursor-opaque-high',
+            ceilingModelAxis: 'selected:gpt-5.6-sol-max',
             effortAxis: 'not-applicable',
-            modelAxis: 'selected:fixture-cursor-opaque-medium',
+            modelAxis: 'selected:gpt-5.6-terra-medium',
             policy: 'high',
-            target: 'fixture-cursor-opaque-medium',
+            target: 'gpt-5.6-terra-medium',
           },
           launch: {
             mechanism: 'cursor-cli',
@@ -662,7 +662,7 @@ test('collector output drives nine-task assertions and a bound report', async ()
           scope: taskId,
           selection: {
             atOrBelowCeiling: true,
-            candidatesConsidered: ['fixture-cursor-opaque-medium'],
+            candidatesConsidered: ['gpt-5.6-terra-medium'],
             reason: 'native-catalog-unsatisfying',
           },
         }),

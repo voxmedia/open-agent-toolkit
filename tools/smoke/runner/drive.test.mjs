@@ -95,6 +95,16 @@ test('selects one protocol and invocation shape for every harness', async () => 
   }
 });
 
+test('plan-review prompt preserves the three-commit transition boundary', async () => {
+  const protocol = await loadProtocol({
+    harness: 'codex',
+    scenario: 'plan-review',
+  });
+  assert.match(protocol.prompt, /do not journal the gate received-row commit/);
+  assert.match(protocol.prompt, /pre-review → reviewed/);
+  assert.match(protocol.prompt, /reviewed → implementation-ready/);
+});
+
 test('refuses to drive when selected-harness preflight is not ready', async () => {
   await assert.rejects(
     () =>

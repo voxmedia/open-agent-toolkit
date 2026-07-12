@@ -394,6 +394,15 @@ the post-implementation sequence contract test,
 
 _Sequential; depends on p01–p04. Live tasks execute from this worktree against real providers and may pause for operator-driven sessions — these pauses are task steps, not blockers. Codex, Claude, and Cursor CLI run both the canonical automated/noninteractive path and a separately labeled operator-interactive path so TTY-dependent differences remain visible; Cursor IDE is operator-driven only. Live tasks (p05-t02 through p05-t06) intentionally use evidence-assertion step structures (Preconditions/Execute/Verify/Commit) instead of the RED/GREEN pattern: their verification surface is the committed evidence report, not a unit test. Each Verify step applies the assertion profile matching the scenario run (`plan-review` / `implement` / `full`) per design §Scenario Model and p03-t02._
 
+_Operational sequence: finish every autonomous Codex, Claude, and Cursor CLI
+run plus the unavailable-target negative control first. After those runs have
+stabilized one source HEAD/build, prepare all distinct operator harness/scenario
+worktrees from that commit; the operator may drive them concurrently in
+separate terminals, subject to provider rate limits. Cursor IDE joins this
+operator batch because it has no automated path. Complete collection and the
+p05-t06 cross-harness summary only after every operator worktree has returned.
+The affected p05 tasks remain open while their operator evidence is deferred._
+
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
 **Files:**
