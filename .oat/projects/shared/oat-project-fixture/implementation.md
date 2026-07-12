@@ -565,6 +565,17 @@ corrected in this bookkeeping update.
 - The default retry limit of two is exhausted. Sequential execution is paused
   for a human decision on one narrow additional retry.
 
+**User-authorized terminal fix:**
+
+- User decision: apply the sole pre-baseline cleanup fix and skip another
+  self-review; retain the independent external phase gate.
+- `c8aebc68` — cleanup now safely handles path-only and exact-source
+  pre-baseline ownership while refusing any pre-baseline branch advance.
+- Direct acceptance: 60/60 smoke/bootstrap tests, including actual failures at
+  worktree add, fixture copy, and baseline commit; direct lint/format passed.
+- Phase 2 self-review requirement is recorded as user-waived after the bounded
+  fix. External phase gate remains required.
+
 ---
 
 ## Phase 3: Evidence Collector & Report
