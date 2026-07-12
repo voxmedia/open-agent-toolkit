@@ -264,6 +264,36 @@ test('rejects an unknown forced-unavailable harness before running probes', asyn
   assert.equal(probesRun, 0);
 });
 
+test('requires only sanitized Cursor API key presence for Cursor execution', async () => {
+  const gateOptions = {
+    gateRuntime: 'cursor',
+    gateTarget: 'cursor-default',
+    harness: 'codex',
+  };
+  await assert.rejects(
+    () =>
+      runPreflight(gateOptions, {
+        env: { ...process.env, CURSOR_API_KEY: '' },
+        probes: readyProbes(),
+      }),
+    (error) => {
+      assert.ok(error instanceof PreflightError);
+      assert.deepEqual(error.report.cursorApiKey, {
+        present: false,
+        required: true,
+      });
+      return true;
+    },
+  );
+
+  const report = await runPreflight(gateOptions, {
+    env: { ...process.env, CURSOR_API_KEY: 'test-secret-value' },
+    probes: readyProbes(),
+  });
+  assert.deepEqual(report.cursorApiKey, { present: true, required: true });
+  assert.doesNotMatch(JSON.stringify(report), /test-secret-value/);
+});
+
 test('accepts the canonical fixture seed headers and presets', async () => {
   const probes = readyProbes();
   delete probes.fixture;

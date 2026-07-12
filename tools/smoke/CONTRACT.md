@@ -8,6 +8,7 @@ The runner writes one JSON provisioning manifest before drive. It includes:
 {
   "appliedScenario": "plan-review | implement | full",
   "driveMode": "automated | operator",
+  "gateRuntime": "exact independent review runtime for this harness",
   "gateTarget": "exact independent review target for this harness",
   "reportRoot": "/absolute/parent/tools/smoke/reports/<harness>[/operator]/<scenario>",
   "worktreePath": "/absolute/disposable/worktree",
@@ -123,10 +124,15 @@ automated reports. `createdPaths`, `branch`, and `worktreePath` are the cleanup
 allowlist.
 
 `gateTarget` is selected before the run starts and is cross-runtime relative to
-the root harness: Codex uses `claude-default`; Claude and both Cursor surfaces
-use `codex-5-6-sol-max`. Every required gate invocation must pass this exact
-target. Listing targets is a valid probe; invoking `oat gate review` as a probe
-is not, because an accepted gate launch is terminal even when it fails.
+the root harness: Codex uses the trusted
+`cursor-gpt-5-6-sol-max` target; Claude and both Cursor surfaces use
+`codex-5-6-sol-max`. Every required gate invocation must pass this exact target.
+Listing targets is a valid probe; invoking `oat gate review` as a probe is not,
+because an accepted gate launch is terminal even when it fails.
+When either the root or gate runtime is Cursor, preflight requires only
+sanitized presence of `CURSOR_API_KEY`. The runner passes the inherited key
+through process environment; the value must never enter config, manifests,
+logs, prompts, or evidence.
 
 Manifest updates are published with a sibling temporary file and atomic rename.
 Nested ownership registrations additionally use a bounded exclusive sibling

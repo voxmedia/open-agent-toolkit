@@ -6,7 +6,11 @@ import { parseArgs } from './args.mjs';
 import { cleanupSmoke } from './cleanup.mjs';
 import { collectSmoke, driveSmoke, loadPreparedManifest } from './drive.mjs';
 import { runPreflight } from './preflight.mjs';
-import { provisionSmoke } from './provision.mjs';
+import {
+  gateRuntimeForHarness,
+  gateTargetForHarness,
+  provisionSmoke,
+} from './provision.mjs';
 
 const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
 const repositoryRoot = resolve(runnerDirectory, '../../..');
@@ -481,6 +485,8 @@ export async function main(
           runPreflight(
             {
               ...preflightOptions,
+              gateRuntime: gateRuntimeForHarness(preflightOptions.harness),
+              gateTarget: gateTargetForHarness(preflightOptions.harness),
               trustedOatCommandPath: join(smokeBinDirectory, 'oat'),
             },
             {

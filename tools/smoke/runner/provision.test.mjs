@@ -19,6 +19,7 @@ import { promisify } from 'node:util';
 
 import {
   createBranchName,
+  gateRuntimeForHarness,
   gateTargetForHarness,
   provisionSmoke,
 } from './provision.mjs';
@@ -151,11 +152,14 @@ test('uses flat collision-resistant deterministic branch names', () => {
 });
 
 test('selects a deterministic cross-runtime gate target per harness', () => {
-  assert.equal(gateTargetForHarness('codex'), 'claude-default');
+  assert.equal(gateTargetForHarness('codex'), 'cursor-gpt-5-6-sol-max');
   assert.equal(gateTargetForHarness('claude'), 'codex-5-6-sol-max');
   assert.equal(gateTargetForHarness('cursor-cli'), 'codex-5-6-sol-max');
   assert.equal(gateTargetForHarness('cursor-ide'), 'codex-5-6-sol-max');
+  assert.equal(gateRuntimeForHarness('codex'), 'cursor');
+  assert.equal(gateRuntimeForHarness('claude'), 'codex');
   assert.throws(() => gateTargetForHarness('unknown'), /No independent/);
+  assert.throws(() => gateRuntimeForHarness('unknown'), /No independent/);
 });
 
 test('rejects a pre-existing branch collision without claiming or deleting it', async () => {
@@ -259,7 +263,8 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     assert.equal(manifest.sourceCommitSha, sourceCommitSha);
     assert.match(manifest.baselineCommitSha, /^[0-9a-f]{40}$/);
     assert.notEqual(manifest.baselineCommitSha, sourceCommitSha);
-    assert.equal(manifest.gateTarget, 'claude-default');
+    assert.equal(manifest.gateRuntime, 'cursor');
+    assert.equal(manifest.gateTarget, 'cursor-gpt-5-6-sol-max');
     assert.deepEqual(manifest.branchOwnership, {
       baseCommitSha: sourceCommitSha,
       baselineCommitSha: manifest.baselineCommitSha,

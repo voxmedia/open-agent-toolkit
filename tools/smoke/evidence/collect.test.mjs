@@ -216,6 +216,7 @@ async function createGoldenRun() {
       value: { postApproval: [], preApproval: [] },
     },
     fixtureProjectPath,
+    gateRuntime: 'claude',
     gateTarget: 'claude-fable-skip-permissions',
     harness: 'cursor-cli',
     manifestPath,
@@ -363,6 +364,7 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.equal(bundle.scenario, 'implement');
     assert.equal(bundle.manifest.driveMode, 'automated');
     assert.equal(bundle.manifest.driveStatus, 'completed');
+    assert.equal(bundle.manifest.gateRuntime, 'claude');
     assert.equal(bundle.manifest.gateTarget, 'claude-fable-skip-permissions');
     assert.deepEqual(bundle.fixture.taskIds, [
       'p01-t01',

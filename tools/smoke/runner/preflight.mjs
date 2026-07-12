@@ -385,6 +385,7 @@ function isReady(report, selectedHarness) {
   return (
     report.fixture.result === 'valid' &&
     report.oat.result === 'local' &&
+    (!report.cursorApiKey.required || report.cursorApiKey.present) &&
     report.harnesses[selectedHarness].installed.result === 'installed' &&
     report.harnesses[selectedHarness].authenticated.result === 'authenticated'
   );
@@ -396,6 +397,7 @@ export function formatReadinessReport(report) {
     `selected harness: ${report.selectedHarness}`,
     `local oat: ${report.oat.result}`,
     `fixture: ${report.fixture.result}`,
+    `cursor API key: required=${report.cursorApiKey.required}, present=${report.cursorApiKey.present}`,
   ];
 
   for (const [harness, readiness] of Object.entries(report.harnesses)) {
@@ -413,7 +415,15 @@ export function emitReadinessReport(report, write = console.log) {
 }
 
 export async function runPreflight(
-  { fixturePath, harness, localOatPath, packagePath, trustedOatCommandPath },
+  {
+    fixturePath,
+    gateRuntime,
+    gateTarget,
+    harness,
+    localOatPath,
+    packagePath,
+    trustedOatCommandPath,
+  },
   { env = process.env, probes = {}, reporter } = {},
 ) {
   if (!HARNESS_COMMANDS[harness]) {
@@ -456,6 +466,14 @@ export async function runPreflight(
   }
 
   const report = {
+    cursorApiKey: {
+      present:
+        typeof env.CURSOR_API_KEY === 'string' && env.CURSOR_API_KEY.length > 0,
+      required:
+        harness === 'cursor-cli' ||
+        harness === 'cursor-ide' ||
+        gateRuntime === 'cursor',
+    },
     fixture: await fixture({ fixturePath }),
     forcedUnavailable: forcedHarness ?? null,
     harnesses,
@@ -467,6 +485,10 @@ export async function runPreflight(
       trustedCommandPath: trustedOatCommandPath,
     }),
     selectedHarness: harness,
+    selectedGate: {
+      runtime: gateRuntime ?? null,
+      target: gateTarget ?? null,
+    },
   };
   report.status = isReady(report, harness) ? 'ready' : 'blocked';
 

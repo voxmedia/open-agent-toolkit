@@ -1481,6 +1481,7 @@ function normalizeManifest(manifest) {
     ),
     driveMode: optionalString(manifest.driveMode),
     driveStatus: optionalString(manifest.drive?.status),
+    gateRuntime: optionalString(manifest.gateRuntime),
     gateTarget: optionalString(manifest.gateTarget),
     harness: optionalString(manifest.harness),
     ownershipJournal,

@@ -54,6 +54,8 @@ function matchingGate(bundle, review) {
       gate.target === fields.oat_gate_target &&
       (!bundle.manifest?.gateTarget ||
         gate.target === bundle.manifest.gateTarget) &&
+      (!bundle.manifest?.gateRuntime ||
+        gate.runtime === bundle.manifest.gateRuntime) &&
       gate.runtime === fields.oat_gate_runtime &&
       gate.projectPath === fields.oat_project &&
       gate.invocationConsistent === true &&

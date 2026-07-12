@@ -46,6 +46,10 @@ with `--target {{GATE_TARGET}}`. You may inspect `oat gate target list`, but
 never invoke a gate as a probe. An accepted failed gate is terminal for that
 gate and must not be replaced.
 
+Before a Cursor gate, run `[ -n "${CURSOR_API_KEY:-}" ]` without printing the
+value. If it is absent, stop before launch. Never read, persist, or echo the key;
+the gate child inherits it from the smoke runner environment.
+
 Do not modify the parent worktree or persisted user configuration. Work only in
 this disposable worktree, honor the manifest writable roots, commit each
 fixture task exactly as planned, and do not replace any accepted child launch.

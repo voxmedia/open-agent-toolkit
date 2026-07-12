@@ -14,10 +14,10 @@ const repositoryRoot = resolve(runnerDirectory, '../../..');
 const fixturePath = join(repositoryRoot, 'tools/smoke/fixture');
 const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
 const GATE_TARGETS = {
-  claude: 'codex-5-6-sol-max',
-  codex: 'claude-default',
-  'cursor-cli': 'codex-5-6-sol-max',
-  'cursor-ide': 'codex-5-6-sol-max',
+  claude: { id: 'codex-5-6-sol-max', runtime: 'codex' },
+  codex: { id: 'cursor-gpt-5-6-sol-max', runtime: 'cursor' },
+  'cursor-cli': { id: 'codex-5-6-sol-max', runtime: 'codex' },
+  'cursor-ide': { id: 'codex-5-6-sol-max', runtime: 'codex' },
 };
 const cliEntryPoint = join(repositoryRoot, 'packages/cli/src/index.ts');
 const cliTsconfig = join(repositoryRoot, 'packages/cli/tsconfig.json');
@@ -205,6 +205,7 @@ function createManifest({
     createdPaths: [manifestPath, runPath],
     fixtureProjectPath,
     driveMode,
+    gateRuntime: gateRuntimeForHarness(harness),
     gateTarget: gateTargetForHarness(harness),
     harness,
     intendedCloseoutPolicy: {
@@ -258,7 +259,15 @@ export function gateTargetForHarness(harness) {
   if (!target) {
     throw new TypeError(`No independent gate target for harness ${harness}.`);
   }
-  return target;
+  return target.id;
+}
+
+export function gateRuntimeForHarness(harness) {
+  const target = GATE_TARGETS[harness];
+  if (!target) {
+    throw new TypeError(`No independent gate runtime for harness ${harness}.`);
+  }
+  return target.runtime;
 }
 
 export function createBranchName({
