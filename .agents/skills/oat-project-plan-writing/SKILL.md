@@ -122,13 +122,15 @@ actual provider invocation before probing generic reviewer availability or
 selecting execution mechanics. A concrete managed Codex target takes precedence
 over generic tier availability.
 
-- Codex: use the exact registered reviewer variant returned by
-  `providers.codex.dispatchArgs.variant` when the host can select that role.
-  If the exact role is unavailable or the current host cannot select it,
-  launch a fresh Codex child with the resolver target's explicit model,
-  reasoning effort, and canonical role instructions from
-  `.agents/agents/oat-reviewer.md`. If the fresh child cannot preserve the
-  target, use only a verified-equivalent inline route or block the review.
+- Codex: when the resolver returns a materialized
+  `providers.codex.dispatchArgs.variant`, first launch that exact registered
+  reviewer variant as native `agent_type`. Only a recorded actual pre-start
+  native role-selection rejection permits a fresh Codex child with the resolver
+  target's explicit model, reasoning effort, and canonical role instructions
+  from `.agents/agents/oat-reviewer.md`. A separately pre-selected CLI route is
+  allowed only when native dispatch cannot express the complete target and no
+  child has started. If another route cannot preserve the target, use only a
+  verified-equivalent inline route or block the review.
 - Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
   that exact value in the actual provider invocation as its `model` argument.
 - Cursor: treat `providers.cursor.dispatchArgs.model` as opaque and put that

@@ -837,7 +837,19 @@ If `{PROJECT_PATH}/implementation.md` already contains orchestration run entries
 
 **Detected state reconciliation:**
 
-- If there is an in-flight phase (implementer committed but no review verdict in implementation.md), re-dispatch the reviewer for that phase's current HEAD.
+- If there is an in-flight phase (implementer committed but no review verdict
+  in `implementation.md`), reconcile its recorded `Review Dispatch Summary`
+  before any action:
+  - When the coordinator's reviewer launch was accepted, continue, poll, or
+    nudge only through that existing child handle. If the handle cannot be
+    resumed, block or escalate; never replace it.
+  - When no review was launched, or the recorded attempt was explicitly
+    rejected before child start, resume the phase coordinator with the current
+    phase range so it retains exact ceiling resolution and review-launch
+    ownership.
+  - When an artifact was returned, validate its range and structured dispatch
+    evidence through the normal per-phase flow.
+    The outer workflow never dispatches the phase reviewer itself.
 - If there are un-cleaned worktrees from a prior parallel group, list them and ask the user whether to resume or clean up:
 
   ```

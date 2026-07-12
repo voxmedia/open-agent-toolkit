@@ -1253,7 +1253,8 @@ describe('validateOatSkills', () => {
     expect(shared).toMatch(
       /complete\s+(?:recommended\s+defaults|bundled\s+recommendation)/i,
     );
-    expect(shared).toMatch(/exact registered.*variant/i);
+    expect(shared).toContain('exact registered');
+    expect(shared).toContain('native `agent_type`');
     expect(shared).toMatch(/fresh Codex child/i);
     expect(shared).toMatch(
       /explicit\s+model.*reasoning\s+effort.*canonical\s+role\s+instructions/is,
@@ -1776,7 +1777,7 @@ describe('validateOatSkills', () => {
     );
   });
 
-  it('keeps every artifact-review caller on its resolved target', async () => {
+  it('keeps planning artifact reviews inherited and accepted launches terminal', async () => {
     const callers = [
       [
         'spec-driven plan',
@@ -1790,32 +1791,41 @@ describe('validateOatSkills', () => {
         'import-plan',
         await readRepoFile('.agents/skills/oat-project-import-plan/SKILL.md'),
       ],
-      [
-        'implementation execution docs',
-        await readRepoFile(
-          'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
-        ),
-      ],
     ] as const;
 
     for (const [name, content] of callers) {
-      expect(content, `${name} exact or pinned route`).toMatch(
-        /exact (?:resolver-returned |registered )*(?:reviewer )?(?:role|variant)[\s\S]{0,500}(?:fresh|new) Codex child[\s\S]{0,300}pinned/i,
+      expect(content, `${name} inherits by default`).toMatch(
+        /planning parent[\s\S]{0,120}deliberate inheritance[\s\S]{0,80}default/i,
       );
-      expect(content, `${name} guarded inline route`).toMatch(
-        /inline[\s\S]{0,320}verified equivalent current-host[\s\S]{0,240}(?:model|effort|controls)/i,
+      expect(content, `${name} bounds managed exception`).toMatch(
+        /unknown or below[\s\S]{0,120}reviewer ceiling/i,
       );
-      expect(content, `${name} explicit base exceptions`).toMatch(
-        /explicit inherit[\s\S]{0,240}managed-uncapped/i,
+      expect(content, `${name} tries exact native Codex first`).toMatch(
+        /Codex[\s\S]{0,180}exact native `agent_type`/i,
       );
-      expect(content, `${name} target-preserving timeout retry`).toMatch(
-        /(?:timeout|does not conclude)[\s\S]{0,500}retry[\s\S]{0,320}(?:same exact|pinned)[\s\S]{0,320}(?:fail closed|block)/i,
+      expect(content, `${name} gates another Codex route`).toContain(
+        'recorded actual pre-start',
+      );
+      expect(content, `${name} permits pinned child after rejection`).toMatch(
+        /rejection permits a fresh[\s\S]{0,40}child pinned/i,
+      );
+      expect(content, `${name} accepted terminality`).toContain(
+        'After acceptance',
+      );
+      expect(content, `${name} continues accepted handle`).toContain(
+        'existing reviewer',
+      );
+      expect(content, `${name} blocks terminal timeout`).toMatch(
+        /terminal timeout[\s\S]{0,120}(?:blocks|escalates)[\s\S]{0,120}without another launch/i,
+      );
+      expect(content, `${name} limits replacement`).toMatch(
+        /Replacement eligibility[\s\S]{0,120}pre-start rejection/i,
       );
       expect(content, `${name} no unconditional tier fallback`).not.toMatch(
         /Tier 2 inline fallback otherwise/i,
       );
-      expect(content, `${name} no timeout inline downgrade`).not.toMatch(
-        /(?:timeout|does not conclude)[\s\S]{0,240}fall(?:ing)? back inline/i,
+      expect(content, `${name} no accepted timeout retry`).not.toMatch(
+        /timeout[\s\S]{0,240}retry the same exact role or pinned child/i,
       );
     }
   });
@@ -2357,9 +2367,9 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.10'],
-      ['oat-project-plan', '1.3.13'],
-      ['oat-project-quick-start', '2.1.14'],
-      ['oat-project-import-plan', '1.4.5'],
+      ['oat-project-plan', '1.3.14'],
+      ['oat-project-quick-start', '2.1.15'],
+      ['oat-project-import-plan', '1.4.6'],
       ['oat-project-review-provide', '1.3.14'],
     ] as const;
 
@@ -2573,6 +2583,10 @@ describe('validateOatSkills', () => {
       ),
       coordinator.indexOf('### Mode: Task Worker'),
     );
+    const resumeRoute = implement.slice(
+      implement.indexOf('### Step 1.5: Resumption Detection'),
+      implement.indexOf('### Step 2: Read Plan Document'),
+    );
 
     expect(autoLoop).toMatch(
       /Default:[\s\S]{0,220}parent-at-or-above-ceiling[\s\S]{0,180}omit the child model[\s\S]{0,120}selection_reason: inherit/i,
@@ -2600,6 +2614,17 @@ describe('validateOatSkills', () => {
     expect(implement).toContain('fix-mode coordinator');
     expect(implement).toContain('coordinator-owned');
     expect(implement).toContain('never launches a duplicate');
+    expect(resumeRoute).toContain('Review Dispatch Summary');
+    expect(resumeRoute).toMatch(
+      /reviewer launch was accepted[\s\S]{0,180}existing child handle[\s\S]{0,180}never replace it/i,
+    );
+    expect(resumeRoute).toContain('explicitly');
+    expect(resumeRoute).toContain('rejected before child start');
+    expect(resumeRoute).toContain('resume the phase coordinator');
+    expect(resumeRoute).toContain(
+      'outer workflow never dispatches the phase reviewer',
+    );
+    expect(resumeRoute).not.toMatch(/re-dispatch the reviewer/i);
   });
 
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
@@ -2635,7 +2660,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.14');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.15');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

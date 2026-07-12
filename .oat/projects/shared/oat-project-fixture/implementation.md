@@ -1023,6 +1023,50 @@ src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` —
 
 **Next:** commit the fix baseline, then run Phase 4 re-review.
 
+### Phase 4 Self-review — Iteration 2
+
+**Review artifact:** `reviews/p04-review-2026-07-12T133028Z.md`
+
+**Verdict:** failed — 0 Critical, 4 Important, 0 Medium, 0 Minor.
+
+**Findings:**
+
+- The three executable planning callers still duplicated obsolete
+  ceiling-pinned artifact-review mechanics instead of inheriting the planning
+  parent by default.
+- Those callers and their positive contract test still authorized a
+  replacement launch after an accepted timeout.
+- Interrupted implementation reconciliation bypassed coordinator review
+  ownership and could replace an accepted reviewer.
+- Planning Codex exception language allowed fallback without a recorded actual
+  pre-start rejection of the exact native materialized role.
+
+### Phase 4 Self-review — Iteration 2 — Fix iteration 2 complete
+
+**Outcome:**
+
+- Spec-driven, quick-start, and import planning callers now execute deliberate
+  parent inheritance by default and enter the managed target route only when
+  launcher-owned evidence identifies an unknown or below-ceiling parent.
+- Every planning caller requires the exact materialized Codex `agent_type`
+  attempt first. A fresh pinned child is allowed only after recorded actual
+  pre-start role-selection rejection.
+- Accepted planning reviews continue only through the existing handle; terminal
+  timeout blocks or escalates without another launch.
+- Interrupted phase reconciliation now consumes the `Review Dispatch Summary`.
+  It continues an accepted handle or resumes the phase coordinator only when no
+  child started; the outer workflow never launches the reviewer.
+- Contract tests cover all three executable planning callers and the
+  interrupted coordinator-owned resume route.
+- The three newly changed canonical planning skills received their required
+  one-time PR-scoped version bumps.
+
+**Verification:** 86/86 focused skill/closeout tests passed; repository-local
+provider sync passed.
+
+**Next:** run full validation, commit the second fix baseline, and re-review
+Phase 4.
+
 ---
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
