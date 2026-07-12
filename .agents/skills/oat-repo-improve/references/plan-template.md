@@ -1,199 +1,200 @@
-# Handoff Plan Template
+# External Implementation Plan Template
 
-Every plan is written for an executor model that has **zero context**: it has not seen the advisor session, the audit, the other plans, or any prior conversation. It may be a smaller/cheaper model. Assume it is competent at following explicit instructions and weak at filling gaps, recovering from ambiguity, or knowing when to stop.
+Use this template for plans written by `oat-repo-improve`. Every plan must stand alone for an executor that has zero context from the advisor session, source review, backlog discussion, or sibling plans.
 
-Three properties make a plan executable by a weaker model:
+External plans are durable reference artifacts. They are deliberately not canonical OAT `plan.md` files and must not contain OAT phase IDs, task IDs, lifecycle readiness, review tables, or implementation bookkeeping.
 
-1. **Self-contained context** — everything needed is in the file: paths, code excerpts, conventions, commands.
-2. **Verification gates** — every step ends with a command and its expected result. The executor never has to _judge_ whether it succeeded.
-3. **Hard boundaries and escape hatches** — explicit out-of-scope list, and "STOP and report" conditions instead of letting the model improvise when reality doesn't match the plan.
+## File Contract
 
-File naming: `plans/NNN-short-slug.md`, numbered in recommended execution order.
+Write plans under `.oat/repo/reference/external-plans/` as:
 
+`YYYY-MM-DD-<short-slug>.md`
+
+Use this frontmatter:
+
+```yaml
 ---
+oat_generated: true
+oat_external_plan: true
+oat_external_plan_source: repo-audit|maintainability-review|backlog-review|backlog-directory|backlog-item
+oat_external_plan_sources:
+  - <repo-relative source artifact or scope>
+oat_external_plan_commit: <short SHA>
+oat_backlog_items: []
+oat_issue_url: null
+created: '<ISO 8601 UTC>'
+---
+```
 
-## Template
+`oat_backlog_items` contains backlog IDs represented by the plan. Keep it empty when none apply. Set `oat_issue_url` only after confirmed issue publication. Never record absolute workstation paths in durable frontmatter.
 
-```markdown
-# Plan NNN: <Imperative title — what will be true after this plan>
+## Plan Template
 
-> **Executor instructions**: Follow this plan step by step. Run every
-> verification command and confirm the expected result before moving to the
-> next step. If anything in the "STOP conditions" section occurs, stop and
-> report — do not improvise. When done, update the status row for this plan
-> in `plans/README.md` — unless a reviewer dispatched you and told you they
-> maintain the index.
+````markdown
+# <Imperative title: what will be true after execution>
+
+> [!NOTE]
+> This is an external implementation plan, not a canonical OAT project
+> `plan.md`. Execute it directly, or import it for tracked OAT execution with
+> `oat-project-import-plan <this-file>`.
 >
-> **Drift check (run first)**: `git diff --stat <planned-at SHA>..HEAD -- <in-scope paths>`
-> If any in-scope file changed since this plan was written, compare the
-> "Current state" excerpts against the live code before proceeding; on a
-> mismatch, treat it as a STOP condition.
+> Begin with the drift check. Follow the steps and verification gates in order.
+> If a STOP condition occurs, stop and report instead of improvising.
 
-## Status
+## Outcome
 
-- **Priority**: P1 | P2 | P3
-- **Effort**: S | M | L
-- **Risk**: LOW | MED | HIGH
-- **Depends on**: plans/NNN-\*.md (or "none")
-- **Category**: bug | security | perf | tests | tech-debt | migration | dx | docs | direction
-- **Planned at**: commit `<short SHA>`, <YYYY-MM-DD>
-- **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
+State the observable end result in 2–5 sentences. Explain why it matters and preserve the source intent in language an executor and reviewer can understand without opening the source artifact.
 
-## Why this matters
+## Source and live evidence
 
-2–5 sentences. The problem, its concrete cost, and what improves when this
-lands. Written so the executor (and a human reviewer) understands the intent —
-intent is what lets a correct judgment call happen when a detail is off.
+- Source artifact or scope: `<repo-relative path or scope>`
+- Planned at: commit `<short SHA>` on `<YYYY-MM-DD>`
+- Related backlog items: `<ID and title, or none>`
+- Verified evidence:
+  - `<file:line or command evidence>` — what it establishes
 
-## Current state
+Distinguish source assertions from facts verified against the live repository. Do not copy stale evidence forward.
 
-The facts the executor needs, inlined — never "as discussed" or "see audit":
+## Drift check
 
-- The relevant files, each with one line on its role:
-  - `src/orders/api.ts` — order-list endpoint; contains the N+1 (lines 130–160)
-- Excerpts of the code as it exists today (short, with `file:line` markers),
-  enough that the executor can confirm it's looking at the right thing.
-- The repo conventions that apply here, with a pointer to one exemplar file:
-  "Error handling follows the Result pattern — see `src/lib/result.ts` and its
-  use in `src/users/api.ts:40-60`. Match it."
-- Any documented vocabulary or design constraints the plan must honor, inlined
-  from the intent/design docs found in recon: the relevant `CONTEXT.md` terms
-  the executor should use in names and comments, the `DESIGN.md` tokens/components
-  to reuse, or the ADR whose decision this work must stay consistent with. Quote
-  the specific lines — the executor has not read those docs.
+Run before editing:
 
-## Commands you will need
+```bash
+git diff --stat <planned-at SHA>..HEAD -- <in-scope paths>
+```
+````
 
-| Purpose   | Command                 | Expected on success |
-| --------- | ----------------------- | ------------------- |
-| Install   | `pnpm install`          | exit 0              |
-| Typecheck | `pnpm typecheck`        | exit 0, no errors   |
-| Tests     | `pnpm test -- <filter>` | all pass            |
-| Lint      | `pnpm lint`             | exit 0              |
+If an in-scope file changed, compare the plan's current-state evidence with the live code. A material mismatch is a STOP condition unless the plan explicitly explains how to reconcile it.
 
-(Exact commands from this repo — verified during recon, not guessed.)
+## Repository conventions
 
-## Suggested executor toolkit
+- Build: `<exact command>` → `<expected success>`
+- Typecheck: `<exact command or not applicable>`
+- Test: `<exact command>` → `<expected success>`
+- Lint/format check: `<exact non-mutating command>`
+- Implementation pattern: `<exemplar file and the convention to match>`
+- Git/PR convention: `<observed convention; do not push/open a PR unless instructed>`
 
-(Optional — include only when relevant skills/tools plausibly exist in the
-executor's environment. Skip the section otherwise.)
-
-- Skills the executor should invoke if available, and for what:
-  "use `vercel-react-best-practices` when writing the memoization in step 3".
-- Reference docs worth reading before starting, by path or URL.
+Only include commands verified from repository instructions or configuration.
 
 ## Scope
 
-**In scope** (the only files you should modify):
+### In scope
 
-- `src/orders/api.ts`
-- `src/orders/api.test.ts` (create)
+- `<exact file, directory, symbol, or behavior>`
 
-**Out of scope** (do NOT touch, even though they look related):
+### Out of scope
 
-- `src/orders/legacy-api.ts` — deprecated path, scheduled for deletion;
-  changing it wastes effort and risks the v1 clients still pinned to it.
-- Any change to the public response shape — clients depend on it.
+- `<specific adjacent concern>` — `<why it must remain untouched>`
 
-## Git workflow
+## Current state
 
-(Filled from recon — match the repo's observed conventions.)
+Describe the minimum facts needed to execute safely:
 
-- Branch: `advisor/NNN-<slug>` (or the repo's branch-naming convention if one is evident)
-- Commit per step or per logical unit; message style: <match repo, e.g. conventional commits — include an example from `git log`>
-- Do NOT push or open a PR unless the operator instructed it.
+- role of each relevant file or module;
+- short current-state excerpts with `file:line` markers when exact code shape matters;
+- applicable decisions, vocabulary, data contracts, or design constraints;
+- dependencies and assumptions established during vetting.
 
-## Steps
+## Implementation steps
 
-### Step 1: <imperative title>
+### 1. <Imperative step title>
 
-What to do, precisely. Reference exact files/symbols. Include the target code
-shape when it's load-bearing (the pattern to produce, not necessarily every
-line).
+Name exact files and symbols. Describe the target behavior or code shape and any boundary that must remain stable.
 
-**Verify**: `<command>` → <expected output>
+**Verify:** `<command>` → `<expected output>`
 
-### Step 2: ...
+### 2. <Imperative step title>
 
-(Each step small enough to verify independently. Order steps so the codebase
-is never broken between steps when possible — e.g. add new path, switch
-callers, then remove old path.)
+Continue in dependency order. Keep each step independently checkable and leave the repository in a coherent state.
+
+**Verify:** `<command>` → `<expected output>`
 
 ## Test plan
 
-- New tests to write, in which file, covering which cases (list them:
-  happy path, the specific bug/regression this plan fixes, named edge cases).
-- Which existing test to use as the structural pattern:
-  "model after `src/users/api.test.ts`".
-- Verification: `<test command>` → all pass, including N new tests.
+- Tests to add or change, with exact paths and named cases.
+- Existing test to use as the structural pattern.
+- Regression or failure mode each test proves.
+- Focused command and expected result.
+- Full relevant suite and expected result.
 
 ## Done criteria
 
-Machine-checkable. ALL must hold:
+- [ ] All in-scope behavior matches the stated outcome.
+- [ ] Focused tests pass with the expected cases.
+- [ ] Required build, typecheck, lint, and full relevant tests pass.
+- [ ] `git status --short` contains no unexplained or out-of-scope files.
+- [ ] Documentation or migration notes named by the plan are complete.
 
-- [ ] `pnpm typecheck` exits 0
-- [ ] `pnpm test` exits 0; new tests for <X> exist and pass
-- [ ] `grep -rn "<old pattern>" src/` returns no matches
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `plans/README.md` status row updated
+Replace generic criteria with machine-checkable commands or observable assertions specific to the plan.
 
 ## STOP conditions
 
-Stop and report back (do not improvise) if:
+Stop and report instead of improvising when:
 
-- The code at the locations in "Current state" doesn't match the excerpts
-  (the codebase has drifted since this plan was written).
-- A step's verification fails twice after a reasonable fix attempt.
-- The fix appears to require touching an out-of-scope file.
-- You discover the assumption "<key assumption>" is false.
+- live state materially contradicts the verified evidence or drift assumptions;
+- a required change crosses an out-of-scope boundary;
+- a named verification gate fails twice after one bounded correction;
+- a load-bearing dependency, API, ownership assumption, or migration precondition is false;
+- the work would expose, copy, or rotate a credential without explicit authority.
 
-## Maintenance notes
+Add plan-specific STOP conditions for its actual risks.
 
-For the human/agent who owns this code after the change lands:
+## Review focus
 
-- What future changes will interact with this (e.g. "if pagination is added
-  to this endpoint, the batching in step 2 must be revisited").
-- What a reviewer should scrutinize in the PR.
-- Any follow-up explicitly deferred out of this plan (and why).
-```
+- What a reviewer should inspect most closely.
+- Compatibility or regression risks.
+- Follow-ups intentionally deferred and why.
 
----
+````
 
-## Index file: `plans/README.md`
+## Multi-Plan Index
 
-Written once by the advisor after all plans, updated by executors:
+When one run writes multiple plans, create `YYYY-MM-DD-<source-mode>-plan-index.md`:
 
 ```markdown
-# Implementation Plans
+---
+oat_generated: true
+oat_external_plan_index: true
+oat_external_plan_source: <source mode>
+oat_external_plan_sources:
+  - <source artifact or scope>
+oat_external_plan_commit: <short SHA>
+created: '<ISO 8601 UTC>'
+---
 
-Generated by the oat-repo-improve skill on <date>. Execute in the order below unless
-dependencies say otherwise. Each executor: read the plan fully before starting,
-honor its STOP conditions, and update your row when done.
+# External Plan Index: <run title>
 
-## Execution order & status
+This index records selection and ordering. It is not an executable plan and is
+not an `oat-project-import-plan` target.
 
-| Plan | Title | Priority | Effort | Depends on | Status |
-| ---- | ----- | -------- | ------ | ---------- | ------ |
-| 001  | ...   | P1       | S      | —          | TODO   |
-| 002  | ...   | P1       | M      | 001        | TODO   |
+## Selection
 
-Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
+- Selected: <why these candidates were chosen>
+- Deferred/rejected: <material candidates and rationale>
+- Unaudited or out of scope: <boundaries>
+
+## Recommended order
+
+| Order | Plan | Source item/finding | Depends on | Tracking | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | [Title](./YYYY-MM-DD-slug.md) | <ID/title or finding> | — | <backlog ID and/or issue URL, or none> | <reason> |
 
 ## Dependency notes
 
-- 002 requires 001 because <reason>.
+- <Dependency or parallel-lane explanation.>
+````
 
-## Findings considered and rejected
+Do not use a repository-wide `README.md` as the index. Do not ask executors to mutate the index; execution tracking belongs to the chosen execution workflow.
 
-- <finding>: not worth doing because <one line>. (So nobody re-audits it.)
-```
+## Quality Gate
 
-## Quality bar — check before finishing each plan
+Before finishing each plan, confirm:
 
-- Could a model that has never seen this repo execute this with only the plan file and the repo? If any step requires knowledge from the advisor session, inline that knowledge.
-- Is every verification a command with an expected result, not a judgment ("make sure it works")?
-- Does every step name exact files and symbols, not "the relevant module"?
-- Are the STOP conditions specific to this plan's actual risks, not boilerplate?
-- Would a reviewer reading only "Why this matters" + "Done criteria" understand what they're approving?
-- No secret values anywhere in the file — locations and credential types only.
-- "Planned at" SHA is filled in and the in-scope paths in the drift check match the Scope section.
+- It can be executed with only the plan and repository.
+- Every source claim used for implementation was verified live.
+- It has one coherent shippable outcome and verification boundary. Independent outcomes are separate plans; inseparable project-sized work is escalated to an OAT project/import decision.
+- Every step names exact files/symbols and ends in a command with an expected result.
+- Scope and STOP conditions are specific enough to prevent plausible but unauthorized expansion.
+- Frontmatter source paths are repo-relative and backlog IDs are exact.
+- No secret value, workstation-only absolute path, OAT task ID, or lifecycle bookkeeping appears.

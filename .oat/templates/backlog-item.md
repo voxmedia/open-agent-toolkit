@@ -10,6 +10,7 @@ assignee: null
 created: '{ISO 8601 UTC}'
 updated: '{ISO 8601 UTC}'
 associated_issues: []
+external_plans: [] # repo-relative .oat/repo/reference/external-plans/*.md paths
 oat_template: true
 oat_template_name: backlog-item
 ---

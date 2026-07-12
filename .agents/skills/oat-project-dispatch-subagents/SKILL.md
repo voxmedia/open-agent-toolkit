@@ -1,6 +1,6 @@
 ---
 name: oat-project-dispatch-subagents
-version: 1.0.0
+version: 1.1.0
 description: Use when an OAT project lifecycle skill needs to translate project state, phase or task scope, gates, and write authority into a provider-neutral subagent dispatch.
 disable-model-invocation: true
 user-invocable: false
@@ -90,6 +90,20 @@ Project policy may cap or select a target. Translate the resolved policy and
 ceiling into the generic request; do not ask the general engine to read
 `state.md` or infer project configuration.
 
+Configured project policy is standing, scope-bound route authorization. When
+the resolver selects a CLI/programmatic or cross-runtime route, pass it to the
+general engine with `selection_source: policy-resolved` and evidence of the
+owning project, phase/task, provider, lifecycle role, policy/ceiling, and exact
+route. Do not ask the user to re-authorize that route for each task.
+
+Prefer native dispatch when it satisfies the resolved contract, but do not
+replace a required policy-resolved route merely because a weaker native surface
+exists. Cursor task subagents are a representative case: project policy may
+route through the Cursor CLI/programmatic surface when native model
+availability cannot satisfy the selected target. Configured cross-family gates
+use the same policy-resolved tier. Ambient CLI availability and stale
+conversational approval are never project policy.
+
 ## Lifecycle Roles
 
 Map each lifecycle role to a generic baseline class and add project policy:
@@ -119,9 +133,11 @@ For every lifecycle dispatch:
    limit, and fallback.
 4. Map the lifecycle role to a generic class.
 5. Add project metadata without replacing neutral request fields.
-6. Invoke `oat-dispatch-subagents` with the complete request.
-7. Preserve its generic dispatch record unchanged.
-8. Add lifecycle outcome metadata and let the calling workflow perform state,
+6. Add `selection_source: policy-resolved` plus owning configuration evidence
+   for every configured non-native route.
+7. Invoke `oat-dispatch-subagents` with the complete request.
+8. Preserve its generic dispatch record unchanged.
+9. Add lifecycle outcome metadata and let the calling workflow perform state,
    plan, implementation-log, commit, or review-table writes.
 
 Example adapter input:

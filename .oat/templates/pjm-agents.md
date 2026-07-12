@@ -60,6 +60,14 @@ doctor` surfaces this drift.
 recent commits against open items: work that shipped without a close-out
 should be closed retroactively with a note.
 
+## External Plan Reverse Links
+
+Backlog item frontmatter may include `external_plans`, a YAML string array of
+repo-relative paths under `.oat/repo/reference/external-plans/`.
+`oat-repo-improve` owns additions to this field after a plan write succeeds.
+Preserve existing links, deduplicate additions, and never link a failed or
+partial write. These are durable source-to-plan references, not project status.
+
 ## Project Kickoff Handoffs
 
 `handoffs/` holds one-shot kickoff prompts — consumable context for turning a

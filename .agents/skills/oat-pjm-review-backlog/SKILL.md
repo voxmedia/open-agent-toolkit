@@ -1,7 +1,7 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.4.0
-description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, and execution recommendations.
+version: 1.5.0
+description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, execution recommendations, and an optional external-plan handoff.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
@@ -48,13 +48,14 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print short step indicators, e.g.:
-  - `[1/7] Resolving backlog inputs…`
-  - `[2/7] Cataloging backlog items…`
-  - `[3/7] Reading codebase context…`
-  - `[4/7] Writing review document…`
-  - `[5/7] Summarizing recommendations…`
-  - `[6/7] (Optional) Priority-alignment walkthrough…` — only print after the operator accepts the offer in Step 9
-  - `[7/7] (Optional) Refreshing project kickoff handoffs…` — only print after the operator agrees a kickoff stack in Step 10
+  - `[1/8] Resolving backlog inputs…`
+  - `[2/8] Cataloging backlog items…`
+  - `[3/8] Reading codebase context…`
+  - `[4/8] Writing review document…`
+  - `[5/8] Summarizing recommendations…`
+  - `[6/8] (Optional) Priority-alignment walkthrough…` — only print after the operator accepts the offer in Step 9
+  - `[7/8] (Optional) Refreshing project kickoff handoffs…` — only print after the operator agrees a kickoff stack in Step 10
+  - `[8/8] (Optional) Handing selected items to repo improve…` — only print after the operator accepts the offer in Step 11
 
 ## Arguments
 
@@ -207,7 +208,7 @@ After the summary, ask the operator:
 
 If `.oat/repo/pjm/backlog/reviews/priority-alignment.md` already exists, frame it as an **update** to the existing document rather than a fresh create. Read the existing file first so the walkthrough builds on it.
 
-If the operator declines, stop after the summary. Do not silently write or modify `priority-alignment.md`.
+If the operator declines, skip Steps 9–10 and continue to the Step 11 external-plan offer. Do not silently write or modify `priority-alignment.md`.
 
 **If the operator accepts, run the walkthrough:**
 
@@ -246,6 +247,16 @@ This step mirrors the **Project Kickoff Handoffs** section of the pjm instructio
 
 Every backlog item reference in a handoff — like every reference in review output and alignment docs — pairs the ID with its human-readable title per the **Reference Format Convention**. No bare IDs.
 
+### Step 11: Offer External Plan Generation (Optional)
+
+After the review flow concludes, offer:
+
+> Want to turn selected items from this backlog review into self-contained external implementation plans with `oat-repo-improve`?
+
+If the operator accepts, invoke `oat-repo-improve` in `backlog-review` mode with the living review path. Also pass `backlog/reviews/priority-alignment.md` when it exists and was confirmed or refreshed during this run. The improve skill owns candidate selection, bounded live verification, plan generation under `.oat/repo/reference/external-plans/`, and backlog-item reverse links.
+
+Do not generate external plans inside this skill. Do not assume the kickoff stack must become plans; present it as the recommended selection and let the operator adjust it. A generated external plan remains optional input to `oat-project-import-plan`, not a canonical OAT project plan.
+
 ## Success Criteria
 
 - Every active backlog item file has a value-effort rating with rationale
@@ -256,4 +267,5 @@ Every backlog item reference in a handoff — like every reference in review out
 - Living review is written to `.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md` (unless `--output` is explicitly overridden); dated snapshots, when emitted, live in the same `backlog/reviews/` directory and never under `.oat/repo/reviews/`
 - The operator is offered (but never forced into) a collaborative walkthrough that produces or updates `backlog/reviews/priority-alignment.md`; if the operator accepts, the file is written using the priority-alignment template and includes a Changelog entry for this pass; if the operator declines, no file is created or modified
 - When a priority-alignment pass produces an agreed kickoff stack, one handoff per kickoff-stack item is written or refreshed under `.oat/repo/pjm/handoffs/` (with item reference, recommended mode, input pointers, repo conventions/gates, and a close-out requiring the Backlog Lifecycle executed and the handoff deleted in the same shipping PR); handoffs for reprioritized-out items are deleted in the same pass; kickoff-stack membership, lane count, and ordering remain human decisions the skill presents rather than chooses
+- The operator is offered an optional `oat-repo-improve backlog-review <review>` handoff; this skill never writes external plans itself
 - Every user-facing reference to a backlog item pairs the ID with a human-readable title (per the Reference Format Convention)

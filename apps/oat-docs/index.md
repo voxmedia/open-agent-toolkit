@@ -61,4 +61,5 @@
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
   - Skills
     - [Skills](workflows/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
+    - [Repo Improve](workflows/skills/repo-improve.md) — Turn repository audits, maintainability reviews, and backlog sources into standalone external implementation plans.
 - [Quickstart](quickstart.md) — Start-here guide for choosing the right OAT adoption path.

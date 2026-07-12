@@ -25,6 +25,7 @@ verification_evidence: file-line-references
 deadline_seconds: 300
 retry_limit: 1
 authorization_scope: this-audit-run
+selection_source: native-default
 fallback:
   mode: explicit-downgrade
   target: reduced-quick-audit
@@ -59,7 +60,7 @@ role_selector: oat-recon-worker
 model_selector: opaque-provider-selector
 model_selector_granularity: opaque
 effort_selector: economical
-selection_source: explicit-call
+selection_source: native-default
 candidates_considered:
   - opaque-provider-selector
 selection_reason: native-catalog
@@ -77,6 +78,14 @@ continuation_events: []
 
 `role_selector` is the exact provider or harness agent-type selector, when that
 surface exists. Preserve opaque selectors byte-for-byte.
+
+Use `selection_source: native-default` for the preferred same-runtime native
+route, `policy-resolved` for a CLI/programmatic or cross-runtime route selected
+by configured project/workflow/gate policy, and `explicit-user` for an
+otherwise agent-proposed alternate route approved for the current run. For
+`policy-resolved`, include the owning configuration in
+`configured_invocation_evidence`. CLI or SDK availability alone is never a
+selection source.
 
 ## Recon Wave
 
