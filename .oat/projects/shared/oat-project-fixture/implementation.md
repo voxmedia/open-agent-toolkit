@@ -753,6 +753,31 @@ published. Markdown is deterministic but independently replaced, so
 interruption may leave a stale human-readable derivative; `--check` never
 trusts Markdown.
 
+### Phase 3 Self-review — Iteration 2
+
+**Verdict:** failed — 2 Critical, 4 Important, 1 Medium, 1 Minor
+
+**Findings:**
+
+- Canonical gate JSON uses repo-relative artifact/project paths and nested
+  invocation fields that the first fix did not fully normalize/cross-check.
+- Journal branch names and outer subject order did not prove task commits ran
+  on distinct p01/p02 histories and merged before p03.
+- Bundle kind/schema and the caller's expected scenario/profile were not
+  explicit acceptance inputs.
+- Ceiling eligibility still trusted a launcher boolean rather than recomputing
+  against the committed fixture dispatch matrix.
+- Transition records were commit-bound but did not parse parent/commit artifact
+  contents to verify exact ordered states.
+- Review durability allowed `received`, did not require exact row artifact and
+  successful receive-eligible gate, and searched all refs instead of outer
+  HEAD.
+- Review-row dates remained in normalized evidence.
+- Independent JSON/Markdown replacement remains a Minor human-readable
+  derivative concern.
+
+**Action:** final configured fix iteration started in the root thread.
+
 ---
 
 ## Phase 4: Orchestration Contract
