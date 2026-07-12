@@ -41,7 +41,7 @@ flowchart TD
   end
 
   subgraph Implementation
-    IM["Implementation-phase\nself-review"] --> IMR["Resolve dispatch ceiling"]
+    IM["Root-owned phase\nself-review"] --> IMR["Resolve dispatch ceiling"]
     IMR --> IMPIN["At-ceiling pin\n(ceiling final candidate)"]
     IMR --> IMINH["Inherit\n(only if dispatcher known at/above ceiling)"]
     IMR --> IMCLI["Exact CLI reviewer\n(selected pre-launch)"]
@@ -69,11 +69,12 @@ reviewer child** inside the gate exec target: the lifecycle/final gate.
 | Phase review gate (external)        | Optional non-pausing gate after a phase passes its self-review     | Independent configured cross-family CLI/exec target (`gates.execTargets`), host-avoidance, unconstrained by native catalog; fail closed if unavailable                                                         |
 | Lifecycle / final gate              | End-of-lifecycle sign-off                                          | Cross-runtime CLI exec target, independent of producer context; fails closed rather than substituting same-context self-review; may spawn a nested managed reviewer child inside the gate exec target          |
 
-The first two flavors are **self-reviews** — the producing context resolves its
-own reviewer under the ceiling invariant. The last two are **gates** — an
-external, configured, producer-independent target. Implementation tasks may run
-_below_ the ceiling for cost reasons, but their self-reviews must never inherit a
-below-ceiling worker or coordinator model.
+The first two flavors are **self-reviews**. Planning review inherits its
+producing parent by default; implementation phase review is dispatched by the
+project root after the phase producer returns. The last two are **gates** — an
+external, configured, producer-independent target. Phase implementation may run
+_below_ the review ceiling for cost reasons, but review must never silently
+inherit the below-ceiling phase agent.
 
 ## Independence and fail-closed semantics
 
@@ -87,10 +88,11 @@ silently downgrading:
   satisfies the invariant without managed re-pinning. Pinning is _possible_
   once the ceiling is resolved during planning, but it is not the default.
 - **Implementation self-review** needs ceiling-level capability but not
-  cross-family isolation. It resolves the dispatch ceiling and pins the tier's
-  final candidate. Inheritance is allowed only when the review-owning dispatcher
-  is _known_ to be at or above the ceiling; otherwise an exact provider CLI
-  reviewer is selected before launch. It never inherits a below-ceiling target.
+  cross-family isolation. The root resolves the dispatch ceiling and pins the
+  tier's final candidate after the phase report. Inheritance is allowed only
+  when the root dispatcher is _known_ to be at or above the ceiling; otherwise
+  an exact provider CLI reviewer is selected before launch. Reviewer selection
+  is never delegated to the phase implementer.
 - **Phase review gate** adds cross-family independence. It uses a configured
   independent exec target from `gates.execTargets` with host-avoidance,
   unconstrained by the harness's native subagent catalog. If the required

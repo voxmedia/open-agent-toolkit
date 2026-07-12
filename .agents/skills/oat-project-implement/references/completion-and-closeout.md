@@ -251,9 +251,10 @@ To run in a separate session use: oat-project-review-provide code final
 
 ### Step 15: Final HiLL Closeout Sequence
 
-The final-closeout orchestrator owns this sequence after the rebased phase
-coordinator has finished. Do not move lifecycle sequencing into task workers or
-weaken exact target selection for child dispatches.
+The final-closeout orchestrator owns this sequence after the phase implementer
+and root-owned phase review have finished. Do not move lifecycle sequencing
+into phase or optional nested workers or weaken exact target selection for
+child dispatches.
 
 Identify the final implementation phase from the plan. A final HiLL checkpoint
 exists when `oat_plan_hill_phases` is `[]` (every phase) or when it explicitly

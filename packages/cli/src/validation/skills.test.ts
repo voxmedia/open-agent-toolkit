@@ -1646,19 +1646,22 @@ describe('validateOatSkills', () => {
     expect(providers).toMatch(
       /project-config[\s\S]{0,260}(?:tracked|version-controlled)[\s\S]{0,260}user-config[\s\S]{0,180}~\/\.codex/i,
     );
-    expect(providers).toMatch(/phase coordinator[\s\S]{0,220}task worker/i);
+    expect(providers).toMatch(
+      /phase implementer[\s\S]{0,300}directly executes/i,
+    );
+    expect(providers).toMatch(/optional nested/i);
     expect(providers).toContain('providers.claude.dispatchArgs.model');
     expect(providers).toContain('providers.cursor.dispatchArgs.model');
     expect(providers).toMatch(/Cursor[\s\S]{0,220}(?:opaque|byte-for-byte)/i);
 
-    expect(execution).toMatch(/phase coordinator/i);
-    expect(execution).toMatch(/one exact task worker (?:per task|at a time)/i);
-    expect(execution).toMatch(/Task Scope[\s\S]{0,600}task_id:/i);
+    expect(execution).toMatch(/root[\s\S]{0,160}phase implementer/i);
+    expect(execution).toMatch(/one exact\s+phase implementer target/i);
+    expect(execution).toMatch(/Phase Scope[\s\S]{0,600}phase_id:/i);
     expect(execution).toMatch(
       /serial(?:ly)?[\s\S]{0,220}(?:same|one) worktree/i,
     );
     expect(execution).toMatch(
-      /(?:must not|does not|never)[\s\S]{0,160}implement ordinary (?:plan )?tasks/i,
+      /directly (?:implements|executes)[\s\S]{0,220}(?:planned|phase) tasks?/i,
     );
     expect(execution).toContain('--ceiling-tier');
     expect(execution).toContain('providers.codex.dispatchArgs.variant');
@@ -1672,8 +1675,8 @@ describe('validateOatSkills', () => {
       expect(content, `${name} no exact-family policy mapping`).not.toContain(
         'min(preferred, cap)',
       );
-      expect(content, `${name} no whole-phase executor`).not.toMatch(
-        /phase implementer executes all tasks in the phase/i,
+      expect(content, `${name} root-owned phase execution`).toMatch(
+        /phase implementer[\s\S]{0,300}(?:executes|implements)[\s\S]{0,200}tasks?/i,
       );
     }
   });

@@ -220,8 +220,8 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 - Enable feature flag in config:
   - `[features]`
   - `multi_agent = true`
-- For OAT's nested root → coordinator → worker topology, configure
-  `[agents] max_depth = 2` or higher.
+- OAT's default topology is root → phase implementer and needs depth `1`.
+  Configure `[agents] max_depth = 2` or higher for optional nested work.
 - Define role(s) in config:
   - `[agents.oat-reviewer]` (or role names your workflow dispatches)
 - Dispatch by role name using `agent_type` (not `subagent_type`).
@@ -234,8 +234,9 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
   configs and registers them in `.codex/config.toml`.
 - Project-scoped output is repository-owned and version controlled. Explicit
   user-scope materialization writes under `~/.codex` instead.
-- Sync and direct materialization merge an `agents.max_depth` floor of `2`
-  without lowering a higher project or inherited user value.
+- Sync and direct materialization merge an `agents.max_depth` floor of `2` as
+  optional nested-work capacity without lowering a higher project or inherited
+  user value. Default managed preflight accepts missing depth or depth `1`.
 
 ### Other Codex Resources
 

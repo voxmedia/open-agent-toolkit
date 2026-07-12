@@ -26,8 +26,9 @@ flowchart LR
   C -->|exact type model effort| W[Task worker]
 ```
 
-Read the effective maximum nesting depth for each environment. A depth that
-permits root → coordinator → worker does not grant filesystem authority.
+Read the effective maximum nesting depth for each environment. Default
+root → phase-agent execution needs one child level; a second level only enables
+optional nested work. Either depth does not grant filesystem authority.
 Before a write-capable launch, verify the minimum scoped writable roots needed
 for the task, shared Git metadata, and managed output.
 

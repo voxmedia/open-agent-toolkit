@@ -12,9 +12,9 @@ three places:
 
 1. **Cross-runtime gate reviews** — a workflow gate dispatches an independent
    reviewer to a different runtime/family than the one that produced the work.
-2. **Policy-resolved CLI dispatch** — a task, reviewer, or coordinator route
-   that the native same-runtime catalog cannot satisfy, resolved to a provider
-   CLI before launch.
+2. **Policy-resolved CLI dispatch** — a phase implementer, optional nested
+   worker, or reviewer route that the native same-runtime catalog cannot
+   satisfy, resolved to a provider CLI before launch.
 3. **Operator smoke sessions** — the smoke runner drives each harness through
    its headless flavor to capture per-harness evidence.
 
@@ -116,9 +116,10 @@ recorded as `reported` or `not-reported`, and its absence never invalidates the
 configured-invocation record. See [Evidence Layers](evidence-layers.md) for the
 three-layer model and how assertions bind to the launcher-owned layer.
 
-Where relevant to a run: Claude coordinator→worker nesting and Cursor CLI
-task-event observability are **validated per run by live smoke evidence**, not
-asserted here as settled facts.
+Where relevant to a run: optional Claude phase-agent nesting and Cursor CLI
+subagent-event observability are **validated per run by live smoke evidence**,
+not asserted here as settled facts. Successful default execution does not
+require either capability.
 
 ## Related
 

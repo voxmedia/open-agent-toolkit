@@ -301,7 +301,7 @@ oat_dispatch_policy:
   source: project-state
 ```
 
-### Exact task resolution
+### Exact phase resolution
 
 The project-aware resolver remains the source of truth. Preflight reads layered
 config and project state without mutating either:
@@ -310,8 +310,9 @@ config and project state without mutating either:
 oat project dispatch-ceiling resolve --provider codex --preflight --json
 ```
 
-For each managed capped task, the phase coordinator supplies the recorded
-project or narrower phase maximum plus one exact configured candidate:
+For each managed capped phase, the root supplies the recorded project or
+narrower phase maximum plus one exact configured phase-implementer candidate.
+Optional nested work resolves separately only when launched:
 
 ```bash
 oat project dispatch-ceiling resolve \
@@ -346,14 +347,14 @@ config layer that owns the selected candidate.
 The resolver fails closed when a candidate is missing, above the maximum,
 ambiguous, malformed, or cannot compile exact provider controls. `--preferred`
 remains compatibility behavior for legacy scalar ceilings and managed
-`Uncapped`; it is not the exact managed task-worker path.
+`Uncapped`; it is not the exact managed phase-agent path.
 
 ### Provider enforcement and materialization
 
-| Provider | Exact task mechanism                                                                                 |
+| Provider | Exact phase-agent or optional-child mechanism                                                        |
 | -------- | ---------------------------------------------------------------------------------------------------- |
 | Codex    | `providers.codex.dispatchArgs.variant` as `agent_type`, or a fresh child pinned to model plus effort |
-| Claude   | `providers.claude.dispatchArgs.model` as the actual Task `model`                                     |
+| Claude   | `providers.claude.dispatchArgs.model` as the actual Agent `model`                                    |
 | Cursor   | `providers.cursor.dispatchArgs.model` byte-for-byte as the actual opaque invocation model            |
 
 Project sync materializes the supported Codex catalogue and every configured
