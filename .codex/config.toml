@@ -17,23 +17,23 @@ max_depth = 3
   config_file = "agents/skeptical-evaluator.toml"
 
   [agents.oat-phase-implementer]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-luna-high]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-luna-high.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-sol-high]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-sol-high.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-sol-max]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-sol-max.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-terra-xhigh]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-terra-xhigh.toml"
 
   [agents.oat-reviewer-gpt-5-6-luna-high]
@@ -53,39 +53,39 @@ max_depth = 3
   config_file = "agents/oat-reviewer-gpt-5-6-terra-xhigh.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-luna-low]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-luna-low.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-luna-medium]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-luna-medium.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-luna-xhigh]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-luna-xhigh.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-sol-low]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-sol-low.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-sol-medium]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-sol-medium.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-sol-xhigh]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-sol-xhigh.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-terra-high]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-terra-high.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-terra-low]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-terra-low.toml"
 
   [agents.oat-phase-implementer-gpt-5-6-terra-medium]
-  description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
   config_file = "agents/oat-phase-implementer-gpt-5-6-terra-medium.toml"
 
   [agents.oat-reviewer-gpt-5-6-luna-low]

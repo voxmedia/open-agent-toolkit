@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.4
+version: 1.5.5
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -419,23 +419,24 @@ for smoke mode and `false` for normal mode.
   under `strict` and `allow-failing`.
 - `failed` (with `reason: smoke-readiness-failed`): fixture-scoped child
   readiness failed after containment. Stop immediately; do not dispatch a
-  coordinator, reviewer, or gate and do not degrade to sequential execution.
+  phase implementer, reviewer, or gate and do not degrade to sequential
+  execution.
 
 ## Error Handling
 
-| Scenario                                   | Behavior                                                                                                                   |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Worktree creation fails                    | Return error status with git error message                                                                                 |
-| Branch already checked out elsewhere       | Return error with worktree location info                                                                                   |
-| Smoke marker missing or unsafe             | Return `status: failed`, `reason: smoke-marker-invalid`; never run propagation, sync, status, or tests                     |
-| Smoke marker malformed or safe init fails  | Return `status: failed`, `reason: smoke-init-failed`; never downgrade under `allow-failing`                                |
-| Smoke fixture readiness fails              | Return `status: failed`, `reason: smoke-readiness-failed`; abort the run before any coordinator, reviewer, or gate launch  |
-| Base mismatch (Step 2.7 fails, strict)     | Return `status: failed`, `reason: base-mismatch`, with `expected_base_sha` and `observed_head_sha`. Do not run baselines.  |
-| Base mismatch (Step 2.7 fails, allow-fail) | Emit structured warning with `reason: base-mismatch`, log to artifacts, prefer fail-fast unless caller opted into degrade. |
-| Baseline check fails (strict)              | Return error with check name and failure output                                                                            |
-| Baseline check fails (allow-failing)       | Add to warnings, continue, log to artifacts                                                                                |
-| No active project                          | Skip artifact logging, use console only                                                                                    |
-| Invalid branch name                        | Return error before attempting creation                                                                                    |
+| Scenario                                   | Behavior                                                                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Worktree creation fails                    | Return error status with git error message                                                                                      |
+| Branch already checked out elsewhere       | Return error with worktree location info                                                                                        |
+| Smoke marker missing or unsafe             | Return `status: failed`, `reason: smoke-marker-invalid`; never run propagation, sync, status, or tests                          |
+| Smoke marker malformed or safe init fails  | Return `status: failed`, `reason: smoke-init-failed`; never downgrade under `allow-failing`                                     |
+| Smoke fixture readiness fails              | Return `status: failed`, `reason: smoke-readiness-failed`; abort the run before any phase implementer, reviewer, or gate launch |
+| Base mismatch (Step 2.7 fails, strict)     | Return `status: failed`, `reason: base-mismatch`, with `expected_base_sha` and `observed_head_sha`. Do not run baselines.       |
+| Base mismatch (Step 2.7 fails, allow-fail) | Emit structured warning with `reason: base-mismatch`, log to artifacts, prefer fail-fast unless caller opted into degrade.      |
+| Baseline check fails (strict)              | Return error with check name and failure output                                                                                 |
+| Baseline check fails (allow-failing)       | Add to warnings, continue, log to artifacts                                                                                     |
+| No active project                          | Skip artifact logging, use console only                                                                                         |
+| Invalid branch name                        | Return error before attempting creation                                                                                         |
 
 ## Artifact Logging
 

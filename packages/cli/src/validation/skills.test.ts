@@ -897,7 +897,7 @@ describe('validateOatSkills', () => {
       implement.indexOf('### Parallel Group Execution'),
     );
     expect(phaseGateSection).toMatch(
-      /all three receive-eligibility conditions must hold:.*status.*`ok`.*`blocked`.*`receiveEligible: true`.*`handoff` is non-null/is,
+      /all three receive-eligibility\s+conditions must hold:.*status.*`ok`.*`blocked`.*`receiveEligible: true`.*`handoff` is non-null/is,
     );
   });
 
@@ -1026,7 +1026,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.39');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.40');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1055,7 +1055,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.5');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -1174,11 +1174,11 @@ describe('validateOatSkills', () => {
 
     expect(implement).toContain('known-invalid run abort');
     expect(implement).toMatch(
-      /No later coordinator, worker, self-review, or gate may launch/,
+      /terminates\s+every accepted\s+handle[\s\S]{0,220}never authorizes[\s\S]{0,120}replacement[\s\S]{0,80}sequential degradation/i,
     );
-    expect(implement).toMatch(/sequential degradation is forbidden/);
+    expect(implement).toMatch(/sequential\s+degradation is forbidden/i);
     expect(implement).toMatch(
-      /never\s+authorizes fallback, replacement, sequential degradation/i,
+      /never\s+authorizes fallback,\s+replacement,\s+or sequential degradation/i,
     );
     expect(bootstrap).toContain('reason: smoke-readiness-failed');
     expect(bootstrap).toMatch(
@@ -1212,7 +1212,7 @@ describe('validateOatSkills', () => {
       /spawn acceptance[\s\S]{0,180}launcher payload[\s\S]{0,180}configured invocation evidence/i,
     );
     expect(content).toMatch(
-      /For every coordinator, task-worker, fix, and review launch,[\s\S]{0,100}record `target`,\s*`model_axis`, and `effort_axis` from resolver output and the actual launcher\s+payload after payload construction/i,
+      /For every phase-implementer, optional nested, fix, and review launch,[\s\S]{0,120}record\s+`target`,[\s\S]{0,100}`model_axis`, and `effort_axis` from resolver output and the actual launcher\s+payload after payload construction/i,
     );
     expect(content).toMatch(
       /missing (?:runtime )?telemetry[\s\S]{0,160}(?:missing )?(?:agent )?self-report[\s\S]{0,200}not[\s\S]{0,100}(?:role )?unavailability/i,
@@ -1237,7 +1237,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.39');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.40');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1279,7 +1279,7 @@ describe('validateOatSkills', () => {
   });
 
   it('blocks accepted reviewer BLOCKED terminals without invoking fallback', async () => {
-    const coordinator = await readRepoFile(
+    const phaseAgent = await readRepoFile(
       '.agents/agents/oat-phase-implementer.md',
     );
     const implement = await readRepoFile(
@@ -1294,13 +1294,16 @@ describe('validateOatSkills', () => {
       implement.indexOf('### Step 15: Prompt for Next Steps'),
     );
 
-    expect(coordinator).toMatch(
-      /accepted\s+terminal\s+results[\s\S]{0,160}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
+    expect(phaseAgent).toMatch(
+      /Accepted terminal\s+results[\s\S]{0,160}`BLOCKED`[\s\S]{0,180}never trigger fallback/i,
     );
-    for (const [name, content] of [
-      ['phase reviewer', phaseReview],
-      ['final reviewer', finalReview],
-    ] as const) {
+    expect(phaseReview).toMatch(
+      /interruption, `BLOCKED`, or contract refusal is the review outcome/i,
+    );
+    expect(phaseReview).toMatch(
+      /never a\s+reason to replace an accepted reviewer/i,
+    );
+    for (const [name, content] of [['final reviewer', finalReview]] as const) {
       expect(content, `${name} BLOCKED gate`).toMatch(
         /accepted reviewer[\s\S]{0,100}`BLOCKED`[\s\S]{0,180}(?:blocks|must block)[\s\S]{0,120}review/i,
       );
@@ -1547,95 +1550,46 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('coordinates one exact serial task worker per plan task', async () => {
+  it('restores one direct phase implementer with optional nested dispatch', async () => {
     const agent = await readRepoFile('.agents/agents/oat-phase-implementer.md');
     const implement = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.6');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.7');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
-      /phase coordinator/i,
+      /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.39');
-
-    const coordinator = agent.slice(
-      agent.indexOf('### Mode: Phase Coordinator'),
-      agent.indexOf('### Mode: Task Worker'),
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.40');
+    expect(agent).toMatch(
+      /directly execute(?:s)? every task in dependency order/i,
     );
-    const worker = agent.slice(agent.indexOf('### Mode: Task Worker'));
-
-    expect(coordinator).toMatch(
-      /must not implement ordinary plan tasks (?:itself|in its own context)/i,
+    expect(agent).toMatch(/one\s+verified\s+commit per task/i);
+    expect(agent).toContain('between-task transition check');
+    expect(agent).toContain('Phase-Wide Self-Review');
+    expect(agent).toMatch(/Ordinary phase tasks are implemented directly/i);
+    expect(agent).toMatch(/Nested dispatch is optional/i);
+    expect(agent).toContain(
+      '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
     );
-    expect(coordinator).toMatch(/one exact task worker at a time/i);
-    expect(coordinator).toMatch(
-      /serial(?:ly)?[\s\S]{0,180}(?:same|one) worktree/i,
+    expect(agent).toContain('.agents/skills/oat-dispatch-subagents/SKILL.md');
+    expect(agent).toMatch(
+      /root[\s\S]{0,180}dispatches the independent phase reviewer/i,
     );
-    expect(coordinator).toMatch(
-      /parallel[\s\S]{0,240}plan-declared[\s\S]{0,180}(?:phase|worktree)/i,
-    );
-    expect(coordinator).toContain('--ceiling-tier');
-    expect(coordinator).toContain('--candidate-model');
-    expect(coordinator).toContain('providers.codex.dispatchArgs.variant');
-    expect(coordinator).toContain('providers.claude.dispatchArgs.model');
-    expect(coordinator).toContain('providers.cursor.dispatchArgs.model');
-    expect(coordinator).toMatch(
-      /Codex[\s\S]{0,180}(?:attempt|dispatch)[\s\S]{0,180}exact materialized `agent_type` first/i,
-    );
-    expect(coordinator).toMatch(
-      /only explicit\s+pre-start native role-selection rejection[\s\S]{0,260}(?:permits|allows)[\s\S]{0,160}fresh pinned fallback/i,
-    );
-    expect(coordinator).toMatch(
-      /launcher-owned `target`, `model_axis`, and `effort_axis`[\s\S]{0,260}(?:immutable|must not)[\s\S]{0,180}(?:worker )?self-report/i,
-    );
-    expect(coordinator).toMatch(
-      /missing telemetry[\s\S]{0,180}accepted\s+terminal\s+results[\s\S]{0,120}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
-    );
-    expect(coordinator).toMatch(
-      /Cursor[\s\S]{0,260}(?:byte-for-byte|opaque)[\s\S]{0,220}(?:actual|invocation)/i,
-    );
-    expect(coordinator).toMatch(
-      /(?:missing|absent)[\s\S]{0,180}(?:above|exceeds)[\s\S]{0,220}(?:cannot|unable)[\s\S]{0,220}(?:fail closed|BLOCKED)/i,
-    );
-    expect(coordinator).toMatch(
-      /(?:do not|never)[\s\S]{0,180}(?:coordinator target|base role|provider default)[\s\S]{0,240}(?:downgrade|fallback|substitute)/i,
-    );
-    expect(coordinator).toMatch(
-      /verify[\s\S]{0,160}(?:reported )?commit[\s\S]{0,180}(?:HEAD|git)/i,
-    );
-    expect(coordinator).toMatch(
-      /Task Dispatch Summary[\s\S]{0,260}Exact target[\s\S]{0,120}Result[\s\S]{0,120}Commit/i,
-    );
-
-    for (const field of [
-      'task_id',
-      'file_boundary',
-      'verification',
-      'commit_convention',
-    ]) {
-      expect(worker, `bounded Task Scope field ${field}`).toContain(field);
-    }
-    expect(worker).toMatch(/exactly one task/i);
-    expect(worker).toMatch(
-      /must not dispatch another\s+(?:coordinator|worker)/i,
-    );
+    expect(agent).toContain('`continuation_events`');
+    expect(agent).toMatch(/do not invent a new\s+schema/i);
 
     const perPhase = implement.slice(
       implement.indexOf('### Step 5: Per-Phase Execution'),
       implement.indexOf('### Per-Phase Review'),
     );
     expect(perPhase).toContain('--ceiling-tier');
-    expect(perPhase).toMatch(/project or phase named ceiling/i);
-    expect(perPhase).toMatch(/one exact task worker/i);
-    expect(perPhase).toMatch(/Task Scope[\s\S]{0,500}task_id:/i);
-    expect(perPhase).toMatch(
-      /same worktree[\s\S]{0,220}serial|serial[\s\S]{0,220}same worktree/i,
-    );
-    expect(perPhase).toMatch(
-      /(?:missing|absent|exceeds|above)[\s\S]{0,320}(?:fail closed|block)/i,
-    );
+    expect(perPhase).toMatch(/one exact phase implementer target/i);
+    expect(perPhase).toMatch(/Phase Scope:[\s\S]{0,800}phase_base_head:/i);
+    expect(perPhase).toMatch(/Ordinary tasks do not require per-task workers/i);
+    expect(perPhase).toMatch(/optional bounded child/i);
+    expect(perPhase).toMatch(/exactly one append-only commit in plan\s+order/i);
   });
 
   it('documents adaptive named ceilings and exact task-worker dispatch', async () => {
@@ -1936,9 +1890,6 @@ describe('validateOatSkills', () => {
     const implement = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
-    const coordinator = await readRepoFile(
-      '.agents/agents/oat-phase-implementer.md',
-    );
     const artifactReview = planWriting.slice(
       planWriting.indexOf('## Managed Dispatch Readiness and Review Contract'),
       planWriting.indexOf('## Shared Phase-Review Setup Contract'),
@@ -1949,11 +1900,9 @@ describe('validateOatSkills', () => {
       ),
       reviewProvide.indexOf('### Step 7: Determine Review Artifact Path'),
     );
-    const phaseReview = coordinator.slice(
-      coordinator.indexOf(
-        '#### 7. Dispatch the Coordinator-owned Ceiling Review',
-      ),
-      coordinator.indexOf('#### 8. Return Phase Summary'),
+    const phaseReview = implement.slice(
+      implement.indexOf('### Per-Phase Review'),
+      implement.indexOf('### Optional External Phase Review Gate'),
     );
     const finalReview = implement.slice(
       implement.indexOf('**Workflow preference check (before prompting):**'),
@@ -1977,10 +1926,10 @@ describe('validateOatSkills', () => {
       );
       if (name === 'phase review') {
         expect(content, `${name} accepted handle`).toMatch(
-          /after acceptance[\s\S]{0,180}existing child/i,
+          /after acceptance[\s\S]{0,180}accepted reviewer\s+handle/i,
         );
         expect(content, `${name} no replacement`).toMatch(
-          /acceptance cannot launch a replacement/i,
+          /never a\s+reason to replace an accepted reviewer/i,
         );
       } else {
         expect(content, `${name} target-preserving retry`).toMatch(
@@ -2462,7 +2411,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.11'],
+      ['oat-project-plan-writing', '1.2.12'],
       ['oat-project-plan', '1.3.14'],
       ['oat-project-quick-start', '2.1.15'],
       ['oat-project-import-plan', '1.4.6'],
@@ -2481,7 +2430,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.0.39'],
+      ['oat-project-implement', '2.0.40'],
       ['oat-project-review-provide', '1.3.15'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
@@ -2554,14 +2503,16 @@ describe('validateOatSkills', () => {
     expect(engine).toMatch(/^version:\s*1\.1\.1$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
-    expect(adapter).toMatch(/^version:\s*1\.1\.1$/m);
+    expect(adapter).toMatch(/^version:\s*1\.1\.2$/m);
     expect(adapter).toContain('oat-dispatch-subagents');
     expect(engine).toMatch(/resolved dispatch policy or named ceiling/i);
     expect(engine).toMatch(
       /intersect configured candidates[\s\S]{0,120}(?:catalog|selectors)/i,
     );
     expect(engine).toMatch(/catalog snapshot[\s\S]{0,160}dispatch context/i);
-    expect(adapter).toMatch(/Task worker[\s\S]{0,240}never silently inherit/i);
+    expect(adapter).toMatch(
+      /Phase implementer[\s\S]{0,240}complete phase[\s\S]{0,180}per-task commits/i,
+    );
     expect(engine).toMatch(
       /select one[\s\S]{0,180}provider-CLI[\s\S]{0,180}before launch/i,
     );
@@ -2572,10 +2523,10 @@ describe('validateOatSkills', () => {
       /accepted launch[\s\S]{0,180}(?:terminal|no replacement)/i,
     );
     expect(adapter).toMatch(
-      /planning (?:self-)?review[\s\S]{0,180}inherit[\s\S]{0,240}implementation (?:self-)?review[\s\S]{0,240}(?:named )?ceiling/i,
+      /planning (?:self-)?review[\s\S]{0,180}inherit[\s\S]{0,280}implementation phase review[\s\S]{0,240}(?:named )?ceiling/i,
     );
     expect(adapter).toMatch(
-      /below-ceiling Cursor phase coordinator[\s\S]{0,320}pre-start CLI reviewer route/i,
+      /root owns implementation phase-review selection[\s\S]{0,320}pre-start CLI reviewer route/i,
     );
     expect(adapter).toMatch(/Gate independence is project policy/i);
     expect(adapter).toMatch(/configured cross-family gates/i);
@@ -2671,11 +2622,11 @@ describe('validateOatSkills', () => {
     expect(smoke).toMatch(/separate canonical[\s\S]{0,40}gate JSON/i);
   });
 
-  it('makes planning inheritance and coordinator-owned phase review executable', async () => {
+  it('makes planning inheritance and root-owned phase review executable', async () => {
     const planning = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
-    const coordinator = await readRepoFile(
+    const phaseAgent = await readRepoFile(
       '.agents/agents/oat-phase-implementer.md',
     );
     const implement = await readRepoFile(
@@ -2685,11 +2636,9 @@ describe('validateOatSkills', () => {
       planning.indexOf('## Auto Artifact-Review Loop'),
       planning.indexOf('## Canonical Plan Format'),
     );
-    const reviewRoute = coordinator.slice(
-      coordinator.indexOf(
-        '#### 7. Dispatch the Coordinator-owned Ceiling Review',
-      ),
-      coordinator.indexOf('### Mode: Task Worker'),
+    const reviewRoute = implement.slice(
+      implement.indexOf('### Per-Phase Review'),
+      implement.indexOf('### Optional External Phase Review Gate'),
     );
     const resumeRoute = implement.slice(
       implement.indexOf('### Step 1.5: Resumption Detection'),
@@ -2707,47 +2656,31 @@ describe('validateOatSkills', () => {
     );
 
     expect(reviewRoute).toContain('--role reviewer');
-    expect(reviewRoute).not.toContain('--ceiling-tier "$REVIEW_CEILING_TIER"');
-    expect(implement).toContain(
-      'Capture the Immutable Review-Ceiling Envelope',
-    );
-    expect(implement).toContain('review_expected_policy:');
-    expect(implement).toContain('review_expected_target:');
-    expect(implement).toContain('review_expected_dispatch_args:');
-    expect(implement).toContain('review_expected_model_axis:');
-    expect(implement).toContain('review_expected_effort_axis:');
-    expect(implement).toMatch(
-      /review_ceiling_source:[\s\S]{0,120}resolver vocabulary/i,
-    );
-    expect(reviewRoute).toContain('selection.ceilingTier');
-    expect(reviewRoute).toContain('selection.target');
-    expect(reviewRoute).toContain('dispatchArgs');
+    expect(reviewRoute).toMatch(/Do not pass[\s\S]{0,80}`--ceiling-tier`/i);
+    expect(reviewRoute).toMatch(/root workflow owns implementation review/i);
+    expect(reviewRoute).toMatch(/exact\s+review payload before launch/i);
+    expect(reviewRoute).toContain('selection reason');
+    expect(reviewRoute).toContain('candidates');
     expect(reviewRoute).toMatch(
-      /policy,[\s\S]{0,120}source,[\s\S]{0,120}target,[\s\S]{0,160}mismatch[\s\S]{0,40}`BLOCKED`/i,
+      /After acceptance[\s\S]{0,220}only through the accepted reviewer\s+handle/i,
     );
-    expect(reviewRoute).toContain('cursor-agent --list-models');
-    expect(reviewRoute).toContain(
-      'selection_reason: native-catalog-unsatisfying',
+    expect(reviewRoute).toMatch(
+      /Critical\/Important findings[\s\S]{0,260}Resume the original phase implementer handle/i,
     );
-    expect(reviewRoute).toContain('candidates_considered');
-    expect(reviewRoute).toMatch(/after acceptance[\s\S]{0,180}existing child/i);
-    expect(reviewRoute).toMatch(/acceptance cannot launch a replacement/i);
-    expect(implement).toContain(
-      'phase coordinator owns implementation self-review',
+    expect(reviewRoute).toMatch(
+      /fresh phase implementer[\s\S]{0,160}same exact target[\s\S]{0,240}original `request_id`[\s\S]{0,120}`continuation_events`/i,
     );
-    expect(implement).toContain('Do not dispatch a second');
-    expect(implement).toContain('fix-mode coordinator');
-    expect(implement).toContain('coordinator-owned');
-    expect(implement).toContain('never launches a duplicate');
-    expect(resumeRoute).toContain('Review Dispatch Summary');
+    expect(phaseAgent).toMatch(/do not own[\s\S]{0,120}phase review dispatch/i);
+    expect(phaseAgent).toMatch(/Never dispatch implementation\s+self-review/i);
+    expect(resumeRoute).toContain('root-owned');
     expect(resumeRoute).toMatch(
-      /reviewer launch was accepted[\s\S]{0,180}existing child handle[\s\S]{0,180}never replace it/i,
+      /root reviewer launch was accepted[\s\S]{0,180}existing reviewer handle[\s\S]{0,180}never replace/i,
     );
     expect(resumeRoute).toContain('explicitly');
-    expect(resumeRoute).toContain('rejected before child start');
-    expect(resumeRoute).toContain('resume the phase coordinator');
-    expect(resumeRoute).toContain(
-      'outer workflow never dispatches the phase reviewer',
+    expect(resumeRoute).toMatch(/rejected before\s+child start/i);
+    expect(resumeRoute).toContain('resume the original phase implementer');
+    expect(resumeRoute).toMatch(
+      /fresh same-target[\s\S]{0,160}original[\s\S]{0,80}`request_id`[\s\S]{0,80}`continuation_events`/i,
     );
     expect(resumeRoute).not.toMatch(/re-dispatch the reviewer/i);
   });

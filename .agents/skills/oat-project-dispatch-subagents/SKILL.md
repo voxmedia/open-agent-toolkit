@@ -1,6 +1,6 @@
 ---
 name: oat-project-dispatch-subagents
-version: 1.1.1
+version: 1.1.2
 description: Use when an OAT project lifecycle skill needs to translate project state, phase or task scope, gates, and write authority into a provider-neutral subagent dispatch.
 disable-model-invocation: true
 user-invocable: false
@@ -108,24 +108,24 @@ conversational approval are never project policy.
 
 Map each lifecycle role to a generic baseline class and add project policy:
 
-| Lifecycle role             | Generic class | Project-specific contract                                                                                                                |
-| -------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase coordinator          | `coordinator` | Own one phase dossier. Prefer an explicit suitable native target; inherit only when the root/session target is deliberately suitable.    |
-| Task worker                | `worker`      | Own one task and bounded files. Use an explicit native or pre-selected alternate target; never silently inherit an expensive root model. |
-| Fix worker                 | `worker`      | Own listed findings and bounded files. Preserve retry/fix-loop limits and original task context.                                         |
-| Planning self-review       | `reviewer`    | Inherit the planning parent by default unless the plan-writing contract requires an exact independent reviewer.                          |
-| Implementation self-review | `reviewer`    | Target the resolved reviewer ceiling; inherit only when the review-owning dispatcher is known to satisfy it.                             |
-| Phase gate                 | `reviewer`    | Use the configured independent target and fail closed when unavailable.                                                                  |
-| Lifecycle gate             | `reviewer`    | Stay independent of producer context and fail closed rather than substituting same-context self-review.                                  |
+| Lifecycle role                         | Generic class       | Project-specific contract                                                                                               |
+| -------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Phase implementer                      | `worker`            | Own one complete phase, execute tasks directly in order, preserve per-task commits, and return phase verification.      |
+| Optional task/recon/specialist child   | `worker` or `recon` | Launch only when benefit justifies nesting; keep objective, files, authority, target, output, and verification bounded. |
+| Phase fix continuation                 | `worker`            | Resume the original phase handle when possible; preserve retry limits, phase context, and original request linkage.     |
+| Planning self-review                   | `reviewer`          | Inherit the planning parent by default unless the plan-writing contract requires an exact independent reviewer.         |
+| Root-owned implementation phase review | `reviewer`          | Target the resolved reviewer ceiling independently of the phase producer.                                               |
+| Phase gate                             | `reviewer`          | Use the configured independent target and fail closed when unavailable.                                                 |
+| Lifecycle gate                         | `reviewer`          | Stay independent of producer context and fail closed rather than substituting same-context self-review.                 |
 
 The calling lifecycle skill remains authoritative when its reviewed contract
 is stricter than this table.
 
-A below-ceiling Cursor phase coordinator whose nested native catalog cannot
-satisfy the resolved implementation-review ceiling must pass a
-policy-resolved pre-start CLI reviewer route to the generic engine. Record the
-native mismatch, exact target, selection reason, and ordered candidates; never
-silently downgrade the review.
+The root owns implementation phase-review selection. A native catalog that
+cannot satisfy the resolved review ceiling must use a policy-resolved
+pre-start CLI reviewer route when available. Record the native mismatch, exact
+target, selection reason, and ordered candidates; never delegate reviewer
+selection to a below-ceiling phase implementer or silently downgrade.
 
 ## Adapt the Request
 
@@ -177,12 +177,22 @@ project:
   worktree: root
 ```
 
-## Coordinator and Worker Topology
+## Phase-Agent Topology
 
-Use a phase coordinator only when the lifecycle workflow declares that
-topology. A coordinator may dispatch task workers when nesting and authority
-permit it, but it must not widen task boundaries, alter plan sequencing, or
-take over user checkpoints.
+The default implementation topology is root → phase implementer plus
+root → phase reviewer. The phase implementer directly owns the planned phase
+tasks. Per-task dispatch is not required.
+
+Optional nested workers or recon agents are benefit-driven and remain subject
+to exact bounded scopes and launcher-owned evidence. They must not widen task
+boundaries, alter plan sequencing, take over phase commits, dispatch the phase
+reviewer, or own user checkpoints.
+
+When review findings require fixes, resume the original phase request when the
+host supports continuation. If a completed phase handle is unavailable, allow
+at most one fresh same-target phase implementer for the bounded fix scope and
+link its generic record to the original `request_id` through existing
+`continuation_events`.
 
 For parallel groups, preserve plan-declared isolation. Each worktree receives
 only its assigned phase/task boundaries and must not mutate sibling worktrees.

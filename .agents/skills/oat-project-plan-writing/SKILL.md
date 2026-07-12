@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.11
+version: 1.2.12
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -363,8 +363,9 @@ Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `o
 `## Dispatch Profile` is optional and should be omitted by default. A profile
 may narrow a phase to a named ceiling at or below the project ceiling. The
 named ceiling is a maximum candidate tier, not an exact model-family or effort
-preference; the later coordinator chooses exact task targets from the complete
-configured ladder.
+preference; the implementation root chooses one exact phase-implementer target
+from the complete configured ladder. Optional nested work resolves separately
+only when the phase implementer justifies and launches it.
 
 Only include the section when the user has explicit constraints or preferences. Routine hand-tuning can be worse than runtime selection because the orchestrator has fresher phase context and host capability information at dispatch time.
 

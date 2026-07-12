@@ -27,19 +27,23 @@ If `{PROJECT_PATH}/implementation.md` already contains orchestration run entries
 
 **Detected state reconciliation:**
 
-- If there is an in-flight phase (implementer committed but no review verdict
-  in `implementation.md`), reconcile its recorded `Review Dispatch Summary`
-  before any action:
-  - When the coordinator's reviewer launch was accepted, continue, poll, or
-    nudge only through that existing child handle. If the handle cannot be
-    resumed, block or escalate; never replace it.
-  - When no review was launched, or the recorded attempt was explicitly
-    rejected before child start, resume the phase coordinator with the current
-    phase range so it retains exact ceiling resolution and review-launch
-    ownership.
-  - When an artifact was returned, validate its range and structured dispatch
-    evidence through the normal per-phase flow.
-    The outer workflow never dispatches the phase reviewer itself.
+- If there is an in-flight phase (implementer committed but no root-owned
+  review verdict in `implementation.md`), reconcile its phase and review
+  handles before any action:
+  - Verify the original phase report, request ID, commit range, and task
+    boundaries.
+  - When the root reviewer launch was accepted, continue, poll, or nudge only
+    through that existing reviewer handle. If it cannot be resumed, block or
+    escalate; never replace an accepted review round.
+  - When no review was launched, or the attempt was explicitly rejected before
+    child start, the root resolves and dispatches the reviewer through the
+    normal per-phase flow.
+  - When a review artifact was returned, validate its range and structured
+    dispatch evidence before fix disposition.
+  - Blocking findings resume the original phase implementer in fix mode. If
+    that completed phase handle is unavailable, at most one fresh same-target
+    implementer may receive the bounded fix scope, linked to the original
+    `request_id` through `continuation_events`.
 - If there are un-cleaned worktrees from a prior parallel group, list them and ask the user whether to resume or clean up:
 
   ```
@@ -174,7 +178,9 @@ After checkpoint behavior is confirmed, resolve auto-review preference:
    ```
 5. Write `oat_auto_review_at_hill_checkpoints: true|false` to plan.md frontmatter alongside `oat_plan_hill_phases`.
 
-This setting controls only the extra `oat-project-review-provide` lifecycle review at HiLL checkpoints. It does not control Tier 1 phase gate reviews; Tier 1 always runs `oat-reviewer` after each phase.
+This setting controls only the extra `oat-project-review-provide` lifecycle
+review at HiLL checkpoints. It does not control the standard root-owned phase
+review; Tier 1 always runs `oat-reviewer` after each phase.
 
 **On resume:** If `oat_auto_review_at_hill_checkpoints` is already present in plan.md frontmatter, skip Touchpoint A entirely — do not re-ask, do not re-read config, do not print the auto-review note. The stored value is authoritative. If only legacy `oat_auto_review_at_checkpoints` is present, treat it as authoritative for this run and write the new `oat_auto_review_at_hill_checkpoints` key on the next plan frontmatter update.
 

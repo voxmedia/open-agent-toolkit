@@ -24,7 +24,7 @@ that fresh child cannot be launched, fail closed and block; never substitute
 the coordinator or base role.
 
 Use base `oat-phase-implementer` only for the allowed exceptions above:
-explicit inherit/default behavior. It is never a managed task-worker fallback.
+explicit inherit/default behavior. It is never a managed phase-target fallback.
 
 Detect whether native subagent dispatch is available. The detection logic follows the same pattern used by `oat-project-review-provide` but produces a two-tier outcome (no fresh-session tier — this skill runs autonomously and cannot block on user-initiated fresh sessions mid-run).
 
@@ -72,7 +72,11 @@ Do not print `[0/N]` for this preflight step. The implementation denominator is 
 
 **Hard pre-work guard:** before any code edit, test run, or implementation commit, print the selected tier and reason. If Tier 2 is selected, the reason must be one of the three allowed Tier 2 reasons above. Do not run tests, edit files, or create implementation commits until Step 0.5 has completed and the tier report has been printed.
 
-**Tier is locked for the remainder of the run only after the dispatch target is resolved.** Subsequent coordinator, task-worker, fix, and review dispatches use the same tier. Tier controls mechanics only: every managed task worker still resolves its own exact target beneath the recorded project or phase named maximum. No mid-run downgrade is allowed.
+**Tier is locked for the remainder of the run only after the dispatch target is
+resolved.** Subsequent phase-implementer, optional nested, fix-continuation,
+and review dispatches use the same tier. Tier controls mechanics only: every
+managed phase implementer resolves one exact target beneath the recorded
+project or phase named maximum. No mid-run downgrade is allowed.
 
 **Recovery if Step 0.5 was skipped:** If implementation work has already started inline before completing Step 0.5, STOP immediately. Preserve any work in progress, complete or revert to a clean task boundary, and re-run Step 0.5 before continuing. Do not silently continue in Tier 2.
 
@@ -278,17 +282,17 @@ modifying project state.
 
 ### Runtime dispatch selection
 
-Before coordinator bootstrap and before each task-worker, fix, or review
+Before each phase-implementer, optional nested, fix-continuation, or review
 dispatch, choose and log runtime controls. Resolve these controls before
-applying Tier 1/Tier 2 mechanics. A coordinator target never becomes a task
-target: managed tasks use an exact resolver candidate beneath the recorded
-project or phase named ceiling. Inline execution must preserve equivalent
-controls or use a documented exception.
+applying Tier 1/Tier 2 mechanics. A phase target applies to the phase
+implementer, which directly owns its planned tasks. Optional children resolve
+their own exact bounded target beneath the phase ceiling. Inline execution must
+preserve equivalent controls or use a documented exception.
 
 Use these inputs:
 
 - resolved dispatch policy, source, and provider-specific selection
-- phase ID and the current bounded task scope
+- phase ID and the current bounded phase or optional-child scope
 - optional `## Dispatch Profile` row in `plan.md`
 - host-exposed provider controls, by axis
 - prior outcomes for the phase, including review results and failed retries
@@ -315,8 +319,9 @@ an ordered matrix route:
 Every implementation, fix, and review resolver invocation MUST pass explicit
 report context:
 
-- implementation: `--report-scope <phase-or-task> --report-action implementation`
-- fix: `--report-scope <phase-or-task> --report-action fix`
+- implementation: `--report-scope <phase> --report-action implementation`
+- optional nested work: `--report-scope <phase-or-bounded-child> --report-action implementation`
+- fix: `--report-scope <phase-or-bounded-fix> --report-action fix`
 - review: `--report-scope <phase-or-review-scope> --report-action review`
 
 Require `dispatchReport.schemaVersion: 1` in the completed resolver JSON before
@@ -373,7 +378,14 @@ fallback.
 3. For capped managed implementer/fix work, selected effort is `min(preferred, resolved_cap)`.
 4. For managed `Uncapped` implementer/fix work, selected effort is the preferred effort with no cap.
 5. For inherit/default mode, the resolver returns no selected dispatch args. Use the base/unpinned Codex role, log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as managed uncapped behavior.
-6. For managed capped task-worker/fix dispatch, choose an exact configured candidate. For implementation, call `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <task-id> --report-action implementation --json`. For a bounded fix, use `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <task-id> --report-action fix --json`. Read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`; never reuse the coordinator role or a cap-only variant. `--preferred` remains compatibility behavior outside the exact task-worker path.
+6. For managed capped phase-implementer/fix dispatch, choose an exact
+   configured candidate. For implementation, call
+   `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
+   For a bounded fix, use the same phase target with
+   `--report-scope <phase-or-fix-scope> --report-action fix`. Read
+   `providers.codex.dispatchArgs.variant` and
+   `providers.codex.selection.target`; never reuse a cap-only variant.
+   Optional children resolve only when actually launched.
 7. For review dispatch: call `oat project dispatch-ceiling resolve --provider codex --role reviewer --report-scope <phase-or-review-scope> --report-action review --json`; read `providers.codex.dispatchArgs.variant` and `providers.codex.selection.target`.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
@@ -391,7 +403,13 @@ Claude rules:
 - Review dispatch:
   - Capped managed policy: target the configured policy cap directly.
   - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.
-- For managed capped task-worker/fix dispatch, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <task-id> --report-action implementation --json` for implementation. For a bounded fix, call `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <task-id> --report-action fix --json`. For review dispatch, call the resolver with `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json` and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it exactly on the actual Task invocation.
+- For managed capped phase-implementer/fix dispatch, call
+  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
+  For bounded fixes, reuse the exact phase target with a bounded fix scope.
+  For review dispatch, call the resolver with
+  `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json`
+  and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it
+  exactly on the actual Task invocation.
 - Pass `model: "<value>"` when `model_axis=selected:<value>` on the Task tool call.
 - Keep `effort_axis=not-applicable`; Claude Code has no separate per-dispatch effort axis.
 
@@ -399,10 +417,9 @@ Cursor rules:
 
 - Treat every configured Cursor candidate string as opaque. Do not normalize it
   or infer capability from its spelling.
-- For managed capped task-worker/fix dispatch, call
-  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <task-id> --report-action implementation --json`
-  for implementation. For a bounded fix, call
-  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <task-id> --report-action fix --json`.
+- For managed capped phase-implementer/fix dispatch, call
+  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <phase-id> --report-action implementation --json`.
+  For bounded fixes, reuse the exact phase target with a bounded fix scope.
 - Require `providers.cursor.dispatchArgs.model` and pass that exact byte-for-byte
   string as the actual Cursor invocation model. If the host cannot apply it,
   fail closed.
@@ -411,7 +428,8 @@ Payload-first invariant:
 
 - Build the actual host dispatch argument map before logging.
 - Do not emit `selected:<value>` unless the host invocation contains the corresponding role/model selection.
-- For every coordinator, task-worker, fix, and review launch, record `target`,
+- For every phase-implementer, optional nested, fix, and review launch, record
+  `target`,
   `model_axis`, and `effort_axis` from resolver output and the actual launcher
   payload after payload construction.
 - Record `selection_reason` and `candidates_considered` beside those axes.

@@ -1,7 +1,7 @@
 ---
 name: oat-project-implement
-version: 2.0.39
-description: Use when plan.md is ready for execution. Dispatches phase coordinators that select one exact target-pinned worker per task; supports bounded fix loops and plan-declared worktree-isolated parallel phases.
+version: 2.0.40
+description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
@@ -19,8 +19,8 @@ Execute the implementation plan task-by-task with full state tracking.
 
 ## Shared Subagent Dispatch Contract
 
-Before resolving or launching any coordinator, task worker, fix worker, or
-self-reviewer, read and follow
+Before resolving or launching any phase implementer, optional nested worker,
+fix continuation, or reviewer, read and follow
 `.agents/skills/oat-project-dispatch-subagents/SKILL.md`. The project adapter
 resolves lifecycle scope and then requires
 `.agents/skills/oat-dispatch-subagents/SKILL.md` for provider-neutral
@@ -138,9 +138,10 @@ Rules:
 
 - Never preload a later route "for context."
 - Re-enter this router after each route reaches its terminal condition.
-- A coordinator receives only its Phase Scope and the coordinator role contract;
-  it does not receive these root-workflow references.
-- Task workers receive only one exact Task Scope and relevant repository context.
+- A phase implementer receives only its Phase Scope and role contract; it does
+  not receive these root-workflow references.
+- Optional nested workers receive only their bounded scope and relevant
+  repository context.
 - Reviewers receive only the bounded review scope, commit range, allowed files,
   and review artifact contract. They do not read this implementation skill.
 - Preserve every invariant in the routed references; progressive disclosure
@@ -158,9 +159,13 @@ Rules:
 
 ## Success Criteria
 
-- One exact target-pinned worker executed each task in dependency order
-- The phase coordinator did not implement ordinary task work in its own context
-- Same-worktree task workers ran serially; only plan-declared phase worktrees ran in parallel
+- One exact target-pinned phase implementer directly executed each phase's
+  tasks in dependency order
+- Each planned task produced exactly one verified bounded commit
+- Root dispatched exactly one accepted phase reviewer per review round
+- Blocking findings returned to the original phase handle when resumable
+- Optional nested dispatch was absent by default and fully evidenced when used
+- Only plan-declared phase worktrees ran in parallel
 - TDD discipline followed
 - Each task result and commit was verified against HEAD and its file boundary
 - Implementation.md tracks all progress
