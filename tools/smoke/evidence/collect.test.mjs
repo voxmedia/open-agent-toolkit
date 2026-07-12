@@ -173,10 +173,18 @@ test('collects a deterministic normalized evidence bundle', async () => {
     assert.deepEqual(JSON.parse(await readFile(outputPath, 'utf8')), bundle);
     assert.equal(bundle.schemaVersion, 1);
     assert.equal(bundle.scenario, 'implement');
+    assert.deepEqual(bundle.fixture.taskIds, [
+      'p01-t01',
+      'p01-t02',
+      'p02-t01',
+      'p03-t01',
+    ]);
+    assert.match(bundle.fixture.planHash, /^[0-9a-f]{64}$/u);
     assert.deepEqual(
       bundle.dispatches.map((dispatch) => dispatch.scope),
       ['p01-t01', 'p01-t02'],
     );
+    assert.equal(bundle.dispatches[0].selection.atOrBelowCeiling, true);
     assert.deepEqual(bundle.dispatches[0].runtimeIdentity, {
       confidence: 'high',
       effort: 'xhigh',

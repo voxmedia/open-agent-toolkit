@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   mkdir,
   readFile,
@@ -215,6 +215,10 @@ function normalizeDispatch(record, index) {
     runtimeIdentity: normalizeRuntimeIdentity(record.runtimeIdentity),
     scope: requireString(record.scope, `dispatch[${index}].scope`),
     selection: {
+      atOrBelowCeiling:
+        typeof selection.atOrBelowCeiling === 'boolean'
+          ? selection.atOrBelowCeiling
+          : null,
       candidatesConsidered: Array.isArray(selection.candidatesConsidered)
         ? selection.candidatesConsidered
             .map((candidate) => String(candidate))
@@ -222,6 +226,16 @@ function normalizeDispatch(record, index) {
         : [],
       reason: optionalString(selection.reason),
     },
+  };
+}
+
+async function collectFixtureContract(fixtureProjectPath) {
+  const contents = await readFile(join(fixtureProjectPath, 'plan.md'), 'utf8');
+  return {
+    planHash: createHash('sha256').update(contents).digest('hex'),
+    taskIds: [...contents.matchAll(/^### Task (p\d+-t\d+):/gmu)].map(
+      (match) => match[1],
+    ),
   };
 }
 
@@ -653,6 +667,7 @@ export async function collectEvidence({
 
   const bundle = {
     dispatches,
+    fixture: await collectFixtureContract(fixtureProjectPath),
     fixtureLogs: await collectFixtureLogs(canonicalWorktree),
     git: await collectGitTopology(canonicalWorktree, manifest),
     manifest: normalizeManifest(manifest),
