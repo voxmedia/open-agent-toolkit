@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T12:38:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-12T12:46:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 operator-authorized fixes complete; awaiting self-review
+Implementation — Phase 3 self-review passed; Phase 4 ready
 
 ## Artifacts
 
@@ -111,6 +111,7 @@ Implementation — Phase 3 operator-authorized fixes complete; awaiting self-rev
 - ⚠ Final Phase 3 self-review failed 2C/2I/1M/0m after retry limit
 - ✓ Operator-authorized Phase 3 fix iteration 3 complete
 - ✓ Review retry cap raised to 5
+- ✓ Final Phase 3 self-review passed 0C/0I/0M/0m
 
 ## Blockers
 
@@ -118,4 +119,4 @@ None
 
 ## Next Milestone
 
-Run final Phase 3 self-review
+Execute p04-t01: promote the validated coordinator selection contract

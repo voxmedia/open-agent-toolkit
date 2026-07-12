@@ -871,6 +871,25 @@ trusts Markdown.
 
 **Next:** final Phase 3 self-review under the expanded retry policy.
 
+### Phase 3 Final Self-review — Passed
+
+**Review artifact:**
+`reviews/p03-review-2026-07-12T124433Z.md`
+
+**Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+
+**Dispatch:**
+
+- Cursor's native Task catalog rejected the exact project High-ceiling target,
+  `gpt-5.6-sol-xhigh`, before launch.
+- `cursor-agent --list-models` independently confirmed that exact target in the
+  separate CLI account catalog.
+- The review therefore used a deliberate pre-start Cursor CLI selection at the
+  exact ceiling. The artifact records the configured target and
+  launcher-observed CLI invocation; no silent downgrade occurred.
+
+**Disposition:** Phase 3 is complete. Phase 4 (`p04-t01`) is next.
+
 ---
 
 ## Phase 4: Orchestration Contract
