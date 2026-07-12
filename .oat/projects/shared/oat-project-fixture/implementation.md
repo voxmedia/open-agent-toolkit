@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-11
-oat_current_task_id: p04-t02
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -79,7 +79,7 @@ oat_generated: false
 | Phase 5 | pending     | 6     | 0/6       |
 | Phase 6 | pending     | 3     | 0/3       |
 
-**Total:** 12/23 tasks completed
+**Total:** 13/23 tasks completed
 
 ---
 
@@ -920,8 +920,21 @@ p04 task.
 
 ### Task p04-t02: Cursor and Claude native topology guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4b693e574ab545aa1cdd63a72726aad1ccf1b887
+
+**Outcome:**
+
+- Added one-level Cursor, Codex, and Claude references preserving each
+  provider's verified native/CLI surfaces and explicit p05 boundaries.
+- Consumers read exactly one active-provider reference instead of merging
+  incompatible mechanics.
+- Cursor guidance includes opaque per-dispatch catalogs, deliberate native
+  inheritance, CLI worker/reviewer selection, and the catalog-mismatch
+  advisory.
+
+**Verification:** 78 skill-contract tests, repository lint, repository format,
+and synchronized provider views passed.
 
 ---
 
