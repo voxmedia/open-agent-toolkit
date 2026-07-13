@@ -15,6 +15,10 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, and provider-specific enforcement.
+- [Orchestration Model](orchestration-model.md) - The layered dispatch model: roles, selection flow, and per-harness topology.
+- [Review Flavors](review-flavors.md) - The four review flavors and who resolves each one's target.
+- [Evidence Layers](evidence-layers.md) - The three-layer dispatch evidence model behind records and smoke verification.
+- [Programmatic Execution](programmatic-execution.md) - Per-harness headless/CLI execution surfaces and where OAT uses them.
 - [Project Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
 - [Implementation Execution](implementation-execution.md) - Phase dispatch, runtime selection, review/fix loop, and dry-run behavior.
 - [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.
@@ -48,6 +52,10 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.
+- [Orchestration Model](orchestration-model.md) - The layered dispatch model: roles, selection flow, and per-harness topology.
+- [Review Flavors](review-flavors.md) - The four review flavors and who resolves each one's target.
+- [Evidence Layers](evidence-layers.md) - The three-layer dispatch evidence model behind records and smoke verification.
+- [Programmatic Execution](programmatic-execution.md) - Per-harness headless/CLI execution surfaces and where OAT uses them.
 - [Artifacts](artifacts.md) - What lives in `state.md`, `discovery.md`, `plan.md`, `implementation.md`, and related files.
 - [Project Splitting](splitting.md) - How broad discoveries or brainstorms become coordination parents and child projects.
 - [State Machine](state-machine.md) - Lifecycle and review status transitions across a project.

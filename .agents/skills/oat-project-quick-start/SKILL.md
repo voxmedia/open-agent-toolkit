@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.14
+version: 2.1.15
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -608,13 +608,21 @@ Apply the shared loop exactly:
 
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
-- For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
-- For Claude or Cursor, pass the exact resolver-returned
-  `providers.<provider>.dispatchArgs.model` as the actual invocation's model
-  argument. Preserve the same complete payload on timeout and retry; Cursor
-  strings remain opaque.
-- Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
-- If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
+- Review in the current planning parent by deliberate inheritance by default.
+  Do not launch a managed child unless launcher-owned evidence identifies that
+  parent as unknown or below the resolved reviewer ceiling.
+- For that exception only, apply the shared concrete target contract. A Codex
+  materialized variant must first be launched as the exact native `agent_type`;
+  only a recorded actual pre-start role-selection rejection permits a fresh
+  child pinned to the resolved model and effort. Claude and Cursor use the
+  exact resolver-returned `providers.<provider>.dispatchArgs.model` value;
+  Cursor strings remain opaque.
+- After acceptance, poll, nudge, or continue only through the existing reviewer
+  handle. A terminal timeout blocks or escalates without another launch.
+  Replacement eligibility is limited to explicit pre-start rejection.
+- Run an exception inline only with verified equivalent current-host model and
+  effort controls. Default inherited review runs in the planning parent. If
+  neither route applies, fail closed before artifact review.
 - Apply Critical and Important artifact-local fixes when unambiguous; offer Medium and Minor fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.

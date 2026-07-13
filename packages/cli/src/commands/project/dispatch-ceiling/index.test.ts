@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -19,6 +20,38 @@ interface HarnessOptions {
   home: string;
   activeProjectPath?: string | null;
   processEnv?: NodeJS.ProcessEnv;
+}
+
+interface ReviewSelectionExpectation {
+  policy: string;
+  source: string;
+  ceilingTier: string;
+  target: unknown;
+  dispatchArgs: unknown;
+  modelAxis: string;
+  effortAxis: string;
+}
+
+function coordinatorReviewSelectionMatches(
+  payload: Record<string, unknown>,
+  providerName: string,
+  expected: ReviewSelectionExpectation,
+): boolean {
+  const providers = payload.providers as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  const provider = providers?.[providerName];
+  const selection = provider?.selection as Record<string, unknown> | undefined;
+
+  return (
+    payload.policy === expected.policy &&
+    payload.source === expected.source &&
+    selection?.ceilingTier === expected.ceilingTier &&
+    isDeepStrictEqual(selection?.target, expected.target) &&
+    isDeepStrictEqual(provider?.dispatchArgs, expected.dispatchArgs) &&
+    provider?.modelAxis === expected.modelAxis &&
+    provider?.effortAxis === expected.effortAxis
+  );
 }
 
 function createHarness(options: HarnessOptions): {
@@ -893,15 +926,21 @@ describe('oat project dispatch-ceiling resolve', () => {
         '--non-interactive',
         '--json',
       ]);
-      await runCommand(command, [
+      const reviewerArgs = [
         '--provider',
         'cursor',
         '--role',
         'reviewer',
         '--preflight',
         '--non-interactive',
+        '--report-scope',
+        'p04',
+        '--report-action',
+        'review',
         '--json',
-      ]);
+      ];
+      expect(reviewerArgs).not.toContain('--ceiling-tier');
+      await runCommand(command, reviewerArgs);
 
       for (const payload of capture.jsonPayloads) {
         expect(payload).toMatchObject({
@@ -926,6 +965,87 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(process.exitCode).toBe(0);
     },
   );
+
+  it('matches the coordinator review envelope and rejects source or target drift', async () => {
+    const { root, home } = await setup();
+    const target = 'gpt-5.6-sol-xhigh';
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    cursor:',
+        `      high: ${target}`,
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--role',
+      'reviewer',
+      '--preflight',
+      '--non-interactive',
+      '--report-scope',
+      'p04',
+      '--report-action',
+      'review',
+      '--project-path',
+      '.oat/projects/shared/demo',
+      '--json',
+    ]);
+
+    const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+    const expected: ReviewSelectionExpectation = {
+      policy: 'high',
+      source: 'project-state',
+      ceilingTier: 'high',
+      target: {
+        harness: 'cursor',
+        crossHarness: false,
+        routeIndex: 0,
+        routeLength: 1,
+        model: target,
+      },
+      dispatchArgs: { model: target },
+      modelAxis: `selected:${target}`,
+      effortAxis: 'not-applicable',
+    };
+
+    expect(coordinatorReviewSelectionMatches(payload, 'cursor', expected)).toBe(
+      true,
+    );
+    expect(
+      coordinatorReviewSelectionMatches(payload, 'cursor', {
+        ...expected,
+        source: 'project',
+      }),
+    ).toBe(false);
+    expect(
+      coordinatorReviewSelectionMatches(payload, 'cursor', {
+        ...expected,
+        target: {
+          harness: 'cursor',
+          crossHarness: false,
+          routeIndex: 0,
+          routeLength: 1,
+          model: 'different-target',
+        },
+      }),
+    ).toBe(false);
+    expect(process.exitCode).toBe(0);
+  });
 
   it('keeps single-axis capped selection unchanged when escalation level is present', async () => {
     const { root, home } = await setup();
@@ -2790,9 +2910,8 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
-    ['missing', ''],
     ['invalid', 'max_depth = "invalid"'],
-    ['below the required floor', 'max_depth = 1'],
+    ['below the required floor', 'max_depth = 0'],
   ])(
     'blocks managed codex implementation preflight when project max depth is %s',
     async (_label, depthLine) => {
@@ -2841,7 +2960,10 @@ describe('oat project dispatch-ceiling resolve', () => {
       });
       expect(
         (capture.jsonPayloads[0] as { message?: string }).message,
-      ).toContain('root (0) → phase coordinator (1) → task worker (2)');
+      ).toContain('root (0) → phase implementer (1)');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('Depth 2 is optional');
       expect(
         (capture.jsonPayloads[0] as { message?: string }).message,
       ).toContain('oat sync --scope project');
@@ -2854,9 +2976,14 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
   );
 
-  it.each([2, 4])(
-    'passes managed codex implementation preflight at project max depth %i',
-    async (maxDepth) => {
+  it.each([
+    ['missing', null],
+    ['one', 1],
+    ['two', 2],
+    ['four', 4],
+  ])(
+    'passes managed codex implementation preflight when project max depth is %s',
+    async (_label, maxDepth) => {
       const { root, home } = await setup();
       await writeJson(join(root, '.oat', 'config.json'), {
         version: 1,
@@ -2880,7 +3007,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       await mkdir(join(root, '.codex'), { recursive: true });
       await writeFile(
         join(root, '.codex', 'config.toml'),
-        `[agents]\nmax_depth = ${maxDepth}\n`,
+        `[agents]\n${maxDepth === null ? '' : `max_depth = ${maxDepth}`}\n`,
         'utf8',
       );
 
@@ -3009,7 +3136,7 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('uses user-scoped depth and remediation for user implementation preflight', async () => {
+  it('accepts user-scoped depth one for default phase implementation', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
       version: 1,
@@ -3059,17 +3186,11 @@ describe('oat project dispatch-ceiling resolve', () => {
     );
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'blocked',
+      status: 'resolved',
       provider: 'codex',
-      unresolved: true,
+      unresolved: false,
     });
-    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'oat sync --scope user',
-    );
-    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope user',
-    );
-    expect(process.exitCode).toBe(1);
+    expect(process.exitCode).toBe(0);
   });
 
   it('does not use harness as a same-harness route dispatch value', async () => {

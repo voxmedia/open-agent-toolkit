@@ -998,7 +998,7 @@ config_file = "agents/reviewer.toml"
     expect(capture.info[0]).toContain('references exist');
   });
 
-  it.each([2, 3])(
+  it.each([1, 2, 3])(
     'passes project codex max depth %i for managed roles',
     async (maxDepth) => {
       const codexConfigPath = '/tmp/workspace/.codex/config.toml';
@@ -1021,17 +1021,19 @@ config_file = "agents/reviewer.toml"
 
       expect(capture.info[0]).toContain('project:codex_max_depth');
       expect(capture.info[0]).toContain(`agents.max_depth is ${maxDepth}`);
-      expect(capture.info[0]).toContain(
-        'root (0) → phase coordinator (1) → task worker (2)',
-      );
+      expect(capture.info[0]).toContain('root (0) → phase implementer (1)');
+      if (maxDepth === 1) {
+        expect(capture.info[0]).toContain(
+          'Depth 2 enables optional nested child (2)',
+        );
+      }
       expect(process.exitCode).toBe(0);
     },
   );
 
   it.each([
-    ['missing', ''],
     ['invalid', 'max_depth = "invalid"'],
-    ['below the required floor', 'max_depth = 1'],
+    ['below the required floor', 'max_depth = 0'],
   ])('warns when project codex max depth is %s', async (_label, depthLine) => {
     const codexConfigPath = '/tmp/workspace/.codex/config.toml';
     const rolePath = '/tmp/workspace/.codex/agents/worker.toml';
@@ -1049,9 +1051,7 @@ config_file = "agents/reviewer.toml"
     await runDoctor(command);
 
     expect(capture.info[0]).toContain('project:codex_max_depth');
-    expect(capture.info[0]).toContain(
-      'root (0) → phase coordinator (1) → task worker (2)',
-    );
+    expect(capture.info[0]).toContain('root (0) → phase implementer (1)');
     expect(capture.info[0]).toContain('oat sync --scope project');
     expect(capture.info[0]).toContain(
       'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope project',
@@ -1124,7 +1124,7 @@ config_file = "agents/reviewer.toml"
     expect(process.exitCode).toBe(1);
   });
 
-  it('checks user codex max depth with user-scoped remediation', async () => {
+  it('accepts user codex max depth one for default phase execution', async () => {
     const codexConfigPath = '/tmp/home/.codex/config.toml';
     const rolePath = '/tmp/home/.codex/agents/worker.toml';
     const { command, capture } = createHarness({
@@ -1145,11 +1145,10 @@ config_file = "agents/reviewer.toml"
     await runDoctor(command, { scope: 'user' });
 
     expect(capture.info[0]).toContain('user:codex_max_depth');
-    expect(capture.info[0]).toContain('oat sync --scope user');
     expect(capture.info[0]).toContain(
-      'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope user',
+      'Depth 2 enables optional nested child (2)',
     );
-    expect(process.exitCode).toBe(1);
+    expect(process.exitCode).toBe(0);
   });
 
   it('passes user codex max depth at the managed-role floor', async () => {

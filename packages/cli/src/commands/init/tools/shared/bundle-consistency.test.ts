@@ -119,6 +119,24 @@ function isUserInvocableSkill(skillName: string): boolean {
   return /^user-invocable:\s*true$/m.test(content);
 }
 
+function readBundledSkillContract(
+  assetsRoot: string,
+  skillName: string,
+): string {
+  const skillRoot = join(assetsRoot, 'skills', skillName);
+  const entry = readFileSync(join(skillRoot, 'SKILL.md'), 'utf8');
+  if (skillName !== 'oat-project-implement') {
+    return entry;
+  }
+
+  const referencesRoot = join(skillRoot, 'references');
+  const references = readdirSync(referencesRoot)
+    .filter((file) => file.endsWith('.md'))
+    .sort()
+    .map((file) => readFileSync(join(referencesRoot, file), 'utf8'));
+  return [entry, ...references].join('\n');
+}
+
 describe('bundle-assets.sh consistency', () => {
   const bundleSkills = parseBundleSkills();
   const bundleAgents = parseBundleAgents();
@@ -336,10 +354,7 @@ describe('bundle-assets.sh consistency', () => {
           'oat-project-quick-start',
           'oat-project-implement',
         ]) {
-          const content = readFileSync(
-            join(assetsRoot, 'skills', skill, 'SKILL.md'),
-            'utf8',
-          );
+          const content = readBundledSkillContract(assetsRoot, skill);
 
           expect(content).toContain(
             'oat project dispatch-ceiling choices --format markdown',
@@ -367,9 +382,9 @@ describe('bundle-assets.sh consistency', () => {
           stdio: 'pipe',
         });
 
-        const content = readFileSync(
-          join(assetsRoot, 'skills', 'oat-project-implement', 'SKILL.md'),
-          'utf8',
+        const content = readBundledSkillContract(
+          assetsRoot,
+          'oat-project-implement',
         );
 
         expect(content).toContain('Human-facing dispatch display rules');
@@ -412,10 +427,7 @@ describe('bundle-assets.sh consistency', () => {
           'oat-project-review-provide',
           'oat-project-review-provide-remote',
         ]) {
-          const content = readFileSync(
-            join(assetsRoot, 'skills', skill, 'SKILL.md'),
-            'utf8',
-          );
+          const content = readBundledSkillContract(assetsRoot, skill);
           const invocations = [
             ...content
               .replace(/\\\r?\n\s*/g, ' ')

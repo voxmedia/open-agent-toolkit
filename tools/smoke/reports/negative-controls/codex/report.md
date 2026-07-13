@@ -1,0 +1,110 @@
+# Smoke Evidence Report
+
+**Scenario:** plan-review
+**Status:** passed
+**Assertions:** 1 passed / 0 failed
+**Bundle SHA-256:** 766624fcf5c460208c65b4d5ebcc24dd1fcc094aa0b4d9acdb2e6e340e6eb168
+**Authority:** `report.json` is authoritative; this Markdown is a derived view.
+
+| Assertion                                   | Severity | Status | Description                                               |
+| ------------------------------------------- | -------- | ------ | --------------------------------------------------------- |
+| negative-unavailable-target-no-provisioning | critical | passed | An unavailable selected target exits before provisioning. |
+
+## Evidence
+
+### negative-unavailable-target-no-provisioning
+
+```json
+{
+  "preflight": {
+    "cursorApiKey": {
+      "present": true,
+      "required": true
+    },
+    "fixture": {
+      "result": "valid"
+    },
+    "forcedUnavailable": "codex",
+    "harnesses": {
+      "deterministic": {
+        "authenticated": {
+          "command": "/Users/tstang/.nvm/versions/node/v22.17.0/bin/node --eval process.exit(0)",
+          "reason": "Authentication is only probed for the selected harness.",
+          "result": "not-run"
+        },
+        "installed": {
+          "command": "/Users/tstang/.nvm/versions/node/v22.17.0/bin/node --version",
+          "path": "/Users/tstang/.nvm/versions/node/v22.17.0/bin/node",
+          "result": "installed"
+        }
+      },
+      "codex": {
+        "authenticated": {
+          "command": "codex login status",
+          "result": "not-run"
+        },
+        "installed": {
+          "command": "codex --version",
+          "result": "unavailable"
+        }
+      },
+      "claude": {
+        "authenticated": {
+          "command": "claude auth status",
+          "reason": "Authentication is only probed for the selected harness.",
+          "result": "not-run"
+        },
+        "installed": {
+          "command": "claude --version",
+          "path": "/Users/tstang/.local/bin/claude",
+          "result": "installed"
+        }
+      },
+      "cursor-ide": {
+        "authenticated": {
+          "command": "cursor agent status",
+          "reason": "Authentication is only probed for the selected harness.",
+          "result": "not-run"
+        },
+        "installed": {
+          "command": "cursor --version",
+          "path": "/Users/tstang/.local/bin/cursor",
+          "result": "installed"
+        }
+      },
+      "cursor-cli": {
+        "authenticated": {
+          "command": "cursor-agent status",
+          "reason": "Authentication is only probed for the selected harness.",
+          "result": "not-run"
+        },
+        "installed": {
+          "command": "cursor-agent --version",
+          "path": "/Users/tstang/.local/bin/cursor-agent",
+          "result": "installed"
+        }
+      }
+    },
+    "oat": {
+      "expectedVersion": "0.1.56",
+      "freshness": "current-source",
+      "commandPath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/bin/oat",
+      "localPath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/packages/cli/dist/index.js",
+      "revision": "a67bd378c3424be60b59c8083a0cd44089417438",
+      "result": "local",
+      "version": "0.1.56"
+    },
+    "selectedHarness": "codex",
+    "selectedGate": {
+      "runtime": "cursor",
+      "target": "cursor-gpt-5-6-sol-max"
+    },
+    "status": "blocked"
+  },
+  "provisioningEvidence": {
+    "branches": [],
+    "manifests": [],
+    "worktrees": []
+  }
+}
+```

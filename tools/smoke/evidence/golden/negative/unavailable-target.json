@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "control",
+  "scenario": "implement",
+  "control": {
+    "kind": "unavailable-target",
+    "harness": "cursor-cli"
+  },
+  "preflight": {
+    "status": "blocked",
+    "selectedHarness": "cursor-cli",
+    "harnesses": {
+      "cursor-cli": {
+        "installed": {
+          "result": "unavailable"
+        }
+      }
+    }
+  },
+  "provisioningEvidence": {
+    "branches": [],
+    "manifests": [],
+    "worktrees": []
+  }
+}

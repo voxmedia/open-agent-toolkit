@@ -12,7 +12,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Project: `.agents/skills` -> `.claude/skills`, `.agents/agents` -> `.claude/agents`, `.agents/rules` -> `.claude/rules`
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
-    - Managed task workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Task `model`
+    - Managed phase implementers and optional nested workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Agent `model`
 
 === "Cursor"
 
@@ -61,10 +61,10 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
-    - Managed Codex roles require `agents.max_depth >= 2` for the native topology: root (depth 0) → phase coordinator (depth 1) → task worker (depth 2). Sync and direct materialization merge that floor without lowering a higher target value; project writes also preserve a higher inherited user value.
+    - Default managed Codex execution requires root (depth 0) → phase implementer (depth 1). `agents.max_depth >= 2` enables optional nested phase-agent work; sync and direct materialization still merge that capability floor without lowering a higher target value.
     - Project sync or materialization writes only the project's `.codex/config.toml`; explicit user-scope materialization writes only `~/.codex/config.toml`. Project scope may read the lower-precedence user depth, but never mutates user configuration.
-    - When managed roles exist and effective depth is missing, invalid, or below `2`, `oat doctor` and managed implementation preflight explain the topology and recommend `oat sync --scope project` or `oat sync --scope user` for the affected scope. Direct materialization with the same scope is the single-role repair path.
-    - `oat-phase-implementer` is dual-mode: Phase Scope makes it a phase coordinator, while Task Scope makes the exact materialized variant a one-task worker. The coordinator does not implement ordinary tasks itself.
+    - Missing depth and explicit depth `1` are sufficient for default phase execution. Invalid values or values below `1` block managed implementation preflight. `oat doctor` explains when depth `2` optional nesting is available.
+    - The phase implementer directly executes its planned tasks from one Phase Scope, preserves one bounded commit per task, and returns phase-wide verification. It does not dispatch the phase reviewer.
 
 ## Managed dispatch views
 
@@ -85,17 +85,17 @@ project `.codex` view. User-config candidates materialize under `~/.codex`.
 OAT does not auto-ignore project output or create its Git commit; the team owns
 that repository change.
 
-At implementation time, the phase coordinator passes the recorded named
-maximum through invocation-only `--ceiling-tier`, resolves one exact candidate
-per bounded task, and dispatches one task worker at a time. Codex first
-attempts the resolver-returned materialized role as the native `agent_type`.
-The launcher records the target, model axis, and effort axis from that resolved
-payload; worker self-report is not provenance and cannot replace those values.
+At implementation time, the root passes the recorded named maximum through
+invocation-only `--ceiling-tier`, resolves one exact candidate per phase, and
+dispatches one phase implementer. Codex first attempts the resolver-returned
+materialized role as the native `agent_type`. The launcher records the target,
+model axis, and effort axis from that resolved payload; child self-report is not
+provenance and cannot replace those values.
 Only an explicit pre-start native role-selection rejection permits a fresh
 pinned-child fallback. An accepted child, including one that later returns
 `BLOCKED` or lacks telemetry, is a task outcome rather than a fallback signal.
 Claude and Cursor bind the exact model arguments described above. A missing or
-unselectable managed target blocks rather than falling back to the coordinator
+unselectable managed target blocks rather than falling back to the root target
 or a base role.
 
 ## Scope rules

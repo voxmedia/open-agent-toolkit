@@ -79,6 +79,11 @@ continuation_events: []
 `role_selector` is the exact provider or harness agent-type selector, when that
 surface exists. Preserve opaque selectors byte-for-byte.
 
+Use the stable selection reasons `native-catalog`,
+`native-catalog-unsatisfying`, `pre-start-rejection`, `inherit`, and
+`gate-target`. Calling adapters may add a more specific diagnostic, but must
+not replace or rename these shared values.
+
 Use `selection_source: native-default` for the preferred same-runtime native
 route, `policy-resolved` for a CLI/programmatic or cross-runtime route selected
 by configured project/workflow/gate policy, and `explicit-user` for an

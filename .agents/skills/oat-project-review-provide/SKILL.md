@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.14
+version: 1.3.15
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -588,10 +588,13 @@ terminal blocking review outcome: it blocks the review and does not invoke or
 trigger the fresh-child fallback. Absent findings from that terminal must not
 be parsed, interpreted, or treated as a passing review.
 
-On timeout or retry, reuse the same exact role or complete invocation payload,
-including the Claude or Cursor model argument. If the host cannot apply a
-required role or model argument, fail closed or block unless inline execution
-has verified equivalent current-host controls.
+Before acceptance, an explicit transport or role-selection rejection may retry
+with the same exact role and complete invocation payload, including the Claude
+or Cursor model argument. After acceptance, poll, nudge, or continue only
+through the existing reviewer handle. Terminal timeout, interruption, or
+`BLOCKED` blocks or escalates without another launch. If the host cannot apply
+a required role or model argument before launch, fail closed or block unless
+inline execution has verified equivalent current-host controls.
 Workflow correctness must not require provider restart or hot reload.
 Never use a managed base role because a target is missing or unavailable; a
 managed base role is forbidden except for

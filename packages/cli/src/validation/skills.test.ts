@@ -93,8 +93,36 @@ function currentSkillContent(
   ].join('\n');
 }
 
-async function readRepoFile(relativePath: string): Promise<string> {
+const implementSkillPath = '.agents/skills/oat-project-implement/SKILL.md';
+const implementReferencePaths = [
+  'dispatch-and-dry-run.md',
+  'plan-and-resume.md',
+  'phase-execution.md',
+  'completion-and-closeout.md',
+] as const;
+
+async function readRawRepoFile(relativePath: string): Promise<string> {
   return readFile(join(process.cwd(), '..', '..', relativePath), 'utf8');
+}
+
+async function readRepoFile(relativePath: string): Promise<string> {
+  const content = await readRawRepoFile(relativePath);
+  if (relativePath !== implementSkillPath) {
+    return content;
+  }
+  const successIndex = content.indexOf('## Success Criteria');
+  const references = await Promise.all(
+    implementReferencePaths.map((path) =>
+      readRawRepoFile(
+        `.agents/skills/oat-project-implement/references/${path}`,
+      ),
+    ),
+  );
+  return [
+    content.slice(0, successIndex),
+    ...references,
+    content.slice(successIndex),
+  ].join('\n\n');
 }
 
 function getFrontmatterForTest(content: string): string {
@@ -869,7 +897,7 @@ describe('validateOatSkills', () => {
       implement.indexOf('### Parallel Group Execution'),
     );
     expect(phaseGateSection).toMatch(
-      /all three receive-eligibility conditions must hold:.*status.*`ok`.*`blocked`.*`receiveEligible: true`.*`handoff` is non-null/is,
+      /all three receive-eligibility\s+conditions must hold:.*status.*`ok`.*`blocked`.*`receiveEligible: true`.*`handoff` is non-null/is,
     );
   });
 
@@ -998,7 +1026,184 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.40');
+  });
+
+  it('routes implementation phases through bounded progressive disclosure', async () => {
+    const entry = await readRawRepoFile(implementSkillPath);
+
+    expect(entry.split('\n').length).toBeLessThanOrEqual(220);
+    for (const path of implementReferencePaths) {
+      expect(entry).toContain(`references/${path}`);
+    }
+    expect(entry).toContain('Never preload a later route');
+    expect(entry).toContain(
+      'Reviewers receive only the bounded review scope, commit range, allowed files',
+    );
+    expect(entry).not.toContain('### Step 5: Per-Phase Execution');
+    expect(entry).not.toContain('### Step 14: Trigger Final Review');
+  });
+
+  it('detects smoke bootstrap mode from the resolved base before worktree creation', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+    const detectionIndex = content.indexOf(
+      'git -C "$REPO_ROOT" ls-tree "$RESOLVED_BASE_SHA" -- ".oat/smoke-bootstrap.json"',
+    );
+    const creationIndex = content.indexOf(
+      '### Step 2: Create or Reuse Worktree',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.6');
+    expect(detectionIndex).toBeGreaterThanOrEqual(0);
+    expect(creationIndex).toBeGreaterThan(detectionIndex);
+    expect(content).toContain('BOOTSTRAP_MODE=normal');
+    expect(content).toContain('BOOTSTRAP_MODE=smoke');
+    expect(content).toContain('bootstrap_mode: normal | smoke');
+  });
+
+  it('keeps smoke bootstrap creation hook-scoped and delegates containment to safe init', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+    const creation = content.slice(
+      content.indexOf('### Step 2: Create or Reuse Worktree'),
+      content.indexOf(
+        '### Step 2.5: Propagate Local-Only Config + Local Paths',
+      ),
+    );
+
+    expect(creation).toContain(
+      'git -c core.hooksPath=/dev/null -C "$REPO_ROOT" worktree add',
+    );
+    expect(creation).toMatch(/invocation-scoped/i);
+    expect(creation).not.toMatch(/^\s*git config .*core\.hooksPath/m);
+    expect(creation).toContain(
+      'git -C "$TARGET_PATH" ls-files --error-unmatch -- ".oat/smoke-bootstrap.json"',
+    );
+    expect(creation).toContain(
+      'node "$TARGET_PATH/tools/smoke/runner/journal.mjs" register',
+    );
+    expect(creation.indexOf('journal.mjs" register')).toBeLessThan(
+      creation.indexOf('On failure: return structured error'),
+    );
+    expect(content).toContain(
+      'Prefer an explicit worktree bootstrap command when the repository declares',
+    );
+    expect(content).toContain('If no command exists, derive the minimum safe');
+    expect(content).toContain('Never assume Node.js, pnpm, a dependency store');
+    expect(content).toContain(
+      'Source smoke preflight already owns dependency, build, and repository-wide test',
+    );
+    expect(content).toContain('`bash scripts/worktree/init.sh`, not');
+    expect(content).toContain('`pnpm run worktree:init`');
+    expect(content).toContain(
+      '(cd "$TARGET_PATH" && bash scripts/worktree/init.sh)',
+    );
+    expect(content).toMatch(
+      /invoking\s+the child script by absolute path while the shell remains in the outer/u,
+    );
+    expect(content).not.toContain('source-commit-bound dependency');
+  });
+
+  it('keeps smoke bootstrap closed to local and provider sync side effects', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+    const propagation = content.slice(
+      content.indexOf(
+        '### Step 2.5: Propagate Local-Only Config + Local Paths',
+      ),
+      content.indexOf('### Step 2.7: Verify Resolved Base in Worktree HEAD'),
+    );
+    const smokePropagation = propagation.slice(
+      0,
+      propagation.indexOf('**Normal mode:**'),
+    );
+    const baseline = content.slice(
+      content.indexOf('### Step 3: Run Baseline Checks'),
+      content.indexOf('Check behavior per baseline policy:'),
+    );
+    const smokeBaseline = baseline.slice(baseline.indexOf('**Smoke mode:**'));
+    const providerSync = content.slice(
+      content.indexOf('### Step 4: Create Provider Directories and Sync'),
+      content.indexOf('### Step 5: Return Structured Status'),
+    );
+    const smokeProviderSync = providerSync.slice(
+      0,
+      providerSync.indexOf('**Normal mode:**'),
+    );
+
+    expect(propagation).toMatch(
+      /smoke mode[\s\S]{0,260}skip[\s\S]{0,160}config propagation[\s\S]{0,160}`oat local sync`/i,
+    );
+    expect(smokePropagation).not.toMatch(/^\s*(?:cp|oat local sync)\s/m);
+    expect(providerSync).toMatch(
+      /smoke mode[\s\S]{0,320}skip[\s\S]{0,240}provider[- ]director[\s\S]{0,240}all-scope sync[\s\S]{0,240}staging[\s\S]{0,160}sync commit/i,
+    );
+    expect(smokeProviderSync).not.toMatch(
+      /^\s*(?:mkdir|oat sync|git add|git commit)\s/m,
+    );
+    expect(smokeBaseline).not.toMatch(/^\s*oat\s/m);
+    expect(smokeBaseline).not.toMatch(
+      /^\s*(?:pnpm|npm|yarn|bun)\s+(?:install|run build|test)\b/m,
+    );
+    expect(content).toMatch(/never run\s+PATH-resolved `oat` in smoke mode/i);
+    expect(content).toMatch(
+      /missing,\s*unsafe,\s*or malformed smoke marker[\s\S]{0,320}(?:always )?fatal/i,
+    );
+    expect(content).toMatch(
+      /safe-init failure[\s\S]{0,320}fatal[\s\S]{0,240}(?:both policies|`allow-failing`)/i,
+    );
+    for (const skippedOperation of [
+      'local_config_propagation',
+      'local_paths_sync',
+      'provider_directory_creation',
+      'provider_sync',
+      'sync_staging',
+      'sync_commit',
+    ]) {
+      expect(content, `structured smoke skip ${skippedOperation}`).toContain(
+        `${skippedOperation}: true | false`,
+      );
+    }
+  });
+
+  it('makes smoke readiness failures run-fatal without replacement', async () => {
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const bootstrap = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap-auto/SKILL.md',
+    );
+
+    expect(implement).toContain('known-invalid run abort');
+    expect(implement).toMatch(
+      /terminates\s+every accepted\s+handle[\s\S]{0,220}never authorizes[\s\S]{0,120}replacement[\s\S]{0,80}sequential degradation/i,
+    );
+    expect(implement).toMatch(/sequential\s+degradation is forbidden/i);
+    expect(implement).toMatch(
+      /never\s+authorizes fallback,\s+replacement,\s+or sequential degradation/i,
+    );
+    expect(bootstrap).toContain('reason: smoke-readiness-failed');
+    expect(bootstrap).toMatch(
+      /must not install dependencies, build the repository, run\s+repository-wide tests/i,
+    );
+  });
+
+  it('keeps manual worktree setup repository-defined', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-worktree-bootstrap/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content).toContain(
+      'Prefer an explicit worktree bootstrap command when the repository declares',
+    );
+    expect(content).toContain('If no command exists, derive the minimum safe');
+    expect(content).toContain('do not assume Node.js, pnpm');
+    expect(content).not.toMatch(/^\s*pnpm\s/m);
   });
 
   it('makes native Codex dispatch and launcher-owned provenance authoritative', async () => {
@@ -1013,7 +1218,7 @@ describe('validateOatSkills', () => {
       /spawn acceptance[\s\S]{0,180}launcher payload[\s\S]{0,180}configured invocation evidence/i,
     );
     expect(content).toMatch(
-      /For every coordinator, task-worker, fix, and review launch,[\s\S]{0,100}record `target`,\s*`model_axis`, and `effort_axis` from resolver output and the actual launcher\s+payload after payload construction/i,
+      /For every phase-implementer, optional nested, fix, and review launch,[\s\S]{0,120}record\s+`target`,[\s\S]{0,100}`model_axis`, and `effort_axis` from resolver output and the actual launcher\s+payload after payload construction/i,
     );
     expect(content).toMatch(
       /missing (?:runtime )?telemetry[\s\S]{0,160}(?:missing )?(?:agent )?self-report[\s\S]{0,200}not[\s\S]{0,100}(?:role )?unavailability/i,
@@ -1033,20 +1238,22 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/launcher-selected\/config-declared/i);
   });
 
-  it('keeps timed-out native reviewer retries on the accepted route', async () => {
+  it('forbids replacement launches after reviewer acceptance', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.40');
     expect(content).toMatch(
-      /accepted native reviewer[\s\S]{0,180}times out[\s\S]{0,180}retry the same already-selected native `agent_type` route/i,
+      /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
     expect(content).toMatch(
-      /fresh pinned-child route is eligible only when the original native attempt[\s\S]{0,160}explicit pre-start role-selection rejection/i,
+      /terminal timeout[\s\S]{0,180}(?:stop|escalate)[\s\S]{0,180}without another launch/i,
     );
-    expect(content).toMatch(
-      /original native reviewer spawn was accepted[\s\S]{0,180}retry the same already-selected native `agent_type` route[\s\S]{0,220}do not switch[\s\S]{0,160}fresh pinned child/i,
+    expect(content).toContain('A new launch is eligible only when');
+    expect(content).toMatch(/explicit pre-start rejection/i);
+    expect(content).not.toMatch(
+      /accepted native reviewer[\s\S]{0,220}retry the same already-selected native `agent_type` route/i,
     );
   });
 
@@ -1055,7 +1262,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.14');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.15');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1078,7 +1285,7 @@ describe('validateOatSkills', () => {
   });
 
   it('blocks accepted reviewer BLOCKED terminals without invoking fallback', async () => {
-    const coordinator = await readRepoFile(
+    const phaseAgent = await readRepoFile(
       '.agents/agents/oat-phase-implementer.md',
     );
     const implement = await readRepoFile(
@@ -1093,13 +1300,16 @@ describe('validateOatSkills', () => {
       implement.indexOf('### Step 15: Prompt for Next Steps'),
     );
 
-    expect(coordinator).toMatch(
-      /accepted\s+terminal\s+results[\s\S]{0,160}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
+    expect(phaseAgent).toMatch(
+      /Accepted terminal\s+results[\s\S]{0,160}`BLOCKED`[\s\S]{0,180}never trigger fallback/i,
     );
-    for (const [name, content] of [
-      ['phase reviewer', phaseReview],
-      ['final reviewer', finalReview],
-    ] as const) {
+    expect(phaseReview).toMatch(
+      /interruption, `BLOCKED`, or contract refusal is the review outcome/i,
+    );
+    expect(phaseReview).toMatch(
+      /never a\s+reason to replace an accepted reviewer/i,
+    );
+    for (const [name, content] of [['final reviewer', finalReview]] as const) {
       expect(content, `${name} BLOCKED gate`).toMatch(
         /accepted reviewer[\s\S]{0,100}`BLOCKED`[\s\S]{0,180}(?:blocks|must block)[\s\S]{0,120}review/i,
       );
@@ -1145,7 +1355,8 @@ describe('validateOatSkills', () => {
     expect(shared).toMatch(
       /complete\s+(?:recommended\s+defaults|bundled\s+recommendation)/i,
     );
-    expect(shared).toMatch(/exact registered.*variant/i);
+    expect(shared).toContain('exact registered');
+    expect(shared).toContain('native `agent_type`');
     expect(shared).toMatch(/fresh Codex child/i);
     expect(shared).toMatch(
       /explicit\s+model.*reasoning\s+effort.*canonical\s+role\s+instructions/is,
@@ -1320,8 +1531,11 @@ describe('validateOatSkills', () => {
       expect(content, `${name} Cursor payload`).toContain(
         'providers.cursor.dispatchArgs.model',
       );
-      expect(content, `${name} exact payload retry`).toMatch(
-        /(?:timeout|retry|re-dispatch)[\s\S]{0,420}(?:same|exact)[\s\S]{0,260}(?:payload|model argument)/i,
+      expect(content, `${name} accepted-handle continuation`).toMatch(
+        /(?:After acceptance|accepted reviewer)[\s\S]{0,220}(?:existing|same) (?:reviewer |child )?handle/i,
+      );
+      expect(content, `${name} terminal no replacement`).toMatch(
+        /terminal timeout[\s\S]{0,180}(?:block|escalate)[\s\S]{0,180}(?:without another launch|cannot launch a replacement)/i,
       );
     }
 
@@ -1342,95 +1556,48 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('coordinates one exact serial task worker per plan task', async () => {
+  it('restores one direct phase implementer with optional nested dispatch', async () => {
     const agent = await readRepoFile('.agents/agents/oat-phase-implementer.md');
     const implement = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.5');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.7');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
-      /phase coordinator/i,
+      /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.36');
-
-    const coordinator = agent.slice(
-      agent.indexOf('### Mode: Phase Coordinator'),
-      agent.indexOf('### Mode: Task Worker'),
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.0.40');
+    expect(agent).toMatch(
+      /directly execute(?:s)? every task in dependency order/i,
     );
-    const worker = agent.slice(agent.indexOf('### Mode: Task Worker'));
-
-    expect(coordinator).toMatch(
-      /must not implement ordinary plan tasks (?:itself|in its own context)/i,
+    expect(agent).toMatch(/one\s+verified\s+commit per task/i);
+    expect(agent).toContain('between-task transition check');
+    expect(agent).toContain('git -c core.hooksPath=/dev/null commit');
+    expect(agent).toContain('`--no-verify`');
+    expect(agent).toContain('Phase-Wide Self-Review');
+    expect(agent).toMatch(/Ordinary phase tasks are implemented directly/i);
+    expect(agent).toMatch(/Nested dispatch is optional/i);
+    expect(agent).toContain(
+      '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
     );
-    expect(coordinator).toMatch(/one exact task worker at a time/i);
-    expect(coordinator).toMatch(
-      /serial(?:ly)?[\s\S]{0,180}(?:same|one) worktree/i,
+    expect(agent).toContain('.agents/skills/oat-dispatch-subagents/SKILL.md');
+    expect(agent).toMatch(
+      /root[\s\S]{0,180}dispatches the independent phase reviewer/i,
     );
-    expect(coordinator).toMatch(
-      /parallel[\s\S]{0,240}plan-declared[\s\S]{0,180}(?:phase|worktree)/i,
-    );
-    expect(coordinator).toContain('--ceiling-tier');
-    expect(coordinator).toContain('--candidate-model');
-    expect(coordinator).toContain('providers.codex.dispatchArgs.variant');
-    expect(coordinator).toContain('providers.claude.dispatchArgs.model');
-    expect(coordinator).toContain('providers.cursor.dispatchArgs.model');
-    expect(coordinator).toMatch(
-      /Codex[\s\S]{0,180}(?:attempt|dispatch)[\s\S]{0,180}exact materialized `agent_type` first/i,
-    );
-    expect(coordinator).toMatch(
-      /only explicit\s+pre-start native role-selection rejection[\s\S]{0,260}(?:permits|allows)[\s\S]{0,160}fresh pinned fallback/i,
-    );
-    expect(coordinator).toMatch(
-      /launcher-owned `target`, `model_axis`, and `effort_axis`[\s\S]{0,260}(?:immutable|must not)[\s\S]{0,180}(?:worker )?self-report/i,
-    );
-    expect(coordinator).toMatch(
-      /missing telemetry[\s\S]{0,180}accepted\s+terminal\s+results[\s\S]{0,120}`BLOCKED`[\s\S]{0,180}never\s+trigger fallback/i,
-    );
-    expect(coordinator).toMatch(
-      /Cursor[\s\S]{0,260}(?:byte-for-byte|opaque)[\s\S]{0,220}(?:actual|invocation)/i,
-    );
-    expect(coordinator).toMatch(
-      /(?:missing|absent)[\s\S]{0,180}(?:above|exceeds)[\s\S]{0,220}(?:cannot|unable)[\s\S]{0,220}(?:fail closed|BLOCKED)/i,
-    );
-    expect(coordinator).toMatch(
-      /(?:do not|never)[\s\S]{0,180}(?:coordinator target|base role|provider default)[\s\S]{0,240}(?:downgrade|fallback|substitute)/i,
-    );
-    expect(coordinator).toMatch(
-      /verify[\s\S]{0,160}(?:reported )?commit[\s\S]{0,180}(?:HEAD|git)/i,
-    );
-    expect(coordinator).toMatch(
-      /Task Dispatch Summary[\s\S]{0,260}Exact target[\s\S]{0,120}Result[\s\S]{0,120}Commit/i,
-    );
-
-    for (const field of [
-      'task_id',
-      'file_boundary',
-      'verification',
-      'commit_convention',
-    ]) {
-      expect(worker, `bounded Task Scope field ${field}`).toContain(field);
-    }
-    expect(worker).toMatch(/exactly one task/i);
-    expect(worker).toMatch(
-      /must not dispatch another\s+(?:coordinator|worker)/i,
-    );
+    expect(agent).toContain('`continuation_events`');
+    expect(agent).toMatch(/do not invent a new\s+schema/i);
 
     const perPhase = implement.slice(
       implement.indexOf('### Step 5: Per-Phase Execution'),
       implement.indexOf('### Per-Phase Review'),
     );
     expect(perPhase).toContain('--ceiling-tier');
-    expect(perPhase).toMatch(/project or phase named ceiling/i);
-    expect(perPhase).toMatch(/one exact task worker/i);
-    expect(perPhase).toMatch(/Task Scope[\s\S]{0,500}task_id:/i);
-    expect(perPhase).toMatch(
-      /same worktree[\s\S]{0,220}serial|serial[\s\S]{0,220}same worktree/i,
-    );
-    expect(perPhase).toMatch(
-      /(?:missing|absent|exceeds|above)[\s\S]{0,320}(?:fail closed|block)/i,
-    );
+    expect(perPhase).toMatch(/one exact phase implementer target/i);
+    expect(perPhase).toMatch(/Phase Scope:[\s\S]{0,800}phase_base_head:/i);
+    expect(perPhase).toMatch(/Ordinary tasks do not require per-task workers/i);
+    expect(perPhase).toMatch(/optional bounded child/i);
+    expect(perPhase).toMatch(/exactly one append-only commit in plan\s+order/i);
   });
 
   it('documents adaptive named ceilings and exact task-worker dispatch', async () => {
@@ -1487,19 +1654,22 @@ describe('validateOatSkills', () => {
     expect(providers).toMatch(
       /project-config[\s\S]{0,260}(?:tracked|version-controlled)[\s\S]{0,260}user-config[\s\S]{0,180}~\/\.codex/i,
     );
-    expect(providers).toMatch(/phase coordinator[\s\S]{0,220}task worker/i);
+    expect(providers).toMatch(
+      /phase implementer[\s\S]{0,300}directly executes/i,
+    );
+    expect(providers).toMatch(/optional nested/i);
     expect(providers).toContain('providers.claude.dispatchArgs.model');
     expect(providers).toContain('providers.cursor.dispatchArgs.model');
     expect(providers).toMatch(/Cursor[\s\S]{0,220}(?:opaque|byte-for-byte)/i);
 
-    expect(execution).toMatch(/phase coordinator/i);
-    expect(execution).toMatch(/one exact task worker (?:per task|at a time)/i);
-    expect(execution).toMatch(/Task Scope[\s\S]{0,600}task_id:/i);
+    expect(execution).toMatch(/root[\s\S]{0,160}phase implementer/i);
+    expect(execution).toMatch(/one exact\s+phase implementer target/i);
+    expect(execution).toMatch(/Phase Scope[\s\S]{0,600}phase_id:/i);
     expect(execution).toMatch(
       /serial(?:ly)?[\s\S]{0,220}(?:same|one) worktree/i,
     );
     expect(execution).toMatch(
-      /(?:must not|does not|never)[\s\S]{0,160}implement ordinary (?:plan )?tasks/i,
+      /directly (?:implements|executes)[\s\S]{0,220}(?:planned|phase) tasks?/i,
     );
     expect(execution).toContain('--ceiling-tier');
     expect(execution).toContain('providers.codex.dispatchArgs.variant');
@@ -1513,8 +1683,8 @@ describe('validateOatSkills', () => {
       expect(content, `${name} no exact-family policy mapping`).not.toContain(
         'min(preferred, cap)',
       );
-      expect(content, `${name} no whole-phase executor`).not.toMatch(
-        /phase implementer executes all tasks in the phase/i,
+      expect(content, `${name} root-owned phase execution`).toMatch(
+        /phase implementer[\s\S]{0,300}(?:executes|implements)[\s\S]{0,200}tasks?/i,
       );
     }
   });
@@ -1626,8 +1796,11 @@ describe('validateOatSkills', () => {
       ['oat-project-implement', implement],
       ['oat-project-review-provide', reviewProvide],
     ] as const) {
+      expect(content, `${skillName} concrete Codex target`).toMatch(
+        /concrete managed Codex target/i,
+      );
       expect(content, `${skillName} target-first precedence`).toMatch(
-        /concrete managed Codex target[\s\S]{0,500}(?:before|takes precedence over)[\s\S]{0,200}(?:tier|availability)/i,
+        /(?:before|takes precedence)[\s\S]{0,220}(?:tier|availability)/i,
       );
       expect(content, `${skillName} unavailable-role route`).toMatch(
         /(?:unavailable|cannot select|native role-selection rejection)[\s\S]{0,500}fresh Codex child[\s\S]{0,500}(?:block|fail closed)/i,
@@ -1665,7 +1838,7 @@ describe('validateOatSkills', () => {
     );
   });
 
-  it('keeps every artifact-review caller on its resolved target', async () => {
+  it('keeps planning artifact reviews inherited and accepted launches terminal', async () => {
     const callers = [
       [
         'spec-driven plan',
@@ -1679,32 +1852,41 @@ describe('validateOatSkills', () => {
         'import-plan',
         await readRepoFile('.agents/skills/oat-project-import-plan/SKILL.md'),
       ],
-      [
-        'implementation execution docs',
-        await readRepoFile(
-          'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
-        ),
-      ],
     ] as const;
 
     for (const [name, content] of callers) {
-      expect(content, `${name} exact or pinned route`).toMatch(
-        /exact (?:resolver-returned |registered )*(?:reviewer )?(?:role|variant)[\s\S]{0,500}(?:fresh|new) Codex child[\s\S]{0,300}pinned/i,
+      expect(content, `${name} inherits by default`).toMatch(
+        /planning parent[\s\S]{0,120}deliberate inheritance[\s\S]{0,80}default/i,
       );
-      expect(content, `${name} guarded inline route`).toMatch(
-        /inline[\s\S]{0,320}verified equivalent current-host[\s\S]{0,240}(?:model|effort|controls)/i,
+      expect(content, `${name} bounds managed exception`).toMatch(
+        /unknown or below[\s\S]{0,120}reviewer ceiling/i,
       );
-      expect(content, `${name} explicit base exceptions`).toMatch(
-        /explicit inherit[\s\S]{0,240}managed-uncapped/i,
+      expect(content, `${name} tries exact native Codex first`).toMatch(
+        /Codex[\s\S]{0,180}exact native `agent_type`/i,
       );
-      expect(content, `${name} target-preserving timeout retry`).toMatch(
-        /(?:timeout|does not conclude)[\s\S]{0,500}retry[\s\S]{0,320}(?:same exact|pinned)[\s\S]{0,320}(?:fail closed|block)/i,
+      expect(content, `${name} gates another Codex route`).toContain(
+        'recorded actual pre-start',
+      );
+      expect(content, `${name} permits pinned child after rejection`).toMatch(
+        /rejection permits a fresh[\s\S]{0,40}child pinned/i,
+      );
+      expect(content, `${name} accepted terminality`).toContain(
+        'After acceptance',
+      );
+      expect(content, `${name} continues accepted handle`).toContain(
+        'existing reviewer',
+      );
+      expect(content, `${name} blocks terminal timeout`).toMatch(
+        /terminal timeout[\s\S]{0,120}(?:blocks|escalates)[\s\S]{0,120}without another launch/i,
+      );
+      expect(content, `${name} limits replacement`).toMatch(
+        /Replacement eligibility[\s\S]{0,120}pre-start rejection/i,
       );
       expect(content, `${name} no unconditional tier fallback`).not.toMatch(
         /Tier 2 inline fallback otherwise/i,
       );
-      expect(content, `${name} no timeout inline downgrade`).not.toMatch(
-        /(?:timeout|does not conclude)[\s\S]{0,240}fall(?:ing)? back inline/i,
+      expect(content, `${name} no accepted timeout retry`).not.toMatch(
+        /timeout[\s\S]{0,240}retry the same exact role or pinned child/i,
       );
     }
   });
@@ -1731,7 +1913,7 @@ describe('validateOatSkills', () => {
     );
     const phaseReview = implement.slice(
       implement.indexOf('### Per-Phase Review'),
-      implement.indexOf('**Verdict outcomes:**'),
+      implement.indexOf('### Optional External Phase Review Gate'),
     );
     const finalReview = implement.slice(
       implement.indexOf('**Workflow preference check (before prompting):**'),
@@ -1753,9 +1935,18 @@ describe('validateOatSkills', () => {
       expect(content, `${name} actual model argument`).toMatch(
         /actual\s+(?:(?:provider|host)\s+)?invocation[\s\S]{0,280}(?:model|dispatchArgs\.model)/i,
       );
-      expect(content, `${name} target-preserving retry`).toMatch(
-        /(?:timeout|retry|re-dispatch)[\s\S]{0,500}(?:same|exact)[\s\S]{0,300}(?:model|payload|dispatch argument)/i,
-      );
+      if (name === 'phase review') {
+        expect(content, `${name} accepted handle`).toMatch(
+          /after acceptance[\s\S]{0,180}accepted reviewer\s+handle/i,
+        );
+        expect(content, `${name} no replacement`).toMatch(
+          /never a\s+reason to replace an accepted reviewer/i,
+        );
+      } else {
+        expect(content, `${name} target-preserving retry`).toMatch(
+          /(?:timeout|retry|re-dispatch)[\s\S]{0,500}(?:same|exact)[\s\S]{0,300}(?:model|payload|dispatch argument)/i,
+        );
+      }
       expect(content, `${name} unsupported model binding`).toMatch(
         /(?:cannot|unable to) (?:apply|pass|bind)[\s\S]{0,280}(?:fail closed|block)/i,
       );
@@ -2231,11 +2422,11 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.9'],
-      ['oat-project-plan', '1.3.13'],
-      ['oat-project-quick-start', '2.1.14'],
-      ['oat-project-import-plan', '1.4.5'],
-      ['oat-project-review-provide', '1.3.14'],
+      ['oat-project-plan-writing', '1.2.12'],
+      ['oat-project-plan', '1.3.14'],
+      ['oat-project-quick-start', '2.1.15'],
+      ['oat-project-import-plan', '1.4.6'],
+      ['oat-project-review-provide', '1.3.15'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2250,8 +2441,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.0.36'],
-      ['oat-project-review-provide', '1.3.14'],
+      ['oat-project-implement', '2.0.40'],
+      ['oat-project-review-provide', '1.3.15'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 
@@ -2307,6 +2498,210 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('loads project dispatch through the provider-neutral engine', async () => {
+    const adapterPath =
+      '.agents/skills/oat-project-dispatch-subagents/SKILL.md';
+    const enginePath = '.agents/skills/oat-dispatch-subagents/SKILL.md';
+    const adapter = await readRepoFile(adapterPath);
+    const engine = await readRepoFile(enginePath);
+    const consumers = [
+      '.agents/skills/oat-project-implement/SKILL.md',
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+      '.agents/agents/oat-phase-implementer.md',
+    ];
+
+    expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
+    expect(engine).toMatch(/^version:\s*1\.1\.2$/m);
+    expect(engine).toMatch(/^user-invocable:\s*false$/m);
+    expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
+    expect(adapter).toMatch(/^version:\s*1\.1\.2$/m);
+    expect(adapter).toContain('oat-dispatch-subagents');
+    expect(engine).toMatch(/resolved dispatch policy or named ceiling/i);
+    expect(engine).toMatch(
+      /intersect configured candidates[\s\S]{0,120}(?:catalog|selectors)/i,
+    );
+    expect(engine).toMatch(/catalog snapshot[\s\S]{0,160}dispatch context/i);
+    expect(adapter).toMatch(
+      /Phase implementer[\s\S]{0,240}complete phase[\s\S]{0,180}per-task commits/i,
+    );
+    expect(engine).toMatch(
+      /select one[\s\S]{0,180}provider-CLI[\s\S]{0,180}before launch/i,
+    );
+    expect(engine).toMatch(
+      /record route, selection source, selection reason, candidates/i,
+    );
+    expect(engine).toMatch(
+      /accepted launch[\s\S]{0,180}(?:terminal|no replacement)/i,
+    );
+    expect(adapter).toMatch(
+      /planning (?:self-)?review[\s\S]{0,180}inherit[\s\S]{0,280}implementation phase review[\s\S]{0,240}(?:named )?ceiling/i,
+    );
+    expect(adapter).toMatch(
+      /root owns implementation phase-review selection[\s\S]{0,320}pre-start CLI reviewer route/i,
+    );
+    expect(adapter).toMatch(/Gate independence is project policy/i);
+    expect(adapter).toMatch(/configured cross-family gates/i);
+    expect(engine).toMatch(/invalid-run-abort[\s\S]{0,220}never authorizes/i);
+    expect(adapter).toMatch(
+      /tracked smoke marker[\s\S]{0,320}invalid-run-abort/i,
+    );
+
+    for (const path of consumers) {
+      const content = await readRepoFile(path);
+      expect(content, path).toContain(adapterPath);
+      expect(content, path).toContain(enginePath);
+    }
+  });
+
+  it('loads exactly one active-provider subagent dispatch reference', async () => {
+    const root = '.agents/skills/oat-dispatch-subagents';
+    const contract = await readRepoFile(`${root}/SKILL.md`);
+    const cursor = await readRepoFile(`${root}/references/provider-cursor.md`);
+    const codex = await readRepoFile(`${root}/references/provider-codex.md`);
+    const claude = await readRepoFile(`${root}/references/provider-claude.md`);
+    const consumers = [
+      await readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      await readRepoFile('.agents/agents/oat-phase-implementer.md'),
+    ];
+
+    for (const provider of ['cursor', 'codex', 'claude']) {
+      expect(contract).toContain(`references/provider-${provider}.md`);
+    }
+    for (const consumer of consumers) {
+      expect(consumer).toMatch(
+        /read exactly one[\s\S]{0,180}active-provider[\s\S]{0,180}oat-dispatch-subagents\/references/i,
+      );
+    }
+
+    expect(cursor).toMatch(/native[\s\S]{0,160}opaque/i);
+    expect(cursor).toMatch(/omit(?:ted)? model[\s\S]{0,120}inherit/i);
+    expect(cursor).toMatch(
+      /root and nested catalogs[\s\S]{0,180}(?:volatile|independent|snapshot)/i,
+    );
+    expect(cursor).toMatch(
+      /pre-start CLI routes[\s\S]{0,320}native mismatch[\s\S]{0,220}recorded before launch/i,
+    );
+    expect(cursor).toMatch(
+      /catalog-mismatch advisory[\s\S]{0,320}possible ladder additions[\s\S]{0,240}do not remove/i,
+    );
+    expect(codex).toMatch(/materialized role/i);
+    expect(codex).toMatch(/maximum nesting depth/i);
+    expect(codex).toMatch(/scoped writable roots/i);
+    expect(codex).toMatch(/configured-invocation evidence/i);
+    expect(claude).toMatch(/native agent tool/i);
+    expect(claude).toContain('`claude -p`');
+  });
+
+  it('aligns human selection fields with smoke evidence wire paths', async () => {
+    const engine = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    );
+    const schema = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/references/record-schema.md',
+    );
+    const contract = `${engine}\n${schema}`;
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const smoke = await readRepoFile('tools/smoke/CONTRACT.md');
+
+    for (const [name, content] of [
+      ['shared dispatch contract', contract],
+      ['implementation dispatch notes', implement],
+      ['smoke evidence contract', smoke],
+    ] as const) {
+      expect(content, `${name} selection reason`).toContain('selection_reason');
+      expect(content, `${name} candidates`).toContain('candidates_considered');
+    }
+    for (const reason of [
+      'native-catalog',
+      'native-catalog-unsatisfying',
+      'pre-start-rejection',
+      'inherit',
+    ]) {
+      expect(contract).toContain(reason);
+      expect(implement).toContain(reason);
+      expect(smoke).toContain(reason);
+    }
+    expect(smoke).toMatch(
+      /selection_reason[\s\S]{0,160}selection\.reason[\s\S]{0,240}candidates_considered[\s\S]{0,160}selection\.candidatesConsidered/,
+    );
+    expect(smoke).toMatch(
+      /candidates_considered[\s\S]{0,120}ordered decision evidence[\s\S]{0,120}never be sorted/i,
+    );
+    expect(smoke).toContain('`gate-target` is intentionally outside this');
+    expect(smoke).toMatch(/separate canonical[\s\S]{0,40}gate JSON/i);
+  });
+
+  it('makes planning inheritance and root-owned phase review executable', async () => {
+    const planning = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const phaseAgent = await readRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const autoLoop = planning.slice(
+      planning.indexOf('## Auto Artifact-Review Loop'),
+      planning.indexOf('## Canonical Plan Format'),
+    );
+    const reviewRoute = implement.slice(
+      implement.indexOf('### Per-Phase Review'),
+      implement.indexOf('### Optional External Phase Review Gate'),
+    );
+    const resumeRoute = implement.slice(
+      implement.indexOf('### Step 1.5: Resumption Detection'),
+      implement.indexOf('### Step 2: Read Plan Document'),
+    );
+
+    expect(autoLoop).toMatch(
+      /Default:[\s\S]{0,220}parent-at-or-above-ceiling[\s\S]{0,180}omit the child model[\s\S]{0,120}selection_reason: inherit/i,
+    );
+    expect(autoLoop).toMatch(
+      /Exception:[\s\S]{0,180}planning parent is unknown or below the ceiling[\s\S]{0,180}concrete ceiling target/i,
+    );
+    expect(autoLoop).toMatch(
+      /terminal timeout[\s\S]{0,120}(?:blocks|escalates)[\s\S]{0,160}cannot launch a replacement/i,
+    );
+
+    expect(reviewRoute).toContain('--role reviewer');
+    expect(reviewRoute).toMatch(/Do not pass[\s\S]{0,80}`--ceiling-tier`/i);
+    expect(reviewRoute).toMatch(/root workflow owns implementation review/i);
+    expect(reviewRoute).toMatch(/exact\s+review payload before launch/i);
+    expect(reviewRoute).toContain('selection reason');
+    expect(reviewRoute).toContain('candidates');
+    expect(reviewRoute).toMatch(
+      /After acceptance[\s\S]{0,220}only through the accepted reviewer\s+handle/i,
+    );
+    expect(reviewRoute).toMatch(
+      /Critical\/Important findings[\s\S]{0,260}Resume the original phase implementer handle/i,
+    );
+    expect(reviewRoute).toMatch(
+      /fresh phase implementer[\s\S]{0,160}same exact target[\s\S]{0,240}original `request_id`[\s\S]{0,120}`continuation_events`/i,
+    );
+    expect(reviewRoute).toMatch(
+      /do not support resuming a completed child handle[\s\S]{0,120}expected rather than an anomalous recovery/i,
+    );
+    expect(phaseAgent).toMatch(/do not own[\s\S]{0,120}phase review dispatch/i);
+    expect(phaseAgent).toMatch(/Never dispatch implementation\s+self-review/i);
+    expect(phaseAgent).toMatch(
+      /Concurrent child writers[\s\S]{0,180}(?:disjoint|separate worktree)/i,
+    );
+    expect(resumeRoute).toContain('root-owned');
+    expect(resumeRoute).toMatch(
+      /root reviewer launch was accepted[\s\S]{0,180}existing reviewer handle[\s\S]{0,180}never replace/i,
+    );
+    expect(resumeRoute).toContain('explicitly');
+    expect(resumeRoute).toMatch(/rejected before\s+child start/i);
+    expect(resumeRoute).toContain('resume the original phase implementer');
+    expect(resumeRoute).toMatch(
+      /fresh same-target[\s\S]{0,160}original[\s\S]{0,80}`request_id`[\s\S]{0,80}`continuation_events`/i,
+    );
+    expect(resumeRoute).not.toMatch(/re-dispatch the reviewer/i);
+  });
+
   it('requires quick-start to describe session-context synthesis and discovery backfill', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
     const skillPath = join(
@@ -2340,7 +2735,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.14');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.15');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-07-13 — BL-260711-add-live-workflow-smoke — Add live workflow smoke fixture — Shipped a disposable three-phase fixture, root-owned phase-agent orchestration, deterministic and live evidence, recovery and preflight hardening, and operator documentation; the canonical Codex packet passes 10/10 assertions.
 - 2026-07-11 — BL-260709-split-post-implementation — Split post-implementation sequence into pre- and post-approval steps — Added structured pre- and post-approval sequencing with legacy compatibility and restart-safe final HiLL handling.
 - 2026-07-11 — BL-260707-cache-cursor-model-catalog — Cache Cursor model catalog during matrix validation — Added pass-scoped Cursor probe and broad-catalog caching for adoption and doctor.
 - 2026-07-11 — BL-260707-consolidate-dispatch-matrix — Consolidate dispatch matrix normalization and traversal — Consolidated dispatch matrix normalization and traversal behind shared adapters.

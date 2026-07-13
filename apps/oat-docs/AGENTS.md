@@ -40,7 +40,7 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 
 1. Use the `oat-project-document` skill during OAT project workflows. It reads project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`) and proposes evidence-backed doc updates — no speculation, no content that doesn't trace back to the source artifacts.
 2. The skill generates recommendations; you approve them before they land. Treat it like analyze/apply but scoped to a single project's documentation delta.
-3. Do not hand-write project-derived docs that bypass this flow. Bypassing means future runs of the skill will re-surface the same content as "missing" because the provenance chain is broken.
+3. `oat-project-document` is the default end-of-project documentation flow, and its core guidance is valuable and should be generally followed. An explicit in-plan doc-authoring task is sanctioned when documentation is central to the project's scope, provided that task still honors the skill's core guidance: delta analysis against existing pages, user approval of substantive content, nav sync, and generated-index regeneration. Do not hand-write project-derived docs outside either flow — bypassing both means future runs of the skill will re-surface the same content as "missing" because the provenance chain is broken.
 
 ## What not to do
 

@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap
-version: 1.2.0
+version: 1.2.1
 description: Use when creating or resuming a git worktree for OAT implementation. Creates or validates a worktree and runs OAT bootstrap checks.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--existing]'
 disable-model-invocation: true
@@ -15,7 +15,8 @@ Create or resume a git worktree and prepare it for OAT development.
 ## Prerequisites
 
 - Git repository is clean enough to create/switch worktrees.
-- Node.js and pnpm are available in the target environment.
+- The toolchain required by the repository is available in the target
+  environment.
 - OAT project files exist (`.oat/`, `.agents/`).
 
 ## Mode Assertion
@@ -166,21 +167,30 @@ oat local sync "{target-path}" 2>/dev/null || true
 - Non-blocking: if sync fails or no `localPaths` are configured, bootstrap continues.
 - Does not overwrite existing paths in the target (use `--force` to override).
 
-### Step 3: Run OAT Bootstrap
+### Step 3: Resolve and Run the Repository Bootstrap
 
-Run bootstrap and readiness checks in the target worktree:
+Resolve setup from repository context; do not assume Node.js, pnpm, or any
+other ecosystem:
 
-```bash
-pnpm run worktree:init
-oat status --scope project
-pnpm test
-git status --porcelain
-```
+1. Read the applicable agent instructions and contributing/setup guidance.
+2. Inspect repository task definitions, manifests, and lockfiles.
+3. Prefer an explicit worktree bootstrap command when the repository declares
+   one. For example, this repository documents a `worktree:init` script and its
+   package-manager invocation in `AGENTS.md` and `package.json`.
+4. If no command exists, derive the minimum safe setup needed for a fresh
+   worktree from repository context: dependency setup, generated files, build,
+   and any required local configuration.
+5. State the exact selected commands and evidence before executing them.
+
+Run the selected bootstrap command, then the repository's documented readiness
+check and a proportionate baseline verification. Run `oat status --scope
+project` when the initialized repository contains an OAT project. Finish with
+`git status --porcelain`.
 
 Required behavior:
 
-- Stop immediately if `worktree:init` or `status` fails.
-- If `pnpm test` fails:
+- Stop immediately if the selected bootstrap or required status check fails.
+- If the selected baseline verification fails:
   - show a concise failure summary
   - ask the user whether to `abort` or `proceed anyway`
   - if user proceeds:

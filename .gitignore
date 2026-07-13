@@ -5,6 +5,8 @@ node_modules
 
 # testing
 coverage
+tools/smoke/.runs/
+tools/smoke/recovery/
 
 # misc
 .DS_Store
@@ -16,7 +18,8 @@ coverage
 # build outputs
 dist/
 build/
-packages/cli/assets/
+packages/cli/assets/*
+!packages/cli/assets/public-package-versions.json
 apps/oat-docs/site/
 
 # Next.js

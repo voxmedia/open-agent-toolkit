@@ -29,14 +29,22 @@ interface HarnessOptions {
   processEnv?: NodeJS.ProcessEnv;
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  writeDiagnostic?: (message: string) => void;
 }
 
 interface ProcessCall {
   command: string;
   args: string[];
+  livenessIntervalMs?: number;
   purpose: 'host-detection' | 'availability' | 'execute';
-  stdio: 'ignore' | 'inherit';
+  stdio: 'ignore' | 'inherit' | 'pipe';
   timeoutMs: number;
+}
+
+interface LivenessSnapshot {
+  elapsedMs: number;
+  hardBudgetMs: number;
+  idleMs: number;
 }
 
 type ProcessRunner = (
@@ -45,6 +53,8 @@ type ProcessRunner = (
   options: {
     cwd: string;
     env: NodeJS.ProcessEnv;
+    livenessIntervalMs?: number;
+    onLiveness?: (snapshot: LivenessSnapshot) => void;
     purpose: ProcessCall['purpose'];
     stdio: ProcessCall['stdio'];
     timeoutMs: number;
@@ -76,6 +86,9 @@ function createHarness(options: HarnessOptions): {
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
     processEnv: options.processEnv ?? {},
+    ...(options.writeDiagnostic
+      ? { writeDiagnostic: options.writeDiagnostic }
+      : {}),
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
@@ -140,6 +153,7 @@ function createProcessRunner(
     availableTargets?: Iterable<string>;
     executeExitCode?: number;
     executeTimedOut?: boolean;
+    livenessSnapshots?: LivenessSnapshot[];
     onExecute?: (call: ProcessCallInput) => Promise<void> | void;
   } = {},
 ): { calls: ProcessCall[]; runProcess: ProcessRunner } {
@@ -170,6 +184,7 @@ function createProcessRunner(
     calls.push({
       command,
       args: [...args],
+      livenessIntervalMs: runOptions.livenessIntervalMs,
       purpose: runOptions.purpose,
       stdio: runOptions.stdio,
       timeoutMs: runOptions.timeoutMs,
@@ -204,6 +219,9 @@ function createProcessRunner(
 
     if (runOptions.purpose === 'execute') {
       lastExecutePrompt = args.at(-1) ?? '';
+      for (const snapshot of options.livenessSnapshots ?? []) {
+        runOptions.onLiveness?.(snapshot);
+      }
       await options.onExecute?.({
         command,
         args: [...args],
@@ -251,6 +269,7 @@ async function runReviewGate(options: {
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  writeDiagnostic?: (message: string) => void;
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -261,6 +280,7 @@ async function runReviewGate(options: {
     processEnv: options.processEnv,
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
+    writeDiagnostic: options.writeDiagnostic,
   });
   await runCommand(
     command,
@@ -522,7 +542,7 @@ describe('oat gate', () => {
     expect(call).toMatchObject({
       command: expected.command,
       purpose: 'execute',
-      stdio: 'inherit',
+      stdio: 'pipe',
     });
     expect(call?.args.slice(0, expected.baseArgs.length)).toEqual(
       expected.baseArgs,
@@ -2807,7 +2827,7 @@ describe('oat gate', () => {
         command: testCase.expectedCommand,
         args: testCase.expectedArgs,
         purpose: 'execute',
-        stdio: 'inherit',
+        stdio: 'pipe',
       });
       expect(process.exitCode).toBe(0);
     }
@@ -3039,7 +3059,7 @@ describe('oat gate', () => {
       command: 'codex',
       args: ['exec', 'Review', 'the', 'current', 'project'],
       purpose: 'execute',
-      stdio: 'inherit',
+      stdio: 'pipe',
       timeoutMs: 15 * 60 * 1_000,
     });
     expect(process.exitCode).toBe(7);
@@ -3086,7 +3106,7 @@ describe('oat gate', () => {
 
     expect(runner.calls.at(-1)).toMatchObject({
       purpose: 'execute',
-      stdio: 'inherit',
+      stdio: 'pipe',
     });
     expect(process.exitCode).toBe(0);
   });
@@ -4215,7 +4235,7 @@ describe('oat gate', () => {
 
     expect(runner.calls.at(-1)).toMatchObject({
       purpose: 'execute',
-      stdio: 'inherit',
+      stdio: 'pipe',
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'review_failed',
@@ -4321,7 +4341,7 @@ describe('oat gate', () => {
 
     expect(runner.calls.at(-1)).toMatchObject({
       purpose: 'execute',
-      stdio: 'inherit',
+      stdio: 'pipe',
       timeoutMs: 1234,
     });
     expect(capture.jsonPayloads[0]).toMatchObject({
@@ -4342,6 +4362,63 @@ describe('oat gate', () => {
       },
     });
     expect(process.exitCode).toBe(124);
+  });
+
+  it('emits elapsed, idle, and hard-budget gate liveness telemetry', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        { elapsedMs: 1_000, hardBudgetMs: 5_000, idleMs: 250 },
+        { elapsedMs: 2_000, hardBudgetMs: 5_000, idleMs: 1_250 },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_EXEC_TIMEOUT_MS: '5000',
+        OAT_GATE_LIVENESS_INTERVAL_MS: '250',
+      },
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      livenessIntervalMs: 250,
+      purpose: 'execute',
+      stdio: 'pipe',
+      timeoutMs: 5_000,
+    });
+    expect(diagnostics.map((message) => JSON.parse(message))).toEqual(
+      expect.arrayContaining([
+        {
+          elapsedMs: 1_000,
+          hardBudgetMs: 5_000,
+          idleMs: 250,
+          target: 'codex-default',
+          type: 'gate-liveness',
+        },
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 1_250,
+          target: 'codex-default',
+          type: 'gate-liveness',
+        },
+      ]),
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
   });
 
   it('accepts an explicit project name when no active project is configured', async () => {

@@ -1,6 +1,6 @@
 ---
 title: Dispatch Policy
-description: 'How OAT combines owned provider candidate ladders, project and phase named maximum ceilings, exact task dispatch, and provider-specific enforcement.'
+description: 'How OAT combines provider candidate ladders, project and phase named ceilings, exact phase-agent dispatch, and provider-specific enforcement.'
 ---
 
 # Dispatch Policy
@@ -12,15 +12,15 @@ constraints:
   or repo-local config. Each named tier contains one or more exact candidates.
 - A **named ceiling** is a project or phase maximum such as `balanced` or
   `high`. It is not an enduring model-family or effort preference.
-- A **task target** is one exact configured candidate selected at invocation
-  time at or below the named maximum.
+- A **phase target** is one exact configured candidate selected at invocation
+  time at or below the named maximum. Optional nested work resolves separately.
 
 The CLI command remains `oat project dispatch-ceiling resolve` for compatibility.
 Legacy `workflow.dispatchCeiling.*` and `oat_dispatch_ceiling` values remain
 readable, but new projects use ordered candidates plus `oat_dispatch_policy`.
 
 For raw config keys, see [Configuration](../../cli-utilities/configuration.md).
-For the coordinator and task-worker loop, see
+For the root-owned phase-agent loop, see
 [Implementation Execution](implementation-execution.md).
 
 ## Named Policy Choices
@@ -36,8 +36,8 @@ For the coordinator and task-worker loop, see
 
 A named `High` ceiling therefore keeps configured Economy, Balanced, and High
 candidates eligible and available. It does not pin Sol, `opus`, one Cursor
-string, or one effort value. The task coordinator chooses the lowest exact
-candidate it judges sufficient for each bounded task.
+string, or one effort value. The project root chooses one exact candidate it
+judges sufficient for the phase.
 
 `Uncapped` is explicit managed state. It is not represented by omitted policy
 state. `Unresolved` is a planning or preflight deferral and cannot begin
@@ -179,7 +179,7 @@ The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
 does not use task candidate flags.
 
-## Exact Task Resolution
+## Exact Phase Resolution
 
 Planning and implementation preflight resolve the active policy first:
 
@@ -190,9 +190,9 @@ oat project dispatch-ceiling resolve \
   --json
 ```
 
-Before each managed capped implementation or fix task, the phase coordinator
-classifies the bounded task and requests one exact configured candidate. It
-passes the recorded project or narrower phase maximum through the
+Before each managed capped phase or bounded fix continuation, the root requests
+one exact configured candidate. It passes the recorded project or narrower
+phase maximum through the
 invocation-only `--ceiling-tier` option:
 
 ```bash
@@ -237,23 +237,23 @@ Successful JSON reports:
 
 The resolver rejects a missing candidate, an above-ceiling candidate, an
 ambiguous route, malformed ordering, a reviewer candidate request, or controls
-that cannot compile exactly. The coordinator blocks instead of reusing its own
-target, a base role, or a provider default.
+that cannot compile exactly. The root blocks instead of reusing its own target,
+a base role, or a provider default.
 
 `--preferred` remains available for legacy scalar ceilings and managed
-`Uncapped` compatibility. It is not the exact managed task-worker selection
+`Uncapped` compatibility. It is not the exact managed phase-agent selection
 path.
 
 ## Provider Enforcement
 
-| Provider | Exact task invocation                                                                                                              | Failure behavior                          |
+| Provider | Exact phase-agent or optional-child invocation                                                                                     | Failure behavior                          |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable    |
 | Claude   | Pass `providers.claude.dispatchArgs.model` as the actual Task `model`                                                              | Block if the model cannot be applied      |
 | Cursor   | Pass `providers.cursor.dispatchArgs.model` byte-for-byte as the actual invocation model; treat it as opaque                        | Block rather than normalize or substitute |
 | Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory     |
 
-Materialized Codex roles exist before task dispatch after project/user sync.
+Materialized Codex roles exist before phase dispatch after project/user sync.
 The supported catalogue is committed project output; custom Codex candidates
 materialize according to config ownership. Workflow correctness still keeps a
 fresh pinned-child fallback and does not require provider restart or hot reload.
@@ -290,20 +290,23 @@ and prompts, stdout and stderr, exit and duration data, and capture-environment
 details such as user-specific binary paths; it is not limited to the structured
 second-pass projection.
 
-## Coordinator and Worker Layers
+## Phase and Optional-Worker Layers
 
-`oat-phase-implementer` has two explicit modes:
+The phase implementer directly implements the phase tasks from one Phase Scope
+and:
 
-1. **Phase coordinator:** reads phase artifacts once, preserves dependency
-   order, selects one exact candidate per task, waits for each worker, verifies
-   its result and commit, then performs phase-wide integration review. It does
-   not implement ordinary tasks itself.
-2. **Task worker:** receives exactly one Task Scope with one task ID, file
-   boundary, verification commands, commit convention, and exact dispatch
-   payload. It implements and commits that task, then stops.
+1. reads phase artifacts once and preserves dependency order;
+2. directly implements each planned task;
+3. creates and verifies one bounded commit per task; and
+4. runs phase-wide verification before returning to the root.
 
-Workers run serially in the same worktree. Parallelism remains limited to
-plan-declared phase worktrees. See
+Optional nested workers or recon agents resolve their own exact candidates only
+when they provide a concrete benefit. They are not required for ordinary plan
+tasks and do not own phase commits or review dispatch.
+
+Tasks run serially in the same worktree. Parallelism remains limited to
+plan-declared phase worktrees unless optional work has explicitly isolated
+write authority. See
 [Implementation Execution](implementation-execution.md) for the full loop.
 
 ## Dispatch Report V1 and Producer Provenance
