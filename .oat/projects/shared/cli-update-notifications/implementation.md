@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/5 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Notification Policy and Service
 
 **Status:** in_progress
 **Started:** 2026-07-13
@@ -57,10 +57,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add the user update-notification preference
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Implement the cached update notification service
 
 **Status:** pending
 **Commit:** -
@@ -96,12 +96,26 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: CLI Integration and Release Readiness
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Wire notifications into command dispatch
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Document update notification behavior
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Prepare the lockstep public package release
 
 **Status:** pending
 **Commit:** -
