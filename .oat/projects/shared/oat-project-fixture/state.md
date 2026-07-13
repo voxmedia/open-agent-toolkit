@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 493d397fd6c05805094ad91c25c4d72b304fbfc4
+oat_last_commit: 06b6b22edf59509c556d2932a1e18e9b7d172b49
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 5 # override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -45,19 +45,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T02:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T03:15:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Final review fixes complete; independent re-review pending
+**Status:** Implementation and final re-review complete; project closeout pending
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — final fix-range re-review
+Implementation complete — project closeout
 
 ## Artifacts
 
@@ -65,7 +65,7 @@ Implementation — final fix-range re-review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 46 tasks)
-- **Implementation:** `implementation.md` (all tasks complete — re-review pending)
+- **Implementation:** `implementation.md` (complete — final re-review passed)
 
 ## Progress
 
@@ -171,7 +171,8 @@ Implementation — final fix-range re-review
 - ✓ p06-t05–p06-t09 closed all final findings
 - ✓ Canonical reports, 123 smoke tests, full workspace/docs verification, and
   release validation pass at `0.1.59`
-- → Independent fix-range re-review
+- ✓ Independent exact-target fix-range re-review passed 0C/0I/0M/0m
+- → Project closeout
 
 ## Blockers
 
@@ -179,4 +180,5 @@ None
 
 ## Next Milestone
 
-Pass the independent fix-range re-review, then finalize project bookkeeping.
+Integrate the pending documentation worktree updates, then complete project
+summary and final PR bookkeeping.
