@@ -43,7 +43,7 @@ Fully sequential (`oat_plan_parallel_groups: []`). p02 consumes p01's contract d
 
 ## Phase-Boundary Review Note
 
-Per-phase code reviews during implementation dispatch as **native cross-family subagents pinned to the exact resolver-returned target** (project policy: managed/frontier; the user-scope ladder's Cursor frontier cell is explicitly `["gpt-5.6-sol-xhigh"]`, so the resolver returns `gpt-5.6-sol-xhigh` as the reviewer target — natively dispatchable in this host and cross-family against the Claude-family orchestrator). The exact target is preserved on retry/re-dispatch; if the host ever cannot apply it, the review blocks rather than downgrading. This is the FR3 tier-2 mechanism, applied at every phase boundary per user direction (2026-07-11). The external `oat_phase_review_gate` frontmatter is intentionally unset: no qualifying configured gate CLI target exists in this environment, and the setup contract forbids inventing enablement. Review provenance (mechanism, model, family) is recorded per phase in the Reviews table and implementation log.
+Per-phase code reviews during implementation route through the dispatch substrate (`oat-project-dispatch-subagents`) as **pre-launch-selected, cross-family pinned subagent dispatches** (project policy: managed/frontier; the user-scope ladder's Cursor frontier cell is explicitly `["gpt-5.6-sol-xhigh"]`, so the resolver returns `gpt-5.6-sol-xhigh` as the reviewer target — natively dispatchable in this host and cross-family against the Claude-family orchestrator). Route selection happens before launch from catalog evidence; accepted launches are terminal (bounded identical-payload retry, then blocked — never a downgrade). This is the FR3 policy-resolved route, applied at every phase boundary per user direction (2026-07-11). The external `oat_phase_review_gate` frontmatter is intentionally unset: no qualifying configured gate CLI target exists in this environment, and the setup contract forbids inventing enablement. Review provenance is recorded per the dispatch record schema and referenced from the Reviews table and implementation log.
 
 ---
 
@@ -72,7 +72,7 @@ Per-phase code reviews during implementation dispatch as **native cross-family s
 **Steps:**
 
 - Define `OAT_AUTONOMOUS=1` semantics (implies/sets `OAT_NON_INTERACTIVE=1`; session-scoped; never persisted; boundary semantics; provenance rules).
-- Build the gate inventory table covering **all** of: `oat-project-new`, `oat-project-quick-start`, `oat-project-discover`, `oat-project-design`, `oat-project-plan`, `oat-project-import-plan`, `oat-project-implement`, `oat-project-document`, `oat-project-summary`, `oat-project-pr-final`, `oat-project-complete`, `oat-project-review-provide`, `oat-project-review-receive`. Every interactive prompt gets a row: `skill | gate | interactive behavior | autonomous resolution | classification | provenance`.
+- Build the gate inventory table covering **all** of: `oat-project-new`, `oat-project-quick-start`, `oat-project-discover`, `oat-project-design`, `oat-project-plan`, `oat-project-import-plan`, `oat-project-implement` (including its four `references/` files — HiLL confirmation in `plan-and-resume.md`, final closeout in `completion-and-closeout.md`, dispatch preflight in `dispatch-and-dry-run.md`), `oat-project-document`, `oat-project-summary`, `oat-project-pr-final`, `oat-project-complete`, `oat-project-review-provide`, `oat-project-review-receive`, plus the dispatch substrate contracts (`oat-dispatch-subagents`, `oat-project-dispatch-subagents` — authorization prompts, route-approval questions). Every interactive prompt gets a row: `skill | gate | interactive behavior | autonomous resolution | classification | provenance`. Include `oat_post_implement_sequence` states (unset / legacy string / pre-post shape) in the inventory's closeout rows.
 - Classify boundaries: destructive-change risk, unresolved Critical findings, repo-policy approval, missing credentials.
 
 **Verify (row-by-row, not counts):**
@@ -83,24 +83,28 @@ For each listed skill, extract prompt sites (`rg -n "AskUserQuestion|Ask the use
 
 ---
 
-### Task p01-t02: Amend oat-project-implement — non-interactive HiLL + dispatch approval
+### Task p01-t02: Amend oat-project-implement — non-interactive HiLL + closeout + dispatch authorization
 
-**Files:**
+**Files (post-restructure targets):**
 
-- Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump)
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump; pointer notes only)
+- Modify: `.agents/skills/oat-project-implement/references/plan-and-resume.md` (HiLL confirmation touchpoint)
+- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` (Final HiLL Closeout Sequence)
+- Modify: `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md` (dispatch authorization prompt, only if the inventory maps a prompt there)
 
 **Steps:**
 
-- Step 2.5 area: when `OAT_AUTONOMOUS=1` and `oat_plan_hill_phases` unconfirmed → take the existing `HILL_DEFAULT=final` path (write explicit `["<final-phase-id>"]` + `oat_auto_review_at_hill_checkpoints: true`), no prompt (FR6). Preserve `[]` and explicit-list semantics untouched.
-- HiLL checkpoint pause: under autonomy, run auto-review and auto-receive; continue without waiting; record provenance.
-- Tier-1 subagent dispatch approval: auto-approved for the run under autonomy per inventory; log tier selection.
+- `plan-and-resume.md` HiLL confirmation: when `OAT_AUTONOMOUS=1` and `oat_plan_hill_phases` unconfirmed → take the existing `hillCheckpointDefault: final` path (write explicit `["<final-phase-id>"]` + `oat_auto_review_at_hill_checkpoints: true`), no prompt (FR6). Preserve `[]` and explicit-list semantics untouched.
+- Checkpoint pauses: under autonomy, run auto-review and auto-receive; continue without waiting; provenance via dispatch records.
+- `completion-and-closeout.md` Final HiLL Closeout Sequence: under autonomy, auto-approve the final HiLL between `oat_post_implement_sequence` pre- and post-approval steps after a passing auto-review; a failed blocking review is a boundary stop. Handle unset/legacy sequence values per the inventory.
+- Subagent-dispatch authorization prompts: auto-approved for the run under autonomy per inventory; route selection stays with the dispatch substrate (no dispatch-mechanics amendments).
 
 **Verify:**
 
 Run: `pnpm oat:validate-skills`
-Expected: pass; interactive prose paths unchanged (manual diff read confirms amendments are additive `OAT_AUTONOMOUS`-conditional blocks).
+Expected: pass; interactive prose paths unchanged (manual diff read confirms amendments are additive `OAT_AUTONOMOUS`-conditional blocks); smoke fixture run (tools/smoke) confirms interactive topology unchanged.
 
-**Commit:** `feat(p01-t02): autonomy-aware HiLL resolution and dispatch approval in implement`
+**Commit:** `feat(p01-t02): autonomy-aware HiLL resolution, closeout approval, and dispatch authorization in implement`
 
 ---
 
@@ -226,7 +230,7 @@ Probe skill discoverable in fresh context (or contingency wording adopted in p02
 - **First, read both authoring contracts and follow them throughout:** `.agents/skills/create-agnostic-skill/SKILL.md` (baseline: routing-first `Use when…` description formula, progressive disclosure with SKILL.md <500 lines, frontmatter/versioning rules, delegation capability model, examples in both invocation styles) and `.agents/skills/create-oat-skill/SKILL.md` (OAT specialization: mode assertion, progress banners, `{PROJECTS_ROOT}`/local-config resolution, OAT-safe bash patterns).
 - Frontmatter: `version: 1.0.0`, `disable-model-invocation: true`, routing-first description ("Use when a user explicitly asks to run an OAT project autonomously end-to-end…").
 - Mode assertion (blocked: bypassing skill-owned gates, persisting autonomy state, approximating artifacts without CLI; allowed: policy activation, state detection, lifecycle chaining, boundary stops).
-- Workflow steps: activate signal pair → resolve project home (defer to harness skill in cloud) → entry-state detection from `state.md`/plan frontmatter → mode selection via review-density rule (FR13, rationale recorded) → external-research mandate (FR9, mechanism-agnostic) → learnings log creation (FR11, category taxonomy) → per-phase lifecycle invocation with review contract (FR3 ladder, stated abstractly) → PR topology defaults (FR12) → tail chaining (document → summary → pr-final) → phase-boundary commit+push → structured run report / boundary blocker report → restart-resume rule (deliberate re-invocation resumes from persisted state).
+- Workflow steps: activate signal pair → resolve project home (defer to harness skill in cloud) → entry-state detection from `state.md`/plan frontmatter → mode selection via review-density rule (FR13, rationale recorded) → external-research mandate (FR9, mechanism-agnostic) → learnings log creation (FR11, category taxonomy) → per-phase lifecycle invocation with the review contract (FR3: pre-launch route selection through `oat-project-dispatch-subagents`; accepted launches terminal; blocking reviews fail closed) → PR topology defaults (FR12) → lifecycle tail via implement's `oat_post_implement_sequence` closeout (orchestrator ensures the sequence resolves; policy auto-approves final HiLL per FR6) → phase-boundary commit+push → structured run report / boundary blocker report → restart-resume rule (deliberate re-invocation resumes from persisted state). Explicit anti-pattern note: never add an orchestration layer over implement's phase-agent topology (documented wall-clock regression).
 - Delegation capability model per Step 0.5 pattern (policy supplies authorize-once).
 
 **Verify:**
@@ -250,7 +254,7 @@ Expected: pass; body <500 lines (inventory in references).
 - **First, read both authoring contracts and follow them throughout** (same contracts as p02-t02: `create-agnostic-skill` baseline + `create-oat-skill` specialization).
 - Frontmatter: model-invocable (auto-surface), description keyed to "OAT + Cursor Cloud environment" triggers.
 - Body: cloud detection (env markers, `cursor-cloud` MCP `run-info`/`environment-info`); project-home resolution (multi-repo + single-repo); **asset-precedence rule: user scope always wins** (all asset classes — skills, templates, scripts; the user tier is installed from `@latest` at env boot and repo copies are never customized, only stale). For skills, per-skill frontmatter `version:` comparison runs as **verification, not arbitration**: user ≥ repo is the expected invariant; if a repo copy is ever higher, the **user copy remains the execution source** — log the anomaly to the learnings file and flag the user tier for refresh (`oat tools update` / environment rebuild) before continuing when freshness is safety-critical. The comparison never switches the source (FR7). Absolute-path reads — primary or fallback per p02-t01 outcome; CLI availability contract (verify `oat`, install via npm if missing, never approximate artifacts); awareness pointers (autonomous skill, org-layer context skills).
-- References file: deterministic family identity (`run-info` → `originalModelName` → family map), pinned-slug subagent dispatch guidance, degraded-tier logging shape.
+- References file: deterministic family identity (`run-info` → `originalModelName` → family map); the dual-catalog rule (native subagent enum is a curated high-tier subset — no sol-max/luna/terra; `cursor-agent --list-models` exposes the full catalog, so FR8 provisioning widens the dispatchable set); degraded-route recording shape (achieved independence level). Dispatch *mechanics* defer to `oat-dispatch-subagents/references/provider-cursor.md` — do not restate them.
 
 **Verify:**
 
@@ -571,7 +575,7 @@ Expected: all green; worktree validation passes post-commit.
 
 **Steps:**
 
-- Small approved-plan fixture project; invoke `oat-project-autonomous`; verify implement→document→summary→pr-final chain, review provenance per phase, phase-boundary pushes.
+- Approved-plan fixture project — reuse the shipped smoke-fixture machinery (`tools/smoke` fixture, runner, assertion engine) as the base rather than hand-rolling; invoke `oat-project-autonomous`; verify implement drives the `oat_post_implement_sequence` closeout (pre-approval → auto-approved final HiLL → post-approval), review provenance per phase via dispatch records, phase-boundary pushes.
 - **Restart scenario:** kill/abandon the session mid-phase; new session re-invokes the skill; verify resume from persisted state with no duplicated work (FR2).
 - **Boundary scenario:** contrive a boundary (e.g., unresolved Critical finding via fixture); verify structured blocker report + clean resumable stop (FR2/NFR3).
 - **NFR2 inspection:** post-run artifact grep for autonomy flags (zero); local interactive resume pauses at persisted HiLL checkpoint.
@@ -605,7 +609,7 @@ Expected: all green; worktree validation passes post-commit.
 **Steps:**
 
 - **HiLL fixtures (FR6):** (a) autonomous run with unconfirmed checkpoints writes explicit `["<final-id>"]` + auto-review flag; (b) plan with `[]` preserved untouched and pauses every phase interactively; (c) the autonomous-written plan resumed interactively pauses at the final checkpoint.
-- **Review ladder (FR3):** exercise all three tiers — gate CLI path (once `cursor-agent` authenticated), cross-family pinned subagent (family from `run-info`, never self-report), same-family degraded (simulated single-family constraint) — verifying provenance records mechanism+model+family and Critical findings block / Important follow gate policy.
+- **Review routes (FR3):** exercise all three pre-launch route selections — gate CLI route (once `cursor-agent` authenticated), policy-resolved cross-family subagent (family from `run-info`, never self-report), explicitly selected same-family route (simulated single-family catalog) — verifying dispatch records capture selection reason + achieved independence level, accepted-launch terminality holds (post-accept failure → identical-payload retry → blocked, never downgraded), and Critical findings block / Important follow gate policy. Produce schema-conformant evidence records, not prose claims.
 
 **Verify:** Each scenario's expected observable state checked with evidence (frontmatter diffs, provenance entries).
 

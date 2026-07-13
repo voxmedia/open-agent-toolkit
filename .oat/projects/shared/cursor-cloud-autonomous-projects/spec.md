@@ -67,8 +67,8 @@ The solution must keep OAT's public artifacts org-agnostic while allowing org-sp
 
 - **Description:** A provider-agnostic, explicitly invoked skill that activates the autonomy policy, resolves the project's current state, enters the lifecycle at the right phase, and chains it to completion — including the tail (documentation, summary, final PR) — stopping only at defined autonomy boundaries.
 - **Acceptance Criteria:**
-  - Given an active project with an approved plan, the skill enters at implementation and drives through documentation, summary, and final PR.
-  - Given a bare goal, the skill runs discovery, design (when warranted), planning, gated reviews, implementation, and the lifecycle tail.
+  - Given an active project with an approved plan, the skill enters at implementation and drives through documentation, summary, and final PR — riding implement's `oat_post_implement_sequence` closeout (pre-approval steps → final HiLL → post-approval steps) rather than orchestrator-owned tail chaining; the orchestrator ensures the sequence is configured/resolved and the autonomy policy handles the final HiLL approval per FR6.
+  - Given a bare goal, the skill runs discovery, design (when warranted), planning, gated reviews, implementation, and the same closeout-driven lifecycle tail.
   - The skill invokes existing lifecycle skills rather than re-describing their processes (thin orchestrator; no lifecycle fork).
   - Autonomy boundaries are explicit: missing credentials without offline equivalent, product-judgment ambiguity, destructive-change risk, unresolved Critical review findings, repository-policy approval requirements.
   - Works identically local and cloud; contains no Cursor-specific or org-specific mechanisms (those bind via harness/org-layer skills).
@@ -77,12 +77,14 @@ The solution must keep OAT's public artifacts org-agnostic while allowing org-sp
 
 **FR3: Autonomous Review Contract**
 
-- **Description:** Autonomous runs obtain independent review after discovery, design, and plan artifacts, cross-family preferred, with layered mechanism resolution; the final code review remains blocking.
+- **Description:** Autonomous runs obtain independent review after discovery, design, and plan artifacts, cross-family preferred. Review routing is a **pre-launch route-selection policy** executed through the dispatch substrate (`oat-dispatch-subagents` / `oat-project-dispatch-subagents`), never a runtime fallback chain; the final code review remains blocking.
 - **Acceptance Criteria:**
-  - Resolution order: (1) configured `oat gate` when a harness CLI is available; (2) native subagent pinned to a different model family, with own family identified deterministically from run metadata, never from model self-report; (3) same-family subagent review, explicitly logged as degraded.
-  - The contract is stated mechanism-agnostically in the autonomous skill; harness-specific mechanics live in the harness-layer skill.
+  - Route selection happens **before launch**, from catalog/availability evidence: configured `oat gate` route when a harness CLI target is available; otherwise a policy-resolved subagent pinned to a different model family (own family identified deterministically from run metadata, never from model self-report); a same-family route is selected only when no second family is dispatchable, chosen explicitly and recorded with its selection reason and achieved independence level (context independence retained; family independence lost).
+  - Accepted launches are terminal: post-accept failures follow the dispatch engine's recovery rules (bounded retry with the identical payload, then blocked) — never a silent downgrade to a cheaper route.
+  - Blocking reviews (the final code review; any gate configured to block) fail closed to a boundary stop when no adequate route exists; non-blocking artifact reviews may proceed on a recorded degraded route.
+  - The contract is stated mechanism-agnostically in the autonomous skill; harness-specific mechanics live in the harness-layer skill, deferring to the dispatch substrate's provider references.
   - Unresolved Critical findings block progression (autonomy boundary); Important findings follow the configured gate policy.
-  - Review provenance (mechanism used, model family) is recorded in project artifacts.
+  - Review provenance uses the dispatch record schema (configured-invocation evidence authoritative; runtime identity non-authoritative), referenced from project artifacts.
 - **Priority:** P0
 
 **FR4: Gate Hooks for Discovery and Design Skills**
@@ -107,6 +109,7 @@ The solution must keep OAT's public artifacts org-agnostic while allowing org-sp
 - **Acceptance Criteria:**
   - When autonomy is active and `oat_plan_hill_phases` is unconfirmed, the run writes the explicit final-phase value with auto-review enabled (mirroring `workflow.hillCheckpointDefault: final`).
   - At an autonomous HiLL checkpoint, the auto-review runs and is received without pausing for a human; interactively, the same persisted value pauses as it does today (take-back-over safe).
+  - The final HiLL approval is handled at its shipped location — implement's Final HiLL Closeout Sequence, between `oat_post_implement_sequence` pre-approval and post-approval steps — where autonomy auto-approves after a passing auto-review (a failed blocking review remains a boundary stop).
   - `[]` and absent semantics are unchanged; workflow documentation clarifies them to prevent `[]`-means-none misconfiguration.
 - **Priority:** P0
 
