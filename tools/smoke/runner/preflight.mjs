@@ -99,10 +99,10 @@ async function resolveCommand(executable, env = process.env) {
 
 async function defaultRuntimeProbe(
   harness,
-  { commandRunner = runCommand } = {},
+  { commandResolver = resolveCommand, commandRunner = runCommand } = {},
 ) {
   const { args, executable } = HARNESS_COMMANDS[harness].runtime;
-  const path = await resolveCommand(executable);
+  const path = await commandResolver(executable);
   const command = commandLabel(executable, args);
 
   if (!path) {
@@ -492,6 +492,7 @@ export async function runPreflight(
   const gateTargetProbe = probes.gateTarget ?? defaultGateTargetProbe;
   const oat = probes.oat ?? defaultOatProbe;
   const commandRunner = probes.command ?? runCommand;
+  const commandResolver = probes.resolveCommand ?? resolveCommand;
   const forcedHarness = env.OAT_SMOKE_FORCE_UNAVAILABLE;
   if (forcedHarness && !HARNESS_COMMANDS[forcedHarness]) {
     throw new PreflightError({
@@ -516,7 +517,7 @@ export async function runPreflight(
     const installed =
       forcedHarness === currentHarness
         ? unavailableResult(currentHarness)
-        : await runtime(currentHarness, { commandRunner });
+        : await runtime(currentHarness, { commandResolver, commandRunner });
     const authenticated = requiredHarnesses.includes(currentHarness)
       ? await auth(currentHarness, installed, { commandRunner })
       : {

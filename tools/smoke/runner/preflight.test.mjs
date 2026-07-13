@@ -128,6 +128,7 @@ test('uses the documented runtime and authentication argv for Cursor IDE', async
         },
         fixture: async () => ({ result: 'valid' }),
         oat: async () => ({ result: 'local' }),
+        resolveCommand: async (executable) => executable,
       },
     },
   );
