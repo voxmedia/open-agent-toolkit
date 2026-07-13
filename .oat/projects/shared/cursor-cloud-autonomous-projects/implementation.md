@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t06
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 5/6       |
+| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | pending     | 8     | 0/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 5/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 6/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -41,12 +41,13 @@ oat_generated: false
 
 ## Phase 1: Autonomy contract + lifecycle skill amendments (OAT repo)
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-13
+**Completed:** 2026-07-13
 
 ### Phase Summary (fill when phase is complete)
 
-_Pending._
+Defined the session-scoped autonomy contract and exhaustive lifecycle gate inventory; made implement, discover, design, quick-start, document, summary, and final-PR behavior autonomy-aware without changing inactive interactive paths; added bundle-scope quick-start review and conditional execution-learnings synthesis; and published workflow guidance for autonomy, Cursor Cloud, and unambiguous HiLL checkpoint semantics.
 
 ### Task p01-t01: Author autonomy contract + gate inventory doc
 
@@ -85,8 +86,10 @@ _Pending._
 
 ### Task p01-t06: Workflow docs — autonomy page, cloud guidance page, HiLL semantics
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `7a9f03c5`
+**Outcome:** Added workflow documentation for the autonomy contract and Cursor Cloud operation, clarified that absent HiLL selection is unconfirmed while `[]` means every phase, linked both new pages from the authored projects index, and regenerated the machine-readable docs index.
+**Verification:** Passed — `pnpm build:docs` completed six package builds and generated all 63 static pages; `rg -n "autonomy|cursor-cloud" apps/oat-docs/docs/workflows/projects/index.md` found both authored navigation links; generated index contains both pages.
 
 ---
 
@@ -136,6 +139,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p01-t03: discover/design gate hooks committed (`0e8464c7`); skill validation and section-presence checks passed.
 - [x] p01-t04: quick-start bundle gate and autonomous resolutions committed (`5a98859f`); skill validation and provider sync status passed.
 - [x] p01-t05: lifecycle-tail autonomy and conditional learnings synthesis committed (`8d575ffe`); skill validation, conditional-template review, and provider sync status passed.
+- [x] p01-t06: autonomy, Cursor Cloud, and HiLL-semantics docs committed (`7a9f03c5`); docs build, authored navigation check, and generated-index refresh passed.
 
 **Decisions:**
 
@@ -158,7 +162,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status (p01-t01..t05) | 76 | 0 | Inventory verification, four skill-validation runs, 70 smoke tests, discover/design section check, quick-start validation, and lifecycle-tail/template review; provider views in sync |
+| 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 78 | 0 | Inventory verification, four skill-validation runs, 70 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
 
 ## Final Summary (for PR/docs)
 
