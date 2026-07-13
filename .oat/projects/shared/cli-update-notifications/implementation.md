@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 2     | 2/2       |
-| Phase 2      | complete    | 3     | 3/3       |
-| Phase p-rev1 | complete    | 3     | 3/3       |
-| Phase p-rev2 | in_progress | 2     | 0/2       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 2     | 2/2       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase p-rev1 | complete | 3     | 3/3       |
+| Phase p-rev2 | complete | 2     | 2/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -296,7 +296,7 @@ oat_generated: false
 
 ## Phase p-rev2: Fable Review Fixes
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-13
 
 ### Review Received: Supplemental Fable Final Review
@@ -325,15 +325,15 @@ oat_generated: false
 
 ### Task prev2-t01: Honor truthy update-notifier opt-outs
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 4b4c5927551875fe268f98e4b1dedc28a82813d6
 
 ---
 
 ### Task prev2-t02: Continue after prompt infrastructure errors
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 9edf62a4de410bfe13a06cd373faeb191ced8b96
 
 ### Deferred Findings (Minor)
 
@@ -342,6 +342,17 @@ oat_generated: false
   explicitly labeled PowerShell, PowerShell 7 behaves correctly, and affected
   OAT arguments are exceptionally rare. Follow-up trigger: a reported
   PowerShell 5.1 rerun failure or an explicit compatibility requirement.
+
+### Phase Summary
+
+- Truthy `NO_UPDATE_NOTIFIER` values now suppress both passive notices and
+  guarded offers; false-like values preserve normal behavior.
+- Prompt infrastructure failures now warn and continue with the current bundle,
+  while installer failures remain blocking before mutation.
+- Documentation was aligned, full CLI/docs/release checks passed, and
+  independent p-rev2 review returned no findings.
+
+**Review artifact:** `reviews/p-rev2-review-2026-07-13T215721Z.md`
 
 ---
 
@@ -421,6 +432,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Implementation: `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
 - Fix: `Dispatch: scope=p-rev1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
 - Re-review: passed with zero findings.
+
+### Run 4 - 2026-07-13T21:58:00Z
+
+- Branch: `cursor/cli-update-notifications-40f7`
+- Tier: 1 (subagents)
+- Policy: managed High
+- Phase: p-rev2
+- Outcome: 2/2 user-selected Fable review fix tasks completed; p-rev2 review
+  passed with no findings
+
+| Phase  | Implementer        | Tasks | Review                                        | Result |
+| ------ | ------------------ | ----- | --------------------------------------------- | ------ |
+| p-rev2 | `gpt-5.6-sol-high` | 2/2   | `reviews/p-rev2-review-2026-07-13T215721Z.md` | passed |
+
+**Outstanding items:**
+
+- Explicitly deferred `m2`: rare PowerShell 5.1 display-only embedded-quote
+  edge, with a follow-up trigger recorded in the p-rev2 section.
 
 <!-- orchestration-runs-end -->
 
