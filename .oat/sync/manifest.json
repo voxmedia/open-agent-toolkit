@@ -1481,7 +1481,47 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-07-12T16:37:02.168Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-cursor-cloud-projects",
+      "providerPath": ".claude/skills/oat-cursor-cloud-projects",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-13T21:28:39.822Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-autonomous",
+      "providerPath": ".claude/skills/oat-project-autonomous",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-13T21:28:39.823Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-cursor-cloud-projects",
+      "providerPath": ".cursor/skills/oat-cursor-cloud-projects",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-13T21:28:39.824Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-autonomous",
+      "providerPath": ".cursor/skills/oat-project-autonomous",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-13T21:28:39.824Z"
     }
   ],
-  "lastUpdated": "2026-07-12T16:37:02.168Z"
+  "lastUpdated": "2026-07-13T21:28:39.824Z"
 }
