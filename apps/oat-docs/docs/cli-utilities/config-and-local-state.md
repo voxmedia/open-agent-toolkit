@@ -113,6 +113,26 @@ Use `oat config` for repo runtime config inspection and supported key mutation.
 
 Use `oat config dump --json` when you need the whole resolved config in one machine-readable response rather than a single key or a human-oriented list view.
 
+### Update notifications
+
+OAT can passively report when npm's stable `latest` CLI version is newer during an ordinary interactive command run. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice. Ordinary eligible commands only show update guidance and do not prompt.
+
+Before eligible interactive `oat init`, `oat tools install`, or `oat tools update` mutations, a known newer stable CLI receives special handling. These commands copy tool versions bundled with the running CLI, so OAT warns that the older CLI can only install its own bundle and that the available CLI may contain newer bundled tools. The default-no prompt offers to install the exact validated version with:
+
+```bash
+npm install --global @open-agent-toolkit/cli@<validated-version>
+```
+
+If accepted, OAT updates the CLI package, stops before changing tools, and asks you to rerun the original command under the new CLI. If declined or the prompt is aborted, OAT warns and continues with the current bundle. If npm fails, the requested tool mutation does not run and the error includes a command to retry. The warning describes possible bundle freshness; it does not claim that tools installed by the current CLI are incompatible with that CLI.
+
+Checks, notices, and the update offer are skipped for JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations. Guarded dry-run commands also skip the prompt and installer. Set `NO_UPDATE_NOTIFIER` to a truthy value (for example, `1`, `true`, `yes`, or `on`) to suppress checks for one process; empty, `0`, and `false` do not suppress them. Or disable checks persistently in user config:
+
+```bash
+oat config set updateNotifications false --user
+```
+
+The preference defaults to `true`; run the same command with `true` to re-enable it. Cached check and notice timestamps live in `~/.oat/update-check.json`, separate from the user-authored preference in `~/.oat/config.json`.
+
 Dispatch policy keys are part of this surface, but provider-specific generation
 still belongs to provider commands. Use `oat config describe
 workflow.dispatchPolicy.policy` to inspect capped managed, managed uncapped,

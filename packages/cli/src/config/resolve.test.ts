@@ -231,6 +231,33 @@ describe('resolveEffectiveConfig', () => {
       value: false,
       source: 'default',
     });
+    expect(result.resolved['updateNotifications']).toEqual({
+      value: true,
+      source: 'default',
+    });
+  });
+
+  it('preserves an explicit false update notification preference from user config', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () =>
+          ({
+            version: 1,
+            updateNotifications: false,
+          }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['updateNotifications']).toEqual({
+      value: false,
+      source: 'user',
+    });
   });
 
   it('normalizes user-level known strays from config.json', async () => {

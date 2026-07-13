@@ -83,6 +83,7 @@ const DEFAULT_LOCAL_CONFIG = {
 
 const DEFAULT_USER_CONFIG = {
   activeIdea: null,
+  updateNotifications: true,
 } satisfies Record<string, unknown>;
 
 const DEFAULT_WORKFLOW_CONFIG = {
