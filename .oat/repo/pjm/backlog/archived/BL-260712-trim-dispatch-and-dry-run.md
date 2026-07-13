@@ -1,14 +1,14 @@
 ---
 id: BL-260712-trim-dispatch-and-dry-run
 title: 'Trim dispatch-and-dry-run implementation reference'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [skills, context-efficiency, oat-project-implement]
 assignee: null
 created: '2026-07-12T19:27:00Z'
-updated: '2026-07-13T00:40:00Z'
+updated: '2026-07-13T04:13:27Z'
 associated_issues: []
 oat_template: true
 oat_template_name: backlog-item

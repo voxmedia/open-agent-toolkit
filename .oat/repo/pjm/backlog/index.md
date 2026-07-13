@@ -27,7 +27,6 @@
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                 | open   | high     | feature | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs   | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates           | open   | medium   | feature | S        |
-| BL-260712-trim-dispatch-and-dry-run      | Trim dispatch-and-dry-run implementation reference                  | open   | medium   | task    | M        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                          | open   | medium   | task    | S        |
 
 <!-- END OAT BACKLOG-INDEX -->
