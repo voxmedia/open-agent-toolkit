@@ -1606,7 +1606,7 @@ passes its nine-assertion implement profile.
 ### Task p06-t04: Revalidate release after Phase 5 review fixes
 
 **Status:** completed
-**Commit:** pending bookkeeping commit
+**Commit:** `13708e75`
 
 All three canonical report checks passed. Direct smoke lint and formatting
 passed, as did all 116 smoke tests. `pnpm build`, `pnpm build:docs`, `pnpm
@@ -1754,10 +1754,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                             | Passed | Failed | Coverage                                                |
-| ----- | ----------------------------------------------------- | ------ | ------ | ------------------------------------------------------- |
-| Final | Workspace verification + live Codex implement profile | All    | 0      | 9/9 live assertions; 2700 CLI tests plus package suites |
-| p06   | Post-review release image                             | All    | 0      | 116 smoke tests; 5 public package release validations   |
+| Phase | Tests Run                                             | Passed | Failed | Coverage                                                  |
+| ----- | ----------------------------------------------------- | ------ | ------ | --------------------------------------------------------- |
+| Final | Workspace verification + live Codex implement profile | All    | 0      | 10/10 live assertions; 2700 CLI tests plus package suites |
+| p06   | Post-review release image                             | All    | 0      | 123 smoke tests; 5 public package release validations     |
 
 ## Final Summary (for PR/docs)
 
@@ -1769,7 +1769,7 @@ Track test execution during implementation.
   independent root-owned review, bounded fix continuity, and optional isolated
   third-tier work.
 - Live/operator protocols for Codex, Claude, Cursor IDE, and Cursor CLI, with a
-  canonical 9/9 Codex implement report and preserved legacy baseline.
+  canonical 10/10 Codex implement report and preserved legacy baseline.
 - User-facing OAT docs, a contributor runbook, and Vault capture describing the
   topology and smoke process.
 

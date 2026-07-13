@@ -1285,7 +1285,8 @@ validation.
 
 **Total: 46 tasks**
 
-Final-review fixes queued; resume at p06-t05.
+All tasks and review fixes are complete. The exact-target final fix-range
+re-review passed with no findings.
 
 ---
 

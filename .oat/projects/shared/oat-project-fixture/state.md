@@ -172,6 +172,8 @@ Implementation complete — project closeout
 - ✓ Canonical reports, 123 smoke tests, full workspace/docs verification, and
   release validation pass at `0.1.59`
 - ✓ Independent exact-target fix-range re-review passed 0C/0I/0M/0m
+- ✓ The fixture-2 documentation patch was already integrated as patch-equivalent
+  commit `2441b65d`; current docs include all subsequent topology corrections
 - → Project closeout
 
 ## Blockers
@@ -180,5 +182,4 @@ None
 
 ## Next Milestone
 
-Integrate the pending documentation worktree updates, then complete project
-summary and final PR bookkeeping.
+Generate the project summary, then complete final PR bookkeeping.
