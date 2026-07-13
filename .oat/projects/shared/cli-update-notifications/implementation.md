@@ -224,7 +224,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Implementer | Tasks | Review | Result |
 | ----- | ----------- | ----- | ------ | ------ |
-| p01 | `gpt-5.6-sol-high` | 2/2 | `reviews/p01-review-2026-07-13.md` | passed |
+| p01 | `gpt-5.6-sol-high` | 2/2 | `reviews/archived/p01-review-2026-07-13.md` | passed |
 
 **Dispatch notes:**
 
@@ -248,7 +248,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Implementer | Tasks | Review | Result |
 | ----- | ----------- | ----- | ------ | ------ |
-| p02 | `gpt-5.6-sol-high` | 3/3 | `reviews/p02-review-2026-07-13.md` | passed |
+| p02 | `gpt-5.6-sol-high` | 3/3 | `reviews/archived/p02-review-2026-07-13.md` | passed |
 
 **Dispatch notes:**
 
@@ -266,7 +266,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Final Review Fixes
 
-**Review artifact:** `reviews/final-review-2026-07-13.md`
+**Review artifact:** `reviews/archived/final-review-2026-07-13.md`
 
 - Medium resolved in `5deb8004`: user documentation now states that TTL limits
   are normal serial behavior and overlapping processes can duplicate checks or
@@ -275,7 +275,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   from `design.md`.
 - Status: focused final re-review passed with no findings.
 - Re-review artifact:
-  `reviews/final-rereview-2026-07-13T1752Z.md`.
+  `reviews/archived/final-rereview-2026-07-13T1752Z.md`.
 
 ---
 

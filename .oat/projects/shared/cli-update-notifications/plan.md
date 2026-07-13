@@ -314,9 +314,9 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 
 | Scope  | Type     | Status  | Date       | Artifact |
 | ------ | -------- | ------- | ---------- | -------- |
-| p01    | code     | passed  | 2026-07-13 | `reviews/p01-review-2026-07-13.md` |
-| p02    | code     | passed  | 2026-07-13 | `reviews/p02-review-2026-07-13.md` |
-| final  | code     | passed  | 2026-07-13 | `reviews/final-rereview-2026-07-13T1752Z.md` |
+| p01    | code     | passed  | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md` |
+| p02    | code     | passed  | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md` |
+| final  | code     | passed  | 2026-07-13 | `reviews/archived/final-rereview-2026-07-13T1752Z.md` |
 | spec   | artifact | pending | -          | -        |
 | design | artifact | pending | -          | -        |
 | plan   | artifact | passed  | 2026-07-13 | structured auto-review |
