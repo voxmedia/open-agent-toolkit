@@ -33,7 +33,7 @@ oat_template: true
 - [x] Every task has bounded files, formatting, verification, and an atomic commit
 - [x] Existing review rows preserved
 - [x] Parallelism evaluated and declared
-- [ ] Phase gate review setting resolved
+- [x] Phase gate review setting resolved: disabled (user declined)
 - [x] Project dispatch policy selected: High
 
 ## Parallelism
