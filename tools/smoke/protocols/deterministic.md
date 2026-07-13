@@ -37,6 +37,10 @@ evidence collection, assertions, and cleanup paths. No provider credential,
 network request, dependency installation, repository build, or repository-wide
 test is permitted.
 
+Publish each accepted dispatch record only after the fake handle has a terminal
+`completed` or `failed` outcome; `running` is not a valid immutable evidence
+outcome.
+
 Gate target: {{GATE_TARGET}}.
 Gate count is fixed: the implement scenario runs exactly one external final
 code gate after p03 and one root-owned phase review per phase.

@@ -40,10 +40,13 @@ topology. Dispatch one phase implementer that directly executes each phase,
 then dispatch the independent phase reviewer from the root. Optional nested
 work is allowed only when it provides a concrete benefit and is not required
 for ordinary fixture tasks. Before every child launch, apply the configured
-dispatch contract and preserve launcher-owned selection, acceptance, outcome,
-and runtime-identity evidence as separate facts. Write immutable dispatch and
-state-transition records only through tools/smoke/evidence/record.mjs,
-following tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
+dispatch contract and retain launcher-owned selection and acceptance facts.
+Do not publish an accepted dispatch record while its handle is running; after
+termination, write exactly one immutable record with its terminal `completed`
+or `failed` outcome. Record pre-start rejection immediately. Keep runtime
+identity separate, and write dispatch and state-transition records only through
+tools/smoke/evidence/record.mjs, following tools/smoke/CONTRACT.md. Preserve
+gate JSON without rewriting it.
 
 The `oat` command is already bound to the preflight-verified source build
 through the smoke environment. Use it directly; do not install dependencies,

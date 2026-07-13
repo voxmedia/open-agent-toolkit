@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const ACTIONS = new Set(['implementation', 'review']);
 const LAUNCH_STATUSES = new Set(['accepted', 'pre-start-rejected']);
-const OUTCOMES = new Set(['completed', 'failed', 'rejected', 'running']);
+const OUTCOMES = new Set(['completed', 'failed', 'rejected']);
 const SELECTION_REASONS = new Set([
   'inherit',
   'native-catalog',

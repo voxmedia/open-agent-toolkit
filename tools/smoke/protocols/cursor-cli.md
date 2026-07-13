@@ -35,11 +35,13 @@ harness: observe this invocation's native catalog, select exact native targets
 only from that snapshot, and select any CLI route before launch. Dispatch one
 phase implementer that directly executes its tasks, then dispatch its
 independent reviewer from the root. Nested work is optional and requires a
-bounded benefit. Before every child launch, preserve launcher-owned selection,
-acceptance, outcome, and runtime-identity evidence as separate facts. Write
-immutable dispatch and state-transition records only through
-tools/smoke/evidence/record.mjs, following tools/smoke/CONTRACT.md. Preserve
-gate JSON without rewriting it.
+bounded benefit. Before every child launch, retain launcher-owned selection and
+acceptance facts. Do not publish an accepted dispatch record while its handle
+is running; after termination, write exactly one immutable record with its
+terminal `completed` or `failed` outcome. Record pre-start rejection
+immediately. Keep runtime identity separate, and write dispatch and
+state-transition records only through tools/smoke/evidence/record.mjs,
+following tools/smoke/CONTRACT.md. Preserve gate JSON without rewriting it.
 
 The `oat` command is already bound to the preflight-verified source build
 through the smoke environment. Use it directly; do not install dependencies,

@@ -101,6 +101,19 @@ test('rejects inconsistent, unsupported, or incomplete records', () => {
         validRecord({
           launch: {
             mechanism: 'cursor-cli',
+            outcome: 'running',
+            status: 'accepted',
+          },
+        }),
+      ),
+    /Invalid launch outcome: running/,
+  );
+  assert.throws(
+    () =>
+      normalizeDispatchRecord(
+        validRecord({
+          launch: {
+            mechanism: 'cursor-cli',
             outcome: 'completed',
             status: 'pre-start-rejected',
           },

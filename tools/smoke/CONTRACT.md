@@ -313,6 +313,11 @@ The disposable workflow writes launcher-owned records before collection:
   action and role prevents phase-implementer, optional-worker, and reviewer records from
   colliding at a shared phase scope. Create records only through
   `tools/smoke/evidence/record.mjs` with `--kind dispatch`.
+  Resolve and retain launcher-owned selection and acceptance facts before
+  launch, but do not publish an accepted record while its handle is running.
+  After the handle terminates, publish exactly one record with `completed` or
+  `failed`. A pre-start rejection is already terminal and may be published
+  immediately.
 - `workspace/evidence/orchestration/<sequence>-state-transition.json` —
   commit-bound plan-review transitions. Create records through the same command
   with `--kind state-transition`.
@@ -384,7 +389,7 @@ file names, provider-reference paths, or frontmatter versions.
     "status": "accepted | pre-start-rejected",
     "accepted": true,
     "mechanism": "native or CLI mechanism",
-    "outcome": "running | completed | failed | rejected"
+    "outcome": "completed | failed | rejected"
   },
   "runtimeIdentity": null
 }
