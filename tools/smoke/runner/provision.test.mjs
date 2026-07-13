@@ -215,6 +215,11 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     await chmod(hookPath, 0o755);
   }
   const manifestPublishes = [];
+  const provisionGitCalls = [];
+  const provisionGit = async (args, options) => {
+    provisionGitCalls.push(args);
+    return git(args, options);
+  };
   let childWorktreePath;
   let manifest;
 
@@ -237,7 +242,7 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
           writeFile,
         },
         fixture: fixturePath,
-        git,
+        git: provisionGit,
         random: () => 'test-run',
         repository,
         runsDirectory,
@@ -257,6 +262,18 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     assert.equal(manifest.sourceCommitSha, sourceCommitSha);
     assert.match(manifest.baselineCommitSha, /^[0-9a-f]{40}$/);
     assert.notEqual(manifest.baselineCommitSha, sourceCommitSha);
+    const baselineCommitCall = provisionGitCalls.find((args) =>
+      args.includes('test(smoke): establish fixture baseline'),
+    );
+    assert.ok(baselineCommitCall);
+    assert.deepEqual(baselineCommitCall.slice(0, 6), [
+      '-c',
+      'user.name=Smoke Test',
+      '-c',
+      'user.email=smoke@example.test',
+      '-c',
+      'core.hooksPath=/dev/null',
+    ]);
     assert.equal(manifest.gateRuntime, 'cursor');
     assert.equal(manifest.gateTarget, 'cursor-gpt-5-6-sol-max');
     assert.deepEqual(manifest.branchOwnership, {

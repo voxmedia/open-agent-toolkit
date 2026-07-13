@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { applyPresetToFixture } from '../fixture/presets/apply-preset.mjs';
+import { withSmokeGitIdentity } from './git-identity.mjs';
 import { gitCommonDirectory } from './journal.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -466,13 +467,13 @@ export async function provisionSmoke(
       },
     );
     await git(
-      [
+      withSmokeGitIdentity([
         '-c',
         'core.hooksPath=/dev/null',
         'commit',
         '-m',
         'test(smoke): establish fixture baseline',
-      ],
+      ]),
       {
         cwd: worktreePath,
       },

@@ -11,6 +11,7 @@ import { dirname, join, relative } from 'node:path';
 import { promisify } from 'node:util';
 
 import { writeDispatchRecord } from '../evidence/record.mjs';
+import { withSmokeGitIdentity } from '../runner/git-identity.mjs';
 import {
   registerNestedSmokeResource,
   updateSmokeManifest,
@@ -137,20 +138,20 @@ async function commitTask(worktreePath, taskId) {
   await appendFile(logPath, `${taskId} completed\n`);
   await git(['add', '--', relative(worktreePath, logPath)], worktreePath);
   await git(
-    [
+    withSmokeGitIdentity([
       '-c',
       'core.hooksPath=/dev/null',
       'commit',
       '-m',
       `feat(${taskId}): append fixture marker`,
-    ],
+    ]),
     worktreePath,
   );
 }
 
 async function mergePhase(manifest, phaseWorktree) {
   await git(
-    [
+    withSmokeGitIdentity([
       '-c',
       'core.hooksPath=/dev/null',
       'merge',
@@ -158,7 +159,7 @@ async function mergePhase(manifest, phaseWorktree) {
       phaseWorktree.branch,
       '-m',
       `merge ${phaseWorktree.phase}`,
-    ],
+    ]),
     manifest.worktreePath,
   );
 }
@@ -223,13 +224,13 @@ async function completeFinalGate(manifest) {
     manifest.worktreePath,
   );
   await git(
-    [
+    withSmokeGitIdentity([
       '-c',
       'core.hooksPath=/dev/null',
       'commit',
       '-m',
       'chore: record deterministic final review',
-    ],
+    ]),
     manifest.worktreePath,
   );
 
@@ -256,13 +257,13 @@ async function completeFinalGate(manifest) {
     manifest.worktreePath,
   );
   await git(
-    [
+    withSmokeGitIdentity([
       '-c',
       'core.hooksPath=/dev/null',
       'commit',
       '-m',
       'chore: receive deterministic final review',
-    ],
+    ]),
     manifest.worktreePath,
   );
 }
@@ -303,13 +304,13 @@ async function completePhaseReview(manifest, scope) {
     manifest.worktreePath,
   );
   await git(
-    [
+    withSmokeGitIdentity([
       '-c',
       'core.hooksPath=/dev/null',
       'commit',
       '-m',
       `chore: record deterministic ${scope} review`,
-    ],
+    ]),
     manifest.worktreePath,
   );
 }
