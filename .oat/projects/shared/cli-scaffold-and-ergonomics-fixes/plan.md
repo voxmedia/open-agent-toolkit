@@ -6,6 +6,11 @@ oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p02', 'p03', 'p04', 'p05', 'p06']]
+oat_phase_review_gate:
+  enabled: true
+  phases: [p01, p06]
+  review_type: code
+  exit_nonzero_on: important
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -216,6 +221,8 @@ git commit -m "fix(p04-t01): require closed backlog summaries"
 - Modify: `packages/cli/src/commands/help-snapshots.test.ts` if the help contract requires an update
 - Modify: `.agents/skills/oat-project-summary/SKILL.md`
 
+Before editing the canonical skill, rebase onto the latest integration base and inspect concurrent `oat-project-summary` changes, including the `orchestration-run-log` project’s declared surface. Preserve sibling prose and limit this task to the Step 6 decision-promotion clauses.
+
 **Step 1: Write test (RED)**
 
 Add core and command-wiring tests for `--decision <text>` and `--consequences <text>`, asserting those values fill the template sections and flow through `createDecisionRecord`. Add or update help coverage for both flags.
@@ -225,7 +232,7 @@ Expected: Tests fail because the options do not exist and rendering hardcodes `T
 
 **Step 2: Implement (GREEN)**
 
-Thread optional decision and consequences fields through the command options, record-creation API, and renderer. Update `oat-project-summary` Step 6 to derive context, decision, and consequences from each grounded Key Decision and pass all three flags in the atomic `oat decision new` call. Bump that canonical skill once from `1.2.0` to `1.2.1`.
+Thread optional decision and consequences fields through the command options, record-creation API, and renderer. Update `oat-project-summary` Step 6 to derive context, decision, and consequences from each grounded Key Decision and pass all three flags in the atomic `oat decision new` call. Bump that canonical skill exactly one patch from its then-current version after the rebase.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts`
 Expected: Explicit values populate all three sections and command help exposes both flags.
@@ -322,7 +329,7 @@ Expected: All five public packages build, pack, satisfy metadata/content contrac
 
 **Step 4: Verify working-tree release hygiene**
 
-Confirm only expected source, test, docs, project-artifact, and five-package version files changed; confirm no derived provider-skill copies or sibling-project prose were swept in.
+Confirm only expected source, test, docs, project-artifact, and five-package version files changed; confirm no derived provider-skill copies or sibling-project prose were swept in. Recheck that `oat-project-summary` preserves concurrent changes and carries exactly one patch bump relative to the final base.
 
 **Step 5: Commit**
 
