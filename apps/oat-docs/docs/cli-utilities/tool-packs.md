@@ -49,6 +49,23 @@ skills can use the utility engine directly.
 
 The `oat tools` command group provides a unified interface for managing installed tools (skills and agents) across scopes.
 
+### CLI updates before bundled-tool mutations
+
+Tool packs ship inside the OAT CLI package. An older CLI can therefore install or update only the tool versions in its own bundle, while a newer stable CLI release may contain newer bundled versions. This is a bundle-freshness warning, not a claim that tools installed by the current CLI are immediately incompatible with it.
+
+Before an eligible interactive `oat init`, `oat tools install` (including pack subcommands), or `oat tools update` mutation, OAT checks the cached stable CLI availability. If a newer version is known, it explains the bundle difference and offers, with a default answer of no, to install that exact validated version:
+
+```bash
+npm install --global @open-agent-toolkit/cli@<validated-version>
+```
+
+- Accepting updates the CLI package only, stops before changing bundled tools, and asks you to rerun the original command under the new CLI.
+- Declining or aborting warns that the current bundle may be older, then continues the requested command.
+- If npm fails, OAT does not run the tool mutation and reports how to retry the CLI installation.
+- Dry-run, JSON, non-interactive, opted-out, CI, test, source-development, and ephemeral package-runner invocations do not prompt or install.
+
+Other eligible commands keep the passive update notice and never launch the installer.
+
 ## Install vs. initialize
 
 The `project-management` pack has two lifecycle steps:

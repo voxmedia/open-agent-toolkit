@@ -42,7 +42,11 @@ Additional useful entry points:
 
 ## Update Notifications
 
-On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice. OAT never prompts or runs an update for you. JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations are suppressed.
+On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice.
+
+`oat init`, `oat tools install`, and `oat tools update` are different because they copy tools bundled with the running CLI. Before an eligible interactive mutation, a known newer CLI triggers a warning that the current CLI can only install its own bundled tool versions and that the available CLI may bundle newer versions. OAT then offers, defaulting to no, to run `npm install --global @open-agent-toolkit/cli@<validated-version>` for the exact validated stable version. Acceptance updates the CLI package, stops before changing tools, and asks you to rerun the original command. Declining or aborting continues with the current bundle after a warning. An installer failure stops the tool mutation and reports the command you can retry.
+
+This warning does not mean tools installed from the current bundle are incompatible with the current CLI; it only identifies that a newer CLI release may include newer bundled tool versions. Dry-run, JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations do not prompt or install. Ordinary eligible commands remain passive.
 
 Disable checks for one process with `NO_UPDATE_NOTIFIER=1`, or persist the user-level preference:
 
