@@ -436,7 +436,7 @@ Expected: both on PATH with expected versions. Until a rebuild happens, record e
 
 **Steps:**
 
-- Idempotent step: install/refresh OAT packs at user scope (requires p02-t04; includes workflows pack); seed `~/.oat/config.json` from the seed file (dispatch ladder for cursor/codex/claude tiers, gate execTargets with `availabilityCommand` probes, `workflow.hillCheckpointDefault: final`).
+- Idempotent step: install/refresh OAT packs at user scope (requires p02-t04; includes workflows pack); seed `~/.oat/config.json` from the seed file: dispatch ladder for cursor/codex/claude tiers (full ordered candidate cells — e.g., frontier `[gpt-5.6-sol-xhigh, gpt-5.6-sol-max]` — so per-surface catalog divergence resolves via first-dispatchable selection), `workflow.hillCheckpointDefault: final`, and a **priority-ordered, multi-family gate execTargets ladder** with `availabilityCommand` probes: comparable-capability alternatives from each family (e.g., cursor `gpt-5.6-sol-max` → `gpt-5.6-sol-xhigh`; cursor `claude-fable-5-xhigh` → `claude-fable-5-thinking-high`; `cursor-grok-4.5-high` as third-family tertiary) so cross-family review always has a different-family option regardless of a given environment's catalog. Gate exec targets run through the CLI main-agent catalog (the broadest surface); priority order absorbs residual availability drift.
 - `CURSOR_API_KEY` wiring per the `GITHUB_PACKAGES_TOKEN` reference pattern (env reference only). **Degraded vs acceptance:** absent secret → warn-and-continue with a logged "gate tier-1 unavailable" note (NFR4 degraded path); FR8 *acceptance* requires the authenticated check to pass — tracked in p04-t04 strict mode.
 
 **Verify:**
