@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 18    | 13/18     |
+| Phase 5 | in_progress | 19    | 14/19     |
 | Phase 6 | in_progress | 3     | 2/3       |
 
-**Total:** 29/35 tasks completed (4 deferred, 1 in progress, 1 pending)
+**Total:** 30/36 tasks completed (4 deferred, 1 in progress, 1 pending)
 
 ---
 
@@ -1369,7 +1369,7 @@ fully recorded.
 
 ### Task p05-t13: Validate restored topology with one live Codex run
 
-**Status:** in_progress — final fresh confirmation running
+**Status:** in_progress — final fresh confirmation pending
 **Commit:** -
 
 **Comparison baseline:** 38m22s, nine passing assertions, mandatory three-tier
@@ -1385,7 +1385,11 @@ topology.
   evidence was rejected and never promoted.
 - The next fresh run correctly aborted before any child launch when safe init
   ran from the outer cwd. p05-t18 made the required child cwd explicit.
-- A final fresh run follows p05-t18.
+- The p05-t18 confirmation accepted p01/p02 and preserved terminal dispatch
+  evidence, then both agents failed at their first commits because repository
+  hooks need dependencies intentionally absent from smoke children. p05-t19
+  isolated only those disposable fixture commits from hooks.
+- A final fresh run follows p05-t19.
 
 ---
 
@@ -1440,6 +1444,18 @@ Focused record/drive tests and all 111 smoke tests passed.
 The bootstrap skill and Codex protocol now require
 `(cd "$CHILD_WORKTREE" && bash scripts/worktree/init.sh)`. Skill and drive
 contract tests passed, and provider views were synchronized.
+
+---
+
+### Task p05-t19: Isolate disposable fixture commits from unavailable hooks
+
+**Status:** completed
+**Commit:** `e1f6f6ee`
+
+Smoke fixture task commits now use
+`git -c core.hooksPath=/dev/null commit ...` without mutating Git config,
+installing dependencies, or using `--no-verify`. Skill and drive contract tests
+passed, and managed Codex phase-agent roles were synchronized.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t13
-oat_last_commit: 4082bd1040ef8cdd50c9abcf356d67a2a3f168e6
+oat_last_commit: e1f6f6ee5c7be59f2eef2751e47a386e94e9bdcd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T00:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T00:28:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -64,7 +64,7 @@ Implementation — final live Codex confirmation
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 35 tasks)
+- **Plan:** `plan.md` (complete — 6 phases / 36 tasks)
 - **Implementation:** `implementation.md` (in progress — final live smoke and
   release bookkeeping)
 
@@ -146,9 +146,10 @@ Implementation — final live Codex confirmation
 - ✓ p05-t16 refreshed direct builds and removed stale coordinator wording
 - ✓ p05-t17 made terminal dispatch outcomes mandatory
 - ✓ p05-t18 bound smoke-safe init to the registered child worktree cwd
+- ✓ p05-t19 isolated disposable fixture commits from unavailable child hooks
 - ✓ p06-t01 OAT docs and smoke runbook complete
 - ✓ p06-t02 Vault capture committed externally
-- → p05-t13 final fresh Codex confirmation running
+- → p05-t13 final fresh Codex confirmation pending
 
 ## Blockers
 
