@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.2.0
+version: 1.3.0
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -113,8 +113,13 @@ Read all available artifacts for synthesis:
 - `"$PROJECT_PATH/plan.md"` — phases, tasks, reviews, deferred items
 - `"$PROJECT_PATH/implementation.md"` — task outcomes, deviations, challenges, review notes
 - `"$PROJECT_PATH/state.md"` — associated issues, workflow mode
+- `"$PROJECT_PATH/oat-execution-learnings.md"` — optional append-only
+  autonomous-run observations and recommendations
 
 **Priority for content:** Implementation.md outcomes take precedence over design.md plans. Summary should reflect what actually happened, not what was planned.
+
+If `oat-execution-learnings.md` is absent, do not infer autonomous learnings
+from other artifacts and do not add an Autonomous Execution Learnings section.
 
 ### Step 3: Check for Existing Summary
 
@@ -138,9 +143,15 @@ test -f "$PROJECT_PATH/summary.md"
    ```
 
 3. Determine update scope:
-   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count`: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
+   - If `oat-execution-learnings.md` exists, compare its dated entry
+     identifiers (timestamp, category, and title) with the source pointers in
+     the existing `## Autonomous Execution Learnings` section. Treat missing,
+     added, or changed recommendations as `learnings_changed`.
+   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
    - If `current_rev_count > oat_summary_revision_count`: New revision phases exist. Update: Revision History, What Was Implemented, Follow-up Items.
    - If `current_last_task > oat_summary_last_task`: New tasks completed. Update: What Was Implemented, Notable Challenges, Tradeoffs Made.
+   - If `learnings_changed`: update Autonomous Execution Learnings even when
+     task and revision tracking fields are unchanged.
 
 **If does not exist (first run):**
 
@@ -174,6 +185,45 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 | Revision History     | plan.md p-revN phases, implementation.md revision notes                |
 | Follow-up Items      | implementation.md deferred findings, plan.md deferred items            |
 | Associated Issues    | state.md `associated_issues` field                                     |
+| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                    |
+
+**Autonomous Execution Learnings (conditional):**
+
+When `"$PROJECT_PATH/oat-execution-learnings.md"` exists, synthesize
+`## Autonomous Execution Learnings` as actionable recommendations grouped
+under exactly these categories:
+
+- **Agent-instruction updates** — durable skill, agent-rule, or instruction
+  changes;
+- **Cloud-environment improvements** — image, setup, credentials,
+  provisioning, tool-availability, or environment-readiness changes;
+- **Code follow-ups** — concrete product or toolkit code changes not completed
+  by this project;
+- **Workflow issues** — lifecycle, gate, review, dispatch, or orchestration
+  process changes.
+
+For each source entry:
+
+1. Use its `Observation`, `Impact`, and `Recommendation` fields to decide
+   whether it contains an actionable recommendation. Do not copy raw run notes
+   that have no durable action.
+2. Place each recommendation in the single best-fit category above. The source
+   taxonomy (`gotcha`, `efficiency`, `documentation-gap`,
+   `candidate-skill-content`, `decision`, `environment-limited`) is evidence,
+   not a one-to-one output mapping.
+3. Write a concise action plus one-line rationale. Preserve uncertainty and
+   environment-limited status; do not claim an unverified fix.
+4. End the item with a relative link to `oat-execution-learnings.md` and the
+   exact source entry identifier (`timestamp — category — title`). Link to the
+   entry heading anchor when one exists; otherwise link to the file and include
+   the identifier in the link text so the entry remains traceable.
+5. Deduplicate recommendations that describe the same action, while retaining
+   pointers to every supporting source entry.
+
+Omit empty category subheadings. If the learnings file contains no actionable
+entries, omit the entire section. If the file is absent, this behavior is inert:
+remove the template placeholder during a first render and make no
+learnings-driven update on a re-run.
 
 **For incremental updates (re-run):**
 
@@ -293,5 +343,10 @@ Summary tracks: last task {task_id}, {N} revision phases
 - Summary is under 200 lines for typical projects
 - Re-run after revisions updates only affected sections
 - Re-run with no changes produces no modifications
+- When `oat-execution-learnings.md` exists, actionable recommendations are
+  grouped under Agent-instruction updates, Cloud-environment improvements, Code
+  follow-ups, and Workflow issues with source-entry pointers
+- When `oat-execution-learnings.md` is absent, no Autonomous Execution
+  Learnings section is rendered and normal summary behavior is unchanged
 - When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
 - When the PJM tool pack is not installed, decision promotion is skipped silently with no prompt
