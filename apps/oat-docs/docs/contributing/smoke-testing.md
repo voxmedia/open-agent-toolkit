@@ -41,9 +41,11 @@ an evidence bundle before cleanup reclaims its resources.
 
 ## Prerequisites
 
-Preflight (`tools/smoke/runner/preflight.mjs`) probes each harness for an
-installed runtime and an authenticated session. It only probes authentication
-for the selected harness; the others are checked for install status only.
+Preflight (`tools/smoke/runner/preflight.mjs`) derives the required runtime set
+from both the selected drive harness and its independent gate runtime. Every
+distinct required runtime must be installed and authenticated before
+provisioning. Preflight also runs `oat gate target list --json` and requires the
+configured target to report available without launching a review.
 
 | Harness      | Runtime probe            | Authentication probe  |
 | ------------ | ------------------------ | --------------------- |
@@ -80,14 +82,16 @@ against.
   (task IDs and parallel groups) is stable across resume, the plan gate review
   is corroborated against gate-owned invocation evidence, and state advances
   atomically from pre-review through reviewed to implementation-ready.
-- **`implement`** — proves execution: exactly one accepted, completed launch per
-  fixture task (explicit pre-start rejections before acceptance are allowed),
-  exact at-or-below-ceiling target selection, one fixture marker and one exact
-  task commit per task, isolated flat parallel branches with fan-in after all
-  declared dependencies, phase review corroboration, and explicit runtime
-  identity status.
-- **`full`** — unions the plan-review and implement profiles and adds the final
-  code gate after the last phase.
+- **`implement`** — proves execution: one accepted, completed phase implementer
+  and one direct-root phase reviewer for each of `p01`, `p02`, and `p03`;
+  exactly five fixture markers and five bounded task commits; exact
+  at-or-below-ceiling target selection; isolated flat parallel branches with
+  fan-in after all declared dependencies; phase-review row and artifact
+  binding; explicit runtime identity status; and exactly one final code gate
+  after `p03`.
+- **`full`** — unions the plan-review and implement profiles. It runs exactly
+  two external gates: one plan-review gate before implementation and one final
+  code gate after `p03`.
 
 ## Running
 

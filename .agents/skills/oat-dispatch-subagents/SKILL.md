@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.1.1
+version: 1.1.2
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
