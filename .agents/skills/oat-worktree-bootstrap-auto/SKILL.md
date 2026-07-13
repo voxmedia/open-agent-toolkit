@@ -1,6 +1,6 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.5.5
+version: 1.5.6
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
@@ -304,6 +304,10 @@ Invoke the repository's direct smoke-safe entrypoint, not a package-manager
 wrapper that may perform installation before reaching it. In this repository
 that command is `bash scripts/worktree/init.sh`, not
 `pnpm run worktree:init`.
+Set the child worktree itself as the process working directory. Use the
+equivalent of `(cd "$TARGET_PATH" && bash scripts/worktree/init.sh)`; invoking
+the child script by absolute path while the shell remains in the outer
+worktree is a containment failure.
 
 Check behavior per baseline policy:
 

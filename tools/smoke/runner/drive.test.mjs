@@ -75,6 +75,12 @@ test('selects one protocol and invocation shape for every harness', async () => 
       protocol.prompt,
       /accepted dispatch record[\s\S]{0,200}(?:terminal|termination)/,
     );
+    if (harness === 'codex') {
+      assert.match(
+        protocol.prompt,
+        /\(cd "\$CHILD_WORKTREE" && bash scripts\/worktree\/init\.sh\)/,
+      );
+    }
     assert.match(protocol.prompt, /Gate count is fixed:/);
 
     const automated = createInvocationPlan({

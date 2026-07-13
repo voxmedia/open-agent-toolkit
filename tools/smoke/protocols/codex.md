@@ -68,7 +68,8 @@ hard budget.
 For each child worktree, follow `oat-worktree-bootstrap-auto` exactly. After
 `git worktree add`, register the child in the manifest ownership journal before
 running its first process. Then invoke the direct smoke-safe entrypoint with
-`bash scripts/worktree/init.sh` from the child. Do not invoke
+`(cd "$CHILD_WORKTREE" && bash scripts/worktree/init.sh)`. Do not invoke the
+script by absolute path from the outer worktree, and do not invoke
 `pnpm run worktree:init`: Corepack or package-manager startup may fetch before
 the smoke-safe script can register ownership and short-circuit dependency work.
 

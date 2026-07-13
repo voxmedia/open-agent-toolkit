@@ -265,6 +265,11 @@ package manager or dependency store. Primary environment, MCP, local-project,
 and archive copies remain disabled, as do S3 archive sync, shared-hook setup,
 local-path sync, and provider-view sync. Missing, malformed, untracked, or
 out-of-run marker/config bindings fail before repository bootstrap can begin.
+The command's process working directory must be the registered child worktree:
+use the equivalent of
+`(cd "$CHILD_WORKTREE" && bash scripts/worktree/init.sh)`. Executing the child
+script by absolute path from the outer worktree is an invalid-run containment
+failure.
 
 `branchOwnership` is absent until this run successfully creates the branch. Its
 source and immutable baseline SHAs bind cleanup authority to the created ref; a

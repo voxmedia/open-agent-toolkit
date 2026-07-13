@@ -911,6 +911,31 @@ pass.
 
 ---
 
+### Task p05-t18: Bind smoke-safe init to the child worktree
+
+_Recovery task discovered when a fresh confirmation correctly aborted before
+dispatch because the child init script was invoked from the outer worktree._
+
+**Files:**
+
+- Modify: `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `tools/smoke/{CONTRACT.md,protocols/codex.md}`
+- Modify: `tools/smoke/runner/drive.test.mjs`
+
+**Step 1: Make the containment boundary executable** — require the child
+worktree itself as process cwd, using the equivalent of
+`(cd "$CHILD_WORKTREE" && bash scripts/worktree/init.sh)`. An absolute child
+script path from the outer cwd remains an invalid-run abort.
+
+**Step 2: Synchronize and verify** — bump the canonical bootstrap skill, refresh
+provider views, and require the exact cwd-bound launch shape in skill and drive
+contract tests.
+
+**Step 3: Commit** — `fix(p05-t18): bind smoke init to child worktree`
+
+---
+
 ## Phase 6: Documentation, Vault Capture & Release
 
 _Sequential; depends on p05._
@@ -1032,12 +1057,12 @@ Expected: all green.
   isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
-- Phase 5: 17 tasks — Harness protocols, deterministic/fail-fast recovery,
+- Phase 5: 18 tasks — Harness protocols, deterministic/fail-fast recovery,
   report publication, phase-agent restoration, terminal evidence hardening, and
   bounded live smoke evidence
 - Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
 
-**Total: 34 tasks**
+**Total: 35 tasks**
 
 Ready for code review and merge.
 

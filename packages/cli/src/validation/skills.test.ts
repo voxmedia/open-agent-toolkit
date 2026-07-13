@@ -1055,7 +1055,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.6');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -1098,6 +1098,12 @@ describe('validateOatSkills', () => {
     );
     expect(content).toContain('`bash scripts/worktree/init.sh`, not');
     expect(content).toContain('`pnpm run worktree:init`');
+    expect(content).toContain(
+      '(cd "$TARGET_PATH" && bash scripts/worktree/init.sh)',
+    );
+    expect(content).toMatch(
+      /invoking\s+the child script by absolute path while the shell remains in the outer/u,
+    );
     expect(content).not.toContain('source-commit-bound dependency');
   });
 
