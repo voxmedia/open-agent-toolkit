@@ -319,8 +319,8 @@ After rebasing/merging any sibling change that lands first, determine the next u
 
 **Step 2: Run focused and workspace verification**
 
-Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm format && pnpm type-check && pnpm build`
-Expected: CLI tests and all workspace static/build checks pass.
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm format && pnpm type-check && pnpm build && pnpm build:docs`
+Expected: CLI tests, all workspace static/build checks, and the production docs build pass.
 
 **Step 3: Run the publishable-package gate**
 
@@ -329,7 +329,7 @@ Expected: All five public packages build, pack, satisfy metadata/content contrac
 
 **Step 4: Verify working-tree release hygiene**
 
-Confirm only expected source, test, docs, project-artifact, and five-package version files changed; confirm no derived provider-skill copies or sibling-project prose were swept in. Recheck that `oat-project-summary` preserves concurrent changes and carries exactly one patch bump relative to the final base.
+Confirm only expected source, test, docs, project-artifact, and five-package version files changed; confirm no derived provider-skill copies or sibling-project prose were swept in. Review any docs build-generated index delta and include it only when it follows from the authored contributor-doc change. Recheck that `oat-project-summary` preserves concurrent changes and carries exactly one patch bump relative to the final base.
 
 **Step 5: Commit**
 
