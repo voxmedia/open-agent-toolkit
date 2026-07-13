@@ -72,14 +72,12 @@ async function removePackCompanionAssets(
   dryRun: boolean,
   deps: RemoveToolsDependencies,
 ): Promise<void> {
-  if (dryRun || pack !== 'workflows') {
+  if (dryRun || pack !== 'workflows' || scope !== 'user') {
     return;
   }
 
-  if (scope === 'user') {
-    for (const agent of WORKFLOW_AGENTS) {
-      await deps.removeFile(join(scopeRoot, '.agents', 'agents', agent));
-    }
+  for (const agent of WORKFLOW_AGENTS) {
+    await deps.removeFile(join(scopeRoot, '.agents', 'agents', agent));
   }
 
   for (const template of WORKFLOW_TEMPLATES) {

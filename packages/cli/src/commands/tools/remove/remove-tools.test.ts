@@ -194,9 +194,7 @@ describe('removeTools', () => {
 
     expect(result.removed).toHaveLength(3);
     expect(deps.removedDirs).toHaveLength(2); // two skills
-    expect(deps.removedFiles).toHaveLength(
-      1 + WORKFLOW_TEMPLATES.length + WORKFLOW_SCRIPTS.length,
-    );
+    expect(deps.removedFiles).toHaveLength(1); // one agent
   });
 
   it('dry-run previews removal without deleting', async () => {
