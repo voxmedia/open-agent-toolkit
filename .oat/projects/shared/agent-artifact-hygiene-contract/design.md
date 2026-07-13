@@ -87,6 +87,10 @@ Role-specific text may immediately follow to preserve existing DoD semantics. Th
 
 All role and skill edits occur under `.agents/`. Each changed canonical skill receives one frontmatter version bump for the final PR diff, including the newly added `oat-project-plan-writing` surface. `oat sync --scope all` regenerates provider views. Because these bundled assets and the CLI prompt ship publicly, all five public package versions move in lockstep.
 
+### Dispatch-Ladder Preflight Hardening
+
+The shared `oat-project-plan-writing` contract must inspect the effective dispatch ladder across shared, repo-local, and user configuration before offering adoption. A `dispatch-ceiling resolve` result with `matrix: null` can mean only that the project has no selected ceiling; it is not evidence that candidate ladders are absent. Adoption is offered only when the independent effective-config check finds missing or incomplete cells. When ladders are complete but policy is unresolved, planning skips adoption and asks only for the project-specific named ceiling.
+
 ## Testing Strategy
 
 ### Contract Coverage
@@ -105,6 +109,7 @@ All role and skill edits occur under `.agents/`. Each changed canonical skill re
 - Ensure the generated implementation plan itself demonstrates planner-first resolution: every artifact-writing task contains a concrete, file-scoped command derived from this repository's documented `format:fix` surface.
 - Run the file-scoped write command before each implementation commit, then run the repository check command to prove no tracked artifact is left unformatted.
 - Verify that package versions are lockstep, canonical skills have one version bump each, and provider views match canonical content.
+- Add a skill-contract regression check that a complete user-level ladder with no project policy skips adoption and proceeds to the project-ceiling choice; `matrix: null` must not be treated as ladder absence.
 
 ### Final Validation
 
