@@ -154,6 +154,7 @@ Key behavior:
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - Compares installed versions against bundled versions and copies updated assets
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to include newly added bundled skills or agents in that same scope
+- Pack-targeted updates intentionally rewrite bundled template and script companions in place, even when the pack's installed skills are already current
 - For `--pack <pack>` and `--all`, shared repo config is also reconciled from an installed-pack scan so `tools.*` reflects what is actually available and stale `true` flags are cleared
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
@@ -207,6 +208,8 @@ retains its existing scaffolding and local-path setup.
 `oat tools update --pack workflows --scope user` refreshes all four asset
 classes in place, including newly bundled skills and agents. Pack removal and a
 confirmed aggregate scope reduction remove those same user-level assets.
+Companion template and script removal is user-scope-only; project-scope removal
+leaves repo-local `.oat/templates/` and `.oat/scripts/` assets intact.
 
 ## Core pack
 

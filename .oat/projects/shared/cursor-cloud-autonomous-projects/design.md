@@ -319,7 +319,7 @@ Phase boundaries each end committed and pushed; Phases 4–5 are cross-repo work
 
 | Risk | Prob. | Impact | Mitigation | Contingency |
 |---|---|---|---|---|
-| User-scope skills (`~/.agents/skills/`) not loaded by cloud agents (undocumented) | Medium | High | Verify empirically at Phase 4 start, before dependent work | Orientation skill instructs absolute-path reads (always works); plugin distribution as fallback channel |
+| Direct cloud auto-surfacing of user-scope skills (`~/.agents/skills/`) remains unverified after the 2026-07-13 probe | Medium | High | Probe confirmed OAT CLI discovery, but this run could not refresh or verify model auto-surfacing; absolute-path-primary loading was activated for dependent work | Continue canonical absolute-path reads; re-probe on a fresh Phase 4 VM and retain plugin distribution as a fallback channel |
 | Autonomy contract gap → unmapped prompt stalls an unattended run | Medium | High | FR1 exhaustive inventory; stall-as-defect handling logs the gap and stops cleanly | Inventory patch + rerun; learnings entry prevents recurrence |
 | Same-name skill collisions / drifted repo copies mislead agents | Med-High | Medium | Unique names for new skills; instruction-level precedence; path-based reads | Operator freshness automation (out of scope) shrinks drift over time |
 | Cross-family review unavailable (single family / no harness auth) | Low-Med | Medium | Layered ladder with explicit degraded logging; availability probes | Final review still blocking; provenance shows degradation for later re-review |
