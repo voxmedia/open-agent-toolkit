@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -28,12 +28,12 @@ oat_generated: false
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 8     | 8/8       |
-| Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
+| Phase 3 (p03): OAT release (publish boundary)                  | in_progress | 2     | 1/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 14/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 15/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -184,7 +184,19 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 
 ## Phase 3: OAT release (publish boundary)
 
-**Status:** pending — tasks p03-t01 … p03-t02 per plan.md (p03-t02 is an operator boundary: merge → pipeline publish)
+**Status:** in_progress
+**Started:** 2026-07-13
+
+### Task p03-t01: Full-suite verification + PR readiness
+
+**Status:** completed
+**Outcome:** Refreshed the stale sync-manifest version stamp from 0.1.48 to 0.1.61 with the source CLI (`1cc0ba0b`) and completed the full local release-readiness gate.
+**Verification:** Passed — `pnpm lint` completed 10/10 tasks with zero warnings/errors; `pnpm type-check` completed 10/10 tasks; `pnpm test` completed 10/10 tasks with 2,804 package tests and 123/123 smoke tests; `pnpm build` completed 5/5 public-package builds; `pnpm release:validate` validated all five 0.1.61 public package tarballs.
+**PR readiness:** Ready — p02 passed round-2 review and the full p03-t01 local gate is green: "branch pushed through p02, PR creation delegated to root". The p03 commits remain local for the root-owned boundary push.
+
+### Task p03-t02: Publish boundary verification
+
+**Status:** pending — operator merge → pipeline publish; this task polls for completion and does not publish.
 
 ## Phase 4: Environment provisioning (cloud-agent-env-node repo)
 
@@ -237,6 +249,8 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02-t08: Grok/xAI classification and OpenAI/Claude gate participation committed (`5037d151`); all 166 targeted tests plus CLI/release gates passed.
 - [x] p02 phase verification: root `pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm release:validate` completed with zero failures; smoke suite passed 123/123 and all five 0.1.61 public tarballs validated.
 - [x] p02 review fix round 1: all seven cross-family findings resolved (`56364e83`, `77abc935`, `7559ec0c`); full CLI suite passed 2,717/2,717, 58 skills validated, five release tarballs validated, provider views remained in sync, and the temp-HOME dry-run reproduction made zero template/script writes.
+- [x] p02 round-2 review: passed; folded m4 follow-up resolved in p03-t01 by refreshing the sync manifest stamp to source CLI version 0.1.61 (`1cc0ba0b`).
+- [x] p03-t01: full release-readiness gate passed — lint 10/10, type-check 10/10, package tests 2,804 plus smoke 123/123, build 5/5, and release validation 5/5; branch pushed through p02, PR creation delegated to root.
 
 **Decisions:**
 
@@ -262,6 +276,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
 | 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t08 + fix round) | 653 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
+| 3     | Full local gate: lint, type-check, package tests + smoke, build, release validation (p03-t01) | 2,804 package + 123 smoke tests; 10 lint; 10 type-check; 5 build; 5 release packages | 0 | Round-2 review passed; source CLI manifest stamp corrected to 0.1.61; branch pushed through p02 and PR creation delegated to root |
 
 ## Final Summary (for PR/docs)
 
