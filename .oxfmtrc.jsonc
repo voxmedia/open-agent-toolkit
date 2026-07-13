@@ -17,6 +17,7 @@
   "sortPackageJson": {},
   "ignorePatterns": [
     "dist/",
+    ".oat/config.json",
     "packages/cli/assets/**",
     "packages/cli/assets/templates/**/*.yml",
     ".oat/templates/**/*.yml",

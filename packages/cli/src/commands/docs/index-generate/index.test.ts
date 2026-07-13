@@ -13,7 +13,13 @@ import {
   GENERATED_INDEX_WARNING,
 } from './index';
 
-function createHarness(options: { cwd?: string; repoRoot?: string } = {}) {
+function createHarness(
+  options: {
+    cwd?: string;
+    repoRoot?: string;
+    documentationIndex?: string;
+  } = {},
+) {
   const capture = createLoggerCapture();
   const cwd = options.cwd ?? '/tmp/repo/apps/docs';
   const repoRoot = options.repoRoot ?? '/tmp/repo';
@@ -42,7 +48,9 @@ function createHarness(options: { cwd?: string; repoRoot?: string } = {}) {
       }),
       readOatConfig: vi.fn(async () => ({
         version: 1,
-        documentation: {},
+        documentation: options.documentationIndex
+          ? { index: options.documentationIndex }
+          : {},
       })),
       writeOatConfig: vi.fn(
         async (root: string, config: Record<string, unknown>) => {
@@ -116,6 +124,19 @@ describe('createDocsGenerateIndexCommand', () => {
       documentation?: { index?: string };
     };
     expect(config.documentation?.index).toBe('apps/docs/index.md');
+  });
+
+  it('does not rewrite config when the stored index path is unchanged', async () => {
+    const { command, writtenConfigs, writtenFiles } = createHarness({
+      cwd: '/tmp/repo/apps/docs',
+      repoRoot: '/tmp/repo',
+      documentationIndex: 'apps/docs/index.md',
+    });
+
+    await runCommand(command);
+
+    expect(writtenFiles).toHaveLength(1);
+    expect(writtenConfigs).toHaveLength(0);
   });
 
   it('reads config from repo root, not CWD', async () => {

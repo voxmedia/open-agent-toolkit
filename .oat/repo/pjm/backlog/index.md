@@ -4,6 +4,7 @@
 
 ## Curated Overview
 
+- Build reliability: concurrent CLI invocations race on in-place `packages/cli/assets` regeneration (five incidents on 2026-07-12, including one silent bundle corruption). `BL-260712-serialize-cli-asset-bundling` — Serialize CLI asset bundling with atomic staging — tracks atomic staging plus a portable lock; increasingly urgent as multi-agent workflows make concurrent invocations in one worktree routine.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
 - Dispatch matrix normalization consolidation, pass-scoped Cursor catalog caching, and the Dispatch Report V1 schema/formatter are shipped.
 - The live workflow smoke fixture is complete: deterministic root verification, an opt-in authenticated runner, root-owned phase-agent topology, safe recovery/cleanup, public runbooks, and a canonical Codex packet passing 10/10 assertions.
@@ -22,6 +23,7 @@
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                    | open   | high     | feature | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches      | open   | high     | feature | M        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews | open   | high     | feature | M        |
+| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                    | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                 | open   | high     | feature | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs   | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates           | open   | medium   | feature | S        |
