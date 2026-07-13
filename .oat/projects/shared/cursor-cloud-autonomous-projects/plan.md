@@ -691,7 +691,7 @@ Expected: all green; worktree validation passes post-commit.
 
 | Scope  | Type     | Status  | Date | Artifact |
 | ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
+| p01    | code     | passed  | 2026-07-13 | Round 1 FAIL (3C/1I/1M/3m — vendoring, contract-test pins, verify-gap) → fix `d390ca50`/`7c0d9cbf`; Round 2 PASS + M2 docs-link fix `3e3cc9a7`. Reviewer: cursor native `claude-fable-5-thinking-xhigh` (cross-family vs GPT-5.6 Sol producer, explicit-user selection per Deviations) |
 | p02    | code     | pending | -    | -        |
 | p03    | code     | pending | -    | -        |
 | p04    | code     | pending | -    | -        |
