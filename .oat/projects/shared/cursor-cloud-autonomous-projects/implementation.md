@@ -110,8 +110,13 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 
 ## Phase 2: New OAT skills + user-scope installability (OAT repo)
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-13
+**Completed:** 2026-07-13
+
+### Phase Summary
+
+Retired the user-scope discovery risk with an explicit absolute-path contingency; added and bundled the autonomous orchestration and Cursor Cloud orientation skills; made the workflows pack's complete asset set installable, updateable, and removable at user scope without home-level project scaffolding; added user-first project template resolution and Grok/xAI gate-family participation; and advanced all five public packages to 0.1.61.
 
 ### Task p02-t01: Verify user-scope skill loading in cloud
 
@@ -222,6 +227,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02-t06: five-package lockstep 0.1.61 bump committed (`6898ebba`); all public package tarballs passed release validation.
 - [x] p02-t07: per-file user-first template resolution committed (`912c403d`); all four precedence scenarios, CLI gates, and release validation passed.
 - [x] p02-t08: Grok/xAI classification and OpenAI/Claude gate participation committed (`5037d151`); all 166 targeted tests plus CLI/release gates passed.
+- [x] p02 phase verification: root `pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm release:validate` completed with zero failures; smoke suite passed 123/123 and all five 0.1.61 public tarballs validated.
 
 **Decisions:**
 
@@ -245,7 +251,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
-| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates (p02-t01..t08) | 653 | 0 | Phase task gates green; 15 family and 151 gate tests prove Grok participates for OpenAI and Claude producers; release validation passed |
+| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite (p02-t01..t08) | 653 focused + full suite | 0 | All task gates and root lint/type-check/test/build passed; smoke 123/123; five public 0.1.61 tarballs validated |
 
 ## Final Summary (for PR/docs)
 
