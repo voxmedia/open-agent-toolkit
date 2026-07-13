@@ -1,7 +1,7 @@
 ---
 oat_generated: false
 oat_project: oat-project-fixture
-oat_evidence_date: 2026-07-12
+oat_evidence_date: 2026-07-13
 ---
 
 # Root-Owned Phase-Agent Live Validation
@@ -17,7 +17,7 @@ green canonical report:
 - all five task commits and all three phase reviews passed;
 - no optional nested child was needed.
 
-The final retained run passed all nine evidence assertions in 26m20s, compared
+The final retained run passed all nine evidence assertions in 26m21s, compared
 with 38m22s for the mandatory three-tier baseline.
 
 ## Run record
@@ -63,14 +63,26 @@ with 38m22s for the mandatory three-tier baseline.
 
 ### `smoke-automated-2026-07-13T00-28-52-722Z`
 
-- Duration: 26m20s.
+- Duration: 26m21s.
 - Status: passed, 9/9 assertions.
 - Bundle SHA-256:
-  `b01c5dad067191187c0bed856148a2eb72f3759457345f0df1f52c09f718d30d`.
+  `96e5b76d40d82370a4c207d67e9ae6a50b669de76bfdb69d12b9ead4dca0e78b`.
 - Canonical packet: `tools/smoke/reports/codex/implement/`.
 - Three phase implementers and three root-owned reviewers completed; all five
   task commits, parallel isolation, ordered fan-in, final gate corroboration,
   durable review disposition, and explicit runtime-identity status passed.
+
+## Baseline comparison
+
+The mandatory three-tier baseline recorded 13 child dispatch attempts plus one
+final gate: five accepted task workers, one rejected task-worker route, three
+phase coordinators, three accepted reviewers, and one rejected reviewer route.
+
+The restored run recorded six accepted child launches plus one final gate:
+three phase implementers and three root-owned reviewers, with no task workers
+or rejected child routes. On the same five-task fixture, the restored topology
+removed seven launch attempts, cut total launch count in half, and finished
+12m01s faster (31.3%).
 
 ## Interpretation
 

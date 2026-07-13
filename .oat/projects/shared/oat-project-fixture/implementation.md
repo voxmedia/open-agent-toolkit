@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-12
-oat_current_task_id: p06-t03
+oat_last_updated: 2026-07-13
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 5     | 5/5       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | complete    | 19    | 15/19     |
-| Phase 6 | in_progress | 3     | 2/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 5     | 5/5       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | complete | 19    | 15/19     |
+| Phase 6 | complete | 3     | 3/3       |
 
-**Total:** 31/36 tasks completed (4 deferred, 1 in progress)
+**Total:** 32/36 tasks completed (4 explicitly deferred)
 
 ---
 
@@ -608,7 +608,7 @@ corrected in this bookkeeping update.
 
 ## Phase 3: Evidence Collector & Report
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-11
 
 ### Task p03-t01: Evidence collection module
@@ -1183,7 +1183,7 @@ and a complete Codex dry-run lifecycle passed.
 ### Task p05-t02: Codex three-tier baseline smoke evidence
 
 **Status:** completed
-**Commit:** pending bookkeeping commit
+**Commit:** `cbe4e7a1`
 
 **Outcome:**
 
@@ -1263,7 +1263,7 @@ tests passed. Workspace lint, format, type-check, plan validation, and
 
 ### Task p05-t08: Deterministic orchestration contract tier
 
-**Status:** complete
+**Status:** completed
 **Commit:** `839ada92`
 
 **Scope correction from smoke-effort feedback:**
@@ -1297,7 +1297,7 @@ complete smoke suite passed 106/106; workspace lint and formatting passed.
 
 ### Task p05-t09: Fail-fast child execution and observable gates
 
-**Status:** complete
+**Status:** completed
 **Commit:** `e3262bf9`
 
 **Outcome:**
@@ -1324,7 +1324,7 @@ workspace build, lint, format, type-check, and all 2699 CLI tests passed.
 
 ### Task p05-t10: Single-owner run metadata and report publication
 
-**Status:** complete
+**Status:** completed
 **Commit:** `19840df6`
 
 **Outcome:**
@@ -1371,7 +1371,7 @@ fully recorded.
 ### Task p05-t13: Validate restored topology with one live Codex run
 
 **Status:** completed
-**Commit:** recorded by the p05-t13 evidence commit
+**Commit:** `1626bd34`
 
 **Comparison baseline:** 38m22s, nine passing assertions, mandatory three-tier
 topology.
@@ -1390,13 +1390,17 @@ topology.
   evidence, then both agents failed at their first commits because repository
   hooks need dependencies intentionally absent from smoke children. p05-t19
   isolated only those disposable fixture commits from hooks.
-- The final retained run passed 9/9 assertions in 26m20s and published
+- The final retained run passed 9/9 assertions in 26m21s and published
   `tools/smoke/reports/codex/implement/`.
 - It recorded three completed phase implementers, three completed root-owned
   phase reviewers, five exact task commits, p01/p02 isolation, p03 fan-in, and
   one corroborated passing final gate.
 - Bundle SHA-256:
-  `b01c5dad067191187c0bed856148a2eb72f3759457345f0df1f52c09f718d30d`.
+  `96e5b76d40d82370a4c207d67e9ae6a50b669de76bfdb69d12b9ead4dca0e78b`.
+- Against the 38m22s three-tier baseline, it finished 12m01s faster (31.3%).
+  The launch shape fell from 13 child attempts plus one gate to six accepted
+  children plus one gate: 14 total launch attempts became 7, with task workers
+  eliminated.
 
 ---
 
@@ -1487,8 +1491,13 @@ passed, and managed Codex phase-agent roles were synchronized.
 
 ### Task p06-t03: Release validation
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commits:** `ae1d71f5`, `b9d42125`, `1626bd34`
+
+All five public packages are aligned at `0.1.58`. `pnpm build`, `pnpm
+build:docs`, `pnpm lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and
+`pnpm release:validate` pass. The canonical live Codex report independently
+passes its nine-assertion implement profile.
 
 ---
 
@@ -1569,38 +1578,65 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review   | Source Artifact                        | Planned / Documented                                                                        | Actual / Accepted                                                                                                                                   | Reason                                                                                                                                              | Source of Truth                                               | Follow-up                                                                  |
 | --------------- | -------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | p04 preparation | `design.md` Component 5; `plan.md` p04 | Author dispatch language directly in implementation and phase-coordinator skills during p04 | Draft provider-neutral and harness contracts during p01; p04 promotes verified material into a shared internal skill with explicit consumer loading | Concurrent Codex/Claude verification can run while Cursor implementation continues, and one canonical progressive-disclosure contract reduces drift | Updated `design.md`, `plan.md`, and dispatch draft references | Collect harness reports before p04; retain unsupported/inconclusive claims |
+| p05 topology    | `design.md`; original p05 smoke plan   | Require root → coordinator → task-worker execution                                          | Root dispatches one phase implementer that owns direct task execution; optional children are isolated and the root independently owns review        | The mandatory three-tier run took 38m22s and added orchestration overhead without improving the fixture result                                      | Updated `design.md`, DR-260712, and canonical live report     | Trim the large dispatch reference in the tracked backlog                   |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                             | Passed | Failed | Coverage                                                |
+| ----- | ----------------------------------------------------- | ------ | ------ | ------------------------------------------------------- |
+| Final | Workspace verification + live Codex implement profile | All    | 0      | 9/9 live assertions; 2700 CLI tests plus package suites |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A deterministic workflow fixture, runner, evidence collector, assertion
+  engine, and report publisher for repeatable OAT smoke testing.
+- Root-owned phase-agent execution: one direct phase implementer per phase,
+  independent root-owned review, bounded fix continuity, and optional isolated
+  third-tier work.
+- Live/operator protocols for Codex, Claude, Cursor IDE, and Cursor CLI, with a
+  canonical 9/9 Codex implement report and preserved legacy baseline.
+- User-facing OAT docs, a contributor runbook, and Vault capture describing the
+  topology and smoke process.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Default implementation requires only root → phase implementer depth; Codex
+  depth 2 is optional and enables nested work.
+- Immutable dispatch evidence is published only with terminal outcomes.
+- Smoke children initialize from their own worktree and isolate disposable
+  fixture commits from unavailable dependency-backed hooks.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/agents/oat-phase-implementer.md` — direct phase ownership contract.
+- `.agents/skills/oat-project-implement/` — root orchestration and review loop.
+- `tools/smoke/` — fixture, runner, protocols, evidence, and reports.
+- `apps/oat-docs/docs/workflows/projects/` — public execution and smoke docs.
+- `.oat/projects/shared/oat-project-fixture/references/` — decisions, reviews,
+  and live comparison evidence.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- `pnpm build`
+- `pnpm build:docs`
+- `pnpm lint`
+- `pnpm format`
+- `pnpm type-check`
+- `pnpm test`
+- `pnpm release:validate`
+- `node tools/smoke/evidence/report.mjs --check
+tools/smoke/reports/codex/implement/report.json --expect-profile implement`
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The mandatory three-tier topology was replaced by the proven root-owned
+  phase-agent model. The final five-task run passed in 26m21s with seven total
+  launch attempts, versus 38m22s and fourteen attempts for the preserved
+  three-tier baseline.
 
 ## References
 

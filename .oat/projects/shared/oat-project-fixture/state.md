@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t03
-oat_last_commit: e1f6f6ee5c7be59f2eef2751e47a386e94e9bdcd
+oat_current_task: null
+oat_last_commit: 1626bd34a6c3819e71eced32d5272c9c71e1cba8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 5 # override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -40,24 +40,24 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T00:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T00:59:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Implementation in progress
+**Status:** Implementation complete; ready for final PR
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-12
 
 ## Current Phase
 
-Implementation — release validation
+Implementation complete — release validated and PR-ready
 
 ## Artifacts
 
@@ -65,7 +65,7 @@ Implementation — release validation
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 36 tasks)
-- **Implementation:** `implementation.md` (in progress — release validation)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -147,11 +147,11 @@ Implementation — release validation
 - ✓ p05-t18 bound smoke-safe init to the registered child worktree cwd
 - ✓ p05-t19 isolated disposable fixture commits from unavailable child hooks
 - ✓ p05-t13 published the final Codex implement report: 9/9 assertions in
-  26m20s, with three phase implementers, three root-owned reviewers, five task
+  26m21s, with three phase implementers, three root-owned reviewers, five task
   commits, parallel isolation, fan-in, and one passing final gate
 - ✓ p06-t01 OAT docs and smoke runbook complete
 - ✓ p06-t02 Vault capture committed externally
-- → p06-t03 release validation in progress
+- ✓ p06-t03 release validation and project bookkeeping complete
 
 ## Blockers
 
@@ -159,4 +159,4 @@ None
 
 ## Next Milestone
 
-Complete release validation and project bookkeeping.
+Open the final PR when requested.

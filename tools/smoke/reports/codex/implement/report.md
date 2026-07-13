@@ -3,7 +3,7 @@
 **Scenario:** implement
 **Status:** passed
 **Assertions:** 9 passed / 0 failed
-**Bundle SHA-256:** b01c5dad067191187c0bed856148a2eb72f3759457345f0df1f52c09f718d30d
+**Bundle SHA-256:** 96e5b76d40d82370a4c207d67e9ae6a50b669de76bfdb69d12b9ead4dca0e78b
 **Authority:** `report.json` is authoritative; this Markdown is a derived view.
 
 | Assertion                                 | Severity  | Status | Description                                                                                                          |
