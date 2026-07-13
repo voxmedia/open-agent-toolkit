@@ -61,9 +61,10 @@ A boundary is a successful fail-closed outcome, not permission to continue with
 a guessed answer. The run reports what stopped, the evidence, and the operator
 action needed to resume.
 
-The canonical
-[autonomy contract and exhaustive gate inventory](../../../../../.agents/docs/autonomy-contract.md)
-maps each prompt to its autonomous resolution and provenance.
+The canonical autonomy contract and exhaustive gate inventory
+(`.agents/docs/autonomy-contract.md`, vendored into each consuming skill at
+`references/docs/autonomy-contract.md`) map each prompt to its autonomous
+resolution and provenance.
 
 ## Review contract
 
