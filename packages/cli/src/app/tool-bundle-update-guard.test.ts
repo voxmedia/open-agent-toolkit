@@ -35,6 +35,7 @@ function createHarness(
   overrides: {
     availableVersion?: string | null;
     confirmed?: boolean;
+    promptError?: Error;
     installError?: Error;
     options?: Partial<ToolBundleUpdateGuardOptions>;
     platform?: NodeJS.Platform;
@@ -48,7 +49,11 @@ function createHarness(
       ? '1.2.3'
       : overrides.availableVersion,
   );
-  const confirmAction = vi.fn(async () => overrides.confirmed ?? false);
+  const confirmAction = overrides.promptError
+    ? vi.fn(async () => {
+        throw overrides.promptError;
+      })
+    : vi.fn(async () => overrides.confirmed ?? false);
   const installCli = overrides.installError
     ? vi.fn(async () => {
         throw overrides.installError;
@@ -299,6 +304,28 @@ describe('guardBundledToolMutation', () => {
     ).resolves.toBe(false);
 
     expect(harness.installCli).not.toHaveBeenCalled();
+    expect(harness.logger.warn).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /continuing.*current CLI.*bundle.*older.*available CLI/is,
+      ),
+    );
+  });
+
+  it('warns and continues with the current bundle after a prompt infrastructure error', async () => {
+    const harness = createHarness({
+      promptError: new Error('prompt input stream failed'),
+    });
+
+    await expect(
+      guardBundledToolMutation(harness.options, harness.dependencies),
+    ).resolves.toBe(false);
+
+    expect(harness.installCli).not.toHaveBeenCalled();
+    expect(harness.logger.warn).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /could not open.*prompt.*update manually.*npm install --global @open-agent-toolkit\/cli@1\.2\.3/is,
+      ),
+    );
     expect(harness.logger.warn).toHaveBeenCalledWith(
       expect.stringMatching(
         /continuing.*current CLI.*bundle.*older.*available CLI/is,

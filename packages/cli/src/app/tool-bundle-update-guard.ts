@@ -187,10 +187,19 @@ export async function guardBundledToolMutation(
       'can only install its own bundled tool versions. The available CLI may ' +
       'bundle newer tool versions.',
   );
-  const accepted = await dependencies.confirmAction(
-    `Update the OAT CLI to ${availableVersion} before running ${options.commandPath}?`,
-    { interactive: options.interactive },
-  );
+  const installCommand = `npm install --global ${CLI_PACKAGE}@${availableVersion}`;
+  let accepted = false;
+  try {
+    accepted = await dependencies.confirmAction(
+      `Update the OAT CLI to ${availableVersion} before running ${options.commandPath}?`,
+      { interactive: options.interactive },
+    );
+  } catch {
+    options.logger.warn(
+      'Could not open the OAT CLI update prompt. Skipping the automatic CLI ' +
+        `update. To update manually, run: ${installCommand}`,
+    );
+  }
 
   if (!accepted) {
     options.logger.warn(
@@ -200,7 +209,6 @@ export async function guardBundledToolMutation(
     return false;
   }
 
-  const installCommand = `npm install --global ${CLI_PACKAGE}@${availableVersion}`;
   const invocation = resolveInstallerInvocation(
     options,
     dependencies,
