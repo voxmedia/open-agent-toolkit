@@ -694,7 +694,7 @@ Expected: all green; worktree validation passes post-commit.
 | Scope  | Type     | Status  | Date | Artifact |
 | ------ | -------- | ------- | ---- | -------- |
 | p01    | code     | passed  | 2026-07-13 | Round 1 FAIL (3C/1I/1M/3m — vendoring, contract-test pins, verify-gap) → fix `d390ca50`/`7c0d9cbf`; Round 2 PASS + M2 docs-link fix `3e3cc9a7`. Reviewer: cursor native `claude-fable-5-thinking-xhigh` (cross-family vs GPT-5.6 Sol producer, explicit-user selection per Deviations) |
-| p02    | code     | pending | -    | -        |
+| p02    | code     | passed  | 2026-07-13 | Round 1 FAIL (0C/2I/2M/3m — dry-run mutation, removal regression) → fixes `56364e83`/`77abc935`/`7559ec0c`; Round 2 PASS (new m4 sync-stamp folds into p03-t01). Reviewer: cursor native `claude-fable-5-thinking-xhigh` (cross-family) |
 | p03    | code     | pending | -    | -        |
 | p04    | code     | pending | -    | -        |
 | p05    | code     | descoped | 2026-07-13 | moved to external org-skills repo via operator handoff (`references/internal-docs-mcp-handoff.md`) |
