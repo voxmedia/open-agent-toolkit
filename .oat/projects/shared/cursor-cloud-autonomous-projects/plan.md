@@ -297,13 +297,15 @@ Expected: green; direct and aggregate fresh-home tests prove the full asset set 
 
 ### Task p02-t05: Bundle + manifest + sync
 
+> **Ordering amendment (2026-07-13, implementation):** the p01-review-amended contract suite requires each authored skill to be manifest/bundle-registered at authoring time. Registration therefore moves into the authoring tasks — p02-t02 and p02-t03 each add their own skill to `bundle-assets.sh` and `skill-manifest.ts` within their task commit. This task retains provider-view sync and bundle-consistency verification across both.
+
 **Files:**
 
-- Modify: `packages/cli/scripts/bundle-assets.sh` (SKILLS array), `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+- Modify: `packages/cli/scripts/bundle-assets.sh` (SKILLS array), `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` — registration now landed by p02-t02/p02-t03; verify only
 
 **Steps:**
 
-- Add both new skills to the bash array and the TypeScript manifest (workflows pack — now user-scope eligible via p02-t04).
+- Verify both new skills are present in the bash array and the TypeScript manifest (workflows pack — now user-scope eligible via p02-t04).
 - Run `oat sync --scope project` to generate provider views.
 
 **Verify:**
