@@ -160,6 +160,10 @@ test('deterministic child readiness failure is terminal before any launch', asyn
 
 test('deterministic accepted failure is terminal without replacement', async () => {
   const run = await provisionDeterministicRun();
+  const context = {
+    manifest: run.manifest,
+    results: { preflight: { status: 'ready' } },
+  };
 
   try {
     await Promise.all([
@@ -180,9 +184,12 @@ test('deterministic accepted failure is terminal without replacement', async () 
     ]);
     await assert.rejects(
       () =>
-        runDeterministicProvider({
-          failureMode: 'post-acceptance',
-          worktreePath: run.manifest.worktreePath,
+        driveSmoke(options, context, {
+          execute: async () =>
+            runDeterministicProvider({
+              failureMode: 'post-acceptance',
+              worktreePath: run.manifest.worktreePath,
+            }),
         }),
       /accepted phase implementer failure/,
     );
@@ -222,6 +229,45 @@ test('deterministic accepted failure is terminal without replacement', async () 
         readdir(join(run.manifest.worktreePath, 'workspace/evidence/gates')),
       (error) => error?.code === 'ENOENT',
     );
+    assert.equal(run.manifest.drive.status, 'failed');
+    const recovery = await collectSmoke(
+      { ...options, collectionMode: 'recovery' },
+      context,
+      {
+        repository: run.reportRepository,
+        runsDirectory: run.runsDirectory,
+      },
+    );
+    const recoveredBundle = JSON.parse(
+      await readFile(recovery.collected.outputPath, 'utf8'),
+    );
+    assert.equal(recovery.recovery.canonicalPublished, false);
+    assert.equal(recovery.report.report.status, 'failed');
+    assert.equal(recoveredBundle.dispatches.length, 1);
+    assert.equal(recoveredBundle.dispatches[0].launch.outcome, 'failed');
+    await assert.rejects(
+      () => readdir(run.manifest.reportRoot),
+      (error) => error?.code === 'ENOENT',
+    );
+
+    const latestManifest = JSON.parse(
+      await readFile(run.manifest.manifestPath, 'utf8'),
+    );
+    await cleanupSmoke(latestManifest, {
+      repository,
+      runsDirectory: run.runsDirectory,
+    });
+    assert.equal(
+      JSON.parse(await readFile(recovery.report.jsonPath, 'utf8')).status,
+      'failed',
+    );
+    assert.deepEqual(
+      (await readdir(run.runsDirectory)).filter((entry) =>
+        entry.startsWith('smoke-'),
+      ),
+      [],
+    );
+    run.manifest = null;
   } finally {
     await cleanupRun(run);
   }

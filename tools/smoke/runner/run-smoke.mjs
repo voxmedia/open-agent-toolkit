@@ -314,7 +314,7 @@ export async function runSmoke(
       results.collect = await runStage(
         'collect-recovery',
         handlers.collect,
-        options,
+        { ...options, collectionMode: 'recovery' },
         context,
         signalState,
       );
@@ -346,6 +346,9 @@ export async function runSmoke(
   }
 
   if (runError) {
+    if (results.collect) {
+      runError.recoveryCollection = results.collect;
+    }
     if (manifestRecoveryError) {
       runError.manifestRecoveryError = manifestRecoveryError;
     }

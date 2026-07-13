@@ -61,6 +61,15 @@ root. Published reports are acceptance evidence and must be committed; cleanup
 does not own or remove them. Cleanup removes every journal-owned run directory
 and refuses unjournaled run-descendant resources.
 
+After a failed or interrupted drive, the lifecycle invokes collection with
+`collectionMode: recovery`. Recovery accepts only terminal `failed` or
+`interrupted` drive state, runs the real collector and assertion engine over
+all available evidence, and never publishes canonical acceptance. Its bundle,
+failed report, or collector diagnostic is moved to the ignored
+`tools/smoke/recovery/<runIdentity>/` path before owned worktrees and run-local
+staging are cleaned. The original run error retains this recovery result or
+diagnostic path.
+
 ## Provisioning Manifest
 
 The runner writes one JSON provisioning manifest before drive. It includes:

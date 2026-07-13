@@ -194,6 +194,9 @@ function phaseReviewAcceptanceAssertion(bundle, phaseReviewDispatches) {
   const rows = bundle.fixture?.reviewRows ?? [];
   const currentCommits = bundle.git?.currentBranchCommits ?? [];
   const failures = [];
+  const legacyOwnershipEvidence = phaseReviewDispatches.every(
+    (dispatch) => (dispatch.schemaVersion ?? 1) === 1,
+  );
 
   for (const phase of EXPECTED_PHASE_IDS) {
     const dispatches = phaseReviewDispatches.filter(
@@ -221,32 +224,68 @@ function phaseReviewAcceptanceAssertion(bundle, phaseReviewDispatches) {
         dispatches[0]?.ownership?.parentRequestId ===
           bundle.manifest?.runIdentity);
     const committedHistory = review?.committedHistory;
-
+    const reasons = [];
+    if (dispatches.length !== 1) {
+      reasons.push('dispatch-count');
+    }
+    if (!directRoot) {
+      reasons.push('dispatch-ownership');
+    }
+    if (phaseRows.length !== 1) {
+      reasons.push('row-count');
+    }
+    if (row?.status !== 'passed') {
+      reasons.push('row-status');
+    }
     if (
-      dispatches.length !== 1 ||
-      !directRoot ||
-      phaseRows.length !== 1 ||
-      row?.status !== 'passed' ||
       row?.type !== 'code' ||
-      phaseReviews.length !== 1 ||
+      row?.type !== review?.frontmatter?.oat_review_type
+    ) {
+      reasons.push('review-type');
+    }
+    if (phaseReviews.length !== 1) {
+      reasons.push('artifact-count');
+    }
+    if (
       row?.artifact !== review?.path ||
-      review?.frontmatter?.oat_review_type !== 'code' ||
-      review?.frontmatter?.oat_review_invocation !== 'auto' ||
+      !/^reviews\/(?:archived\/)?[^/]+\.md$/u.test(review?.path ?? '')
+    ) {
+      reasons.push('artifact-path');
+    }
+    if (
+      review?.frontmatter?.oat_project !== '.oat/projects/smoke-fixture' ||
+      review?.frontmatter?.oat_review_scope !== phase ||
+      review?.frontmatter?.oat_review_invocation !== 'auto'
+    ) {
+      reasons.push('artifact-frontmatter');
+    }
+    if (
       !repositoryPath ||
       !artifactCommit?.files?.includes(repositoryPath) ||
       committedHistory?.contentHash !== review?.contentHash ||
       committedHistory?.matchesHead !== true ||
       committedHistory?.reachableFromHead !== true
     ) {
-      failures.push(phase);
+      reasons.push('committed-history');
+    }
+    if (reasons.length > 0) {
+      failures.push({ phase, reasons });
     }
   }
 
   return assertion(
     'implement-phase-review-acceptance-bound',
-    'Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history.',
+    legacyOwnershipEvidence
+      ? 'Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history; retained schema-v1 evidence does not prove direct-root ownership.'
+      : 'Every direct-root phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history.',
     failures.length === 0,
-    { failingScopes: failures, requiredScopes: EXPECTED_PHASE_IDS },
+    {
+      failures,
+      ownershipEvidence: legacyOwnershipEvidence
+        ? 'unavailable-schema-v1'
+        : 'required-schema-v2',
+      requiredScopes: EXPECTED_PHASE_IDS,
+    },
   );
 }
 

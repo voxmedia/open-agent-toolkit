@@ -12,6 +12,7 @@ import {
   loadPreparedManifest,
   loadProtocol,
   publishReportDirectory,
+  recoveryRootFor,
   reportRootFor,
 } from './drive.mjs';
 
@@ -46,6 +47,7 @@ async function createManifest(runDirectory, overrides = {}) {
     manifestPath,
     readiness: { status: 'ready' },
     reportRoot: join(runDirectory, 'reports'),
+    runIdentity: 'smoke-drive-test',
     worktreePath: join(runDirectory, 'worktree'),
     ...overrides,
   };
@@ -439,6 +441,59 @@ test('persists and rejects a failed evidence report', async () => {
     assert.equal(persisted.collection.status, 'failed');
     assert.match(persisted.collection.stagingDirectory, /report-staging-/);
     assert.equal(publications, 0);
+  } finally {
+    await rm(runDirectory, { force: true, recursive: true });
+  }
+});
+
+test('recovery collection evaluates failed drives without canonical publication', async () => {
+  const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
+  try {
+    const repository = join(runDirectory, 'repository');
+    const recoveryOptions = options({
+      collectionMode: 'recovery',
+      dryRun: false,
+    });
+    const manifest = await createManifest(runDirectory, {
+      drive: { status: 'failed' },
+      reportRoot: reportRootFor(recoveryOptions, repository),
+    });
+    let canonicalPublications = 0;
+    let preservedAt = null;
+
+    const result = await collectSmoke(
+      recoveryOptions,
+      {
+        manifest,
+        results: { preflight: { status: 'ready' } },
+      },
+      {
+        collect: async (received) => ({
+          outputPath: join(received.outDirectory, 'bundle.json'),
+        }),
+        emitReport: async (received) => ({
+          jsonPath: join(received.outDirectory, 'report.json'),
+          markdownPath: join(received.outDirectory, 'report.md'),
+          report: { status: 'failed', summary: { failed: 4 } },
+        }),
+        formatBundle: async () => {},
+        preserve: async (_stagingDirectory, destination) => {
+          preservedAt = destination;
+        },
+        publish: async () => {
+          canonicalPublications += 1;
+        },
+        repository,
+      },
+    );
+    const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
+
+    assert.equal(canonicalPublications, 0);
+    assert.equal(preservedAt, recoveryRootFor(manifest, repository));
+    assert.equal(result.recovery.canonicalPublished, false);
+    assert.equal(result.recovery.status, 'failed');
+    assert.equal(persisted.collection.status, 'recovery-completed');
+    assert.equal(persisted.collection.canonicalPublished, false);
   } finally {
     await rm(runDirectory, { force: true, recursive: true });
   }

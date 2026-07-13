@@ -38,15 +38,19 @@ test('collects and cleans after drive failure without masking the drive error', 
       runSmoke(options, {
         cleanup: async () => calls.push('cleanup'),
         handlers: handlers({
-          async collect() {
+          async collect(collectionOptions) {
+            assert.equal(collectionOptions.collectionMode, 'recovery');
             calls.push('collect');
+            return { recovery: { path: '/tmp/recovery' } };
           },
           async drive() {
             throw driveError;
           },
         }),
       }),
-    (error) => error === driveError,
+    (error) =>
+      error === driveError &&
+      error.recoveryCollection.recovery.path === '/tmp/recovery',
   );
   assert.deepEqual(calls, ['collect', 'cleanup']);
 });

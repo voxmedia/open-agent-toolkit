@@ -267,6 +267,53 @@ async function completeFinalGate(manifest) {
   );
 }
 
+async function completePhaseReview(manifest, scope) {
+  const reviewPath = join(
+    manifest.fixtureProjectPath,
+    'reviews',
+    `${scope}-review.md`,
+  );
+  const planPath = join(manifest.fixtureProjectPath, 'plan.md');
+  await mkdir(dirname(reviewPath), { recursive: true });
+  await writeFile(
+    reviewPath,
+    `---\noat_review_scope: ${scope}\noat_review_type: code\noat_review_invocation: auto\noat_project: .oat/projects/smoke-fixture\n---\n\n# Deterministic ${scope} Review\n\nNo findings.\n`,
+  );
+  const plan = await readFile(planPath, 'utf8');
+  const updatedPlan = plan.replace(
+    new RegExp(
+      `^\\| ${scope}\\s+\\| code\\s+\\| pending \\| -\\s+\\| -\\s+\\|$`,
+      'mu',
+    ),
+    `| ${scope} | code | passed | 2026-07-12 | reviews/${scope}-review.md |`,
+  );
+  if (updatedPlan === plan) {
+    throw new Error(
+      `Deterministic phase review could not update the ${scope} row.`,
+    );
+  }
+  await writeFile(planPath, updatedPlan);
+  await git(
+    [
+      'add',
+      '--',
+      relative(manifest.worktreePath, reviewPath),
+      relative(manifest.worktreePath, planPath),
+    ],
+    manifest.worktreePath,
+  );
+  await git(
+    [
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-m',
+      `chore: record deterministic ${scope} review`,
+    ],
+    manifest.worktreePath,
+  );
+}
+
 export async function runDeterministicProvider({
   failureMode = process.env.OAT_SMOKE_DETERMINISTIC_FAILURE ?? null,
   worktreePath = process.cwd(),
@@ -327,6 +374,7 @@ export async function runDeterministicProvider({
         role: 'reviewer',
         scope,
       });
+      await completePhaseReview(manifest, scope);
     }
     await completeFinalGate(manifest);
     await updateSmokeManifest(marker.manifestPath, (current) => ({

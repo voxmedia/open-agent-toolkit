@@ -420,7 +420,7 @@ test('implement profile detects incomplete dispatch, ceiling, isolation, fan-in,
   ]);
 });
 
-test('phase-review acceptance independently rejects row, artifact, status, path, and scope defects', async () => {
+test('phase-review acceptance independently rejects dispatch, row, artifact, and history defects', async () => {
   const cases = [
     {
       mutate(bundle) {
@@ -437,6 +437,28 @@ test('phase-review acceptance independently rejects row, artifact, status, path,
         );
       },
       name: 'missing artifact',
+    },
+    {
+      mutate(bundle) {
+        bundle.fixture.reviewRows.push({
+          ...structuredClone(
+            bundle.fixture.reviewRows.find((row) => row.scope === 'p01'),
+          ),
+        });
+      },
+      name: 'duplicate row',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews.push({
+          ...structuredClone(
+            bundle.reviews.find(
+              (review) => review.frontmatter.oat_review_scope === 'p01',
+            ),
+          ),
+        });
+      },
+      name: 'duplicate artifact',
     },
     {
       mutate(bundle) {
@@ -459,6 +481,58 @@ test('phase-review acceptance independently rejects row, artifact, status, path,
         ).frontmatter.oat_review_scope = 'p99';
       },
       name: 'mismatched artifact scope',
+    },
+    {
+      mutate(bundle) {
+        bundle.fixture.reviewRows.find((row) => row.scope === 'p01').type =
+          'artifact';
+      },
+      name: 'mismatched review type',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews.find(
+          (review) => review.frontmatter.oat_review_scope === 'p01',
+        ).frontmatter.oat_review_invocation = 'manual';
+      },
+      name: 'mismatched review invocation',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews.find(
+          (review) => review.frontmatter.oat_review_scope === 'p01',
+        ).frontmatter.oat_project = '.oat/projects/another-project';
+      },
+      name: 'mismatched review project',
+    },
+    {
+      mutate(bundle) {
+        bundle.dispatches.find(
+          (dispatch) =>
+            dispatch.scope === 'p01' && dispatch.role === 'reviewer',
+        ).ownership = {
+          launcherRole: 'phase-agent',
+          parentRequestId: 'p01-phase-implementer-request',
+          parentScope: 'p01',
+        };
+      },
+      name: 'non-root reviewer ownership',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews.find(
+          (review) => review.frontmatter.oat_review_scope === 'p01',
+        ).committedHistory.contentHash = 'different-committed-content';
+      },
+      name: 'committed history content mismatch',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews.find(
+          (review) => review.frontmatter.oat_review_scope === 'p01',
+        ).committedHistory.reachableFromHead = false;
+      },
+      name: 'committed history is unreachable',
     },
   ];
 
@@ -654,6 +728,18 @@ test('retained schema-v1 implement evidence stays valid without claiming root ow
   );
   assert.match(
     completeness.description,
+    /does not prove direct-root ownership/,
+  );
+  const reviewAcceptance = evaluateEvidence(legacy).assertions.find(
+    (assertion) => assertion.id === 'implement-phase-review-acceptance-bound',
+  );
+  assert.equal(reviewAcceptance.status, 'passed');
+  assert.equal(
+    reviewAcceptance.evidence.ownershipEvidence,
+    'unavailable-schema-v1',
+  );
+  assert.match(
+    reviewAcceptance.description,
     /does not prove direct-root ownership/,
   );
 });

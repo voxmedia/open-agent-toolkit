@@ -153,6 +153,16 @@ export function reportRootFor(
   );
 }
 
+export function recoveryRootFor(manifest, repository = repositoryRoot) {
+  if (
+    typeof manifest?.runIdentity !== 'string' ||
+    !/^smoke-[A-Za-z0-9-]+$/u.test(manifest.runIdentity)
+  ) {
+    throw new DriveError('Smoke recovery requires a valid run identity.');
+  }
+  return join(repository, 'tools', 'smoke', 'recovery', manifest.runIdentity);
+}
+
 export function protocolPathFor(harness) {
   const fileName = PROTOCOL_FILES[harness];
   if (!fileName) {
@@ -540,6 +550,7 @@ export async function collectSmoke(
     collect = collectEvidence,
     emitReport = emitEvidenceReport,
     formatBundle = formatBundleForPublication,
+    preserve = publishReportDirectory,
     publish = publishReportDirectory,
     repository = repositoryRoot,
     runsDirectory = runRoot,
@@ -547,6 +558,7 @@ export async function collectSmoke(
 ) {
   context.manifest ??= await loadPreparedManifest(options, { runsDirectory });
   const manifest = context.manifest;
+  const recovery = options.collectionMode === 'recovery';
   assertReady(options, context, manifest);
   const expectedReportRoot = reportRootFor(options, repository);
   if (resolve(manifest.reportRoot) !== resolve(expectedReportRoot)) {
@@ -561,9 +573,14 @@ export async function collectSmoke(
     }));
     return manifest.collection;
   }
-  if (!['awaiting-operator', 'completed'].includes(manifest.drive?.status)) {
+  const collectableDriveStatuses = recovery
+    ? ['failed', 'interrupted']
+    : ['awaiting-operator', 'completed'];
+  if (!collectableDriveStatuses.includes(manifest.drive?.status)) {
     throw new DriveError(
-      'Smoke evidence collection requires a completed drive.',
+      recovery
+        ? 'Smoke recovery collection requires a failed or interrupted drive.'
+        : 'Smoke evidence collection requires a completed drive.',
     );
   }
 
@@ -571,6 +588,7 @@ export async function collectSmoke(
     dirname(manifest.manifestPath),
     `report-staging-${randomUUID()}`,
   );
+  await mkdir(stagingDirectory, { recursive: true });
   await saveManifestUpdate(manifest, (current) => ({
     ...current,
     collection: { stagingDirectory, status: 'running' },
@@ -590,6 +608,39 @@ export async function collectSmoke(
       bundlePath: collected.outputPath,
       outDirectory: stagingDirectory,
     });
+    if (recovery) {
+      const recoveryDirectory = recoveryRootFor(manifest, repository);
+      await preserve(stagingDirectory, recoveryDirectory);
+      const recoveredCollected = {
+        ...collected,
+        outputPath: join(recoveryDirectory, 'bundle.json'),
+      };
+      const recoveredReport = {
+        ...report,
+        jsonPath: join(recoveryDirectory, 'report.json'),
+        markdownPath: join(recoveryDirectory, 'report.md'),
+      };
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          bundlePath: recoveredCollected.outputPath,
+          canonicalPublished: false,
+          reportPath: recoveredReport.jsonPath,
+          reportStatus: report.report.status,
+          recoveryDirectory,
+          status: 'recovery-completed',
+        },
+      }));
+      return {
+        collected: recoveredCollected,
+        recovery: {
+          canonicalPublished: false,
+          path: recoveryDirectory,
+          status: report.report.status,
+        },
+        report: recoveredReport,
+      };
+    }
     if (report.report.status !== 'passed') {
       await saveManifestUpdate(manifest, (current) => ({
         ...current,
@@ -630,6 +681,32 @@ export async function collectSmoke(
     }));
     return { collected: publishedCollected, report: publishedReport };
   } catch (error) {
+    if (recovery) {
+      const recoveryDirectory = recoveryRootFor(manifest, repository);
+      await atomicWriteJson(join(stagingDirectory, 'recovery-error.json'), {
+        drive: {
+          error: manifest.drive?.error ?? null,
+          status: manifest.drive?.status ?? null,
+        },
+        error: error instanceof Error ? error.message : String(error),
+        runIdentity: manifest.runIdentity,
+        schemaVersion: 1,
+      });
+      await preserve(stagingDirectory, recoveryDirectory);
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          canonicalPublished: false,
+          error: error instanceof Error ? error.message : String(error),
+          recoveryDirectory,
+          status: 'recovery-failed',
+        },
+      }));
+      if (error && typeof error === 'object') {
+        error.recoveryPath = recoveryDirectory;
+      }
+      throw error;
+    }
     if (manifest.collection?.status !== 'failed') {
       await saveManifestUpdate(manifest, (current) => ({
         ...current,

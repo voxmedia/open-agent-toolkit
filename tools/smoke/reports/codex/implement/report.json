@@ -85,9 +85,10 @@
       "status": "passed"
     },
     {
-      "description": "Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history.",
+      "description": "Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history; retained schema-v1 evidence does not prove direct-root ownership.",
       "evidence": {
-        "failingScopes": [],
+        "failures": [],
+        "ownershipEvidence": "unavailable-schema-v1",
         "requiredScopes": ["p01", "p02", "p03"]
       },
       "id": "implement-phase-review-acceptance-bound",
