@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-t13
+oat_current_task: p06-t03
 oat_last_commit: e1f6f6ee5c7be59f2eef2751e47a386e94e9bdcd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T00:28:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T00:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — final live Codex confirmation
+Implementation — release validation
 
 ## Artifacts
 
@@ -65,8 +65,7 @@ Implementation — final live Codex confirmation
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 36 tasks)
-- **Implementation:** `implementation.md` (in progress — final live smoke and
-  release bookkeeping)
+- **Implementation:** `implementation.md` (in progress — release validation)
 
 ## Progress
 
@@ -147,9 +146,12 @@ Implementation — final live Codex confirmation
 - ✓ p05-t17 made terminal dispatch outcomes mandatory
 - ✓ p05-t18 bound smoke-safe init to the registered child worktree cwd
 - ✓ p05-t19 isolated disposable fixture commits from unavailable child hooks
+- ✓ p05-t13 published the final Codex implement report: 9/9 assertions in
+  26m20s, with three phase implementers, three root-owned reviewers, five task
+  commits, parallel isolation, fan-in, and one passing final gate
 - ✓ p06-t01 OAT docs and smoke runbook complete
 - ✓ p06-t02 Vault capture committed externally
-- → p05-t13 final fresh Codex confirmation pending
+- → p06-t03 release validation in progress
 
 ## Blockers
 
@@ -157,5 +159,4 @@ None
 
 ## Next Milestone
 
-Publish and check the final Codex implement report, then complete release and
-project bookkeeping.
+Complete release validation and project bookkeeping.

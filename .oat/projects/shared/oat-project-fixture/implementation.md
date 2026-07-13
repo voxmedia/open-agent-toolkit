@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-12
-oat_current_task_id: p05-t13
+oat_current_task_id: p06-t03
 oat_generated: false
 ---
 
 # Implementation: oat-project-fixture
 
 **Started:** 2026-07-11
-**Last Updated:** 2026-07-12
+**Last Updated:** 2026-07-13
 
 ## Gate Feedback Log (quick-start plan gate, `onFailure: block`, maxAttempts exhausted)
 
@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 19    | 14/19     |
+| Phase 5 | complete    | 19    | 15/19     |
 | Phase 6 | in_progress | 3     | 2/3       |
 
-**Total:** 30/36 tasks completed (4 deferred, 1 in progress, 1 pending)
+**Total:** 31/36 tasks completed (4 deferred, 1 in progress)
 
 ---
 
@@ -1153,8 +1153,9 @@ provider synchronization, package versions, and PR #135/#137 regressions.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-12
+**Completed:** 2026-07-13
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -1369,8 +1370,8 @@ fully recorded.
 
 ### Task p05-t13: Validate restored topology with one live Codex run
 
-**Status:** in_progress — final fresh confirmation pending
-**Commit:** -
+**Status:** completed
+**Commit:** recorded by the p05-t13 evidence commit
 
 **Comparison baseline:** 38m22s, nine passing assertions, mandatory three-tier
 topology.
@@ -1389,7 +1390,13 @@ topology.
   evidence, then both agents failed at their first commits because repository
   hooks need dependencies intentionally absent from smoke children. p05-t19
   isolated only those disposable fixture commits from hooks.
-- A final fresh run follows p05-t19.
+- The final retained run passed 9/9 assertions in 26m20s and published
+  `tools/smoke/reports/codex/implement/`.
+- It recorded three completed phase implementers, three completed root-owned
+  phase reviewers, five exact task commits, p01/p02 isolation, p03 fan-in, and
+  one corroborated passing final gate.
+- Bundle SHA-256:
+  `b01c5dad067191187c0bed856148a2eb72f3759457345f0df1f52c09f718d30d`.
 
 ---
 
@@ -1480,7 +1487,7 @@ passed, and managed Codex phase-agent roles were synchronized.
 
 ### Task p06-t03: Release validation
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
