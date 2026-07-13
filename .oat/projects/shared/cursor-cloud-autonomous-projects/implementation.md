@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p02-t08
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
-| Phase 2 (p02): New OAT skills + user-scope installability      | in_progress | 8     | 7/8       |
+| Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 8     | 8/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 13/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 14/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -162,6 +162,13 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 **Outcome:** Added per-file user → repo → bundled template resolution to project scaffolding while keeping all generated artifacts under the repository's configured projects root.
 **Verification:** Passed — 27 scaffold tests cover user precedence, repo fallback, bundled no-install floor, and partial-tier mixing; CLI type-check/lint, focused formatting, and five-package release validation passed.
 
+### Task p02-t08: CLI — Grok/xAI family classification
+
+**Status:** completed
+**Commit:** `5037d151`
+**Outcome:** Added deterministic `xai` classification for Grok/xAI provider IDs and model slugs, making the configured Grok tertiary eligible for different-family gate selection.
+**Verification:** Passed — 15 family tests and 151 gate tests cover both OpenAI and Claude producers selecting Grok after higher-priority same-family candidates are ineligible/unavailable; CLI type-check/lint, formatting, and five-package release validation passed.
+
 ## Phase 3: OAT release (publish boundary)
 
 **Status:** pending — tasks p03-t01 … p03-t02 per plan.md (p03-t02 is an operator boundary: merge → pipeline publish)
@@ -214,6 +221,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02-t05: provider views and sync manifest committed (`88cdb61f`); both registrations verified and bundle consistency passed 23/23 tests.
 - [x] p02-t06: five-package lockstep 0.1.61 bump committed (`6898ebba`); all public package tarballs passed release validation.
 - [x] p02-t07: per-file user-first template resolution committed (`912c403d`); all four precedence scenarios, CLI gates, and release validation passed.
+- [x] p02-t08: Grok/xAI classification and OpenAI/Claude gate participation committed (`5037d151`); all 166 targeted tests plus CLI/release gates passed.
 
 **Decisions:**
 
@@ -237,7 +245,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
-| 2     | Probe; skills; workflows lifecycle; provider sync; release validation; template precedence (p02-t01..t07) | 487 | 0 | Added 27 passing scaffold tests across all four user/repo/bundled resolution scenarios; CLI and release gates passed |
+| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates (p02-t01..t08) | 653 | 0 | Phase task gates green; 15 family and 151 gate tests prove Grok participates for OpenAI and Claude producers; release validation passed |
 
 ## Final Summary (for PR/docs)
 
