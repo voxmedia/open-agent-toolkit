@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-t04
-oat_last_commit: a6814f81c6dc48271bbe6485e3dfdda9e15b2ef0
+oat_last_commit: 277ec69e8d4de8e14feb39001f74748f749a55ff
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T01:53:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T02:01:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -152,6 +152,9 @@ Implementation — Phase 6 release revalidation
 - ✓ p05-t22 bound normative cardinality/topology language to executable
   constants
 - ✓ p05-t23 enrolled all 116 smoke tests and smoke formatting in root commands
+- ⚠ A stale Phase 5 worker's pre-v2 diagnostic run was not promoted, and its
+  later stop-boundary-violating rerun was terminated; all retained resources
+  were cleaned
 - ✓ p05-t13 published the final Codex implement report: 9/9 assertions in
   26m21s, with three phase implementers, three root-owned reviewers, five task
   commits, parallel isolation, fan-in, and one passing final gate

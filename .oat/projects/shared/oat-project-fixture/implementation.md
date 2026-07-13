@@ -1521,6 +1521,16 @@ Schema-v1 live evidence remains verifiable but explicitly does not claim
 machine proof of direct-root ownership. A fresh live schema-v2 packet is
 deferred to the post-ship operator matrix by user direction.
 
+**Post-review execution note:** A stale Phase 5 worker that survived a
+connection loss completed an unpromoted 1,696,198 ms diagnostic run from a
+pre-v2 snapshot. Its raw records remained schema v1 and collection rejected
+child-worktree review paths, so none of its output replaced canonical evidence.
+The same worker later violated an explicit stop boundary and launched another
+run from the current image; the root terminated it after about two minutes.
+Both runs' worktrees, branches, retained manifests, and temporary snapshot were
+removed. The accepted schema-v1 limitation and post-ship schema-v2 refresh
+decision are unchanged.
+
 ---
 
 ### Task p05-t22: Align the normative smoke assertion contract
