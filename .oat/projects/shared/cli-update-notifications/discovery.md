@@ -27,8 +27,9 @@ interactive update. The exact mechanism is intentionally open for discovery.
 
 **Q:** Should the first release use a passive update notice, or should it also
 offer to run the package-manager update from inside the current command?
-**A:** Pending.
-**Decision:** Pending user confirmation.
+**A:** Use the recommended passive-notice approach.
+**Decision:** The first release will notify only. It will not prompt or launch
+an installer during unrelated commands.
 
 ## Solution Space
 
@@ -69,12 +70,11 @@ installs.
 
 ### Chosen Direction
 
-**Approach:** Pending.
-**Rationale:** Research favors a cached passive notice for the initial release;
-it matches common Node CLI behavior and avoids disrupting agent and script
-workflows. The user explicitly mentioned an update prompt, so this tradeoff
-requires confirmation.
-**User validated:** No.
+**Approach:** Cached passive notice.
+**Rationale:** It matches common Node CLI behavior, avoids disrupting agent and
+script workflows, and does not need to infer ownership of the current
+installation.
+**User validated:** Yes.
 
 ## Options Considered
 
@@ -106,6 +106,8 @@ command.
    greatest published version.
 2. **Command safety:** Update checking must be best-effort and must not alter
    the invoked command's exit status.
+3. **Interaction model:** The first release is notification-only; it will not
+   prompt or execute an update from an unrelated command.
 
 ## Constraints
 
