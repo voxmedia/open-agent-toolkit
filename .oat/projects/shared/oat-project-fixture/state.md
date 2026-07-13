@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 9f43dc28a8c36ed9e3795fad9ca60c8f2633e640
+oat_current_task: p06-t05
+oat_last_commit: e964d228085706ffce1baf1fdaa2725a0bc1d281
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,27 +45,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T02:03:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T02:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** All implementation tasks complete; final review pending
+**Status:** Implementation in progress; final review fixes queued
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — Final project review
+Implementation — final review fixes
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 41 tasks)
-- **Implementation:** `implementation.md` (all tasks complete — final review pending)
+- **Plan:** `plan.md` (complete — 6 phases / 46 tasks)
+- **Implementation:** `implementation.md` (in progress — p06-t05)
 
 ## Progress
 
@@ -167,7 +167,8 @@ Implementation — Final project review
 - ✓ Independent Phase 5 fix-range re-review passed 0C/0I/0M/0m
 - ✓ p06-t04 post-review release revalidation passed all canonical, smoke,
   workspace, docs, and public-package checks
-- → Final independent project review
+- ⚠ Final independent review failed 0C/3I/2M/0m
+- → p06-t05–p06-t09 close all final findings
 
 ## Blockers
 
@@ -175,4 +176,4 @@ None
 
 ## Next Milestone
 
-Run the final independent project review and receive any findings.
+Complete p06-t05–p06-t09, revalidate release, and re-run final review.

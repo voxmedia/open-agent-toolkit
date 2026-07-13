@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: final_review
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: null
+oat_current_task_id: p06-t05
 oat_generated: false
 ---
 
@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 5     | 5/5       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 3     | 3/3       |
-| Phase 5 | complete | 23    | 19/23     |
-| Phase 6 | complete | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 5     | 5/5       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 3     | 3/3       |
+| Phase 5 | complete    | 23    | 19/23     |
+| Phase 6 | in_progress | 9     | 4/9       |
 
-**Total:** 37/41 tasks completed (4 explicitly deferred)
+**Total:** 37/46 tasks completed (4 deferred, 1 in progress, 4 pending)
 
 ---
 
@@ -1573,9 +1573,8 @@ with schema-v2 refresh deferred to the post-ship operator matrix.
 
 ## Phase 6: Documentation, Vault Capture & Release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-12
-**Completed:** 2026-07-13
 
 ### Task p06-t01: OAT docs and smoke runbook
 
@@ -1613,6 +1612,48 @@ passed, as did all 116 smoke tests. `pnpm build`, `pnpm build:docs`, `pnpm
 lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and `pnpm
 release:validate` passed; the release validator rebuilt and accepted all five
 public packages at `0.1.58`.
+
+---
+
+### Final Review Received
+
+**Date:** 2026-07-13
+**Artifact:** `reviews/archived/final-review-2026-07-13T020514Z.md`
+**Findings:** 0 Critical / 3 Important / 2 Medium / 0 Minor
+**Disposition:** all five findings converted to p06-t05–p06-t09.
+
+### Task p06-t05: Bind phase-review artifacts to acceptance
+
+**Status:** in_progress
+**Commit:** -
+
+---
+
+### Task p06-t06: Preserve failed-drive recovery evidence
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t07: Preflight independent gate runtimes
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t08: Align shipped topology guidance
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p06-t09: Enroll smoke lint in root verification
+
+**Status:** pending
+**Commit:** -
 
 ---
 
