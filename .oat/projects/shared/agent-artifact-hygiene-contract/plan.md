@@ -96,6 +96,7 @@ git commit -m "feat(p01-t01): resolve artifact formatting during planning"
 - Modify: `.agents/skills/oat-project-document/SKILL.md`
 - Modify: `.agents/skills/oat-project-pr-final/SKILL.md`
 - Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 
 **Steps:**
 
@@ -105,13 +106,14 @@ git commit -m "feat(p01-t01): resolve artifact formatting during planning"
 4. Make phase implementation run applicable repository gates over its produced diff, explicitly including artifact writes; lifecycle prose work runs only checks relevant to changed files.
 5. Bump role versions to `oat-phase-implementer` `1.0.8` and `oat-reviewer` `1.1.7`.
 6. Bump skill versions once: review-provide `1.3.16`, review-receive `1.5.7`, summary `1.2.1`, document `1.5.1`, pr-final `1.4.3`, quick-start `2.1.16`.
+7. Update every hard-coded role/skill version assertion affected by this task.
 
 **Format:**
 
 Run:
 
 ```bash
-pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md
+pnpm exec oxfmt --write .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md packages/cli/src/validation/skills.test.ts
 ```
 
 **Verify:**
@@ -121,6 +123,7 @@ Run:
 ```bash
 rg -l 'Artifact hygiene contract:' .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md
 pnpm run oat:validate-skills
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 ```
 
 Expected: all eight runtime canonical files are listed and skill validation passes.
@@ -128,7 +131,7 @@ Expected: all eight runtime canonical files are listed and skill validation pass
 **Commit:**
 
 ```bash
-git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md
+git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md packages/cli/src/validation/skills.test.ts
 git commit -m "feat(p01-t02): require hygiene for artifact writers"
 ```
 
