@@ -74,7 +74,10 @@ function createHarness(
     env: {},
     logger,
     commandPath: 'oat tools update',
-    rerunCommand: 'oat tools update --all',
+    rerunCommand: {
+      shell: 'POSIX shell',
+      command: 'oat tools update --all',
+    },
     ...overrides.options,
   };
 
@@ -89,20 +92,56 @@ function createHarness(
 }
 
 describe('formatRerunCommand', () => {
-  it('preserves normalized arguments and safely quotes shell-sensitive values', () => {
+  it('preserves normalized arguments with POSIX-safe quoting', () => {
     expect(
-      formatRerunCommand([
-        '/usr/bin/node',
-        '/opt/oat/dist/index.js',
-        'tools',
-        'update',
-        'name with spaces',
-        '$(touch /tmp/not-run)',
-        "quote'value",
-      ]),
-    ).toBe(
-      "oat tools update 'name with spaces' '$(touch /tmp/not-run)' 'quote'\"'\"'value'",
-    );
+      formatRerunCommand(
+        [
+          '/usr/bin/node',
+          '/opt/oat/dist/index.js',
+          'tools',
+          'update',
+          'name with spaces',
+          '$(touch /tmp/not-run)',
+          "quote'value",
+        ],
+        'linux',
+      ),
+    ).toEqual({
+      shell: 'POSIX shell',
+      command:
+        "oat tools update 'name with spaces' '$(touch /tmp/not-run)' 'quote'\"'\"'value'",
+    });
+  });
+
+  it('uses explicitly labeled PowerShell-safe quoting for Windows arguments', () => {
+    expect(
+      formatRerunCommand(
+        [
+          'C:\\Program Files\\nodejs\\node.exe',
+          'C:\\Program Files\\oat\\index.js',
+          'init',
+          '--cwd',
+          'C:\\Program Files\\repo',
+          "single'quote",
+          'double"quote',
+          'C:\\repo\\with\\backslashes',
+          '$value',
+          'left&right',
+          'left|right',
+          'left<right',
+          'left>right',
+          '100%',
+          'bang!',
+        ],
+        'win32',
+      ),
+    ).toEqual({
+      shell: 'PowerShell',
+      command:
+        "oat init --cwd 'C:\\Program Files\\repo' 'single''quote' 'double\"quote' " +
+        "'C:\\repo\\with\\backslashes' '$value' 'left&right' 'left|right' " +
+        "'left<right' 'left>right' '100%' 'bang!'",
+    });
   });
 });
 
@@ -169,13 +208,15 @@ describe('guardBundledToolMutation', () => {
     async (_name, rerunCommand) => {
       const harness = createHarness({
         confirmed: true,
-        options: { rerunCommand },
+        options: {
+          rerunCommand: { shell: 'POSIX shell', command: rerunCommand },
+        },
       });
 
       await guardBundledToolMutation(harness.options, harness.dependencies);
 
       expect(harness.logger.info).toHaveBeenCalledWith(
-        expect.stringContaining(`\n${rerunCommand}`),
+        expect.stringContaining(`in POSIX shell:\n${rerunCommand}`),
       );
     },
   );

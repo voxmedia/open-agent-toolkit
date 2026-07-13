@@ -11,10 +11,15 @@ import type { UpdateNotifierOptions } from './update-notifier';
 
 const CLI_PACKAGE = '@open-agent-toolkit/cli';
 
+export interface RerunCommandDisplay {
+  shell: 'POSIX shell' | 'PowerShell';
+  command: string;
+}
+
 export interface ToolBundleUpdateGuardOptions extends UpdateNotifierOptions {
   commandPath: string;
   dryRun: boolean;
-  rerunCommand: string;
+  rerunCommand: RerunCommandDisplay;
 }
 
 interface InstallerOptions {
@@ -87,15 +92,30 @@ export function formatCommandPath(command: Command): string {
   return getCommandPath(command).join(' ');
 }
 
-function quoteDisplayArgument(argument: string): string {
+function quotePosixArgument(argument: string): string {
   if (/^[a-zA-Z0-9_@+=:,./-]+$/.test(argument)) {
     return argument;
   }
   return `'${argument.replaceAll("'", `'"'"'`)}'`;
 }
 
-export function formatRerunCommand(argv: string[]): string {
-  return ['oat', ...argv.slice(2)].map(quoteDisplayArgument).join(' ');
+function quotePowerShellArgument(argument: string): string {
+  if (/^[a-zA-Z0-9_:,./-]+$/.test(argument)) {
+    return argument;
+  }
+  return `'${argument.replaceAll("'", "''")}'`;
+}
+
+export function formatRerunCommand(
+  argv: string[],
+  platform: NodeJS.Platform = process.platform,
+): RerunCommandDisplay {
+  const windows = platform === 'win32';
+  const quoteArgument = windows ? quotePowerShellArgument : quotePosixArgument;
+  return {
+    shell: windows ? 'PowerShell' : 'POSIX shell',
+    command: ['oat', ...argv.slice(2)].map(quoteArgument).join(' '),
+  };
 }
 
 export function isBundledToolMutationCommand(command: Command): boolean {
@@ -207,8 +227,8 @@ export async function guardBundledToolMutation(
   }
 
   options.logger.info(
-    `Updated the OAT CLI to ${availableVersion}. Rerun this command so the new ` +
-      `CLI can install its bundled tools:\n${options.rerunCommand}`,
+    `Updated the OAT CLI to ${availableVersion}. To let the new CLI install ` +
+      `its bundled tools, rerun in ${options.rerunCommand.shell}:\n${options.rerunCommand.command}`,
   );
   return true;
 }

@@ -210,7 +210,10 @@ describe('main', () => {
       expect(guardBundledToolMutationMock).toHaveBeenCalledWith(
         expect.objectContaining({
           commandPath: `oat ${commandPath.join(' ')}`,
-          rerunCommand: `oat ${commandPath.join(' ')}`,
+          rerunCommand: {
+            shell: 'POSIX shell',
+            command: `oat ${commandPath.join(' ')}`,
+          },
           currentVersion: OAT_VERSION,
           dryRun: false,
           home: '/home/tester',
@@ -278,11 +281,53 @@ describe('main', () => {
       expect(guardBundledToolMutationMock).toHaveBeenCalledWith(
         expect.objectContaining({
           commandPath: `oat ${commandPath.join(' ')}`,
-          rerunCommand: expectedRerunCommand,
+          rerunCommand: {
+            shell: 'POSIX shell',
+            command: expectedRerunCommand,
+          },
         }),
       );
     },
   );
+
+  it('injects Windows platform formatting and labels PowerShell rerun guidance', async () => {
+    registerCommandsMock.mockImplementation((program: Command) => {
+      program.exitOverride();
+      const update = program
+        .command('tools')
+        .command('update')
+        .allowUnknownOption()
+        .allowExcessArguments()
+        .argument('[arguments...]')
+        .action(actionMock);
+      update.option('--all');
+    });
+
+    await main(
+      [
+        'node',
+        'cli.js',
+        'tools',
+        'update',
+        '--all',
+        '--cwd',
+        'C:\\Program Files\\repo',
+        '$value',
+        'left&right',
+      ],
+      'win32',
+    );
+
+    expect(guardBundledToolMutationMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rerunCommand: {
+          shell: 'PowerShell',
+          command:
+            "oat tools update --all --cwd 'C:\\Program Files\\repo' '$value' 'left&right'",
+        },
+      }),
+    );
+  });
 
   it.each([
     ['tools list', ['tools', 'list']],

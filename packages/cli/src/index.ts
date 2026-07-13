@@ -36,7 +36,10 @@ export function normalizeArgv(argv: string[]): string[] {
   return argv;
 }
 
-export async function main(argv: string[] = process.argv): Promise<void> {
+export async function main(
+  argv: string[] = process.argv,
+  platform: NodeJS.Platform = process.platform,
+): Promise<void> {
   const program = createProgram();
   registerCommands(program);
   const normalizedArgv = normalizeArgv(argv);
@@ -58,7 +61,7 @@ export async function main(argv: string[] = process.argv): Promise<void> {
         ...notifierOptions,
         commandPath: formatCommandPath(actionCommand),
         dryRun: context.dryRun,
-        rerunCommand: formatRerunCommand(normalizedArgv),
+        rerunCommand: formatRerunCommand(normalizedArgv, platform),
       });
       if (cliUpdated) {
         throw new CliUpdateInstalledSignal();
