@@ -27,3 +27,42 @@ Cloud, resolve and read the selected user-scope skill and companion assets by
 absolute path as the primary mechanism. Provider auto-surfacing remains a
 convenience only until a fresh-run probe verifies it. Keep user scope as the
 execution source under the user-always-wins precedence rule.
+
+## 2026-07-13T23:08:00Z - code-follow-up - Selection-only gate routing
+
+**Observation:** The p04 readiness check must prove priority-ordered,
+different-family routing for OpenAI and Claude producers, but the OAT gate CLI
+has no non-executing selection surface. `oat gate target list --json` reports
+the ordered registry and availability, while `oat gate cross-provider-exec`
+crosses the accepted-launch boundary and therefore cannot safely be used as a
+readiness probe.
+
+**Impact:** The environment script currently mirrors the gate selector over the
+read-only, priority-sorted target list. Its family classifier is explicitly
+pinned in lockstep to
+`packages/cli/src/providers/identity/family.ts`, but this remains duplicated
+selection logic that can drift from the CLI.
+
+**Recommendation:** Add a read-only `--select-only` (or equivalent dry-run)
+mode to the OAT gate command. It should accept producer identity and avoidance
+options, run real availability checks, return the selected target plus diversity
+metadata, and never launch the provider command. Replace the environment-side
+selection mirror once that CLI surface ships.
+
+## 2026-07-13T23:09:00Z - agent-instruction/code-follow-up - Literal availability probes
+
+**Observation:** The user-reviewed reference config's six
+`availabilityCommand` strings use plain `grep -q '<model-slug>'`. Model slugs
+contain dots, so grep interprets them as regex wildcards rather than literal
+characters.
+
+**Impact:** A sufficiently similar catalog line could produce a false-positive
+availability result. Phase 4 intentionally did not alter
+`.cursor/oat-user-config.json` because byte fidelity to the reviewed reference
+is a task requirement.
+
+**Recommendation:** Update the canonical reference config to use
+`grep -Fq -- '<model-slug>'` (or exact parsed model IDs), then advance the seed
+revision and recopy it into the environment repository. Add an authoring
+instruction or validation rule requiring literal matching for opaque provider
+model identifiers.
