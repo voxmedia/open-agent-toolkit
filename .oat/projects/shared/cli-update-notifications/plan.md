@@ -213,10 +213,12 @@ git commit -m "feat(p02-t01): notify CLI users about stable updates"
 
 ---
 
-### Task p02-t02: Document update notification behavior
+### Task p02-t02: Document and format update notification behavior
 
 **Files:**
 
+- Modify: `packages/cli/src/index.ts`
+- Modify: `packages/cli/src/index.test.ts`
 - Modify: `packages/cli/README.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
 
@@ -231,10 +233,12 @@ Expected: Existing docs pass mechanically but lack the new user guidance.
 **Step 2: Implement (GREEN)**
 
 Document update-notification behavior and both suppression mechanisms in the
-CLI README and existing config/local-state page.
+CLI README and existing config/local-state page. Apply the repository formatter
+to the two integration files committed by p02-t01 and the two documentation
+files so phase-wide formatting can pass without amending prior commits.
 
-Run: `pnpm --filter oat-docs check`
-Expected: Documentation formatting and Markdown lint pass.
+Run: `pnpm exec oxfmt --write packages/cli/src/index.ts packages/cli/src/index.test.ts packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md && pnpm --filter oat-docs check`
+Expected: Declared files are formatted and documentation Markdown lint passes.
 
 **Step 3: Refactor**
 
@@ -249,7 +253,7 @@ Expected: Docs checks and repository formatting pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md
+git add packages/cli/src/index.ts packages/cli/src/index.test.ts packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md
 git commit -m "docs(p02-t02): document CLI update notifications"
 ```
 

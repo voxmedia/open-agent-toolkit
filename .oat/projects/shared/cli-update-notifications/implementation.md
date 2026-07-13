@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -127,15 +127,31 @@ oat_generated: false
 
 ### Task p02-t01: Wire notifications into command dispatch
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2f233893b7a86ef12bdf412e70cd7d03aa532e3a
+
+**Outcome:**
+
+- Registered a thin root `preAction` hook that forwards command context to the
+  notifier and contains notifier failures.
+
+**Verification:**
+
+- Run: bootstrap/notifier tests and CLI type-check.
+- Result: 45 tests passed; type-check passed.
 
 ---
 
-### Task p02-t02: Document update notification behavior
+### Task p02-t02: Document and format update notification behavior
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
+
+**Notes:**
+
+- Scope now includes mechanical formatting of p02-t01 integration files after
+  the repository formatter found style differences not covered by the task's
+  focused verification.
 
 ---
 
@@ -181,6 +197,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Non-blocking Medium: concurrent processes may duplicate a check or notice;
   rate limits are best-effort across overlapping processes.
+
+### Run 2 - 2026-07-13T17:29:00Z
+
+- Branch: `cursor/cli-update-notifications-40f7`
+- Tier: 1 (subagents)
+- Policy: managed High
+- Phase: p02, original handle continuation required
+- Outcome: p02-t01 passed; phase stopped before p02-t02 because repository
+  formatting required the committed integration files to enter the next task's
+  boundary.
+
+**Dispatch notes:**
+
+- `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+
+**Outstanding items:**
+
+- Continue the accepted p02 handle from p02-t02 after the committed plan
+  boundary adjustment.
 
 <!-- orchestration-runs-end -->
 
@@ -230,6 +265,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | p01 review | Discovery/design | Check and notice intervals stated as absolute | Exact for serial invocations; best-effort across overlapping processes | Cross-process locking adds disproportionate stale-lock complexity | Implementation | Revisit only if duplicate notices are observed |
+| p02-t02 | Original plan | Documentation files only | Also formats p02-t01 integration files | Whole-repo formatting was first exercised in p02-t02 and exposed style-only changes | Updated plan | Continue original p02 handle |
 
 ## Test Results
 
