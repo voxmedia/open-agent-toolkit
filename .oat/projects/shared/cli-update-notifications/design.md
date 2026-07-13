@@ -10,20 +10,27 @@ oat_template: false
 
 ## Overview
 
-OAT will add a cross-cutting, notification-only update check to normal
-interactive CLI command execution. A root Commander hook will invoke a small
-update-notification service before command actions. The service will immediately
-return for JSON, non-interactive, CI, test, source-development, ephemeral
-package-runner, or explicitly suppressed invocations.
+OAT adds a cross-cutting update check to interactive CLI execution. A root
+Commander hook invokes a small availability service before command actions.
+Ordinary commands receive passive notices; commands rooted at `init`,
+`tools install`, and `tools update` run a specialized pre-mutation guard. Both
+paths return immediately for JSON, non-interactive, CI, test,
+source-development, ephemeral package-runner, or explicitly suppressed
+invocations.
 
 Eligible invocations will read a dedicated cache under `~/.oat`. At most once
 per 24 hours, the service will make a short, abortable request to the npm
 registry's `latest` endpoint for `@open-agent-toolkit/cli`. When the returned
 stable version is newer than the running stable version, OAT will emit a
-human-readable warning and the documented npm global-install command. The same
-version will be announced at most once per 72 hours. All fetch, parse, read, and
-write failures are best-effort: they do not escape the service or affect the
-requested command's exit status.
+human-readable warning and the documented npm global-install command on
+ordinary commands. The same version is announced at most once per 72 hours.
+
+Before a guarded command mutates bundled tools, the same availability result
+drives an interactive, default-no offer. Acceptance installs the exact validated
+CLI version, cancels the old action, and asks the user to rerun the full original
+command under the new CLI. Decline warns that the running CLI can only install
+its own older bundled tool versions and then continues. Installer failures stop
+before mutation with actionable remediation.
 
 The implementation will use Node's built-in `fetch`, `AbortSignal`, and
 filesystem APIs rather than add a runtime dependency. Stable `x.y.z` versions
@@ -41,7 +48,10 @@ JSON-write primitives, but remains independent of command-specific handlers.
 **Key Components:**
 
 - **Bootstrap hook:** Supplies command/global context to the notifier for every
-  actionable command without modifying individual handlers.
+  actionable command and classifies complete nested Commander paths.
+- **Tool-bundle mutation guard:** Intercepts `init`, `tools install`, and
+  `tools update` before mutation; owns consent, exact-version npm execution,
+  action cancellation, and shell-aware rerun guidance.
 - **Eligibility policy:** Applies TTY, JSON, environment, source-run, ephemeral
   invocation, and persisted-preference suppression rules.
 - **Registry checker:** Fetches and validates npm `latest` metadata with a
@@ -58,6 +68,8 @@ index.ts / Commander preAction
         |
         v
 maybeNotifyAboutUpdate(command context)
+        |
+        +--> guarded mutation? --> consent --> exact CLI update --> stop + rerun
         |
         +--> eligibility policy --> user config + environment
         |
@@ -78,10 +90,15 @@ maybeNotifyAboutUpdate(command context)
 5. If the check TTL expired, fetch `/@open-agent-toolkit%2fcli/latest` with a
    short abort timeout and atomically cache a valid stable version.
 6. Compare the cached latest version with the running OAT version.
-7. If newer and the notice interval expired, warn with current/latest versions
-   and `npm install -g @open-agent-toolkit/cli@latest`.
-8. Atomically record the announced version and timestamp.
-9. Swallow operational errors and continue the requested command unchanged.
+7. For an ordinary command, if newer and the notice interval expired, warn with
+   current/latest versions and `npm install -g
+   @open-agent-toolkit/cli@latest`.
+8. For a guarded tool mutation, explain that the running CLI owns the bundled
+   tool versions and ask whether to update the exact CLI version first.
+9. On acceptance, invoke npm without a shell (using `npm-cli.js` through Node
+   on Windows), cancel the old action, and print a shell-aware full rerun.
+10. On decline, warn and continue; on installer failure, stop before mutation.
+11. Atomically persist cache changes. Availability failures remain best-effort.
 ```
 
 ## Component Design
@@ -130,6 +147,43 @@ async function maybeNotifyAboutUpdate(
 - Use dependency injection for fetch, clock, cache I/O, and user config to make
   timeout, failure, and TTL behavior testable without live network calls.
 
+### Tool-Bundle Mutation Guard
+
+**Purpose:** Prevent users from unknowingly installing tool versions bundled
+with an outdated CLI when a newer stable CLI is already available.
+
+**Responsibilities:**
+
+- Match every nested action path rooted at `init`, `tools install`, or
+  `tools update`.
+- Reuse validated availability state rather than duplicate registry/cache logic.
+- Explain bundle-version freshness accurately without claiming that current
+  tools are incompatible with their current CLI.
+- Use default-no consent and an exact-version, shell-free npm argument array.
+- Resolve `npm-cli.js` and invoke it through `process.execPath` on Windows.
+- Cancel the old command only after a successful CLI install and preserve a
+  shell-aware, display-safe equivalent of the complete original command.
+
+**Interfaces:**
+
+```typescript
+function isBundledToolMutationCommand(command: Command): boolean;
+function formatRerunCommand(argv: string[], platform: NodeJS.Platform): string;
+async function guardBundledToolMutation(
+  options: ToolBundleUpdateGuardOptions,
+  dependencies?: Partial<ToolBundleUpdateGuardDependencies>,
+): Promise<boolean>; // true means CLI updated; cancel old action
+```
+
+**Design Decisions:**
+
+- The guard lives at the root pre-action boundary so all existing and nested
+  bundle-mutating command handlers receive the same behavior.
+- Rerun text is display-only and shell-aware: POSIX quoting on non-Windows and
+  an explicitly labeled PowerShell command on Windows.
+- Failure to locate or run npm is an actionable error before tool mutation;
+  registry/cache failures remain best-effort and simply allow the command.
+
 ### Eligibility Policy
 
 **Purpose:** Ensure the notifier is invisible to automation and unsupported
@@ -145,9 +199,7 @@ install contexts.
 **Interfaces:**
 
 ```typescript
-function shouldCheckForUpdates(
-  input: UpdateEligibilityInput,
-): boolean;
+function shouldCheckForUpdates(input: UpdateEligibilityInput): boolean;
 ```
 
 **Design Decisions:**
@@ -228,7 +280,7 @@ credentials, command arguments, repository paths, or user data.
 
 ## API Design
 
-The external interface is configuration-only:
+The persistent interface remains configuration-only:
 
 ```bash
 oat config get updateNotifications
@@ -239,6 +291,10 @@ The default is enabled. `NO_UPDATE_NOTIFIER=1` suppresses checks for a single
 process regardless of the persisted preference. Update notices are human
 output only and do not alter JSON response schemas.
 
+Interactive `init`, `tools install`, and `tools update` actions can additionally
+offer an exact stable CLI upgrade before mutation. No new CLI flag or command
+is introduced.
+
 ## Error Handling
 
 - Cache missing or malformed: continue with empty cache.
@@ -248,6 +304,10 @@ output only and do not alter JSON response schemas.
 - Cache write failure: do not fail or change the command result; repeated
   notices are possible until a write succeeds.
 - Unexpected notifier error: the bootstrap wrapper catches it and continues.
+- Guarded npm resolution/install failure: return an exit-2 actionable error and
+  do not execute the guarded mutation.
+- Successful guarded update: consume a private success signal at the parser
+  boundary so the old action does not run.
 - Optional verbose diagnostics may report suppression or failures, but default
   output remains silent.
 
@@ -265,6 +325,9 @@ output only and do not alter JSON response schemas.
 - Cache read/write failure containment.
 - Exact notice content and guarantee that failures do not throw.
 - User-config normalization and config get/set/describe/list support.
+- Complete guarded path classification, consent outcomes, full rerun argument
+  preservation, POSIX/PowerShell display quoting, and Windows npm-cli.js
+  resolution.
 
 ### Integration Tests
 
@@ -272,6 +335,8 @@ output only and do not alter JSON response schemas.
 - JSON and non-interactive command paths do not emit update warnings.
 - Help and version output do not invoke update checking.
 - Existing command exit behavior is unchanged when notifier dependencies fail.
+- Accepted guarded updates cancel `init`, nested init, tools-install, and
+  tools-update actions; decline and suppressed paths run them normally.
 
 ### End-to-End Tests
 

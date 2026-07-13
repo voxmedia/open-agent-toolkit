@@ -14,8 +14,17 @@ Update availability follows npm's latest dist-tag and stores runtime timestamps 
 
 ## Decision
 
-TODO
+Resolve update availability from the npm `latest` endpoint for
+`@open-agent-toolkit/cli`, accept only strict stable `major.minor.patch`
+versions, and persist check/notice timestamps in
+`~/.oat/update-check.json`. Reuse the same validated availability result for
+passive notices and guarded tool-bundle mutations.
 
 ## Consequences
 
-TODO
+- Prerelease and malformed versions are ignored.
+- Successful and failed refresh attempts are rate-limited so offline commands
+  do not repeatedly pay the network timeout.
+- Runtime cache state remains separate from user-authored configuration.
+- Registry, parse, and cache failures remain best-effort and do not block
+  ordinary commands.

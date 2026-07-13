@@ -14,8 +14,16 @@ NO_UPDATE_NOTIFIER supports temporary suppression while updateNotifications fals
 
 ## Decision
 
-TODO
+Support `NO_UPDATE_NOTIFIER=1` for process-scoped suppression and the
+user-level `updateNotifications: false` preference for durable suppression.
+Both controls suppress passive notices and guarded CLI update offers.
 
 ## Consequences
 
-TODO
+- CI and one-off commands can opt out without modifying files.
+- Users can disable update awareness across repositories through
+  `~/.oat/config.json`.
+- A user who opts out also bypasses the stale-bundle warning on guarded
+  commands and accepts responsibility for managing CLI/tool freshness.
+- Missing configuration defaults to enabled with source attribution through
+  the existing config resolver.

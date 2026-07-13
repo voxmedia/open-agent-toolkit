@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ["p-rev1"]
+oat_plan_hill_phases: ['p-rev1']
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick
@@ -312,15 +312,15 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date       | Artifact |
-| ------ | -------- | ------- | ---------- | -------- |
-| p01    | code     | passed  | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md` |
-| p02    | code     | passed  | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md` |
-| p-rev1 | code     | passed  | 2026-07-13 | `reviews/p-rev1-rereview-2026-07-13T183541Z.md` |
-| final  | code     | received | 2026-07-13 | `reviews/final-review-2026-07-13.md` |
-| spec   | artifact | pending | -          | -        |
-| design | artifact | pending | -          | -        |
-| plan   | artifact | passed  | 2026-07-13 | structured auto-review |
+| Scope  | Type     | Status          | Date       | Artifact                                        |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------- |
+| p01    | code     | passed          | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`     |
+| p02    | code     | passed          | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`     |
+| p-rev1 | code     | passed          | 2026-07-13 | `reviews/p-rev1-rereview-2026-07-13T183541Z.md` |
+| final  | code     | fixes_completed | 2026-07-13 | `reviews/final-review-2026-07-13.md`            |
+| spec   | artifact | pending         | -          | -                                               |
+| design | artifact | pending         | -          | -                                               |
+| plan   | artifact | passed          | 2026-07-13 | structured auto-review                          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase p-rev1 | in_progress | 3 | 3/3 |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 2     | 2/2       |
+| Phase 2      | complete    | 3     | 3/3       |
+| Phase p-rev1 | in_progress | 3     | 3/3       |
 
 **Total:** 8/8 tasks completed
 
@@ -313,9 +313,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Schedule: `p01` then `p02` (sequential)
 - Outcomes: 1 phase passed, 0 failed, 0 stopped; p02 remains
 
-| Phase | Implementer | Tasks | Review | Result |
-| ----- | ----------- | ----- | ------ | ------ |
-| p01 | `gpt-5.6-sol-high` | 2/2 | `reviews/archived/p01-review-2026-07-13.md` | passed |
+| Phase | Implementer        | Tasks | Review                                      | Result |
+| ----- | ------------------ | ----- | ------------------------------------------- | ------ |
+| p01   | `gpt-5.6-sol-high` | 2/2   | `reviews/archived/p01-review-2026-07-13.md` | passed |
 
 **Dispatch notes:**
 
@@ -337,9 +337,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Phase: p02, original handle continued after a bounded plan adjustment
 - Outcome: 3/3 tasks completed; phase and independent review passed
 
-| Phase | Implementer | Tasks | Review | Result |
-| ----- | ----------- | ----- | ------ | ------ |
-| p02 | `gpt-5.6-sol-high` | 3/3 | `reviews/archived/p02-review-2026-07-13.md` | passed |
+| Phase | Implementer        | Tasks | Review                                      | Result |
+| ----- | ------------------ | ----- | ------------------------------------------- | ------ |
+| p02   | `gpt-5.6-sol-high` | 3/3   | `reviews/archived/p02-review-2026-07-13.md` | passed |
 
 **Dispatch notes:**
 
@@ -360,9 +360,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: 3/3 tasks completed; two Important review findings fixed in one
   continuation commit; focused re-review passed
 
-| Phase | Implementer | Tasks | Review | Result |
-| ----- | ----------- | ----- | ------ | ------ |
-| p-rev1 | `gpt-5.6-sol-high` | 3/3 | `reviews/p-rev1-rereview-2026-07-13T183541Z.md` | passed |
+| Phase  | Implementer        | Tasks | Review                                          | Result |
+| ------ | ------------------ | ----- | ----------------------------------------------- | ------ |
+| p-rev1 | `gpt-5.6-sol-high` | 3/3   | `reviews/p-rev1-rereview-2026-07-13T183541Z.md` | passed |
 
 **Dispatch notes:**
 
@@ -392,7 +392,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Revised Final Review Findings
 
 **Review artifact:** `reviews/final-review-2026-07-13.md`
-**Status:** blocking fixes in progress
+**Status:** fixes completed; awaiting final re-review
 
 - Important: make displayed rerun commands platform-aware so Windows `cmd.exe`
   and PowerShell users receive safe, runnable guidance.
@@ -402,8 +402,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Medium: replace template `TODO` content in the five accepted feature decision
   records and document the guarded-command exception.
 
-**Next:** Apply bounded code and lifecycle/reference fixes, then rerun final
-review.
+**Next:** Rerun final review.
+
+**Fixes completed:**
+
+- `884efa0dc6501fcdb48e47790fe6494798267faf` makes displayed rerun commands
+  platform-aware and explicitly labels PowerShell-safe Windows guidance.
+- `summary.md`, `design.md`, the deviation ledger, repository current-state and
+  backlog summaries, and all five accepted feature decisions now reflect the
+  guarded mutation exception and `0.1.62`.
 
 ---
 
@@ -459,20 +466,21 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| p01 review | Discovery/design | Check and notice intervals stated as absolute | Exact for serial invocations; best-effort across overlapping processes | Cross-process locking adds disproportionate stale-lock complexity | Implementation | Revisit only if duplicate notices are observed |
-| p02-t02 | Original plan | Documentation files only | Also formats p02-t01 integration files | Whole-repo formatting was first exercised in p02-t02 and exposed style-only changes | Updated plan | Continue original p02 handle |
+| Task / Review | Source Artifact           | Planned / Documented                          | Actual / Accepted                                                                                                    | Reason                                                                                      | Source of Truth               | Follow-up                                                                      |
+| ------------- | ------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------ |
+| p01 review    | Discovery/design          | Check and notice intervals stated as absolute | Exact for serial invocations; best-effort across overlapping processes                                               | Cross-process locking adds disproportionate stale-lock complexity                           | Implementation                | Revisit only if duplicate notices are observed                                 |
+| p02-t02       | Original plan             | Documentation files only                      | Also formats p02-t01 integration files                                                                               | Whole-repo formatting was first exercised in p02-t02 and exposed style-only changes         | Updated plan                  | Continue original p02 handle                                                   |
+| p-rev1        | Original discovery/design | Notification-only behavior for every command  | Ordinary commands remain passive; `init`, `tools install`, and `tools update` use a pre-mutation CLI freshness guard | Inline feedback identified that an old CLI can only install its older bundled tool versions | Revised implementation/design | Summary, design, repo references, and decisions aligned before final re-review |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | 285 focused tests + type-check | 285 | 0 | Phase scope |
-| 2     | 2,745 CLI tests + lint/type-check + docs/format/release gates | 2,745 | 0 | Phase and release scope |
-| p-rev1 | 2,803 CLI tests + full repo/docs/format/release gates | 2,803 | 0 | Revision and release scope |
+| Phase  | Tests Run                                                     | Passed | Failed | Coverage                   |
+| ------ | ------------------------------------------------------------- | ------ | ------ | -------------------------- |
+| 1      | 285 focused tests + type-check                                | 285    | 0      | Phase scope                |
+| 2      | 2,745 CLI tests + lint/type-check + docs/format/release gates | 2,745  | 0      | Phase and release scope    |
+| p-rev1 | 2,803 CLI tests + full repo/docs/format/release gates         | 2,803  | 0      | Revision and release scope |
 
 ## Final Summary (for PR/docs)
 

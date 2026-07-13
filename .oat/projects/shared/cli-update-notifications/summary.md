@@ -5,9 +5,9 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_generated: true
 oat_template: false
-oat_summary_last_task: p02-t03
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t03
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: cli-update-notifications
@@ -25,9 +25,17 @@ The CLI now runs a best-effort update notifier before actionable commands in
 eligible interactive sessions. The notifier checks npm's stable `latest`
 metadata through an abortable request, compares strict stable versions, caches
 check attempts in `~/.oat/update-check.json`, and prints a passive warning with
-the documented global npm update command when a newer release is known. It
-never prompts, launches an installer, or changes the requested command's exit
-behavior.
+the documented global npm update command when a newer release is known.
+Ordinary commands never prompt, launch an installer, or change the requested
+command's exit behavior.
+
+Commands rooted at `oat init`, `oat tools install`, and `oat tools update` use
+a specialized pre-mutation guard. When a newer CLI is known, the guard explains
+that the running older CLI can only install its own older bundled tool versions
+and offers to update the exact CLI version first. Acceptance runs shell-free npm
+execution, cancels the old command, and prints a shell-aware equivalent of the
+full original command for rerun. Decline warns and continues with the current
+bundle.
 
 The notifier suppresses JSON, non-interactive, CI, test, source-development,
 and ephemeral-runner contexts. Users can suppress one process with
@@ -37,14 +45,18 @@ registry checks to once every 24 hours and same-version notices to once every
 72 hours.
 
 The feature includes focused config, cache, registry, eligibility, bootstrap,
-and failure-containment tests; CLI and docs guidance; and lockstep `0.1.61`
+and failure-containment tests; CLI and docs guidance; and lockstep `0.1.62`
 versions for all five public packages plus regenerated shipped version assets.
 
 ## Key Decisions
 
-- **Passive notification only:** Unrelated commands do not prompt or execute
-  package-manager updates. This avoids blocking pseudo-terminal agent sessions
-  and avoids guessing which package manager owns the installation.
+- **Passive notification for ordinary commands:** Unrelated commands do not
+  prompt or execute package-manager updates. Tool-bundle mutation commands are
+  the explicit exception because an older CLI can only install its older
+  bundled tool versions.
+- **Guard tool-bundle mutations before execution:** `init`, `tools install`,
+  and `tools update` offer an exact-version CLI update before mutation. A
+  successful update stops the old action and requires a rerun under the new CLI.
 - **Stable npm metadata with a dedicated cache:** Availability follows the npm
   `latest` dist-tag, uses Node's built-in fetch/filesystem APIs, and stores
   runtime timestamps separately from user-authored configuration.
@@ -64,6 +76,11 @@ The original discovery and design described the check and notice intervals as
 absolute. Implementation and review established that they are exact for serial
 invocations and best-effort across overlapping processes. User documentation
 was updated before final re-review to state this behavior explicitly.
+
+The original design was notification-only. Inline feedback added a guarded
+exception for commands that install bundled tools. This revision preserves
+passive notices elsewhere while preventing users from unknowingly installing
+older tool versions from an outdated CLI bundle.
 
 ## Notable Challenges
 
@@ -87,5 +104,5 @@ append-only task history and producing a clean final format gate.
 
 - Consider a cross-process cache claim only if duplicate checks or notices are
   observed in real usage.
-- Release-channel selection and an explicit guided updater remain intentionally
-  deferred until OAT supports those workflows.
+- Release-channel selection and a general-purpose self-update command remain
+  intentionally deferred.
