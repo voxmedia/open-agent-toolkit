@@ -1,14 +1,14 @@
 ---
 id: BL-260711-add-live-workflow-smoke
 title: 'Add live workflow smoke fixture'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: high # urgent | high | medium | low | none
 scope: feature # idea | task | feature | initiative
 scope_estimate: L # XS | S | M | L | XL | XXL
 labels: [workflow, smoke-test, e2e, gates, dispatch]
 assignee: null
 created: '2026-07-11T00:00:45Z'
-updated: '2026-07-11T00:00:45Z'
+updated: '2026-07-13T03:23:25Z'
 associated_issues: []
 ---
 
