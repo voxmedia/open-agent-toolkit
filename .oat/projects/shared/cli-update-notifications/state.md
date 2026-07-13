@@ -36,7 +36,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: "https://github.com/voxmedia/open-agent-toolkit/pull/143" # null | string — tracked PR URL when a PR exists
 oat_project_created: "2026-07-13T16:00:20.521Z" # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-07-13T18:37:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-07-13T18:40:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -48,7 +48,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Revision p-rev1 passed; final verification in progress.
+Implementation — Revised tasks complete and verified; awaiting final review.
 
 ## Artifacts
 
@@ -76,7 +76,8 @@ Implementation — Revision p-rev1 passed; final verification in progress.
 - ✓ Revision p-rev1 tasks implemented
 - ✓ Revision review fixes completed
 - ✓ Revision re-review passed
-- ⧗ Final verification and review pending
+- ✓ Revised final verification passed
+- ⧗ Final review pending
 
 ## Blockers
 
@@ -84,4 +85,4 @@ None
 
 ## Next Milestone
 
-Run final verification and final review for the revised implementation.
+Run final review for the revised implementation.

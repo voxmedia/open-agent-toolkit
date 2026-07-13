@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
@@ -402,6 +402,10 @@ Chronological log of implementation progress.
 - [x] p02-t01: Wire notifications into command dispatch - `2f233893`
 - [x] p02-t02: Document and format update notification behavior - `67fcfc89`
 - [x] p02-t03: Prepare the lockstep public package release - `023f0b36`
+- [x] prev1-t01: Add the interactive update guard - `676690ab`
+- [x] prev1-t02: Document the interactive offer - `e96abd69`
+- [x] prev1-t03: Prepare the revision release - `86aea5db`
+- [x] p-rev1 review fixes - `cfa6d7c3`
 
 **What changed (high level):**
 
@@ -410,7 +414,10 @@ Chronological log of implementation progress.
 - Added and independently reviewed the cached, offline-safe notification
   service.
 - Integrated the notifier into command dispatch, documented it, and prepared
-  the `0.1.61` lockstep public package release.
+  the initial `0.1.61` lockstep public package release.
+- Added a pre-mutation CLI freshness guard for `init`, `tools install`, and
+  `tools update`, including safe rerun guidance and portable Windows npm
+  execution, then prepared the `0.1.62` revision release.
 
 **Decisions:**
 
@@ -447,6 +454,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 285 focused tests + type-check | 285 | 0 | Phase scope |
 | 2     | 2,745 CLI tests + lint/type-check + docs/format/release gates | 2,745 | 0 | Phase and release scope |
+| p-rev1 | 2,803 CLI tests + full repo/docs/format/release gates | 2,803 | 0 | Revision and release scope |
 
 ## Final Summary (for PR/docs)
 
@@ -454,13 +462,19 @@ Track test execution during implementation.
 
 - Passive stable-release update notices backed by a best-effort TTL cache.
 - User and environment suppression controls that preserve automation safety.
-- CLI bootstrap integration, documentation, and lockstep `0.1.61` release
+- A pre-mutation freshness guard for `oat init`, `oat tools install`, and
+  `oat tools update` that offers to upgrade the CLI before installing versions
+  from an older bundled tool set.
+- CLI bootstrap integration, documentation, and lockstep `0.1.62` release
   metadata.
 
 **Behavioral changes (user-facing):**
 
 - Eligible interactive commands can warn when npm's stable `latest` version is
   newer and show the documented global update command.
+- Guarded tool-mutating commands explain that the running CLI can only install
+  its own bundled versions. Acceptance updates the exact CLI version and asks
+  for a safely reconstructed rerun; decline warns and continues.
 - JSON, non-interactive, CI, test, source-development, ephemeral-runner, and
   explicitly opted-out invocations remain silent.
 
@@ -468,13 +482,17 @@ Track test execution during implementation.
 
 - `packages/cli/src/app/update-notifier.ts` - update policy, cache, registry,
   version comparison, and output.
+- `packages/cli/src/app/tool-bundle-update-guard.ts` - guarded command
+  classification behavior, consent, portable npm execution, and rerun
+  guidance.
 - `packages/cli/src/index.ts` - root command hook.
 - `packages/cli/src/config/` and `commands/config/` - persistent user opt-out.
 
 **Verification performed:**
 
-- 2,745 CLI tests, CLI lint/type-check, docs checks, repository formatting, and
-  five-package release validation.
+- 2,803 CLI tests; full repository tests, lint, type-check, and build; docs
+  checks; repository formatting; patch whitespace; and five-package release
+  validation.
 
 **Design deltas (if any):**
 
