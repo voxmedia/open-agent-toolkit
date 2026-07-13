@@ -264,6 +264,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+## Final Review Fixes
+
+**Review artifact:** `reviews/final-review-2026-07-13.md`
+
+- Medium resolved in `5deb8004`: user documentation now states that TTL limits
+  are normal serial behavior and overlapping processes can duplicate checks or
+  notices.
+- Minor resolved in project bookkeeping: removed the extra terminal blank line
+  from `design.md`.
+- Status: fixes completed; awaiting focused final re-review.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.

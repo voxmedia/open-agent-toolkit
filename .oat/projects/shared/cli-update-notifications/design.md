@@ -278,4 +278,3 @@ output only and do not alter JSON response schemas.
 No live-registry E2E test is required. Focused integration tests use injected
 registry/cache adapters so tests are deterministic, offline-safe, and do not
 write to the real user home.
-
