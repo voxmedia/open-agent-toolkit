@@ -4,6 +4,13 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+  buildCommandContext,
+  type GlobalOptions,
+} from '@app/command-context';
+import { maybeNotifyAboutUpdate } from '@app/update-notifier';
+import { OAT_VERSION } from '@shared/oat-version';
+
 import { createProgram } from './app/create-program';
 import { registerCommands } from './commands';
 import { CliError } from './errors';
@@ -27,7 +34,26 @@ export function normalizeArgv(argv: string[]): string[] {
 export async function main(argv: string[] = process.argv): Promise<void> {
   const program = createProgram();
   registerCommands(program);
-  await program.parseAsync(normalizeArgv(argv));
+  const normalizedArgv = normalizeArgv(argv);
+  program.hook('preAction', async (_command, actionCommand) => {
+    const context = buildCommandContext(
+      actionCommand.optsWithGlobals() as GlobalOptions,
+    );
+    try {
+      await maybeNotifyAboutUpdate({
+        currentVersion: OAT_VERSION,
+        home: context.home,
+        interactive: context.interactive,
+        json: context.json,
+        argv: normalizedArgv,
+        env: process.env,
+        logger: context.logger,
+      });
+    } catch {
+      // Update notifications are best-effort and never affect command dispatch.
+    }
+  });
+  await program.parseAsync(normalizedArgv);
 }
 
 export function isEntrypoint(
