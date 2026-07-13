@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  formatRerunCommand,
   guardBundledToolMutation,
   isBundledToolMutationCommand,
   type ToolBundleUpdateGuardDependencies,
@@ -36,6 +37,9 @@ function createHarness(
     confirmed?: boolean;
     installError?: Error;
     options?: Partial<ToolBundleUpdateGuardOptions>;
+    platform?: NodeJS.Platform;
+    nodeExecutable?: string;
+    existingPaths?: string[];
   } = {},
 ) {
   const logger = createLogger();
@@ -54,6 +58,11 @@ function createHarness(
     resolveUpdateAvailability,
     confirmAction,
     installCli,
+    platform: overrides.platform ?? 'linux',
+    nodeExecutable: overrides.nodeExecutable ?? '/usr/bin/node',
+    fileExists: vi.fn(
+      (path) => overrides.existingPaths?.includes(path) ?? false,
+    ),
   };
   const options: ToolBundleUpdateGuardOptions = {
     currentVersion: '1.0.0',
@@ -64,7 +73,8 @@ function createHarness(
     argv: ['/usr/bin/node', '/opt/oat/dist/index.js', 'tools', 'update'],
     env: {},
     logger,
-    command: 'oat tools update',
+    commandPath: 'oat tools update',
+    rerunCommand: 'oat tools update --all',
     ...overrides.options,
   };
 
@@ -77,6 +87,24 @@ function createHarness(
     resolveUpdateAvailability,
   };
 }
+
+describe('formatRerunCommand', () => {
+  it('preserves normalized arguments and safely quotes shell-sensitive values', () => {
+    expect(
+      formatRerunCommand([
+        '/usr/bin/node',
+        '/opt/oat/dist/index.js',
+        'tools',
+        'update',
+        'name with spaces',
+        '$(touch /tmp/not-run)',
+        "quote'value",
+      ]),
+    ).toBe(
+      "oat tools update 'name with spaces' '$(touch /tmp/not-run)' 'quote'\"'\"'value'",
+    );
+  });
+});
 
 describe('isBundledToolMutationCommand', () => {
   it.each([
@@ -126,8 +154,97 @@ describe('guardBundledToolMutation', () => {
       { shell: false, stdio: 'inherit' },
     );
     expect(harness.logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('rerun `oat tools update`'),
+      expect.stringContaining('oat tools update --all'),
     );
+  });
+
+  it.each([
+    ['named update', 'oat tools update oat-project-implement'],
+    ['pack update', 'oat tools update --pack workflows'],
+    ['all update', 'oat tools update --all --scope user'],
+    ['scoped install', 'oat tools install docs --scope project --no-sync'],
+    ['init', 'oat init --scope project --no-hook --setup'],
+  ])(
+    'includes the runnable %s invocation in success guidance',
+    async (_name, rerunCommand) => {
+      const harness = createHarness({
+        confirmed: true,
+        options: { rerunCommand },
+      });
+
+      await guardBundledToolMutation(harness.options, harness.dependencies);
+
+      expect(harness.logger.info).toHaveBeenCalledWith(
+        expect.stringContaining(`\n${rerunCommand}`),
+      );
+    },
+  );
+
+  it('launches the npm JavaScript CLI through Node on Windows', async () => {
+    const npmCliPath = 'C:\\npm\\node_modules\\npm\\bin\\npm-cli.js';
+    const standardNpmCli =
+      'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js';
+    const harness = createHarness({
+      confirmed: true,
+      platform: 'win32',
+      nodeExecutable: 'C:\\Program Files\\nodejs\\node.exe',
+      existingPaths: [npmCliPath, standardNpmCli],
+      options: {
+        env: { npm_execpath: npmCliPath },
+      },
+    });
+
+    await guardBundledToolMutation(harness.options, harness.dependencies);
+
+    expect(harness.installCli).toHaveBeenCalledWith(
+      'C:\\Program Files\\nodejs\\node.exe',
+      [npmCliPath, 'install', '--global', '@open-agent-toolkit/cli@1.2.3'],
+      { shell: false, stdio: 'inherit' },
+    );
+  });
+
+  it('falls back to npm-cli.js relative to node.exe on Windows', async () => {
+    const nodeExecutable = 'C:\\Node\\node.exe';
+    const standardNpmCli = 'C:\\Node\\node_modules\\npm\\bin\\npm-cli.js';
+    const harness = createHarness({
+      confirmed: true,
+      platform: 'win32',
+      nodeExecutable,
+      existingPaths: [standardNpmCli],
+      options: {
+        env: { npm_execpath: 'C:\\invalid\\npm.cmd' },
+      },
+    });
+
+    await guardBundledToolMutation(harness.options, harness.dependencies);
+
+    expect(harness.installCli).toHaveBeenCalledWith(
+      nodeExecutable,
+      [standardNpmCli, 'install', '--global', '@open-agent-toolkit/cli@1.2.3'],
+      { shell: false, stdio: 'inherit' },
+    );
+  });
+
+  it('fails actionably before mutation when Windows npm-cli.js cannot be resolved', async () => {
+    const harness = createHarness({
+      confirmed: true,
+      platform: 'win32',
+      nodeExecutable: 'C:\\Node\\node.exe',
+      options: {
+        env: { npm_execpath: 'C:\\Node\\npm.cmd' },
+      },
+    });
+
+    await expect(
+      guardBundledToolMutation(harness.options, harness.dependencies),
+    ).rejects.toMatchObject({
+      message: expect.stringMatching(
+        /could not locate npm-cli\.js.*npm install --global @open-agent-toolkit\/cli@1\.2\.3/is,
+      ),
+      exitCode: 2,
+    });
+
+    expect(harness.installCli).not.toHaveBeenCalled();
   });
 
   it.each([

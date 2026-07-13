@@ -1,4 +1,6 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { win32 } from 'node:path';
 
 import { resolveUpdateAvailability } from '@app/update-notifier';
 import { confirmAction } from '@commands/shared/shared.prompts';
@@ -10,8 +12,9 @@ import type { UpdateNotifierOptions } from './update-notifier';
 const CLI_PACKAGE = '@open-agent-toolkit/cli';
 
 export interface ToolBundleUpdateGuardOptions extends UpdateNotifierOptions {
-  command: string;
+  commandPath: string;
   dryRun: boolean;
+  rerunCommand: string;
 }
 
 interface InstallerOptions {
@@ -32,6 +35,9 @@ export interface ToolBundleUpdateGuardDependencies {
     args: string[],
     options: InstallerOptions,
   ) => Promise<void>;
+  platform: NodeJS.Platform;
+  nodeExecutable: string;
+  fileExists: (path: string) => boolean;
 }
 
 function installCli(
@@ -62,6 +68,9 @@ const DEFAULT_DEPENDENCIES: ToolBundleUpdateGuardDependencies = {
   resolveUpdateAvailability,
   confirmAction,
   installCli,
+  platform: process.platform,
+  nodeExecutable: process.execPath,
+  fileExists: existsSync,
 };
 
 function getCommandPath(command: Command): string[] {
@@ -78,12 +87,63 @@ export function formatCommandPath(command: Command): string {
   return getCommandPath(command).join(' ');
 }
 
+function quoteDisplayArgument(argument: string): string {
+  if (/^[a-zA-Z0-9_@+=:,./-]+$/.test(argument)) {
+    return argument;
+  }
+  return `'${argument.replaceAll("'", `'"'"'`)}'`;
+}
+
+export function formatRerunCommand(argv: string[]): string {
+  return ['oat', ...argv.slice(2)].map(quoteDisplayArgument).join(' ');
+}
+
 export function isBundledToolMutationCommand(command: Command): boolean {
   const [, ...path] = getCommandPath(command);
   if (path[0] === 'init') {
     return true;
   }
   return path[0] === 'tools' && (path[1] === 'install' || path[1] === 'update');
+}
+
+interface InstallerInvocation {
+  file: string;
+  args: string[];
+}
+
+function resolveInstallerInvocation(
+  options: ToolBundleUpdateGuardOptions,
+  dependencies: ToolBundleUpdateGuardDependencies,
+  packageVersion: string,
+): InstallerInvocation | null {
+  const npmArgs = ['install', '--global', packageVersion];
+  if (dependencies.platform !== 'win32') {
+    return { file: 'npm', args: npmArgs };
+  }
+
+  const environmentPath = options.env.npm_execpath?.trim();
+  const standardPath = win32.join(
+    win32.dirname(dependencies.nodeExecutable),
+    'node_modules',
+    'npm',
+    'bin',
+    'npm-cli.js',
+  );
+  const npmCliPath = [environmentPath, standardPath].find(
+    (candidate) =>
+      candidate !== undefined &&
+      win32.isAbsolute(candidate) &&
+      win32.basename(candidate).toLowerCase() === 'npm-cli.js' &&
+      dependencies.fileExists(candidate),
+  );
+  if (!npmCliPath) {
+    return null;
+  }
+
+  return {
+    file: dependencies.nodeExecutable,
+    args: [npmCliPath, ...npmArgs],
+  };
 }
 
 export async function guardBundledToolMutation(
@@ -102,31 +162,42 @@ export async function guardBundledToolMutation(
   }
 
   options.logger.warn(
-    `OAT CLI ${availableVersion} is available. ${options.command} copies tools ` +
+    `OAT CLI ${availableVersion} is available. ${options.commandPath} copies tools ` +
       `bundled with the currently running CLI ${options.currentVersion}, which ` +
       'can only install its own bundled tool versions. The available CLI may ' +
       'bundle newer tool versions.',
   );
   const accepted = await dependencies.confirmAction(
-    `Update the OAT CLI to ${availableVersion} before running ${options.command}?`,
+    `Update the OAT CLI to ${availableVersion} before running ${options.commandPath}?`,
     { interactive: options.interactive },
   );
 
   if (!accepted) {
     options.logger.warn(
-      `Continuing ${options.command} with the current CLI's bundle. Its tool ` +
+      `Continuing ${options.commandPath} with the current CLI's bundle. Its tool ` +
         'versions may be older than those bundled with the available CLI.',
     );
     return false;
   }
 
   const installCommand = `npm install --global ${CLI_PACKAGE}@${availableVersion}`;
-  try {
-    await dependencies.installCli(
-      'npm',
-      ['install', '--global', `${CLI_PACKAGE}@${availableVersion}`],
-      { shell: false, stdio: 'inherit' },
+  const invocation = resolveInstallerInvocation(
+    options,
+    dependencies,
+    `${CLI_PACKAGE}@${availableVersion}`,
+  );
+  if (!invocation) {
+    throw new CliError(
+      'Could not locate npm-cli.js for a shell-free Windows update. ' +
+        `No tools were changed. Run this command manually: ${installCommand}`,
+      2,
     );
+  }
+  try {
+    await dependencies.installCli(invocation.file, invocation.args, {
+      shell: false,
+      stdio: 'inherit',
+    });
   } catch {
     throw new CliError(
       `Failed to update the OAT CLI to ${availableVersion}. ` +
@@ -136,8 +207,8 @@ export async function guardBundledToolMutation(
   }
 
   options.logger.info(
-    `Updated the OAT CLI to ${availableVersion}; rerun \`${options.command}\` ` +
-      'so the new CLI can install its bundled tools.',
+    `Updated the OAT CLI to ${availableVersion}. Rerun this command so the new ` +
+      `CLI can install its bundled tools:\n${options.rerunCommand}`,
   );
   return true;
 }

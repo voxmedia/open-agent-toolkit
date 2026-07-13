@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildCommandContext, type GlobalOptions } from '@app/command-context';
 import {
   formatCommandPath,
+  formatRerunCommand,
   guardBundledToolMutation,
   isBundledToolMutationCommand,
 } from '@app/tool-bundle-update-guard';
@@ -55,8 +56,9 @@ export async function main(argv: string[] = process.argv): Promise<void> {
     if (isBundledToolMutationCommand(actionCommand)) {
       const cliUpdated = await guardBundledToolMutation({
         ...notifierOptions,
-        command: formatCommandPath(actionCommand),
+        commandPath: formatCommandPath(actionCommand),
         dryRun: context.dryRun,
+        rerunCommand: formatRerunCommand(normalizedArgv),
       });
       if (cliUpdated) {
         throw new CliUpdateInstalledSignal();

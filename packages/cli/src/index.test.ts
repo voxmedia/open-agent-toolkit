@@ -209,7 +209,8 @@ describe('main', () => {
       expect(guardBundledToolMutationMock).toHaveBeenCalledOnce();
       expect(guardBundledToolMutationMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          command: `oat ${commandPath.join(' ')}`,
+          commandPath: `oat ${commandPath.join(' ')}`,
+          rerunCommand: `oat ${commandPath.join(' ')}`,
           currentVersion: OAT_VERSION,
           dryRun: false,
           home: '/home/tester',
@@ -218,6 +219,66 @@ describe('main', () => {
           argv: ['node', 'cli.js', ...commandPath],
           env: process.env,
           logger,
+        }),
+      );
+    },
+  );
+
+  it.each([
+    [
+      'named update',
+      ['tools', 'update'],
+      ['tools', 'update', 'oat-project-implement'],
+      'oat tools update oat-project-implement',
+    ],
+    [
+      'pack update',
+      ['tools', 'update'],
+      ['tools', 'update', '--pack', 'workflows'],
+      'oat tools update --pack workflows',
+    ],
+    [
+      'all update',
+      ['tools', 'update'],
+      ['tools', 'update', '--all', '--scope', 'user'],
+      'oat tools update --all --scope user',
+    ],
+    [
+      'scoped install',
+      ['tools', 'install', 'docs'],
+      ['tools', 'install', 'docs', '--scope', 'project', '--no-sync'],
+      'oat tools install docs --scope project --no-sync',
+    ],
+    [
+      'init',
+      ['init'],
+      ['init', '--scope', 'project', '--no-hook', '--setup'],
+      'oat init --scope project --no-hook --setup',
+    ],
+  ] satisfies Array<[string, string[], string[], string]>)(
+    'preserves a runnable equivalent for a guarded %s invocation',
+    async (_name, commandPath, userArguments, expectedRerunCommand) => {
+      registerCommandsMock.mockImplementation((program: Command) => {
+        program.exitOverride();
+        let parent = program;
+        for (const name of commandPath) {
+          const command = new Command(name);
+          parent.addCommand(command);
+          parent = command;
+        }
+        parent
+          .allowUnknownOption()
+          .allowExcessArguments()
+          .argument('[arguments...]')
+          .action(actionMock);
+      });
+
+      await main(['node', 'cli.js', ...userArguments]);
+
+      expect(guardBundledToolMutationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          commandPath: `oat ${commandPath.join(' ')}`,
+          rerunCommand: expectedRerunCommand,
         }),
       );
     },
