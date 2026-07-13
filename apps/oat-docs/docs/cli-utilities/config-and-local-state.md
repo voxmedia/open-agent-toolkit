@@ -125,7 +125,7 @@ npm install --global @open-agent-toolkit/cli@<validated-version>
 
 If accepted, OAT updates the CLI package, stops before changing tools, and asks you to rerun the original command under the new CLI. If declined or the prompt is aborted, OAT warns and continues with the current bundle. If npm fails, the requested tool mutation does not run and the error includes a command to retry. The warning describes possible bundle freshness; it does not claim that tools installed by the current CLI are incompatible with that CLI.
 
-Checks, notices, and the update offer are skipped for JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations. Guarded dry-run commands also skip the prompt and installer. Set `NO_UPDATE_NOTIFIER=1` to suppress the check for one process, or disable it persistently in user config:
+Checks, notices, and the update offer are skipped for JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations. Guarded dry-run commands also skip the prompt and installer. Set `NO_UPDATE_NOTIFIER` to a truthy value (for example, `1`, `true`, `yes`, or `on`) to suppress checks for one process; empty, `0`, and `false` do not suppress them. Or disable checks persistently in user config:
 
 ```bash
 oat config set updateNotifications false --user

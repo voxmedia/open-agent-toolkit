@@ -48,7 +48,7 @@ On ordinary interactive command runs, OAT may print a passive notice when npm's 
 
 This warning does not mean tools installed from the current bundle are incompatible with the current CLI; it only identifies that a newer CLI release may include newer bundled tool versions. Dry-run, JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations do not prompt or install. Ordinary eligible commands remain passive.
 
-Disable checks for one process with `NO_UPDATE_NOTIFIER=1`, or persist the user-level preference:
+Set `NO_UPDATE_NOTIFIER` to a truthy value (for example, `1`, `true`, `yes`, or `on`) to suppress checks for one process; empty, `0`, and `false` do not suppress them. Or persist the user-level preference:
 
 ```bash
 oat config set updateNotifications false --user

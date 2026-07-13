@@ -171,7 +171,7 @@ function isStaticallyEligible(options: UpdateNotifierOptions): boolean {
   ) {
     return false;
   }
-  if (options.env.NO_UPDATE_NOTIFIER === '1') {
+  if (isTruthyEnvironmentValue(options.env.NO_UPDATE_NOTIFIER)) {
     return false;
   }
   return (

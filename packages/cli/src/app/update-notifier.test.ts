@@ -188,7 +188,6 @@ describe('maybeNotifyAboutUpdate', () => {
       'ephemeral npx executable',
       { env: { npm_execpath: '/usr/lib/node_modules/npm/bin/npx-cli.js' } },
     ],
-    ['environment-opted-out', { env: { NO_UPDATE_NOTIFIER: '1' } }],
   ] satisfies Array<[string, Partial<UpdateNotifierOptions>]>)(
     'skips %s invocations before reading persistent state',
     async (_name, options) => {
@@ -202,6 +201,42 @@ describe('maybeNotifyAboutUpdate', () => {
       expect(harness.readFile).not.toHaveBeenCalled();
       expect(harness.fetch).not.toHaveBeenCalled();
       expect(harness.logger.warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['1', 'true', 'yes', 'on'])(
+    'skips truthy NO_UPDATE_NOTIFIER=%s before reading persistent state',
+    async (value) => {
+      const harness = createHarness({
+        options: { env: { NO_UPDATE_NOTIFIER: value } },
+      });
+
+      await expect(
+        maybeNotifyAboutUpdate(harness.options, harness.dependencies),
+      ).resolves.toBeUndefined();
+
+      expect(harness.dependencies.readUserConfig).not.toHaveBeenCalled();
+      expect(harness.readFile).not.toHaveBeenCalled();
+      expect(harness.fetch).not.toHaveBeenCalled();
+      expect(harness.logger.warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['', '0', 'false'])(
+    'does not suppress updates for false-like NO_UPDATE_NOTIFIER=%j',
+    async (value) => {
+      const harness = createHarness({
+        options: { env: { NO_UPDATE_NOTIFIER: value } },
+        cache: {
+          checkedAt: NOW.toISOString(),
+          latestVersion: '1.1.0',
+        },
+      });
+
+      await maybeNotifyAboutUpdate(harness.options, harness.dependencies);
+
+      expect(harness.dependencies.readUserConfig).toHaveBeenCalledOnce();
+      expect(harness.logger.warn).toHaveBeenCalledOnce();
     },
   );
 

@@ -64,6 +64,8 @@ npm install --global @open-agent-toolkit/cli@<validated-version>
 - If npm fails, OAT does not run the tool mutation and reports how to retry the CLI installation.
 - Dry-run, JSON, non-interactive, opted-out, CI, test, source-development, and ephemeral package-runner invocations do not prompt or install.
 
+Set `NO_UPDATE_NOTIFIER` to a truthy value (for example, `1`, `true`, `yes`, or `on`) to suppress checks for one process; empty, `0`, and `false` do not suppress them.
+
 Other eligible commands keep the passive update notice and never launch the installer.
 
 ## Install vs. initialize
