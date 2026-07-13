@@ -117,6 +117,7 @@ test('uses the documented runtime and authentication argv for Cursor IDE', async
   const report = await runPreflight(
     { harness: 'cursor-ide' },
     {
+      env: { CURSOR_API_KEY: 'test-key' },
       probes: {
         command: async (executable, args) => {
           commands.push([executable, args]);
