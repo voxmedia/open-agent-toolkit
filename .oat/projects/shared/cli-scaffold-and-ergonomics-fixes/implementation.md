@@ -30,11 +30,11 @@ oat_generated: false
 | p02   | pending | 1     | 0/1       |
 | p03   | pending | 1     | 0/1       |
 | p04   | pending | 1     | 0/1       |
-| p05   | pending | 1     | 0/1       |
+| p05   | pending | 2     | 0/2       |
 | p06   | pending | 2     | 0/2       |
 | p07   | pending | 1     | 0/1       |
 
-**Total:** 0/8 tasks completed
+**Total:** 0/9 tasks completed
 
 ---
 
@@ -86,12 +86,17 @@ oat_generated: false
 
 ---
 
-## Phase 5: Fill decision records atomically
+## Phase 5: Create complete PJM records atomically
 
 **Status:** pending
 **Started:** -
 
 ### Task p05-t01: Add decision and consequences inputs to decision creation
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Scaffold backlog items with a single command
 
 **Status:** pending
 **Commit:** -
@@ -156,6 +161,7 @@ Chronological log of implementation progress.
 - [ ] p03-t01: Suggest the exact all-tools update command
 - [ ] p04-t01: Require a summary before closing backlog items
 - [ ] p05-t01: Add decision and consequences inputs to decision creation
+- [ ] p05-t02: Scaffold backlog items with a single command
 - [ ] p06-t01: Add a minimal stale-invocation doctor check and release callout
 - [ ] p06-t02: Close stdin for noninteractive gate targets
 - [ ] p07-t01: Bump lockstep packages and run completion gates
@@ -202,10 +208,23 @@ Chronological log of implementation progress.
 
 **Next:** Begin implementation at p01-t01.
 
+### Scope Revision: Wave-2 Operator Feedback Item 4
+
+**Origin:** Third-run operator feedback against OAT CLI 0.1.59, received 2026-07-13.
+
+**Change:**
+
+- Added p05-t02 for `oat backlog new <title>` real-template scaffolding, collision safety, canonical defaults/flags, managed-index regeneration, and the `oat-pjm-add-backlog-item` canonical-skill migration/version bump.
+- Preserved all existing task IDs and review rows; task totals increased from 8 to 9.
+- Marked the prior plan review as awaiting re-review because the approved scope changed after its pass.
+
+**Next:** Revalidate and re-review the revised plan; implementation still starts at p01-t01.
+
 **Execution shape:**
 
 - Run p01 first.
 - Run p02-p06 concurrently in isolated worktrees and merge in plan order.
+- Run both p05 tasks sequentially in the same isolated worktree.
 - Run p07 after all fixes merge.
 - Independent phase gate review is enabled for p01 and p06.
 

@@ -23,9 +23,9 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** Eliminate scaffold corruption and placeholder leakage, then harden the affected CLI workflows so failures are actionable and shipped grammar changes are detectable.
+**Goal:** Eliminate scaffold corruption and placeholder leakage, add complete CLI-native PJM record creation, then harden the affected workflows so failures are actionable and shipped grammar changes are detectable.
 
-**Architecture:** Keep fixes local to the owning command/template surfaces. Add focused regression tests at each boundary, use `oat doctor` for repository-level stale-invocation detection, and finish with the required lockstep public-package release validation.
+**Architecture:** Keep fixes local to the owning command/template surfaces. Reuse canonical templates and existing ID/index primitives for CLI-native record creation, add focused regression tests at each boundary, use `oat doctor` for repository-level stale-invocation detection, and finish with the required lockstep public-package release validation.
 
 **Tech Stack:** TypeScript ESM, Commander, Vitest, YAML, Markdown templates, pnpm/Turborepo.
 
@@ -35,7 +35,7 @@ oat_template: false
 
 ## Parallelism
 
-Phase p01 runs first because it fixes the project-creation corruption and is the highest-priority item. Phases p02-p06 then run concurrently: their write sets are disjoint across the plan template, tools update, backlog archive, decision/summary, doctor/release-note, and gate-runner surfaces. Tasks within p06 run sequentially in one isolated worktree. The phases merge in order. Phase p07 runs only after all fixes merge because it owns the shared five-package version bump and repository-wide release gate.
+Phase p01 runs first because it fixes the project-creation corruption and is the highest-priority item. Phases p02-p06 then run concurrently: their write sets are disjoint across the plan template, tools update, backlog archive, PJM record creation/skill migration, doctor/release-note, and gate-runner surfaces. Tasks within p05 and p06 run sequentially in their respective isolated worktrees. The phases merge in order. Phase p07 runs only after all fixes merge because it owns the shared five-package version bump and repository-wide release gate.
 
 ---
 
@@ -208,7 +208,7 @@ git commit -m "fix(p04-t01): require closed backlog summaries"
 
 ---
 
-## Phase 5: Fill decision records atomically
+## Phase 5: Create complete PJM records atomically
 
 ### Task p05-t01: Add decision and consequences inputs to decision creation
 
@@ -252,6 +252,66 @@ Expected: Decision tests, help snapshots, semantic skill-contract coverage, and 
 ```bash
 git add packages/cli/src/commands/decision/new.ts packages/cli/src/commands/decision/new.test.ts packages/cli/src/commands/decision/index.ts packages/cli/src/commands/decision/index.test.ts packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/validation/skills.test.ts .agents/skills/oat-project-summary/SKILL.md
 git commit -m "feat(p05-t01): fill decision record sections at creation"
+```
+
+### Task p05-t02: Scaffold backlog items with a single command
+
+**Files:**
+
+- Create: `packages/cli/src/commands/backlog/new.ts`
+- Create: `packages/cli/src/commands/backlog/new.test.ts`
+- Modify: `packages/cli/src/commands/backlog/index.ts`
+- Modify: `packages/cli/src/commands/backlog/index.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `.agents/skills/oat-pjm-add-backlog-item/SKILL.md`
+
+Before editing the canonical skill, rebase onto the latest integration base and preserve concurrent changes. Bump `oat-pjm-add-backlog-item` exactly one patch from its then-current version, edit only the canonical `.agents/skills/` source, and refresh provider-linked views with `oat sync --scope all`.
+
+**Step 1: Write tests (RED)**
+
+Add core creation and command-wiring tests that point directly at the repository’s real `.oat/templates/backlog-item.md`, never a copied fixture. Cover:
+
+- deterministic `BL-YYMMDD-slug` creation through the existing generator with same-day collisions in both `items/` and `archived/` rejected without overwrite;
+- idempotent backlog initialization before creation when the scaffold is absent;
+- canonical default frontmatter (`status: open`, `priority: medium`, `scope: task`, `scope_estimate: null`, `labels: []`, `assignee: null`, `associated_issues: []`, `external_plans: []`) and normalized ISO 8601 UTC `created`/`updated` timestamps;
+- `--priority`, `--scope`, comma-delimited `--labels`, and `--description` overrides, with the real description placeholder retained when omitted and the template Acceptance Criteria placeholders preserved;
+- managed-index regeneration that adds one item row, leaves `## Curated Overview` byte-for-byte unchanged, and produces identical index content on an immediate second regeneration;
+- help/JSON output and a canonical-skill contract requiring `oat backlog new` while rejecting the old `generate-id` + hand-authored creation + explicit `regenerate-index` sequence.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
+Expected: Tests fail because `oat backlog new` and the updated skill contract do not exist.
+
+**Step 2: Implement (GREEN)**
+
+Create a focused backlog-item creator that:
+
+- runs the existing idempotent `initializeBacklog` semantics first;
+- resolves repo-local `backlog-item.md` with bundled-assets fallback and renders the real template without shipping `oat_template` metadata;
+- normalizes one creation timestamp to ISO 8601 UTC for both `created` and `updated`;
+- reuses `generateBacklogId`, validates priority/scope values, parses trimmed comma-delimited labels, and uses exclusive creation plus preflight checks against both active and archived paths;
+- writes the canonical frontmatter defaults and description/Acceptance Criteria body, regenerates the managed index through `regenerateBacklogIndex`, and removes the newly written item if regeneration fails;
+- returns the item ID/path and index result for human and JSON command output.
+
+Register `oat backlog new <title>` with `--priority`, `--scope`, `--labels`, `--description`, and the existing `--backlog-root` convention. Update `oat-pjm-add-backlog-item` to replace its generate-ID/hand-authored creation/index-regeneration sequence with the new command, retaining only post-create enrichment for user-confirmed fields not exposed by the minimum CLI surface and the optional Curated Overview prompt.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
+Expected: Real-template creation, collision protection, defaults/flags, index idempotence, command output, and the canonical-skill command contract pass.
+
+**Step 3: Refactor**
+
+Keep generation, initialization, and index behavior delegated to existing backlog primitives; centralize only creation-specific template rendering, option normalization, collision handling, and rollback. Do not duplicate or hand-edit the managed index block.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/backlog/regenerate-index.test.ts src/commands/backlog/shared/generate-id.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm oat:validate-skills`
+Expected: Focused backlog, ID, index, help, semantic skill-contract, type-check, and canonical skill validation all pass; `git status --short` shows no hand-edited provider copy.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/backlog/new.ts packages/cli/src/commands/backlog/new.test.ts packages/cli/src/commands/backlog/index.ts packages/cli/src/commands/backlog/index.test.ts packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/validation/skills.test.ts .agents/skills/oat-pjm-add-backlog-item/SKILL.md
+git commit -m "feat(p05-t02): scaffold backlog items from the CLI"
 ```
 
 ---
@@ -384,19 +444,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
-| p03    | code     | pending | -          | -                                                           |
-| p04    | code     | pending | -          | -                                                           |
-| p05    | code     | pending | -          | -                                                           |
-| p06    | code     | pending | -          | -                                                           |
-| p07    | code     | pending | -          | -                                                           |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T231038Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| p04    | code     | pending         | -          | -                                                           |
+| p05    | code     | pending         | -          | -                                                           |
+| p06    | code     | pending         | -          | -                                                           |
+| p07    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | fixes_completed | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T231038Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -417,11 +477,11 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 - Phase 2: 1 task - Clarify plan task-shape guidance
 - Phase 3: 1 task - Improve tools update no-args feedback
 - Phase 4: 1 task - Prevent placeholder backlog summaries
-- Phase 5: 1 task - Fill decision records atomically
+- Phase 5: 2 tasks - Create complete PJM records atomically
 - Phase 6: 2 tasks - Strengthen CLI upgrade and gate hygiene
 - Phase 7: 1 task - Prepare and validate the release
 
-**Total: 8 tasks**
+**Total: 9 tasks**
 
 Ready for code review and merge.
 

@@ -41,6 +41,7 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 - **Plan template guidance:** add explicit language that the TDD task-body shape is a default, not a requirement — the invariants are stable task IDs, per-task verification, and atomic commits. Either a note in the template or a minimal non-TDD variant (decide at planning; a note is the smaller change and `validate-plan` already accepts non-TDD shapes).
 - **`oat tools update` ergonomics:** improve the no-args path — either default to `--all` with a confirmation line, or make the error show the exact suggested command. (Operator suggested either.)
 - **`oat backlog archive` summary:** stop writing TODO placeholders — either require `--summary` on the closed path, or derive a fallback summary from the item's title/description.
+- **`oat backlog new` item scaffolding (wave-2 item 4, added 2026-07-13):** add `oat backlog new <title>` so agents no longer combine `generate-id`, hand-authored template files, and `regenerate-index`. Reuse deterministic ID/collision semantics, initialize the backlog scaffold, render the real backlog-item template with canonical defaults plus `--priority`, `--scope`, `--labels`, and optional `--description`, regenerate only the managed index block, and update/version-bump `oat-pjm-add-backlog-item` to use the command.
 - **`oat decision new` section flags (wave-1 item):** add `--decision <text>` / `--consequences <text>` (or `--body-file <path>`) so all template slots can be filled at creation, and update `oat-project-summary`'s Step 6 promotion step to derive and pass all three sections from the Key Decision content. Operator prefers this over post-creation edits because it keeps index regeneration atomic. (Note: the promotion-step half touches a canonical skill → version bump for `oat-project-summary` in the same PR.)
 - **Breaking-change hygiene (operator answer, 2026-07-13):** no shim — "shims linger." Implement (b) + (c): a prominent release-note callout convention for CLI grammar breaks, and a doctor-style check that flags known-stale invocation forms in repo scripts/docs after upgrades. The operator called the doctor check "the actually valuable half": the realistic failure mode is an agent installing `@latest` mid-run, with repo scripts written against the old grammar breaking at a distance from the upgrade — a post-upgrade grep-style check would have caught it before the first bootstrap.
 - **Noninteractive gate stdin (operator-approved scope addition, 2026-07-13):** gate targets already receive their prompt through argv, so close/ignore inherited stdin while preserving piped stdout/stderr, target selection, timeout, liveness, and diagnostic behavior.
@@ -62,6 +63,7 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 - The plan template states that non-TDD task shapes are permitted and names the actual invariants.
 - `oat tools update` with no args either acts usefully or errors with a copy-pasteable suggestion.
 - `oat backlog archive` never writes `TODO: summarize outcome` into completed.md.
+- `oat backlog new <title>` renders a collision-safe item from the real repository template with canonical defaults/overrides and refreshes the managed index idempotently without changing Curated Overview.
 - Decision records promoted via `oat-project-summary` land with real `## Decision` and `## Consequences` content, never literal `TODO`.
 - A decided, implemented policy response for CLI grammar breaking changes.
 - Noninteractive gate targets begin without waiting for parent stdin EOF while stdout/stderr capture and existing gate behavior remain intact.
@@ -69,7 +71,7 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 ## Out of Scope
 
 - Reverting the `--scope` per-command design.
-- Unrelated skill-prose changes (the `oat-project-summary` Step 6 promotion requirement above is the explicit exception; other skill prose is covered by sibling projects).
+- Unrelated skill-prose changes (the `oat-project-summary` Step 6 and `oat-pjm-add-backlog-item` command-migration requirements above are the explicit exceptions; other skill prose is covered by sibling projects).
 - The run-log feature (separate project).
 
 ## Deferred Ideas
