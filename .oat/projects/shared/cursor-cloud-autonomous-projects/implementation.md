@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 1/6       |
+| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 2/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | pending     | 8     | 0/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 1/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 2/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -57,8 +57,10 @@ _Pending._
 
 ### Task p01-t02: Amend oat-project-implement — non-interactive HiLL + closeout + dispatch authorization
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `526a009f`
+**Outcome:** Added strictly `OAT_AUTONOMOUS=1`-conditional implement behavior for final-default HiLL resolution, automatic checkpoint review/receive, bounded delegation authorization, target-preserving final review, unset/legacy/structured closeout sequencing, and final HiLL auto-approval between pre/post steps; bumped the skill to 2.1.0.
+**Verification:** Passed — `pnpm oat:validate-skills` validated 56 skills; `pnpm test:smoke` passed 70 smoke tests including the deterministic production-topology fixture; project sync status reported all provider views in sync; manual diff confirmed interactive branches remain intact.
 
 ### Task p01-t03: Amend oat-project-discover and oat-project-design — gate hooks + autonomy behavior
 
@@ -124,7 +126,8 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - HiLL confirmed: `["p04","p06"]` + auto-review true (config).
 - Plan mutation: p05 descoped to external org-skills repo (user direction); handoff written to `references/internal-docs-mcp-handoff.md`.
 - [x] p01-t01: autonomy contract and gate inventory committed (`113c8f6f`); recursive fifteen-root prompt scan passed with zero unmapped sites.
-- [ ] p01-t02: amend implement autonomy behavior.
+- [x] p01-t02: implement autonomy amendments committed (`526a009f`); skill validation, smoke fixture suite, and provider sync status passed.
+- [ ] p01-t03: add discover/design gate hooks and autonomy behavior.
 
 **Decisions:**
 
@@ -147,7 +150,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | Recursive prompt-site inventory scan (p01-t01) | 1 | 0 | All fifteen required roots; zero unmapped prompt sites |
+| 1     | Prompt inventory scan; skill validation; smoke fixture suite; provider sync status (p01-t01..t02) | 72 | 0 | 1 inventory verification + 1 skill validation + 70 smoke tests; all provider views in sync |
 
 ## Final Summary (for PR/docs)
 
