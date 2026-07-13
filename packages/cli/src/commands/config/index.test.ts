@@ -242,6 +242,77 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('sets, gets, lists, and describes the user update notification preference', async () => {
+    const root = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
+    tempDirs.push(home);
+
+    const setHarness = createHarness({ cwd: root, home });
+    await runCommand(setHarness.command, [
+      'set',
+      'updateNotifications',
+      'false',
+      '--user',
+    ]);
+
+    const raw = await readFile(join(home, '.oat', 'config.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({
+      version: 1,
+      updateNotifications: false,
+    });
+
+    const getHarness = createHarness({ cwd: root, home });
+    await runCommand(
+      getHarness.command,
+      ['get', 'updateNotifications'],
+      ['--json'],
+    );
+    expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'updateNotifications',
+      value: 'false',
+      source: 'user',
+    });
+
+    const listHarness = createHarness({ cwd: root, home });
+    await runCommand(listHarness.command, ['list']);
+    expect(listHarness.capture.info[0]).toContain('updateNotifications');
+    expect(listHarness.capture.info[0]).toContain('false');
+    expect(listHarness.capture.info[0]).toContain('user');
+
+    const describeHarness = createHarness({ cwd: root, home });
+    await runCommand(describeHarness.command, [
+      'describe',
+      'updateNotifications',
+    ]);
+    expect(describeHarness.capture.info[0]).toContain(
+      'Key: updateNotifications',
+    );
+    expect(describeHarness.capture.info[0]).toContain('Scope: user');
+    expect(describeHarness.capture.info[0]).toContain('Type: boolean');
+    expect(describeHarness.capture.info[0]).toContain('Default: true');
+    expect(describeHarness.capture.info[0]).toContain(
+      'Owning command: oat config set updateNotifications false --user',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects non-user surfaces for updateNotifications', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'updateNotifications',
+      'false',
+      '--shared',
+    ]);
+
+    expect(capture.error[0]).toContain('updateNotifications');
+    expect(capture.error[0]).toContain('user');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('gets git.defaultBranch from shared config', async () => {
     const root = await createRepoRoot();
     await writeFile(

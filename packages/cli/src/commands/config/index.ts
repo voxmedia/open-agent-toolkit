@@ -107,6 +107,7 @@ type ConfigKey =
   | 'tools.research'
   | 'tools.utility'
   | 'tools.workflows'
+  | 'updateNotifications'
   | 'workflow.archiveOnComplete'
   | 'workflow.autoNarrowReReviewScope'
   | 'workflow.autoArtifactReview.analysis'
@@ -206,6 +207,7 @@ const KEY_ORDER: ConfigKey[] = [
   'tools.research',
   'tools.utility',
   'tools.workflows',
+  'updateNotifications',
   'workflow.hillCheckpointDefault',
   'workflow.archiveOnComplete',
   'workflow.createPrOnComplete',
@@ -526,6 +528,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set activeIdea <value> --user',
     description:
       'User-level active idea fallback used when no repo-local active idea is set. Writable via `oat config set activeIdea <value> --user`.',
+  },
+  {
+    key: 'updateNotifications',
+    group: 'User (~/.oat/config.json)',
+    file: '~/.oat/config.json',
+    scope: 'user',
+    type: 'boolean',
+    defaultValue: 'true',
+    mutability: 'read/write',
+    owningCommand: 'oat config set updateNotifications false --user',
+    description:
+      'Whether interactive CLI commands may check for and display stable update notifications.',
   },
   {
     key: 'workflow.hillCheckpointDefault',
@@ -911,6 +925,15 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
     return;
   }
 
+  if (key === 'updateNotifications') {
+    if (surface !== 'user') {
+      throw new Error(
+        `Cannot set 'updateNotifications' at '${surface}' scope. updateNotifications can only be set at user scope (~/.oat/config.json).`,
+      );
+    }
+    return;
+  }
+
   if (isStructuralKey(key)) {
     if (surface !== 'shared') {
       throw new Error(
@@ -955,10 +978,23 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
 }
 
 function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
+  if (key === 'updateNotifications') {
+    return 'user';
+  }
   if (isWorkflowKey(key) || isStateKey(key)) {
     return 'local';
   }
   return 'shared';
+}
+
+function parseBooleanValue(key: ConfigKey, rawValue: string): boolean {
+  const normalized = rawValue.trim().toLowerCase();
+  if (normalized !== 'true' && normalized !== 'false') {
+    throw new Error(
+      `Invalid value for ${key}: expected 'true' or 'false', got '${rawValue}'`,
+    );
+  }
+  return normalized === 'true';
 }
 
 function parseWorkflowValue(
@@ -966,13 +1002,7 @@ function parseWorkflowValue(
   rawValue: string,
 ): boolean | string | WorkflowPostImplementSequence {
   if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
-    const normalized = rawValue.trim().toLowerCase();
-    if (normalized !== 'true' && normalized !== 'false') {
-      throw new Error(
-        `Invalid value for ${key}: expected 'true' or 'false', got '${rawValue}'`,
-      );
-    }
-    return normalized === 'true';
+    return parseBooleanValue(key, rawValue);
   }
 
   if (key === 'workflow.postImplementSequence') {
@@ -1462,6 +1492,20 @@ async function setConfigValue(
       key,
       value: nextValue,
       source: 'local',
+    };
+  }
+
+  if (key === 'updateNotifications') {
+    const nextValue = parseBooleanValue(key, rawValue);
+    const userConfig = await dependencies.readUserConfig(userConfigDir);
+    await dependencies.writeUserConfig(userConfigDir, {
+      ...userConfig,
+      updateNotifications: nextValue,
+    });
+    return {
+      key,
+      value: String(nextValue),
+      source: 'user',
     };
   }
 
