@@ -39,7 +39,7 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 - **Plan template guidance:** add explicit language that the TDD task-body shape is a default, not a requirement — the invariants are stable task IDs, per-task verification, and atomic commits. Either a note in the template or a minimal non-TDD variant (decide at planning; a note is the smaller change and `validate-plan` already accepts non-TDD shapes).
 - **`oat tools update` ergonomics:** improve the no-args path — either default to `--all` with a confirmation line, or make the error show the exact suggested command. (Operator suggested either.)
 - **`oat backlog archive` summary:** stop writing TODO placeholders — either require `--summary` on the closed path, or derive a fallback summary from the item's title/description.
-- **Breaking-change hygiene:** decide the policy response. The `--scope` removal was intentional and tested — this is not a revert. Options: (a) temporary global-flag alias through a deprecation window, (b) prominent release-note callout convention for CLI grammar breaks, (c) doctor-style check flagging known-stale invocation forms in repo scripts after upgrades. Operator was asked whether a shim is actually wanted or release-note treatment suffices; scope this requirement to their answer.
+- **Breaking-change hygiene (operator answer, 2026-07-13):** no shim — "shims linger." Implement (b) + (c): a prominent release-note callout convention for CLI grammar breaks, and a doctor-style check that flags known-stale invocation forms in repo scripts/docs after upgrades. The operator called the doctor check "the actually valuable half": the realistic failure mode is an agent installing `@latest` mid-run, with repo scripts written against the old grammar breaking at a distance from the upgrade — a post-upgrade grep-style check would have caught it before the first bootstrap.
 
 ## Key Decisions
 
@@ -68,13 +68,15 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 
 ## Deferred Ideas
 
-- General doctor-style "stale CLI invocation forms in repo scripts" checker — may be larger than this bundle warrants; keep only if the breaking-change decision lands on option (c).
+_(none — the doctor-style stale-invocation checker was promoted into Requirements by the operator's answer; scope it minimally, e.g. a known-stale-forms list checked by `oat doctor` or a post-upgrade hint, and split it out if it grows.)_
 
 ## Open Questions
 
-- **`--scope` migration (asked of the originating operator):** deprecation shim vs. release-note prominence + doctor check? Scope the breaking-change work to their answer; default to release-note convention + error-message hint if unanswered.
 - **`tools update` default:** default-to-`--all` (with confirmation) vs. better error? Decide at planning; better error is the safer minimum.
 - **Substitution robustness:** exact-token alignment vs. whitespace-tolerant token regex in `scaffold.ts`? Decide at planning.
+- **Doctor-check scope:** where the stale-invocation check runs (within `oat doctor`, or a post-upgrade hint from the CLI) and where the known-stale-forms list lives. Keep minimal.
+
+_Resolved 2026-07-13 (operator answer): no `--scope` shim; release-note prominence + doctor-style stale-invocation check (the latter prioritized)._
 
 ## Assumptions
 

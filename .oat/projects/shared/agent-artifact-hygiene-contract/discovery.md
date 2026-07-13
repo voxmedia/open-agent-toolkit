@@ -42,6 +42,7 @@ A grep of the whole `.agents/` tree for `pnpm format|oxfmt|format:fix` returns o
 
 - Add a repo-agnostic output-hygiene contract to the agent role definitions (`oat-phase-implementer`, `oat-reviewer`) and to every lifecycle skill step that writes or edits an artifact: before finishing/committing, run the repository's documented format command (and relevant DoD gates) on files the agent created or edited.
 - The format command must be **discovered from repo instructions** (AGENTS.md / CLAUDE.md, package manifests) — never hardcode a specific formatter.
+- When no format command is discoverable: **warn once, then no-op** — a one-line "no format command discovered in repo instructions; skipping" in the agent's output. (Operator answer, 2026-07-13: silent no-op hides misconfiguration; failing would be worse than the disease.)
 - The phase-implementer contract should state the general form: task completion includes the repo's full gate set over the produced diff, **explicitly including artifact writes**, which agents tend to treat as exempt.
 - The `oat gate review` injected context note (CLI source) should carry the same contract line for gate-dispatched reviewers.
 
@@ -49,6 +50,7 @@ A grep of the whole `.agents/` tree for `pnpm format|oxfmt|format:fix` returns o
 
 1. **Contract over per-run briefs:** hygiene lives in role definitions and skill steps so it applies to every run without orchestrator intervention. (Operator evidence: the per-brief workaround worked but had to be re-added manually per dispatch.)
 2. **Repo-agnostic discovery:** the contract instructs discovering the format command, not naming one. Rationale: OAT ships to arbitrary repos.
+3. **Ignore-patterns rejected as a substitute (operator answer, 2026-07-13):** artifacts must actually be formatted. Project artifacts under `.oat/projects/shared/` are tracked, PR-reviewed content — carving them out creates a permanent unformatted zone inside the diff; and the reviews directory is only one instance of the class (summary/document/pr-final/receive also write tracked markdown outside `.oat/projects/`, where an ignore-pattern can't follow). Consuming repos may add ignore-patterns as local belt-and-suspenders, but the upstream fix is the role contract.
 
 ## Constraints
 
@@ -71,9 +73,9 @@ A grep of the whole `.agents/` tree for `pnpm format|oxfmt|format:fix` returns o
 ## Open Questions
 
 - **Contract placement:** one shared reference document that role definitions and skills cite, vs. duplicating the contract line in each artifact-writing step? (Lightweight design decision — weigh drift risk against skill self-containedness.)
-- **No-format-command repos:** should the contract no-op silently or emit a one-line note when no format command is discoverable? (Question sent to the originating operator; default to silent no-op if unanswered.)
-- **Ignore-pattern alternative:** operator was asked whether adding `.oat/projects/**/reviews/**` to format ignore patterns would have been acceptable; their answer may narrow or reframe the contract's reach.
 - **DoD gate scope:** "relevant DoD gates" beyond formatting — lint? For markdown artifacts formatting is usually the only applicable gate; the contract wording should avoid implying agents run full test suites on prose artifacts.
+
+_Resolved 2026-07-13 (operator answers): no-format-command repos → warn once then no-op; ignore-patterns → rejected as substitute (see Key Decisions 3)._
 
 ## Assumptions
 
