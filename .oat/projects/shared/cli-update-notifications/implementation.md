@@ -392,7 +392,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Revised Final Review Findings
 
 **Review artifact:** `reviews/final-review-2026-07-13.md`
-**Status:** fixes completed; awaiting final re-review
+**Status:** final re-review passed
 
 - Important: make displayed rerun commands platform-aware so Windows `cmd.exe`
   and PowerShell users receive safe, runnable guidance.
@@ -411,6 +411,10 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `summary.md`, `design.md`, the deviation ledger, repository current-state and
   backlog summaries, and all five accepted feature decisions now reflect the
   guarded mutation exception and `0.1.62`.
+- Re-review passed with no Critical, Important, or Medium findings. The sole
+  Minor return-type drift in `design.md` was corrected during closeout.
+
+**Re-review artifact:** `reviews/final-review-2026-07-13-v2.md`
 
 ---
 

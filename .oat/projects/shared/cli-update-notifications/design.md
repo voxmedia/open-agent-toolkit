@@ -168,7 +168,10 @@ with an outdated CLI when a newer stable CLI is already available.
 
 ```typescript
 function isBundledToolMutationCommand(command: Command): boolean;
-function formatRerunCommand(argv: string[], platform: NodeJS.Platform): string;
+function formatRerunCommand(
+  argv: string[],
+  platform: NodeJS.Platform,
+): RerunCommandDisplay;
 async function guardBundledToolMutation(
   options: ToolBundleUpdateGuardOptions,
   dependencies?: Partial<ToolBundleUpdateGuardDependencies>,
