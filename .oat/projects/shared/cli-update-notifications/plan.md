@@ -58,6 +58,8 @@ sets and independent verification, so no parallel group is declared.
 
 - Modify: `packages/cli/src/config/oat-config.ts`
 - Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
 - Modify: `packages/cli/src/commands/config/index.ts`
 - Modify: `packages/cli/src/commands/config/index.test.ts`
 
@@ -65,19 +67,20 @@ sets and independent verification, so no parallel group is declared.
 
 Add focused tests proving that user config normalizes, reads, and writes the
 optional `updateNotifications` boolean; missing values remain enabled by
-default; and config get/set/list/describe expose the user-scoped setting.
+default with `source=default`; explicit false resolves with `source=user`; and
+config get/set/list/describe expose the user-scoped setting.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts`
 Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
 
-Extend `UserConfig` normalization and the config command catalog/set/get paths
-with a user-level `updateNotifications` boolean. Missing means enabled; explicit
-`false` is preserved. The owning command is
+Extend `UserConfig` normalization, effective-config resolution, and the config
+command catalog/set/get paths with a user-level `updateNotifications` boolean.
+Missing resolves to enabled; explicit `false` is preserved. The owning command is
 `oat config set updateNotifications false --user`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts`
 Expected: Test passes (GREEN)
 
 **Step 3: Refactor**
@@ -87,13 +90,13 @@ parsing, and scope validation rather than adding a separate mutation path.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: Focused tests and CLI type-check pass.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
 git commit -m "feat(p01-t01): add update notification preference"
 ```
 
@@ -112,7 +115,8 @@ Cover stable-version comparison, malformed/prerelease suppression, all
 eligibility gates, fresh and stale cache behavior, 24-hour check and 72-hour
 notice TTLs, successful registry metadata, timeouts/errors, atomic cache
 updates, exact notice content, and the never-throw contract using injected
-dependencies.
+dependencies. Prove that a failed refresh records the attempt time and prevents
+another fetch within 24 hours while preserving any previously trusted version.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts`
 Expected: Test fails (RED)
@@ -126,6 +130,9 @@ Create a bootstrap-owned service that:
 - reads `~/.oat/update-check.json`;
 - fetches the encoded npm package `latest` endpoint only when the check TTL is
   stale, using a short abort timeout;
+- records the attempt timestamp after timeout, network, HTTP, malformed JSON,
+  or invalid-version failures so offline users are not retried on every command,
+  while preserving any trusted cached version;
 - accepts only strict stable `major.minor.patch` versions and compares numeric
   tuples;
 - warns at most once per version every 72 hours with the documented npm global
@@ -167,9 +174,10 @@ git commit -m "feat(p01-t02): add cached CLI update notifier"
 **Step 1: Write test (RED)**
 
 Add bootstrap tests proving actionable commands invoke the notifier hook once,
-while help/version paths do not; notifier rejection is contained; normalized
-argv remains unchanged; and command parsing still completes with the original
-exit behavior.
+while help/version paths do not; JSON and non-interactive contexts produce no
+update warning and pass the correct flags to the hook; notifier rejection is
+contained; normalized argv remains unchanged; and command parsing still
+completes with the original exit behavior.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/index.test.ts`
 Expected: Test fails (RED)
@@ -191,8 +199,8 @@ notification behavior in the app service.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/index.test.ts src/app/update-notifier.test.ts`
-Expected: Bootstrap and notifier tests pass together.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/index.test.ts src/app/update-notifier.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Bootstrap/notifier tests and CLI type-check pass together.
 
 **Step 5: Commit**
 
@@ -203,37 +211,28 @@ git commit -m "feat(p02-t01): notify CLI users about stable updates"
 
 ---
 
-### Task p02-t02: Document behavior and prepare the public release
+### Task p02-t02: Document update notification behavior
 
 **Files:**
 
 - Modify: `packages/cli/README.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
-- Modify: `packages/cli/package.json`
-- Modify: `packages/control-plane/package.json`
-- Modify: `packages/docs-config/package.json`
-- Modify: `packages/docs-theme/package.json`
-- Modify: `packages/docs-transforms/package.json`
-- Modify: `pnpm-lock.yaml`
 
 **Step 1: Write validation expectation (RED)**
 
 Confirm the docs do not yet describe the passive notice, TTL behavior, JSON/CI
-suppression, `NO_UPDATE_NOTIFIER`, or the user config opt-out. Confirm release
-validation reports the shipped CLI change without the required lockstep public
-package bump.
+suppression, `NO_UPDATE_NOTIFIER`, or the user config opt-out.
 
-Run: `pnpm release:validate`
-Expected: Release validation identifies missing lockstep version updates.
+Run: `pnpm --filter oat-docs check`
+Expected: Existing docs pass mechanically but lack the new user guidance.
 
 **Step 2: Implement (GREEN)**
 
 Document update-notification behavior and both suppression mechanisms in the
-CLI README and existing config/local-state page. Bump the five lockstep public
-packages by one patch version and update the lockfile.
+CLI README and existing config/local-state page.
 
-Run: `pnpm release:validate`
-Expected: Public package versions and shipped functionality validation pass.
+Run: `pnpm --filter oat-docs check`
+Expected: Documentation formatting and Markdown lint pass.
 
 **Step 3: Refactor**
 
@@ -242,14 +241,61 @@ avoid promising interactive or package-manager-executed updates.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check && pnpm format && pnpm release:validate`
-Expected: CLI tests, lint, type-check, formatting, and release validation pass.
+Run: `pnpm --filter oat-docs check && pnpm format`
+Expected: Docs checks and repository formatting pass.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md
 git commit -m "docs(p02-t02): document CLI update notifications"
+```
+
+---
+
+### Task p02-t03: Prepare the lockstep public package release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Run release validation (RED)**
+
+Run release validation against the implemented shipped CLI change before
+version updates.
+
+Run: `pnpm release:validate`
+Expected: Validation identifies the missing lockstep public package bumps.
+
+**Step 2: Implement (GREEN)**
+
+Bump all five lockstep public packages from `0.1.60` to `0.1.61` and regenerate
+the lockfile without changing dependency ranges.
+
+Run: `pnpm release:validate`
+Expected: Public package version and shipped-functionality validation pass.
+
+**Step 3: Refactor**
+
+Confirm only the five required public package versions and corresponding
+lockfile importer metadata changed.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter oat-docs check && pnpm format && pnpm release:validate`
+Expected: CLI tests, lint, type-check, docs checks, formatting, and release
+validation pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git commit -m "chore(p02-t03): bump lockstep public packages"
 ```
 
 ---
@@ -285,9 +331,9 @@ git commit -m "docs(p02-t02): document CLI update notifications"
 **Summary:**
 
 - Phase 1: 2 tasks - User preference and cached notifier service
-- Phase 2: 2 tasks - Command integration, documentation, and release readiness
+- Phase 2: 3 tasks - Command integration, documentation, and release readiness
 
-**Total: 4 tasks**
+**Total: 5 tasks**
 
 Ready for code review and merge.
 
