@@ -1,5 +1,5 @@
 ---
-oat_current_task: p02-t01
+oat_current_task: p06-t01
 oat_last_commit: 77355db5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ["p04", "p06"] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ["p04"] # Progress: which HiLL checkpoints have been completed (p04 reached 2026-07-13; awaiting operator)
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -37,7 +37,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p01 in progress; HiLL checkpoints `["p04","p06"]`; p05 descoped to org-skills operator handoff
+Implementation — p01–p04 complete and review-passed (Fable cross-family, 2 rounds each); paused at p04 HiLL checkpoint. Awaiting operator: PR #133 merge → 0.1.61 publish; env rebuild; `CURSOR_API_KEY`; org-skills repo (p05 handoff). p06 blocked on publish
 
 ## Artifacts
 
