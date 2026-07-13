@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p03-t02
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 8     | 8/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | in_progress | 2     | 1/2       |
-| Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
+| Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | in_progress | 4     | 1/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 15/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 16/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -201,7 +201,15 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 
 ## Phase 4: Environment provisioning (cloud-agent-env-node repo)
 
-**Status:** pending — tasks p04-t01 … p04-t04 per plan.md (end-state validation hard-blocked on p03-t02)
+**Status:** in_progress — end-state validation hard-blocked on p03-t02
+**Started:** 2026-07-13
+
+### Task p04-t01: Dockerfile — install OAT CLI + cursor-agent
+
+**Status:** completed
+**Commit:** `8180572` (`cloud-agent-env-node`)
+**Outcome:** Added the unpinned latest `@open-agent-toolkit/cli` global install after Node provisioning, installed Cursor Agent through Cursor's official `https://cursor.com/install` path, exposed `~/.local/bin`, and extended the image smoke checks for both CLIs. No credential enters the image.
+**Verification:** Verified here — official current docs and installer were inspected; the installer creates both `agent` and legacy `cursor-agent` entrypoints; `git diff --check` passed. Environment-limited — the Docker daemon is unavailable in this VM, npm still publishes 0.1.60 rather than target 0.1.61, and the current VM has not been rebuilt, so the image build and fresh-VM `oat --version && cursor-agent --version` remain pending.
 
 ## Phase 5: Org layer
 
@@ -252,6 +260,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02 review fix round 1: all seven cross-family findings resolved (`56364e83`, `77abc935`, `7559ec0c`); full CLI suite passed 2,717/2,717, 58 skills validated, five release tarballs validated, provider views remained in sync, and the temp-HOME dry-run reproduction made zero template/script writes.
 - [x] p02 round-2 review: passed; folded m4 follow-up resolved in p03-t01 by refreshing the sync manifest stamp to source CLI version 0.1.61 (`1cc0ba0b`).
 - [x] p03-t01: full release-readiness gate passed — lint 10/10, type-check 10/10, package tests 2,804 plus smoke 123/123, build 5/5, and release validation 5/5; branch pushed through p02, PR creation delegated to root.
+- [x] p04-t01: image provisioning for OAT and Cursor Agent committed in `cloud-agent-env-node` (`8180572`); official installer path and legacy `cursor-agent` symlink verified from current Cursor docs/script, while Docker build and fresh-VM version probes remain environment-limited pending daemon access, OAT 0.1.61 publish, and environment rebuild.
 
 **Decisions:**
 
@@ -278,6 +287,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
 | 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t08 + fix round) | 653 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
 | 3     | Full local gate: lint, type-check, package tests + smoke, build, release validation (p03-t01) | 2,804 package + 123 smoke tests; 10 lint; 10 type-check; 5 build; 5 release packages | 0 | Round-2 review passed; source CLI manifest stamp corrected to 0.1.61; branch pushed through p02 and PR creation delegated to root |
+| 4     | Dockerfile static verification and official installer inspection (p04-t01) | `git diff --check` passed; official install path and both CLI entrypoints confirmed | 0 | Docker build and fresh-VM CLI probes environment-limited pending daemon access, 0.1.61 publish, and environment rebuild |
 
 ## Final Summary (for PR/docs)
 
