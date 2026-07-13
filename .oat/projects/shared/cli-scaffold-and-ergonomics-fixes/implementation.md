@@ -31,10 +31,10 @@ oat_generated: false
 | p03   | pending | 1     | 0/1       |
 | p04   | pending | 1     | 0/1       |
 | p05   | pending | 1     | 0/1       |
-| p06   | pending | 1     | 0/1       |
+| p06   | pending | 2     | 0/2       |
 | p07   | pending | 1     | 0/1       |
 
-**Total:** 0/7 tasks completed
+**Total:** 0/8 tasks completed
 
 ---
 
@@ -98,12 +98,17 @@ oat_generated: false
 
 ---
 
-## Phase 6: Detect stale CLI grammar
+## Phase 6: Strengthen CLI upgrade and gate hygiene
 
 **Status:** pending
 **Started:** -
 
 ### Task p06-t01: Add a minimal stale-invocation doctor check and release callout
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Close stdin for noninteractive gate targets
 
 **Status:** pending
 **Commit:** -
@@ -152,7 +157,28 @@ Chronological log of implementation progress.
 - [ ] p04-t01: Require a summary before closing backlog items
 - [ ] p05-t01: Add decision and consequences inputs to decision creation
 - [ ] p06-t01: Add a minimal stale-invocation doctor check and release callout
+- [ ] p06-t02: Close stdin for noninteractive gate targets
 - [ ] p07-t01: Bump lockstep packages and run completion gates
+
+### Plan Artifact Review Received
+
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-13T223614Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 2
+- Minor: 0
+
+**Artifact edits:**
+
+- I1: Added the generated public-package version manifest to p07 ownership, verification, and staging.
+- M1: Added semantic skill-contract coverage for all three decision-promotion fields to p05.
+- M2: Corrected the `passed` review-status contract.
+- Operator-approved scope addition: Added p06-t02 to close stdin for noninteractive gate targets.
+
+**Next:** Re-run the plan artifact gate; implementation still starts at p01-t01.
 
 **Execution shape:**
 

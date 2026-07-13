@@ -35,7 +35,7 @@ oat_template: false
 
 ## Parallelism
 
-Phase p01 runs first because it fixes the project-creation corruption and is the highest-priority item. Phases p02-p06 then run concurrently: their write sets are disjoint across the plan template, tools update, backlog archive, decision/summary, and doctor/release-note surfaces. They merge in phase order. Phase p07 runs only after all fixes merge because it owns the shared five-package version bump and repository-wide release gate.
+Phase p01 runs first because it fixes the project-creation corruption and is the highest-priority item. Phases p02-p06 then run concurrently: their write sets are disjoint across the plan template, tools update, backlog archive, decision/summary, doctor/release-note, and gate-runner surfaces. Tasks within p06 run sequentially in one isolated worktree. The phases merge in order. Phase p07 runs only after all fixes merge because it owns the shared five-package version bump and repository-wide release gate.
 
 ---
 
@@ -219,23 +219,24 @@ git commit -m "fix(p04-t01): require closed backlog summaries"
 - Modify: `packages/cli/src/commands/decision/index.ts`
 - Modify: `packages/cli/src/commands/decision/index.test.ts`
 - Modify: `packages/cli/src/commands/help-snapshots.test.ts` if the help contract requires an update
+- Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `.agents/skills/oat-project-summary/SKILL.md`
 
 Before editing the canonical skill, rebase onto the latest integration base and inspect concurrent `oat-project-summary` changes, including the `orchestration-run-log` project’s declared surface. Preserve sibling prose and limit this task to the Step 6 decision-promotion clauses.
 
 **Step 1: Write test (RED)**
 
-Add core and command-wiring tests for `--decision <text>` and `--consequences <text>`, asserting those values fill the template sections and flow through `createDecisionRecord`. Add or update help coverage for both flags.
+Add core and command-wiring tests for `--decision <text>` and `--consequences <text>`, asserting those values fill the template sections and flow through `createDecisionRecord`. Add or update help coverage for both flags. Add a focused canonical-skill contract assertion that Step 6 passes `--context`, `--decision`, and `--consequences` in its promotion command.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts`
-Expected: Tests fail because the options do not exist and rendering hardcodes `TODO`.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
+Expected: Tests fail because the options do not exist, rendering hardcodes `TODO`, and the promotion contract does not pass all three sections.
 
 **Step 2: Implement (GREEN)**
 
 Thread optional decision and consequences fields through the command options, record-creation API, and renderer. Update `oat-project-summary` Step 6 to derive context, decision, and consequences from each grounded Key Decision and pass all three flags in the atomic `oat decision new` call. Bump that canonical skill exactly one patch from its then-current version after the rebase.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts`
-Expected: Explicit values populate all three sections and command help exposes both flags.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
+Expected: Explicit values populate all three sections, command help exposes both flags, and the skill promotion path passes all three values.
 
 **Step 3: Refactor**
 
@@ -243,19 +244,19 @@ Keep backward-compatible defaults for callers that omit the new flags, but ensur
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts && pnpm oat:validate-skills`
-Expected: Decision tests, help snapshots, and canonical skill validation pass.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts && pnpm oat:validate-skills`
+Expected: Decision tests, help snapshots, semantic skill-contract coverage, and canonical skill validation pass.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/decision/new.ts packages/cli/src/commands/decision/new.test.ts packages/cli/src/commands/decision/index.ts packages/cli/src/commands/decision/index.test.ts packages/cli/src/commands/help-snapshots.test.ts .agents/skills/oat-project-summary/SKILL.md
+git add packages/cli/src/commands/decision/new.ts packages/cli/src/commands/decision/new.test.ts packages/cli/src/commands/decision/index.ts packages/cli/src/commands/decision/index.test.ts packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/validation/skills.test.ts .agents/skills/oat-project-summary/SKILL.md
 git commit -m "feat(p05-t01): fill decision record sections at creation"
 ```
 
 ---
 
-## Phase 6: Detect stale CLI grammar
+## Phase 6: Strengthen CLI upgrade and gate hygiene
 
 ### Task p06-t01: Add a minimal stale-invocation doctor check and release callout
 
@@ -298,6 +299,43 @@ git add packages/cli/src/commands/doctor/stale-invocations.ts packages/cli/src/c
 git commit -m "feat(p06-t01): detect stale CLI invocation grammar"
 ```
 
+### Task p06-t02: Close stdin for noninteractive gate targets
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+Add focused gate-runner coverage asserting that an exec target with captured stdout/stderr receives an explicit closed/ignored stdin rather than inheriting the parent stream. Preserve existing target selection, output forwarding, timeout, and liveness behavior.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+Expected: The regression fails because captured gate execution currently maps `stdio: 'pipe'` to `['inherit', 'pipe', 'pipe']`.
+
+**Step 2: Implement (GREEN)**
+
+Make the noninteractive gate stdin policy explicit in the process-launch boundary: gate prompts remain argv-based, stdin is ignored/closed, and stdout/stderr remain piped for diagnostics and liveness tracking. Do not encode shell redirection in target configuration or alter review instructions.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+Expected: A Codex-style target can begin immediately without waiting for parent stdin EOF, and existing gate behavior remains green.
+
+**Step 3: Refactor**
+
+Keep input and output policies independently legible so future interactive process uses cannot accidentally inherit the noninteractive gate default.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Focused gate tests and CLI type checking pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+git commit -m "fix(p06-t02): close stdin for gate targets"
+```
+
 ---
 
 ## Phase 7: Prepare and validate the release
@@ -311,6 +349,7 @@ git commit -m "feat(p06-t01): detect stale CLI invocation grammar"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `pnpm-lock.yaml` only if pnpm updates workspace metadata
 
 **Step 1: Establish the release version**
@@ -329,12 +368,12 @@ Expected: All five public packages build, pack, satisfy metadata/content contrac
 
 **Step 4: Verify working-tree release hygiene**
 
-Confirm only expected source, test, docs, project-artifact, and five-package version files changed; confirm no derived provider-skill copies or sibling-project prose were swept in. Review any docs build-generated index delta and include it only when it follows from the authored contributor-doc change. Recheck that `oat-project-summary` preserves concurrent changes and carries exactly one patch bump relative to the final base.
+Confirm only expected source, test, docs, project-artifact, five-package version files, and the generated public-package version manifest changed; confirm no derived provider-skill copies or sibling-project prose were swept in. Assert `packages/cli/assets/public-package-versions.json` matches the final common package version after build/release validation. Review any docs build-generated index delta and include it only when it follows from the authored contributor-doc change. Recheck that `oat-project-summary` preserves concurrent changes and carries exactly one patch bump relative to the final base.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
 git commit -m "chore(p07-t01): bump public packages for CLI fixes"
 ```
 
@@ -344,19 +383,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| p06    | code     | pending  | -          | -                                                  |
-| p07    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-13T223614Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| p04    | code     | pending         | -          | -                                                           |
+| p05    | code     | pending         | -          | -                                                           |
+| p06    | code     | pending         | -          | -                                                           |
+| p07    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | fixes_completed | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T223614Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -365,7 +404,7 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+- `passed`: re-review run and recorded as passing (no unresolved Critical/Important/Medium findings and all applicable final-scope disposition gates satisfied)
 
 ---
 
@@ -378,10 +417,10 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 - Phase 3: 1 task - Improve tools update no-args feedback
 - Phase 4: 1 task - Prevent placeholder backlog summaries
 - Phase 5: 1 task - Fill decision records atomically
-- Phase 6: 1 task - Detect stale CLI grammar
+- Phase 6: 2 tasks - Strengthen CLI upgrade and gate hygiene
 - Phase 7: 1 task - Prepare and validate the release
 
-**Total: 7 tasks**
+**Total: 8 tasks**
 
 Ready for code review and merge.
 
