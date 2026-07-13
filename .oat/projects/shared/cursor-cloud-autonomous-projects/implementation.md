@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 3/6       |
+| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 4/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | pending     | 8     | 0/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 3/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 4/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -71,8 +71,10 @@ _Pending._
 
 ### Task p01-t04: Amend oat-project-quick-start — bundle gate scope + autonomy gates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `5a98859f`
+**Outcome:** Expanded the quick-start exit gate to review the discovery, optional lightweight-design, and plan bundle while preserving legacy plan-only configurations; added strictly autonomous resolutions for inherited dirty trees, design-depth selection, and requirements confirmation; bumped the skill to 2.2.0.
+**Verification:** Passed — `pnpm oat:validate-skills` validated 56 skills; project sync required no generated changes and provider status reported all views in sync.
 
 ### Task p01-t05: Amend document / pr-final / summary + summary template
 
@@ -130,7 +132,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p01-t01: autonomy contract and gate inventory committed (`113c8f6f`); recursive fifteen-root prompt scan passed with zero unmapped sites.
 - [x] p01-t02: implement autonomy amendments committed (`526a009f`); skill validation, smoke fixture suite, and provider sync status passed.
 - [x] p01-t03: discover/design gate hooks committed (`0e8464c7`); skill validation and section-presence checks passed.
-- [ ] p01-t04: amend quick-start bundle gate and autonomy behavior.
+- [x] p01-t04: quick-start bundle gate and autonomous resolutions committed (`5a98859f`); skill validation and provider sync status passed.
 
 **Decisions:**
 
@@ -153,7 +155,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; provider sync status (p01-t01..t03) | 74 | 0 | Inventory verification, two skill-validation runs, 70 smoke tests, and discover/design section check; provider views in sync |
+| 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; provider sync status (p01-t01..t04) | 75 | 0 | Inventory verification, three skill-validation runs, 70 smoke tests, discover/design section check, and quick-start validation; provider views in sync |
 
 ## Final Summary (for PR/docs)
 
