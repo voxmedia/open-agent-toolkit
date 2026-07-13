@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p02', 'p03', 'p04', 'p05', 'p06']]
 oat_phase_review_gate:
   enabled: true
@@ -16,7 +16,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: cli-scaffold-and-ergonomics-fixes
@@ -344,19 +344,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| p06    | code     | pending | -    | -        |
-| p07    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact                    |
+| ------ | -------- | ------- | ---------- | --------------------------- |
+| p01    | code     | pending | -          | -                           |
+| p02    | code     | pending | -          | -                           |
+| p03    | code     | pending | -          | -                           |
+| p04    | code     | pending | -          | -                           |
+| p05    | code     | pending | -          | -                           |
+| p06    | code     | pending | -          | -                           |
+| p07    | code     | pending | -          | -                           |
+| final  | code     | pending | -          | -                           |
+| spec   | artifact | pending | -          | -                           |
+| design | artifact | pending | -          | -                           |
+| plan   | artifact | passed  | 2026-07-13 | in-memory structured review |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

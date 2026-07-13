@@ -24,84 +24,98 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status  | Tasks | Completed |
+| ----- | ------- | ----- | --------- |
+| p01   | pending | 1     | 0/1       |
+| p02   | pending | 1     | 0/1       |
+| p03   | pending | 1     | 0/1       |
+| p04   | pending | 1     | 0/1       |
+| p05   | pending | 1     | 0/1       |
+| p06   | pending | 1     | 0/1       |
+| p07   | pending | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-07-13
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/7 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Repair project scaffolding
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Render and validate real scaffold templates
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Clarify plan task-shape guidance
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Document TDD as the default, not a validator requirement
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Improve tools update no-args feedback
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Suggest the exact all-tools update command
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Prevent placeholder backlog summaries
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Require a summary before closing backlog items
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Fill decision records atomically
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Add decision and consequences inputs to decision creation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Detect stale CLI grammar
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Add a minimal stale-invocation doctor check and release callout
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 7: Prepare and validate the release
+
+**Status:** pending
+**Started:** -
+
+### Task p07-t01: Bump lockstep packages and run completion gates
 
 **Status:** pending
 **Commit:** -
@@ -130,36 +144,22 @@ Chronological log of implementation progress.
 
 ### 2026-07-13
 
-**Session Start:** {time}
+**Planning handoff:**
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Render and validate real scaffold templates
+- [ ] p02-t01: Document TDD as the default, not a validator requirement
+- [ ] p03-t01: Suggest the exact all-tools update command
+- [ ] p04-t01: Require a summary before closing backlog items
+- [ ] p05-t01: Add decision and consequences inputs to decision creation
+- [ ] p06-t01: Add a minimal stale-invocation doctor check and release callout
+- [ ] p07-t01: Bump lockstep packages and run completion gates
 
-**What changed (high level):**
+**Execution shape:**
 
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-13
-
-**Session Start:** {time}
-
-{Continue log...}
+- Run p01 first.
+- Run p02-p06 concurrently in isolated worktrees and merge in plan order.
+- Run p07 after all fixes merge.
+- Independent phase gate review is enabled for p01 and p06.
 
 ---
 
@@ -177,8 +177,13 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
+| p02   | -         | -      | -      | -        |
+| p03   | -         | -      | -      | -        |
+| p04   | -         | -      | -      | -        |
+| p05   | -         | -      | -      | -        |
+| p06   | -         | -      | -      | -        |
+| p07   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
@@ -206,5 +211,5 @@ Track test execution during implementation.
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
+- State: `state.md`
