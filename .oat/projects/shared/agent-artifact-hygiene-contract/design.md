@@ -89,7 +89,7 @@ All role and skill edits occur under `.agents/`. Each changed canonical skill re
 
 ### Dispatch-Ladder Preflight Hardening
 
-The shared `oat-project-plan-writing` contract must inspect the effective dispatch ladder across shared, repo-local, and user configuration before offering adoption. A `dispatch-ceiling resolve` result with `matrix: null` can mean only that the project has no selected ceiling; it is not evidence that candidate ladders are absent. Adoption is offered only when the independent effective-config check finds missing or incomplete cells. When ladders are complete but policy is unresolved, planning skips adoption and asks only for the project-specific named ceiling.
+The shared `oat-project-plan-writing` contract must run `oat config list --json` once and inspect its resolved provider/tier entries before offering adoption. That CLI is the effective-config boundary: it merges shared, repo-local, user, and default configuration and reports source attribution, so agents must not read each raw config surface themselves. A `dispatch-ceiling resolve` result with `matrix: null` can mean only that the project has no selected ceiling; it is not evidence that candidate ladders are absent. Adoption is offered only when the effective-config output contains missing or incomplete ladder cells. When ladders are complete but policy is unresolved, planning skips adoption and asks only for the project-specific named ceiling.
 
 ## Testing Strategy
 
