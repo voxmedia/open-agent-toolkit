@@ -42,7 +42,7 @@ Additional useful entry points:
 
 ## Update Notifications
 
-On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. OAT checks at most once every 24 hours, repeats a notice for the same version at most once every 72 hours, and never prompts or runs an update for you. JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations are suppressed.
+On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice. OAT never prompts or runs an update for you. JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations are suppressed.
 
 Disable checks for one process with `NO_UPDATE_NOTIFIER=1`, or persist the user-level preference:
 

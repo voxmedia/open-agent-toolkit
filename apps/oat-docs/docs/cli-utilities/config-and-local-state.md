@@ -115,7 +115,7 @@ Use `oat config dump --json` when you need the whole resolved config in one mach
 
 ### Update notifications
 
-OAT can passively report when npm's stable `latest` CLI version is newer during an ordinary interactive command run. It checks at most once every 24 hours and repeats a notice for the same version at most once every 72 hours. The notice only shows the command you can run yourself; OAT does not prompt or execute an update.
+OAT can passively report when npm's stable `latest` CLI version is newer during an ordinary interactive command run. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice. The notice only shows the command you can run yourself; OAT does not prompt or execute an update.
 
 Checks and notices are skipped for JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations. Set `NO_UPDATE_NOTIFIER=1` to suppress the check for one process, or disable it persistently in user config:
 
