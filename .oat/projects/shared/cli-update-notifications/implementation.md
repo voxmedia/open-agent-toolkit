@@ -353,7 +353,7 @@ oat_generated: false
 - Documentation was aligned, full CLI/docs/release checks passed, and
   independent p-rev2 review returned no findings.
 
-**Review artifact:** `reviews/p-rev2-review-2026-07-13T215721Z.md`
+**Review artifact:** `reviews/archived/p-rev2-review-2026-07-13T215721Z.md`
 
 ---
 
@@ -485,9 +485,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: 2/2 user-selected Fable review fix tasks completed; p-rev2 review
   passed with no findings
 
-| Phase  | Implementer        | Tasks | Review                                        | Result |
-| ------ | ------------------ | ----- | --------------------------------------------- | ------ |
-| p-rev2 | `gpt-5.6-sol-high` | 2/2   | `reviews/p-rev2-review-2026-07-13T215721Z.md` | passed |
+| Phase  | Implementer        | Tasks | Review                                                 | Result |
+| ------ | ------------------ | ----- | ------------------------------------------------------ | ------ |
+| p-rev2 | `gpt-5.6-sol-high` | 2/2   | `reviews/archived/p-rev2-review-2026-07-13T215721Z.md` | passed |
 
 **Outstanding items:**
 

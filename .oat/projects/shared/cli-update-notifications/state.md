@@ -18,6 +18,15 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_post_implement_sequence:
+  status: pre_approval
+  final_phase: p-rev3
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary, document]
+  approval: pending
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   providers: # present for capped managed policies; omitted for uncapped/inherit
 #     codex: high # low|medium|high|xhigh
@@ -31,24 +40,24 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/143' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T16:00:20.521Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T23:22:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T23:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cli-update-notifications
 
-**Status:** Artifact alignment complete
+**Status:** Preparing revised PR handoff
 **Started:** 2026-07-13
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — p-rev3 complete; refreshing documentation and PR handoff.
+Implementation — p-rev3 complete; documentation synced; refreshing PR handoff.
 
 ## Artifacts
 
@@ -85,6 +94,7 @@ Implementation — p-rev3 complete; refreshing documentation and PR handoff.
 - ✓ Final Fable re-review received
 - ✓ p-rev3 artifact alignment completed
 - ✓ Re-review explicitly skipped by user after deterministic verification
+- ✓ End-of-revision documentation sync completed
 
 ## Blockers
 
@@ -92,4 +102,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-document`, refresh PR handoff, and return to final approval.
+Refresh PR handoff and return to final approval.
