@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p02-t02
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
-| Phase 2 (p02): New OAT skills + user-scope installability      | in_progress | 8     | 1/8       |
+| Phase 2 (p02): New OAT skills + user-scope installability      | in_progress | 8     | 2/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 7/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 8/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -120,6 +120,13 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 **Outcome:** Created a uniquely named canonical user-scope probe. OAT's source CLI discovered it under `~/.agents/skills`; direct Cursor Cloud model auto-surfacing could not be refreshed or verified in this run, so p02-t03 will use absolute-path reads as the primary contingency.
 **Verification:** Passed via the plan's documented-equivalent-evidence path — `pnpm run cli:source -- tools list --scope user --json` reported the probe as a user-scope custom skill at version 1.0.0; the evidence limitation and contingency decision are recorded in `oat-execution-learnings.md`.
 
+### Task p02-t02: Author oat-project-autonomous SKILL.md
+
+**Status:** completed
+**Commit:** `37b15167`
+**Outcome:** Added the explicitly invoked, provider-agnostic autonomous orchestrator with session-only policy activation, state-aware resume, review-density mode selection, external research and learnings contracts, pre-launch review routing, PR topology, implement-owned closeout, boundary reporting, and restart semantics; vendored the gate inventory and registered the skill in the workflows bundle/manifest per the amended plan.
+**Verification:** Passed — `pnpm oat:validate-skills` validated 57 skills; the amended CLI contract suite passed 12 files and 161 tests; SKILL.md is 438 lines and the gate-inventory symlink resolves.
+
 ## Phase 3: OAT release (publish boundary)
 
 **Status:** pending — tasks p03-t01 … p03-t02 per plan.md (p03-t02 is an operator boundary: merge → pipeline publish)
@@ -166,6 +173,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p01 review fix round 1: bundle vendoring, contract pins, closeout assertion, approval provenance, scan baseline, and docs link fixed (`d390ca50`); focused contracts, full CLI suite, skill validation, and docs build passed.
 - [x] p01 review round 2: PASS; non-blocking Medium M2 fixed (`3e3cc9a7`) by rendering autonomy-contract locations as code paths instead of a docs-site hyperlink; docs build and rendered-page href check passed.
 - [x] p02-t01: user-scope probe evidence committed (`5443ef90`); OAT-level discovery passed, direct Cursor Cloud auto-surfacing remained unverified without a fresh run, and the p02-t03 absolute-path-primary contingency was activated.
+- [x] p02-t02: autonomous orchestrator skill and authoring-time workflows registration committed (`37b15167`); skill validation and all 161 amended CLI contract tests passed.
 
 **Decisions:**
 
@@ -189,7 +197,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
-| 2     | User-scope skill loading probe (p02-t01) | 1 | 0 | OAT source CLI discovered the canonical `~/.agents/skills` probe; Cursor Cloud direct auto-surfacing remained environment-limited and triggered the planned contingency |
+| 2     | User-scope skill loading probe; skill validation; amended skill/bundle contracts (p02-t01..t02) | 162 | 0 | OAT source CLI discovered the canonical user probe; 57 skills validated; 12 CLI contract files and 161 tests passed for the autonomous skill and bundle registration |
 
 ## Final Summary (for PR/docs)
 
