@@ -44,7 +44,9 @@ vi.mock('./commands', () => ({
 
 import { isEntrypoint, main, normalizeArgv } from './index';
 
-function commandContext(options: { json?: boolean; interactive?: boolean } = {}) {
+function commandContext(
+  options: { json?: boolean; interactive?: boolean } = {},
+) {
   const json = options.json ?? false;
   return {
     scope: 'all',
@@ -85,7 +87,10 @@ describe('main', () => {
     registerCommandsMock.mockReset();
     registerCommandsMock.mockImplementation((program: Command) => {
       program
-        .configureOutput({ writeErr: () => undefined, writeOut: () => undefined })
+        .configureOutput({
+          writeErr: () => undefined,
+          writeOut: () => undefined,
+        })
         .exitOverride();
       program.command('status').action(actionMock);
     });

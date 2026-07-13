@@ -4,10 +4,7 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import {
-  buildCommandContext,
-  type GlobalOptions,
-} from '@app/command-context';
+import { buildCommandContext, type GlobalOptions } from '@app/command-context';
 import { maybeNotifyAboutUpdate } from '@app/update-notifier';
 import { OAT_VERSION } from '@shared/oat-version';
 

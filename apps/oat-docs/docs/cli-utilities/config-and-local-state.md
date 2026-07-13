@@ -113,6 +113,18 @@ Use `oat config` for repo runtime config inspection and supported key mutation.
 
 Use `oat config dump --json` when you need the whole resolved config in one machine-readable response rather than a single key or a human-oriented list view.
 
+### Update notifications
+
+OAT can passively report when npm's stable `latest` CLI version is newer during an ordinary interactive command run. It checks at most once every 24 hours and repeats a notice for the same version at most once every 72 hours. The notice only shows the command you can run yourself; OAT does not prompt or execute an update.
+
+Checks and notices are skipped for JSON, non-interactive, CI, test, source-development, and ephemeral package-runner invocations. Set `NO_UPDATE_NOTIFIER=1` to suppress the check for one process, or disable it persistently in user config:
+
+```bash
+oat config set updateNotifications false --user
+```
+
+The preference defaults to `true`; run the same command with `true` to re-enable it. Cached check and notice timestamps live in `~/.oat/update-check.json`, separate from the user-authored preference in `~/.oat/config.json`.
+
 Dispatch policy keys are part of this surface, but provider-specific generation
 still belongs to provider commands. Use `oat config describe
 workflow.dispatchPolicy.policy` to inspect capped managed, managed uncapped,
