@@ -1050,6 +1050,12 @@
       "path": "reviews/archived/final-review-2026-07-13T004430Z.md"
     },
     {
+      "committedHistory": {
+        "commitSha": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+        "contentHash": "af942b4d78e60602239157b5a34952e366de9b56174e9fcce1bd374ebe7caae2",
+        "matchesHead": true,
+        "reachableFromHead": true
+      },
       "contentHash": "af942b4d78e60602239157b5a34952e366de9b56174e9fcce1bd374ebe7caae2",
       "corroboration": {},
       "frontmatter": {
@@ -1061,6 +1067,12 @@
       "path": "reviews/p01-review-2026-07-13T003400Z.md"
     },
     {
+      "committedHistory": {
+        "commitSha": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+        "contentHash": "304b3b2e3d9a190bc4488b6fd8d39a977c5bae441310cf06379e247f6fc72332",
+        "matchesHead": true,
+        "reachableFromHead": true
+      },
       "contentHash": "304b3b2e3d9a190bc4488b6fd8d39a977c5bae441310cf06379e247f6fc72332",
       "corroboration": {},
       "frontmatter": {
@@ -1072,6 +1084,12 @@
       "path": "reviews/p02-review-2026-07-13T003400Z.md"
     },
     {
+      "committedHistory": {
+        "commitSha": "1af9844608caa84b75c13f12d98b14b8b71433e7",
+        "contentHash": "8206b0aa92f90269c70f13075c2f4f6ec17958981cf05b6b116afa4eb376e74a",
+        "matchesHead": true,
+        "reachableFromHead": true
+      },
       "contentHash": "8206b0aa92f90269c70f13075c2f4f6ec17958981cf05b6b116afa4eb376e74a",
       "corroboration": {},
       "frontmatter": {

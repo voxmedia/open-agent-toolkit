@@ -456,6 +456,13 @@ test('collects a deterministic normalized evidence bundle', async () => {
     );
     assert.deepEqual(bundle.reviews, [
       {
+        committedHistory: {
+          commitSha: run.baselineCommitSha,
+          contentHash:
+            'de6a26c69e3b855dfe8525a05272a831b492c29946810716f59b088c435e2d95',
+          matchesHead: true,
+          reachableFromHead: true,
+        },
         contentHash:
           'de6a26c69e3b855dfe8525a05272a831b492c29946810716f59b088c435e2d95',
         corroboration: {
@@ -627,6 +634,8 @@ test('collector output drives five-task assertions and a bound report', async ()
 
   try {
     await rm(join(run.worktreePath, 'workspace/evidence/dispatch.jsonl'));
+    await rm(gateDirectory, { force: true, recursive: true });
+    await mkdir(gateDirectory, { recursive: true });
     for (const taskId of taskIds) {
       if (taskId === 'p03-t01') {
         for (const child of run.children) {
@@ -708,6 +717,18 @@ test('collector output drives five-task assertions and a bound report', async ()
           worktreePath: run.worktreePath,
         });
       }
+      await writeFile(
+        join(reviewDirectory, `${phase}-review.md`),
+        `---\noat_review_scope: ${phase}\noat_review_type: code\noat_review_invocation: auto\noat_project: .oat/projects/smoke-fixture\n---\n\n# ${phase} Review\n`,
+      );
+      await git(
+        ['add', '--', `.oat/projects/smoke-fixture/reviews/${phase}-review.md`],
+        run.worktreePath,
+      );
+      await git(
+        ['commit', '-m', `chore: record fixture ${phase} review`],
+        run.worktreePath,
+      );
     }
 
     for (const scope of ['final']) {
@@ -790,22 +811,24 @@ test('collector output drives five-task assertions and a bound report', async ()
     );
     const archivedReviewDirectory = join(reviewDirectory, 'archived');
     await mkdir(archivedReviewDirectory, { recursive: true });
-    for (const scope of ['p03', 'final']) {
-      await rename(
-        join(reviewDirectory, `${scope}-review.md`),
-        join(archivedReviewDirectory, `${scope}-review.md`),
-      );
-    }
+    await rename(
+      join(reviewDirectory, 'final-review.md'),
+      join(archivedReviewDirectory, 'final-review.md'),
+    );
     let plan = await readFile(join(run.fixtureProjectPath, 'plan.md'), 'utf8');
-    for (const scope of ['p03', 'final']) {
+    for (const scope of ['p01', 'p02', 'p03']) {
       plan = plan.replace(
         new RegExp(
           `^\\| ${scope}\\s+\\| code\\s+\\| pending \\| -\\s+\\| -\\s+\\|$`,
           'mu',
         ),
-        `| ${scope} | code | passed | 2026-07-11 | reviews/archived/${scope}-review.md |`,
+        `| ${scope} | code | passed | 2026-07-11 | reviews/${scope}-review.md |`,
       );
     }
+    plan = plan.replace(
+      /^\| final\s+\| code\s+\| pending \| -\s+\| -\s+\|$/mu,
+      '| final | code | passed | 2026-07-11 | reviews/archived/final-review.md |',
+    );
     await writeFile(join(run.fixtureProjectPath, 'plan.md'), plan);
     await git(
       ['add', '--', '.oat/projects/smoke-fixture/plan.md'],

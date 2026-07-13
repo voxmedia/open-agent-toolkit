@@ -2,8 +2,8 @@
 
 **Scenario:** implement
 **Status:** passed
-**Assertions:** 9 passed / 0 failed
-**Bundle SHA-256:** 96e5b76d40d82370a4c207d67e9ae6a50b669de76bfdb69d12b9ead4dca0e78b
+**Assertions:** 10 passed / 0 failed
+**Bundle SHA-256:** 0bf523ad84e1e776b7e19bf259f4f959a3dfe7274e6f4c4779b70209e9476328
 **Authority:** `report.json` is authoritative; this Markdown is a derived view.
 
 | Assertion                                 | Severity  | Status | Description                                                                                                                                     |
@@ -14,6 +14,7 @@
 | implement-fixture-markers-and-commits     | important | passed | Every task has exactly one fixture marker and one exact task commit.                                                                            |
 | implement-parallel-isolation              | important | passed | Parallel phases used disjoint writes, separate worktrees, and flat branch names.                                                                |
 | implement-fan-in-reconciliation           | important | passed | Fan-in completed after all declared dependencies.                                                                                               |
+| implement-phase-review-acceptance-bound   | important | passed | Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history.                  |
 | review-gate-corroborated-implementation   | important | passed | Every required gate review exactly matches gate-owned invocation and corroboration evidence.                                                    |
 | review-disposition-durable-implementation | important | passed | Every required review has a durable artifact commit and terminal plan row.                                                                      |
 | implement-runtime-identity-status         | important | passed | Runtime identity is recorded or explicitly marked not-reported.                                                                                 |
@@ -95,6 +96,15 @@
     "p02-t02": 6,
     "p03-t01": 10
   }
+}
+```
+
+### implement-phase-review-acceptance-bound
+
+```json
+{
+  "failingScopes": [],
+  "requiredScopes": ["p01", "p02", "p03"]
 }
 ```
 

@@ -22,56 +22,72 @@ const taskIds = ['p01-t01', 'p01-t02', 'p02-t01', 'p02-t02', 'p03-t01'];
 function reviewEvidence(scope) {
   const runId = `${scope}-gate`;
   const activePath = `reviews/${scope}-review.md`;
-  const path = `reviews/archived/${scope}-review.md`;
+  const phaseReview = /^p\d{2}$/u.test(scope);
+  const path = phaseReview ? activePath : `reviews/archived/${scope}-review.md`;
   const contentHash = `${scope}-review-hash`;
   return {
-    gate: {
-      activeArtifactPath: activePath,
-      archived: true,
-      artifactPath: path,
-      artifactHash: contentHash,
-      blocking: false,
-      committedArtifact: {
+    gate: phaseReview
+      ? null
+      : {
+          activeArtifactPath: activePath,
+          archived: true,
+          artifactPath: path,
+          artifactHash: contentHash,
+          blocking: false,
+          committedArtifact: {
+            commitSha: `artifact-${scope}`,
+            contentHash,
+            matchesArchived: true,
+          },
+          configuredInvocation: {
+            effort: 'provider-default',
+            model: 'fable',
+            source: 'exec-target-config',
+          },
+          corroboration: {
+            invocation: 'matched',
+            project: 'matched',
+            run: 'matched',
+          },
+          invocation: 'gate',
+          invocationConsistent: true,
+          outcome: 'review_completed_gate_passed',
+          projectPath: '.oat/projects/smoke-fixture',
+          receiveCommit: { rowMatched: true, sha: `receive-${scope}` },
+          receiveEligible: true,
+          runId,
+          runtime: 'claude',
+          scope,
+          status: 'ok',
+          target: 'claude-fable',
+        },
+    review: {
+      committedHistory: {
         commitSha: `artifact-${scope}`,
         contentHash,
-        matchesArchived: true,
+        matchesHead: true,
+        reachableFromHead: true,
       },
-      configuredInvocation: {
-        effort: 'provider-default',
-        model: 'fable',
-        source: 'exec-target-config',
-      },
-      corroboration: {
-        invocation: 'matched',
-        project: 'matched',
-        run: 'matched',
-      },
-      invocation: 'gate',
-      invocationConsistent: true,
-      outcome: 'review_completed_gate_passed',
-      projectPath: '.oat/projects/smoke-fixture',
-      receiveCommit: { rowMatched: true, sha: `receive-${scope}` },
-      receiveEligible: true,
-      runId,
-      runtime: 'claude',
-      scope,
-      status: 'ok',
-      target: 'claude-fable',
-    },
-    review: {
       contentHash,
-      frontmatter: {
-        oat_gate_run_id: runId,
-        oat_gate_runtime: 'claude',
-        oat_gate_target: 'claude-fable',
-        oat_invocation_model: 'fable',
-        oat_invocation_reasoning_effort: 'provider-default',
-        oat_invocation_source: 'exec-target-config',
-        oat_project: '.oat/projects/smoke-fixture',
-        oat_review_invocation: 'gate',
-        oat_review_scope: scope,
-        oat_review_type: 'code',
-      },
+      frontmatter: phaseReview
+        ? {
+            oat_project: '.oat/projects/smoke-fixture',
+            oat_review_invocation: 'auto',
+            oat_review_scope: scope,
+            oat_review_type: 'code',
+          }
+        : {
+            oat_gate_run_id: runId,
+            oat_gate_runtime: 'claude',
+            oat_gate_target: 'claude-fable',
+            oat_invocation_model: 'fable',
+            oat_invocation_reasoning_effort: 'provider-default',
+            oat_invocation_source: 'exec-target-config',
+            oat_project: '.oat/projects/smoke-fixture',
+            oat_review_invocation: 'gate',
+            oat_review_scope: scope,
+            oat_review_type: 'code',
+          },
       path,
     },
     row: {
@@ -89,7 +105,9 @@ function productionShape(bundle) {
   const rootRequestId = 'smoke-root-request';
   const reviewScopes = [
     ...(scenario === 'plan-review' || scenario === 'full' ? ['plan'] : []),
-    ...(scenario === 'implement' || scenario === 'full' ? ['final'] : []),
+    ...(scenario === 'implement' || scenario === 'full'
+      ? ['p01', 'p02', 'p03', 'final']
+      : []),
   ];
   const evidence = reviewScopes.map(reviewEvidence);
   const taskCommits = taskIds.map((taskId, index) => {
@@ -110,14 +128,14 @@ function productionShape(bundle) {
     };
   });
   const artifactCommits = evidence.map((entry) => ({
-    files: [`.oat/projects/smoke-fixture/${entry.gate.activeArtifactPath}`],
+    files: [`.oat/projects/smoke-fixture/${entry.review.path}`],
     parents: [],
-    sha: entry.gate.committedArtifact.commitSha,
+    sha: entry.review.committedHistory.commitSha,
     subject: `chore: record ${entry.review.frontmatter.oat_review_scope} review`,
   }));
   const receiveCommits = evidence.map((entry) => ({
     files: [
-      `.oat/projects/smoke-fixture/${entry.gate.activeArtifactPath}`,
+      `.oat/projects/smoke-fixture/${entry.review.path}`,
       '.oat/projects/smoke-fixture/plan.md',
     ],
     parents: [],
@@ -238,7 +256,7 @@ function productionShape(bundle) {
         })),
       phase,
     })),
-    gates: evidence.map((entry) => entry.gate),
+    gates: evidence.map((entry) => entry.gate).filter(Boolean),
     git: {
       branchHistories: [
         {
@@ -329,8 +347,8 @@ function failedIds(report) {
 test('scenario profiles pass their complete golden evidence', async () => {
   const expectations = {
     'plan-review': 5,
-    implement: 9,
-    full: 13,
+    implement: 10,
+    full: 14,
   };
 
   for (const [scenario, assertionCount] of Object.entries(expectations)) {
@@ -395,10 +413,67 @@ test('implement profile detects incomplete dispatch, ceiling, isolation, fan-in,
     'implement-fixture-markers-and-commits',
     'implement-parallel-isolation',
     'implement-fan-in-reconciliation',
+    'implement-phase-review-acceptance-bound',
     'review-gate-corroborated-implementation',
     'review-disposition-durable-implementation',
     'implement-runtime-identity-status',
   ]);
+});
+
+test('phase-review acceptance independently rejects row, artifact, status, path, and scope defects', async () => {
+  const cases = [
+    {
+      mutate(bundle) {
+        bundle.fixture.reviewRows = bundle.fixture.reviewRows.filter(
+          (row) => row.scope !== 'p01',
+        );
+      },
+      name: 'missing row',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews = bundle.reviews.filter(
+          (review) => review.frontmatter.oat_review_scope !== 'p01',
+        );
+      },
+      name: 'missing artifact',
+    },
+    {
+      mutate(bundle) {
+        bundle.fixture.reviewRows.find((row) => row.scope === 'p01').status =
+          'fixes_completed';
+      },
+      name: 'non-passed status',
+    },
+    {
+      mutate(bundle) {
+        bundle.fixture.reviewRows.find((row) => row.scope === 'p01').artifact =
+          'reviews/other.md';
+      },
+      name: 'mismatched artifact path',
+    },
+    {
+      mutate(bundle) {
+        bundle.reviews.find(
+          (review) => review.frontmatter.oat_review_scope === 'p01',
+        ).frontmatter.oat_review_scope = 'p99';
+      },
+      name: 'mismatched artifact scope',
+    },
+  ];
+
+  for (const entry of cases) {
+    const bundle = await readGolden('implement');
+    entry.mutate(bundle);
+    assert.equal(
+      evaluateEvidence(bundle).assertions.find(
+        (assertion) =>
+          assertion.id === 'implement-phase-review-acceptance-bound',
+      ).status,
+      'failed',
+      entry.name,
+    );
+  }
 });
 
 test('provider-specific targets preserve Codex roles and model axes separately', async () => {

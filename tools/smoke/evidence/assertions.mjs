@@ -189,6 +189,67 @@ function planReviewAssertions(bundle) {
   ];
 }
 
+function phaseReviewAcceptanceAssertion(bundle, phaseReviewDispatches) {
+  const reviews = bundle.reviews ?? [];
+  const rows = bundle.fixture?.reviewRows ?? [];
+  const currentCommits = bundle.git?.currentBranchCommits ?? [];
+  const failures = [];
+
+  for (const phase of EXPECTED_PHASE_IDS) {
+    const dispatches = phaseReviewDispatches.filter(
+      (dispatch) =>
+        dispatch.scope === phase &&
+        dispatch.launch?.accepted === true &&
+        dispatch.launch?.outcome === 'completed',
+    );
+    const phaseRows = rows.filter((row) => row.scope === phase);
+    const phaseReviews = reviews.filter(
+      (review) => review.frontmatter?.oat_review_scope === phase,
+    );
+    const row = phaseRows[0];
+    const review = phaseReviews[0];
+    const repositoryPath = review
+      ? `.oat/projects/smoke-fixture/${review.path}`
+      : null;
+    const artifactCommit = currentCommits.find(
+      (commit) => commit.sha === review?.committedHistory?.commitSha,
+    );
+    const directRoot =
+      dispatches[0]?.schemaVersion !== 2 ||
+      (dispatches[0]?.ownership?.launcherRole === 'project-root' &&
+        dispatches[0]?.ownership?.parentScope === 'project' &&
+        dispatches[0]?.ownership?.parentRequestId ===
+          bundle.manifest?.runIdentity);
+    const committedHistory = review?.committedHistory;
+
+    if (
+      dispatches.length !== 1 ||
+      !directRoot ||
+      phaseRows.length !== 1 ||
+      row?.status !== 'passed' ||
+      row?.type !== 'code' ||
+      phaseReviews.length !== 1 ||
+      row?.artifact !== review?.path ||
+      review?.frontmatter?.oat_review_type !== 'code' ||
+      review?.frontmatter?.oat_review_invocation !== 'auto' ||
+      !repositoryPath ||
+      !artifactCommit?.files?.includes(repositoryPath) ||
+      committedHistory?.contentHash !== review?.contentHash ||
+      committedHistory?.matchesHead !== true ||
+      committedHistory?.reachableFromHead !== true
+    ) {
+      failures.push(phase);
+    }
+  }
+
+  return assertion(
+    'implement-phase-review-acceptance-bound',
+    'Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history.',
+    failures.length === 0,
+    { failingScopes: failures, requiredScopes: EXPECTED_PHASE_IDS },
+  );
+}
+
 function selectedAxis(axis) {
   return typeof axis === 'string' && axis.startsWith('selected:')
     ? axis.slice('selected:'.length)
@@ -523,6 +584,7 @@ function implementAssertions(bundle) {
       fanIn,
       { indexes },
     ),
+    phaseReviewAcceptanceAssertion(bundle, phaseReviewDispatches),
     ...reviewAssertions(
       bundle,
       requiredReviewScopes,

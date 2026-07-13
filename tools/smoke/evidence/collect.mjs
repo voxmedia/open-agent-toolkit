@@ -507,6 +507,7 @@ async function collectReviews(fixtureProjectPath, worktreePath) {
 
   return Promise.all(
     paths.map(async (path) => {
+      const repositoryPath = relative(worktreePath, path);
       const frontmatter = normalizeReviewFrontmatter(
         parseFrontmatter(
           await safeReadFile(path, fixtureProjectPath, 'Review artifact'),
@@ -528,9 +529,39 @@ async function collectReviews(fixtureProjectPath, worktreePath) {
         fixtureProjectPath,
         'Review artifact',
       );
+      const contentHash = createHash('sha256').update(contents).digest('hex');
+      const committedContents = await runGitRaw(
+        ['show', `HEAD:${repositoryPath}`],
+        worktreePath,
+      ).catch(() => null);
+      const commitSha = await runGit(
+        ['log', '-1', '--format=%H', 'HEAD', '--', repositoryPath],
+        worktreePath,
+      ).catch(() => '');
+      const reachableFromHead =
+        commitSha !== '' &&
+        (await runGit(
+          ['merge-base', '--is-ancestor', commitSha, 'HEAD'],
+          worktreePath,
+        ).then(
+          () => true,
+          () => false,
+        ));
       return {
+        committedHistory: {
+          commitSha: commitSha || null,
+          contentHash:
+            committedContents === null
+              ? null
+              : createHash('sha256').update(committedContents).digest('hex'),
+          matchesHead:
+            committedContents !== null &&
+            createHash('sha256').update(committedContents).digest('hex') ===
+              contentHash,
+          reachableFromHead,
+        },
         corroboration,
-        contentHash: createHash('sha256').update(contents).digest('hex'),
+        contentHash,
         frontmatter,
         path: relative(fixtureProjectPath, path),
       };
