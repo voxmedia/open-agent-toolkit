@@ -6,6 +6,8 @@ oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
+oat_plan_hill_phases: ["p04", "p06"] # confirmed 2026-07-13: run p01–p04 without pauses (p03 publish boundary still blocks on operator merge); p06 is the final phase
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
 oat_plan_source: spec-driven # spec-driven | quick | imported
 oat_import_reference: null
 oat_import_source_path: null
@@ -55,7 +57,7 @@ Per-phase code reviews during implementation route through the dispatch substrat
 | npm publish of the OAT release | Operator (merge → pipeline) | p03-t02 gate; p04 end-state validation | p04 end-state validation is blocked until p03-t02 passes |
 | S3 archive-bucket access for cloud AWS profile | Operator | p06 archive-on-complete verification | Marked environment-limited until granted |
 | vox-docs CI indexing (`bruno`, `pntr`, `open-agent-toolkit`, `cloud-agent-env-node`) | Operator | p06-t04 research validation (soft) | FR9 gap-logging path validates instead when absent |
-| `internal-docs-mcp` marketplace publication + installation mode | Operator | p06-t06 FR10 live checks | FR10 live checks environment-limited until published |
+| `internal-docs-mcp` skill landing in the external org-skills plugin repo (handoff: `references/internal-docs-mcp-handoff.md`) + marketplace publication + installation mode | Operator | p06-t06 FR10 live checks | FR10 live checks environment-limited until the org-skills repo ships and publishes the skill |
 
 ---
 
@@ -519,6 +521,8 @@ Expected: boot mode green immediately; strict mode green once operator secret la
 
 ## Phase 5: Org layer (`pntr` repo — `internal-docs-mcp` plugin)
 
+> **DESCOPED (2026-07-13, user direction):** Phase 5 moves out of this project. The `internal-docs-mcp` skill will land in a new dedicated org-skills plugin repository (not `pntr`) via operator handoff — skill draft + repo-setup prompt at `references/internal-docs-mcp-handoff.md`. Publication is now an operator dependency (see Operator Dependencies); p06's FR10 live checks remain environment-limited until the org repo ships the skill. The tasks below are retained for context and are **not executed** by this project.
+
 **Goal (FR10):** Skill-only plugin teaching vox-docs usage. Logically independent of p01–p04 (sequenced here; not parallelizable cross-repo).
 
 ### Task p05-t01: Plugin scaffold + SKILL.md
@@ -691,7 +695,7 @@ Expected: all green; worktree validation passes post-commit.
 | p02    | code     | pending | -    | -        |
 | p03    | code     | pending | -    | -        |
 | p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
+| p05    | code     | descoped | 2026-07-13 | moved to external org-skills repo via operator handoff (`references/internal-docs-mcp-handoff.md`) |
 | p06    | code     | pending | -    | -        |
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
@@ -710,10 +714,10 @@ Expected: all green; worktree validation passes post-commit.
 - Phase 2: 8 tasks — risk retirement, new skills, user-scope installability, template resolution, grok family classification, bundle, versions (OAT repo)
 - Phase 3: 2 tasks — release readiness + publish boundary
 - Phase 4: 4 tasks — environment provisioning (env repo)
-- Phase 5: 2 tasks — org-layer plugin (pntr repo)
+- Phase 5: 2 tasks — DESCOPED 2026-07-13 to external org-skills repo (operator handoff)
 - Phase 6: 7 tasks — scenario matrix, e2e validation, audits, closure
 
-**Total: 29 tasks**
+**Total: 29 planned tasks (27 executable; p05 descoped)**
 
 Ready for implementation after plan review.
 

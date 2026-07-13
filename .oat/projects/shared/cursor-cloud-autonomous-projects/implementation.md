@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-10
+oat_last_updated: 2026-07-13
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: cursor-cloud-autonomous-projects
 
-**Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Started:** 2026-07-13
+**Last Updated:** 2026-07-13
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -18,107 +18,95 @@ oat_generated: false
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews`.
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                                          | Status      | Tasks | Completed |
+| -------------------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 0/6       |
+| Phase 2 (p02): New OAT skills + user-scope installability      | pending     | 8     | 0/8       |
+| Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
+| Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
+| Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
+| Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+
+**HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Autonomy contract + lifecycle skill amendments (OAT repo)
 
 **Status:** in_progress
-**Started:** 2026-07-10
+**Started:** 2026-07-13
 
 ### Phase Summary (fill when phase is complete)
 
-**Outcome (what changed):**
+_Pending._
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Author autonomy contract + gate inventory doc
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+### Task p01-t02: Amend oat-project-implement — non-interactive HiLL + closeout + dispatch authorization
 
 **Status:** pending
 **Commit:** -
+
+### Task p01-t03: Amend oat-project-discover and oat-project-design — gate hooks + autonomy behavior
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Amend oat-project-quick-start — bundle gate scope + autonomy gates
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: Amend document / pr-final / summary + summary template
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: Workflow docs — autonomy page, cloud guidance page, HiLL semantics
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: New OAT skills + user-scope installability (OAT repo)
+
+**Status:** pending — tasks p02-t01 … p02-t08 per plan.md
+
+## Phase 3: OAT release (publish boundary)
+
+**Status:** pending — tasks p03-t01 … p03-t02 per plan.md (p03-t02 is an operator boundary: merge → pipeline publish)
+
+## Phase 4: Environment provisioning (cloud-agent-env-node repo)
+
+**Status:** pending — tasks p04-t01 … p04-t04 per plan.md (end-state validation hard-blocked on p03-t02)
+
+## Phase 5: Org layer
+
+**Status:** descoped — see Deviations table; not executed by this project
+
+## Phase 6: Scenario validation + e2e + closure
+
+**Status:** pending — tasks p06-t01 … p06-t07 per plan.md
 
 ---
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_Orchestration runs from `oat-project-implement` are appended here._
 
 <!-- orchestration-runs-end -->
 
@@ -126,82 +114,41 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
+### 2026-07-13
 
-### 2026-07-10
+**Session Start:** Run 1 (Cursor Cloud, branch `cursor/cursor-cloud-autonomous-projects-e049`)
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
+- Preflight: Tier 1 (native Cursor subagents, available without auth). Dispatch policy `managed/frontier` (project state); implementer target resolved to `gpt-5.6-sol-xhigh` (cursor, enforced — model arg). Environment notes: globally installed `oat` predates dispatch-report flags — resolver runs via `pnpm run cli:source` after building `@open-agent-toolkit/control-plane`; `cursor-agent` CLI not present in this VM (expected — p04 provisions it; gate exec targets unavailable this run, review routing via native cross-family subagent instead).
+- HiLL confirmed: `["p04","p06"]` + auto-review true (config).
+- Plan mutation: p05 descoped to external org-skills repo (user direction); handoff written to `references/internal-docs-mcp-handoff.md`.
+- [ ] p01: dispatching phase implementer next.
 
 **Decisions:**
 
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
+- Per-phase code reviews use a cross-family **Fable** reviewer (user direction 2026-07-13, this session) — supersedes the plan note naming `gpt-5.6-sol-xhigh` as reviewer target; recorded in Deviations.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-10
-
-**Session Start:** {time}
-
-{Continue log...}
+- None.
 
 ---
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Phase 5 | plan.md | p05 ships `internal-docs-mcp` as a `pntr` plugin | Descoped: skill moves to a new dedicated org-skills plugin repo via operator handoff (`references/internal-docs-mcp-handoff.md`) | User direction 2026-07-13: pntr is not the right home for org skills | plan.md (descope note applied) | Operator publishes org-skills plugin; p06-t06 FR10 checks environment-limited until then |
+| Phase reviews | plan.md (Phase-Boundary Review Note) | Reviewer target `gpt-5.6-sol-xhigh` (cross-family vs prior Claude-family orchestrator) | Reviewer target Fable (`claude-fable-5-thinking-xhigh`), cross-family vs current GPT-5.6 Sol orchestrator | User switched orchestrator model to GPT-5.6 Sol and directed Fable for cross-model reviews (2026-07-13) | This table + dispatch records | None — same independence guarantee, family roles inverted |
 
 ## Test Results
-
-Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+_Pending._
 
 ## References
 
