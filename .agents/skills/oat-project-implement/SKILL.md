@@ -38,7 +38,7 @@ merge provider mechanics.
 ## Autonomy Policy
 
 When `OAT_AUTONOMOUS=1`, read
-`.agents/docs/autonomy-contract.md` and keep `OAT_NON_INTERACTIVE=1` set for
+`references/docs/autonomy-contract.md` and keep `OAT_NON_INTERACTIVE=1` set for
 this run. Autonomy-specific behavior is routed with the rest of the workflow:
 
 - delegation authorization: `references/dispatch-and-dry-run.md`;

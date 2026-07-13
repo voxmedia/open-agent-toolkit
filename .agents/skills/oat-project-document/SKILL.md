@@ -25,7 +25,7 @@ Read project artifacts and implementation code to identify documentation surface
 
 **Purpose:** Analyze what a project built, identify documentation gaps, and apply approved documentation updates.
 
-When `OAT_AUTONOMOUS=1`, read `.agents/docs/autonomy-contract.md` and execute
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and execute
 the existing `--auto` path for this run. Keep `OAT_NON_INTERACTIVE=1`
 session-scoped and never persist either environment signal. This branch is inert
 when autonomy is inactive.

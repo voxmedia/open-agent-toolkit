@@ -62,7 +62,7 @@ a guessed answer. The run reports what stopped, the evidence, and the operator
 action needed to resume.
 
 The canonical
-[autonomy contract and exhaustive gate inventory](https://github.com/voxmedia/open-agent-toolkit/blob/main/.agents/docs/autonomy-contract.md)
+[autonomy contract and exhaustive gate inventory](../../../../../.agents/docs/autonomy-contract.md)
 maps each prompt to its autonomous resolution and provenance.
 
 ## Review contract

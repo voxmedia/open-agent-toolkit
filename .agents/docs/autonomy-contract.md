@@ -211,6 +211,9 @@ site is listed. `NG` means the phrase is metadata, output text, a no-prompt
 assertion, a prompt payload, or another non-interactive occurrence rather than
 a reachable gate. A range such as `38-39` accounts for both matching lines.
 
+**Scan baseline:** `113c8f6f` (`feat(p01-t01): add autonomy contract and gate
+inventory`). The file-and-line mappings below were captured against that commit.
+
 | Skill root / file | `file:line -> inventory row` comparison |
 | --- | --- |
 | `oat-project-new/SKILL.md` | `8 -> NG`; `38-39,43 -> NEW-01`; `58 -> NEW-02`; `74,76 -> NG` |

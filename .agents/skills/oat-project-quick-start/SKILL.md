@@ -24,7 +24,7 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 
 **Purpose:** Capture intent quickly (`discovery.md`) and generate an execution-ready `plan.md` for `oat-project-implement`.
 
-When `OAT_AUTONOMOUS=1`, read `.agents/docs/autonomy-contract.md` and keep
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and keep
 `OAT_NON_INTERACTIVE=1` set for this run. The autonomous branches below are
 inert otherwise. Record decisions and rationale, but never persist either
 autonomy environment signal.

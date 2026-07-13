@@ -38,7 +38,7 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 
 **Purpose:** Create final PR description and open the PR.
 
-When `OAT_AUTONOMOUS=1`, read `.agents/docs/autonomy-contract.md` and keep
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and keep
 `OAT_NON_INTERACTIVE=1` set for this run. Autonomous resolution is limited to
 the explicit branches below; never persist either environment signal. When
 autonomy is inactive, preserve the existing interactive path unchanged.

@@ -355,8 +355,8 @@ exact resume command: `oat-project-implement`.
 awaiting_approval` with `approval: pending` before asking for final HiLL
    approval.
 3. Record explicit approval as `approval: approved` and `status: post_approval`
-   before any post-approval dispatch. Then dispatch incomplete `post_approval`
-   steps in stored order.
+   before any post-approval dispatch. Record `approval_source: user` in the same
+   commit. Then dispatch incomplete `post_approval` steps in stored order.
 4. A decline or defer keeps `status: awaiting_approval` and `approval: pending`;
    record neither approval nor failure and run no post-approval step. State the
    boundary and exact resume command: `oat-project-implement`.
