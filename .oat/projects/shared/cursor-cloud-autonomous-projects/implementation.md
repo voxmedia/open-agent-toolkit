@@ -61,7 +61,7 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 **Status:** completed
 **Commit:** `526a009f`
 **Outcome:** Added strictly `OAT_AUTONOMOUS=1`-conditional implement behavior for final-default HiLL resolution, automatic checkpoint review/receive, bounded delegation authorization, target-preserving final review, unset/legacy/structured closeout sequencing, and final HiLL auto-approval between pre/post steps; bumped the skill to 2.1.0.
-**Verification:** Passed — `pnpm oat:validate-skills` validated 56 skills; `pnpm test:smoke` passed 70 smoke tests including the deterministic production-topology fixture; project sync status reported all provider views in sync; manual diff confirmed interactive branches remain intact.
+**Verification:** Passed — `pnpm oat:validate-skills` validated 56 skills; `pnpm test:smoke` passed 123 smoke tests including the deterministic production-topology fixture; project sync status reported all provider views in sync; manual diff confirmed interactive branches remain intact.
 
 ### Task p01-t03: Amend oat-project-discover and oat-project-design — gate hooks + autonomy behavior
 
@@ -90,6 +90,13 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 **Commit:** `7a9f03c5`
 **Outcome:** Added workflow documentation for the autonomy contract and Cursor Cloud operation, clarified that absent HiLL selection is unconfirmed while `[]` means every phase, linked both new pages from the authored projects index, and regenerated the machine-readable docs index.
 **Verification:** Passed — `pnpm build:docs` completed six package builds and generated all 63 static pages; `rg -n "autonomy|cursor-cloud" apps/oat-docs/docs/workflows/projects/index.md` found both authored navigation links; generated index contains both pages.
+
+### Phase Review Fix Round 1
+
+**Status:** completed
+**Commit:** `d390ca50`
+**Outcome:** Vendored the autonomy contract into all four consuming skill bundles, repaired seven stale skill-version contract pins and the post-implement inert-path assertion, added explicit interactive approval provenance, recorded the prompt-scan baseline, and replaced the external autonomy-doc link with an in-repo reference.
+**Verification:** Passed — focused skill/shared contracts: 12 files and 161 tests; `pnpm oat:validate-skills`: 56 skills; full CLI suite: 240 files and 2,701 tests with zero failures; `pnpm build:docs`: six package builds and 63 static pages.
 
 ---
 
@@ -140,6 +147,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p01-t04: quick-start bundle gate and autonomous resolutions committed (`5a98859f`); skill validation and provider sync status passed.
 - [x] p01-t05: lifecycle-tail autonomy and conditional learnings synthesis committed (`8d575ffe`); skill validation, conditional-template review, and provider sync status passed.
 - [x] p01-t06: autonomy, Cursor Cloud, and HiLL-semantics docs committed (`7a9f03c5`); docs build, authored navigation check, and generated-index refresh passed.
+- [x] p01 review fix round 1: bundle vendoring, contract pins, closeout assertion, approval provenance, scan baseline, and docs link fixed (`d390ca50`); focused contracts, full CLI suite, skill validation, and docs build passed.
 
 **Decisions:**
 
@@ -162,7 +170,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 78 | 0 | Inventory verification, four skill-validation runs, 70 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
+| 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
 
 ## Final Summary (for PR/docs)
 

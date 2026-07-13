@@ -103,7 +103,7 @@ For each of the **fifteen** named skill roots (thirteen lifecycle skills + two d
 
 **Verify:**
 
-Run: `pnpm oat:validate-skills`
+Run: `pnpm oat:validate-skills`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/`
 Expected: pass; interactive prose paths unchanged (manual diff read confirms amendments are additive `OAT_AUTONOMOUS`-conditional blocks); smoke fixture run (tools/smoke) confirms interactive topology unchanged.
 
 **Commit:** `feat(p01-t02): autonomy-aware HiLL resolution, closeout approval, and dispatch authorization in implement`
@@ -123,7 +123,7 @@ Expected: pass; interactive prose paths unchanged (manual diff read confirms ame
 
 **Verify:**
 
-Run: `pnpm oat:validate-skills`; `rg -n "Gate Execution" .agents/skills/oat-project-{discover,design}/SKILL.md`
+Run: `pnpm oat:validate-skills`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/`; `rg -n "Gate Execution" .agents/skills/oat-project-{discover,design}/SKILL.md`
 Expected: both sections present; validation passes.
 
 **Commit:** `feat(p01-t03): configured gate hooks for discover and design`
@@ -143,7 +143,7 @@ Expected: both sections present; validation passes.
 
 **Verify:**
 
-Run: `pnpm oat:validate-skills`
+Run: `pnpm oat:validate-skills`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/`
 Expected: pass.
 
 **Commit:** `feat(p01-t04): bundle-scope exit gate and autonomy behaviors in quick-start`
@@ -165,7 +165,7 @@ Expected: pass.
 
 **Verify:**
 
-Run: `pnpm oat:validate-skills`
+Run: `pnpm oat:validate-skills`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/`
 Expected: pass; template renders without the section when no learnings file.
 
 **Commit:** `feat(p01-t05): autonomy behaviors and learnings synthesis in lifecycle tail`
@@ -237,7 +237,7 @@ Probe skill discoverable in fresh context (or contingency wording adopted in p02
 
 **Verify:**
 
-Run: `pnpm oat:validate-skills`
+Run: `pnpm oat:validate-skills`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/`
 Expected: pass; body <500 lines (inventory in references).
 
 **Commit:** `feat(p02-t02): oat-project-autonomous orchestrator skill`
@@ -260,7 +260,7 @@ Expected: pass; body <500 lines (inventory in references).
 
 **Verify:**
 
-Run: `pnpm oat:validate-skills` and `rg -i "vox|voxmedia|voxops" .agents/skills/oat-cursor-cloud-projects/`
+Run: `pnpm oat:validate-skills`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/`; `rg -i "vox|voxmedia|voxops" .agents/skills/oat-cursor-cloud-projects/`
 Expected: validation passes; org-identifier scan returns zero hits (NFR1).
 
 **Commit:** `feat(p02-t03): oat-cursor-cloud-projects orientation skill`
