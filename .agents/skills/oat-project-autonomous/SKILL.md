@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.0
+version: 1.0.1
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -204,7 +204,8 @@ Select the earliest incomplete lifecycle owner:
 | Persisted state | Route |
 | --- | --- |
 | No project yet | Continue to Step 2, then invoke the selected creation skill |
-| Discovery incomplete | `oat-project-discover` |
+| Quick-mode discovery, optional design, or plan incomplete | `oat-project-quick-start` |
+| Spec-driven discovery incomplete | `oat-project-discover` |
 | Spec-driven design/spec incomplete | `oat-project-design` |
 | Design complete, plan incomplete | `oat-project-plan` |
 | Imported plan requested | `oat-project-import-plan` |

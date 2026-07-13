@@ -19,9 +19,9 @@ Resolve identity in this order:
 
 | Match, in order | Family |
 | --- | --- |
-| contains `grok` or `xai` | `xai` |
 | contains `claude` or `anthropic` | `claude` |
 | contains `gpt`, `openai`, `codex`, or an OpenAI reasoning-series slug | `openai` |
+| contains `grok` or `xai` | `xai` |
 | contains `composer` | `composer` |
 | contains `glm` | `glm` |
 | no rule matches | `unknown` |

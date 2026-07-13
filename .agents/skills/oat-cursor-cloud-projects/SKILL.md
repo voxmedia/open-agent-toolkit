@@ -1,6 +1,6 @@
 ---
 name: oat-cursor-cloud-projects
-version: 1.0.0
+version: 1.0.1
 description: Use when OAT work is mentioned in a Cursor Cloud environment. Orients agents to cloud detection, repo-rooted project homes, user-first assets, CLI availability, and Cursor dispatch context without owning lifecycle execution.
 disable-model-invocation: false
 user-invocable: true
