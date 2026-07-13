@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p04-t03
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -29,11 +29,11 @@ oat_generated: false
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 8     | 8/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | in_progress | 2     | 1/2       |
-| Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | in_progress | 4     | 2/4       |
+| Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | in_progress | 4     | 3/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 17/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 18/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -219,6 +219,13 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 **Seed delta:** None — `git diff --no-index` confirms `.cursor/oat-user-config.json` is byte-identical to `references/oat-user-config.cloud.json`. The OAT package remains an unpinned latest install, which will resolve to planned 0.1.61 after publication.
 **Verification:** Verified here — `bash -n`, `git diff --check`, seed JSON assertions, and exact reference comparison passed (shellcheck unavailable). A stub-OAT temp-HOME harness ran the installer twice with a recursive no-diff result, exercised missing/present `CURSOR_API_KEY`, and proved a newer seed marker preserves its config. The OAT 0.1.61 source CLI installed all workflows assets at user scope (including both new skills) and `config dump --json` resolved the final checkpoint plus OpenAI-, Claude-, and xAI-family target ladder. Environment-limited — published/global 0.1.61, real `cursor-agent`, and authenticated secret probes await publish/rebuild/operator secret.
 
+### Task p04-t03: Per-repo shared-config audit + local overrides
+
+**Status:** completed
+**Commit:** `1221f3f` (`cloud-agent-env-node`)
+**Outcome:** Audited every shared key in `gizmo-slack-app`, `open-agent-toolkit`, and `pntr`; classified all three configs cloud-safe; retained S3 archive sync as operator-backed policy; and documented the result plus the two new `.cursor/` files in the environment inventory. No environment-seeded local override is required or created. The pre-existing OAT active-project local pointer remains untouched session state.
+**Verification:** Verified here — all three JSON configs parsed, retained `archive.s3SyncOnComplete: true` and an S3 URI, the README table enumerates every top-level shared key, `git diff --check` passed, and the env-repo diff contains no `.oat/config.local.json`.
+
 ## Phase 5: Org layer
 
 **Status:** descoped — see Deviations table; not executed by this project
@@ -270,6 +277,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p03-t01: full release-readiness gate passed — lint 10/10, type-check 10/10, package tests 2,804 plus smoke 123/123, build 5/5, and release validation 5/5; branch pushed through p02, PR creation delegated to root.
 - [x] p04-t01: image provisioning for OAT and Cursor Agent committed in `cloud-agent-env-node` (`8180572`); official installer path and legacy `cursor-agent` symlink verified from current Cursor docs/script, while Docker build and fresh-VM version probes remain environment-limited pending daemon access, OAT 0.1.61 publish, and environment rebuild.
 - [x] p04-t02: user-scope pack refresh, exact reviewed config seed with monotonic marker, and runtime-only Cursor auth wiring committed in `cloud-agent-env-node` (`dd85638`); syntax/reference/config-source checks and two-run temp-HOME harness passed, while live published-package and authenticated-agent checks remain environment-limited.
+- [x] p04-t03: all shared OAT configs classified cloud-safe and documented in `cloud-agent-env-node` (`1221f3f`); S3 sync remains enabled and no local override was seeded.
 
 **Decisions:**
 
@@ -296,7 +304,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
 | 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t08 + fix round) | 653 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
 | 3     | Full local gate: lint, type-check, package tests + smoke, build, release validation (p03-t01) | 2,804 package + 123 smoke tests; 10 lint; 10 type-check; 5 build; 5 release packages | 0 | Round-2 review passed; source CLI manifest stamp corrected to 0.1.61; branch pushed through p02 and PR creation delegated to root |
-| 4     | Dockerfile static verification; installer syntax/reference/config checks; two-run temp-HOME idempotency harness; OAT 0.1.61 source-CLI workflows/config exercise (p04-t01..t02) | All available checks passed; recursive second-run diff was empty; both new skills and all six resolved target configs found | 0 | shellcheck unavailable; Docker build, published/global 0.1.61, real Cursor Agent, and authenticated probes environment-limited pending publish/rebuild/secret |
+| 4     | Dockerfile static verification; installer syntax/reference/config checks; two-run temp-HOME idempotency harness; OAT 0.1.61 source-CLI workflows/config exercise; three-repo shared-config audit (p04-t01..t03) | All available checks passed; recursive second-run diff was empty; both new skills and all six resolved target configs found; all audited configs cloud-safe | 0 | shellcheck unavailable; Docker build, published/global 0.1.61, real Cursor Agent, and authenticated probes environment-limited pending publish/rebuild/secret |
 
 ## Final Summary (for PR/docs)
 
