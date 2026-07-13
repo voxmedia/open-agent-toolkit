@@ -18,6 +18,15 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_post_implement_sequence:
+  status: pre_approval
+  final_phase: p-rev1
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary, document]
+  approval: pending
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   providers: # present for capped managed policies; omitted for uncapped/inherit
 #     codex: high # low|medium|high|xhigh
