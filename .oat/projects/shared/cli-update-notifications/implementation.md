@@ -273,7 +273,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   notices.
 - Minor resolved in project bookkeeping: removed the extra terminal blank line
   from `design.md`.
-- Status: fixes completed; awaiting focused final re-review.
+- Status: focused final re-review passed with no findings.
+- Re-review artifact:
+  `reviews/final-rereview-2026-07-13T1752Z.md`.
 
 ---
 
