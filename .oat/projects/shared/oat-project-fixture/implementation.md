@@ -1510,14 +1510,21 @@ guard now verifies all active canonical reports after normal formatting.
 
 ### Task p05-t21: Prove direct-root phase reviewer ownership
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `1a144ac8`
+
+Schema-v2 dispatch records now carry launcher-assigned request and parent
+identity. The writer and implement profile reject phase-agent-owned reviewers,
+missing ownership, conflicting scope, and broken optional-child linkage.
+Schema-v1 live evidence remains verifiable but explicitly does not claim
+machine proof of direct-root ownership. A fresh live schema-v2 packet is
+deferred to the post-ship operator matrix by user direction.
 
 ---
 
 ### Task p05-t22: Align the normative smoke assertion contract
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---

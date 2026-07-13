@@ -1,12 +1,12 @@
 const SCENARIOS = new Set(['plan-review', 'implement', 'full']);
-const EXPECTED_TASK_IDS = [
+export const EXPECTED_TASK_IDS = [
   'p01-t01',
   'p01-t02',
   'p02-t01',
   'p02-t02',
   'p03-t01',
 ];
-const EXPECTED_PHASE_IDS = ['p01', 'p02', 'p03'];
+export const EXPECTED_PHASE_IDS = ['p01', 'p02', 'p03'];
 
 export class EvidenceAssertionError extends Error {
   constructor(message) {

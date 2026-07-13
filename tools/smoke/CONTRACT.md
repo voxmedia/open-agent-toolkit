@@ -484,14 +484,16 @@ identity remain separate objects.
 ## Assertions and Report Binding
 
 The `plan-review` profile compares the baseline and current substantive plan,
-requires the canonical nine task IDs, verifies commit-bound atomic state
-transitions, and exactly cross-checks the plan gate artifact against gate JSON.
-The `implement` profile requires exactly one accepted completed launch per
-task (while allowing explicit rejections before acceptance), exact
-at-or-below-ceiling selection, nine marker commits/log lines, journaled flat
-parallel branches, p01/p02-before-p03 fan-in, phase gate corroboration, and
-explicit runtime identity status. `full` adds the final gate and unions both
-profiles.
+requires the canonical `EXPECTED_TASK_IDS` set (currently 5 tasks), verifies
+commit-bound atomic state transitions, and exactly cross-checks the plan gate
+artifact against gate JSON. The `implement` profile requires one accepted
+completed phase implementer and one direct-root reviewer for every
+`EXPECTED_PHASE_IDS` entry (currently 3 phases), while allowing explicit
+rejections before acceptance. It also requires exact at-or-below-ceiling
+selection, 5 marker commits/log lines, journaled flat parallel branches,
+p01/p02-before-p03 fan-in, phase gate corroboration, and explicit runtime
+identity status. Optional nested launches are validated when present but are
+not required. `full` adds the final gate and unions both profiles.
 
 Parallel proof maps p01 and p02 task commits to two distinct journaled refs
 created from the same manifest baseline, rejects cross-phase ancestry, checks

@@ -28,7 +28,7 @@ oat_template_name: plan
 
 **Goal:** Ship a live workflow smoke capability — deterministic fixture project, opt-in smoke runner, evidence collector/report — then use it to land and evidence a working native-first subagent orchestration model across four harness targets (Codex, Claude, Cursor IDE, Cursor CLI), with an OAT docs deliverable and Vault knowledge capture.
 
-**Architecture:** Version-controlled fixture (`tools/smoke/fixture/`, 3 phases × 3 log-append tasks, p01∥p02 + fan-in p03, two state presets) + runner script (preflight → provision → drive → collect → cleanup, manifest-based and interrupt-safe) + evidence report asserting the three-layer provenance model. See `design.md`.
+**Architecture:** Version-controlled fixture (`tools/smoke/fixture/`, 3 phases / 5 log-append tasks, p01∥p02 + fan-in p03, two state presets) + runner script (preflight → provision → drive → collect → cleanup, manifest-based and interrupt-safe) + evidence report asserting the three-layer provenance model. See `design.md`.
 
 **Tech Stack:** Node ESM scripts under `tools/smoke/` (mirroring `tools/verification/` conventions), `node --test` for script tests, existing `oat` CLI (local build) as the executable under test, Fumadocs for the docs deliverable.
 
