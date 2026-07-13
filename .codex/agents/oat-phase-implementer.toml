@@ -108,6 +108,10 @@ For every task:
 6. Self-review requirements, behavioral tests, scope, and accidental changes.
 7. Fix any issue before committing.
 8. Create exactly one task commit using `commit_convention`.
+   In a smoke child, source preflight owns repository-wide hook validation and
+   the child intentionally has no dependency install. Use
+   `git -c core.hooksPath=/dev/null commit ...` for that task commit; do not
+   mutate Git config or use `--no-verify`.
 9. Verify:
    - HEAD is exactly one commit after `PRE_TASK_HEAD`;
    - the commit changes only declared task files;

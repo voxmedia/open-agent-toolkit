@@ -270,6 +270,11 @@ use the equivalent of
 `(cd "$CHILD_WORKTREE" && bash scripts/worktree/init.sh)`. Executing the child
 script by absolute path from the outer worktree is an invalid-run containment
 failure.
+Smoke children intentionally have no dependency install, so repository hooks
+that require workspace tooling are unavailable there. Create every fixture task
+commit with invocation-scoped hook isolation:
+`git -c core.hooksPath=/dev/null commit ...`. Never mutate Git configuration or
+substitute `--no-verify`.
 
 `branchOwnership` is absent until this run successfully creates the branch. Its
 source and immutable baseline SHAs bind cleanup authority to the created ref; a

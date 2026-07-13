@@ -72,6 +72,9 @@ running its first process. Then invoke the direct smoke-safe entrypoint with
 script by absolute path from the outer worktree, and do not invoke
 `pnpm run worktree:init`: Corepack or package-manager startup may fetch before
 the smoke-safe script can register ownership and short-circuit dependency work.
+Because smoke children intentionally have no dependency install, create every
+fixture task commit with `git -c core.hooksPath=/dev/null commit ...`. Do not
+mutate Git config or use `--no-verify`.
 
 Gate count is fixed: `plan-review` runs one plan gate, `implement` runs one
 final code gate after p03, and `full` runs those two gates. Phase self-reviews

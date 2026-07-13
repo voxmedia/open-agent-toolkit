@@ -1573,6 +1573,8 @@ describe('validateOatSkills', () => {
     );
     expect(agent).toMatch(/one\s+verified\s+commit per task/i);
     expect(agent).toContain('between-task transition check');
+    expect(agent).toContain('git -c core.hooksPath=/dev/null commit');
+    expect(agent).toContain('`--no-verify`');
     expect(agent).toContain('Phase-Wide Self-Review');
     expect(agent).toMatch(/Ordinary phase tasks are implemented directly/i);
     expect(agent).toMatch(/Nested dispatch is optional/i);

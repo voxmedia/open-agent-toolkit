@@ -80,6 +80,10 @@ test('selects one protocol and invocation shape for every harness', async () => 
         protocol.prompt,
         /\(cd "\$CHILD_WORKTREE" && bash scripts\/worktree\/init\.sh\)/,
       );
+      assert.match(
+        protocol.prompt,
+        /git -c core\.hooksPath=\/dev\/null commit/,
+      );
     }
     assert.match(protocol.prompt, /Gate count is fixed:/);
 
