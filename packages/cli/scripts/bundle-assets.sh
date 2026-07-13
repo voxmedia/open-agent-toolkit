@@ -39,6 +39,7 @@ SKILLS=(
   oat-pjm-decision
   oat-pjm-review-backlog
   oat-pjm-update-repo-reference
+  oat-project-autonomous
   oat-project-capture
   oat-project-clear-active
   oat-project-complete

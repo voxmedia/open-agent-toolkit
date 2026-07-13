@@ -39,6 +39,7 @@ export function resolvePackDefaultScope(packName: string): 'user' | 'project' {
 // ── Workflow pack ──────────────────────────────────────────────────
 
 export const WORKFLOW_SKILLS = [
+  'oat-project-autonomous',
   'oat-project-capture',
   'oat-project-clear-active',
   'oat-project-complete',
