@@ -7,17 +7,21 @@ import { OAT_VERSION } from '@shared/oat-version';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ToolBundleUpdateGuardOptions } from './app/tool-bundle-update-guard';
 import type { UpdateNotifierOptions } from './app/update-notifier';
 
 const {
   actionMock,
   buildCommandContextMock,
+  guardBundledToolMutationMock,
   logger,
   maybeNotifyAboutUpdateMock,
   registerCommandsMock,
 } = vi.hoisted(() => ({
   actionMock: vi.fn<() => Promise<void>>(),
   buildCommandContextMock: vi.fn(),
+  guardBundledToolMutationMock:
+    vi.fn<(options: ToolBundleUpdateGuardOptions) => Promise<boolean>>(),
   logger: {
     debug: vi.fn(),
     error: vi.fn(),
@@ -34,8 +38,14 @@ vi.mock('@app/command-context', () => ({
   buildCommandContext: buildCommandContextMock,
 }));
 
-vi.mock('./app/update-notifier', () => ({
+vi.mock('./app/update-notifier', async (importOriginal) => ({
+  ...(await importOriginal()),
   maybeNotifyAboutUpdate: maybeNotifyAboutUpdateMock,
+}));
+
+vi.mock('./app/tool-bundle-update-guard', async (importOriginal) => ({
+  ...(await importOriginal()),
+  guardBundledToolMutation: guardBundledToolMutationMock,
 }));
 
 vi.mock('./commands', () => ({
@@ -81,6 +91,8 @@ describe('main', () => {
     buildCommandContextMock.mockImplementation((options: { json?: boolean }) =>
       commandContext({ json: options.json }),
     );
+    guardBundledToolMutationMock.mockReset();
+    guardBundledToolMutationMock.mockResolvedValue(false);
     logger.warn.mockReset();
     maybeNotifyAboutUpdateMock.mockReset();
     maybeNotifyAboutUpdateMock.mockResolvedValue(undefined);
@@ -100,6 +112,7 @@ describe('main', () => {
     await main(['node', 'cli.js', 'status']);
 
     expect(actionMock).toHaveBeenCalledOnce();
+    expect(guardBundledToolMutationMock).not.toHaveBeenCalled();
     expect(maybeNotifyAboutUpdateMock).toHaveBeenCalledOnce();
     expect(maybeNotifyAboutUpdateMock.mock.invocationCallOrder[0]).toBeLessThan(
       actionMock.mock.invocationCallOrder[0]!,
@@ -167,6 +180,108 @@ describe('main', () => {
     expect(maybeNotifyAboutUpdateMock).toHaveBeenCalledWith(
       expect.objectContaining({ argv: ['node', 'cli.js', 'status'] }),
     );
+  });
+
+  it.each([
+    ['top-level init', ['init']],
+    ['nested init', ['init', 'tools', 'core']],
+    ['tools install', ['tools', 'install']],
+    ['tools install pack', ['tools', 'install', 'docs']],
+    ['tools update', ['tools', 'update']],
+  ] satisfies Array<[string, string[]]>)(
+    'runs the compatibility guard instead of the passive notifier for %s',
+    async (_name, commandPath) => {
+      registerCommandsMock.mockImplementation((program: Command) => {
+        program.exitOverride();
+        let parent = program;
+        for (const name of commandPath) {
+          const command = new Command(name);
+          parent.addCommand(command);
+          parent = command;
+        }
+        parent.action(actionMock);
+      });
+
+      await main(['node', 'cli.js', ...commandPath]);
+
+      expect(actionMock).toHaveBeenCalledOnce();
+      expect(maybeNotifyAboutUpdateMock).not.toHaveBeenCalled();
+      expect(guardBundledToolMutationMock).toHaveBeenCalledOnce();
+      expect(guardBundledToolMutationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          command: `oat ${commandPath.join(' ')}`,
+          currentVersion: OAT_VERSION,
+          dryRun: false,
+          home: '/home/tester',
+          interactive: true,
+          json: false,
+          argv: ['node', 'cli.js', ...commandPath],
+          env: process.env,
+          logger,
+        }),
+      );
+    },
+  );
+
+  it.each([
+    ['tools list', ['tools', 'list']],
+    ['nested non-root init', ['docs', 'init']],
+  ] satisfies Array<[string, string[]]>)(
+    'keeps %s on the passive notifier path',
+    async (_name, commandPath) => {
+      registerCommandsMock.mockImplementation((program: Command) => {
+        program.exitOverride();
+        let parent = program;
+        for (const name of commandPath) {
+          const command = new Command(name);
+          parent.addCommand(command);
+          parent = command;
+        }
+        parent.action(actionMock);
+      });
+
+      await main(['node', 'cli.js', ...commandPath]);
+
+      expect(actionMock).toHaveBeenCalledOnce();
+      expect(maybeNotifyAboutUpdateMock).toHaveBeenCalledOnce();
+      expect(guardBundledToolMutationMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it('stops before guarded command mutation after a successful CLI update', async () => {
+    registerCommandsMock.mockImplementation((program: Command) => {
+      program
+        .exitOverride()
+        .command('tools')
+        .command('update')
+        .action(actionMock);
+    });
+    guardBundledToolMutationMock.mockResolvedValue(true);
+
+    await expect(
+      main(['node', 'cli.js', 'tools', 'update']),
+    ).resolves.toBeUndefined();
+
+    expect(guardBundledToolMutationMock).toHaveBeenCalledOnce();
+    expect(actionMock).not.toHaveBeenCalled();
+  });
+
+  it('prevents guarded command mutation when the installer fails', async () => {
+    registerCommandsMock.mockImplementation((program: Command) => {
+      program
+        .exitOverride()
+        .command('tools')
+        .command('update')
+        .action(actionMock);
+    });
+    guardBundledToolMutationMock.mockRejectedValue(
+      new Error('CLI update failed'),
+    );
+
+    await expect(main(['node', 'cli.js', 'tools', 'update'])).rejects.toThrow(
+      'CLI update failed',
+    );
+    expect(actionMock).not.toHaveBeenCalled();
   });
 });
 

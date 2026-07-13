@@ -5,6 +5,11 @@ import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { buildCommandContext, type GlobalOptions } from '@app/command-context';
+import {
+  formatCommandPath,
+  guardBundledToolMutation,
+  isBundledToolMutationCommand,
+} from '@app/tool-bundle-update-guard';
 import { maybeNotifyAboutUpdate } from '@app/update-notifier';
 import { OAT_VERSION } from '@shared/oat-version';
 
@@ -12,6 +17,8 @@ import { createProgram } from './app/create-program';
 import { registerCommands } from './commands';
 import { CliError } from './errors';
 import { createLogger } from './ui';
+
+class CliUpdateInstalledSignal extends Error {}
 
 export function normalizeArgv(argv: string[]): string[] {
   // `pnpm run <script> -- ...` passes a literal `--` into argv.
@@ -36,21 +43,39 @@ export async function main(argv: string[] = process.argv): Promise<void> {
     const context = buildCommandContext(
       actionCommand.optsWithGlobals() as GlobalOptions,
     );
-    try {
-      await maybeNotifyAboutUpdate({
-        currentVersion: OAT_VERSION,
-        home: context.home,
-        interactive: context.interactive,
-        json: context.json,
-        argv: normalizedArgv,
-        env: process.env,
-        logger: context.logger,
+    const notifierOptions = {
+      currentVersion: OAT_VERSION,
+      home: context.home,
+      interactive: context.interactive,
+      json: context.json,
+      argv: normalizedArgv,
+      env: process.env,
+      logger: context.logger,
+    };
+    if (isBundledToolMutationCommand(actionCommand)) {
+      const cliUpdated = await guardBundledToolMutation({
+        ...notifierOptions,
+        command: formatCommandPath(actionCommand),
+        dryRun: context.dryRun,
       });
+      if (cliUpdated) {
+        throw new CliUpdateInstalledSignal();
+      }
+      return;
+    }
+    try {
+      await maybeNotifyAboutUpdate(notifierOptions);
     } catch {
       // Update notifications are best-effort and never affect command dispatch.
     }
   });
-  await program.parseAsync(normalizedArgv);
+  try {
+    await program.parseAsync(normalizedArgv);
+  } catch (error) {
+    if (!(error instanceof CliUpdateInstalledSignal)) {
+      throw error;
+    }
+  }
 }
 
 export function isEntrypoint(

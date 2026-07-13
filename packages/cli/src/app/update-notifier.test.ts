@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   maybeNotifyAboutUpdate,
+  resolveUpdateAvailability,
   type UpdateNotifierDependencies,
   type UpdateNotifierOptions,
 } from './update-notifier';
@@ -87,6 +88,81 @@ function createHarness(overrides: HarnessOverrides = {}) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+describe('resolveUpdateAvailability', () => {
+  it('returns the exact validated newer stable version without emitting a notice', async () => {
+    const harness = createHarness({
+      cache: {
+        checkedAt: NOW.toISOString(),
+        latestVersion: '1.2.3',
+      },
+    });
+
+    await expect(
+      resolveUpdateAvailability(harness.options, harness.dependencies),
+    ).resolves.toBe('1.2.3');
+
+    expect(harness.fetch).not.toHaveBeenCalled();
+    expect(harness.logger.warn).not.toHaveBeenCalled();
+    expect(harness.atomicWriteJson).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['current', {}, { currentVersion: '1.2.3' }],
+    ['invalid current', {}, { currentVersion: 'development' }],
+    ['unavailable', {}, {}],
+    ['opted out', { version: 1, updateNotifications: false }, {}],
+    ['JSON', { version: 1 }, { json: true }],
+    ['non-interactive', { version: 1 }, { interactive: false }],
+    ['CI', { version: 1 }, { env: { CI: '1' } }],
+  ] satisfies Array<
+    [
+      string,
+      { version?: number; updateNotifications?: boolean },
+      Partial<UpdateNotifierOptions>,
+    ]
+  >)(
+    'returns null when an update is %s or the invocation is suppressed',
+    async (name, userConfig, options) => {
+      const harness = createHarness({
+        cache:
+          name === 'unavailable'
+            ? { checkedAt: NOW.toISOString() }
+            : {
+                checkedAt: NOW.toISOString(),
+                latestVersion: '1.2.3',
+              },
+        userConfig: {
+          version: userConfig.version ?? 1,
+          updateNotifications: userConfig.updateNotifications,
+        },
+        options,
+      });
+
+      await expect(
+        resolveUpdateAvailability(harness.options, harness.dependencies),
+      ).resolves.toBeNull();
+      expect(harness.logger.warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it('preserves refresh backoff when resolving availability for a guard', async () => {
+    const harness = createHarness({
+      fetchImpl: vi.fn(async () => {
+        throw new Error('offline');
+      }),
+    });
+
+    await expect(
+      resolveUpdateAvailability(harness.options, harness.dependencies),
+    ).resolves.toBeNull();
+
+    expect(harness.atomicWriteJson).toHaveBeenCalledWith(
+      '/home/tester/.oat/update-check.json',
+      { checkedAt: NOW.toISOString() },
+    );
+  });
 });
 
 describe('maybeNotifyAboutUpdate', () => {

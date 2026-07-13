@@ -238,77 +238,131 @@ function formatNotice(currentVersion: string, latestVersion: string): string {
   );
 }
 
+interface UpdateAvailabilityState {
+  cache: UpdateCheckCache;
+  cacheChanged: boolean;
+  cachePath: string;
+  dependencies: UpdateNotifierDependencies;
+  latestVersion: string | null;
+  nowMs: number;
+  nowTimestamp: string;
+}
+
+async function resolveUpdateAvailabilityState(
+  options: UpdateNotifierOptions,
+  overrides: Partial<UpdateNotifierDependencies>,
+): Promise<UpdateAvailabilityState | null> {
+  if (!isStaticallyEligible(options)) {
+    return null;
+  }
+
+  const currentVersion = parseStableVersion(options.currentVersion);
+  if (!currentVersion) {
+    return null;
+  }
+
+  const dependencies: UpdateNotifierDependencies = {
+    ...DEFAULT_DEPENDENCIES,
+    ...overrides,
+  };
+  const userConfigDir = join(options.home, '.oat');
+  const userConfig = await dependencies.readUserConfig(userConfigDir);
+  if (userConfig.updateNotifications === false) {
+    return null;
+  }
+
+  const cachePath = join(userConfigDir, 'update-check.json');
+  let cache = await readUpdateCache(cachePath, dependencies);
+  const now = dependencies.now();
+  const nowMs = now.getTime();
+  const nowTimestamp = now.toISOString();
+  let cacheChanged = false;
+
+  if (!isTtlFresh(cache.checkedAt, nowMs, CHECK_TTL_MS)) {
+    const latestVersion = await fetchLatestVersion(dependencies);
+    cache = {
+      ...cache,
+      checkedAt: nowTimestamp,
+      ...(latestVersion ? { latestVersion } : {}),
+    };
+    cacheChanged = true;
+  }
+
+  const latestVersion = cache.latestVersion;
+  const parsedLatestVersion = parseStableVersion(latestVersion);
+  return {
+    cache,
+    cacheChanged,
+    cachePath,
+    dependencies,
+    latestVersion:
+      latestVersion &&
+      parsedLatestVersion &&
+      compareVersions(parsedLatestVersion, currentVersion) > 0
+        ? latestVersion
+        : null,
+    nowMs,
+    nowTimestamp,
+  };
+}
+
+async function persistUpdateCache(state: UpdateAvailabilityState) {
+  if (!state.cacheChanged) {
+    return;
+  }
+  try {
+    await state.dependencies.atomicWriteJson(state.cachePath, state.cache);
+  } catch {
+    // Cache persistence is best-effort and must not affect the command.
+  }
+}
+
+export async function resolveUpdateAvailability(
+  options: UpdateNotifierOptions,
+  overrides: Partial<UpdateNotifierDependencies> = {},
+): Promise<string | null> {
+  try {
+    const state = await resolveUpdateAvailabilityState(options, overrides);
+    if (!state) {
+      return null;
+    }
+    await persistUpdateCache(state);
+    return state.latestVersion;
+  } catch {
+    return null;
+  }
+}
+
 export async function maybeNotifyAboutUpdate(
   options: UpdateNotifierOptions,
   overrides: Partial<UpdateNotifierDependencies> = {},
 ): Promise<void> {
   try {
-    if (!isStaticallyEligible(options)) {
+    const state = await resolveUpdateAvailabilityState(options, overrides);
+    if (!state) {
       return;
     }
 
-    const currentVersion = parseStableVersion(options.currentVersion);
-    if (!currentVersion) {
-      return;
-    }
-
-    const dependencies: UpdateNotifierDependencies = {
-      ...DEFAULT_DEPENDENCIES,
-      ...overrides,
-    };
-    const userConfigDir = join(options.home, '.oat');
-    const userConfig = await dependencies.readUserConfig(userConfigDir);
-    if (userConfig.updateNotifications === false) {
-      return;
-    }
-
-    const cachePath = join(userConfigDir, 'update-check.json');
-    let cache = await readUpdateCache(cachePath, dependencies);
-    const now = dependencies.now();
-    const nowMs = now.getTime();
-    const nowTimestamp = now.toISOString();
-    let cacheChanged = false;
-
-    if (!isTtlFresh(cache.checkedAt, nowMs, CHECK_TTL_MS)) {
-      const latestVersion = await fetchLatestVersion(dependencies);
-      cache = {
-        ...cache,
-        checkedAt: nowTimestamp,
-        ...(latestVersion ? { latestVersion } : {}),
-      };
-      cacheChanged = true;
-    }
-
-    const latestVersion = cache.latestVersion;
-    const parsedLatestVersion = parseStableVersion(latestVersion);
     if (
-      latestVersion &&
-      parsedLatestVersion &&
-      compareVersions(parsedLatestVersion, currentVersion) > 0 &&
-      shouldNotify(cache, latestVersion, nowMs)
+      state.latestVersion &&
+      shouldNotify(state.cache, state.latestVersion, state.nowMs)
     ) {
       try {
         options.logger.warn(
-          formatNotice(options.currentVersion, latestVersion),
+          formatNotice(options.currentVersion, state.latestVersion),
         );
-        cache = {
-          ...cache,
-          lastNotifiedAt: nowTimestamp,
-          lastNotifiedVersion: latestVersion,
+        state.cache = {
+          ...state.cache,
+          lastNotifiedAt: state.nowTimestamp,
+          lastNotifiedVersion: state.latestVersion,
         };
-        cacheChanged = true;
+        state.cacheChanged = true;
       } catch {
         // Notification output is best-effort and must not affect the command.
       }
     }
 
-    if (cacheChanged) {
-      try {
-        await dependencies.atomicWriteJson(cachePath, cache);
-      } catch {
-        // Cache persistence is best-effort and must not affect the command.
-      }
-    }
+    await persistUpdateCache(state);
   } catch {
     // The notifier never changes command state, even on unexpected failures.
   }
