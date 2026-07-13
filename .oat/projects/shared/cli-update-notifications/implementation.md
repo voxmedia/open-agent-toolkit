@@ -205,8 +205,28 @@ oat_generated: false
 
 ## Phase p-rev1: Interactive CLI Update Offer
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-13
+
+### Phase Summary
+
+**Outcome:**
+
+- Added a shared pre-mutation guard for every `init`, `tools install`, and
+  `tools update` action path.
+- A known newer CLI explains that the running CLI can only install its older
+  bundled tool versions and offers an exact-version npm update first.
+- Acceptance updates the CLI, cancels the old action, preserves a safely quoted
+  rerun command, and supports shell-free Windows npm invocation through
+  `npm-cli.js`; decline warns and continues.
+- Ordinary eligible commands retain passive notices.
+
+**Verification:**
+
+- 2,803 CLI tests, CLI lint/type-check, full repository gates, docs checks,
+  formatting, and five-package `0.1.62` release validation passed.
+- Independent review passed after one bounded fix round with no residual
+  findings.
 
 ### Revision Received: Inline Feedback
 
@@ -249,7 +269,7 @@ oat_generated: false
 ### Revision Review: p-rev1
 
 **Artifact:** `reviews/p-rev1-review-2026-07-13T182301Z.md`
-**Status:** fixes completed; awaiting re-review
+**Status:** passed
 
 **Findings:**
 
@@ -267,6 +287,9 @@ oat_generated: false
   arguments and options.
 - Windows resolves `npm-cli.js` and invokes it through `process.execPath`;
   missing resolution fails before mutation with manual remediation.
+
+**Re-review artifact:**
+`reviews/p-rev1-rereview-2026-07-13T183541Z.md`
 
 ---
 
@@ -327,6 +350,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Non-blocking Medium: docs do not explicitly qualify the serial TTL cadence as
   best-effort across overlapping processes.
+
+### Run 3 - 2026-07-13T18:36:00Z
+
+- Branch: `cursor/cli-update-notifications-40f7`
+- Tier: 1 (subagents)
+- Policy: managed High
+- Phase: p-rev1
+- Outcome: 3/3 tasks completed; two Important review findings fixed in one
+  continuation commit; focused re-review passed
+
+| Phase | Implementer | Tasks | Review | Result |
+| ----- | ----------- | ----- | ------ | ------ |
+| p-rev1 | `gpt-5.6-sol-high` | 3/3 | `reviews/p-rev1-rereview-2026-07-13T183541Z.md` | passed |
+
+**Dispatch notes:**
+
+- Implementation: `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- Fix: `Dispatch: scope=p-rev1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- Re-review: passed with zero findings.
 
 <!-- orchestration-runs-end -->
 
