@@ -49,7 +49,43 @@ For direct lifecycle or review writes:
 
 ## Component Design
 
-_Pending collaborative review._
+### Runtime Artifact Hygiene Contract
+
+**Purpose:** Keep every artifact-writing execution path self-contained while making copies easy to audit.
+
+**Canonical wording:**
+
+> Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.
+
+Role-specific text may immediately follow to preserve existing DoD semantics. The phase implementer explicitly runs the repository's applicable gate set over its produced diff, including artifact writes. Lifecycle skills apply only checks relevant to the files they changed; prose-only work does not imply unrelated full test suites.
+
+**Placement:**
+
+- `.agents/agents/oat-phase-implementer.md`
+- `.agents/agents/oat-reviewer.md`
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+- `.agents/skills/oat-project-summary/SKILL.md`
+- `.agents/skills/oat-project-document/SKILL.md`
+- `.agents/skills/oat-project-pr-final/SKILL.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `packages/cli/src/commands/gate/index.ts` in `REVIEW_GATE_CONTEXT_NOTE`
+
+### Planning-Time Command Resolution
+
+**Purpose:** Remove redundant discovery from normal implementation dispatches and make formatting an executable task step rather than ambient guidance.
+
+`oat-project-plan-writing` must:
+
+1. Resolve the applicable documented write/fix command once while authoring a plan.
+2. Distinguish it from a check-only command.
+3. Put the concrete repository command into every task that creates or edits artifacts, scoped to that task's files when supported.
+4. If no command is discoverable, put the exact warn-once/no-op behavior into those tasks instead.
+5. Keep the runtime contract as fallback guidance; downstream agents do not rediscover a valid baked command.
+
+### Canonical Asset Projection and Release
+
+All role and skill edits occur under `.agents/`. Each changed canonical skill receives one frontmatter version bump for the final PR diff, including the newly added `oat-project-plan-writing` surface. `oat sync --scope all` regenerates provider views. Because these bundled assets and the CLI prompt ship publicly, all five public package versions move in lockstep.
 
 ## Testing Strategy
 
