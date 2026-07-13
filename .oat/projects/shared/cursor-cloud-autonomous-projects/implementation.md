@@ -98,6 +98,14 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 **Outcome:** Vendored the autonomy contract into all four consuming skill bundles, repaired seven stale skill-version contract pins and the post-implement inert-path assertion, added explicit interactive approval provenance, recorded the prompt-scan baseline, and replaced the external autonomy-doc link with an in-repo reference.
 **Verification:** Passed — focused skill/shared contracts: 12 files and 161 tests; `pnpm oat:validate-skills`: 56 skills; full CLI suite: 240 files and 2,701 tests with zero failures; `pnpm build:docs`: six package builds and 63 static pages.
 
+### Phase Review Fix Round 2
+
+**Review disposition:** PASS with one non-blocking Medium finding (M2)
+**Status:** completed
+**Commit:** `3e3cc9a7`
+**Outcome:** Removed the docs-site hyperlink that escaped the documentation root and now presents the canonical and per-skill vendored autonomy-contract locations as inline code paths.
+**Verification:** Passed — `pnpm build:docs` completed six package builds and generated 63 static pages; the rendered autonomy page contains the `.agents/docs/autonomy-contract.md` code path and no `.agents` `href`.
+
 ---
 
 ## Phase 2: New OAT skills + user-scope installability (OAT repo)
@@ -148,6 +156,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p01-t05: lifecycle-tail autonomy and conditional learnings synthesis committed (`8d575ffe`); skill validation, conditional-template review, and provider sync status passed.
 - [x] p01-t06: autonomy, Cursor Cloud, and HiLL-semantics docs committed (`7a9f03c5`); docs build, authored navigation check, and generated-index refresh passed.
 - [x] p01 review fix round 1: bundle vendoring, contract pins, closeout assertion, approval provenance, scan baseline, and docs link fixed (`d390ca50`); focused contracts, full CLI suite, skill validation, and docs build passed.
+- [x] p01 review round 2: PASS; non-blocking Medium M2 fixed (`3e3cc9a7`) by rendering autonomy-contract locations as code paths instead of a docs-site hyperlink; docs build and rendered-page href check passed.
 
 **Decisions:**
 
