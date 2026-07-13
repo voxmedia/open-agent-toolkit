@@ -1178,6 +1178,70 @@ passed only after independent re-review confirms no unresolved findings.
 
 ---
 
+### Task p06-t05: (review) Bind phase-review artifacts to acceptance
+
+_Final review finding I1._
+
+Require each p01–p03 reviewer dispatch to correlate with exactly one passed
+review row and scoped review artifact, bind that artifact to committed fixture
+history, and add independent negative tests for missing/mismatched rows,
+artifacts, status, and scope.
+
+**Commit:** `fix(p06-t05): bind phase review acceptance evidence`
+
+---
+
+### Task p06-t06: (review) Preserve failed-drive recovery evidence
+
+_Final review finding I2._
+
+Add an explicit failed/interrupted recovery collection mode that evaluates
+available evidence without publishing canonical acceptance, preserves a
+diagnosable result through safe cleanup, and is exercised with the real
+collector in an integration test.
+
+**Commit:** `fix(p06-t06): preserve failed smoke evidence`
+
+---
+
+### Task p06-t07: (review) Preflight independent gate runtimes
+
+_Final review finding I3._
+
+Derive readiness from both the drive harness and configured gate runtime,
+require installation and authentication/credential readiness for each distinct
+runtime, validate target availability without launching a gate, and cover
+cross-runtime failure cases.
+
+**Commit:** `fix(p06-t07): preflight independent gate runtime`
+
+---
+
+### Task p06-t08: (review) Align shipped topology guidance
+
+_Final review finding M1._
+
+Correct smoke runbook scenario cardinality, align or remove duplicate
+coordinator-era provider references, add a docs/contract drift guard, bump the
+affected canonical skill version, synchronize provider views, and apply any
+required lockstep public-package version bump.
+
+**Commit:** `docs(p06-t08): align shipped smoke topology`
+
+---
+
+### Task p06-t09: (review) Enroll smoke lint in root verification
+
+_Final review finding M2._
+
+Add direct `tools/smoke` lint and lint-fix coverage to the normal root commands,
+prove `pnpm lint` catches a seeded smoke violation, and re-run full release
+validation.
+
+**Commit:** `chore(p06-t09): enroll smoke lint verification`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -1188,7 +1252,7 @@ passed only after independent re-review confirms no unresolved findings.
 | p04    | code     | passed          | 2026-07-12 | Final configured re-review passed 0C/0I/0M/0m (`reviews/p04-review-2026-07-12T140718Z.md`). All four prior review rounds are resolved. The reviewer verified immutable reviewer-envelope capture/comparison, coordinator-owned route selection, planning inheritance, native-first and accepted-handle constraints, ordered evidence and gate separation, provider sync/version policy, and PR #135/#137 regressions.                        |
 | p05    | code     | passed          | 2026-07-13 | Fix-range re-review passed 0C/0I/0M/0m (`reviews/archived/p05-review-2026-07-13T014202Z.md`) across p05-t20–p05-t23. The reviewer verified formatter-stable report binding, schema-v2 direct-root ownership evidence with honest schema-v1 limitation, five-task/three-phase contract alignment, and root smoke formatting/test enrollment.                                                                                                  |
 | p06    | code     | pending         | 2026-07-13 | Post-review release revalidation passed: all canonical checks, 116 smoke tests, full workspace verification, and all five public-package release validations are green. Awaiting final-scope independent review.                                                                                                                                                                                                                             |
-| final  | code     | pending         | 2026-07-13 | Re-run after Phase 5 fixes, Phase 5 re-review, and p06-t04 release validation.                                                                                                                                                                                                                                                                                                                                                               |
+| final  | code     | fixes_added     | 2026-07-13 | Final independent review failed 0C/3I/2M/0m (`reviews/archived/final-review-2026-07-13T020514Z.md`). p06-t05–p06-t09 cover phase-review artifact binding, real failed-drive recovery collection, gate-runtime preflight readiness, stale smoke/provider docs, and root smoke lint enrollment.                                                                                                                                                |
 | spec   | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | plan   | artifact | fixes_completed | 2026-07-11 | Round 1: reviews/artifact-plan-review-2026-07-11T165003Z.md (2I+2M, fixed; verified clean in round 2). Round 2: reviews/artifact-plan-review-2026-07-11T170953Z.md (3I+1M, all fixed: auth-readiness preflight, Codex report checks, explicit doc-authoring task w/ runbook + AGENTS.md nuance, p06-t03 conditional evidence scope). Gate maxAttempts exhausted; user decision 2026-07-11: accept with fixes recorded, no further gate runs. |
@@ -1216,13 +1280,12 @@ passed only after independent re-review confirms no unresolved findings.
 - Phase 5: 23 tasks — Harness protocols, deterministic/fail-fast recovery,
   report publication, phase-agent restoration, terminal evidence hardening, and
   bounded live smoke evidence plus independent-review fixes
-- Phase 6: 4 tasks — OAT docs + diagrams, Vault closing pass, release validation,
-  and post-review revalidation
+- Phase 6: 9 tasks — OAT docs + diagrams, Vault capture, release validation,
+  and final-review fixes
 
-**Total: 41 tasks**
+**Total: 46 tasks**
 
-All implementation tasks and release validation are complete; run the final
-independent project review.
+Final-review fixes queued; resume at p06-t05.
 
 ---
 
