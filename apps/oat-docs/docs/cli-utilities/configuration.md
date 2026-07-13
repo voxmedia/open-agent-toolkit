@@ -468,6 +468,35 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.recommendationVersion` — version of the adopted recommended matrix.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 
+### HiLL plan-field semantics
+
+`workflow.hillCheckpointDefault` controls the first implementation run's
+checkpoint choice, but the confirmed selection is stored in `plan.md` as
+`oat_plan_hill_phases`. The plan field has three distinct states:
+
+| `oat_plan_hill_phases` state | Meaning |
+| ---------------------------- | ------- |
+| Field absent | Checkpoint selection is unconfirmed. This is valid before the first implementation run; a resumed run treats it as bookkeeping drift that must be resolved. |
+| `[]` | Checkpoint after every phase boundary. |
+| `["p02", "p04"]` | Checkpoint only after the listed phases complete. |
+
+**Never write `[]` to mean no checkpoints.** It means every phase. To select
+only the final checkpoint, store the final phase ID explicitly:
+
+```yaml
+oat_plan_hill_phases: ['p04']
+```
+
+With `workflow.hillCheckpointDefault: every`, the first implementation run
+writes `[]`. With `workflow.hillCheckpointDefault: final`, it writes
+`["<final-phase-id>"]`. An autonomous run with an absent field takes that same
+explicit final-default path and enables checkpoint auto-review; it preserves an
+existing valid empty or explicit list. Because autonomy itself is never
+persisted, a later interactive run pauses at the stored checkpoints normally.
+
+See [HiLL Checkpoints](../workflows/projects/hill-checkpoints.md) for timing and
+approval behavior.
+
 ### Auto artifact-review preferences
 
 `workflow.autoArtifactReview.*` controls the artifact-quality loops that run before downstream workflow steps consume generated artifacts. Both keys are default-on. Only an explicit `false` disables the matching loop:
