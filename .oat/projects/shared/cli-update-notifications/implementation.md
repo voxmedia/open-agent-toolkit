@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase p-rev1 | in_progress | 3 | 0/3 |
+| Phase p-rev1 | in_progress | 3 | 3/3 |
 
-**Total:** 5/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -229,22 +229,38 @@ oat_generated: false
 
 ### Task prev1-t01: Add the interactive update offer
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 676690abb032c1d70e0caea49ac6a70f8fc3d5c0
 
 ---
 
 ### Task prev1-t02: Document the interactive offer
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e96abd69a22e887eebc015eef53dfed4677e742b
 
 ---
 
 ### Task prev1-t03: Prepare the revision release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 86aea5db76c4de50a7d806e14ac7ded371248063
+
+### Revision Review: p-rev1
+
+**Artifact:** `reviews/p-rev1-review-2026-07-13T182301Z.md`
+**Status:** blocking fixes in progress
+
+**Findings:**
+
+- Preserve positional arguments and options in display-safe rerun guidance; the
+  first implementation reduced commands such as `oat tools update --all` to an
+  invalid bare command.
+- On Windows, resolve npm's JavaScript CLI entrypoint and invoke it with
+  `process.execPath`; do not attempt to spawn `npm.cmd` with `shell: false`.
+
+**Next:** Continue the original p-rev1 implementer in bounded fix mode, then
+re-review.
 
 ---
 

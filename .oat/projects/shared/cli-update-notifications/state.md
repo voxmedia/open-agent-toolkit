@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: 668b743e
+oat_current_task: null
+oat_last_commit: 86aea5db76c4de50a7d806e14ac7ded371248063
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -36,7 +36,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: "https://github.com/voxmedia/open-agent-toolkit/pull/143" # null | string — tracked PR URL when a PR exists
 oat_project_created: "2026-07-13T16:00:20.521Z" # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-07-13T18:05:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-07-13T18:25:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -48,7 +48,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Revision p-rev1 queued from inline feedback.
+Implementation — Revision p-rev1 review fixes in progress.
 
 ## Artifacts
 
@@ -73,7 +73,8 @@ Implementation — Revision p-rev1 queued from inline feedback.
 - ✓ Project summary generated
 - ✓ Documentation synchronized
 - ✓ PR created
-- ⧗ Revision p-rev1 queued
+- ✓ Revision p-rev1 tasks implemented
+- ⧗ Revision review fixes in progress
 
 ## Blockers
 
@@ -81,4 +82,4 @@ None
 
 ## Next Milestone
 
-Execute revision task `prev1-t01`, then re-run final verification and review.
+Fix the two blocking p-rev1 review findings, then re-review.
