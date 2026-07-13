@@ -174,6 +174,14 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 **Outcome:** Added deterministic `xai` classification for Grok/xAI provider IDs and model slugs, making the configured Grok tertiary eligible for different-family gate selection.
 **Verification:** Passed — 15 family tests and 151 gate tests cover both OpenAI and Claude producers selecting Grok after higher-priority same-family candidates are ineligible/unavailable; CLI type-check/lint, formatting, and five-package release validation passed.
 
+### Phase Review Fix Round 1
+
+**Review disposition:** Initial FAIL with 2 Important, 2 Medium, and 3 Minor findings; all seven findings resolved
+**Status:** completed
+**Fix commits:** `56364e83`, `77abc935`, `7559ec0c`
+**Outcome:** Made pack-asset dry runs read-only while reporting planned refreshes; restored executable script modes after update; restricted workflow template/script removal to user scope; corrected quick-mode resume routing and model-family rule order with patch skill bumps; and aligned the design risk and tool-pack lifecycle documentation.
+**Verification:** Passed — full CLI suite 240 files / 2,717 tests; 58 skills validated; all five public package tarballs passed release validation; temp-HOME reviewer reproduction reported planned template/script refreshes with `template_writes=0` and `script_writes=0`; project provider views remained in sync.
+
 ## Phase 3: OAT release (publish boundary)
 
 **Status:** pending — tasks p03-t01 … p03-t02 per plan.md (p03-t02 is an operator boundary: merge → pipeline publish)
@@ -228,6 +236,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02-t07: per-file user-first template resolution committed (`912c403d`); all four precedence scenarios, CLI gates, and release validation passed.
 - [x] p02-t08: Grok/xAI classification and OpenAI/Claude gate participation committed (`5037d151`); all 166 targeted tests plus CLI/release gates passed.
 - [x] p02 phase verification: root `pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm release:validate` completed with zero failures; smoke suite passed 123/123 and all five 0.1.61 public tarballs validated.
+- [x] p02 review fix round 1: all seven cross-family findings resolved (`56364e83`, `77abc935`, `7559ec0c`); full CLI suite passed 2,717/2,717, 58 skills validated, five release tarballs validated, provider views remained in sync, and the temp-HOME dry-run reproduction made zero template/script writes.
 
 **Decisions:**
 
@@ -245,13 +254,14 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | Phase 5 | plan.md | p05 ships `internal-docs-mcp` as a `pntr` plugin | Descoped: skill moves to a new dedicated org-skills plugin repo via operator handoff (`references/internal-docs-mcp-handoff.md`) | User direction 2026-07-13: pntr is not the right home for org skills | plan.md (descope note applied) | Operator publishes org-skills plugin; p06-t06 FR10 checks environment-limited until then |
 | Phase reviews | plan.md (Phase-Boundary Review Note) | Reviewer target `gpt-5.6-sol-xhigh` (cross-family vs prior Claude-family orchestrator) | Reviewer target Fable (`claude-fable-5-thinking-xhigh`), cross-family vs current GPT-5.6 Sol orchestrator | User switched orchestrator model to GPT-5.6 Sol and directed Fable for cross-model reviews (2026-07-13) | This table + dispatch records | None — same independence guarantee, family roles inverted |
+| p02 review I2 (resolved) | plan.md p02-t04 + design.md | Project-scope workflows removal behavior remains unchanged; companion templates/scripts are managed as user-level assets | p02-t04 temporarily extended companion removal to project scope; review fix `56364e83` reversed that extra work and restored the original project `--all` expectation | User-scope lifecycle parity was over-applied to shared repo assets, including `resolve-tracking.sh` | `remove-tools.ts`, `remove-tools.test.ts`, and tool-packs docs | Resolved — project removal leaves repo-local templates/scripts intact |
 
 ## Test Results
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
-| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite (p02-t01..t08) | 653 focused + full suite | 0 | All task gates and root lint/type-check/test/build passed; smoke 123/123; five public 0.1.61 tarballs validated |
+| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t08 + fix round) | 653 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
 
 ## Final Summary (for PR/docs)
 
