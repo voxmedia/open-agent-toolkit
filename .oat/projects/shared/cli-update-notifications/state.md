@@ -22,7 +22,7 @@ oat_post_implement_sequence:
   status: pre_approval
   final_phase: p02
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   post_approval: []
   post_approval_completed: []
