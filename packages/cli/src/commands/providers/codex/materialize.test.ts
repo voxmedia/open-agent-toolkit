@@ -276,6 +276,7 @@ describe('oat providers codex materialize', () => {
     expect(parsedConfig.title).toBe('Custom');
     expect(features.custom).toBe(true);
     expect(features.multi_agent).toBe(true);
+    expect(agents.max_depth).toBe(2);
     expect(agents.custom).toBeDefined();
     expect(materializedAgent.description).toBe('Reviewer');
     expect(materializedAgent.config_file).toBe(
@@ -292,6 +293,128 @@ describe('oat providers codex materialize', () => {
     expect(process.exitCode).toBe(0);
     expect(await readFile(rolePath, 'utf8')).toBe(roleContent);
     expect(await readFile(configPath, 'utf8')).toBe(configContent);
+  });
+
+  it('preserves inherited user depth while writing only project config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-home-'));
+    tempDirs.push(root, home);
+    await writeAgent(root, 'oat-reviewer');
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 1\n',
+      'utf8',
+    );
+    const userConfigPath = join(home, '.codex', 'config.toml');
+    const userConfig = '[agents]\nmax_depth = 5\n';
+    await writeFile(userConfigPath, userConfig, 'utf8');
+    const { command } = createHarness({ cwd: root, home });
+
+    await runCommand(command, {
+      globalArgs: ['--cwd', root, '--json'],
+      commandArgs: [
+        'oat-reviewer',
+        '--model',
+        'gpt-5.6-sol',
+        '--effort',
+        'xhigh',
+      ],
+    });
+
+    const projectConfig = TOML.parse(
+      await readFile(join(root, '.codex', 'config.toml'), 'utf8'),
+    ) as Record<string, unknown>;
+    expect((projectConfig.agents as Record<string, unknown>).max_depth).toBe(5);
+    expect(await readFile(userConfigPath, 'utf8')).toBe(userConfig);
+    await expect(
+      readFile(
+        join(home, '.codex', 'agents', 'oat-reviewer-gpt-5-6-sol-xhigh.toml'),
+        'utf8',
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('writes explicit user materialization only to user config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-home-'));
+    tempDirs.push(root, home);
+    await writeAgent(home, 'oat-reviewer');
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    const projectConfigPath = join(root, '.codex', 'config.toml');
+    const projectConfig = '[agents]\nmax_depth = 7\n';
+    await writeFile(projectConfigPath, projectConfig, 'utf8');
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 1\n',
+      'utf8',
+    );
+    const { command } = createHarness({ cwd: root, home });
+
+    await runCommand(command, {
+      globalArgs: ['--cwd', root, '--json'],
+      commandArgs: [
+        'oat-reviewer',
+        '--scope',
+        'user',
+        '--model',
+        'gpt-5.7-user-custom',
+        '--effort',
+        'high',
+      ],
+    });
+
+    const userConfig = TOML.parse(
+      await readFile(join(home, '.codex', 'config.toml'), 'utf8'),
+    ) as Record<string, unknown>;
+    expect((userConfig.agents as Record<string, unknown>).max_depth).toBe(2);
+    expect(await readFile(projectConfigPath, 'utf8')).toBe(projectConfig);
+    await expect(
+      readFile(
+        join(
+          root,
+          '.codex',
+          'agents',
+          'oat-reviewer-gpt-5-7-user-custom-high-c5aa99594b.toml',
+        ),
+        'utf8',
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('does not write a role when target config TOML is invalid', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-materialize-'));
+    tempDirs.push(root);
+    await writeAgent(root, 'oat-reviewer');
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents\nmax_depth = 2',
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, {
+      globalArgs: ['--cwd', root, '--json'],
+      commandArgs: [
+        'oat-reviewer',
+        '--model',
+        'gpt-5.6-sol',
+        '--effort',
+        'xhigh',
+      ],
+    });
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+    await expect(
+      readFile(
+        join(root, '.codex', 'agents', 'oat-reviewer-gpt-5-6-sol-xhigh.toml'),
+        'utf8',
+      ),
+    ).rejects.toThrow();
   });
 
   it('marks manually materialized user roles as user-config owned', async () => {

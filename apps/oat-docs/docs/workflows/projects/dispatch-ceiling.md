@@ -1,6 +1,6 @@
 ---
 title: Dispatch Policy
-description: 'How OAT combines owned provider candidate ladders, project and phase named maximum ceilings, exact task dispatch, and provider-specific enforcement.'
+description: 'How OAT combines provider candidate ladders, project and phase named ceilings, exact phase-agent dispatch, and provider-specific enforcement.'
 ---
 
 # Dispatch Policy
@@ -12,15 +12,15 @@ constraints:
   or repo-local config. Each named tier contains one or more exact candidates.
 - A **named ceiling** is a project or phase maximum such as `balanced` or
   `high`. It is not an enduring model-family or effort preference.
-- A **task target** is one exact configured candidate selected at invocation
-  time at or below the named maximum.
+- A **phase target** is one exact configured candidate selected at invocation
+  time at or below the named maximum. Optional nested work resolves separately.
 
 The CLI command remains `oat project dispatch-ceiling resolve` for compatibility.
 Legacy `workflow.dispatchCeiling.*` and `oat_dispatch_ceiling` values remain
 readable, but new projects use ordered candidates plus `oat_dispatch_policy`.
 
 For raw config keys, see [Configuration](../../cli-utilities/configuration.md).
-For the coordinator and task-worker loop, see
+For the root-owned phase-agent loop, see
 [Implementation Execution](implementation-execution.md).
 
 ## Named Policy Choices
@@ -36,8 +36,8 @@ For the coordinator and task-worker loop, see
 
 A named `High` ceiling therefore keeps configured Economy, Balanced, and High
 candidates eligible and available. It does not pin Sol, `opus`, one Cursor
-string, or one effort value. The task coordinator chooses the lowest exact
-candidate it judges sufficient for each bounded task.
+string, or one effort value. The project root chooses one exact candidate it
+judges sufficient for the phase.
 
 `Uncapped` is explicit managed state. It is not represented by omitted policy
 state. `Unresolved` is a planning or preflight deferral and cannot begin
@@ -179,7 +179,7 @@ The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
 does not use task candidate flags.
 
-## Exact Task Resolution
+## Exact Phase Resolution
 
 Planning and implementation preflight resolve the active policy first:
 
@@ -190,9 +190,9 @@ oat project dispatch-ceiling resolve \
   --json
 ```
 
-Before each managed capped implementation or fix task, the phase coordinator
-classifies the bounded task and requests one exact configured candidate. It
-passes the recorded project or narrower phase maximum through the
+Before each managed capped phase or bounded fix continuation, the root requests
+one exact configured candidate. It passes the recorded project or narrower
+phase maximum through the
 invocation-only `--ceiling-tier` option:
 
 ```bash
@@ -237,23 +237,23 @@ Successful JSON reports:
 
 The resolver rejects a missing candidate, an above-ceiling candidate, an
 ambiguous route, malformed ordering, a reviewer candidate request, or controls
-that cannot compile exactly. The coordinator blocks instead of reusing its own
-target, a base role, or a provider default.
+that cannot compile exactly. The root blocks instead of reusing its own target,
+a base role, or a provider default.
 
 `--preferred` remains available for legacy scalar ceilings and managed
-`Uncapped` compatibility. It is not the exact managed task-worker selection
+`Uncapped` compatibility. It is not the exact managed phase-agent selection
 path.
 
 ## Provider Enforcement
 
-| Provider | Exact task invocation                                                                                                              | Failure behavior                          |
+| Provider | Exact phase-agent or optional-child invocation                                                                                     | Failure behavior                          |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable    |
 | Claude   | Pass `providers.claude.dispatchArgs.model` as the actual Task `model`                                                              | Block if the model cannot be applied      |
 | Cursor   | Pass `providers.cursor.dispatchArgs.model` byte-for-byte as the actual invocation model; treat it as opaque                        | Block rather than normalize or substitute |
 | Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory     |
 
-Materialized Codex roles exist before task dispatch after project/user sync.
+Materialized Codex roles exist before phase dispatch after project/user sync.
 The supported catalogue is committed project output; custom Codex candidates
 materialize according to config ownership. Workflow correctness still keeps a
 fresh pinned-child fallback and does not require provider restart or hot reload.
@@ -263,35 +263,90 @@ Reviewers use the final candidate at the configured review ceiling. Managed
 reviewer behavior. A timeout retry preserves the same exact role or complete
 Claude/Cursor model payload.
 
-## Coordinator and Worker Layers
+### Cursor evidence authority
 
-`oat-phase-implementer` has two explicit modes:
+Cursor resolution and runtime evidence answer different questions. Resolution
+proves which opaque candidate OAT requested. A stream-JSON Task start and
+correlated completion prove launcher behavior only when the model argument is
+preserved byte-for-byte. An accepted Task plus the child sentinel establishes
+argument eligibility for that account and client; a structured rejection can
+establish `unknown-value`. Runtime producer identity remains `not-reported`
+unless trusted Cursor telemetry or Cursor support independently confirms it.
 
-1. **Phase coordinator:** reads phase artifacts once, preserves dependency
-   order, selects one exact candidate per task, waits for each worker, verifies
-   its result and commit, then performs phase-wide integration review. It does
-   not implement ordinary tasks itself.
-2. **Task worker:** receives exactly one Task Scope with one task ID, file
-   boundary, verification commands, commit convention, and exact dispatch
-   payload. It implements and commits that task, then stops.
+The [2026-07-11 GPT-5.6 evidence record](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
+ran positive and negative controls before candidate probes. Neither control
+emitted a Task event, so the harness stopped without probing the 13 recommended
+arguments or exploratory `gpt-5.6-sol-high-fast`. This is a harness/account
+boundary, not model rejection, and it supports no recommendation change.
 
-Workers run serially in the same worktree. Parallelism remains limited to
-plan-declared phase worktrees. See
+The tracked artifact's structured second-pass block exposes only an allowlisted
+event projection and non-reversible identifier hashes. Exact
+request/session/tool-call IDs and credential-redacted unprojected streams from
+that pass stay in gitignored local project storage for support diagnosis.
+
+The same public artifact intentionally preserves the sanitized historical v1
+text-mode record for provenance. That older section includes command arguments
+and prompts, stdout and stderr, exit and duration data, and capture-environment
+details such as user-specific binary paths; it is not limited to the structured
+second-pass projection.
+
+## Phase and Optional-Worker Layers
+
+The phase implementer directly implements the phase tasks from one Phase Scope
+and:
+
+1. reads phase artifacts once and preserves dependency order;
+2. directly implements each planned task;
+3. creates and verifies one bounded commit per task; and
+4. runs phase-wide verification before returning to the root.
+
+Optional nested workers or recon agents resolve their own exact candidates only
+when they provide a concrete benefit. They are not required for ordinary plan
+tasks and do not own phase commits or review dispatch.
+
+Tasks run serially in the same worktree. Parallelism remains limited to
+plan-declared phase worktrees unless optional work has explicitly isolated
+write authority. See
 [Implementation Execution](implementation-execution.md) for the full loop.
 
-## Producer Provenance
+## Dispatch Report V1 and Producer Provenance
 
-Dispatch notes retain a parseable stamp for later review gates:
+Resolver calls that pass `--report-scope` and `--report-action` include a
+`dispatchReport` object in JSON output. Consumers must require
+`dispatchReport.schemaVersion: 1` before dispatch. The report keeps four
+different decisions separate:
+
+| Report area                                                         | What it means                                                        |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `policy`                                                            | The resolved managed/inherit policy, its status, name, and source    |
+| `selection.ceilingTier` / `selection.ceilingTarget`                 | The maximum allowed tier and its boundary target                     |
+| `selection.requestedCandidate` / `candidateTier` / `candidateIndex` | The exact candidate requested for this bounded task and its position |
+| `selection.exactSelectedTarget` / `route.target`                    | The compiled provider target and actual invocation route             |
+
+A named policy or ceiling is never a substitute for the requested candidate or
+exact selected target. `requestedControls` records what OAT put into the host
+payload. `configuredDefaults` records fallback configuration and is explicitly
+not a runtime observation.
+
+`gateInvocation` is an immutable copy of configured gate controls.
+`runtimeIdentity` is separate and stays `not-reported` until independently
+observed or otherwise supported runtime evidence exists. Requested controls,
+configured defaults, role-name parsing, and reviewer self-identification do not
+become observed runtime identity.
+
+Human output comes from `formatDispatchReport(dispatchReport)`. Dispatch notes
+also retain a parseable compatibility stamp for later review gates:
 
 ```text
 Dispatch: scope=p06-t03 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 ```
 
-`producer` is the resolved model slug when OAT can establish it; otherwise it is
-`unknown`. `provenance` is `declared`, `observed`, `inferred`, or `unknown`.
-Concrete Claude/Cursor model arguments can declare identity. Codex roles retain
-exact model and effort axes from resolver output even when producer identity is
-not independently observable.
+The stamp must be derived through `toDispatchStampRecord(dispatchReport)` and
+`formatDispatchStamp`; callers must not reconstruct it from policy labels, role
+names, candidate strings, or target names. `producer` is the runtime model slug
+when OAT can establish it; otherwise it is `unknown`. `provenance` is
+`declared`, `observed`, `inferred`, or `unknown`. Selected model and effort axes
+can remain exact even when runtime producer identity is not reported.
 
 ## Legacy Compatibility
 

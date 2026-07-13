@@ -119,6 +119,24 @@ function isUserInvocableSkill(skillName: string): boolean {
   return /^user-invocable:\s*true$/m.test(content);
 }
 
+function readBundledSkillContract(
+  assetsRoot: string,
+  skillName: string,
+): string {
+  const skillRoot = join(assetsRoot, 'skills', skillName);
+  const entry = readFileSync(join(skillRoot, 'SKILL.md'), 'utf8');
+  if (skillName !== 'oat-project-implement') {
+    return entry;
+  }
+
+  const referencesRoot = join(skillRoot, 'references');
+  const references = readdirSync(referencesRoot)
+    .filter((file) => file.endsWith('.md'))
+    .sort()
+    .map((file) => readFileSync(join(referencesRoot, file), 'utf8'));
+  return [entry, ...references].join('\n');
+}
+
 describe('bundle-assets.sh consistency', () => {
   const bundleSkills = parseBundleSkills();
   const bundleAgents = parseBundleAgents();
@@ -336,10 +354,7 @@ describe('bundle-assets.sh consistency', () => {
           'oat-project-quick-start',
           'oat-project-implement',
         ]) {
-          const content = readFileSync(
-            join(assetsRoot, 'skills', skill, 'SKILL.md'),
-            'utf8',
-          );
+          const content = readBundledSkillContract(assetsRoot, skill);
 
           expect(content).toContain(
             'oat project dispatch-ceiling choices --format markdown',
@@ -367,9 +382,9 @@ describe('bundle-assets.sh consistency', () => {
           stdio: 'pipe',
         });
 
-        const content = readFileSync(
-          join(assetsRoot, 'skills', 'oat-project-implement', 'SKILL.md'),
-          'utf8',
+        const content = readBundledSkillContract(
+          assetsRoot,
+          'oat-project-implement',
         );
 
         expect(content).toContain('Human-facing dispatch display rules');
@@ -389,6 +404,61 @@ describe('bundle-assets.sh consistency', () => {
         expect(content).toContain(
           'Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown>',
         );
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'bundles workflow report and derived-stamp guidance from canonical skills',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        for (const skill of [
+          'oat-project-implement',
+          'oat-project-review-provide',
+          'oat-project-review-provide-remote',
+        ]) {
+          const content = readBundledSkillContract(assetsRoot, skill);
+          const invocations = [
+            ...content
+              .replace(/\\\r?\n\s*/g, ' ')
+              .matchAll(
+                /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+              ),
+          ]
+            .map(([command]) => command.trim())
+            .filter((command) => command.includes('--provider'));
+          expect(
+            invocations.length,
+            `${skill} actionable resolver invocations`,
+          ).toBeGreaterThan(0);
+          for (const invocation of invocations) {
+            expect(invocation, `${skill} report scope`).toMatch(
+              /--report-scope\s+\S+/,
+            );
+            expect(invocation, `${skill} literal report action`).toMatch(
+              /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+            );
+          }
+          expect(content, `${skill} versioned report`).toContain(
+            'dispatchReport.schemaVersion: 1',
+          );
+          expect(content, `${skill} report renderer`).toContain(
+            'formatDispatchReport(dispatchReport)',
+          );
+          expect(content, `${skill} derived stamp`).toContain(
+            'formatDispatchStamp(dispatchReport)',
+          );
+        }
       } finally {
         rmSync(assetsRoot, { recursive: true, force: true });
       }

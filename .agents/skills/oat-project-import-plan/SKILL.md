@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.4
+version: 1.4.6
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -16,7 +16,7 @@ Import a markdown plan from an external coding provider and normalize it into OA
 Provider native plan mode uses this same path: provider-plan-via-import
 preserves the provider plan first, and provider plan dispatch readiness
 inherits the same import workflow contract below, including complete ladder
-adoption, the project named ceiling, the `Shared Phase-Review Setup Contract`,
+adoption, the project named ceiling, the `Shared Phase Gate Review Setup Contract`,
 and the rule that readiness and completion follow only after a durable review
 disposition. It does not add a separate provider-plan prompt.
 
@@ -277,10 +277,10 @@ maximum. Use the canonical
 project ceiling resolves. `Uncapped` and `Inherit Host Defaults` remain
 explicit modes; `Leave Unresolved` is not implementation-ready.
 
-### Step 4.25: Configure Optional Phase Review
+### Step 4.25: Configure Optional Phase Gate Review
 
 After normalization has produced stable phase IDs and before Step 4.5 starts
-the import-aware plan artifact review, invoke the `Shared Phase-Review Setup
+the import-aware plan artifact review, invoke the `Shared Phase Gate Review Setup
 Contract` from `oat-project-plan-writing`. Provider native plan mode uses this
 same import step and inherits its result.
 
@@ -289,10 +289,10 @@ through the shared contract without probing, prompting, or mutation. Resumed or
 imported explicit values remain authoritative without re-prompting. Otherwise
 let the contract probe qualifying targets and offer all phases, selected
 phases, or disabled. If the probe fails, no target qualifies, or the user
-declines, leave phase review disabled and continue with the contract's concise
+declines, leave Phase gate review disabled and continue with the contract's concise
 status output.
 
-This phase-review setup is independent from HiLL checkpoints. Do not read or
+This Phase gate review setup is independent from HiLL checkpoints. Do not read or
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 
@@ -326,13 +326,21 @@ Apply the shared loop exactly:
 
 - Resolve `workflow.autoArtifactReview.plan`; only an explicit `false` skips the loop.
 - Resolve `oat_orchestration_retry_limit` from project state, defaulting to `2`.
-- For a concrete managed target, dispatch the exact registered reviewer role. If the host cannot select it, launch a fresh Codex child pinned to the resolved model and reasoning effort with the canonical reviewer instructions.
-- For Claude or Cursor, pass the exact resolver-returned
-  `providers.<provider>.dispatchArgs.model` as the actual invocation's model
-  argument. Preserve the same complete payload on timeout and retry; Cursor
-  strings remain opaque.
-- Run inline only with verified equivalent current-host model and effort controls, or for explicit inherit/default behavior or the managed-uncapped reviewer exception. If none applies, fail closed before artifact review.
-- If the reviewer times out or does not conclude, poll and nudge once, then retry the same exact role or pinned child within the retry bound. If that target-preserving retry still fails, fail closed; never downgrade the review to inline.
+- Review in the current planning parent by deliberate inheritance by default.
+  Do not launch a managed child unless launcher-owned evidence identifies that
+  parent as unknown or below the resolved reviewer ceiling.
+- For that exception only, apply the shared concrete target contract. A Codex
+  materialized variant must first be launched as the exact native `agent_type`;
+  only a recorded actual pre-start role-selection rejection permits a fresh
+  child pinned to the resolved model and effort. Claude and Cursor use the
+  exact resolver-returned `providers.<provider>.dispatchArgs.model` value;
+  Cursor strings remain opaque.
+- After acceptance, poll, nudge, or continue only through the existing reviewer
+  handle. A terminal timeout blocks or escalates without another launch.
+  Replacement eligibility is limited to explicit pre-start rejection.
+- Run an exception inline only with verified equivalent current-host model and
+  effort controls. Default inherited review runs in the planning parent. If
+  neither route applies, fail closed before artifact review.
 - Apply Critical and Important artifact-local fixes when unambiguous and limited to canonical conformance/completeness; offer Medium and Minor fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.

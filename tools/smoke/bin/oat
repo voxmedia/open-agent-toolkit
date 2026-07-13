@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPOSITORY_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../../.." && pwd)
+OAT_ENTRYPOINT=${OAT_SMOKE_LOCAL_CLI:-"$REPOSITORY_ROOT/packages/cli/dist/index.js"}
+
+exec "$OAT_ENTRYPOINT" "$@"

@@ -1,0 +1,12 @@
+[
+  {
+    "branch": "smoke-golden-p01",
+    "file": "p01.txt",
+    "message": "feat: complete p01"
+  },
+  {
+    "branch": "smoke-golden-p02",
+    "file": "p02.txt",
+    "message": "feat: complete p02"
+  }
+]

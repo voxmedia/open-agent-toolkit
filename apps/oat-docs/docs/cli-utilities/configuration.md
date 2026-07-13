@@ -301,7 +301,7 @@ oat_dispatch_policy:
   source: project-state
 ```
 
-### Exact task resolution
+### Exact phase resolution
 
 The project-aware resolver remains the source of truth. Preflight reads layered
 config and project state without mutating either:
@@ -310,8 +310,9 @@ config and project state without mutating either:
 oat project dispatch-ceiling resolve --provider codex --preflight --json
 ```
 
-For each managed capped task, the phase coordinator supplies the recorded
-project or narrower phase maximum plus one exact configured candidate:
+For each managed capped phase, the root supplies the recorded project or
+narrower phase maximum plus one exact configured phase-implementer candidate.
+Optional nested work resolves separately only when launched:
 
 ```bash
 oat project dispatch-ceiling resolve \
@@ -346,14 +347,14 @@ config layer that owns the selected candidate.
 The resolver fails closed when a candidate is missing, above the maximum,
 ambiguous, malformed, or cannot compile exact provider controls. `--preferred`
 remains compatibility behavior for legacy scalar ceilings and managed
-`Uncapped`; it is not the exact managed task-worker path.
+`Uncapped`; it is not the exact managed phase-agent path.
 
 ### Provider enforcement and materialization
 
-| Provider | Exact task mechanism                                                                                 |
+| Provider | Exact phase-agent or optional-child mechanism                                                        |
 | -------- | ---------------------------------------------------------------------------------------------------- |
 | Codex    | `providers.codex.dispatchArgs.variant` as `agent_type`, or a fresh child pinned to model plus effort |
-| Claude   | `providers.claude.dispatchArgs.model` as the actual Task `model`                                     |
+| Claude   | `providers.claude.dispatchArgs.model` as the actual Agent `model`                                    |
 | Cursor   | `providers.cursor.dispatchArgs.model` byte-for-byte as the actual opaque invocation model            |
 
 Project sync materializes the supported Codex catalogue and every configured
@@ -380,6 +381,47 @@ Tier 2 remains target-preserving. Inline review is permitted only when the host
 has verified equivalent current-host controls for explicit inherit,
 managed-uncapped, or base-role behavior. Capped managed reviews still require
 the exact registered role, pinned child, or resolver-returned model argument.
+
+### Cursor validation pass and live evidence
+
+Config adoption and doctor validate Cursor candidates with one command-scoped
+pass context. Duplicate references to the same byte-for-byte candidate share
+one Task/subagent probe. If a decisive probe is unavailable, the pass resolves
+the broad catalog once, with at most one `--list-models` fallback. The cache
+ends with that adopt or doctor command; it is not process-global and has no
+TTL.
+
+A correlated Task start/completion pair that preserves the exact model argument
+and returns the sentinel establishes that the argument is eligible for that
+account and client. A structured rejection or exact allow-list exclusion can
+establish `unknown-value`. Neither result identifies the backend runtime model:
+`runtimeIdentity` remains `not-reported` unless trusted Cursor telemetry or
+Cursor support confirms it. Parent prose and broad catalog presence are
+diagnostic-only, so OAT preserves `unvalidated` when launcher evidence is
+absent instead of inferring capability from candidate spelling.
+
+The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
+preserves the original text-mode pass and a versioned stream-JSON second pass.
+The second pass ran a dynamic positive control and deliberate invalid control
+before candidates. Both parent runs completed without a Task event, making the
+controls inconclusive; the stop rule therefore executed zero of the 13
+recommended candidates and did not execute exploratory
+`gpt-5.6-sol-high-fast`. The recommendation remains unchanged and candidate
+eligibility remains unresolved.
+
+The tracked artifact's structured second-pass block contains only allowlisted
+event structure, derived outcomes, sanitized auth-presence context, and
+non-reversible identifier hashes. Exact request/session/tool-call IDs and
+credential-redacted unprojected streams from that pass stay under gitignored
+`.oat/projects/local/` storage for possible Cursor support diagnosis.
+
+The same public artifact intentionally retains the sanitized historical v1
+text-mode record for provenance. That older section includes command arguments
+and prompts, stdout and stderr, exit and duration data, and capture-environment
+details such as user-specific binary paths; it is not limited to the structured
+second-pass allowlist. Re-run after a Cursor client rollout exposes Task in
+headless mode or Cursor support confirms the private requests; review the open
+verification item by 2026-08-08.
 
 ### Legacy compatibility
 
@@ -412,7 +454,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.hillCheckpointDefault` — `every` or `final`. Default HiLL checkpoint behavior in `oat-project-implement`: pause after every phase or only after the last phase. When unset, the skill prompts.
 - `workflow.archiveOnComplete` — boolean. Skip the "Archive after completion?" prompt in `oat-project-complete`. When unset, the skill prompts.
 - `workflow.createPrOnComplete` — boolean. Skip the "Open a PR?" prompt in `oat-project-complete`; when true, completion auto-triggers PR creation. When unset, the skill prompts.
-- `workflow.postImplementSequence` — `wait`, `summary`, `pr`, or `docs-pr`. Controls what `oat-project-implement` chains after final review passes. `wait` stops without auto-chaining, `summary` runs only `oat-project-summary`, `pr` runs `oat-project-pr-final` (which auto-generates summary), `docs-pr` runs `oat-project-document` then `oat-project-pr-final`. When unset, the skill prompts.
+- `workflow.postImplementSequence` — legacy `wait`, `summary`, `pr`, or `docs-pr`, or `{ "preApproval": [...], "postApproval": [...] }`. Legacy values remain strings; structured arrays contain ordered, globally unique `summary`, `document`, and `pr` steps. Pre-approval steps run after final review and before final HiLL approval; post-approval steps run only after that approval. Plain retrieval keeps legacy strings and prints structured values as compact JSON; `--json` returns the raw value.
 - `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
 - `workflow.autoReviewAtHillCheckpoints` — boolean. Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase `oat-reviewer` gates, which run after each phase in Tier 1 regardless of this setting. When unset, the skill prompts.
 - `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.

@@ -1,0 +1,142 @@
+{
+  "assertions": [
+    {
+      "description": "Provisioning manifest is ready for the selected scenario.",
+      "evidence": {
+        "appliedScenario": "implement",
+        "provisioningState": "ready",
+        "readiness": {
+          "status": "ready"
+        }
+      },
+      "id": "manifest-ready",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every phase has one accepted completed phase implementer and reviewer launch; retained schema-v1 evidence does not prove direct-root ownership.",
+      "evidence": {
+        "failingDispatches": [],
+        "ownershipEvidence": "unavailable-schema-v1",
+        "ownershipFailures": [],
+        "phaseIds": ["p01", "p02", "p03"],
+        "taskIds": ["p01-t01", "p01-t02", "p02-t01", "p02-t02", "p03-t01"]
+      },
+      "id": "implement-dispatch-completeness",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every phase implementer, reviewer, and optional nested launch records an exact target at or below the named ceiling.",
+      "evidence": {
+        "failingScopes": []
+      },
+      "id": "implement-exact-target-within-ceiling",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every task has exactly one fixture marker and one exact task commit.",
+      "evidence": {
+        "commitFailures": [],
+        "markerFailures": []
+      },
+      "id": "implement-fixture-markers-and-commits",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Parallel phases used disjoint writes, separate worktrees, and flat branch names.",
+      "evidence": {
+        "journalBranches": [
+          "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+          "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02"
+        ],
+        "mergeIndexes": {
+          "p01": 4,
+          "p02": 8
+        },
+        "phaseStarts": {
+          "p01": "84354cad693b43a71b7961a35938761f241365b8",
+          "p02": "84354cad693b43a71b7961a35938761f241365b8"
+        },
+        "phaseBranches": {
+          "p01": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+          "p02": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02"
+        }
+      },
+      "id": "implement-parallel-isolation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Fan-in completed after all declared dependencies.",
+      "evidence": {
+        "indexes": {
+          "p01-t01": 1,
+          "p01-t02": 2,
+          "p02-t01": 5,
+          "p02-t02": 6,
+          "p03-t01": 10
+        }
+      },
+      "id": "implement-fan-in-reconciliation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every phase reviewer dispatch has exactly one passed row and scoped artifact bound byte-for-byte to reachable fixture history; retained schema-v1 evidence does not prove direct-root ownership.",
+      "evidence": {
+        "failures": [],
+        "ownershipEvidence": "unavailable-schema-v1",
+        "requiredScopes": ["p01", "p02", "p03"]
+      },
+      "id": "implement-phase-review-acceptance-bound",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every required gate review exactly matches gate-owned invocation and corroboration evidence.",
+      "evidence": {
+        "matchedScopes": ["final"],
+        "requiredScopes": ["final"]
+      },
+      "id": "review-gate-corroborated-implementation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every required review has a durable artifact commit and terminal plan row.",
+      "evidence": {
+        "durableScopes": ["final"],
+        "requiredScopes": ["final"]
+      },
+      "id": "review-disposition-durable-implementation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Runtime identity is recorded or explicitly marked not-reported.",
+      "evidence": {
+        "invalidScopes": []
+      },
+      "id": "implement-runtime-identity-status",
+      "severity": "important",
+      "status": "passed"
+    }
+  ],
+  "bundleKind": "workflow",
+  "profile": "implement",
+  "scenario": "implement",
+  "schemaVersion": 1,
+  "status": "passed",
+  "summary": {
+    "failed": 0,
+    "passed": 10,
+    "total": 10
+  },
+  "bundle": {
+    "path": "bundle.json",
+    "sha256": "0bf523ad84e1e776b7e19bf259f4f959a3dfe7274e6f4c4779b70209e9476328"
+  }
+}

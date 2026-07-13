@@ -733,6 +733,14 @@ describe('createSyncCommand', () => {
                 roleName: 'reviewer',
                 content: 'developer_instructions = "review"',
               },
+              {
+                action: 'update',
+                target: 'config',
+                path: '.codex/config.toml',
+                reason: 'codex config differs from desired managed state',
+                content:
+                  '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 4\n',
+              },
             ],
             managedRoles: ['reviewer'],
             aggregateConfigHash: 'hash-reviewer',
@@ -755,6 +763,12 @@ describe('createSyncCommand', () => {
               path: '.codex/agents/reviewer.toml',
               reason: 'managed role file missing',
               roleName: 'reviewer',
+            },
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'codex config differs from desired managed state',
             },
           ],
           managedRoles: ['reviewer'],

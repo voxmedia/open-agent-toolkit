@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "oatVersion": "0.1.47",
+  "oatVersion": "0.1.59",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -1421,7 +1421,67 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-06-23T03:28:27.726Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-repo-improve",
+      "providerPath": ".claude/skills/oat-repo-improve",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T14:39:29.327Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-repo-improve",
+      "providerPath": ".cursor/skills/oat-repo-improve",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T14:39:29.328Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-dispatch-subagents",
+      "providerPath": ".claude/skills/oat-dispatch-subagents",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T16:37:02.165Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-dispatch-subagents",
+      "providerPath": ".claude/skills/oat-project-dispatch-subagents",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T16:37:02.167Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-dispatch-subagents",
+      "providerPath": ".cursor/skills/oat-dispatch-subagents",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T16:37:02.168Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-dispatch-subagents",
+      "providerPath": ".cursor/skills/oat-project-dispatch-subagents",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-12T16:37:02.168Z"
     }
   ],
-  "lastUpdated": "2026-06-23T03:28:27.726Z"
+  "lastUpdated": "2026-07-12T16:37:02.168Z"
 }

@@ -1,0 +1,128 @@
+{
+  "assertions": [
+    {
+      "description": "Provisioning manifest is ready for the selected scenario.",
+      "evidence": {
+        "appliedScenario": "implement",
+        "provisioningState": "ready",
+        "readiness": {
+          "status": "ready"
+        }
+      },
+      "id": "manifest-ready",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every one of the five fixture tasks has exactly one accepted completed launch.",
+      "evidence": {
+        "failingTasks": [],
+        "taskIds": ["p01-t01", "p01-t02", "p02-t01", "p02-t02", "p03-t01"]
+      },
+      "id": "implement-dispatch-completeness",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every task records an exact selected target at or below the named ceiling.",
+      "evidence": {
+        "failingScopes": []
+      },
+      "id": "implement-exact-target-within-ceiling",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every task has exactly one fixture marker and one exact task commit.",
+      "evidence": {
+        "commitFailures": [],
+        "markerFailures": []
+      },
+      "id": "implement-fixture-markers-and-commits",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Parallel phases used disjoint writes, separate worktrees, and flat branch names.",
+      "evidence": {
+        "journalBranches": [
+          "smoke-automated-2026-07-12T20-55-25-660Z-955f7961-07a3-487e-b804-9bba1e7dc994-p01",
+          "smoke-automated-2026-07-12T20-55-25-660Z-955f7961-07a3-487e-b804-9bba1e7dc994-p02"
+        ],
+        "mergeIndexes": {
+          "p01": 4,
+          "p02": 8
+        },
+        "phaseStarts": {
+          "p01": "ae636cc88e2f86bd237a6ad015fe9817bbd16b6b",
+          "p02": "ae636cc88e2f86bd237a6ad015fe9817bbd16b6b"
+        },
+        "phaseBranches": {
+          "p01": "smoke-automated-2026-07-12T20-55-25-660Z-955f7961-07a3-487e-b804-9bba1e7dc994-p01",
+          "p02": "smoke-automated-2026-07-12T20-55-25-660Z-955f7961-07a3-487e-b804-9bba1e7dc994-p02"
+        }
+      },
+      "id": "implement-parallel-isolation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Fan-in completed after all declared dependencies.",
+      "evidence": {
+        "indexes": {
+          "p01-t01": 1,
+          "p01-t02": 2,
+          "p02-t01": 5,
+          "p02-t02": 6,
+          "p03-t01": 11
+        }
+      },
+      "id": "implement-fan-in-reconciliation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every required gate review exactly matches gate-owned invocation and corroboration evidence.",
+      "evidence": {
+        "matchedScopes": ["final"],
+        "requiredScopes": ["final"]
+      },
+      "id": "review-gate-corroborated-implementation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Every required review has a durable artifact commit and terminal plan row.",
+      "evidence": {
+        "durableScopes": ["final"],
+        "requiredScopes": ["final"]
+      },
+      "id": "review-disposition-durable-implementation",
+      "severity": "important",
+      "status": "passed"
+    },
+    {
+      "description": "Runtime identity is recorded or explicitly marked not-reported.",
+      "evidence": {
+        "invalidScopes": []
+      },
+      "id": "implement-runtime-identity-status",
+      "severity": "important",
+      "status": "passed"
+    }
+  ],
+  "bundleKind": "workflow",
+  "profile": "implement",
+  "scenario": "implement",
+  "schemaVersion": 1,
+  "status": "passed",
+  "summary": {
+    "failed": 0,
+    "passed": 9,
+    "total": 9
+  },
+  "bundle": {
+    "path": "bundle.json",
+    "sha256": "4e3a69c52024ed85ae11cbc2c240561961395913a841a0030453edf98df9770a"
+  }
+}

@@ -94,6 +94,23 @@ model that ran, and the reviewer must not replace them with self-identification.
 The CLI compares the copied values with its gate-owned record before it applies
 the severity threshold.
 
+### Gate dispatch report semantics
+
+When gate dispatch is represented in a `DispatchReportV1`, consumers require
+`schemaVersion: 1` and keep three facts independent:
+
+- `gateInvocation` is the immutable configured run ID, target, runtime, model,
+  reasoning effort, and source.
+- `runtimeIdentity` is observed or otherwise supported producer identity; it is
+  `not-reported` when no runtime evidence exists.
+- gate `diversity` describes producer/reviewer routing and achieved separation;
+  it does not overwrite either configured invocation or runtime identity.
+
+Configured target values, requested controls, producer stamps, and reviewer
+self-report are not interchangeable. The human report is rendered from the
+versioned object, and any parseable `Dispatch:` compatibility line is derived
+from that same report rather than rebuilt from target IDs or model names.
+
 ### Review project resolution and corroboration
 
 `--project <path-or-name>` is a declaration. OAT normalizes the declared path
@@ -501,7 +518,7 @@ Gate failure behavior is owned by the gate-aware skill:
 available target. Once a target actually runs, its exit code is the gate result;
 OAT does not try another target after a failed review.
 
-Gate target execution has a child-process timeout (default 10 minutes, override
+Gate target execution has a child-process timeout (default 15 minutes, override
 with `OAT_GATE_EXEC_TIMEOUT_MS`). When a review target times out, JSON output
 reports `status: review_failed`, `outcome: review_did_not_complete`,
 `timedOut: true`, and the timeout value so automation can distinguish a hung

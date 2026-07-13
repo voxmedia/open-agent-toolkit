@@ -16,3 +16,4 @@ Use this section when you are changing OAT itself rather than consuming it as a 
 - [CLI Design Principles](design-principles.md) - Cross-cutting CLI architecture and UX principles.
 - [Commit Conventions](commit-conventions.md) - Traceable commit patterns for project and docs work.
 - [Hooks and Safety](hooks-and-safety.md) - Safety and mutation contracts for provider-sync behavior.
+- [Smoke Testing](smoke-testing.md) - Runbook for the live workflow smoke runner: prerequisites, scenarios, evidence reports, and recovery.

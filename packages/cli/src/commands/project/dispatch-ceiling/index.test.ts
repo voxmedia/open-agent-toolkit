@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -19,6 +20,38 @@ interface HarnessOptions {
   home: string;
   activeProjectPath?: string | null;
   processEnv?: NodeJS.ProcessEnv;
+}
+
+interface ReviewSelectionExpectation {
+  policy: string;
+  source: string;
+  ceilingTier: string;
+  target: unknown;
+  dispatchArgs: unknown;
+  modelAxis: string;
+  effortAxis: string;
+}
+
+function coordinatorReviewSelectionMatches(
+  payload: Record<string, unknown>,
+  providerName: string,
+  expected: ReviewSelectionExpectation,
+): boolean {
+  const providers = payload.providers as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  const provider = providers?.[providerName];
+  const selection = provider?.selection as Record<string, unknown> | undefined;
+
+  return (
+    payload.policy === expected.policy &&
+    payload.source === expected.source &&
+    selection?.ceilingTier === expected.ceilingTier &&
+    isDeepStrictEqual(selection?.target, expected.target) &&
+    isDeepStrictEqual(provider?.dispatchArgs, expected.dispatchArgs) &&
+    provider?.modelAxis === expected.modelAxis &&
+    provider?.effortAxis === expected.effortAxis
+  );
 }
 
 function createHarness(options: HarnessOptions): {
@@ -232,6 +265,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           dispatchArgs: null,
           modelAxis: 'unresolved',
           effortAxis: 'unresolved',
+          selection: { candidateIndex: null },
         },
       },
     });
@@ -425,6 +459,134 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('ignores direct structured project-state tier targets as malformed legacy input', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    codex:',
+        '      high: { model: gpt-5.6-sol, effort: high }',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      value: 'xhigh',
+      matrix: null,
+      providers: { codex: { selection: { candidateIndex: null } } },
+    });
+    expect(capture.warn).toEqual([
+      'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves modern project candidate ladders in the top-level JSON compatibility field', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    codex:',
+        '      balanced:',
+        '        candidates:',
+        '          - { harness: codex, model: gpt-5.6-terra, effort: medium }',
+        '      high:',
+        '        candidates:',
+        '          - { harness: codex, model: gpt-5.6-sol, effort: high }',
+        '          - route:',
+        '              - { harness: codex, model: gpt-5.6-sol, effort: xhigh }',
+        '              - { harness: cursor, model: gpt-5.6-sol-xhigh }',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      matrix: {
+        codex: {
+          balanced: {
+            candidates: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-terra',
+                effort: 'medium',
+              },
+            ],
+          },
+          high: {
+            candidates: [
+              {
+                harness: 'codex',
+                model: 'gpt-5.6-sol',
+                effort: 'high',
+              },
+              {
+                route: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'xhigh',
+                  },
+                  { harness: 'cursor', model: 'gpt-5.6-sol-xhigh' },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      providers: {
+        codex: {
+          cellSource: 'project-state',
+          selection: {
+            candidateTier: 'balanced',
+            requestedCandidate: {
+              model: 'gpt-5.6-terra',
+              effort: 'medium',
+            },
+          },
+        },
+      },
+    });
+    expect(capture.warn).toEqual([]);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('ignores malformed project dispatch matrix overrides with a warning', async () => {
     const { root, home } = await setup();
     await writeFile(
@@ -462,6 +624,38 @@ describe('oat project dispatch-ceiling resolve', () => {
       status: 'resolved',
       provider: 'codex',
       value: 'high',
+      matrix: null,
+    });
+    expect(capture.warn).toEqual([
+      'Ignoring malformed oat_dispatch_policy.matrix in project state.',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns when the project dispatch matrix is not an object', async () => {
+    const { root, home } = await setup();
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: balanced',
+        '  matrix: malformed',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'codex', '--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
       matrix: null,
     });
     expect(capture.warn).toEqual([
@@ -722,7 +916,6 @@ describe('oat project dispatch-ceiling resolve', () => {
           },
         },
       });
-
       const { command, capture } = createHarness({ cwd: root, home });
       await runCommand(command, [
         '--provider',
@@ -733,15 +926,21 @@ describe('oat project dispatch-ceiling resolve', () => {
         '--non-interactive',
         '--json',
       ]);
-      await runCommand(command, [
+      const reviewerArgs = [
         '--provider',
         'cursor',
         '--role',
         'reviewer',
         '--preflight',
         '--non-interactive',
+        '--report-scope',
+        'p04',
+        '--report-action',
+        'review',
         '--json',
-      ]);
+      ];
+      expect(reviewerArgs).not.toContain('--ceiling-tier');
+      await runCommand(command, reviewerArgs);
 
       for (const payload of capture.jsonPayloads) {
         expect(payload).toMatchObject({
@@ -766,6 +965,87 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(process.exitCode).toBe(0);
     },
   );
+
+  it('matches the coordinator review envelope and rejects source or target drift', async () => {
+    const { root, home } = await setup();
+    const target = 'gpt-5.6-sol-xhigh';
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  matrix:',
+        '    cursor:',
+        `      high: ${target}`,
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--role',
+      'reviewer',
+      '--preflight',
+      '--non-interactive',
+      '--report-scope',
+      'p04',
+      '--report-action',
+      'review',
+      '--project-path',
+      '.oat/projects/shared/demo',
+      '--json',
+    ]);
+
+    const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+    const expected: ReviewSelectionExpectation = {
+      policy: 'high',
+      source: 'project-state',
+      ceilingTier: 'high',
+      target: {
+        harness: 'cursor',
+        crossHarness: false,
+        routeIndex: 0,
+        routeLength: 1,
+        model: target,
+      },
+      dispatchArgs: { model: target },
+      modelAxis: `selected:${target}`,
+      effortAxis: 'not-applicable',
+    };
+
+    expect(coordinatorReviewSelectionMatches(payload, 'cursor', expected)).toBe(
+      true,
+    );
+    expect(
+      coordinatorReviewSelectionMatches(payload, 'cursor', {
+        ...expected,
+        source: 'project',
+      }),
+    ).toBe(false);
+    expect(
+      coordinatorReviewSelectionMatches(payload, 'cursor', {
+        ...expected,
+        target: {
+          harness: 'cursor',
+          crossHarness: false,
+          routeIndex: 0,
+          routeLength: 1,
+          model: 'different-target',
+        },
+      }),
+    ).toBe(false);
+    expect(process.exitCode).toBe(0);
+  });
 
   it('keeps single-axis capped selection unchanged when escalation level is present', async () => {
     const { root, home } = await setup();
@@ -1143,6 +1423,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           },
         },
       });
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        '[agents]\nmax_depth = 2\n',
+        'utf8',
+      );
 
       const { command, capture } = createHarness({ cwd: root, home });
       await runCommand(command, [
@@ -1215,7 +1501,6 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
-
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
       '--provider',
@@ -1457,6 +1742,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           },
           selection: {
             candidateTier: 'balanced',
+            candidateIndex: 1,
             ceilingTier: 'balanced',
           },
         },
@@ -1477,6 +1763,289 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(absent.capture.jsonPayloads[0]?.message).toContain(
       'is not present in the configured codex candidate ladders',
     );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('adds an optional dispatch report after exact resolution and preserves non-first candidate provenance', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'low',
+                  },
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--report-scope',
+      'p03-t04',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      policy: 'balanced',
+      source: 'repo-config',
+      providers: {
+        codex: {
+          selection: {
+            candidateIndex: 1,
+            selectionBranch: 'candidate-requested',
+          },
+        },
+      },
+      dispatchReport: {
+        schemaVersion: 1,
+        route: {
+          scope: 'p03-t04',
+          action: 'implementation',
+          role: 'implementer',
+          target: 'oat-phase-implementer-gpt-5-6-terra-medium',
+        },
+        policy: {
+          status: 'resolved',
+          mode: 'managed',
+          name: 'balanced',
+          source: 'repo-config',
+        },
+        selection: {
+          requestedCandidate: {
+            model: 'gpt-5.6-terra',
+            effort: 'medium',
+          },
+          candidateTier: 'balanced',
+          candidateIndex: 1,
+          exactSelectedTarget: {
+            model: 'gpt-5.6-terra',
+            effort: 'medium',
+          },
+          selectionBranch: 'candidate-requested',
+          cellSource: 'repo-config',
+        },
+        requestedControls: {
+          model: {
+            value: 'gpt-5.6-terra',
+            mechanism: 'materialized-role',
+          },
+          effort: {
+            value: 'medium',
+            mechanism: 'materialized-role',
+          },
+        },
+        configuredDefaults: {
+          effort: null,
+          effortSource: null,
+        },
+        runtimeIdentity: {
+          producer: null,
+          provenance: 'unknown',
+          confidence: 'not-reported',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('leaves JSON and human output unchanged when report context is absent', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const jsonHarness = createHarness({ cwd: root, home });
+    await runCommand(jsonHarness.command, ['--provider', 'codex', '--json']);
+    expect({
+      ...(jsonHarness.capture.jsonPayloads[0] as Record<string, unknown>),
+      projectPath: '<project-path>',
+    }).toMatchInlineSnapshot(`
+      {
+        "matrix": null,
+        "policy": null,
+        "policyMode": "inherit",
+        "preset": null,
+        "projectPath": "<project-path>",
+        "provider": "codex",
+        "providerDefaultEffort": "unknown",
+        "providers": {
+          "codex": {
+            "cellSource": null,
+            "dispatchArgs": null,
+            "effortAxis": "provider-default",
+            "mechanism": "pinned-variant",
+            "mode": "advisory",
+            "modelAxis": "inherited",
+            "selection": {
+              "candidateIndex": null,
+              "candidateTier": null,
+              "capped": false,
+              "ceilingTarget": null,
+              "ceilingTier": null,
+              "cellSource": null,
+              "family": "unknown",
+              "policy": null,
+              "policyMode": "inherit",
+              "preferredValue": null,
+              "requestedCandidate": null,
+              "role": "implementer",
+              "selectedValue": null,
+              "selectionBranch": "inherit",
+              "selectionMode": "inherit-default",
+              "target": null,
+            },
+            "target": null,
+            "value": null,
+            "verifyOnDispatch": false,
+          },
+        },
+        "source": "repo-config",
+        "status": "resolved",
+        "unresolved": false,
+        "value": null,
+      }
+    `);
+
+    const humanHarness = createHarness({ cwd: root, home });
+    await runCommand(humanHarness.command, ['--provider', 'codex']);
+    expect(humanHarness.capture.info.join('\n')).toMatchInlineSnapshot(`
+      "Codex dispatch policy: inherit host defaults
+      Resolved cap: none
+      Source: repo config
+      Mode: advisory (pinned-variant)
+      Selection: inherit-default
+      Codex provider default effort: unknown
+      Note: OAT will not select a Codex effort; base/unpinned roles resolve through the provider default."
+    `);
+  });
+
+  it('reports the Codex config source only when the configured default effort is known', async () => {
+    const { root, home } = await setup();
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      'model_reasoning_effort = "high"\n',
+      'utf8',
+    );
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providerDefaultEffort: 'high',
+      dispatchReport: {
+        configuredDefaults: {
+          effort: 'high',
+          effortSource: 'codex-config',
+        },
+      },
+    });
+  });
+
+  it('prints formatted human report output after the existing resolver output', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+    ]);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('Codex dispatch policy: inherit host defaults');
+    expect(output).toContain('Dispatch Report V1');
+    expect(output).toContain('Action / role: review / reviewer');
+    expect(output).toContain('Runtime identity was not reported.');
+  });
+
+  it('requires complete report context and validates action against the resolver role', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const incomplete = createHarness({ cwd: root, home });
+    await runCommand(incomplete.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p03-t04',
+      '--json',
+    ]);
+    expect(incomplete.capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: '--report-scope and --report-action must be provided together.',
+    });
+
+    const mismatch = createHarness({ cwd: root, home });
+    await runCommand(mismatch.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+    expect(mismatch.capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining(
+        'review/reviewer requires resolver role reviewer, received implementer',
+      ),
+    });
     expect(process.exitCode).toBe(1);
   });
 
@@ -1884,6 +2453,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         '      economy:',
         '        candidates:',
         '          - { harness: codex, model: gpt-5.6-luna, effort: low }',
+        '          - { harness: codex, model: gpt-5.6-luna, effort: medium }',
         '      high:',
         '        candidates:',
         '          - { harness: codex, model: gpt-5.6-sol, effort: high }',
@@ -1894,7 +2464,6 @@ describe('oat project dispatch-ceiling resolve', () => {
       ].join('\n'),
       'utf8',
     );
-
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
       '--provider',
@@ -1902,7 +2471,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       '--candidate-model',
       'gpt-5.6-luna',
       '--candidate-effort',
-      'low',
+      'medium',
       '--json',
     ]);
 
@@ -1912,14 +2481,15 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         codex: {
           dispatchArgs: {
-            variant: 'oat-phase-implementer-gpt-5-6-luna-low',
+            variant: 'oat-phase-implementer-gpt-5-6-luna-medium',
           },
           selection: {
             requestedCandidate: {
               model: 'gpt-5.6-luna',
-              effort: 'low',
+              effort: 'medium',
             },
             candidateTier: 'economy',
+            candidateIndex: 1,
             ceilingTier: 'high',
             ceilingTarget: {
               model: 'gpt-5.6-sol',
@@ -2023,6 +2593,7 @@ describe('oat project dispatch-ceiling resolve', () => {
             selectionBranch: 'escalation-target',
             requestedCandidate: { model: 'opaque-lower-target' },
             candidateTier: 'economy',
+            candidateIndex: 0,
             ceilingTier: 'high',
             selectedValue: 'sonnet',
             target: {
@@ -2074,6 +2645,12 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 2\n',
+      'utf8',
+    );
 
     const { command, capture } = createHarness({ cwd: root, home });
     await runCommand(command, [
@@ -2332,6 +2909,290 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    ['invalid', 'max_depth = "invalid"'],
+    ['below the required floor', 'max_depth = 0'],
+  ])(
+    'blocks managed codex implementation preflight when project max depth is %s',
+    async (_label, depthLine) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        `[agents]\n${depthLine}\n`,
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'blocked',
+        provider: 'codex',
+        unresolved: true,
+      });
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('root (0) → phase implementer (1)');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('Depth 2 is optional');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain('oat sync --scope project');
+      expect(
+        (capture.jsonPayloads[0] as { message?: string }).message,
+      ).toContain(
+        'oat providers codex materialize <agent-name> --model <model> --effort <effort> --scope project',
+      );
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    ['missing', null],
+    ['one', 1],
+    ['two', 2],
+    ['four', 4],
+  ])(
+    'passes managed codex implementation preflight when project max depth is %s',
+    async (_label, maxDepth) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-sol',
+                    effort: 'high',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        `[agents]\n${maxDepth === null ? '' : `max_depth = ${maxDepth}`}\n`,
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        provider: 'codex',
+        unresolved: false,
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('inherits user max depth for project implementation preflight only when project depth is absent', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(join(root, '.codex', 'config.toml'), '[agents]\n', 'utf8');
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 3\n',
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preflight',
+      '--non-interactive',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      unresolved: false,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not inherit user max depth over an invalid project value during preflight', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = "invalid"\n',
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 4\n',
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--role',
+      'implementer',
+      '--preflight',
+      '--non-interactive',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      provider: 'codex',
+      unresolved: true,
+    });
+    expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
+      'agents.max_depth is not a valid number',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('accepts user-scoped depth one for default phase implementation', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 4\n',
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 1\n',
+      'utf8',
+    );
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(
+      command,
+      [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--preflight',
+        '--non-interactive',
+        '--json',
+      ],
+      ['--scope', 'user'],
+    );
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'codex',
+      unresolved: false,
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('does not use harness as a same-harness route dispatch value', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
@@ -2421,6 +3282,12 @@ describe('oat project dispatch-ceiling resolve', () => {
         '# State',
         '',
       ].join('\n'),
+      'utf8',
+    );
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents]\nmax_depth = 2\n',
       'utf8',
     );
 

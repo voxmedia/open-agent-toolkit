@@ -1,3 +1,7 @@
+import {
+  toDispatchStampRecord,
+  type DispatchReportV1,
+} from './dispatch-report';
 import type { IdentityProvenance } from './provenance';
 
 export type DispatchAction = 'implementation' | 'fix' | 'review';
@@ -90,7 +94,13 @@ function inferRole(action: DispatchAction): DispatchRole {
   return 'implementer';
 }
 
-export function formatDispatchStamp(record: DispatchStampRecord): string {
+export function formatDispatchStamp(record: DispatchStampRecord): string;
+export function formatDispatchStamp(report: DispatchReportV1): string;
+export function formatDispatchStamp(
+  value: DispatchStampRecord | DispatchReportV1,
+): string {
+  const record =
+    'schemaVersion' in value ? toDispatchStampRecord(value) : value;
   const normalized: DispatchStampRecord = {
     scope: singleToken(record.scope, 'unknown'),
     action: record.action,

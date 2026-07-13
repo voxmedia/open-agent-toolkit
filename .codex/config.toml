@@ -1,122 +1,125 @@
 [features]
 multi_agent = true
 
-[agents.oat-codebase-mapper]
-description = "Explores codebase and writes structured analysis documents. Spawned by oat-repo-knowledge-index with a focus area (tech, arch, quality, concerns). Writes documents directly to reduce orchestrator context load."
-config_file = "agents/oat-codebase-mapper.toml"
+[agents]
+max_depth = 3
 
-[agents.oat-reviewer]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer.toml"
+  [agents.oat-codebase-mapper]
+  description = "Explores codebase and writes structured analysis documents. Spawned by oat-repo-knowledge-index with a focus area (tech, arch, quality, concerns). Writes documents directly to reduce orchestrator context load."
+  config_file = "agents/oat-codebase-mapper.toml"
 
-[agents.skeptical-evaluator]
-description = "Adversarial claim evaluator — receives a context package and gathers evidence to disprove then support a claim. Returns structured findings with citations."
-config_file = "agents/skeptical-evaluator.toml"
+  [agents.oat-reviewer]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer.toml"
 
-[agents.oat-phase-implementer]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer.toml"
+  [agents.skeptical-evaluator]
+  description = "Adversarial claim evaluator — receives a context package and gathers evidence to disprove then support a claim. Returns structured findings with citations."
+  config_file = "agents/skeptical-evaluator.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-luna-high]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-luna-high.toml"
+  [agents.oat-phase-implementer]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-sol-high]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-sol-high.toml"
+  [agents.oat-phase-implementer-gpt-5-6-luna-high]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-luna-high.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-sol-max]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-sol-max.toml"
+  [agents.oat-phase-implementer-gpt-5-6-sol-high]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-sol-high.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-terra-xhigh]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-terra-xhigh.toml"
+  [agents.oat-phase-implementer-gpt-5-6-sol-max]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-sol-max.toml"
 
-[agents.oat-reviewer-gpt-5-6-luna-high]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-luna-high.toml"
+  [agents.oat-phase-implementer-gpt-5-6-terra-xhigh]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-terra-xhigh.toml"
 
-[agents.oat-reviewer-gpt-5-6-sol-high]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-sol-high.toml"
+  [agents.oat-reviewer-gpt-5-6-luna-high]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-luna-high.toml"
 
-[agents.oat-reviewer-gpt-5-6-sol-max]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-sol-max.toml"
+  [agents.oat-reviewer-gpt-5-6-sol-high]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-sol-high.toml"
 
-[agents.oat-reviewer-gpt-5-6-terra-xhigh]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-terra-xhigh.toml"
+  [agents.oat-reviewer-gpt-5-6-sol-max]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-sol-max.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-luna-low]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-luna-low.toml"
+  [agents.oat-reviewer-gpt-5-6-terra-xhigh]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-terra-xhigh.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-luna-medium]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-luna-medium.toml"
+  [agents.oat-phase-implementer-gpt-5-6-luna-low]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-luna-low.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-luna-xhigh]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-luna-xhigh.toml"
+  [agents.oat-phase-implementer-gpt-5-6-luna-medium]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-luna-medium.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-sol-low]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-sol-low.toml"
+  [agents.oat-phase-implementer-gpt-5-6-luna-xhigh]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-luna-xhigh.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-sol-medium]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-sol-medium.toml"
+  [agents.oat-phase-implementer-gpt-5-6-sol-low]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-sol-low.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-sol-xhigh]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-sol-xhigh.toml"
+  [agents.oat-phase-implementer-gpt-5-6-sol-medium]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-sol-medium.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-terra-high]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-terra-high.toml"
+  [agents.oat-phase-implementer-gpt-5-6-sol-xhigh]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-sol-xhigh.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-terra-low]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-terra-low.toml"
+  [agents.oat-phase-implementer-gpt-5-6-terra-high]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-terra-high.toml"
 
-[agents.oat-phase-implementer-gpt-5-6-terra-medium]
-description = "Acts as a phase coordinator that dispatches one exact target-pinned task worker at a time, or executes exactly one bounded Task Scope when dispatched as a worker. Used by oat-project-implement."
-config_file = "agents/oat-phase-implementer-gpt-5-6-terra-medium.toml"
+  [agents.oat-phase-implementer-gpt-5-6-terra-low]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-terra-low.toml"
 
-[agents.oat-reviewer-gpt-5-6-luna-low]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-luna-low.toml"
+  [agents.oat-phase-implementer-gpt-5-6-terra-medium]
+  description = "Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement."
+  config_file = "agents/oat-phase-implementer-gpt-5-6-terra-medium.toml"
 
-[agents.oat-reviewer-gpt-5-6-luna-medium]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-luna-medium.toml"
+  [agents.oat-reviewer-gpt-5-6-luna-low]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-luna-low.toml"
 
-[agents.oat-reviewer-gpt-5-6-luna-xhigh]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-luna-xhigh.toml"
+  [agents.oat-reviewer-gpt-5-6-luna-medium]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-luna-medium.toml"
 
-[agents.oat-reviewer-gpt-5-6-sol-low]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-sol-low.toml"
+  [agents.oat-reviewer-gpt-5-6-luna-xhigh]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-luna-xhigh.toml"
 
-[agents.oat-reviewer-gpt-5-6-sol-medium]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-sol-medium.toml"
+  [agents.oat-reviewer-gpt-5-6-sol-low]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-sol-low.toml"
 
-[agents.oat-reviewer-gpt-5-6-sol-xhigh]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-sol-xhigh.toml"
+  [agents.oat-reviewer-gpt-5-6-sol-medium]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-sol-medium.toml"
 
-[agents.oat-reviewer-gpt-5-6-terra-high]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-terra-high.toml"
+  [agents.oat-reviewer-gpt-5-6-sol-xhigh]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-sol-xhigh.toml"
 
-[agents.oat-reviewer-gpt-5-6-terra-low]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-terra-low.toml"
+  [agents.oat-reviewer-gpt-5-6-terra-high]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-terra-high.toml"
 
-[agents.oat-reviewer-gpt-5-6-terra-medium]
-description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
-config_file = "agents/oat-reviewer-gpt-5-6-terra-medium.toml"
+  [agents.oat-reviewer-gpt-5-6-terra-low]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-terra-low.toml"
+
+  [agents.oat-reviewer-gpt-5-6-terra-medium]
+  description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
+  config_file = "agents/oat-reviewer-gpt-5-6-terra-medium.toml"

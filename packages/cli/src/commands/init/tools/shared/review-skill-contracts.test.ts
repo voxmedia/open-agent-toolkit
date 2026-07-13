@@ -8,7 +8,51 @@ function repoFilePath(relativePath: string): string {
 }
 
 function readRepoFile(relativePath: string): string {
-  return readFileSync(repoFilePath(relativePath), 'utf8');
+  const content = readFileSync(repoFilePath(relativePath), 'utf8');
+  if (relativePath !== '.agents/skills/oat-project-implement/SKILL.md') {
+    return content;
+  }
+  const successIndex = content.indexOf('## Success Criteria');
+  const references = [
+    'dispatch-and-dry-run.md',
+    'plan-and-resume.md',
+    'phase-execution.md',
+    'completion-and-closeout.md',
+  ].map((path) =>
+    readFileSync(
+      repoFilePath(`.agents/skills/oat-project-implement/references/${path}`),
+      'utf8',
+    ),
+  );
+  return [
+    content.slice(0, successIndex),
+    ...references,
+    content.slice(successIndex),
+  ].join('\n\n');
+}
+
+function actionableResolverInvocations(content: string): string[] {
+  const normalized = content.replace(/\\\r?\n\s*/g, ' ');
+  return [
+    ...normalized.matchAll(
+      /(?:pnpm run cli -- project|oat project) dispatch-ceiling resolve[^`\n]*/g,
+    ),
+  ]
+    .map(([command]) => command.trim())
+    .filter((command) => command.includes('--provider'));
+}
+
+function expectValidReportContext(command: string): void {
+  expect(command).toMatch(/--report-scope\s+\S+/);
+  expect(command).toMatch(
+    /--report-action\s+(implementation|fix|review)(?:\s|$)/,
+  );
+  if (/--role\s+reviewer/.test(command)) {
+    expect(command).toMatch(/--report-action\s+review(?:\s|$)/);
+  }
+  if (/--role\s+implementer/.test(command)) {
+    expect(command).toMatch(/--report-action\s+(?:implementation|fix)(?:\s|$)/);
+  }
 }
 
 describe('review skill contracts', () => {
@@ -94,10 +138,9 @@ describe('review skill contracts', () => {
   });
 
   it('defines auto-review checkpoint scope from the last passed whole-phase review', () => {
-    const skillPath = repoFilePath(
+    const content = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
-    const content = readFileSync(skillPath, 'utf8');
 
     expect(content).toContain(
       'Count only whole-phase scopes: `pNN` or `pNN-pMM`',
@@ -136,11 +179,11 @@ describe('review skill contracts', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content).toContain(
-      'If this is the final implementation phase checkpoint, run `oat-project-review-provide code final`',
+    expect(content).toMatch(
+      /If this is the final implementation phase checkpoint, run\s+`oat-project-review-provide code final`/,
     );
-    expect(content).toContain(
-      'do not run a duplicate final phase-only lifecycle review',
+    expect(content).toMatch(
+      /do not run a duplicate final\s+phase-only lifecycle review/,
     );
   });
 
@@ -173,6 +216,57 @@ describe('review skill contracts', () => {
       'Dispatch policy: {policy}; selected={selected value | none}; cap={value | none}',
     );
     expect(content).not.toContain('Producer: {slug | unknown}');
+  });
+
+  it('requires implementation and review workflows to consume Dispatch Report V1', () => {
+    const skillPaths = [
+      '.agents/skills/oat-project-implement/SKILL.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    ];
+
+    for (const path of skillPaths) {
+      const content = readRepoFile(path);
+      const invocations = actionableResolverInvocations(content);
+      expect(
+        invocations.length,
+        `${path} actionable resolver invocations`,
+      ).toBeGreaterThan(0);
+      for (const invocation of invocations) {
+        expectValidReportContext(invocation);
+      }
+      expect(content, `${path} schema version`).toContain(
+        'dispatchReport.schemaVersion: 1',
+      );
+      expect(content, `${path} human renderer`).toContain(
+        'formatDispatchReport(dispatchReport)',
+      );
+      expect(content, `${path} derived stamp`).toContain(
+        'formatDispatchStamp(dispatchReport)',
+      );
+      expect(content, `${path} stamp adapter`).toContain(
+        'toDispatchStampRecord(dispatchReport)',
+      );
+      expect(content, `${path} exact provider payload`).toContain(
+        'providers.<provider>.dispatchArgs',
+      );
+      expect(content, `${path} exact selected target`).toContain(
+        'providers.<provider>.selection.target',
+      );
+      expect(content, `${path} runtime identity field`).toContain(
+        'dispatchReport.runtimeIdentity',
+      );
+      expect(content, `${path} runtime identity default`).toContain(
+        'not-reported',
+      );
+    }
+
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+    expect(remote).toMatch(
+      /oat gate[\s\S]{0,160}must not contain or add[\s\S]{0,120}--target/i,
+    );
   });
 
   it('documents codex dispatch through resolver-returned materialized roles', () => {
@@ -209,7 +303,7 @@ describe('review skill contracts', () => {
     );
 
     const reviewScopeBlock = implementerContent.match(
-      /Tier 1: dispatch the selected reviewer target[\s\S]*?```(?<scope>[\s\S]*?)```/,
+      /Include resolved dispatch context in scope packets when known:[\s\S]*?```yaml(?<scope>[\s\S]*?)```/,
     )?.groups?.scope;
     expect(reviewScopeBlock).toBeDefined();
     expect(reviewScopeBlock).toContain(
@@ -218,8 +312,8 @@ describe('review skill contracts', () => {
     expect(reviewScopeBlock).not.toContain(
       'model_axis: {inherited | selected:<Claude model>}',
     );
-    expect(implementerContent).toContain(
-      'Codex materialized reviewer role selected from a model+effort target',
+    expect(implementerContent).toMatch(
+      /For review dispatch:[\s\S]{0,240}providers\.codex\.dispatchArgs\.variant[\s\S]{0,160}providers\.codex\.selection\.target/,
     );
 
     const inheritedMaterializedCodexExamples = Array.from(

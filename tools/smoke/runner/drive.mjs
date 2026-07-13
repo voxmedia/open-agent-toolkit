@@ -1,0 +1,723 @@
+import { execFile, spawn } from 'node:child_process';
+import { createHash, randomUUID } from 'node:crypto';
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+import { collectEvidence } from '../evidence/collect.mjs';
+import { emitEvidenceReport } from '../evidence/report.mjs';
+import { updateSmokeManifest } from './journal.mjs';
+import { gateTargetForHarness } from './provision.mjs';
+
+const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
+const repositoryRoot = resolve(runnerDirectory, '../../..');
+const protocolsDirectory = resolve(runnerDirectory, '../protocols');
+const runRoot = join(repositoryRoot, 'tools/smoke/.runs');
+const sourceOatEntryPoint = join(repositoryRoot, 'packages/cli/dist/index.js');
+const cursorBrokerLauncher = join(
+  repositoryRoot,
+  'tools/smoke/runner/cursor-broker-launch.mjs',
+);
+const deterministicProvider = join(
+  repositoryRoot,
+  'tools/smoke/deterministic/provider.mjs',
+);
+const PROMPT_START = '<!-- OAT_SMOKE_PROMPT_START -->';
+const PROMPT_END = '<!-- OAT_SMOKE_PROMPT_END -->';
+const execFileAsync = promisify(execFile);
+
+const PROTOCOL_FILES = Object.freeze({
+  deterministic: 'deterministic.md',
+  claude: 'claude.md',
+  codex: 'codex.md',
+  'cursor-cli': 'cursor-cli.md',
+  'cursor-ide': 'cursor-ide.md',
+});
+
+const SCENARIO_INSTRUCTIONS = Object.freeze({
+  full: 'Complete one plan review gate first, then implement all fixture phases with one root-owned phase review per phase and exactly one external final code gate after p03. Stop when implementation is complete; do not run final closeout.',
+  implement:
+    'Implement all fixture phases from the implementation-ready state with one root-owned phase review per phase and exactly one external final code gate after p03. Stop when implementation is complete; do not run final closeout.',
+  'plan-review':
+    'Complete the active plan review and receive path until the project is implementation-ready. Follow CONTRACT.md plan-review transition ordering exactly: do not journal the gate received-row commit; commit and journal receive as pre-review → reviewed; then separately commit and journal readiness as reviewed → implementation-ready. Verify each observed edge before publishing its immutable record. Do not implement any fixture task.',
+});
+
+export class DriveError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'DriveError';
+  }
+}
+
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function shellQuote(value) {
+  return `'${String(value).replaceAll("'", "'\\''")}'`;
+}
+
+async function atomicWriteJson(path, value) {
+  await mkdir(dirname(path), { recursive: true });
+  const temporaryPath = `${path}.${process.pid}-${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`);
+    await rename(temporaryPath, path);
+  } finally {
+    await rm(temporaryPath, { force: true }).catch(() => {});
+  }
+}
+
+export async function formatBundleForPublication(bundlePath) {
+  await execFileAsync(
+    'pnpm',
+    ['exec', 'oxfmt', '--write', resolve(bundlePath)],
+    {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        PATH: `${join(repositoryRoot, 'tools/smoke/bin')}:${process.env.PATH ?? ''}`,
+      },
+    },
+  );
+}
+
+export async function publishReportDirectory(
+  stagingDirectory,
+  reportDirectory,
+  { fileSystem = { mkdir, rename, rm } } = {},
+) {
+  await fileSystem.mkdir(dirname(reportDirectory), { recursive: true });
+  const backupDirectory = join(
+    dirname(stagingDirectory),
+    `report-previous-${randomUUID()}`,
+  );
+  let previousMoved = false;
+  try {
+    await fileSystem.rename(reportDirectory, backupDirectory);
+    previousMoved = true;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+  try {
+    await fileSystem.rename(stagingDirectory, reportDirectory);
+  } catch (error) {
+    if (previousMoved) {
+      try {
+        await fileSystem.rename(backupDirectory, reportDirectory);
+      } catch (restoreError) {
+        throw new DriveError(
+          `Smoke report publication failed and prior evidence remains at ${backupDirectory}: ${restoreError.message}`,
+        );
+      }
+    }
+    throw error;
+  }
+  if (previousMoved) {
+    await fileSystem
+      .rm(backupDirectory, { force: true, recursive: true })
+      .catch(() => {});
+  }
+}
+
+function scenarioInstruction(scenario) {
+  const instruction = SCENARIO_INSTRUCTIONS[scenario];
+  if (!instruction) {
+    throw new DriveError(`Unknown smoke scenario: ${scenario}`);
+  }
+  return instruction;
+}
+
+export function reportRootFor(
+  { driveMode, harness, scenario },
+  repository = repositoryRoot,
+) {
+  return join(
+    repository,
+    'tools',
+    'smoke',
+    'reports',
+    harness,
+    ...(driveMode === 'operator' ? ['operator'] : []),
+    scenario,
+  );
+}
+
+export function recoveryRootFor(manifest, repository = repositoryRoot) {
+  if (
+    typeof manifest?.runIdentity !== 'string' ||
+    !/^smoke-[A-Za-z0-9-]+$/u.test(manifest.runIdentity)
+  ) {
+    throw new DriveError('Smoke recovery requires a valid run identity.');
+  }
+  return join(repository, 'tools', 'smoke', 'recovery', manifest.runIdentity);
+}
+
+export function protocolPathFor(harness) {
+  const fileName = PROTOCOL_FILES[harness];
+  if (!fileName) {
+    throw new DriveError(`Unknown smoke harness: ${harness}`);
+  }
+  return join(protocolsDirectory, fileName);
+}
+
+function extractPromptTemplate(contents, path) {
+  const start = contents.indexOf(PROMPT_START);
+  const end = contents.indexOf(PROMPT_END);
+  if (start === -1 || end === -1 || end <= start) {
+    throw new DriveError(`Smoke protocol has no canned prompt block: ${path}`);
+  }
+  return contents
+    .slice(start + PROMPT_START.length, end)
+    .trim()
+    .replace(/^```text\n/u, '')
+    .replace(/\n```$/u, '');
+}
+
+export async function loadProtocol(
+  { gateTarget, harness, scenario },
+  { read = readFile } = {},
+) {
+  gateTarget ??= gateTargetForHarness(harness);
+  const path = protocolPathFor(harness);
+  const contents = await read(path, 'utf8');
+  const prompt = extractPromptTemplate(contents, path)
+    .replaceAll('{{SCENARIO}}', scenario)
+    .replaceAll('{{SCENARIO_INSTRUCTIONS}}', scenarioInstruction(scenario))
+    .replaceAll('{{GATE_TARGET}}', gateTarget);
+  return { contents, path, prompt };
+}
+
+export function createInvocationPlan({
+  driveMode,
+  gitMetadataPath,
+  harness,
+  prompt,
+  runMetadataPath,
+  worktreePath,
+}) {
+  const operator = driveMode === 'operator';
+  if (harness === 'deterministic' && operator) {
+    throw new DriveError(
+      'Deterministic smoke harness supports automated drive mode only.',
+    );
+  }
+  if (
+    harness === 'codex' &&
+    (typeof gitMetadataPath !== 'string' ||
+      gitMetadataPath.length === 0 ||
+      typeof runMetadataPath !== 'string' ||
+      runMetadataPath.length === 0)
+  ) {
+    throw new DriveError(
+      'Codex smoke drive requires its Git and run metadata roots.',
+    );
+  }
+  if (operator) {
+    const command = {
+      claude: { args: [], executable: 'claude' },
+      codex: {
+        args: [
+          '-C',
+          worktreePath,
+          '--sandbox',
+          'workspace-write',
+          '--add-dir',
+          gitMetadataPath,
+          '--add-dir',
+          runMetadataPath,
+        ],
+        executable: 'codex',
+      },
+      'cursor-cli': { args: [], executable: 'cursor-agent' },
+      'cursor-ide': { args: [worktreePath], executable: 'cursor' },
+    }[harness];
+    if (!command) {
+      throw new DriveError(`Unknown smoke harness: ${harness}`);
+    }
+    return { ...command, cwd: worktreePath, operator: true, prompt };
+  }
+
+  const command = {
+    deterministic: {
+      args: [deterministicProvider],
+      executable: process.execPath,
+    },
+    claude: {
+      args: [
+        '-p',
+        '--permission-mode',
+        'bypassPermissions',
+        '--output-format',
+        'stream-json',
+        '--verbose',
+        prompt,
+      ],
+      executable: 'claude',
+    },
+    codex: {
+      args: [
+        'exec',
+        '--ephemeral',
+        '--sandbox',
+        'workspace-write',
+        '--add-dir',
+        gitMetadataPath,
+        '--add-dir',
+        runMetadataPath,
+        '--dangerously-bypass-hook-trust',
+        '--json',
+        '-C',
+        worktreePath,
+        prompt,
+      ],
+      executable: 'codex',
+    },
+    'cursor-cli': {
+      args: [
+        '-p',
+        '--force',
+        '--trust',
+        '--output-format',
+        'stream-json',
+        '--workspace',
+        worktreePath,
+        prompt,
+      ],
+      executable: 'cursor-agent',
+    },
+    'cursor-ide': {
+      args: [worktreePath],
+      executable: 'cursor',
+      manualOnly: true,
+    },
+  }[harness];
+  if (!command) {
+    throw new DriveError(`Unknown smoke harness: ${harness}`);
+  }
+  return {
+    ...command,
+    credentialBroker: harness === 'codex',
+    cwd: worktreePath,
+    operator: false,
+    prompt,
+  };
+}
+
+export function renderHandoff(plan) {
+  const baseCommand = [plan.executable, ...plan.args];
+  const invocation = (
+    plan.credentialBroker
+      ? [process.execPath, cursorBrokerLauncher, '--', ...baseCommand]
+      : baseCommand
+  )
+    .map(shellQuote)
+    .join(' ');
+  const command = [
+    `export OAT_SMOKE_LOCAL_CLI=${shellQuote(sourceOatEntryPoint)}`,
+    `export PATH=${shellQuote(join(plan.cwd, 'tools/smoke/bin'))}:"$PATH"`,
+    invocation,
+  ].join('; ');
+  return [
+    `Working directory: ${plan.cwd}`,
+    `Command: ${command}`,
+    '',
+    'Paste this canned root prompt:',
+    '',
+    plan.prompt,
+  ].join('\n');
+}
+
+async function executeInvocation(plan, { registerSubprocess } = {}) {
+  return new Promise((resolvePromise, reject) => {
+    const executable = plan.credentialBroker
+      ? process.execPath
+      : plan.executable;
+    const args = plan.credentialBroker
+      ? [cursorBrokerLauncher, '--', plan.executable, ...plan.args]
+      : plan.args;
+    const child = spawn(executable, args, {
+      cwd: plan.cwd,
+      env: {
+        ...process.env,
+        OAT_SMOKE_LOCAL_CLI: sourceOatEntryPoint,
+        PATH: `${join(plan.cwd, 'tools/smoke/bin')}:${process.env.PATH ?? ''}`,
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const unregister = registerSubprocess?.(child);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+      process.stdout.write(chunk);
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+      process.stderr.write(chunk);
+    });
+    child.once('error', (error) => {
+      unregister?.();
+      reject(error);
+    });
+    child.once('close', (code, signal) => {
+      unregister?.();
+      if (code === 0) {
+        resolvePromise({ code, signal, stderr, stdout });
+      } else {
+        reject(
+          new DriveError(
+            `Smoke drive exited with ${signal ?? `code ${String(code)}`}.`,
+          ),
+        );
+      }
+    });
+  });
+}
+
+function assertReady(options, context, manifest) {
+  if (context.results?.preflight?.status !== 'ready') {
+    throw new DriveError(
+      `Smoke drive refused ${options.harness}: preflight is not ready.`,
+    );
+  }
+  if (
+    manifest?.readiness?.status !== 'ready' ||
+    manifest.harness !== options.harness ||
+    manifest.appliedScenario !== options.scenario ||
+    manifest.driveMode !== options.driveMode
+  ) {
+    throw new DriveError(
+      'Smoke manifest does not match the ready drive request.',
+    );
+  }
+}
+
+async function saveManifestUpdate(manifest, update) {
+  const updated = await updateSmokeManifest(manifest.manifestPath, (current) =>
+    update(current),
+  );
+  for (const key of Object.keys(manifest)) {
+    delete manifest[key];
+  }
+  Object.assign(manifest, updated);
+  return updated;
+}
+
+async function saveDriveRecord(manifest, record) {
+  return saveManifestUpdate(manifest, (current) => ({
+    ...current,
+    createdPaths: [
+      ...new Set([
+        ...(current.createdPaths ?? []),
+        ...(manifest.createdPaths ?? []),
+      ]),
+    ],
+    drive: record,
+  }));
+}
+
+export async function driveSmoke(
+  options,
+  context,
+  { execute = executeInvocation, reporter = console.log } = {},
+) {
+  const manifest = context.manifest;
+  assertReady(options, context, manifest);
+  const protocol = await loadProtocol({
+    ...options,
+    gateTarget: manifest.gateTarget,
+  });
+  const plan = createInvocationPlan({
+    ...options,
+    gitMetadataPath: manifest.commonGitDir,
+    prompt: protocol.prompt,
+    runMetadataPath: dirname(manifest.manifestPath),
+    worktreePath: manifest.worktreePath,
+  });
+  const record = {
+    driveMode: options.driveMode,
+    invocation: {
+      args:
+        plan.operator || plan.manualOnly ? plan.args : plan.args.slice(0, -1),
+      executable: plan.executable,
+    },
+    promptSha256: sha256(plan.prompt),
+    protocol: relative(repositoryRoot, protocol.path),
+    status: options.dryRun
+      ? 'dry-run-stub'
+      : plan.operator || plan.manualOnly
+        ? 'awaiting-operator'
+        : 'running',
+  };
+
+  if (options.dryRun || plan.operator || plan.manualOnly) {
+    await saveDriveRecord(manifest, record);
+    reporter(renderHandoff(plan));
+    return { plan, record };
+  }
+
+  await saveDriveRecord(manifest, record);
+  try {
+    const result = await execute(plan, context);
+    const outputPath = join(
+      dirname(manifest.manifestPath),
+      'drive-output.json',
+    );
+    await atomicWriteJson(outputPath, {
+      code: result.code,
+      stderr: result.stderr,
+      stdout: result.stdout,
+    });
+    manifest.createdPaths.push(outputPath);
+    await saveDriveRecord(manifest, {
+      ...record,
+      outputPath,
+      status: 'completed',
+    });
+    return { outputPath, plan, record: manifest.drive };
+  } catch (error) {
+    await saveDriveRecord(manifest, {
+      ...record,
+      error: error instanceof Error ? error.message : String(error),
+      status: 'failed',
+    });
+    throw error;
+  }
+}
+
+async function manifestCandidates(runsDirectory) {
+  let entries;
+  try {
+    entries = await readdir(runsDirectory, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+  return Promise.all(
+    entries
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith('smoke-'))
+      .map(async (entry) => {
+        const path = join(
+          runsDirectory,
+          entry.name,
+          'provisioning-manifest.json',
+        );
+        try {
+          return { path, value: JSON.parse(await readFile(path, 'utf8')) };
+        } catch {
+          return null;
+        }
+      }),
+  ).then((candidates) => candidates.filter(Boolean));
+}
+
+export async function loadPreparedManifest(
+  { driveMode, harness, scenario },
+  { runsDirectory = runRoot } = {},
+) {
+  const matches = (await manifestCandidates(runsDirectory)).filter(
+    ({ value }) =>
+      value.appliedScenario === scenario &&
+      value.driveMode === driveMode &&
+      value.harness === harness &&
+      value.readiness?.status === 'ready',
+  );
+  if (matches.length !== 1) {
+    throw new DriveError(
+      `Expected exactly one prepared ${driveMode} ${harness}/${scenario} run; found ${matches.length}.`,
+    );
+  }
+  return matches[0].value;
+}
+
+export async function collectSmoke(
+  options,
+  context,
+  {
+    collect = collectEvidence,
+    emitReport = emitEvidenceReport,
+    formatBundle = formatBundleForPublication,
+    preserve = publishReportDirectory,
+    publish = publishReportDirectory,
+    repository = repositoryRoot,
+    runsDirectory = runRoot,
+  } = {},
+) {
+  context.manifest ??= await loadPreparedManifest(options, { runsDirectory });
+  const manifest = context.manifest;
+  const recovery = options.collectionMode === 'recovery';
+  assertReady(options, context, manifest);
+  const expectedReportRoot = reportRootFor(options, repository);
+  if (resolve(manifest.reportRoot) !== resolve(expectedReportRoot)) {
+    throw new DriveError(
+      'Smoke manifest report root does not match drive mode.',
+    );
+  }
+  if (options.dryRun) {
+    await saveManifestUpdate(manifest, (current) => ({
+      ...current,
+      collection: { status: 'dry-run-stub' },
+    }));
+    return manifest.collection;
+  }
+  const collectableDriveStatuses = recovery
+    ? ['failed', 'interrupted']
+    : ['awaiting-operator', 'completed'];
+  if (!collectableDriveStatuses.includes(manifest.drive?.status)) {
+    throw new DriveError(
+      recovery
+        ? 'Smoke recovery collection requires a failed or interrupted drive.'
+        : 'Smoke evidence collection requires a completed drive.',
+    );
+  }
+
+  const stagingDirectory = join(
+    dirname(manifest.manifestPath),
+    `report-staging-${randomUUID()}`,
+  );
+  await mkdir(stagingDirectory, { recursive: true });
+  await saveManifestUpdate(manifest, (current) => ({
+    ...current,
+    collection: { stagingDirectory, status: 'running' },
+    createdPaths: [
+      ...new Set([...(current.createdPaths ?? []), stagingDirectory]),
+    ],
+  }));
+
+  try {
+    const collected = await collect({
+      manifestPath: manifest.manifestPath,
+      outDirectory: stagingDirectory,
+      worktreePath: manifest.worktreePath,
+    });
+    await formatBundle(collected.outputPath);
+    const report = await emitReport({
+      bundlePath: collected.outputPath,
+      outDirectory: stagingDirectory,
+    });
+    if (recovery) {
+      const recoveryDirectory = recoveryRootFor(manifest, repository);
+      await preserve(stagingDirectory, recoveryDirectory);
+      const recoveredCollected = {
+        ...collected,
+        outputPath: join(recoveryDirectory, 'bundle.json'),
+      };
+      const recoveredReport = {
+        ...report,
+        jsonPath: join(recoveryDirectory, 'report.json'),
+        markdownPath: join(recoveryDirectory, 'report.md'),
+      };
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          bundlePath: recoveredCollected.outputPath,
+          canonicalPublished: false,
+          reportPath: recoveredReport.jsonPath,
+          reportStatus: report.report.status,
+          recoveryDirectory,
+          status: 'recovery-completed',
+        },
+      }));
+      return {
+        collected: recoveredCollected,
+        recovery: {
+          canonicalPublished: false,
+          path: recoveryDirectory,
+          status: report.report.status,
+        },
+        report: recoveredReport,
+      };
+    }
+    if (report.report.status !== 'passed') {
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          bundlePath: collected.outputPath,
+          error: `Smoke evidence report failed ${report.report.summary.failed} assertion(s).`,
+          reportPath: report.jsonPath,
+          stagingDirectory,
+          status: 'failed',
+        },
+      }));
+      throw new DriveError(
+        `Smoke evidence report failed ${report.report.summary.failed} assertion(s).`,
+      );
+    }
+
+    await publish(stagingDirectory, manifest.reportRoot);
+    const publishedCollected = {
+      ...collected,
+      outputPath: join(manifest.reportRoot, 'bundle.json'),
+    };
+    const publishedReport = {
+      ...report,
+      jsonPath: join(manifest.reportRoot, 'report.json'),
+      markdownPath: join(manifest.reportRoot, 'report.md'),
+    };
+    await saveManifestUpdate(manifest, (current) => ({
+      ...current,
+      collection: {
+        bundlePath: publishedCollected.outputPath,
+        reportPath: publishedReport.jsonPath,
+        status: 'completed',
+      },
+      drive:
+        current.drive?.status === 'awaiting-operator'
+          ? { ...current.drive, status: 'operator-returned' }
+          : current.drive,
+    }));
+    return { collected: publishedCollected, report: publishedReport };
+  } catch (error) {
+    if (recovery) {
+      const recoveryDirectory = recoveryRootFor(manifest, repository);
+      await atomicWriteJson(join(stagingDirectory, 'recovery-error.json'), {
+        drive: {
+          error: manifest.drive?.error ?? null,
+          status: manifest.drive?.status ?? null,
+        },
+        error: error instanceof Error ? error.message : String(error),
+        runIdentity: manifest.runIdentity,
+        schemaVersion: 1,
+      });
+      await preserve(stagingDirectory, recoveryDirectory);
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          canonicalPublished: false,
+          error: error instanceof Error ? error.message : String(error),
+          recoveryDirectory,
+          status: 'recovery-failed',
+        },
+      }));
+      if (error && typeof error === 'object') {
+        error.recoveryPath = recoveryDirectory;
+      }
+      throw error;
+    }
+    if (manifest.collection?.status !== 'failed') {
+      await saveManifestUpdate(manifest, (current) => ({
+        ...current,
+        collection: {
+          ...(current.collection ?? {}),
+          error: error instanceof Error ? error.message : String(error),
+          stagingDirectory,
+          status: 'failed',
+        },
+      }));
+    }
+    throw error;
+  }
+}

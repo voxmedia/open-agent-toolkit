@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "control",
+  "scenario": "implement",
+  "control": {
+    "kind": "post-acceptance-failure",
+    "taskScope": "p01-t01"
+  },
+  "dispatches": [
+    {
+      "scope": "p01-t01",
+      "attempt": 1,
+      "action": "implementation",
+      "configuredInvocation": {
+        "target": "cursor-native:gpt-5.6-sol-xhigh",
+        "modelAxis": "selected:gpt-5.6-sol-xhigh"
+      },
+      "launch": {
+        "accepted": true,
+        "outcome": "failed",
+        "status": "accepted"
+      },
+      "runtimeIdentity": {
+        "status": "not-reported"
+      }
+    }
+  ]
+}

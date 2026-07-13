@@ -11,6 +11,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 - [Writing Skills](../../contributing/skills.md) - Contributor guide to skill authoring, contracts, and governance.
 - [Docs Workflows](../../docs-tooling/workflows.md) - How docs CLI helpers and docs skills work together.
+- [Repo Improve](repo-improve.md) - Source modes, external-plan boundaries, optional tracking, and OAT import handoff.
 
 ## Key Skills by Use Case
 
@@ -23,6 +24,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Run or receive reviews: `oat-project-review-provide`, `oat-project-review-receive`, or the non-project review variants
 - Capture a scoped, shippable backlog item: `oat-pjm-add-backlog-item` directly when the work is already scoped, or `oat-brainstorm` when the thought hasn't converged yet — the brainstorm dispatcher's "scoped backlog item" destination pre-fills the title / description / acceptance criteria / scope estimate / priority from the conversation and then runs `oat-pjm-add-backlog-item` with confirmed inputs
 - Manage the repo backlog and reference docs: `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
+- Turn a repo audit, maintainability review, backlog review, backlog directory, or backlog item into standalone external implementation plans: `oat-repo-improve`. Plans land under `.oat/repo/reference/external-plans/`; execute them directly or optionally pass one to `oat-project-import-plan` for tracked OAT execution.
 - Work on docs surfaces: `authoring-docs` (general documentation baseline), `oat-docs-authoring` (targeted OAT/Fumadocs authoring), `oat-docs-bootstrap` (guided bootstrap of a new docs app), `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Generate a shipping digest or scheduled recap: `oat-wrap-up`
 - Research a topic in depth: `deep-research`
@@ -99,6 +101,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-review-receive-remote`
     - `oat-repo-knowledge-index`
     - `oat-repo-maintainability-review`
+    - `oat-repo-improve`
     - `oat-pjm-add-backlog-item`
     - `oat-pjm-update-repo-reference`
     - `oat-pjm-review-backlog`

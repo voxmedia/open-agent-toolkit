@@ -48,8 +48,21 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
 - Codex project-scope subagent sync writes `.codex/config.toml` and `.codex/agents/*.toml` at command layer after path-mapping sync. Every generated project Codex variant and registration is repository-owned, version-controlled provider output. OAT provides no automatic ignore mechanism for this project output; collaborators review and commit it like other project configuration.
+- Default Codex execution requires `root (0) → phase implementer (1)`. Sync and direct materialization continue to apply an `agents.max_depth` floor of `2` as optional nested-work capability without lowering a higher target value. A project write may read a higher lower-precedence user value and preserves it in project configuration; it writes only project `.codex/config.toml`. User scope writes only `~/.codex/config.toml` and does not read or change project configuration.
+- Missing depth or depth `1` does not block default phase execution. Invalid values or explicit values below `1` fail managed implementation preflight. `oat doctor` reports whether optional depth-two nesting is available and gives a scope-specific repair when the configured value is unusable.
 - Codex aggregate config drift is reported via sync/status extension metadata (`aggregateConfigHash`); it is not persisted as a separate manifest schema entry.
 - Codex user-config materialization writes user-owned implementer and reviewer roles under the user provider directory, `~/.codex`; it does not write those roles into the repository.
+
+## Codex managed dispatch
+
+For managed Codex work, the resolver-returned materialized role is attempted as
+the native `agent_type` first. The launcher owns the resulting target, model,
+and reasoning-effort provenance, derived from the resolved candidate and
+compiled invocation payload; worker output cannot populate or overwrite it.
+A fresh pinned child is allowed only after explicit pre-start native
+role-selection rejection. Missing runtime telemetry, missing self-report, or a
+child accepted by the native route that later returns `BLOCKED` are not
+role-selection rejection and do not permit fallback.
 
 ## Non-interop namespaces in the same CLI
 

@@ -1,0 +1,487 @@
+{
+  "dispatches": [],
+  "fixture": {
+    "baselinePlanHash": "bf28a75688137c99504e060cb214b0887962563ce08d764dd840776f0680103a",
+    "baselineSubstantivePlanHash": "5558233d7fd23465aa1462a4ec86c47a74a59788f10f8412d4816185fb7bafdd",
+    "dispatchPolicy": {
+      "ceilingCandidates": [
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "tier": "high"
+        }
+      ],
+      "eligibleCandidates": [
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-terra",
+          "tier": "balanced"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "tier": "high"
+        }
+      ],
+      "policy": "high",
+      "provider": "codex"
+    },
+    "headPlanHash": "5664608e94464e8bd2e247da0ddbfe6d90b2626486da6b68e7089e483e7bbf99",
+    "headStateHash": "5793372fd5b3001a3e3756360bb2e4960ee154746d4e464e4501cd51fb9968cc",
+    "planHash": "5664608e94464e8bd2e247da0ddbfe6d90b2626486da6b68e7089e483e7bbf99",
+    "reviewRows": [
+      {
+        "artifact": "-",
+        "scope": "p01",
+        "status": "pending",
+        "type": "code"
+      },
+      {
+        "artifact": "-",
+        "scope": "p02",
+        "status": "pending",
+        "type": "code"
+      },
+      {
+        "artifact": "-",
+        "scope": "p03",
+        "status": "pending",
+        "type": "code"
+      },
+      {
+        "artifact": "-",
+        "scope": "final",
+        "status": "pending",
+        "type": "code"
+      },
+      {
+        "artifact": "-",
+        "scope": "spec",
+        "status": "pending",
+        "type": "artifact"
+      },
+      {
+        "artifact": "-",
+        "scope": "design",
+        "status": "pending",
+        "type": "artifact"
+      },
+      {
+        "artifact": "reviews/archived/artifact-plan-review-2026-07-12T202953Z.md",
+        "scope": "plan",
+        "status": "passed",
+        "type": "artifact"
+      }
+    ],
+    "stateHash": "5793372fd5b3001a3e3756360bb2e4960ee154746d4e464e4501cd51fb9968cc",
+    "substantivePlanHash": "5558233d7fd23465aa1462a4ec86c47a74a59788f10f8412d4816185fb7bafdd",
+    "taskIds": ["p01-t01", "p01-t02", "p02-t01", "p02-t02", "p03-t01"]
+  },
+  "fixtureLogs": [
+    {
+      "lines": [
+        {
+          "line": "# Smoke fixture phase p01 log",
+          "sequence": 1
+        }
+      ],
+      "path": "workspace/logs/p01.log",
+      "phase": "p01"
+    },
+    {
+      "lines": [
+        {
+          "line": "# Smoke fixture phase p02 log",
+          "sequence": 1
+        }
+      ],
+      "path": "workspace/logs/p02.log",
+      "phase": "p02"
+    },
+    {
+      "lines": [
+        {
+          "line": "# Smoke fixture phase p03 log",
+          "sequence": 1
+        }
+      ],
+      "path": "workspace/logs/p03.log",
+      "phase": "p03"
+    }
+  ],
+  "gates": [
+    {
+      "activeArtifactPath": "reviews/artifact-plan-review-2026-07-12T202953Z.md",
+      "archived": true,
+      "artifactHash": "a1f5798ebf9c24a430818000a821ee31957393d52147a292b89ef2eaed11b044",
+      "artifactPath": "reviews/archived/artifact-plan-review-2026-07-12T202953Z.md",
+      "blocking": false,
+      "committedArtifact": {
+        "commitSha": "3e1d61caa53709481d6139152feda78ce54dee81",
+        "contentHash": "a1f5798ebf9c24a430818000a821ee31957393d52147a292b89ef2eaed11b044",
+        "matchesArchived": true
+      },
+      "configuredInvocation": {
+        "effort": "provider-default",
+        "model": "gpt-5.6-sol-max",
+        "source": "exec-target-config"
+      },
+      "corroboration": {
+        "invocation": "matched",
+        "project": "matched",
+        "run": "matched"
+      },
+      "invocation": "gate",
+      "invocationConsistent": true,
+      "outcome": "review_completed_gate_passed",
+      "projectPath": ".oat/projects/smoke-fixture",
+      "receiveCommit": {
+        "rowMatched": true,
+        "sha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d"
+      },
+      "receiveEligible": true,
+      "runId": "7a6b518d-dd71-458c-b800-c8a284413d2e",
+      "runtime": "cursor",
+      "scope": "plan",
+      "status": "ok",
+      "target": "cursor-gpt-5-6-sol-max"
+    }
+  ],
+  "git": {
+    "branch": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+    "branchHistories": [
+      {
+        "ancestorBranches": [],
+        "branch": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+        "commits": [
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/design.md",
+              ".oat/projects/smoke-fixture/discovery.md",
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md",
+              ".oat/smoke-bootstrap.json",
+              "workspace/logs/p01.log",
+              "workspace/logs/p02.log",
+              "workspace/logs/p03.log"
+            ],
+            "parents": ["373298ba2e4069929cc16fc6fd14f24dc635acdb"],
+            "sha": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+            "subject": "test(smoke): establish fixture baseline"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/reviews/artifact-plan-review-2026-07-12T202953Z.md"
+            ],
+            "parents": ["2c695b5df0d128ae5505469afe503dc5d16b6e81"],
+            "sha": "3e1d61caa53709481d6139152feda78ce54dee81",
+            "subject": "chore(oat): record plan review artifact"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/reviews/archived/artifact-plan-review-2026-07-12T202953Z.md",
+              ".oat/projects/smoke-fixture/state.md"
+            ],
+            "parents": ["3e1d61caa53709481d6139152feda78ce54dee81"],
+            "sha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d",
+            "subject": "chore(oat): receive smoke fixture plan review"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md"
+            ],
+            "parents": ["b584eaa757fa55a5bdec9282bccc50cad5b0c08d"],
+            "sha": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+            "subject": "chore(oat): mark smoke fixture implementation ready"
+          }
+        ],
+        "head": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+        "mergeBase": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+        "start": {
+          "parent": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+          "sha": "3e1d61caa53709481d6139152feda78ce54dee81"
+        }
+      }
+    ],
+    "branchRefs": [
+      "refs/heads/smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83"
+    ],
+    "commits": [
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/design.md",
+          ".oat/projects/smoke-fixture/discovery.md",
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md",
+          ".oat/smoke-bootstrap.json",
+          "workspace/logs/p01.log",
+          "workspace/logs/p02.log",
+          "workspace/logs/p03.log"
+        ],
+        "parents": ["373298ba2e4069929cc16fc6fd14f24dc635acdb"],
+        "sha": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+        "subject": "test(smoke): establish fixture baseline"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/artifact-plan-review-2026-07-12T202953Z.md"
+        ],
+        "parents": ["2c695b5df0d128ae5505469afe503dc5d16b6e81"],
+        "sha": "3e1d61caa53709481d6139152feda78ce54dee81",
+        "subject": "chore(oat): record plan review artifact"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/archived/artifact-plan-review-2026-07-12T202953Z.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["3e1d61caa53709481d6139152feda78ce54dee81"],
+        "sha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d",
+        "subject": "chore(oat): receive smoke fixture plan review"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["b584eaa757fa55a5bdec9282bccc50cad5b0c08d"],
+        "sha": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+        "subject": "chore(oat): mark smoke fixture implementation ready"
+      }
+    ],
+    "currentBranchCommits": [
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/design.md",
+          ".oat/projects/smoke-fixture/discovery.md",
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md",
+          ".oat/smoke-bootstrap.json",
+          "workspace/logs/p01.log",
+          "workspace/logs/p02.log",
+          "workspace/logs/p03.log"
+        ],
+        "parents": ["373298ba2e4069929cc16fc6fd14f24dc635acdb"],
+        "sha": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+        "subject": "test(smoke): establish fixture baseline"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/artifact-plan-review-2026-07-12T202953Z.md"
+        ],
+        "parents": ["2c695b5df0d128ae5505469afe503dc5d16b6e81"],
+        "sha": "3e1d61caa53709481d6139152feda78ce54dee81",
+        "subject": "chore(oat): record plan review artifact"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/archived/artifact-plan-review-2026-07-12T202953Z.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["3e1d61caa53709481d6139152feda78ce54dee81"],
+        "sha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d",
+        "subject": "chore(oat): receive smoke fixture plan review"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["b584eaa757fa55a5bdec9282bccc50cad5b0c08d"],
+        "sha": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+        "subject": "chore(oat): mark smoke fixture implementation ready"
+      }
+    ],
+    "head": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+    "worktrees": [
+      {
+        "branch": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+        "head": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+        "path": "<worktree>"
+      }
+    ]
+  },
+  "kind": "workflow",
+  "manifest": {
+    "appliedScenario": "plan-review",
+    "baselineCommitSha": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+    "branch": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+    "branchOwnership": {
+      "baseCommitSha": "373298ba2e4069929cc16fc6fd14f24dc635acdb",
+      "baselineCommitSha": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+      "branch": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+      "createdByRun": true,
+      "runIdentity": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83"
+    },
+    "driveMode": "automated",
+    "driveStatus": "completed",
+    "effectiveCloseoutPolicy": {
+      "source": "local",
+      "value": {
+        "postApproval": [],
+        "preApproval": []
+      }
+    },
+    "effectiveSmokeBootstrap": {
+      "branch": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+      "configSha256": "bafe40c6df180ba7f5fbbd7d6a88329e68008e3fc92ca928eebb8ed3982f6172",
+      "policy": {
+        "config": {
+          "copy": "marker-source-only",
+          "preserveBytes": true
+        },
+        "copyPrimary": {
+          "archivedProjects": false,
+          "environment": false,
+          "localProjects": false,
+          "mcp": false
+        },
+        "localPathSync": false,
+        "providerViewSync": false,
+        "s3ArchiveSync": false,
+        "sharedHooks": false
+      },
+      "runIdentity": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83"
+    },
+    "gateRuntime": "cursor",
+    "gateTarget": "cursor-gpt-5-6-sol-max",
+    "harness": "codex",
+    "ownershipJournal": {
+      "resources": [],
+      "schemaVersion": 1
+    },
+    "provisioningState": "ready",
+    "readiness": {
+      "status": "ready"
+    },
+    "runIdentity": "smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83",
+    "sourceCommitSha": "373298ba2e4069929cc16fc6fd14f24dc635acdb",
+    "writableRoots": [
+      {
+        "harness": "codex",
+        "roots": [
+          {
+            "path": "<agent-managed-content>",
+            "purpose": "agent-managed-content"
+          },
+          {
+            "path": "<shared-git-metadata>",
+            "purpose": "shared-git-metadata"
+          },
+          {
+            "path": "<worktree-content>",
+            "purpose": "worktree-content"
+          }
+        ]
+      }
+    ]
+  },
+  "orchestrationEvents": [
+    {
+      "artifactChanges": {
+        "implementation": true,
+        "plan": true,
+        "state": true
+      },
+      "commitSha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d",
+      "contentChanged": true,
+      "event": "state-transition",
+      "from": "pre-review",
+      "fromCommitSha": "2c695b5df0d128ae5505469afe503dc5d16b6e81",
+      "observedFrom": "pre-review",
+      "observedTo": "reviewed",
+      "parentSha": "3e1d61caa53709481d6139152feda78ce54dee81",
+      "reachableFromHead": true,
+      "sequence": 1,
+      "to": "reviewed"
+    },
+    {
+      "artifactChanges": {
+        "implementation": true,
+        "plan": true,
+        "state": true
+      },
+      "commitSha": "7fc0e6d144283e10a3e627534e23bb3c041582ca",
+      "contentChanged": true,
+      "event": "state-transition",
+      "from": "reviewed",
+      "fromCommitSha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d",
+      "observedFrom": "reviewed",
+      "observedTo": "implementation-ready",
+      "parentSha": "b584eaa757fa55a5bdec9282bccc50cad5b0c08d",
+      "reachableFromHead": true,
+      "sequence": 2,
+      "to": "implementation-ready"
+    }
+  ],
+  "reviews": [
+    {
+      "contentHash": "a1f5798ebf9c24a430818000a821ee31957393d52147a292b89ef2eaed11b044",
+      "corroboration": {
+        "oat_gate_run_id": "7a6b518d-dd71-458c-b800-c8a284413d2e",
+        "oat_gate_runtime": "cursor",
+        "oat_gate_target": "cursor-gpt-5-6-sol-max"
+      },
+      "frontmatter": {
+        "oat_gate_run_id": "7a6b518d-dd71-458c-b800-c8a284413d2e",
+        "oat_gate_runtime": "cursor",
+        "oat_gate_target": "cursor-gpt-5-6-sol-max",
+        "oat_invocation_model": "gpt-5.6-sol-max",
+        "oat_invocation_reasoning_effort": "provider-default",
+        "oat_invocation_source": "exec-target-config",
+        "oat_project": ".oat/projects/smoke-fixture",
+        "oat_review_invocation": "gate",
+        "oat_review_scope": "plan",
+        "oat_review_type": "artifact"
+      },
+      "path": "reviews/archived/artifact-plan-review-2026-07-12T202953Z.md"
+    }
+  ],
+  "scenario": "plan-review",
+  "schemaVersion": 1,
+  "source": {
+    "rawPaths": {
+      "commonGitDir": "/Users/tstang/Code/open-agent-toolkit/.git",
+      "fixtureProjectPath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83/worktree/.oat/projects/smoke-fixture",
+      "journalWorktreePaths": [],
+      "manifestPath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83/provisioning-manifest.json",
+      "reportRoot": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/reports/codex/plan-review",
+      "worktreePath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83/worktree",
+      "writableRoots": [
+        {
+          "harness": "codex",
+          "roots": [
+            {
+              "path": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83/worktree",
+              "purpose": "worktree-content"
+            },
+            {
+              "path": "/Users/tstang/Code/open-agent-toolkit/.git",
+              "purpose": "shared-git-metadata"
+            },
+            {
+              "path": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-12T20-27-20-725Z-cdbad040-1538-4cfe-9f58-59ea6dccaf83/worktree/.agents",
+              "purpose": "agent-managed-content"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

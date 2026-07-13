@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.8
+version: 1.2.12
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -22,6 +22,21 @@ OAT ▸ PLAN WRITING
 This is a sub-phase indicator; the calling skill owns the top-level banner.
 
 - When invoked by a calling skill, print the sub-banner immediately before plan authoring begins.
+
+## Shared Subagent Dispatch Contract
+
+Before every artifact self-review dispatch, read and follow
+`.agents/skills/oat-project-dispatch-subagents/SKILL.md`, which then requires
+`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit two-skill load
+is mandatory; do not rely on ambient skill discovery. Planning self-review
+inherits the planning parent by default. The shared contracts own any
+catalog-aware exception, launch acceptance boundary, and dispatch record; this
+skill continues to own plan readiness and review disposition.
+
+After resolving the review provider, read exactly one active-provider
+reference from `.agents/skills/oat-dispatch-subagents/references/`
+(`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
+merge provider mechanics.
 
 ## Managed Dispatch Readiness and Review Contract
 
@@ -83,40 +98,58 @@ scope.
 
 ### Reviewer Ceiling Contract
 
-A managed active-provider result is runnable only when the resolver returns
-concrete native dispatch controls or an explicit deferred cross-harness target.
-Otherwise treat the active-provider reviewer contract as unresolved.
-Reviewer resolution uses the final candidate of the configured review ceiling:
-call `--role reviewer` without an ephemeral implementer candidate request.
-Do not select a lower candidate for artifact, phase, project, or final review
-unless a separate reviewed contract explicitly authorizes reviewer lowering and
-defines its bounds. A `## Dispatch Profile` row alone is not such a contract.
+A managed active-provider result is runnable only when the resolver identifies
+the final candidate of the configured review ceiling. Call `--role reviewer`
+without an ephemeral implementer candidate request. Use that result as the
+planning-parent capability threshold, not as an unconditional child pin.
 
-Bind every concrete managed reviewer target to the actual provider
-invocation before probing generic reviewer availability or selecting an
-execution tier. That target takes precedence over every availability, tier,
-timeout, and inline fallback.
-A concrete managed Codex target takes precedence over tier availability.
+The default planning auto-review route is deliberate parent inheritance:
 
-- Codex: use the exact registered reviewer variant returned by
-  `providers.codex.dispatchArgs.variant` when the host can select that role.
-  If the exact role is unavailable or the current host cannot select it,
-  launch a fresh Codex child with the resolver target's explicit model,
-  reasoning effort, and canonical role instructions from
-  `.agents/agents/oat-reviewer.md`. If the fresh child cannot preserve the
-  target, use only a verified-equivalent inline route or block the review.
+1. Read launcher-owned evidence for the planning parent's configured model and
+   effort.
+2. Compare it with the resolved ceiling target on the provider's independent
+   axes.
+3. When the parent is known at or above the ceiling, omit the child model,
+   record `selection_reason: inherit`, and preserve the parent evidence.
+4. When the parent is unknown or below the ceiling, select the concrete ceiling
+   target before launch as the fail-closed exception below.
+
+Do not assume parent strength from self-report. Do not select a lower candidate
+for an exception. A `## Dispatch Profile` row alone cannot authorize reviewer
+lowering; only a separate reviewed contract may define a bounded lower
+candidate exception.
+
+For the exception route, bind every concrete managed reviewer target to the
+actual provider invocation before probing generic reviewer availability or
+selecting execution mechanics. A concrete managed Codex target takes precedence
+over generic tier availability.
+
+- Codex: when the resolver returns a materialized
+  `providers.codex.dispatchArgs.variant`, first launch that exact registered
+  reviewer variant as native `agent_type`. Only a recorded actual pre-start
+  native role-selection rejection permits a fresh Codex child with the resolver
+  target's explicit model, reasoning effort, and canonical role instructions
+  from `.agents/agents/oat-reviewer.md`. A separately pre-selected CLI route is
+  allowed only when native dispatch cannot express the complete target and no
+  child has started. If another route cannot preserve the target, use only a
+  verified-equivalent inline route or block the review.
 - Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
   that exact value in the actual provider invocation as its `model` argument.
 - Cursor: treat `providers.cursor.dispatchArgs.model` as opaque and put that
   exact, unnormalized string in the actual provider invocation as its `model`
   argument.
 
-Build the actual host invocation payload before declaring the target enforced.
-On timeout, retry, or artifact rewrite/re-dispatch, reuse the same exact role or
-complete provider payload, including the exact model argument. If the host
-cannot apply the required role or model argument, fail closed or block unless
-the guarded inline-equivalence rule below applies. Never continue through a
-generic tier fallback.
+If the host cannot apply, pass, or bind the required exception role/model
+controls, fail closed or block unless verified equivalent inline controls are
+already established.
+
+Build the actual host invocation payload before declaring the exception target
+enforced. If the accepted reviewer does not conclude, continue, poll, or nudge
+the same child handle. A terminal timeout blocks or escalates without another
+launch. Only explicit pre-start rejection permits a new recorded selection.
+After an artifact rewrite following a completed review, the next review is a
+new attempt and reuses the same deliberate inheritance or exact exception
+policy. Never continue through a generic tier fallback.
 
 Workflow correctness must not require provider restart or hot reload.
 Runtime materialization may be best effort, but it is not the correctness
@@ -125,16 +158,16 @@ unavailable in the current session. Base Codex roles are allowed only for
 explicit inherit/default behavior and the documented managed-uncapped reviewer
 fallback.
 
-Inline review of a concrete managed target is permitted only after verifying
-equivalent current-host model and effort controls. Otherwise inline or base
-execution is limited to explicit inherit/default behavior or the documented
-managed-uncapped reviewer fallback.
+Inline review of a concrete managed exception target is permitted only with
+verified equivalent current-host model and effort controls. The default
+inheritance route may review inline because the planning parent is the selected
+reviewer context.
 
 The Auto Artifact-Review Loop below consumes this reviewer dispatch contract.
 Tier selection happens only after the target-preserving route is known and
 changes execution mechanics, not the resolved model/effort contract.
 
-## Shared Phase-Review Setup Contract
+## Shared Phase Gate Review Setup Contract
 
 Every plan-producing workflow invokes this procedure after the complete plan
 has stable phase IDs and before the plan artifact review begins. The calling
@@ -149,7 +182,7 @@ unchanged. Do not probe targets, prompt, or mutate the setting. This applies to
 enabled, disabled, resumed, and imported explicit values. Report:
 
 ```text
-Phase review: preserved existing oat_phase_review_gate setting.
+Phase gate review: preserved existing oat_phase_review_gate setting.
 ```
 
 Implementation preflight remains responsible for rejecting a malformed
@@ -182,13 +215,13 @@ If the probe fails, emit exactly this concise warning and continue planning
 without adding the setting:
 
 ```text
-Warning: phase review target probe failed; phase review remains disabled.
+Warning: Phase gate review target probe failed; Phase gate review remains disabled.
 ```
 
 If no qualifying target exists, emit:
 
 ```text
-Phase review: disabled (no qualifying target); phase review remains disabled.
+Phase gate review: disabled (no qualifying target); Phase gate review remains disabled.
 ```
 
 Do not invent enablement in either branch.
@@ -198,9 +231,12 @@ Do not invent enablement in either branch.
 When at least one target qualifies and an interactive user-response channel is
 available, offer exactly these outcomes:
 
-1. **All phases** - enable review for every implementation phase.
-2. **Selected phases** - enable review only for chosen stable phase IDs.
-3. **Disabled** - leave phase review disabled.
+1. **All phases** - enable the independent Phase gate review after every implementation phase.
+2. **Selected phases** - enable the independent Phase gate review only after chosen stable phase IDs.
+3. **Disabled** - leave Phase gate review disabled.
+
+Phase gate review is non-pausing when it passes and is distinct from both HiLL
+approval and final artifact review.
 
 For all phases, write the existing plan frontmatter shape:
 
@@ -222,7 +258,7 @@ If the user declines or chooses Disabled, do not add
 `oat_phase_review_gate`; emit:
 
 ```text
-Phase review: disabled (user declined); phase review remains disabled.
+Phase gate review: disabled (user declined); Phase gate review remains disabled.
 ```
 
 ### 4. Handle non-interactive planning
@@ -233,7 +269,7 @@ a qualifying target, do not guess all phases or selected phases and do not
 invent enablement. Leave the setting absent and emit:
 
 ```text
-Phase review: disabled (non-interactive; no selection recorded); phase review remains disabled.
+Phase gate review: disabled (non-interactive; no selection recorded); Phase gate review remains disabled.
 ```
 
 ### 5. Keep review gates independent from HiLL
@@ -266,11 +302,11 @@ Use this loop after an artifact has been written and before the calling skill ha
    - The bound controls rewrite/re-dispatch cycles after the initial review. A bound of `0` still permits the initial structured review, then surfaces residual findings without retrying.
 
 3. **Dispatch `oat-reviewer` in structured mode**
-   - When the resolver returned a concrete managed Codex target, use its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions. If neither is possible, run inline only with verified equivalent current-host controls; otherwise block.
-   - When the resolver returned a concrete managed Claude or Cursor target, require `providers.claude.dispatchArgs.model` or `providers.cursor.dispatchArgs.model` respectively and pass that exact value in the actual provider invocation's `model` argument. Cursor values are opaque and must not be normalized. If the host cannot apply the model argument, fail closed unless inline execution has verified equivalent controls.
-   - For explicit inherit/default behavior or the documented managed-uncapped reviewer fallback, Tier 1 uses the configured `oat-reviewer` subagent when available and authorized; Tier 2 may run the same reviewer prompt inline.
+   - Default: after the parent-at-or-above-ceiling check succeeds, omit the child model deliberately and record `selection_reason: inherit`. Tier 1 uses the configured `oat-reviewer` subagent; Tier 2 runs the same structured prompt in the planning parent.
+   - Exception: when the planning parent is unknown or below the ceiling, use the resolver's concrete ceiling target. Codex uses its exact registered reviewer or a fresh child pinned to the same model, effort, and canonical instructions after pre-start role rejection. Claude or Cursor requires the exact `providers.<provider>.dispatchArgs.model` value on the actual invocation; Cursor values remain opaque. If the host cannot preserve that target, block unless inline execution has verified equivalent controls.
+   - If an accepted child does not conclude, continue only through its existing handle. A terminal timeout blocks or escalates and cannot launch a replacement child.
    - Always set `oat_output_mode: structured`; the loop consumes `StructuredFindings` in-memory and the reviewer writes no artifact.
-   - Do not downgrade the resolved target or checklist when changing execution mechanics.
+   - Do not downgrade the selected inheritance/exception policy or checklist when changing execution mechanics.
 
 4. **Apply or offer fixes by severity**
    - If the structured review is clean, proceed to outcome recording.
@@ -279,7 +315,7 @@ Use this loop after an artifact has been written and before the calling skill ha
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
 
 5. **Rewrite and re-dispatch within the bound**
-   - After applying fixes, rewrite the artifact and re-dispatch `oat-reviewer` with the same complete target payload, including the exact Claude or Cursor `dispatchArgs.model` argument.
+   - After applying fixes, rewrite the artifact and start a new review attempt with the same deliberate inheritance policy or complete exception payload, including any exact Claude or Cursor `dispatchArgs.model` argument.
    - Each rewrite/re-dispatch cycle consumes one retry.
    - Stop when the reviewer returns no findings or when the retry bound is exhausted.
 
@@ -327,8 +363,9 @@ Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `o
 `## Dispatch Profile` is optional and should be omitted by default. A profile
 may narrow a phase to a named ceiling at or below the project ceiling. The
 named ceiling is a maximum candidate tier, not an exact model-family or effort
-preference; the later coordinator chooses exact task targets from the complete
-configured ladder.
+preference; the implementation root chooses one exact phase-implementer target
+from the complete configured ladder. Optional nested work resolves separately
+only when the phase implementer justifies and launches it.
 
 Only include the section when the user has explicit constraints or preferences. Routine hand-tuning can be worse than runtime selection because the orchestrator has fresher phase context and host capability information at dispatch time.
 

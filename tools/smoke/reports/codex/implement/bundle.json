@@ -1,0 +1,1138 @@
+{
+  "dispatches": [
+    {
+      "acceptance": null,
+      "action": "implementation",
+      "attempt": 1,
+      "configuredInvocation": {
+        "candidateTier": "high",
+        "ceiling": "high",
+        "ceilingEffortAxis": "selected:high",
+        "ceilingModelAxis": "selected:gpt-5.6-sol",
+        "effortAxis": "selected:high",
+        "modelAxis": "selected:gpt-5.6-sol",
+        "policy": "high",
+        "target": "oat-phase-implementer-gpt-5-6-sol-high"
+      },
+      "launch": {
+        "accepted": true,
+        "mechanism": "codex-native-spawn-agent",
+        "outcome": "completed",
+        "status": "accepted"
+      },
+      "role": "phase-implementer",
+      "runtimeIdentity": {
+        "confidence": "not-reported",
+        "effort": null,
+        "model": null,
+        "producer": null,
+        "provenance": "not-reported",
+        "status": "not-reported"
+      },
+      "scope": "p01",
+      "selection": {
+        "atOrBelowCeiling": true,
+        "candidatesConsidered": ["oat-phase-implementer-gpt-5-6-sol-high"],
+        "reason": "native-catalog"
+      }
+    },
+    {
+      "acceptance": null,
+      "action": "review",
+      "attempt": 1,
+      "configuredInvocation": {
+        "candidateTier": "high",
+        "ceiling": "high",
+        "ceilingEffortAxis": "selected:high",
+        "ceilingModelAxis": "selected:gpt-5.6-sol",
+        "effortAxis": "selected:high",
+        "modelAxis": "selected:gpt-5.6-sol",
+        "policy": "high",
+        "target": "oat-reviewer-gpt-5-6-sol-high"
+      },
+      "launch": {
+        "accepted": true,
+        "mechanism": "codex-native-spawn-agent",
+        "outcome": "completed",
+        "status": "accepted"
+      },
+      "role": "reviewer",
+      "runtimeIdentity": {
+        "confidence": "not-reported",
+        "effort": null,
+        "model": null,
+        "producer": null,
+        "provenance": "not-reported",
+        "status": "not-reported"
+      },
+      "scope": "p01",
+      "selection": {
+        "atOrBelowCeiling": true,
+        "candidatesConsidered": ["oat-reviewer-gpt-5-6-sol-high"],
+        "reason": "native-catalog"
+      }
+    },
+    {
+      "acceptance": null,
+      "action": "implementation",
+      "attempt": 1,
+      "configuredInvocation": {
+        "candidateTier": "high",
+        "ceiling": "high",
+        "ceilingEffortAxis": "selected:high",
+        "ceilingModelAxis": "selected:gpt-5.6-sol",
+        "effortAxis": "selected:high",
+        "modelAxis": "selected:gpt-5.6-sol",
+        "policy": "high",
+        "target": "oat-phase-implementer-gpt-5-6-sol-high"
+      },
+      "launch": {
+        "accepted": true,
+        "mechanism": "codex-native-spawn-agent",
+        "outcome": "completed",
+        "status": "accepted"
+      },
+      "role": "phase-implementer",
+      "runtimeIdentity": {
+        "confidence": "not-reported",
+        "effort": null,
+        "model": null,
+        "producer": null,
+        "provenance": "not-reported",
+        "status": "not-reported"
+      },
+      "scope": "p02",
+      "selection": {
+        "atOrBelowCeiling": true,
+        "candidatesConsidered": ["oat-phase-implementer-gpt-5-6-sol-high"],
+        "reason": "native-catalog"
+      }
+    },
+    {
+      "acceptance": null,
+      "action": "review",
+      "attempt": 1,
+      "configuredInvocation": {
+        "candidateTier": "high",
+        "ceiling": "high",
+        "ceilingEffortAxis": "selected:high",
+        "ceilingModelAxis": "selected:gpt-5.6-sol",
+        "effortAxis": "selected:high",
+        "modelAxis": "selected:gpt-5.6-sol",
+        "policy": "high",
+        "target": "oat-reviewer-gpt-5-6-sol-high"
+      },
+      "launch": {
+        "accepted": true,
+        "mechanism": "codex-native-spawn-agent",
+        "outcome": "completed",
+        "status": "accepted"
+      },
+      "role": "reviewer",
+      "runtimeIdentity": {
+        "confidence": "not-reported",
+        "effort": null,
+        "model": null,
+        "producer": null,
+        "provenance": "not-reported",
+        "status": "not-reported"
+      },
+      "scope": "p02",
+      "selection": {
+        "atOrBelowCeiling": true,
+        "candidatesConsidered": ["oat-reviewer-gpt-5-6-sol-high"],
+        "reason": "native-catalog"
+      }
+    },
+    {
+      "acceptance": null,
+      "action": "implementation",
+      "attempt": 1,
+      "configuredInvocation": {
+        "candidateTier": "high",
+        "ceiling": "high",
+        "ceilingEffortAxis": "selected:high",
+        "ceilingModelAxis": "selected:gpt-5.6-sol",
+        "effortAxis": "selected:high",
+        "modelAxis": "selected:gpt-5.6-sol",
+        "policy": "high",
+        "target": "oat-phase-implementer-gpt-5-6-sol-high"
+      },
+      "launch": {
+        "accepted": true,
+        "mechanism": "codex-native-spawn-agent",
+        "outcome": "completed",
+        "status": "accepted"
+      },
+      "role": "phase-implementer",
+      "runtimeIdentity": {
+        "confidence": "not-reported",
+        "effort": null,
+        "model": null,
+        "producer": null,
+        "provenance": "not-reported",
+        "status": "not-reported"
+      },
+      "scope": "p03",
+      "selection": {
+        "atOrBelowCeiling": true,
+        "candidatesConsidered": ["oat-phase-implementer-gpt-5-6-sol-high"],
+        "reason": "native-catalog"
+      }
+    },
+    {
+      "acceptance": null,
+      "action": "review",
+      "attempt": 1,
+      "configuredInvocation": {
+        "candidateTier": "high",
+        "ceiling": "high",
+        "ceilingEffortAxis": "selected:high",
+        "ceilingModelAxis": "selected:gpt-5.6-sol",
+        "effortAxis": "selected:high",
+        "modelAxis": "selected:gpt-5.6-sol",
+        "policy": "high",
+        "target": "oat-reviewer-gpt-5-6-sol-high"
+      },
+      "launch": {
+        "accepted": true,
+        "mechanism": "codex-native-spawn-agent",
+        "outcome": "completed",
+        "status": "accepted"
+      },
+      "role": "reviewer",
+      "runtimeIdentity": {
+        "confidence": "not-reported",
+        "effort": null,
+        "model": null,
+        "producer": null,
+        "provenance": "not-reported",
+        "status": "not-reported"
+      },
+      "scope": "p03",
+      "selection": {
+        "atOrBelowCeiling": true,
+        "candidatesConsidered": ["oat-reviewer-gpt-5-6-sol-high"],
+        "reason": "native-catalog"
+      }
+    }
+  ],
+  "fixture": {
+    "baselinePlanHash": "768f8c84dea0baded5b6e81e7953e5c8c1c1cb8836dc9d76675c7386b9c8989a",
+    "baselineSubstantivePlanHash": "5558233d7fd23465aa1462a4ec86c47a74a59788f10f8412d4816185fb7bafdd",
+    "dispatchPolicy": {
+      "ceilingCandidates": [
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "tier": "high"
+        }
+      ],
+      "eligibleCandidates": [
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-terra",
+          "tier": "balanced"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "tier": "high"
+        }
+      ],
+      "policy": "high",
+      "provider": "codex"
+    },
+    "headPlanHash": "32980e42101cbd14dcedebe5857e60ecfb04a897718ce8dacd783f8f2cc2808c",
+    "headStateHash": "055e1cf9d12f2fb99226874dc309ebaf08ba50ff4a181146e9c1e1588efa87ee",
+    "planHash": "32980e42101cbd14dcedebe5857e60ecfb04a897718ce8dacd783f8f2cc2808c",
+    "reviewRows": [
+      {
+        "artifact": "reviews/p01-review-2026-07-13T003400Z.md",
+        "scope": "p01",
+        "status": "passed",
+        "type": "code"
+      },
+      {
+        "artifact": "reviews/p02-review-2026-07-13T003400Z.md",
+        "scope": "p02",
+        "status": "passed",
+        "type": "code"
+      },
+      {
+        "artifact": "reviews/p03-review-2026-07-13T004200Z.md",
+        "scope": "p03",
+        "status": "passed",
+        "type": "code"
+      },
+      {
+        "artifact": "reviews/archived/final-review-2026-07-13T004430Z.md",
+        "scope": "final",
+        "status": "passed",
+        "type": "code"
+      },
+      {
+        "artifact": "-",
+        "scope": "spec",
+        "status": "pending",
+        "type": "artifact"
+      },
+      {
+        "artifact": "-",
+        "scope": "design",
+        "status": "pending",
+        "type": "artifact"
+      },
+      {
+        "artifact": "-",
+        "scope": "plan",
+        "status": "passed",
+        "type": "artifact"
+      }
+    ],
+    "stateHash": "055e1cf9d12f2fb99226874dc309ebaf08ba50ff4a181146e9c1e1588efa87ee",
+    "substantivePlanHash": "5558233d7fd23465aa1462a4ec86c47a74a59788f10f8412d4816185fb7bafdd",
+    "taskIds": ["p01-t01", "p01-t02", "p02-t01", "p02-t02", "p03-t01"]
+  },
+  "fixtureLogs": [
+    {
+      "lines": [
+        {
+          "line": "# Smoke fixture phase p01 log",
+          "sequence": 1
+        },
+        {
+          "line": "p01-t01 completed",
+          "sequence": 2
+        },
+        {
+          "line": "p01-t02 completed",
+          "sequence": 3
+        }
+      ],
+      "path": "workspace/logs/p01.log",
+      "phase": "p01"
+    },
+    {
+      "lines": [
+        {
+          "line": "# Smoke fixture phase p02 log",
+          "sequence": 1
+        },
+        {
+          "line": "p02-t01 completed",
+          "sequence": 2
+        },
+        {
+          "line": "p02-t02 completed",
+          "sequence": 3
+        }
+      ],
+      "path": "workspace/logs/p02.log",
+      "phase": "p02"
+    },
+    {
+      "lines": [
+        {
+          "line": "# Smoke fixture phase p03 log",
+          "sequence": 1
+        },
+        {
+          "line": "p03-t01 completed",
+          "sequence": 2
+        }
+      ],
+      "path": "workspace/logs/p03.log",
+      "phase": "p03"
+    }
+  ],
+  "gates": [
+    {
+      "activeArtifactPath": "reviews/final-review-2026-07-13T004430Z.md",
+      "archived": true,
+      "artifactHash": "bc81bb199155be46fd9cbeec01e24e964417303aa1c95843e7f3be6b0e3cf65a",
+      "artifactPath": "reviews/archived/final-review-2026-07-13T004430Z.md",
+      "blocking": false,
+      "committedArtifact": {
+        "commitSha": "3e1cc01718c3abf7631818b6a675b07ee423107d",
+        "contentHash": "bc81bb199155be46fd9cbeec01e24e964417303aa1c95843e7f3be6b0e3cf65a",
+        "matchesArchived": true
+      },
+      "configuredInvocation": {
+        "effort": "provider-default",
+        "model": "gpt-5.6-sol-max",
+        "source": "exec-target-config"
+      },
+      "corroboration": {
+        "invocation": "matched",
+        "project": "matched",
+        "run": "matched"
+      },
+      "invocation": "gate",
+      "invocationConsistent": true,
+      "outcome": "review_completed_gate_passed",
+      "projectPath": ".oat/projects/smoke-fixture",
+      "receiveCommit": {
+        "rowMatched": true,
+        "sha": "0df4a1c6609139836bb856a0417b54546c880d53"
+      },
+      "receiveEligible": true,
+      "runId": "83e87a91-37d8-4d19-ae6f-1ebc28d2f116",
+      "runtime": "cursor",
+      "scope": "final",
+      "status": "ok",
+      "target": "cursor-gpt-5-6-sol-max"
+    }
+  ],
+  "git": {
+    "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+    "branchHistories": [
+      {
+        "ancestorBranches": [
+          "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+          "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02"
+        ],
+        "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+        "commits": [
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/design.md",
+              ".oat/projects/smoke-fixture/discovery.md",
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md",
+              ".oat/smoke-bootstrap.json",
+              "workspace/logs/p01.log",
+              "workspace/logs/p02.log",
+              "workspace/logs/p03.log"
+            ],
+            "parents": ["b5d275fe9233311a393001539c2648c1d6fa1f2e"],
+            "sha": "84354cad693b43a71b7961a35938761f241365b8",
+            "subject": "test(smoke): establish fixture baseline"
+          },
+          {
+            "files": ["workspace/logs/p01.log"],
+            "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+            "sha": "0afee51d6d1879932aa19929227fcd2c0ffb2886",
+            "subject": "feat(p01-t01): append fixture marker"
+          },
+          {
+            "files": ["workspace/logs/p01.log"],
+            "parents": ["0afee51d6d1879932aa19929227fcd2c0ffb2886"],
+            "sha": "670279e0843114530e9c77552ea3d3f935fc78ad",
+            "subject": "feat(p01-t02): append fixture marker"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/reviews/p01-review-2026-07-13T003400Z.md"
+            ],
+            "parents": ["670279e0843114530e9c77552ea3d3f935fc78ad"],
+            "sha": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+            "subject": "docs(oat): record p01 phase review"
+          },
+          {
+            "files": [],
+            "parents": [
+              "84354cad693b43a71b7961a35938761f241365b8",
+              "e12eb8e8e9553f28b269df7cfd6d52d553ce2596"
+            ],
+            "sha": "24e4501d783a0c1702a90f52d9aa9568b0a62703",
+            "subject": "merge p01"
+          },
+          {
+            "files": ["workspace/logs/p02.log"],
+            "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+            "sha": "7d4fc6a52474c762016efedc693ebd99fd61ce41",
+            "subject": "feat(p02-t01): append fixture marker"
+          },
+          {
+            "files": ["workspace/logs/p02.log"],
+            "parents": ["7d4fc6a52474c762016efedc693ebd99fd61ce41"],
+            "sha": "ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e",
+            "subject": "feat(p02-t02): append fixture marker"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/reviews/p02-review-2026-07-13T003400Z.md"
+            ],
+            "parents": ["ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e"],
+            "sha": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+            "subject": "docs(oat): record p02 phase review"
+          },
+          {
+            "files": [],
+            "parents": [
+              "24e4501d783a0c1702a90f52d9aa9568b0a62703",
+              "5dea118d8e5602956ea73f3d0c778c9ad0d640fb"
+            ],
+            "sha": "5012889e2014c30de03a702e8e9e7efd3b356942",
+            "subject": "merge p02"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md"
+            ],
+            "parents": ["5012889e2014c30de03a702e8e9e7efd3b356942"],
+            "sha": "9a6b622b2860081b7f2ade3f4ead398823eed475",
+            "subject": "chore(oat): bookkeeping after parallel phase group"
+          },
+          {
+            "files": ["workspace/logs/p03.log"],
+            "parents": ["9a6b622b2860081b7f2ade3f4ead398823eed475"],
+            "sha": "1b07a1555f3b45847f84aa7816c7c52f54fdaec9",
+            "subject": "feat(p03-t01): append fixture marker"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/reviews/p03-review-2026-07-13T004200Z.md"
+            ],
+            "parents": ["1b07a1555f3b45847f84aa7816c7c52f54fdaec9"],
+            "sha": "1af9844608caa84b75c13f12d98b14b8b71433e7",
+            "subject": "docs(oat): record p03 phase review"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md"
+            ],
+            "parents": ["1af9844608caa84b75c13f12d98b14b8b71433e7"],
+            "sha": "77d209a0f0d6ad535aff590cee0320539420a112",
+            "subject": "chore(oat): bookkeeping after p03 pass"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/state.md"
+            ],
+            "parents": ["77d209a0f0d6ad535aff590cee0320539420a112"],
+            "sha": "1c0a3f49cae6694be25af8a833cc84d11cf17eac",
+            "subject": "chore(oat): update tracking artifacts for implementation complete"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/reviews/final-review-2026-07-13T004430Z.md"
+            ],
+            "parents": ["1c0a3f49cae6694be25af8a833cc84d11cf17eac"],
+            "sha": "3e1cc01718c3abf7631818b6a675b07ee423107d",
+            "subject": "chore(oat): record final review artifact"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/reviews/final-review-2026-07-13T004430Z.md",
+              ".oat/projects/smoke-fixture/state.md"
+            ],
+            "parents": ["3e1cc01718c3abf7631818b6a675b07ee423107d"],
+            "sha": "0df4a1c6609139836bb856a0417b54546c880d53",
+            "subject": "chore(oat): receive passing final review"
+          }
+        ],
+        "head": "0df4a1c6609139836bb856a0417b54546c880d53",
+        "mergeBase": "84354cad693b43a71b7961a35938761f241365b8",
+        "start": {
+          "parent": "84354cad693b43a71b7961a35938761f241365b8",
+          "sha": "0afee51d6d1879932aa19929227fcd2c0ffb2886"
+        }
+      },
+      {
+        "ancestorBranches": [],
+        "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+        "commits": [
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/design.md",
+              ".oat/projects/smoke-fixture/discovery.md",
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md",
+              ".oat/smoke-bootstrap.json",
+              "workspace/logs/p01.log",
+              "workspace/logs/p02.log",
+              "workspace/logs/p03.log"
+            ],
+            "parents": ["b5d275fe9233311a393001539c2648c1d6fa1f2e"],
+            "sha": "84354cad693b43a71b7961a35938761f241365b8",
+            "subject": "test(smoke): establish fixture baseline"
+          },
+          {
+            "files": ["workspace/logs/p01.log"],
+            "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+            "sha": "0afee51d6d1879932aa19929227fcd2c0ffb2886",
+            "subject": "feat(p01-t01): append fixture marker"
+          },
+          {
+            "files": ["workspace/logs/p01.log"],
+            "parents": ["0afee51d6d1879932aa19929227fcd2c0ffb2886"],
+            "sha": "670279e0843114530e9c77552ea3d3f935fc78ad",
+            "subject": "feat(p01-t02): append fixture marker"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/reviews/p01-review-2026-07-13T003400Z.md"
+            ],
+            "parents": ["670279e0843114530e9c77552ea3d3f935fc78ad"],
+            "sha": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+            "subject": "docs(oat): record p01 phase review"
+          }
+        ],
+        "head": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+        "mergeBase": "84354cad693b43a71b7961a35938761f241365b8",
+        "start": {
+          "parent": "84354cad693b43a71b7961a35938761f241365b8",
+          "sha": "0afee51d6d1879932aa19929227fcd2c0ffb2886"
+        }
+      },
+      {
+        "ancestorBranches": [],
+        "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02",
+        "commits": [
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/design.md",
+              ".oat/projects/smoke-fixture/discovery.md",
+              ".oat/projects/smoke-fixture/implementation.md",
+              ".oat/projects/smoke-fixture/plan.md",
+              ".oat/projects/smoke-fixture/state.md",
+              ".oat/smoke-bootstrap.json",
+              "workspace/logs/p01.log",
+              "workspace/logs/p02.log",
+              "workspace/logs/p03.log"
+            ],
+            "parents": ["b5d275fe9233311a393001539c2648c1d6fa1f2e"],
+            "sha": "84354cad693b43a71b7961a35938761f241365b8",
+            "subject": "test(smoke): establish fixture baseline"
+          },
+          {
+            "files": ["workspace/logs/p02.log"],
+            "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+            "sha": "7d4fc6a52474c762016efedc693ebd99fd61ce41",
+            "subject": "feat(p02-t01): append fixture marker"
+          },
+          {
+            "files": ["workspace/logs/p02.log"],
+            "parents": ["7d4fc6a52474c762016efedc693ebd99fd61ce41"],
+            "sha": "ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e",
+            "subject": "feat(p02-t02): append fixture marker"
+          },
+          {
+            "files": [
+              ".oat/projects/smoke-fixture/reviews/p02-review-2026-07-13T003400Z.md"
+            ],
+            "parents": ["ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e"],
+            "sha": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+            "subject": "docs(oat): record p02 phase review"
+          }
+        ],
+        "head": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+        "mergeBase": "84354cad693b43a71b7961a35938761f241365b8",
+        "start": {
+          "parent": "84354cad693b43a71b7961a35938761f241365b8",
+          "sha": "7d4fc6a52474c762016efedc693ebd99fd61ce41"
+        }
+      }
+    ],
+    "branchRefs": [
+      "refs/heads/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+      "refs/heads/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+      "refs/heads/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02"
+    ],
+    "commits": [
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/design.md",
+          ".oat/projects/smoke-fixture/discovery.md",
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md",
+          ".oat/smoke-bootstrap.json",
+          "workspace/logs/p01.log",
+          "workspace/logs/p02.log",
+          "workspace/logs/p03.log"
+        ],
+        "parents": ["b5d275fe9233311a393001539c2648c1d6fa1f2e"],
+        "sha": "84354cad693b43a71b7961a35938761f241365b8",
+        "subject": "test(smoke): establish fixture baseline"
+      },
+      {
+        "files": ["workspace/logs/p01.log"],
+        "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+        "sha": "0afee51d6d1879932aa19929227fcd2c0ffb2886",
+        "subject": "feat(p01-t01): append fixture marker"
+      },
+      {
+        "files": ["workspace/logs/p01.log"],
+        "parents": ["0afee51d6d1879932aa19929227fcd2c0ffb2886"],
+        "sha": "670279e0843114530e9c77552ea3d3f935fc78ad",
+        "subject": "feat(p01-t02): append fixture marker"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/reviews/p01-review-2026-07-13T003400Z.md"
+        ],
+        "parents": ["670279e0843114530e9c77552ea3d3f935fc78ad"],
+        "sha": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+        "subject": "docs(oat): record p01 phase review"
+      },
+      {
+        "files": [],
+        "parents": [
+          "84354cad693b43a71b7961a35938761f241365b8",
+          "e12eb8e8e9553f28b269df7cfd6d52d553ce2596"
+        ],
+        "sha": "24e4501d783a0c1702a90f52d9aa9568b0a62703",
+        "subject": "merge p01"
+      },
+      {
+        "files": ["workspace/logs/p02.log"],
+        "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+        "sha": "7d4fc6a52474c762016efedc693ebd99fd61ce41",
+        "subject": "feat(p02-t01): append fixture marker"
+      },
+      {
+        "files": ["workspace/logs/p02.log"],
+        "parents": ["7d4fc6a52474c762016efedc693ebd99fd61ce41"],
+        "sha": "ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e",
+        "subject": "feat(p02-t02): append fixture marker"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/reviews/p02-review-2026-07-13T003400Z.md"
+        ],
+        "parents": ["ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e"],
+        "sha": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+        "subject": "docs(oat): record p02 phase review"
+      },
+      {
+        "files": [],
+        "parents": [
+          "24e4501d783a0c1702a90f52d9aa9568b0a62703",
+          "5dea118d8e5602956ea73f3d0c778c9ad0d640fb"
+        ],
+        "sha": "5012889e2014c30de03a702e8e9e7efd3b356942",
+        "subject": "merge p02"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["5012889e2014c30de03a702e8e9e7efd3b356942"],
+        "sha": "9a6b622b2860081b7f2ade3f4ead398823eed475",
+        "subject": "chore(oat): bookkeeping after parallel phase group"
+      },
+      {
+        "files": ["workspace/logs/p03.log"],
+        "parents": ["9a6b622b2860081b7f2ade3f4ead398823eed475"],
+        "sha": "1b07a1555f3b45847f84aa7816c7c52f54fdaec9",
+        "subject": "feat(p03-t01): append fixture marker"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/reviews/p03-review-2026-07-13T004200Z.md"
+        ],
+        "parents": ["1b07a1555f3b45847f84aa7816c7c52f54fdaec9"],
+        "sha": "1af9844608caa84b75c13f12d98b14b8b71433e7",
+        "subject": "docs(oat): record p03 phase review"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["1af9844608caa84b75c13f12d98b14b8b71433e7"],
+        "sha": "77d209a0f0d6ad535aff590cee0320539420a112",
+        "subject": "chore(oat): bookkeeping after p03 pass"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["77d209a0f0d6ad535aff590cee0320539420a112"],
+        "sha": "1c0a3f49cae6694be25af8a833cc84d11cf17eac",
+        "subject": "chore(oat): update tracking artifacts for implementation complete"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/final-review-2026-07-13T004430Z.md"
+        ],
+        "parents": ["1c0a3f49cae6694be25af8a833cc84d11cf17eac"],
+        "sha": "3e1cc01718c3abf7631818b6a675b07ee423107d",
+        "subject": "chore(oat): record final review artifact"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/final-review-2026-07-13T004430Z.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["3e1cc01718c3abf7631818b6a675b07ee423107d"],
+        "sha": "0df4a1c6609139836bb856a0417b54546c880d53",
+        "subject": "chore(oat): receive passing final review"
+      }
+    ],
+    "currentBranchCommits": [
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/design.md",
+          ".oat/projects/smoke-fixture/discovery.md",
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md",
+          ".oat/smoke-bootstrap.json",
+          "workspace/logs/p01.log",
+          "workspace/logs/p02.log",
+          "workspace/logs/p03.log"
+        ],
+        "parents": ["b5d275fe9233311a393001539c2648c1d6fa1f2e"],
+        "sha": "84354cad693b43a71b7961a35938761f241365b8",
+        "subject": "test(smoke): establish fixture baseline"
+      },
+      {
+        "files": ["workspace/logs/p01.log"],
+        "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+        "sha": "0afee51d6d1879932aa19929227fcd2c0ffb2886",
+        "subject": "feat(p01-t01): append fixture marker"
+      },
+      {
+        "files": ["workspace/logs/p01.log"],
+        "parents": ["0afee51d6d1879932aa19929227fcd2c0ffb2886"],
+        "sha": "670279e0843114530e9c77552ea3d3f935fc78ad",
+        "subject": "feat(p01-t02): append fixture marker"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/reviews/p01-review-2026-07-13T003400Z.md"
+        ],
+        "parents": ["670279e0843114530e9c77552ea3d3f935fc78ad"],
+        "sha": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+        "subject": "docs(oat): record p01 phase review"
+      },
+      {
+        "files": [],
+        "parents": [
+          "84354cad693b43a71b7961a35938761f241365b8",
+          "e12eb8e8e9553f28b269df7cfd6d52d553ce2596"
+        ],
+        "sha": "24e4501d783a0c1702a90f52d9aa9568b0a62703",
+        "subject": "merge p01"
+      },
+      {
+        "files": ["workspace/logs/p02.log"],
+        "parents": ["84354cad693b43a71b7961a35938761f241365b8"],
+        "sha": "7d4fc6a52474c762016efedc693ebd99fd61ce41",
+        "subject": "feat(p02-t01): append fixture marker"
+      },
+      {
+        "files": ["workspace/logs/p02.log"],
+        "parents": ["7d4fc6a52474c762016efedc693ebd99fd61ce41"],
+        "sha": "ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e",
+        "subject": "feat(p02-t02): append fixture marker"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/reviews/p02-review-2026-07-13T003400Z.md"
+        ],
+        "parents": ["ff7bee2abcedfee4ae9a2b7c87dc97695fb8437e"],
+        "sha": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+        "subject": "docs(oat): record p02 phase review"
+      },
+      {
+        "files": [],
+        "parents": [
+          "24e4501d783a0c1702a90f52d9aa9568b0a62703",
+          "5dea118d8e5602956ea73f3d0c778c9ad0d640fb"
+        ],
+        "sha": "5012889e2014c30de03a702e8e9e7efd3b356942",
+        "subject": "merge p02"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["5012889e2014c30de03a702e8e9e7efd3b356942"],
+        "sha": "9a6b622b2860081b7f2ade3f4ead398823eed475",
+        "subject": "chore(oat): bookkeeping after parallel phase group"
+      },
+      {
+        "files": ["workspace/logs/p03.log"],
+        "parents": ["9a6b622b2860081b7f2ade3f4ead398823eed475"],
+        "sha": "1b07a1555f3b45847f84aa7816c7c52f54fdaec9",
+        "subject": "feat(p03-t01): append fixture marker"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/reviews/p03-review-2026-07-13T004200Z.md"
+        ],
+        "parents": ["1b07a1555f3b45847f84aa7816c7c52f54fdaec9"],
+        "sha": "1af9844608caa84b75c13f12d98b14b8b71433e7",
+        "subject": "docs(oat): record p03 phase review"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["1af9844608caa84b75c13f12d98b14b8b71433e7"],
+        "sha": "77d209a0f0d6ad535aff590cee0320539420a112",
+        "subject": "chore(oat): bookkeeping after p03 pass"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["77d209a0f0d6ad535aff590cee0320539420a112"],
+        "sha": "1c0a3f49cae6694be25af8a833cc84d11cf17eac",
+        "subject": "chore(oat): update tracking artifacts for implementation complete"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/final-review-2026-07-13T004430Z.md"
+        ],
+        "parents": ["1c0a3f49cae6694be25af8a833cc84d11cf17eac"],
+        "sha": "3e1cc01718c3abf7631818b6a675b07ee423107d",
+        "subject": "chore(oat): record final review artifact"
+      },
+      {
+        "files": [
+          ".oat/projects/smoke-fixture/implementation.md",
+          ".oat/projects/smoke-fixture/plan.md",
+          ".oat/projects/smoke-fixture/reviews/final-review-2026-07-13T004430Z.md",
+          ".oat/projects/smoke-fixture/state.md"
+        ],
+        "parents": ["3e1cc01718c3abf7631818b6a675b07ee423107d"],
+        "sha": "0df4a1c6609139836bb856a0417b54546c880d53",
+        "subject": "chore(oat): receive passing final review"
+      }
+    ],
+    "head": "0df4a1c6609139836bb856a0417b54546c880d53",
+    "worktrees": [
+      {
+        "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+        "head": "0df4a1c6609139836bb856a0417b54546c880d53",
+        "path": "<worktree>"
+      },
+      {
+        "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+        "head": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+        "path": "journal:smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01"
+      },
+      {
+        "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02",
+        "head": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+        "path": "journal:smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02"
+      }
+    ]
+  },
+  "kind": "workflow",
+  "manifest": {
+    "appliedScenario": "implement",
+    "baselineCommitSha": "84354cad693b43a71b7961a35938761f241365b8",
+    "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+    "branchOwnership": {
+      "baseCommitSha": "b5d275fe9233311a393001539c2648c1d6fa1f2e",
+      "baselineCommitSha": "84354cad693b43a71b7961a35938761f241365b8",
+      "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+      "createdByRun": true,
+      "runIdentity": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a"
+    },
+    "driveMode": "automated",
+    "driveStatus": "completed",
+    "effectiveCloseoutPolicy": {
+      "source": "local",
+      "value": {
+        "postApproval": [],
+        "preApproval": []
+      }
+    },
+    "effectiveSmokeBootstrap": {
+      "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+      "configSha256": "42531406f88dedfb3135c196f8c5fd5dfbf21ea6f5b07a52810dfd21485143cc",
+      "policy": {
+        "config": {
+          "copy": "marker-source-only",
+          "preserveBytes": true
+        },
+        "copyPrimary": {
+          "archivedProjects": false,
+          "environment": false,
+          "localProjects": false,
+          "mcp": false
+        },
+        "localPathSync": false,
+        "providerViewSync": false,
+        "s3ArchiveSync": false,
+        "sharedHooks": false
+      },
+      "runIdentity": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a"
+    },
+    "gateRuntime": "cursor",
+    "gateTarget": "cursor-gpt-5-6-sol-max",
+    "harness": "codex",
+    "ownershipJournal": {
+      "resources": [
+        {
+          "baselineCommitSha": "84354cad693b43a71b7961a35938761f241365b8",
+          "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01",
+          "runIdentity": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+          "worktree": "journal:smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p01"
+        },
+        {
+          "baselineCommitSha": "84354cad693b43a71b7961a35938761f241365b8",
+          "branch": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02",
+          "runIdentity": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+          "worktree": "journal:smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a-p02"
+        }
+      ],
+      "schemaVersion": 1
+    },
+    "provisioningState": "ready",
+    "readiness": {
+      "status": "ready"
+    },
+    "runIdentity": "smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a",
+    "sourceCommitSha": "b5d275fe9233311a393001539c2648c1d6fa1f2e",
+    "writableRoots": [
+      {
+        "harness": "codex",
+        "roots": [
+          {
+            "path": "<agent-managed-content>",
+            "purpose": "agent-managed-content"
+          },
+          {
+            "path": "<shared-git-metadata>",
+            "purpose": "shared-git-metadata"
+          },
+          {
+            "path": "<worktree-content>",
+            "purpose": "worktree-content"
+          }
+        ]
+      }
+    ]
+  },
+  "orchestrationEvents": [],
+  "reviews": [
+    {
+      "contentHash": "bc81bb199155be46fd9cbeec01e24e964417303aa1c95843e7f3be6b0e3cf65a",
+      "corroboration": {
+        "oat_gate_run_id": "83e87a91-37d8-4d19-ae6f-1ebc28d2f116",
+        "oat_gate_runtime": "cursor",
+        "oat_gate_target": "cursor-gpt-5-6-sol-max"
+      },
+      "frontmatter": {
+        "oat_gate_run_id": "83e87a91-37d8-4d19-ae6f-1ebc28d2f116",
+        "oat_gate_runtime": "cursor",
+        "oat_gate_target": "cursor-gpt-5-6-sol-max",
+        "oat_invocation_model": "gpt-5.6-sol-max",
+        "oat_invocation_reasoning_effort": "provider-default",
+        "oat_invocation_source": "exec-target-config",
+        "oat_project": ".oat/projects/smoke-fixture",
+        "oat_review_invocation": "gate",
+        "oat_review_scope": "final",
+        "oat_review_type": "code"
+      },
+      "path": "reviews/archived/final-review-2026-07-13T004430Z.md"
+    },
+    {
+      "committedHistory": {
+        "commitSha": "e12eb8e8e9553f28b269df7cfd6d52d553ce2596",
+        "contentHash": "af942b4d78e60602239157b5a34952e366de9b56174e9fcce1bd374ebe7caae2",
+        "matchesHead": true,
+        "reachableFromHead": true
+      },
+      "contentHash": "af942b4d78e60602239157b5a34952e366de9b56174e9fcce1bd374ebe7caae2",
+      "corroboration": {},
+      "frontmatter": {
+        "oat_project": ".oat/projects/smoke-fixture",
+        "oat_review_invocation": "auto",
+        "oat_review_scope": "p01",
+        "oat_review_type": "code"
+      },
+      "path": "reviews/p01-review-2026-07-13T003400Z.md"
+    },
+    {
+      "committedHistory": {
+        "commitSha": "5dea118d8e5602956ea73f3d0c778c9ad0d640fb",
+        "contentHash": "304b3b2e3d9a190bc4488b6fd8d39a977c5bae441310cf06379e247f6fc72332",
+        "matchesHead": true,
+        "reachableFromHead": true
+      },
+      "contentHash": "304b3b2e3d9a190bc4488b6fd8d39a977c5bae441310cf06379e247f6fc72332",
+      "corroboration": {},
+      "frontmatter": {
+        "oat_project": ".oat/projects/smoke-fixture",
+        "oat_review_invocation": "auto",
+        "oat_review_scope": "p02",
+        "oat_review_type": "code"
+      },
+      "path": "reviews/p02-review-2026-07-13T003400Z.md"
+    },
+    {
+      "committedHistory": {
+        "commitSha": "1af9844608caa84b75c13f12d98b14b8b71433e7",
+        "contentHash": "8206b0aa92f90269c70f13075c2f4f6ec17958981cf05b6b116afa4eb376e74a",
+        "matchesHead": true,
+        "reachableFromHead": true
+      },
+      "contentHash": "8206b0aa92f90269c70f13075c2f4f6ec17958981cf05b6b116afa4eb376e74a",
+      "corroboration": {},
+      "frontmatter": {
+        "oat_project": ".oat/projects/smoke-fixture",
+        "oat_review_invocation": "auto",
+        "oat_review_scope": "p03",
+        "oat_review_type": "code"
+      },
+      "path": "reviews/p03-review-2026-07-13T004200Z.md"
+    }
+  ],
+  "scenario": "implement",
+  "schemaVersion": 1,
+  "source": {
+    "rawPaths": {
+      "commonGitDir": "/Users/tstang/Code/open-agent-toolkit/.git",
+      "fixtureProjectPath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/worktree/.oat/projects/smoke-fixture",
+      "journalWorktreePaths": [
+        "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/phase-p01",
+        "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/phase-p02"
+      ],
+      "manifestPath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/provisioning-manifest.json",
+      "reportRoot": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/reports/codex/implement",
+      "worktreePath": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/worktree",
+      "writableRoots": [
+        {
+          "harness": "codex",
+          "roots": [
+            {
+              "path": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/worktree",
+              "purpose": "worktree-content"
+            },
+            {
+              "path": "/Users/tstang/Code/open-agent-toolkit/.git",
+              "purpose": "shared-git-metadata"
+            },
+            {
+              "path": "/Users/tstang/orca/workspaces/open-agent-toolkit/oat-project-fixture/tools/smoke/.runs/smoke-automated-2026-07-13T00-28-52-722Z-80480da7-aa2f-48fb-8d1e-2d1a0163c55a/worktree/.agents",
+              "purpose": "agent-managed-content"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

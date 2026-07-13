@@ -46,6 +46,10 @@ import {
   validateRealPathWithinScope,
 } from '@fs/paths';
 import {
+  buildDispatchReport,
+  type DispatchReportV1,
+} from '@providers/identity/dispatch-report';
+import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
@@ -90,6 +94,7 @@ interface GateCommandDependencies {
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
   processEnv: NodeJS.ProcessEnv;
+  writeDiagnostic: (message: string) => void;
 }
 
 interface GateSetOptions {
@@ -138,14 +143,22 @@ interface ReviewGateOptions extends CrossProviderExecOptions {
 interface ProcessRunOptions {
   cwd: string;
   env: NodeJS.ProcessEnv;
+  livenessIntervalMs?: number;
+  onLiveness?: (snapshot: GateLivenessSnapshot) => void;
   purpose: 'host-detection' | 'availability' | 'execute';
-  stdio: 'ignore' | 'inherit';
+  stdio: 'ignore' | 'inherit' | 'pipe';
   timeoutMs: number;
 }
 
 interface ProcessRunResult {
   exitCode: number;
   timedOut?: boolean;
+}
+
+interface GateLivenessSnapshot {
+  elapsedMs: number;
+  hardBudgetMs: number;
+  idleMs: number;
 }
 
 type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
@@ -279,6 +292,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   runProcess: runChildProcess,
   parseReviewGateVerdict,
   processEnv: process.env,
+  writeDiagnostic: (message) => process.stderr.write(message),
 };
 
 const VALID_ON_FAILURE: readonly GateOnFailure[] = ['block', 'prompt', 'warn'];
@@ -307,7 +321,8 @@ const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
 const REVIEW_GATE_CONTEXT_NOTE =
   'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
 const GATE_CHECK_TIMEOUT_MS = 5_000;
-const GATE_EXEC_TIMEOUT_MS = 10 * 60 * 1_000;
+const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
+const GATE_LIVENESS_INTERVAL_MS = 30_000;
 
 function reviewGateProjectContext(project: ResolvedReviewProject): string {
   return [
@@ -360,6 +375,69 @@ function createGateInvocationMetadata(
       ? { model: selectedModel, source: 'exec-target-config' as const }
       : {}),
   });
+}
+
+function buildGateDispatchReport(
+  invocation: GateInvocationMetadata,
+  scope: string,
+): DispatchReportV1 {
+  const report = buildDispatchReport({
+    scope,
+    action: 'review',
+    role: 'reviewer',
+    resolution: {
+      status: 'resolved',
+      provider: invocation.runtime,
+      value: null,
+      policyMode: null,
+      policy: null,
+      source: null,
+      providers: {
+        [invocation.runtime]: {
+          dispatchArgs: null,
+          selection: {
+            role: 'reviewer',
+            requestedCandidate: null,
+            candidateTier: null,
+            candidateIndex: null,
+            ceilingTier: null,
+            ceilingTarget: null,
+            selectedValue: null,
+            selectionMode: 'gate-invocation',
+            selectionBranch: 'gate-configured-invocation',
+            target: null,
+            cellSource: null,
+          },
+        },
+      },
+    },
+    requestedControls: {
+      model: {
+        value: null,
+        mechanism: 'base-role',
+        reason:
+          'Configured gate invocation is reported separately from runtime identity.',
+      },
+      effort: {
+        value: null,
+        mechanism: 'base-role',
+        reason:
+          'Configured gate invocation is reported separately from runtime identity.',
+      },
+    },
+    configuredDefaults: {
+      model: null,
+      modelSource: null,
+      effort: null,
+      effortSource: null,
+    },
+    gateInvocation: invocation,
+  });
+
+  return {
+    ...report,
+    route: { ...report.route, target: invocation.targetId },
+  };
 }
 
 function gateInvocationPromptContext(
@@ -424,11 +502,37 @@ async function runChildProcess(
   return new Promise((resolve, reject) => {
     let timedOut = false;
     let killTimeout: NodeJS.Timeout | null = null;
+    const startedAt = Date.now();
+    let lastActivityAt = startedAt;
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env,
-      stdio: options.stdio,
+      stdio:
+        options.stdio === 'pipe' ? ['inherit', 'pipe', 'pipe'] : options.stdio,
     });
+    const recordActivity = (): void => {
+      lastActivityAt = Date.now();
+    };
+    child.stdout?.on('data', (chunk: Buffer) => {
+      recordActivity();
+      process.stdout.write(chunk);
+    });
+    child.stderr?.on('data', (chunk: Buffer) => {
+      recordActivity();
+      process.stderr.write(chunk);
+    });
+    const livenessInterval =
+      options.onLiveness && options.livenessIntervalMs
+        ? setInterval(() => {
+            const now = Date.now();
+            options.onLiveness?.({
+              elapsedMs: now - startedAt,
+              hardBudgetMs: options.timeoutMs,
+              idleMs: now - lastActivityAt,
+            });
+          }, options.livenessIntervalMs)
+        : null;
+    livenessInterval?.unref();
     const timeout = setTimeout(() => {
       timedOut = true;
       child.kill('SIGTERM');
@@ -441,6 +545,9 @@ async function runChildProcess(
 
     child.on('error', (error) => {
       clearTimeout(timeout);
+      if (livenessInterval) {
+        clearInterval(livenessInterval);
+      }
       if (killTimeout) {
         clearTimeout(killTimeout);
       }
@@ -448,6 +555,9 @@ async function runChildProcess(
     });
     child.on('close', (code) => {
       clearTimeout(timeout);
+      if (livenessInterval) {
+        clearInterval(livenessInterval);
+      }
       if (killTimeout) {
         clearTimeout(killTimeout);
       }
@@ -586,6 +696,20 @@ function resolveGateExecTimeoutMs(env: NodeJS.ProcessEnv): number {
   const parsed = Number(rawValue);
   if (!Number.isInteger(parsed) || parsed < 1) {
     return GATE_EXEC_TIMEOUT_MS;
+  }
+
+  return parsed;
+}
+
+function resolveGateLivenessIntervalMs(env: NodeJS.ProcessEnv): number {
+  const rawValue = env.OAT_GATE_LIVENESS_INTERVAL_MS?.trim();
+  if (!rawValue) {
+    return GATE_LIVENESS_INTERVAL_MS;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return GATE_LIVENESS_INTERVAL_MS;
   }
 
   return parsed;
@@ -1394,6 +1518,9 @@ async function executeTarget(
       ? ['--model', selected.model]
       : [];
   const timeoutMs = resolveGateExecTimeoutMs(dependencies.processEnv);
+  const livenessIntervalMs = resolveGateLivenessIntervalMs(
+    dependencies.processEnv,
+  );
 
   if (!context.json) {
     context.logger.info(
@@ -1408,8 +1535,25 @@ async function executeTarget(
       {
         cwd: context.cwd,
         env: dependencies.processEnv,
+        livenessIntervalMs,
+        onLiveness: ({ elapsedMs, hardBudgetMs, idleMs }) => {
+          const telemetry = {
+            elapsedMs,
+            hardBudgetMs,
+            idleMs,
+            target: selected.id,
+            type: 'gate-liveness',
+          };
+          if (context.json) {
+            dependencies.writeDiagnostic(`${JSON.stringify(telemetry)}\n`);
+          } else {
+            context.logger.info(
+              `Gate liveness: target=${selected.id} elapsed_ms=${elapsedMs} idle_ms=${idleMs} hard_budget_ms=${hardBudgetMs}.`,
+            );
+          }
+        },
         purpose: 'execute',
-        stdio: 'inherit',
+        stdio: 'pipe',
         timeoutMs,
       },
     );
@@ -2003,6 +2147,7 @@ function writeReviewGateResult(
     handoff: string;
     diversity?: GateDiversityMetadata;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration: GateInvocationCorroboration;
   },
 ): void {
@@ -2057,6 +2202,7 @@ function writeReviewGateExecutionFailure(
     timedOut?: boolean;
     timeoutMs?: number;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
@@ -2072,6 +2218,7 @@ function writeReviewGateExecutionFailure(
       project: payload.project,
       projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       ...(payload.corroboration
         ? { corroboration: payload.corroboration }
         : {}),
@@ -2095,6 +2242,7 @@ function writeReviewGateUnexpectedFailure(
     projectResolutionSource: ReviewProjectResolutionSource;
     target: string;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     error: unknown;
   },
 ): void {
@@ -2111,6 +2259,7 @@ function writeReviewGateUnexpectedFailure(
       project: payload.project,
       projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       message,
     });
     return;
@@ -2133,6 +2282,7 @@ function writeReviewGateArtifactValidationFailure(
     message: string;
     recovery: string;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
@@ -2147,6 +2297,7 @@ function writeReviewGateArtifactValidationFailure(
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       ...(payload.corroboration
         ? { corroboration: payload.corroboration }
         : {}),
@@ -2175,6 +2326,7 @@ function writeReviewGateTargetingFailure(
     generatedAt: string | null;
     message: string;
     gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
     corroboration: GateTargetCorroboration;
   },
 ): void {
@@ -2202,6 +2354,7 @@ function writeReviewGateTargetingFailure(
       artifactPath: payload.artifactPath,
       generatedAt: payload.generatedAt,
       gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
       corroboration,
       receiveEligible: false,
       remediable: false,
@@ -2445,6 +2598,7 @@ async function runReviewGate(
         projectResolutionSource: ReviewProjectResolutionSource;
         target: string;
         gateInvocation: GateInvocationMetadata;
+        dispatchReport: DispatchReportV1;
       }
     | undefined;
   try {
@@ -2476,11 +2630,16 @@ async function runReviewGate(
       dependencies,
     );
     const gateInvocation = createGateInvocationMetadata(runId, selected);
+    const dispatchReport = buildGateDispatchReport(
+      gateInvocation,
+      options.reviewScope?.trim() || 'gate-review',
+    );
     postSelectionContext = {
       project: projectPath,
       projectResolutionSource: reviewProject.source,
       target: selected.id,
       gateInvocation,
+      dispatchReport,
     };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
     const before = await listReviewGateArtifactCandidates({
@@ -2518,6 +2677,7 @@ async function runReviewGate(
         timedOut: childResult.timedOut ?? false,
         timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
         gateInvocation,
+        dispatchReport,
       });
       process.exitCode = childExitCode;
       return;
@@ -2559,6 +2719,7 @@ async function runReviewGate(
         generatedAt: diagnosticArtifact?.generatedAt ?? null,
         message,
         gateInvocation,
+        dispatchReport,
         corroboration: initialTargetCorroboration,
       });
       process.exitCode = 1;
@@ -2584,6 +2745,7 @@ async function runReviewGate(
               ? 'Review artifact is missing oat_project for the explicitly declared project.'
               : 'Review artifact project identity does not match the explicitly declared project.',
         gateInvocation,
+        dispatchReport,
         corroboration: initialTargetCorroboration,
       });
       process.exitCode = 1;
@@ -2605,6 +2767,7 @@ async function runReviewGate(
           'Review artifact oat_generated_at is missing or is not a valid timestamp.',
         recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
         gateInvocation,
+        dispatchReport,
         corroboration: corroborateGateInvocation(
           gateInvocation,
           undefined,
@@ -2639,6 +2802,7 @@ async function runReviewGate(
         message: detail,
         recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
         gateInvocation,
+        dispatchReport,
         corroboration: corroborateGateInvocation(
           gateInvocation,
           undefined,
@@ -2673,6 +2837,7 @@ async function runReviewGate(
           : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
         recovery: `Copy the exact gate invocation fields from the review prompt into ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
         gateInvocation,
+        dispatchReport,
         corroboration,
       });
       process.exitCode = 1;
@@ -2690,6 +2855,7 @@ async function runReviewGate(
           'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
         recovery: `Set oat_review_invocation: gate in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
         gateInvocation,
+        dispatchReport,
         corroboration,
       });
       process.exitCode = 1;
@@ -2721,6 +2887,7 @@ async function runReviewGate(
       handoff,
       diversity: selected.diversity,
       gateInvocation,
+      dispatchReport,
       corroboration,
     });
     process.exitCode = blocking ? 1 : 0;
