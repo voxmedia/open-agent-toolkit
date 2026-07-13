@@ -5,7 +5,6 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: []
 oat_plan_parallel_groups: [['p01', 'p02']]
 oat_plan_source: quick
 oat_import_reference: null
@@ -107,6 +106,7 @@ git commit -m "feat(p01-t01): resolve artifact formatting during planning"
 5. Bump role versions to `oat-phase-implementer` `1.0.8` and `oat-reviewer` `1.1.7`.
 6. Bump skill versions once: review-provide `1.3.16`, review-receive `1.5.7`, summary `1.2.1`, document `1.5.1`, pr-final `1.4.3`, quick-start `2.1.16`.
 7. Update every hard-coded role/skill version assertion affected by this task.
+8. Add contract assertions that compare the complete approved runtime block across all eight canonical runtime surfaces; the lead-in search remains a diagnostic, not the equivalence proof.
 
 **Format:**
 
@@ -126,7 +126,7 @@ pnpm run oat:validate-skills
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 ```
 
-Expected: all eight runtime canonical files are listed and skill validation passes.
+Expected: all eight runtime canonical files are listed, their complete contract blocks are equivalent, all version assertions are current, and skill validation passes.
 
 **Commit:**
 
@@ -212,7 +212,7 @@ Run:
 
 ```bash
 pnpm run oat:validate-skills
-pnpm exec vitest run packages/cli/src/validation/skills.test.ts packages/cli/src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/gate/index.test.ts
 pnpm format
 pnpm lint
 pnpm type-check
