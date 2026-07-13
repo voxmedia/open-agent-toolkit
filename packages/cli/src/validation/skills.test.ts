@@ -2681,8 +2681,14 @@ describe('validateOatSkills', () => {
     expect(reviewRoute).toMatch(
       /fresh phase implementer[\s\S]{0,160}same exact target[\s\S]{0,240}original `request_id`[\s\S]{0,120}`continuation_events`/i,
     );
+    expect(reviewRoute).toMatch(
+      /do not support resuming a completed child handle[\s\S]{0,120}expected rather than an anomalous recovery/i,
+    );
     expect(phaseAgent).toMatch(/do not own[\s\S]{0,120}phase review dispatch/i);
     expect(phaseAgent).toMatch(/Never dispatch implementation\s+self-review/i);
+    expect(phaseAgent).toMatch(
+      /Concurrent child writers[\s\S]{0,180}(?:disjoint|separate worktree)/i,
+    );
     expect(resumeRoute).toContain('root-owned');
     expect(resumeRoute).toMatch(
       /root reviewer launch was accepted[\s\S]{0,180}existing reviewer handle[\s\S]{0,180}never replace/i,

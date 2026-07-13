@@ -148,6 +148,8 @@ same exact target and bounded fix scope. Its generic dispatch record must
 reference the original `request_id` through existing `continuation_events`.
 This is a new fix scope, not replacement of the completed phase launch and not
 a dispatch schema change.
+On hosts that do not support resuming a completed child handle, this fresh
+same-target fix launch is expected rather than an anomalous recovery.
 
 Retry exhaustion stops a sequential run. In a parallel group, mark the phase
 `excluded`, do not merge its worktree, and report the review artifact and

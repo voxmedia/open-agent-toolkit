@@ -73,6 +73,9 @@ the same child scope after failure.
 
 Optional third-tier capability is not a phase readiness requirement. If no
 optional launch is needed, do not probe or require nested capacity.
+Concurrent child writers are safely isolated only when their declared file
+sets are disjoint or each child uses a separate worktree; otherwise run them
+serially.
 
 ## Artifact Reads
 
