@@ -16,7 +16,7 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
-  policy: balanced
+  policy: high
   source: project-state
 # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   providers: # present for capped managed policies; omitted for uncapped/inherit
