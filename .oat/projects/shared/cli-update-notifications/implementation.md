@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p02-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | in_progress | 3     | 0/3       |
+| Phase 2 | complete    | 3     | 3/3       |
 
-**Total:** 2/5 tasks completed
+**Total:** 5/5 tasks completed
 
 ---
 
@@ -122,8 +122,29 @@ oat_generated: false
 
 ## Phase 2: CLI Integration and Release Readiness
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-13
+
+### Phase Summary
+
+**Outcome:**
+
+- Wired passive notifications into every actionable command through a thin,
+  failure-contained root hook.
+- Documented behavior, cache cadence, and both suppression mechanisms.
+- Bumped all five public packages to `0.1.61` and regenerated shipped CLI
+  version assets.
+
+**Verification:**
+
+- 2,745 CLI tests, lint, and type-check passed.
+- Docs checks, repository formatting, and release validation passed.
+- Independent review passed with 0 Critical, 0 Important, 1 Medium.
+
+**Notes:**
+
+- Documentation repeats the serial TTL cadence; overlapping processes can
+  still duplicate a check or notice as recorded by both phase reviews.
 
 ### Task p02-t01: Wire notifications into command dispatch
 
@@ -144,8 +165,8 @@ oat_generated: false
 
 ### Task p02-t02: Document and format update notification behavior
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 67fcfc89
 
 **Notes:**
 
@@ -153,12 +174,31 @@ oat_generated: false
   the repository formatter found style differences not covered by the task's
   focused verification.
 
+**Outcome:**
+
+- Added user guidance to the CLI README and config/local-state documentation.
+- Formatted all four declared files.
+
+**Verification:**
+
+- Docs checks and repository formatting passed.
+
 ---
 
 ### Task p02-t03: Prepare the lockstep public package release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 023f0b36
+
+**Outcome:**
+
+- Updated the five lockstep public packages to `0.1.61` and regenerated
+  `packages/cli/assets/public-package-versions.json`.
+
+**Verification:**
+
+- All five packages passed release validation; `pnpm-lock.yaml` remained
+  unchanged.
 
 ---
 
@@ -203,19 +243,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Branch: `cursor/cli-update-notifications-40f7`
 - Tier: 1 (subagents)
 - Policy: managed High
-- Phase: p02, original handle continuation required
-- Outcome: p02-t01 passed; phase stopped before p02-t02 because repository
-  formatting required the committed integration files to enter the next task's
-  boundary.
+- Phase: p02, original handle continued after a bounded plan adjustment
+- Outcome: 3/3 tasks completed; phase and independent review passed
+
+| Phase | Implementer | Tasks | Review | Result |
+| ----- | ----------- | ----- | ------ | ------ |
+| p02 | `gpt-5.6-sol-high` | 3/3 | `reviews/p02-review-2026-07-13.md` | passed |
 
 **Dispatch notes:**
 
 - `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
 
 **Outstanding items:**
 
-- Continue the accepted p02 handle from p02-t02 after the committed plan
-  boundary adjustment.
+- Non-blocking Medium: docs do not explicitly qualify the serial TTL cadence as
+  best-effort across overlapping processes.
 
 <!-- orchestration-runs-end -->
 
@@ -231,7 +274,9 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Add the user update-notification preference - `6c327994`
 - [x] p01-t02: Implement the cached update notification service - `23ba2154`
-- [ ] p02-t01: Wire notifications into command dispatch - in progress
+- [x] p02-t01: Wire notifications into command dispatch - `2f233893`
+- [x] p02-t02: Document and format update notification behavior - `67fcfc89`
+- [x] p02-t03: Prepare the lockstep public package release - `023f0b36`
 
 **What changed (high level):**
 
@@ -239,6 +284,8 @@ Chronological log of implementation progress.
   resolution.
 - Added and independently reviewed the cached, offline-safe notification
   service.
+- Integrated the notifier into command dispatch, documented it, and prepared
+  the `0.1.61` lockstep public package release.
 
 **Decisions:**
 
@@ -254,7 +301,7 @@ Chronological log of implementation progress.
 
 - None.
 
-**Session End:** In progress
+**Session End:** 17:38 UTC
 
 ---
 
@@ -274,30 +321,40 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 285 focused tests + type-check | 285 | 0 | Phase scope |
-| 2     | -         | -      | -      | -        |
+| 2     | 2,745 CLI tests + lint/type-check + docs/format/release gates | 2,745 | 0 | Phase and release scope |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Passive stable-release update notices backed by a best-effort TTL cache.
+- User and environment suppression controls that preserve automation safety.
+- CLI bootstrap integration, documentation, and lockstep `0.1.61` release
+  metadata.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Eligible interactive commands can warn when npm's stable `latest` version is
+  newer and show the documented global update command.
+- JSON, non-interactive, CI, test, source-development, ephemeral-runner, and
+  explicitly opted-out invocations remain silent.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/app/update-notifier.ts` - update policy, cache, registry,
+  version comparison, and output.
+- `packages/cli/src/index.ts` - root command hook.
+- `packages/cli/src/config/` and `commands/config/` - persistent user opt-out.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 2,745 CLI tests, CLI lint/type-check, docs checks, repository formatting, and
+  five-package release validation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- TTL guarantees are exact for serial invocations and best-effort across
+  concurrent processes; cross-process locking was deferred.
 
 ## References
 
