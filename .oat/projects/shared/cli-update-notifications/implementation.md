@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: prev3-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 2     | 2/2       |
-| Phase 2      | complete    | 3     | 3/3       |
-| Phase p-rev1 | complete    | 3     | 3/3       |
-| Phase p-rev2 | complete    | 2     | 2/2       |
-| Phase p-rev3 | in_progress | 1     | 0/1       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 2     | 2/2       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase p-rev1 | complete | 3     | 3/3       |
+| Phase p-rev2 | complete | 2     | 2/2       |
+| Phase p-rev3 | complete | 1     | 1/1       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -359,7 +359,7 @@ oat_generated: false
 
 ## Phase p-rev3: Truthy Opt-Out Artifact Alignment
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-13
 
 ### Review Received: Final Fable Re-review
@@ -380,11 +380,22 @@ is deterministic artifact-only alignment.
 
 ### Task prev3-t01: Align truthy opt-out lifecycle artifacts
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** d1e8841ddbf756156d8c819c6bc97e2f12b19818
 
 **Re-review:** skipped by explicit user instruction; deterministic verification
 will be recorded in phase bookkeeping.
+
+### Phase Summary
+
+- Design, summary, and the dual-suppression decision now describe truthy
+  process-level `NO_UPDATE_NOTIFIER` values.
+- Summary tracking includes p-rev1, p-rev2, and p-rev3, the selected Fable
+  fixes, and the explicit PowerShell 5.1 deferral.
+- Formatting, targeted stale-wording searches, and full-range patch whitespace
+  checks passed.
+- Re-review was explicitly skipped by the user for this deterministic
+  artifact-only alignment.
 
 ---
 
@@ -482,6 +493,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Explicitly deferred `m2`: rare PowerShell 5.1 display-only embedded-quote
   edge, with a follow-up trigger recorded in the p-rev2 section.
+
+### Run 5 - 2026-07-13T23:21:00Z
+
+- Branch: `cursor/cli-update-notifications-40f7`
+- Tier: 1 (subagents)
+- Policy: managed High
+- Phase: p-rev3
+- Outcome: 1/1 artifact-alignment task completed; deterministic verification
+  passed; re-review skipped by explicit user instruction
+
+| Phase  | Implementer        | Tasks | Review                                     | Result |
+| ------ | ------------------ | ----- | ------------------------------------------ | ------ |
+| p-rev3 | `gpt-5.6-sol-high` | 1/1   | user-authorized deterministic verification | passed |
 
 <!-- orchestration-runs-end -->
 
@@ -599,6 +623,8 @@ Track test execution during implementation.
 | 1      | 285 focused tests + type-check                                | 285    | 0      | Phase scope                |
 | 2      | 2,745 CLI tests + lint/type-check + docs/format/release gates | 2,745  | 0      | Phase and release scope    |
 | p-rev1 | 2,803 CLI tests + full repo/docs/format/release gates         | 2,803  | 0      | Revision and release scope |
+| p-rev2 | 2,812 CLI tests + full repo/docs/format/release gates         | 2,812  | 0      | Fable review-fix scope     |
+| p-rev3 | 3 artifact format/stale-wording/whitespace checks             | 3      | 0      | Artifact alignment scope   |
 
 ## Final Summary (for PR/docs)
 

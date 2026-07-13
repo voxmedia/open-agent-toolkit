@@ -312,17 +312,17 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status      | Date       | Artifact                                                 |
-| ------ | -------- | ----------- | ---------- | -------------------------------------------------------- |
-| p01    | code     | passed      | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`              |
-| p02    | code     | passed      | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`              |
-| p-rev1 | code     | passed      | 2026-07-13 | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md` |
-| p-rev2 | code     | passed      | 2026-07-13 | `reviews/p-rev2-review-2026-07-13T215721Z.md`            |
-| p-rev3 | code     | pending     | -          | re-review skipped by explicit user instruction           |
-| final  | code     | fixes_added | 2026-07-13 | `reviews/archived/final-review-2026-07-13T220207Z.md`    |
-| spec   | artifact | pending     | -          | -                                                        |
-| design | artifact | pending     | -          | -                                                        |
-| plan   | artifact | passed      | 2026-07-13 | structured auto-review                                   |
+| Scope  | Type     | Status  | Date       | Artifact                                                                                                |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------- |
+| p01    | code     | passed  | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`                                                             |
+| p02    | code     | passed  | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`                                                             |
+| p-rev1 | code     | passed  | 2026-07-13 | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md`                                                |
+| p-rev2 | code     | passed  | 2026-07-13 | `reviews/p-rev2-review-2026-07-13T215721Z.md`                                                           |
+| p-rev3 | code     | passed  | 2026-07-13 | deterministic verification `d1e8841d`; re-review skipped by user                                        |
+| final  | code     | passed  | 2026-07-13 | `reviews/archived/final-review-2026-07-13T220207Z.md`; artifact fix verified, re-review skipped by user |
+| spec   | artifact | pending | -          | -                                                                                                       |
+| design | artifact | pending | -          | -                                                                                                       |
+| plan   | artifact | passed  | 2026-07-13 | structured auto-review                                                                                  |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
