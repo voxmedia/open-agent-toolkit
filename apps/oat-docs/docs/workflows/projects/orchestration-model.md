@@ -124,9 +124,8 @@ Before launch, the phase agent defines objective, authority, exact target,
 output, verification, deadline, retry policy, and fallback. The parent retains
 phase ownership and task commit authority.
 
-Do not use nested dispatch merely to mirror task granularity. The default
-five-task smoke fixture intentionally proves successful execution with no task
-workers.
+Do not use nested dispatch merely to mirror task granularity. The smoke fixture
+intentionally proves successful execution with no task workers.
 
 ## Catalogs and Exact Selection
 
