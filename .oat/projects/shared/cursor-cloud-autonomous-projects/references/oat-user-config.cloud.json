@@ -150,40 +150,6 @@
           },
           "priority": 110,
           "availabilityCommand": ["cursor-agent", "--version"]
-        },
-        "codex-5-6-sol-max": {
-          "runtime": "codex",
-          "baseCommand": [
-            "codex",
-            "exec",
-            "--model",
-            "gpt-5.6-sol",
-            "-c",
-            "model_reasoning_effort=\"max\"",
-            "--dangerously-bypass-approvals-and-sandbox"
-          ],
-          "invocation": {
-            "model": "gpt-5.6-sol",
-            "reasoningEffort": "max"
-          },
-          "priority": 100,
-          "availabilityCommand": ["codex", "--version"]
-        },
-        "claude-fable-skip-permissions": {
-          "runtime": "claude",
-          "baseCommand": [
-            "claude",
-            "-p",
-            "--model",
-            "fable",
-            "--dangerously-skip-permissions"
-          ],
-          "invocation": {
-            "model": "fable",
-            "reasoningEffort": "provider-default"
-          },
-          "priority": 95,
-          "availabilityCommand": ["claude", "--version"]
         }
       },
       "skills": {
