@@ -2,40 +2,55 @@
 
 This reference preserves the route-specific implementation contract. Load it only when the entry skill routes execution here.
 
+The shared dispatch engine (`oat-dispatch-subagents`) and the project adapter
+(`oat-project-dispatch-subagents`) own capability probing, catalog
+observation, route selection, accepted-launch terminality, continuation,
+recovery, and the structured dispatch record. This reference adds only the
+implement-workflow specifics: tier selection, dispatch-policy preflight,
+resolver invocation shapes, and the logs this workflow must emit. Where this
+reference and the shared skills appear to overlap, the shared skills are
+canonical.
+
 ### Step 0.5: Capability Detection and Tier Selection
 
-**Mandatory target-first order:** Complete Dispatch Policy Preflight and resolve
-the concrete managed Codex target before probing generic agent availability or
-locking Tier 1/Tier 2. A concrete target takes precedence over tier selection:
-first send the exact registered role through native dispatch. Only a native
-role-selection rejection permits an explicitly pinned fresh Codex child. If
-neither exact route is possible, inline execution is allowed only with verified
-equivalent current-host model and effort controls; otherwise block before work
-starts. Explicit inherit/default and documented managed-uncapped reviewer
-behavior remain the only base-role exceptions.
-
-For a concrete managed Codex role, first send the resolver-returned Codex
-variant through the native spawn API as `agent_type`. Spawn acceptance plus the
-constructed launcher payload is configured invocation evidence; independent
-runtime telemetry or agent self-report is not required. Launch a fresh Codex
-child pinned to the resolver-returned model and effort with canonical role
-instructions only after a native role-selection rejection as defined below. If
-that fresh child cannot be launched, fail closed and block; never substitute
-the coordinator or base role.
+**Mandatory target-first order:** Complete Dispatch Policy Preflight and
+resolve the concrete managed target before probing generic agent availability
+or locking Tier 1/Tier 2. A concrete target takes precedence over tier
+selection: first send the exact registered role through native dispatch. For
+Codex, the resolver-returned Codex variant must first be sent through the
+native spawn API as native `agent_type`; spawn acceptance plus the constructed
+launcher payload is configured invocation evidence, and independent runtime
+telemetry or agent self-report is not required. Launch a fresh Codex child
+pinned to the resolver target's explicit model, reasoning effort, and
+canonical role instructions from `.agents/agents/oat-phase-implementer.md` or
+`.agents/agents/oat-reviewer.md` only after a native role-selection rejection
+as defined below.
+If that fresh child cannot be launched, fail closed and block; never
+substitute a base or coordinator role for a managed phase target. Inline
+execution is allowed only with verified equivalent current-host model and
+effort controls. Explicit inherit/default behavior and the documented
+managed-uncapped reviewer fallback remain the only base-role exceptions.
 
 Use base `oat-phase-implementer` only for the allowed exceptions above:
-explicit inherit/default behavior. It is never a managed phase-target fallback.
+explicit inherit/default behavior. It is never a managed phase-target
+fallback.
 
-Detect whether native subagent dispatch is available. The detection logic follows the same pattern used by `oat-project-review-provide` but produces a two-tier outcome (no fresh-session tier — this skill runs autonomously and cannot block on user-initiated fresh sessions mid-run).
+Detection logic (two-tier outcome — this skill runs autonomously and cannot
+block on user-initiated fresh sessions mid-run):
 
-Detection logic:
-
-- If the host is Claude Code, check Task-tool availability with `subagent_type: "oat-phase-implementer"` and `subagent_type: "oat-reviewer"`. Available → Tier 1.
-- If the host is Cursor, use Cursor-native invocation. Available → Tier 1.
-- If the host is Codex multi-agent, verify `[features] multi_agent = true` and whether `spawn_agent` requires explicit authorization.
-  - Codex Tier 1 dispatches for `oat-phase-implementer` and `oat-reviewer` must use self-contained scope packets and fresh context. Do not rely on forked full-thread context when pinning a specialized OAT role.
+- Claude Code: check Task-tool availability with
+  `subagent_type: "oat-phase-implementer"` and
+  `subagent_type: "oat-reviewer"`. Available → Tier 1.
+- Cursor: use Cursor-native invocation. Available → Tier 1.
+- Codex multi-agent: verify `[features] multi_agent = true` and whether
+  `spawn_agent` requires explicit authorization. Root→phase dispatch requires
+  depth 1 only; nested depth matters only when an optional child is actually
+  launched. Tier 1 dispatches must use self-contained scope packets and fresh
+  context; do not rely on forked full-thread context when pinning a
+  specialized OAT role.
   - Available without auth → Tier 1.
-  - Available with auth required → fail closed. You MUST ask the user once at skill start before selecting Tier 2 or starting implementation work:
+  - Available with auth required → fail closed. Ask the user once at skill
+    start before selecting Tier 2 or starting implementation work:
 
     ```
     This OAT implementation skill normally delegates phase implementation and review to subagents. Authorize subagent delegation for this run?
@@ -43,23 +58,33 @@ Detection logic:
     Yes authorizes both oat-phase-implementer and oat-reviewer across every phase in this run.
     ```
 
-    - Approved → Tier 1.
-    - Declined → Tier 2.
+    Approved → Tier 1. Declined → Tier 2.
 
 - If the host does not resolve either generic agent, first attempt the exact
   registered role natively for any concrete managed target. Use the explicitly
-  pinned fresh-child route only after a native role-selection rejection. Select
-  Tier 2 only when inline execution is allowed by the target-first rule above.
+  pinned fresh-child route only after a native role-selection rejection.
+  Select Tier 2 only when inline execution is allowed by the target-first rule
+  above.
 
-**Approval scope rule:** this Tier selection applies to both phase implementation and checkpoint review. Do not infer a mixed mode from conversational emphasis on review checkpoints. If the user has not explicitly approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid when the user explicitly requests it.
+**Approval scope rule:** this Tier selection applies to both phase
+implementation and checkpoint review. Do not infer a mixed mode from
+conversational emphasis on review checkpoints. If the user has not explicitly
+approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid
+when the user explicitly requests it.
 
-**Codex fail-closed rule:** after this skill is invoked, "user did not separately ask for subagents" is not a valid Tier 2 reason. If Codex can spawn agents but requires explicit user authorization, the implementation MUST NOT continue until the delegation question above is answered. Tier 2 is allowed only when:
+**Codex fail-closed rule:** after this skill is invoked, "user did not
+separately ask for subagents" is not a valid Tier 2 reason. If Codex can spawn
+agents but requires explicit user authorization, the implementation MUST NOT
+continue until the delegation question above is answered. Tier 2 is allowed
+only when:
 
 - `user declined delegation`
 - `spawn_agent unavailable`
 - `required agent role unresolved`
 
-Report the selected tier to the user:
+**Hard pre-work guard:** report the selected tier before any code edit, test
+run, or implementation commit. If Tier 2 is selected, the reason must be one
+of the three allowed Tier 2 reasons above:
 
 ```
 [preflight] Checking subagent availability…
@@ -68,44 +93,41 @@ Report the selected tier to the user:
   → Reason: {authorized | available without auth | user declined delegation | spawn_agent unavailable | required agent role unresolved}
 ```
 
-Do not print `[0/N]` for this preflight step. The implementation denominator is not established by capability detection; use the literal `[preflight]` label above.
+Do not print `[0/N]` for this preflight step. The implementation denominator
+is not established by capability detection; use the literal `[preflight]`
+label above.
 
-**Hard pre-work guard:** before any code edit, test run, or implementation commit, print the selected tier and reason. If Tier 2 is selected, the reason must be one of the three allowed Tier 2 reasons above. Do not run tests, edit files, or create implementation commits until Step 0.5 has completed and the tier report has been printed.
+**Tier lock:** tier is locked for the remainder of the run only after the
+dispatch target is resolved. Subsequent phase-implementer, optional nested,
+fix-continuation, and review dispatches use the same tier. Tier controls
+mechanics only: every managed phase implementer resolves one exact target
+beneath the recorded project or phase named maximum. No mid-run downgrade is
+allowed.
 
-**Tier is locked for the remainder of the run only after the dispatch target is
-resolved.** Subsequent phase-implementer, optional nested, fix-continuation,
-and review dispatches use the same tier. Tier controls mechanics only: every
-managed phase implementer resolves one exact target beneath the recorded
-project or phase named maximum. No mid-run downgrade is allowed.
+**Recovery if Step 0.5 was skipped:** if implementation work has already
+started inline before completing Step 0.5, STOP immediately. Preserve any work
+in progress, complete or revert to a clean task boundary, and re-run Step 0.5
+before continuing. Do not silently continue in Tier 2.
 
-**Recovery if Step 0.5 was skipped:** If implementation work has already started inline before completing Step 0.5, STOP immediately. Preserve any work in progress, complete or revert to a clean task boundary, and re-run Step 0.5 before continuing. Do not silently continue in Tier 2.
-
-**Codex authorization example:**
-
-```
-User invokes: $oat-project-implement
-Detected: Codex multi-agent support available; explicit authorization required.
-Expected: ask "This OAT implementation skill normally delegates phase implementation and review to subagents. Authorize subagent delegation for this run?"
-If approved: Selected: Tier 1 — Subagents
-Forbidden: Selected: Tier 2 — Inline because the user did not separately mention subagents.
-```
-
-**Native role-selection rejection:** This means the native host explicitly
-reports that the requested `agent_type` is unsupported, unknown, unregistered,
-or rejected before the child or agent starts. Missing runtime telemetry,
-missing agent self-report, a timeout after spawn acceptance, or any terminal
-result from an accepted child — including `BLOCKED` — is not role
-unavailability and is not a native role-selection rejection. Self-report is
+**Native role-selection rejection:** the native host explicitly reports that
+the requested `agent_type` is unsupported, unknown, unregistered, or rejected
+before the child or agent starts. Missing runtime telemetry, missing agent
+self-report, a timeout after spawn acceptance, or any terminal result from an
+accepted child — including `BLOCKED` — is not role unavailability and is not a
+native role-selection rejection. If an accepted native reviewer remains
+active, poll, nudge, or continue only through its existing handle; a
+terminal timeout records review failure and stops or escalates
+without another launch.
+Accepted-launch terminality and recovery semantics are owned by the shared
+dispatch engine. A new launch is eligible only when the original attempt
+received explicit pre-start rejection before any child started. Self-report is
 optional diagnostic data and cannot populate or overwrite launcher-owned
-`target`, `model_axis`, or `effort_axis` fields. An accepted child cannot
-trigger a fresh pinned-child, CLI fallback, or second launch on the same route.
-If an accepted native reviewer remains active, poll, nudge, or continue only
-through its existing handle. A terminal timeout records review failure and
-stops or escalates without another launch. A new launch is eligible only when
-the original attempt received explicit pre-start rejection before any child
-started.
+`target`, `model_axis`, or `effort_axis` fields.
 
-**Legacy state migration:** If `state.md` contains `oat_execution_mode: subagent-driven`, silently ignore it. On the next bookkeeping write, remove that key. Do not redirect to `oat-project-subagent-implement` — that skill is deprecated.
+**Legacy state migration:** if `state.md` contains
+`oat_execution_mode: subagent-driven`, silently ignore it and remove the key
+on the next bookkeeping write. Do not redirect to
+`oat-project-subagent-implement` — that skill is deprecated.
 
 ### Dispatch Policy Preflight
 
@@ -120,11 +142,8 @@ policy:
 oat project dispatch-ceiling resolve --provider <active-provider> --preflight --report-scope implementation-preflight --report-action implementation --json
 ```
 
-If `oat` is not in PATH, use:
-
-```bash
-pnpm run cli -- project dispatch-ceiling resolve --provider <active-provider> --preflight --report-scope implementation-preflight --report-action implementation --json
-```
+If `oat` is not in PATH, run the same command through
+`pnpm run cli -- project dispatch-ceiling resolve …` with identical flags.
 
 Resolution order:
 
@@ -135,48 +154,15 @@ Resolution order:
 5. Interactive implementation preflight prompt (below)
 6. Non-interactive unresolved: block before work starts
 
-**JSON response shape** (from `--json`):
-
-```json
-{
-  "status": "resolved",
-  "provider": "codex",
-  "value": "high",
-  "policyMode": "managed",
-  "policy": "balanced",
-  "source": "project-state",
-  "preset": "balanced",
-  "unresolved": false,
-  "providerDefaultEffort": "medium",
-  "providers": {
-    "codex": {
-      "value": "high",
-      "mode": "enforced",
-      "mechanism": "pinned-variant",
-      "dispatchArgs": {
-        "variant": "oat-phase-implementer-gpt-5-6-terra-high"
-      },
-      "verifyOnDispatch": false,
-      "selection": {
-        "role": "implementer",
-        "preferredValue": null,
-        "selectedValue": "high",
-        "capped": false,
-        "selectionMode": "capped",
-        "policyMode": "managed",
-        "policy": "balanced"
-      }
-    }
-  }
-}
-```
-
-Read `providers.<active-provider>` for the concrete dispatch controls. The
-`dispatchArgs` field carries the provider-specific argument to pass through
-(Codex: `variant` name; Claude: `model` string). For implementer/fix dispatch,
+Read `providers.<active-provider>` from the `--json` response for the concrete
+dispatch controls. `dispatchArgs` carries the provider-specific argument to
+pass through (Codex: `variant` name; Claude: `model` string; Cursor: opaque
+`model` string). `selection` carries `role`, `selectedValue`, `capped`,
+`selectionMode`, and policy fields; `selection.target` and an optional
+`providers.<provider>.target` carry route data. For implementer/fix dispatch,
 pass `--preferred <preferred-effort>` and use `selection.selectedValue` as the
 selected axis value when it is present. Never re-derive these from the policy
-label or a ceiling-only variant - the resolver is the single compilation/join
+label or a ceiling-only variant — the resolver is the single compilation/join
 point.
 
 Print before phase work:
@@ -190,20 +176,19 @@ Note: OAT will use resolver-returned materialized Codex role names up to high. B
 ```
 
 If no policy resolves and the session is interactive, present the dispatch
-policy prompt once before starting work:
-
-Print the unresolved-policy heading, then generate the choice text from
-canonical CLI metadata immediately before presenting it:
+policy prompt once before starting work. Print the unresolved-policy heading,
+then generate the choice text from canonical CLI metadata immediately before
+presenting it:
 
 ```bash
 oat project dispatch-ceiling choices --format markdown
 ```
 
-Do not hand-type the dispatch policy menu or omit canonical choices. If the CLI
-is unavailable in this environment, derive the same labels and descriptions from
-`packages/cli/src/config/dispatch-policy-options.ts`; include every managed
-policy returned by `VALID_MANAGED_DISPATCH_POLICIES` plus `Uncapped`, `Inherit
-Host Defaults`, and `Leave Unresolved`.
+Do not hand-type the dispatch policy menu or omit canonical choices. If the
+CLI is unavailable in this environment, derive the same labels and
+descriptions from `packages/cli/src/config/dispatch-policy-options.ts`;
+include every managed policy returned by `VALID_MANAGED_DISPATCH_POLICIES`
+plus `Uncapped`, `Inherit Host Defaults`, and `Leave Unresolved`.
 
 At minimum, preserve these semantics in any fallback text:
 
@@ -213,8 +198,8 @@ At minimum, preserve these semantics in any fallback text:
 - `Inherit Host Defaults`: OAT does not choose model or effort controls; the
   executing host/provider owns implementation, fix, and review defaults.
 - `Leave Unresolved`: planning/preflight deferral only. It records no runtime
-  policy and is not a runnable implementation setting. Implementation preflight
-  must block until a policy resolves.
+  policy and is not a runnable implementation setting.
+  Implementation preflight must block until a policy resolves.
 
 OAT applies managed policies where the provider exposes a reliable mechanism
 (Codex: pinned variants; Claude: Task model parameter). Other providers may
@@ -225,19 +210,6 @@ maximum `policy`, and `source`. The named maximum leaves lower configured
 candidates eligible; do not copy compiled provider/model targets into project
 state. On selection, print the named maximum before proceeding.
 
-**Uncapped** persists explicit managed uncapped state. OAT still manages
-dispatch selection. It does not write provider caps, and it must not be
-represented by leaving dispatch policy state absent.
-
-**Inherit Host Defaults** persists explicit inherit/default state. Use this only
-when the user wants OAT to leave implementation, fix, and review model/effort
-controls to the executing host/provider. OAT does not choose model or effort in
-this mode.
-
-**Leave Unresolved** records no runtime policy for implementation. Stop before
-phase work and report the unresolved state; Implementation preflight must block
-until a policy resolves.
-
 Persist in project `state.md` frontmatter using the normalized shape:
 
 ```yaml
@@ -247,30 +219,16 @@ oat_dispatch_policy:
   source: project-state
 ```
 
-For `Uncapped`:
-
-```yaml
-oat_dispatch_policy:
-  mode: managed
-  policy: uncapped
-  source: project-state
-```
-
-For `Inherit Host Defaults`:
-
-```yaml
-oat_dispatch_policy:
-  mode: inherit
-  source: project-state
-```
+For `Uncapped`, persist `policy: uncapped` in the same shape — OAT still
+manages dispatch selection with no stored cap; never represent uncapped by
+leaving policy state absent. For `Inherit Host Defaults`, persist
+`mode: inherit` with `source` and no `policy` key — OAT does not choose model
+or effort in this mode. `Leave Unresolved` records no runtime policy: stop
+before phase work and report the unresolved state.
 
 If no policy resolves and `OAT_NON_INTERACTIVE=1` or no user-response channel
-exists, rerun the resolver with non-interactive behavior and stop before work
+exists, rerun the resolver with `--non-interactive` and stop before work
 starts if it blocks:
-
-```bash
-oat project dispatch-ceiling resolve --provider <active-provider> --preflight --non-interactive --report-scope implementation-preflight --report-action implementation
-```
 
 ```text
 BLOCKED: Codex dispatch policy is unresolved in non-interactive mode.
@@ -286,16 +244,13 @@ Before each phase-implementer, optional nested, fix-continuation, or review
 dispatch, choose and log runtime controls. Resolve these controls before
 applying Tier 1/Tier 2 mechanics. A phase target applies to the phase
 implementer, which directly owns its planned tasks. Optional children resolve
-their own exact bounded target beneath the phase ceiling. Inline execution must
-preserve equivalent controls or use a documented exception.
+their own exact bounded target beneath the phase ceiling. Inline execution
+must preserve equivalent controls or use a documented exception.
 
-Use these inputs:
-
-- resolved dispatch policy, source, and provider-specific selection
-- phase ID and the current bounded phase or optional-child scope
-- optional `## Dispatch Profile` row in `plan.md`
-- host-exposed provider controls, by axis
-- prior outcomes for the phase, including review results and failed retries
+Inputs: the resolved dispatch policy, source, and provider-specific
+selection; the phase ID and current bounded phase or optional-child scope; any
+`## Dispatch Profile` row in `plan.md`; host-exposed provider controls by
+axis; and prior phase outcomes, including review results and failed retries.
 
 Route selection is part of runtime dispatch selection when the resolver returns
 an ordered matrix route:
@@ -351,22 +306,18 @@ Axis states:
 
 Codex rules:
 
-**Managed Codex execution invariant:** When the resolver returns a model+effort
-target, the resolver-returned Codex variant from
-`providers.codex.dispatchArgs.variant` must first be sent through the native
-spawn API as `agent_type`. Spawn acceptance plus the launcher payload is
-configured invocation evidence with launcher-selected/config-declared
-provenance. If and only if the host returns a native role-selection rejection,
-launch a fresh Codex child with the resolver target's explicit model, reasoning
-effort, and canonical role instructions from
-`.agents/agents/oat-phase-implementer.md` or
-`.agents/agents/oat-reviewer.md`. Missing runtime telemetry or agent self-report
-is not role unavailability, and an accepted child result such as `BLOCKED`
-cannot trigger fallback. Workflow correctness must not require provider restart
-or hot reload. A managed base role is forbidden when a concrete target was
-requested; never silently downgrade to it. Base roles remain valid only for
-explicit inherit/default behavior and the documented managed-uncapped reviewer
-fallback.
+The Step 0.5 target-first order is the managed Codex execution invariant:
+send the resolver-returned variant first through the native spawn API as
+native `agent_type` — spawn acceptance plus the constructed launcher payload
+is configured invocation evidence with launcher-selected/config-declared
+provenance, without independent runtime telemetry or agent self-report.
+If and only if the host returns a native role-selection rejection,
+launch a fresh Codex child with the resolver target's explicit
+model, reasoning effort, and canonical role instructions; otherwise fail
+closed and block. Missing runtime telemetry or agent self-report is not role
+unavailability, and an accepted child result such as `BLOCKED` cannot trigger
+fallback. A managed base role is forbidden when a concrete target was
+requested; never silently downgrade to it.
 
 1. Codex effort order is `low < medium < high < xhigh < max`.
 2. Classify preferred effort from scope:
@@ -390,7 +341,15 @@ fallback.
    - Capped managed policy: reviewer targets the configured cap for deterministic quality gate behavior.
    - Managed `Uncapped`: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=no-review-target`, `selectedValue=null`, and `effort_axis=provider-default`.
    - Inherit/default: no reviewer target exists; use base/unpinned reviewer fallback and log `selectionMode=inherit-default`, `selectedValue=null`, and `effort_axis=provider-default`.
-8. Codex payload-first assertion applies whenever the resolver returns a materialized model+effort target. If `providers.codex.dispatchArgs.variant` is present, the actual `spawn_agent` payload MUST first use it as native `agent_type`; when that variant came from a Codex model+effort target, log `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from resolver output and the constructed launcher payload. Spawn acceptance is sufficient configured invocation evidence. Missing telemetry or self-report does not make the variant unusable. If native role selection explicitly rejects the variant, use the explicitly pinned fresh-child route or block. Use the base role and log provider-default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception. Always derive `model_axis` and `effort_axis` from resolver output, not from legacy role-name parsing or agent self-report.
+8. When `providers.codex.dispatchArgs.variant` is present, the actual
+   `spawn_agent` payload MUST first use it as native `agent_type`; when that
+   variant came from a Codex model+effort target, log
+   `model_axis=selected:<model>` and `effort_axis=selected:<effort>` from
+   resolver output and the constructed launcher payload. Materialized
+   model+effort variants retain selected controls while keeping runtime
+   identity not-reported unless independent evidence exists. Always
+   derive `model_axis` and `effort_axis` from resolver output, not from
+   legacy role-name parsing or agent self-report.
 9. Do not use top-level per-call `reasoning_effort` as the standard OAT selected-effort path; dogfooding showed that path can be inconsistent.
 
 Claude rules:
@@ -447,9 +406,7 @@ Payload-first invariant:
   `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
   Populate the report from the completed resolver and actual host arguments.
   Only independently observed or otherwise supported runtime evidence may
-  populate runtime producer identity. Codex materialized model+effort variants
-  retain selected model/effort controls while keeping runtime identity
-  not-reported unless evidence exists. Do not write prose-only, hand-built, or
+  populate runtime producer identity. Do not write prose-only, hand-built, or
   legacy comma-separated stamp forms.
 
 Human-facing dispatch display rules:
@@ -459,14 +416,11 @@ Human-facing dispatch display rules:
   audit fields for the formal stamp, not the primary status. Put unknown
   producer/provenance only in `Dispatch stamp:` or in a low-priority note after
   the route and runtime confirmation.
-- Separate requested controls from configured defaults. For example, a Codex
-  materialized role may request `model_axis=selected:<model>` and
-  `effort_axis=selected:<effort>` while the provider default effort remains a
-  separate fallback/default fact.
-- Separate configured policy/cap from runtime confirmation. A resolver payload
-  can declare a target before the host has confirmed it; an observed mismatch
-  must be called out as `Runtime confirmation: mismatch:<detail>` and handled as
-  an orchestration deviation.
+- Separate requested controls from configured defaults, and configured
+  policy/cap from runtime confirmation. A resolver payload can declare a
+  target before the host has confirmed it; an observed mismatch must be called
+  out as `Runtime confirmation: mismatch:<detail>` and handled as an
+  orchestration deviation.
 - Keep the `Dispatch stamp: Dispatch: ...` line parseable and grammar-stable.
   Do not move display-only prose into the formal stamp.
 
@@ -494,121 +448,18 @@ Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|revie
 Rationale: {short rationale grounded in phase scope and any policy cap/uncapped/default behavior}
 ```
 
-Codex capped example:
+For an explicit inherit/default fallback (for example a base `oat-reviewer`
+under inherit policy), the log reads `Route: none; level=none`,
+`Runtime confirmation: not-observable`, `Selection mode: inherit-default`,
+`Model axis: inherited`, and `Effort axis: provider-default`, with requested
+controls empty and the provider default effort shown as a separate fact.
 
-```text
-OAT Dispatch: Phase p02 implementation
-Host: Codex
-Route: codex/implementer/gpt-5.6-sol/medium; level=0
-Requested controls: model=gpt-5.6-sol, effort=medium, target=oat-phase-implementer-gpt-5-6-sol-medium
-Configured defaults: provider default effort=high
-Runtime confirmation: declared:gpt-5.6-sol/medium
-Preferred effort: high
-OAT Dispatch Tier: economy
-Resolved cap: medium
-Selected effort: medium
-Policy source: repo config
-Provider default effort: high
-Selection mode: capped
-Model axis: selected:gpt-5.6-sol
-Effort axis: selected:medium
-Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
-Rationale: normal multi-file implementation; high preferred due to integration risk, capped by configured policy.
-```
-
-Codex uncapped implementer example:
-
-```text
-OAT Dispatch: Phase p02 implementation
-Host: Codex
-Route: codex/implementer/gpt-5.6-terra/xhigh; level=0
-Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-phase-implementer-gpt-5-6-terra-xhigh
-Configured defaults: provider default effort=medium
-Runtime confirmation: declared:gpt-5.6-terra/xhigh
-Preferred effort: xhigh
-OAT Dispatch Tier: uncapped
-Resolved cap: none
-Selected effort: xhigh
-Policy source: project state
-Provider default effort: medium
-Selection mode: uncapped
-Model axis: selected:gpt-5.6-terra
-Effort axis: selected:xhigh
-Dispatch target: oat-phase-implementer-gpt-5-6-terra-xhigh
-Rationale: high-risk phase; managed uncapped policy allows the preferred pinned variant. Actual host support for upward effort selection must be verified by the dispatching host.
-```
-
-Codex capped reviewer example:
-
-```text
-OAT Dispatch: Phase p02 review
-Host: Codex
-Route: codex/reviewer/gpt-5.6-terra/xhigh; level=0
-Requested controls: model=gpt-5.6-terra, effort=xhigh, target=oat-reviewer-gpt-5-6-terra-xhigh
-Configured defaults: provider default effort=medium
-Runtime confirmation: declared:gpt-5.6-terra/xhigh
-Preferred effort: high
-OAT Dispatch Tier: high
-Resolved cap: xhigh
-Selected effort: xhigh
-Policy source: project state
-Provider default effort: medium
-Selection mode: review-target
-Model axis: selected:gpt-5.6-terra
-Effort axis: selected:xhigh
-Dispatch target: oat-reviewer-gpt-5-6-terra-xhigh
-Rationale: reviewer runs at the configured policy cap for deterministic quality gate behavior.
-```
-
-Codex inherit/default fallback example:
-
-```text
-OAT Dispatch: Phase p02 review
-Host: Codex
-Route: none; level=none
-Requested controls: model=none, effort=provider-default, target=oat-reviewer
-Configured defaults: provider default effort=medium
-Runtime confirmation: not-observable
-Preferred effort: provider-default
-OAT Dispatch Tier: inherit host defaults
-Resolved cap: none
-Selected effort: provider-default
-Policy source: project state
-Provider default effort: medium
-Selection mode: inherit-default
-Model axis: inherited
-Effort axis: provider-default
-Dispatch target: oat-reviewer
-Rationale: explicit inherit/default policy; base unpinned role follows Codex provider default.
-```
-
-Generic sidecar/explorer dispatch:
-
-- Built-in or generic sidecars such as `explorer` are not OAT-managed implementer, reviewer, or fix roles.
-- If a sidecar spawn payload does not explicitly pin a reliable effort/model control, log `Preferred effort: provider-default`, `Selected effort: provider-default`, and `Effort axis: provider-default`.
-- Do not classify a generic sidecar as `Preferred effort: low|medium|high|xhigh|max` unless the actual host invocation contains the corresponding reliable selection. If the host has no reliable effort control for that sidecar, use provider-default wording instead.
-- Sidecar outputs are advisory context only. Implementation work and review/fix gates still follow the OAT-managed dispatch rules above.
-
-Codex generic explorer example:
-
-```text
-OAT Dispatch: p02-t10 sidecar exploration
-Host: Codex
-Route: sidecar/explorer; level=none
-Requested controls: model=none, effort=provider-default, target=explorer
-Configured defaults: provider default effort=xhigh
-Runtime confirmation: not-observable
-Preferred effort: provider-default
-OAT Dispatch Tier: high
-Resolved cap: xhigh
-Selected effort: provider-default
-Policy source: project state
-Provider default effort: xhigh
-Model axis: inherited
-Effort axis: provider-default
-Dispatch target: explorer
-Rationale: read-only sidecar exploration; generic explorer payload does not pin an OAT-managed effort variant.
-```
+Generic sidecar/explorer dispatch: built-in sidecars such as `explorer` are
+not OAT-managed implementer, reviewer, or fix roles, and their outputs are
+advisory context only. Unless the actual spawn payload pins a reliable
+effort/model control, log `Preferred effort: provider-default`,
+`Selected effort: provider-default`, and `Effort axis: provider-default` —
+never a classified effort level the host invocation does not contain.
 
 Include resolved dispatch context in scope packets when known:
 
@@ -650,12 +501,8 @@ Dispatch policy: {policy}; selected={selected value | none}; cap={value | none} 
 
 ```text
 Dispatch policy: balanced; selected=xhigh; cap=xhigh (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
-Dispatch policy: high; selected=high; cap=high (codex, enforced — variant oat-reviewer-gpt-5-6-sol-high)
-Dispatch policy: frontier; selected=max; cap=max (codex, enforced — variant oat-reviewer-gpt-5-6-sol-max)
-Dispatch policy: uncapped; selected=xhigh; cap=none (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
 Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)
-Dispatch policy: frontier; selected=fable; cap=fable (claude, enforced — Task model arg)
 Cursor opaque model-string example: Dispatch policy: frontier; selected=gpt-5.6-sol-max; cap=gpt-5.6-sol-max (cursor, enforced — model arg gpt-5.6-sol-max)
 Dispatch policy: unresolved; selected=none; cap=none (codex, advisory — policy set but no value resolved)
 ```
