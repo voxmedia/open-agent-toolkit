@@ -389,6 +389,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+## Revised Final Review Findings
+
+**Review artifact:** `reviews/final-review-2026-07-13.md`
+**Status:** blocking fixes in progress
+
+- Important: make displayed rerun commands platform-aware so Windows `cmd.exe`
+  and PowerShell users receive safe, runnable guidance.
+- Important: align `summary.md`, lightweight `design.md`, implementation
+  deviations, and repository reference summaries with the guarded command
+  revision and release `0.1.62`.
+- Medium: replace template `TODO` content in the five accepted feature decision
+  records and document the guarded-command exception.
+
+**Next:** Apply bounded code and lifecycle/reference fixes, then rerun final
+review.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
