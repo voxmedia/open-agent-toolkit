@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,80 +26,104 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
-| Phase 2 | pending     | 3     | 0/3       |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | in_progress | 3     | 0/3       |
 
-**Total:** 0/5 tasks completed
+**Total:** 2/5 tasks completed
 
 ---
 
 ## Phase 1: Notification Policy and Service
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-13
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added a user-scoped `updateNotifications` preference that defaults to enabled
+  and resolves with source attribution.
+- Added an offline-safe notifier service with eligibility suppression, stable
+  version comparison, a dedicated atomic cache, daily refresh attempts, and
+  three-day repeat-notice limits.
+- Kept registry and filesystem behavior injectable; tests never contact the
+  live registry or real user home.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/oat-config.ts` and `config/resolve.ts` - preference
+  normalization and effective default/source resolution.
+- `packages/cli/src/commands/config/index.ts` - user-facing config surface.
+- `packages/cli/src/app/update-notifier.ts` - eligibility, cache, registry, and
+  notice orchestration.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused four-file Vitest suite and CLI type-check.
+- Result: 285 tests passed; type-check passed.
+- Independent review: passed with 0 Critical, 0 Important, 1 Medium.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The 24-hour/72-hour limits are exact for serial invocations and best-effort
+  across concurrently starting processes. Cross-process locking was deferred as
+  disproportionate for this notification-only feature.
 
 ### Task p01-t01: Add the user update-notification preference
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 6c327994d7b700a34c548d791ae86e73280b990a
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Users can persistently disable update notifications; missing configuration
+  resolves to enabled and explicit false retains user source attribution.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/oat-config.ts` - user config schema/normalization.
+- `packages/cli/src/config/resolve.ts` - default and user-source resolution.
+- `packages/cli/src/commands/config/index.ts` - get/set/list/describe support.
+- Corresponding tests cover normalization, resolution, scope, and commands.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts`
+- Result: passed.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- The key is user-only; shared/local writes are rejected.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
 ### Task p01-t02: Implement the cached update notification service
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 23ba21544456d33d96444ee337428985e23afa38
 
-**Notes:**
+**Outcome:**
 
-- {Notes will be added during implementation}
+- Added the cached notifier service with all planned eligibility gates,
+  failure-backoff timestamps, trusted-version preservation, rate-limited output,
+  and never-throw containment.
+
+**Verification:**
+
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+- Result: 34 notifier tests and type-check passed.
 
 ---
 
 ## Phase 2: CLI Integration and Release Readiness
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-13
 
 ### Task p02-t01: Wire notifications into command dispatch
 
@@ -134,6 +158,30 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 - 2026-07-13T17:23:00Z
+
+- Branch: `cursor/cli-update-notifications-40f7`
+- Tier: 1 (subagents)
+- Policy: managed High
+- Schedule: `p01` then `p02` (sequential)
+- Outcomes: 1 phase passed, 0 failed, 0 stopped; p02 remains
+
+| Phase | Implementer | Tasks | Review | Result |
+| ----- | ----------- | ----- | ------ | ------ |
+| p01 | `gpt-5.6-sol-high` | 2/2 | `reviews/p01-review-2026-07-13.md` | passed |
+
+**Dispatch notes:**
+
+- Implementation: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- Review: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- Initial `gpt-5.6-sol-medium` launch was rejected before child start; the exact
+  High ceiling target was then accepted.
+
+**Outstanding items:**
+
+- Non-blocking Medium: concurrent processes may duplicate a check or notice;
+  rate limits are best-effort across overlapping processes.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -144,36 +192,34 @@ Chronological log of implementation progress.
 
 ### 2026-07-13
 
-**Session Start:** {time}
+**Session Start:** 17:16 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Add the user update-notification preference - `6c327994`
+- [x] p01-t02: Implement the cached update notification service - `23ba2154`
+- [ ] p02-t01: Wire notifications into command dispatch - in progress
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Added user-scoped opt-out configuration and effective default/source
+  resolution.
+- Added and independently reviewed the cached, offline-safe notification
+  service.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Treat cross-process TTL serialization as best-effort; adding a lock would add
+  stale-lock recovery and startup complexity disproportionate to passive output.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Consider a cross-process cache claim only if duplicate notices are observed
+  in real usage.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-07-13
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** In progress
 
 ---
 
@@ -183,7 +229,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| p01 review | Discovery/design | Check and notice intervals stated as absolute | Exact for serial invocations; best-effort across overlapping processes | Cross-process locking adds disproportionate stale-lock complexity | Implementation | Revisit only if duplicate notices are observed |
 
 ## Test Results
 
@@ -191,7 +237,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
+| 1     | 285 focused tests + type-check | 285 | 0 | Phase scope |
 | 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
