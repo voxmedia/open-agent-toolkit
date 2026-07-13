@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -26,14 +26,14 @@ oat_generated: false
 
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 0/6       |
+| Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | in_progress | 6     | 1/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | pending     | 8     | 0/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 0/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 1/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -50,8 +50,10 @@ _Pending._
 
 ### Task p01-t01: Author autonomy contract + gate inventory doc
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `113c8f6f`
+**Outcome:** Added the session-scoped autonomy contract, boundary and provenance rules, exhaustive gate inventory for all fifteen required skill roots, and a row-by-row prompt-scan comparison with zero unmapped sites.
+**Verification:** Passed — recursive broadened-phrase `rg` scan across each required root; every discovered `file:line` is mapped to an inventory row or explicitly classified as a non-gate phrase match.
 
 ### Task p01-t02: Amend oat-project-implement — non-interactive HiLL + closeout + dispatch authorization
 
@@ -121,7 +123,8 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Preflight: Tier 1 (native Cursor subagents, available without auth). Dispatch policy `managed/frontier` (project state); implementer target resolved to `gpt-5.6-sol-xhigh` (cursor, enforced — model arg). Environment notes: globally installed `oat` predates dispatch-report flags — resolver runs via `pnpm run cli:source` after building `@open-agent-toolkit/control-plane`; `cursor-agent` CLI not present in this VM (expected — p04 provisions it; gate exec targets unavailable this run, review routing via native cross-family subagent instead).
 - HiLL confirmed: `["p04","p06"]` + auto-review true (config).
 - Plan mutation: p05 descoped to external org-skills repo (user direction); handoff written to `references/internal-docs-mcp-handoff.md`.
-- [ ] p01: dispatching phase implementer next.
+- [x] p01-t01: autonomy contract and gate inventory committed (`113c8f6f`); recursive fifteen-root prompt scan passed with zero unmapped sites.
+- [ ] p01-t02: amend implement autonomy behavior.
 
 **Decisions:**
 
@@ -144,7 +147,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
+| 1     | Recursive prompt-site inventory scan (p01-t01) | 1 | 0 | All fifteen required roots; zero unmapped prompt sites |
 
 ## Final Summary (for PR/docs)
 
