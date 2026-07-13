@@ -31,6 +31,12 @@ const HARNESS_COMMANDS = {
     runtime: { args: ['--version'], executable: 'cursor-agent' },
   },
 };
+const GATE_RUNTIME_HARNESS = Object.freeze({
+  claude: 'claude',
+  codex: 'codex',
+  cursor: 'cursor-cli',
+  deterministic: 'deterministic',
+});
 
 const REQUIRED_FIXTURE_PATHS = [
   'project/design.md',
@@ -132,6 +138,41 @@ async function defaultAuthProbe(
         ? 'authenticated'
         : 'unauthenticated',
   };
+}
+
+async function defaultGateTargetProbe(
+  target,
+  expectedRuntime,
+  { commandRunner = runCommand, localOatPath = defaultLocalOatPath } = {},
+) {
+  const args = ['gate', 'target', 'list', '--json'];
+  const command = commandLabel(localOatPath, args);
+  const result = await commandRunner(localOatPath, args);
+  if (result.code !== 0) {
+    return { command, result: 'unavailable', target };
+  }
+  try {
+    const payload = JSON.parse(result.stdout);
+    const configured = payload.targets?.find((entry) => entry.id === target);
+    return {
+      available: configured?.available === true,
+      command,
+      result:
+        configured?.available === true &&
+        (!expectedRuntime || configured.runtime === expectedRuntime)
+          ? 'available'
+          : 'unavailable',
+      runtime: configured?.runtime ?? null,
+      target,
+    };
+  } catch {
+    return {
+      command,
+      reason: 'Gate target list did not return valid JSON.',
+      result: 'unavailable',
+      target,
+    };
+  }
 }
 
 async function latestModifiedTime(path) {
@@ -389,13 +430,18 @@ function unavailableResult(harness) {
   };
 }
 
-function isReady(report, selectedHarness) {
+function isReady(report) {
   return (
     report.fixture.result === 'valid' &&
     report.oat.result === 'local' &&
     (!report.cursorApiKey.required || report.cursorApiKey.present) &&
-    report.harnesses[selectedHarness].installed.result === 'installed' &&
-    report.harnesses[selectedHarness].authenticated.result === 'authenticated'
+    report.requiredHarnesses.every(
+      (harness) =>
+        report.harnesses[harness].installed.result === 'installed' &&
+        report.harnesses[harness].authenticated.result === 'authenticated',
+    ) &&
+    (!report.selectedGate.target ||
+      report.selectedGate.availability.result === 'available')
   );
 }
 
@@ -403,9 +449,11 @@ export function formatReadinessReport(report) {
   const lines = [
     `Smoke preflight: ${report.status}`,
     `selected harness: ${report.selectedHarness}`,
+    `required runtimes: ${report.requiredHarnesses.join(', ')}`,
     `local oat: ${report.oat.result}`,
     `fixture: ${report.fixture.result}`,
     `cursor API key: required=${report.cursorApiKey.required}, present=${report.cursorApiKey.present}`,
+    `gate target: ${report.selectedGate.target ?? 'none'} (${report.selectedGate.availability.result})`,
   ];
 
   for (const [harness, readiness] of Object.entries(report.harnesses)) {
@@ -441,6 +489,7 @@ export async function runPreflight(
   const runtime = probes.runtime ?? defaultRuntimeProbe;
   const auth = probes.auth ?? defaultAuthProbe;
   const fixture = probes.fixture ?? defaultFixtureProbe;
+  const gateTargetProbe = probes.gateTarget ?? defaultGateTargetProbe;
   const oat = probes.oat ?? defaultOatProbe;
   const commandRunner = probes.command ?? runCommand;
   const forcedHarness = env.OAT_SMOKE_FORCE_UNAVAILABLE;
@@ -453,26 +502,48 @@ export async function runPreflight(
     });
   }
   const harnesses = {};
+  const gateHarness = gateRuntime
+    ? GATE_RUNTIME_HARNESS[gateRuntime]
+    : undefined;
+  if (gateRuntime && !gateHarness) {
+    throw new TypeError(`Unknown smoke gate runtime: ${gateRuntime}`);
+  }
+  const requiredHarnesses = [
+    ...new Set([harness, gateHarness].filter(Boolean)),
+  ];
 
   for (const currentHarness of Object.keys(HARNESS_COMMANDS)) {
     const installed =
       forcedHarness === currentHarness
         ? unavailableResult(currentHarness)
         : await runtime(currentHarness, { commandRunner });
-    const authenticated =
-      currentHarness === harness
-        ? await auth(currentHarness, installed, { commandRunner })
-        : {
-            command: commandLabel(
-              HARNESS_COMMANDS[currentHarness].authentication.executable,
-              HARNESS_COMMANDS[currentHarness].authentication.args,
-            ),
-            reason: 'Authentication is only probed for the selected harness.',
-            result: 'not-run',
-          };
+    const authenticated = requiredHarnesses.includes(currentHarness)
+      ? await auth(currentHarness, installed, { commandRunner })
+      : {
+          command: commandLabel(
+            HARNESS_COMMANDS[currentHarness].authentication.executable,
+            HARNESS_COMMANDS[currentHarness].authentication.args,
+          ),
+          reason:
+            'Authentication is only probed for required drive and gate runtimes.',
+          result: 'not-run',
+        };
     harnesses[currentHarness] = { authenticated, installed };
   }
 
+  const oatReadiness = await oat({
+    commandRunner,
+    env,
+    localOatPath,
+    packagePath,
+    trustedCommandPath: trustedOatCommandPath,
+  });
+  const gateAvailability = gateTarget
+    ? await gateTargetProbe(gateTarget, gateRuntime, {
+        commandRunner,
+        localOatPath,
+      })
+    : { result: 'not-configured', target: null };
   const report = {
     cursorApiKey: {
       present:
@@ -485,20 +556,16 @@ export async function runPreflight(
     fixture: await fixture({ fixturePath }),
     forcedUnavailable: forcedHarness ?? null,
     harnesses,
-    oat: await oat({
-      commandRunner,
-      env,
-      localOatPath,
-      packagePath,
-      trustedCommandPath: trustedOatCommandPath,
-    }),
+    oat: oatReadiness,
+    requiredHarnesses,
     selectedHarness: harness,
     selectedGate: {
+      availability: gateAvailability,
       runtime: gateRuntime ?? null,
       target: gateTarget ?? null,
     },
   };
-  report.status = isReady(report, harness) ? 'ready' : 'blocked';
+  report.status = isReady(report) ? 'ready' : 'blocked';
 
   if (typeof reporter === 'function') {
     emitReadinessReport(report, reporter);

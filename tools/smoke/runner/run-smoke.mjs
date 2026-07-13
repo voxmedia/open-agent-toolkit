@@ -413,6 +413,13 @@ function dryRunProbes() {
       command: 'dry-run auth probe',
       result: 'authenticated',
     }),
+    gateTarget: async (target, runtime) => ({
+      available: true,
+      command: 'dry-run gate target probe',
+      result: 'available',
+      runtime,
+      target,
+    }),
     runtime: async () => ({
       command: 'dry-run runtime probe',
       result: 'installed',

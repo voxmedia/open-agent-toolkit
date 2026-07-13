@@ -446,7 +446,82 @@ test('persists and rejects a failed evidence report', async () => {
   }
 });
 
-test('recovery collection evaluates failed drives without canonical publication', async () => {
+test('recovery collection evaluates failed and interrupted drives without canonical publication', async () => {
+  const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
+  try {
+    const repository = join(runDirectory, 'repository');
+    const recoveryOptions = options({
+      collectionMode: 'recovery',
+      dryRun: false,
+    });
+    const reportRoot = reportRootFor(recoveryOptions, repository);
+    for (const status of ['failed', 'interrupted']) {
+      const manifest = await createManifest(runDirectory, {
+        drive: { status },
+        reportRoot,
+      });
+      let canonicalPublications = 0;
+      let preservedAt = null;
+
+      const result = await collectSmoke(
+        recoveryOptions,
+        {
+          manifest,
+          results: { preflight: { status: 'ready' } },
+        },
+        {
+          collect: async (received) => ({
+            outputPath: join(received.outDirectory, 'bundle.json'),
+          }),
+          emitReport: async (received) => ({
+            jsonPath: join(received.outDirectory, 'report.json'),
+            markdownPath: join(received.outDirectory, 'report.md'),
+            report: { status: 'failed', summary: { failed: 4 } },
+          }),
+          formatBundle: async () => {},
+          preserve: async (_stagingDirectory, destination) => {
+            preservedAt = destination;
+          },
+          publish: async () => {
+            canonicalPublications += 1;
+          },
+          repository,
+        },
+      );
+      const persisted = JSON.parse(
+        await readFile(manifest.manifestPath, 'utf8'),
+      );
+
+      assert.equal(canonicalPublications, 0);
+      assert.equal(preservedAt, recoveryRootFor(manifest, repository));
+      assert.equal(result.recovery.canonicalPublished, false);
+      assert.equal(result.recovery.status, 'failed');
+      assert.equal(persisted.collection.status, 'recovery-completed');
+      assert.equal(persisted.collection.canonicalPublished, false);
+    }
+
+    const completedManifest = await createManifest(runDirectory, {
+      drive: { status: 'completed' },
+      reportRoot,
+    });
+    await assert.rejects(
+      () =>
+        collectSmoke(
+          recoveryOptions,
+          {
+            manifest: completedManifest,
+            results: { preflight: { status: 'ready' } },
+          },
+          { repository },
+        ),
+      /recovery collection requires a failed or interrupted drive/u,
+    );
+  } finally {
+    await rm(runDirectory, { force: true, recursive: true });
+  }
+});
+
+test('recovery collection preserves a diagnostic when collection fails', async () => {
   const runDirectory = await mkdtemp(join(tmpdir(), 'oat-drive-test-'));
   try {
     const repository = join(runDirectory, 'repository');
@@ -455,44 +530,43 @@ test('recovery collection evaluates failed drives without canonical publication'
       dryRun: false,
     });
     const manifest = await createManifest(runDirectory, {
-      drive: { status: 'failed' },
+      drive: { error: 'drive failed', status: 'failed' },
       reportRoot: reportRootFor(recoveryOptions, repository),
     });
-    let canonicalPublications = 0;
-    let preservedAt = null;
+    const collectionError = new Error('injected recovery collection failure');
+    const recoveryDirectory = recoveryRootFor(manifest, repository);
 
-    const result = await collectSmoke(
-      recoveryOptions,
+    await assert.rejects(
+      () =>
+        collectSmoke(
+          recoveryOptions,
+          {
+            manifest,
+            results: { preflight: { status: 'ready' } },
+          },
+          {
+            collect: async () => {
+              throw collectionError;
+            },
+            repository,
+          },
+        ),
+      (error) =>
+        error === collectionError && error.recoveryPath === recoveryDirectory,
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await readFile(join(recoveryDirectory, 'recovery-error.json'), 'utf8'),
+      ),
       {
-        manifest,
-        results: { preflight: { status: 'ready' } },
-      },
-      {
-        collect: async (received) => ({
-          outputPath: join(received.outDirectory, 'bundle.json'),
-        }),
-        emitReport: async (received) => ({
-          jsonPath: join(received.outDirectory, 'report.json'),
-          markdownPath: join(received.outDirectory, 'report.md'),
-          report: { status: 'failed', summary: { failed: 4 } },
-        }),
-        formatBundle: async () => {},
-        preserve: async (_stagingDirectory, destination) => {
-          preservedAt = destination;
-        },
-        publish: async () => {
-          canonicalPublications += 1;
-        },
-        repository,
+        drive: { error: 'drive failed', status: 'failed' },
+        error: 'injected recovery collection failure',
+        runIdentity: 'smoke-drive-test',
+        schemaVersion: 1,
       },
     );
     const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
-
-    assert.equal(canonicalPublications, 0);
-    assert.equal(preservedAt, recoveryRootFor(manifest, repository));
-    assert.equal(result.recovery.canonicalPublished, false);
-    assert.equal(result.recovery.status, 'failed');
-    assert.equal(persisted.collection.status, 'recovery-completed');
+    assert.equal(persisted.collection.status, 'recovery-failed');
     assert.equal(persisted.collection.canonicalPublished, false);
   } finally {
     await rm(runDirectory, { force: true, recursive: true });

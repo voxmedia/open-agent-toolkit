@@ -158,7 +158,7 @@ test('deterministic child readiness failure is terminal before any launch', asyn
   }
 });
 
-test('deterministic accepted failure is terminal without replacement', async () => {
+test('deterministic accepted failure is terminal and retained through recovery', async () => {
   const run = await provisionDeterministicRun();
   const context = {
     manifest: run.manifest,

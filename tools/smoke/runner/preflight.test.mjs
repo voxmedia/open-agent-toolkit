@@ -48,6 +48,13 @@ function readyProbes(overrides = {}) {
       result: 'authenticated',
     }),
     fixture: async () => ({ result: 'valid' }),
+    gateTarget: async (target, runtime) => ({
+      available: true,
+      command: 'oat gate target list --json',
+      result: 'available',
+      runtime,
+      target,
+    }),
     oat: async () => ({
       globalPath: '/repo/packages/cli/dist/index.js',
       localPath: '/repo/packages/cli/dist/index.js',
@@ -100,7 +107,7 @@ test('probes authentication only for the selected harness', async () => {
   for (const harness of harnesses.filter((name) => name !== 'codex')) {
     assert.match(
       report.harnesses[harness].authenticated.reason,
-      /only probed for the selected harness/,
+      /only probed for required drive and gate runtimes/,
     );
   }
 });
@@ -299,6 +306,136 @@ test('requires only sanitized Cursor API key presence for Cursor execution', asy
   });
   assert.deepEqual(report.cursorApiKey, { present: true, required: true });
   assert.doesNotMatch(JSON.stringify(report), /test-secret-value/);
+});
+
+test('fails closed when a distinct gate runtime is unavailable or unauthenticated', async () => {
+  const cases = [
+    {
+      gateRuntime: 'cursor',
+      gateTarget: 'cursor-default',
+      harness: 'codex',
+      missingHarness: 'cursor-cli',
+    },
+    {
+      gateRuntime: 'codex',
+      gateTarget: 'codex-default',
+      harness: 'claude',
+      missingHarness: 'codex',
+    },
+    {
+      gateRuntime: 'codex',
+      gateTarget: 'codex-default',
+      harness: 'cursor-cli',
+      missingHarness: 'codex',
+    },
+  ];
+
+  for (const entry of cases) {
+    for (const failure of ['unavailable', 'unauthenticated']) {
+      await assert.rejects(
+        () =>
+          runPreflight(entry, {
+            env: { ...process.env, CURSOR_API_KEY: 'present' },
+            probes: readyProbes({
+              auth: async (harness) => ({
+                command: `${harness} auth status`,
+                result:
+                  failure === 'unauthenticated' &&
+                  harness === entry.missingHarness
+                    ? 'unauthenticated'
+                    : 'authenticated',
+              }),
+              runtime: async (harness) => ({
+                command: `${harness} --version`,
+                result:
+                  failure === 'unavailable' && harness === entry.missingHarness
+                    ? 'unavailable'
+                    : 'installed',
+              }),
+            }),
+          }),
+        (error) => {
+          assert.ok(error instanceof PreflightError);
+          assert.deepEqual(
+            error.report.requiredHarnesses,
+            entry.harness === entry.missingHarness
+              ? [entry.harness]
+              : [entry.harness, entry.missingHarness],
+          );
+          assert.equal(error.report.status, 'blocked');
+          return true;
+        },
+        `${entry.harness}/${entry.gateRuntime} must reject ${failure}`,
+      );
+    }
+  }
+});
+
+test('checks configured gate target availability without launching a gate', async () => {
+  const commands = [];
+  const report = await runPreflight(
+    {
+      gateRuntime: 'codex',
+      gateTarget: 'codex-default',
+      harness: 'claude',
+      localOatPath: '/repo/packages/cli/dist/index.js',
+    },
+    {
+      probes: {
+        ...readyProbes(),
+        command: async (executable, args) => {
+          commands.push([executable, args]);
+          return {
+            code: 0,
+            stdout: JSON.stringify({
+              status: 'ok',
+              targets: [
+                {
+                  available: true,
+                  id: 'codex-default',
+                  runtime: 'codex',
+                },
+              ],
+            }),
+          };
+        },
+        gateTarget: undefined,
+      },
+    },
+  );
+
+  assert.equal(report.status, 'ready');
+  assert.equal(report.selectedGate.availability.result, 'available');
+  assert.deepEqual(commands, [
+    ['/repo/packages/cli/dist/index.js', ['gate', 'target', 'list', '--json']],
+  ]);
+  assert.equal(
+    commands.some(([, args]) => args.includes('review')),
+    false,
+  );
+
+  await assert.rejects(
+    () =>
+      runPreflight(
+        {
+          gateRuntime: 'codex',
+          gateTarget: 'missing-target',
+          harness: 'claude',
+        },
+        {
+          probes: readyProbes({
+            gateTarget: async (target, runtime) => ({
+              available: false,
+              command: 'oat gate target list --json',
+              result: 'unavailable',
+              runtime,
+              target,
+            }),
+          }),
+        },
+      ),
+    PreflightError,
+  );
 });
 
 test('accepts the canonical fixture seed headers and presets', async () => {
