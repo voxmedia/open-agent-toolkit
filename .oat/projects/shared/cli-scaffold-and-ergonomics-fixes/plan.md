@@ -5,172 +5,351 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: [['p02', 'p03', 'p04', 'p05', 'p06']]
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: cli-scaffold-and-ergonomics-fixes
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Eliminate scaffold corruption and placeholder leakage, then harden the affected CLI workflows so failures are actionable and shipped grammar changes are detectable.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Keep fixes local to the owning command/template surfaces. Add focused regression tests at each boundary, use `oat doctor` for repository-level stale-invocation detection, and finish with the required lockstep public-package release validation.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript ESM, Commander, Vitest, YAML, Markdown templates, pnpm/Turborepo.
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
-
-## Planning Checklist
-
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+Phase p01 runs first because it fixes the project-creation corruption and is the highest-priority item. Phases p02-p06 then run concurrently: their write sets are disjoint across the plan template, tools update, backlog archive, decision/summary, and doctor/release-note surfaces. They merge in phase order. Phase p07 runs only after all fixes merge because it owns the shared five-package version bump and repository-wide release gate.
 
 ---
 
-## Dispatch Profile
+## Phase 1: Repair project scaffolding
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Render and validate real scaffold templates
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `.oat/templates/state.md` only if token normalization is needed
+- Modify: `packages/cli/src/commands/project/new/scaffold.ts`
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
 
 **Step 1: Write test (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Replace the masking state fixture with the real repository template (or copy that template into the temp repository), scaffold every workflow mode, parse the generated frontmatter, and assert:
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+- `oat_hill_checkpoints`, `oat_phase`, and `oat_workflow_mode` have the expected array/scalar types and values.
+- No rendered artifact contains an unresolved single-brace `{ OAT_* }` or `{OAT_*}` token.
+- The real template audit identifies no OAT placeholder that the scaffolder leaves unresolved.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Expected: The real-template regression fails because the space-padded state tokens survive rendering.
 
 **Step 2: Implement (GREEN)**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+Make OAT placeholder replacement tolerate optional internal whitespace so both canonical and legacy forms render. After rendering each scaffold artifact, reject any remaining single-brace OAT placeholder before writing it. Keep normal prose placeholders and docs-app double-brace dependency tokens outside this check.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Expected: All scaffold modes render valid state values and unresolved OAT placeholders fail closed.
 
 **Step 3: Refactor**
 
-{Any cleanup or improvements while tests stay green}
+Centralize OAT-token matching/rejection in a small local helper so replacement and defense-in-depth validation use the same token grammar.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Focused tests and CLI type checking pass.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+git add .oat/templates/state.md packages/cli/src/commands/project/new/scaffold.ts packages/cli/src/commands/project/new/scaffold.test.ts
+git commit -m "fix(p01-t01): reject unresolved scaffold placeholders"
 ```
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase 2: Clarify plan task-shape guidance
+
+### Task p02-t01: Document TDD as the default, not a validator requirement
 
 **Files:**
 
-- {File list}
+- Modify: `.oat/templates/plan.md`
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
 
 **Step 1: Write test (RED)**
 
-{Test code}
+Add a real-template assertion that the plan template permits non-TDD task bodies while naming the required invariants: stable `pNN-tNN` IDs, per-task verification, and atomic commits.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Expected: The assertion fails because the current template presents RED/GREEN/Refactor as mandatory.
 
 **Step 2: Implement (GREEN)**
 
-{Implementation code or signatures}
+Add a concise note before the example task: RED/GREEN/Refactor is the recommended default where testable, but plans may use another task-body shape when appropriate as long as the three invariants remain.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Expected: The guidance assertion passes without changing `validate-plan`.
 
 **Step 3: Refactor**
 
-{Optional cleanup}
+Keep the existing TDD example intact and avoid adding a second full template variant.
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Expected: Focused template/scaffold tests pass.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+git add .oat/templates/plan.md packages/cli/src/commands/project/new/scaffold.test.ts
+git commit -m "docs(p02-t01): clarify plan task-shape invariants"
 ```
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 3: Improve tools update no-args feedback
 
-### Task p02-t01: {Task Name}
+### Task p03-t01: Suggest the exact all-tools update command
 
-{Continue TDD pattern...}
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+- Modify: `packages/cli/src/commands/tools/update/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+Exercise `oat tools update` without a name, `--pack`, or `--all` and assert exit code 1 plus a copy-pasteable `oat tools update --all` suggestion. Preserve the existing mutually-exclusive target behavior.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/update/index.test.ts`
+Expected: The test fails because the current error names `--all` without the full suggested command.
+
+**Step 2: Implement (GREEN)**
+
+Keep no-args non-mutating and update the actionable error text to include the exact safer command. Do not default to an all-tools mutation.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/update/index.test.ts`
+Expected: No-args exits 1 with the exact remediation.
+
+**Step 3: Refactor**
+
+Keep target validation centralized and avoid duplicating command-selection logic in the test harness.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/update/index.test.ts`
+Expected: Focused update tests pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.ts packages/cli/src/commands/tools/update/index.test.ts
+git commit -m "fix(p03-t01): suggest all-tools update command"
+```
+
+---
+
+## Phase 4: Prevent placeholder backlog summaries
+
+### Task p04-t01: Require a summary before closing backlog items
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/backlog/archive.ts`
+- Modify: `packages/cli/src/commands/backlog/archive.test.ts`
+
+**Step 1: Write test (RED)**
+
+Change the current TODO-seeding test to assert that closing without a non-empty summary raises `BacklogArchiveError` before any status rewrite, completed-ledger write, move, or index regeneration. Keep `--wont-do` without a summary as the existing no-ledger-entry path.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/archive.test.ts`
+Expected: The test fails because the current closed path writes `TODO: summarize outcome`.
+
+**Step 2: Implement (GREEN)**
+
+Validate and trim the closed-path summary before the first mutation. Return an actionable error that tells the caller to rerun with `--summary "<outcome>"`; remove the TODO fallback constant.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/archive.test.ts`
+Expected: Closed items require a real summary and no completed ledger line can contain the TODO placeholder.
+
+**Step 3: Refactor**
+
+Keep terminal-status validation and summary validation ordered before all writes.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/archive.test.ts src/commands/backlog/index.test.ts`
+Expected: Archive core and command wiring remain green.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/backlog/archive.ts packages/cli/src/commands/backlog/archive.test.ts
+git commit -m "fix(p04-t01): require closed backlog summaries"
+```
+
+---
+
+## Phase 5: Fill decision records atomically
+
+### Task p05-t01: Add decision and consequences inputs to decision creation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/decision/new.ts`
+- Modify: `packages/cli/src/commands/decision/new.test.ts`
+- Modify: `packages/cli/src/commands/decision/index.ts`
+- Modify: `packages/cli/src/commands/decision/index.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts` if the help contract requires an update
+- Modify: `.agents/skills/oat-project-summary/SKILL.md`
+
+**Step 1: Write test (RED)**
+
+Add core and command-wiring tests for `--decision <text>` and `--consequences <text>`, asserting those values fill the template sections and flow through `createDecisionRecord`. Add or update help coverage for both flags.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts`
+Expected: Tests fail because the options do not exist and rendering hardcodes `TODO`.
+
+**Step 2: Implement (GREEN)**
+
+Thread optional decision and consequences fields through the command options, record-creation API, and renderer. Update `oat-project-summary` Step 6 to derive context, decision, and consequences from each grounded Key Decision and pass all three flags in the atomic `oat decision new` call. Bump that canonical skill once from `1.2.0` to `1.2.1`.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts`
+Expected: Explicit values populate all three sections and command help exposes both flags.
+
+**Step 3: Refactor**
+
+Keep backward-compatible defaults for callers that omit the new flags, but ensure the summary promotion path never emits literal TODO content.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts && pnpm oat:validate-skills`
+Expected: Decision tests, help snapshots, and canonical skill validation pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/decision/new.ts packages/cli/src/commands/decision/new.test.ts packages/cli/src/commands/decision/index.ts packages/cli/src/commands/decision/index.test.ts packages/cli/src/commands/help-snapshots.test.ts .agents/skills/oat-project-summary/SKILL.md
+git commit -m "feat(p05-t01): fill decision record sections at creation"
+```
+
+---
+
+## Phase 6: Detect stale CLI grammar
+
+### Task p06-t01: Add a minimal stale-invocation doctor check and release callout
+
+**Files:**
+
+- Create: `packages/cli/src/commands/doctor/stale-invocations.ts`
+- Create: `packages/cli/src/commands/doctor/stale-invocations.test.ts`
+- Modify: `packages/cli/src/commands/doctor/index.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts`
+- Modify: `.github/PULL_REQUEST_TEMPLATE.md`
+- Modify: `apps/oat-docs/docs/contributing/code.md`
+
+**Step 1: Write test (RED)**
+
+Add focused scanner tests with clean content and the known-stale form `oat --scope all sync`, plus doctor integration coverage that reports a warning with file/line evidence and the corrected `oat sync --scope all` form. Assert the check is project-scoped and leaves the intentional per-command `--scope` design unchanged.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts`
+Expected: Tests fail because doctor has no stale-grammar scanner.
+
+**Step 2: Implement (GREEN)**
+
+Add a small data-driven known-stale-forms list and scan bounded repository script/documentation surfaces, excluding dependencies, build output, archived/project artifacts, and generated provider views. Emit a passing check when clean and a warning with exact migration guidance when matches exist. Add a contributor/PR convention requiring a prominent `Breaking CLI grammar changes` callout with before/after commands and migration action; generated release notes must receive a visibly breaking PR title/callout.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts`
+Expected: Doctor flags known stale forms without adding a global `--scope` alias.
+
+**Step 3: Refactor**
+
+Keep pattern definitions and filesystem scanning outside the command registration module; bound the scan for predictable doctor latency.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts src/commands/create-program.test.ts && pnpm exec oxfmt --check .github/PULL_REQUEST_TEMPLATE.md apps/oat-docs/docs/contributing/code.md`
+Expected: Doctor coverage passes, the no-global-scope regression remains green, and release guidance is formatted.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/doctor/stale-invocations.ts packages/cli/src/commands/doctor/stale-invocations.test.ts packages/cli/src/commands/doctor/index.ts packages/cli/src/commands/doctor/index.test.ts .github/PULL_REQUEST_TEMPLATE.md apps/oat-docs/docs/contributing/code.md
+git commit -m "feat(p06-t01): detect stale CLI invocation grammar"
+```
+
+---
+
+## Phase 7: Prepare and validate the release
+
+### Task p07-t01: Bump lockstep packages and run completion gates
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml` only if pnpm updates workspace metadata
+
+**Step 1: Establish the release version**
+
+After rebasing/merging any sibling change that lands first, determine the next unused common public-package version. Bump all five packages to that exact version once; if this branch lands second, rebase and re-bump rather than preserving a colliding version.
+
+**Step 2: Run focused and workspace verification**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm format && pnpm type-check && pnpm build`
+Expected: CLI tests and all workspace static/build checks pass.
+
+**Step 3: Run the publishable-package gate**
+
+Run: `pnpm release:validate`
+Expected: All five public packages build, pack, satisfy metadata/content contracts, and pass lockstep version validation.
+
+**Step 4: Verify working-tree release hygiene**
+
+Confirm only expected source, test, docs, project-artifact, and five-package version files changed; confirm no derived provider-skill copies or sibling-project prose were swept in.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git commit -m "chore(p07-t01): bump public packages for CLI fixes"
+```
+
+If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
 | Scope  | Type     | Status  | Date | Artifact |
 | ------ | -------- | ------- | ---- | -------- |
 | p01    | code     | pending | -    | -        |
 | p02    | code     | pending | -    | -        |
+| p03    | code     | pending | -    | -        |
+| p04    | code     | pending | -    | -        |
+| p05    | code     | pending | -    | -        |
+| p06    | code     | pending | -    | -        |
+| p07    | code     | pending | -    | -        |
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
+| plan   | artifact | pending | -    | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -187,10 +366,15 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 1 task - Repair project scaffolding
+- Phase 2: 1 task - Clarify plan task-shape guidance
+- Phase 3: 1 task - Improve tools update no-args feedback
+- Phase 4: 1 task - Prevent placeholder backlog summaries
+- Phase 5: 1 task - Fill decision records atomically
+- Phase 6: 1 task - Detect stale CLI grammar
+- Phase 7: 1 task - Prepare and validate the release
 
-**Total: {N} tasks**
+**Total: 7 tasks**
 
 Ready for code review and merge.
 
@@ -198,7 +382,5 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- State: `state.md`
