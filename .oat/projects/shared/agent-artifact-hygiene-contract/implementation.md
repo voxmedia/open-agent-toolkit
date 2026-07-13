@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Quick-start lifecycle gate timed out twice against codex-5-6-sol-max.
 oat_last_updated: 2026-07-13
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -76,6 +77,7 @@ _No implementation runs yet._
 - Plan artifact review passed on structured attempt 2.
 - Project dispatch policy: High.
 - Phase gate review: disabled by operator.
+- Quick-start lifecycle gate blocked after two 900-second `review_failed` timeouts against `codex-5-6-sol-max` (run IDs `2157923e-4430-4fd6-844b-ace61cd38990` and `11832394-1aa6-4df9-a82f-3d73e50ef105`). Neither run produced findings, an artifact, or a receive-eligible handoff.
 
 ## Deviations from Plan / Design
 

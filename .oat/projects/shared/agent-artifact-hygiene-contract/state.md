@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - Quick-start lifecycle gate timed out twice against codex-5-6-sol-max.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -68,8 +69,8 @@ Plan - Reviewed and ready for implementation
 
 ## Blockers
 
-None
+- Quick-start lifecycle gate exhausted two configured attempts. Both `codex-5-6-sol-max` reviews timed out after 900 seconds with `review_failed` and no receive-eligible artifact.
 
 ## Next Milestone
 
-Run `oat-project-implement`
+Resolve or explicitly reconfigure the blocked quick-start lifecycle gate before implementation.
