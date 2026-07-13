@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 06b6b22edf59509c556d2932a1e18e9b7d172b49
+oat_last_commit: 241b03ca6c5f2017d40111f0d4d443b71f673c69
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 5 # override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -41,23 +41,23 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/141' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T03:15:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T03:31:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Implementation and final re-review complete; project closeout pending
+**Status:** PR open
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation complete — project closeout
+Implementation — PR open, awaiting human review.
 
 ## Artifacts
 
@@ -66,6 +66,7 @@ Implementation complete — project closeout
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 46 tasks)
 - **Implementation:** `implementation.md` (complete — final re-review passed)
+- **Summary:** `summary.md` (complete)
 
 ## Progress
 
@@ -174,7 +175,10 @@ Implementation complete — project closeout
 - ✓ Independent exact-target fix-range re-review passed 0C/0I/0M/0m
 - ✓ The fixture-2 documentation patch was already integrated as patch-equivalent
   commit `2441b65d`; current docs include all subsequent topology corrections
-- → Project closeout
+- ✓ Project summary and repo reference closeout complete
+- ✓ Remote `main` merged and full release validation re-passed
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/141
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -182,4 +186,7 @@ None
 
 ## Next Milestone
 
-Generate the project summary, then complete final PR bookkeeping.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: run `oat-project-complete`
