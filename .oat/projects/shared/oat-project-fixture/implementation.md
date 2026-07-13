@@ -1545,6 +1545,22 @@ coverage. `pnpm format`, `pnpm test:smoke`, and `pnpm test` passed.
 
 ---
 
+### Review Re-Received: p05 Fix Range
+
+**Date:** 2026-07-13
+**Review artifact:**
+`reviews/archived/p05-review-2026-07-13T014202Z.md`
+
+**Findings:** 0 Critical / 0 Important / 0 Medium / 0 Minor
+
+**Disposition:** Passed. The independent reviewer verified all four prior
+findings resolved and accepted the explicit schema-v1 live-evidence limitation
+with schema-v2 refresh deferred to the post-ship operator matrix.
+
+**Next:** p06-t04 release revalidation.
+
+---
+
 ## Phase 6: Documentation, Vault Capture & Release
 
 **Status:** in_progress

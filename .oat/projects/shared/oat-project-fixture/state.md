@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-t04
-oat_last_commit: 4c5b4ef3e1d109af0b28302293233a6e9e8b1d4b
+oat_last_commit: a6814f81c6dc48271bbe6485e3dfdda9e15b2ef0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,19 +45,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T01:39:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T01:53:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Phase 5 review fixes complete; independent re-review pending
+**Status:** Phase 5 re-review passed; release revalidation pending
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — Phase 5 fix-range re-review
+Implementation — Phase 6 release revalidation
 
 ## Artifacts
 
@@ -65,7 +65,7 @@ Implementation — Phase 5 fix-range re-review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 41 tasks)
-- **Implementation:** `implementation.md` (in progress — fix-range re-review)
+- **Implementation:** `implementation.md` (in progress — release revalidation)
 
 ## Progress
 
@@ -161,8 +161,8 @@ Implementation — Phase 5 fix-range re-review
 - ⚠ Independent Phase 5 review failed 1C/2I/0M/1m
 - ✓ p05-t20–p05-t23 fixed report binding, reviewer-parent evidence, assertion
   contract drift, and smoke validation enrollment
-- → Independent Phase 5 fix-range re-review
-- ○ p06-t04 revalidates the post-review-fix release image
+- ✓ Independent Phase 5 fix-range re-review passed 0C/0I/0M/0m
+- → p06-t04 revalidates the post-review-fix release image
 
 ## Blockers
 
@@ -170,4 +170,4 @@ None
 
 ## Next Milestone
 
-Pass independent Phase 5 fix-range re-review, then run p06-t04.
+Run p06-t04 release revalidation, then perform the final project review.
