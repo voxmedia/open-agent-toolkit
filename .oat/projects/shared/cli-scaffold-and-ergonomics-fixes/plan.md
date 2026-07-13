@@ -1,10 +1,10 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p02', 'p03', 'p04', 'p05', 'p06']]
 oat_phase_review_gate:
   enabled: true
@@ -244,8 +244,8 @@ Keep backward-compatible defaults for callers that omit the new flags, but ensur
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts && pnpm oat:validate-skills`
-Expected: Decision tests, help snapshots, semantic skill-contract coverage, and canonical skill validation pass.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/decision/new.test.ts src/commands/decision/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
+Expected: Decision tests, help snapshots, semantic skill-contract coverage, canonical skill validation, and the base-relative `oat-project-summary` patch-version bump all pass.
 
 **Step 5: Commit**
 
@@ -270,14 +270,18 @@ Before editing the canonical skill, rebase onto the latest integration base and 
 
 **Step 1: Write tests (RED)**
 
-Add core creation and command-wiring tests that point directly at the repository’s real `.oat/templates/backlog-item.md`, never a copied fixture. Cover:
+Add core creation and command-wiring tests that point directly at the repository’s real `.oat/templates/backlog-item.md` and actual bundled `packages/cli/assets/templates/backlog-item.md`, never a copied fixture. Cover:
 
-- deterministic `BL-YYMMDD-slug` creation through the existing generator with same-day collisions in both `items/` and `archived/` rejected without overwrite;
+- repo-local template precedence plus installed-CLI bundled fallback, with both `oat_template` and `oat_template_name` absent from generated frontmatter;
+- deterministic `BL-YYMMDD-slug` creation through the existing generator with same-day collisions in both `items/` and `archived/` rejected without overwrite, including proof that an existing active item’s bytes are unchanged;
 - idempotent backlog initialization before creation when the scaffold is absent;
 - canonical default frontmatter (`status: open`, `priority: medium`, `scope: task`, `scope_estimate: null`, `labels: []`, `assignee: null`, `associated_issues: []`, `external_plans: []`) and normalized ISO 8601 UTC `created`/`updated` timestamps;
-- `--priority`, `--scope`, comma-delimited `--labels`, and `--description` overrides, with the real description placeholder retained when omitted and the template Acceptance Criteria placeholders preserved;
+- `--priority`, `--scope`, `--scope-estimate`, comma-delimited `--labels`, and `--description` overrides, plus rejection of unsupported priority and scope values before item/index mutation;
+- structured YAML round trips for YAML-significant title/label values (apostrophes, colons, and `#`) while description and Acceptance Criteria body content remains literal;
+- the real description placeholder retained when omitted and the template Acceptance Criteria placeholders preserved;
 - managed-index regeneration that adds one item row, leaves `## Curated Overview` byte-for-byte unchanged, and produces identical index content on an immediate second regeneration;
-- help/JSON output and a canonical-skill contract requiring `oat backlog new` while rejecting the old `generate-id` + hand-authored creation + explicit `regenerate-index` sequence.
+- forced post-write index-regeneration failure that removes only the new item while preserving pre-existing files and exact index bytes;
+- help/JSON output and a canonical-skill contract requiring the confirmed scope estimate to be passed to `oat backlog new`, preserving acceptance-criteria enrichment while rejecting the old `generate-id` + hand-authored creation sequence.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
 Expected: Tests fail because `oat backlog new` and the updated skill contract do not exist.
@@ -287,25 +291,26 @@ Expected: Tests fail because `oat backlog new` and the updated skill contract do
 Create a focused backlog-item creator that:
 
 - runs the existing idempotent `initializeBacklog` semantics first;
-- resolves repo-local `backlog-item.md` with bundled-assets fallback and renders the real template without shipping `oat_template` metadata;
+- resolves repo-local `backlog-item.md` with bundled-assets fallback and renders the real template without shipping either template-only metadata key;
 - normalizes one creation timestamp to ISO 8601 UTC for both `created` and `updated`;
-- reuses `generateBacklogId`, validates priority/scope values, parses trimmed comma-delimited labels, and uses exclusive creation plus preflight checks against both active and archived paths;
-- writes the canonical frontmatter defaults and description/Acceptance Criteria body, regenerates the managed index through `regenerateBacklogIndex`, and removes the newly written item if regeneration fails;
+- reuses `generateBacklogId`, validates priority/scope/scope-estimate values, parses trimmed comma-delimited labels, and uses exclusive creation plus preflight checks against both active and archived paths;
+- serializes user-controlled frontmatter structurally through YAML so exact titles/labels round-trip safely while rendering the description/Acceptance Criteria body from the real template;
+- writes the canonical frontmatter defaults and optional scope estimate, regenerates the managed index through `regenerateBacklogIndex`, and removes the newly written item if regeneration fails;
 - returns the item ID/path and index result for human and JSON command output.
 
-Register `oat backlog new <title>` with `--priority`, `--scope`, `--labels`, `--description`, and the existing `--backlog-root` convention. Update `oat-pjm-add-backlog-item` to replace its generate-ID/hand-authored creation/index-regeneration sequence with the new command, retaining only post-create enrichment for user-confirmed fields not exposed by the minimum CLI surface and the optional Curated Overview prompt.
+Register `oat backlog new <title>` with `--priority`, `--scope`, optional `--scope-estimate`, `--labels`, `--description`, and the existing `--backlog-root` convention. Update `oat-pjm-add-backlog-item` to preserve its scope-estimate and Acceptance Criteria collection, pass the confirmed estimate into the new command before its atomic index regeneration, replace the generate-ID/hand-authored creation sequence, retain only post-create enrichment for non-index-visible fields, and keep the optional Curated Overview prompt.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts`
-Expected: Real-template creation, collision protection, defaults/flags, index idempotence, command output, and the canonical-skill command contract pass.
+Expected: Real-template precedence/fallback, metadata stripping, YAML-safe creation, enum validation, no-overwrite collision protection, rollback, defaults/flags, index idempotence, command output, and the canonical-skill command contract pass.
 
 **Step 3: Refactor**
 
-Keep generation, initialization, and index behavior delegated to existing backlog primitives; centralize only creation-specific template rendering, option normalization, collision handling, and rollback. Do not duplicate or hand-edit the managed index block.
+Keep generation, initialization, and index behavior delegated to existing backlog primitives; centralize only creation-specific template rendering, structured frontmatter serialization, option normalization, collision handling, and rollback. Do not duplicate or hand-edit the managed index block.
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/backlog/regenerate-index.test.ts src/commands/backlog/shared/generate-id.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm oat:validate-skills`
-Expected: Focused backlog, ID, index, help, semantic skill-contract, type-check, and canonical skill validation all pass; `git status --short` shows no hand-edited provider copy.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/new.test.ts src/commands/backlog/index.test.ts src/commands/backlog/regenerate-index.test.ts src/commands/backlog/shared/generate-id.test.ts src/commands/help-snapshots.test.ts src/validation/skills.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm oat:validate-skills && pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
+Expected: Focused backlog fallback/failure/serialization, ID, index, help, semantic skill-contract, type-check, canonical skill validation, and the base-relative `oat-pjm-add-backlog-item` patch-version bump all pass; `git status --short` shows no hand-edited provider copy.
 
 **Step 5: Commit**
 
@@ -444,19 +449,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| p06    | code     | pending  | -          | -                                                  |
-| p07    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-13T233754Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| p04    | code     | pending         | -          | -                                                           |
+| p05    | code     | pending         | -          | -                                                           |
+| p06    | code     | pending         | -          | -                                                           |
+| p07    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | fixes_completed | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T233754Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

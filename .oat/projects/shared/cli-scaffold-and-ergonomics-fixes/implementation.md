@@ -220,6 +220,29 @@ Chronological log of implementation progress.
 
 **Next:** Revalidate and re-review the revised plan; implementation still starts at p01-t01.
 
+### Wave-2 Plan Artifact Review Received
+
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-13T233754Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 2
+- Minor: 0
+
+**Artifact resolutions:**
+
+- I1: Added optional `--scope-estimate` so the canonical skill passes the confirmed estimate before the command’s atomic index regeneration.
+- I2: Expanded p05-t02 tests for real-template precedence/bundled fallback, metadata stripping, invalid enums, no-overwrite collision safety, and rollback.
+- I3: Downgraded plan readiness to in-progress/null while re-review is unresolved.
+- M1: Required structured YAML serialization and exact round-trip coverage for user-controlled frontmatter.
+- M2: Added base-relative canonical-skill version-bump validation to both p05 tasks.
+
+**Disposition:** All findings resolved in discovery/plan/state artifacts; no new task IDs created.
+
+**Next:** Re-run the plan artifact gate; implementation remains blocked until a passing review restores readiness.
+
 **Execution shape:**
 
 - Run p01 first.
