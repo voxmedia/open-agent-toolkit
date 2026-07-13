@@ -31,6 +31,16 @@ offer to run the package-manager update from inside the current command?
 **Decision:** The first release will notify only. It will not prompt or launch
 an installer during unrelated commands.
 
+### Question 2: Suppression and operating defaults
+
+**Q:** Should suppression be environment-only, or should OAT also expose a
+persistent preference?
+**A:** The user authorized the remaining bounded decisions to be made
+autonomously using the recommended defaults.
+**Decision:** Support both `NO_UPDATE_NOTIFIER=1` and a persistent OAT
+configuration switch. Check at most once every 24 hours and repeat a notice at
+most once every 72 hours.
+
 ## Solution Space
 
 _Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
@@ -108,6 +118,17 @@ command.
    the invoked command's exit status.
 3. **Interaction model:** The first release is notification-only; it will not
    prompt or execute an update from an unrelated command.
+4. **Suppression:** Respect `NO_UPDATE_NOTIFIER=1` and a persisted
+   update-notification preference so both automation and individual users can
+   opt out.
+5. **Rate limits:** Refresh registry metadata at most once per 24 hours and
+   show the same update notice at most once per 72 hours.
+6. **Audience:** Run checks and show notices only for human, non-JSON command
+   executions. Skip CI, tests, ephemeral package-runner invocations, local
+   source development, help, and version output.
+7. **Update guidance:** Display the documented npm global-install command; do
+   not attempt package-manager ownership detection until OAT supports an
+   executable updater.
 
 ## Constraints
 
@@ -145,21 +166,16 @@ command.
 
 ## Open Questions
 
-- **Interaction:** Should the first release only notify, or prompt to execute an
-  update in supported interactive install contexts?
-- **Suppression:** Should opt-out use only established environment conventions
-  such as `NO_UPDATE_NOTIFIER`, or also add persisted OAT configuration?
-- **Rate limits:** What check interval and repeat-notice interval balance
-  freshness with noise?
-- **Install ownership:** Which package managers can be detected confidently
-  enough to display or execute a manager-specific command?
+No blocking discovery questions remain. Exact module boundaries and cache
+schema will be resolved in the lightweight design.
 
 ## Assumptions
 
 - The npm `latest` dist-tag is the canonical stable release signal.
-- Update UX should be absent from machine-readable JSON output rather than
-  extending every command's JSON schema.
-- A daily availability check is fresh enough for this CLI.
+- Update UX is absent from machine-readable JSON output rather than extending
+  every command's JSON schema.
+- A daily availability check and a three-day repeat-notice interval are fresh
+  enough without becoming noisy.
 
 ## Risks
 
