@@ -89,7 +89,28 @@ All role and skill edits occur under `.agents/`. Each changed canonical skill re
 
 ## Testing Strategy
 
-_Pending collaborative review._
+### Contract Coverage
+
+- Audit canonical sources with an exact search for `Artifact hygiene contract:` and confirm every enumerated runtime surface is present.
+- Confirm the copied runtime block remains equivalent at all nine placements; the plan-writing extension is intentionally additional rather than a divergent replacement.
+- Inspect generated provider views after `oat sync --scope all` and run the repository's skill validation/version-bump checks.
+
+### CLI Unit Tests
+
+- Extend `packages/cli/src/commands/gate/index.test.ts` prompt assertions to require the hygiene lead-in and fallback warning text in assembled gate-review prompts.
+- Run the gate command test file with the CLI package's Vitest runner, then run CLI lint and type-check.
+
+### Workflow Artifact Verification
+
+- Ensure the generated implementation plan itself demonstrates planner-first resolution: every artifact-writing task contains a concrete, file-scoped command derived from this repository's documented `format:fix` surface.
+- Run the file-scoped write command before each implementation commit, then run the repository check command to prove no tracked artifact is left unformatted.
+- Verify that package versions are lockstep, canonical skills have one version bump each, and provider views match canonical content.
+
+### Final Validation
+
+- Run focused CLI tests.
+- Run `pnpm format`, `pnpm lint`, `pnpm type-check`, and `pnpm test`.
+- Run `pnpm release:validate`; the project is not complete until it passes.
 
 ## References
 
