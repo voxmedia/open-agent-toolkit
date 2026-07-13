@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ["p02"]
+oat_plan_hill_phases: ["p-rev1"]
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick
@@ -316,7 +316,8 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 | ------ | -------- | ------- | ---------- | -------- |
 | p01    | code     | passed  | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md` |
 | p02    | code     | passed  | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md` |
-| final  | code     | passed  | 2026-07-13 | `reviews/archived/final-rereview-2026-07-13T1752Z.md` |
+| p-rev1 | code     | pending | -          | -        |
+| final  | code     | pending | 2026-07-13 | prior final pass: `reviews/archived/final-rereview-2026-07-13T1752Z.md` |
 | spec   | artifact | pending | -          | -        |
 | design | artifact | pending | -          | -        |
 | plan   | artifact | passed  | 2026-07-13 | structured auto-review |
@@ -332,14 +333,167 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 
 ---
 
+## Phase p-rev1: Interactive CLI Update Offer
+
+Source: inline feedback (2026-07-13)
+
+### Task prev1-t01: (revision) Add the interactive update offer
+
+**Files:**
+
+- Modify: `packages/cli/src/app/update-notifier.ts`
+- Modify: `packages/cli/src/app/update-notifier.test.ts`
+- Create: `packages/cli/src/app/tool-bundle-update-guard.ts`
+- Create: `packages/cli/src/app/tool-bundle-update-guard.test.ts`
+- Modify: `packages/cli/src/index.ts`
+- Modify: `packages/cli/src/index.test.ts`
+
+**Step 1: Write tests (RED)**
+
+Add focused coverage proving:
+
+- ordinary eligible commands retain the passive notice;
+- `oat init` (including nested init paths), `oat tools install` (including pack
+  subcommands), and `oat tools update` suppress the duplicate passive warning
+  and run one compatibility guard before any mutation;
+- current, invalid, unavailable, opted-out, JSON, non-interactive, dry-run,
+  source-development, test, CI, and ephemeral-runner contexts do not prompt or
+  install;
+- decline and prompt abort continue the requested tool update using the current
+  CLI's bundle, with an explicit warning that those tool versions may be older
+  than the versions bundled with the available CLI release;
+- acceptance invokes npm once with an argument array, `shell: false`, inherited
+  stdio, and the exact validated version rather than a mutable dist-tag, then
+  stops before tool mutation and asks the user to rerun `oat tools update`; and
+- installer failure aborts before tool mutation with an actionable CLI error.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts src/app/tool-bundle-update-guard.test.ts src/index.test.ts`
+Expected: Tests fail because reusable availability resolution and the
+interactive command integration do not exist.
+
+**Step 2: Implement (GREEN)**
+
+Refactor the existing notifier internals into a reusable best-effort
+availability resolver that returns the validated newer stable version while
+preserving the cache, suppression, timeout, and never-throw contracts. Keep
+`maybeNotifyAboutUpdate` as the passive wrapper used by ordinary commands.
+
+Add a shared pre-mutation compatibility guard for command paths rooted at
+`init`, `tools install`, and `tools update`. When a newer stable CLI is
+available, explain that these commands copy tools bundled with the currently
+running CLI. If the user continues under an older CLI, the command can only
+install that older CLI's bundled tool versions rather than the versions bundled
+with the available release. Use `confirmAction` with a default-false prompt and,
+on acceptance, execute:
+
+```text
+npm install --global @open-agent-toolkit/cli@<validated-version>
+```
+
+Use `execFile`/argument-array execution with `shell: false` and inherited stdio.
+After a successful CLI install, stop before command action and tell the user to
+rerun the original command under the new CLI so its bundled tools are used. On
+decline, warn that the command is continuing with the current CLI's bundle,
+then proceed. Dry-run, JSON, non-interactive, opted-out, current-version,
+ephemeral, and unavailable-metadata paths remain non-prompting.
+
+The root bootstrap hook classifies the complete Commander command path. It runs
+the guard instead of the passive notifier for guarded paths and uses a private,
+success-only control signal to prevent the old process from executing the
+command action after a CLI upgrade. Installer failures prevent mutation and
+remain actionable errors.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts src/app/tool-bundle-update-guard.test.ts src/index.test.ts`
+Expected: Focused tests pass.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: CLI tests, lint, and type-check pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/app/update-notifier.ts packages/cli/src/app/update-notifier.test.ts packages/cli/src/app/tool-bundle-update-guard.ts packages/cli/src/app/tool-bundle-update-guard.test.ts packages/cli/src/index.ts packages/cli/src/index.test.ts
+git commit -m "feat(prev1-t01): guard bundled tool mutations"
+```
+
+---
+
+### Task prev1-t02: (revision) Document the interactive offer
+
+**Files:**
+
+- Modify: `packages/cli/README.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+
+**Step 1: Update documentation**
+
+Explain that ordinary eligible commands remain passive. Before interactive
+`oat init`, `oat tools install`, or `oat tools update` mutations, a known newer
+CLI triggers a compatibility warning and offer to install the exact newer
+stable CLI version through npm. Document that acceptance updates the CLI and
+requires rerunning the original command, while decline continues with the
+current CLI's bundle and warns that its tool versions may be older than those
+bundled with the available release. Also cover default-no consent, suppression,
+dry-run/JSON/non-interactive behavior, failure semantics, and the distinction
+between bundled tools and the CLI package.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter oat-docs check && pnpm format`
+Expected: Docs checks and repository formatting pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md apps/oat-docs/docs/cli-utilities/tool-packs.md
+git commit -m "docs(prev1-t02): document interactive CLI update offer"
+```
+
+---
+
+### Task prev1-t03: (revision) Prepare the revision release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Update versions**
+
+Bump all five lockstep public packages from `0.1.61` to `0.1.62` and run the
+CLI asset bundler to regenerate `public-package-versions.json`. Do not modify
+`pnpm-lock.yaml` unless validation proves it is required.
+
+**Step 2: Verify**
+
+Run: `pnpm test && pnpm lint && pnpm type-check && pnpm build && pnpm --filter oat-docs check && pnpm format && pnpm release:validate`
+Expected: Full repository and release verification pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+git commit -m "chore(prev1-t03): bump lockstep public packages"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
 
 - Phase 1: 2 tasks - User preference and cached notifier service
 - Phase 2: 3 tasks - Command integration, documentation, and release readiness
+- Phase p-rev1: 3 tasks - Interactive tools-update offer and revision release
 
-**Total: 5 tasks**
+**Total: 8 tasks**
 
 Ready for code review and merge.
 

@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -28,8 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 2     | 2/2       |
 | Phase 2 | complete    | 3     | 3/3       |
+| Phase p-rev1 | in_progress | 3 | 0/3 |
 
-**Total:** 5/5 tasks completed
+**Total:** 5/8 tasks completed
 
 ---
 
@@ -199,6 +200,51 @@ oat_generated: false
 
 - All five packages passed release validation; `pnpm-lock.yaml` remained
   unchanged.
+
+---
+
+## Phase p-rev1: Interactive CLI Update Offer
+
+**Status:** in_progress
+**Started:** 2026-07-13
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-07-13
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Keep passive update notices for ordinary eligible commands.
+- Before `oat init`, `oat tools install`, or `oat tools update` mutates bundled
+  tools, explain that a newer CLI may bundle newer tool versions, while the
+  running older CLI can only install its own older bundled versions.
+- Offer to update the CLI first. On acceptance, install the exact validated
+  version, stop before tool mutation, and require rerunning `oat tools update`
+  under the new CLI. On decline, continue with the current bundle and warn.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`
+
+**Next:** Execute revision tasks via `oat-project-implement`.
+
+### Task prev1-t01: Add the interactive update offer
+
+**Status:** in_progress
+**Commit:** -
+
+---
+
+### Task prev1-t02: Document the interactive offer
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task prev1-t03: Prepare the revision release
+
+**Status:** pending
+**Commit:** -
 
 ---
 

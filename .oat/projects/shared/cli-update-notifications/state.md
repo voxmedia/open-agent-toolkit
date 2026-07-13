@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 5deb8004
+oat_current_task: prev1-t01
+oat_last_commit: 668b743e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,21 +12,12 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
-oat_post_implement_sequence:
-  status: awaiting_approval
-  final_phase: p02
-  pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document, pr]
-  approval: pending
-  post_approval: []
-  post_approval_completed: []
-  failure: null
 # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   providers: # present for capped managed policies; omitted for uncapped/inherit
 #     codex: high # low|medium|high|xhigh
@@ -40,24 +31,24 @@ oat_post_implement_sequence:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: "https://github.com/voxmedia/open-agent-toolkit/pull/143" # null | string — tracked PR URL when a PR exists
 oat_project_created: "2026-07-13T16:00:20.521Z" # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-07-13T18:08:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-07-13T18:05:00Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cli-update-notifications
 
-**Status:** PR open
+**Status:** Revision in progress
 **Started:** 2026-07-13
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — PR open, awaiting human review.
+Implementation — Revision p-rev1 queued from inline feedback.
 
 ## Artifacts
 
@@ -65,7 +56,7 @@ Implementation — PR open, awaiting human review.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
 - **Plan:** `plan.md` (complete — artifact review passed)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (revision in progress)
 
 ## Progress
 
@@ -82,7 +73,7 @@ Implementation — PR open, awaiting human review.
 - ✓ Project summary generated
 - ✓ Documentation synchronized
 - ✓ PR created
-- ⧗ Awaiting human review and final HiLL approval
+- ⧗ Revision p-rev1 queued
 
 ## Blockers
 
@@ -90,8 +81,4 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- When approved: resume `oat-project-implement` for final HiLL approval and
-  project completion routing
+Execute revision task `prev1-t01`, then re-run final verification and review.
