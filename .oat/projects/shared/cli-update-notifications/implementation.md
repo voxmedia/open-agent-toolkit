@@ -268,7 +268,7 @@ oat_generated: false
 
 ### Revision Review: p-rev1
 
-**Artifact:** `reviews/p-rev1-review-2026-07-13T182301Z.md`
+**Artifact:** `reviews/archived/p-rev1-review-2026-07-13T182301Z.md`
 **Status:** passed
 
 **Findings:**
@@ -289,7 +289,7 @@ oat_generated: false
   missing resolution fails before mutation with manual remediation.
 
 **Re-review artifact:**
-`reviews/p-rev1-rereview-2026-07-13T183541Z.md`
+`reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md`
 
 ---
 
@@ -360,9 +360,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: 3/3 tasks completed; two Important review findings fixed in one
   continuation commit; focused re-review passed
 
-| Phase  | Implementer        | Tasks | Review                                          | Result |
-| ------ | ------------------ | ----- | ----------------------------------------------- | ------ |
-| p-rev1 | `gpt-5.6-sol-high` | 3/3   | `reviews/p-rev1-rereview-2026-07-13T183541Z.md` | passed |
+| Phase  | Implementer        | Tasks | Review                                                   | Result |
+| ------ | ------------------ | ----- | -------------------------------------------------------- | ------ |
+| p-rev1 | `gpt-5.6-sol-high` | 3/3   | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md` | passed |
 
 **Dispatch notes:**
 
@@ -391,7 +391,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Revised Final Review Findings
 
-**Review artifact:** `reviews/final-review-2026-07-13.md`
+**Review artifact:**
+`reviews/archived/final-review-2026-07-13-revision.md`
 **Status:** final re-review passed
 
 - Important: make displayed rerun commands platform-aware so Windows `cmd.exe`
@@ -414,7 +415,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Re-review passed with no Critical, Important, or Medium findings. The sole
   Minor return-type drift in `design.md` was corrected during closeout.
 
-**Re-review artifact:** `reviews/final-review-2026-07-13-v2.md`
+**Re-review artifact:** `reviews/archived/final-review-2026-07-13-v2.md`
 
 ---
 
