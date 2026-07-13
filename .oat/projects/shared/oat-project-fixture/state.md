@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t13
-oat_last_commit: e6fbc717b26c635ebfd0fada2945a93b99260ecb
+oat_last_commit: 4082bd1040ef8cdd50c9abcf356d67a2a3f168e6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -64,7 +64,7 @@ Implementation — final live Codex confirmation
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 34 tasks)
+- **Plan:** `plan.md` (complete — 6 phases / 35 tasks)
 - **Implementation:** `implementation.md` (in progress — final live smoke and
   release bookkeeping)
 
@@ -145,6 +145,7 @@ Implementation — final live Codex confirmation
 - ✓ p05-t15 normalized absolute live review project paths
 - ✓ p05-t16 refreshed direct builds and removed stale coordinator wording
 - ✓ p05-t17 made terminal dispatch outcomes mandatory
+- ✓ p05-t18 bound smoke-safe init to the registered child worktree cwd
 - ✓ p06-t01 OAT docs and smoke runbook complete
 - ✓ p06-t02 Vault capture committed externally
 - → p05-t13 final fresh Codex confirmation running

@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 17    | 12/17     |
+| Phase 5 | in_progress | 18    | 13/18     |
 | Phase 6 | in_progress | 3     | 2/3       |
 
-**Total:** 28/34 tasks completed (4 deferred, 1 in progress, 1 pending)
+**Total:** 29/35 tasks completed (4 deferred, 1 in progress, 1 pending)
 
 ---
 
@@ -1383,7 +1383,9 @@ topology.
 - The next fresh run correctly terminated at its one accepted final gate because
   p01/p02 dispatch records had been immutably published as `running`. That
   evidence was rejected and never promoted.
-- A final fresh run is executing after p05-t17 made terminal outcomes mandatory.
+- The next fresh run correctly aborted before any child launch when safe init
+  ran from the outer cwd. p05-t18 made the required child cwd explicit.
+- A final fresh run follows p05-t18.
 
 ---
 
@@ -1427,6 +1429,17 @@ probe and drive tests passed.
 Removed `running` from immutable dispatch outcomes and aligned every producer
 prompt to publish accepted launches only after terminal completion or failure.
 Focused record/drive tests and all 111 smoke tests passed.
+
+---
+
+### Task p05-t18: Bind smoke-safe init to the child worktree
+
+**Status:** completed
+**Commit:** `4082bd10`
+
+The bootstrap skill and Codex protocol now require
+`(cd "$CHILD_WORKTREE" && bash scripts/worktree/init.sh)`. Skill and drive
+contract tests passed, and provider views were synchronized.
 
 ---
 
