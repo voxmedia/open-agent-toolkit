@@ -12,17 +12,17 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   final_phase: p-rev1
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   post_approval: []
   post_approval_completed: []
@@ -45,19 +45,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/143' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T16:00:20.521Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T18:59:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T19:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cli-update-notifications
 
-**Status:** Revision in progress
+**Status:** PR open
 **Started:** 2026-07-13
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — Revised final review passed; preparing closeout.
+Implementation — revised PR open, awaiting human review.
 
 ## Artifacts
 
@@ -65,7 +65,7 @@ Implementation — Revised final review passed; preparing closeout.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
 - **Plan:** `plan.md` (complete — artifact review passed)
-- **Implementation:** `implementation.md` (revision in progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -88,6 +88,8 @@ Implementation — Revised final review passed; preparing closeout.
 - ✓ Revised final verification passed
 - ✓ Revised final review fixes completed
 - ✓ Final re-review passed
+- ✓ Revised summary, documentation, and PR handoff refreshed
+- ⧗ Awaiting human review and final HiLL approval
 
 ## Blockers
 
@@ -95,4 +97,8 @@ None
 
 ## Next Milestone
 
-Refresh summary, documentation, and PR handoff for the revised implementation.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved: resume `oat-project-implement` for final HiLL approval and
+  project completion routing
