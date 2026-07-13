@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: final_review
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p06-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 5     | 5/5       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | complete    | 23    | 19/23     |
-| Phase 6 | in_progress | 9     | 4/9       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 5     | 5/5       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | complete | 23    | 19/23     |
+| Phase 6 | complete | 9     | 9/9       |
 
-**Total:** 37/46 tasks completed (4 deferred, 1 in progress, 4 pending)
+**Total:** 42/46 tasks completed (4 explicitly deferred)
 
 ---
 
@@ -1573,8 +1573,9 @@ with schema-v2 refresh deferred to the post-ship operator matrix.
 
 ## Phase 6: Documentation, Vault Capture & Release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-12
+**Completed:** 2026-07-13
 
 ### Task p06-t01: OAT docs and smoke runbook
 
@@ -1624,36 +1625,40 @@ public packages at `0.1.58`.
 
 ### Task p06-t05: Bind phase-review artifacts to acceptance
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `8b5b735f`
 
 ---
 
 ### Task p06-t06: Preserve failed-drive recovery evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `a5c0fd07`
 
 ---
 
 ### Task p06-t07: Preflight independent gate runtimes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `7250ba72`
 
 ---
 
 ### Task p06-t08: Align shipped topology guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `0e82b6cd`
 
 ---
 
 ### Task p06-t09: Enroll smoke lint in root verification
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `493d397f`
+
+Root lint/lint-fix now include the smoke surface. All three canonical report
+checks, 123 smoke tests, both builds, lint, format, type-check, the full test
+suite, and `pnpm release:validate` pass at lockstep package version `0.1.59`.
 
 ---
 

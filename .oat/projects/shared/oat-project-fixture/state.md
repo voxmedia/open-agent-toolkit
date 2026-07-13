@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t05
-oat_last_commit: e964d228085706ffce1baf1fdaa2725a0bc1d281
+oat_current_task: null
+oat_last_commit: 493d397fd6c05805094ad91c25c4d72b304fbfc4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,19 +45,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T02:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T02:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Implementation in progress; final review fixes queued
+**Status:** Final review fixes complete; independent re-review pending
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — final review fixes
+Implementation — final fix-range re-review
 
 ## Artifacts
 
@@ -65,7 +65,7 @@ Implementation — final review fixes
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 46 tasks)
-- **Implementation:** `implementation.md` (in progress — p06-t05)
+- **Implementation:** `implementation.md` (all tasks complete — re-review pending)
 
 ## Progress
 
@@ -168,7 +168,10 @@ Implementation — final review fixes
 - ✓ p06-t04 post-review release revalidation passed all canonical, smoke,
   workspace, docs, and public-package checks
 - ⚠ Final independent review failed 0C/3I/2M/0m
-- → p06-t05–p06-t09 close all final findings
+- ✓ p06-t05–p06-t09 closed all final findings
+- ✓ Canonical reports, 123 smoke tests, full workspace/docs verification, and
+  release validation pass at `0.1.59`
+- → Independent fix-range re-review
 
 ## Blockers
 
@@ -176,4 +179,4 @@ None
 
 ## Next Milestone
 
-Complete p06-t05–p06-t09, revalidate release, and re-run final review.
+Pass the independent fix-range re-review, then finalize project bookkeeping.
