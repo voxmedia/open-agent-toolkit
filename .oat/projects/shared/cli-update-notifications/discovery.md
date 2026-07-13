@@ -17,111 +17,167 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Add a familiar CLI update experience: when a newer OAT CLI release is
+available, ordinary command runs should notify the user and may offer an
+interactive update. The exact mechanism is intentionally open for discovery.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Notification versus in-command update
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should the first release use a passive update notice, or should it also
+offer to run the package-manager update from inside the current command?
+**A:** Pending.
+**Decision:** Pending user confirmation.
 
 ## Solution Space
 
 _Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+### Approach 1: Cached passive notice _(Recommended)_
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**Description:** Check the npm `latest` dist-tag on a bounded schedule, cache
+the result, and print a concise update command when a newer stable version is
+known.
+**When this is the right choice:** Best for a CLI used by both humans and
+automation, where command startup and exit behavior must remain predictable.
+**Tradeoffs:** The user must run the update themselves, so adoption may be
+slower than with an in-command prompt.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 2: Interactive update offer
 
-### Approach 2: {Strategy Name}
+**Description:** Use the same cached check, but in a genuine interactive
+terminal ask whether OAT should invoke the detected package manager to install
+the resolved version.
+**When this is the right choice:** Best when update convenience is more
+important than minimizing prompts and installation-source complexity.
+**Tradeoffs:** Package-manager detection can be ambiguous; pseudo-TTY agent
+sessions may still be disrupted; and a failed child installer complicates the
+current command's UX and exit semantics.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 3: Explicit self-update command
+
+**Description:** Keep automatic checks notification-only and add an explicit
+`oat update` or `oat self-update` command that performs diagnostics and hands
+off to the owning package manager.
+**When this is the right choice:** Best when users need a guided update path,
+channels, or troubleshooting without mutating installations during unrelated
+commands.
+**Tradeoffs:** It adds command surface and still requires package-manager-aware
+handoff. True self-replacement is inappropriate for package-manager-owned
+installs.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Pending.
+**Rationale:** Research favors a cached passive notice for the initial release;
+it matches common Node CLI behavior and avoids disrupting agent and script
+workflows. The user explicitly mentioned an update prompt, so this tradeoff
+requires confirmation.
+**User validated:** No.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Registry metadata check
 
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
+**Description:** Resolve the published stable version from npm registry
+metadata and compare it with the running CLI version.
 
 **Pros:**
 
-- {Benefit 1}
-- {Benefit 2}
+- Uses the package's authoritative `latest` dist-tag.
+- Avoids shelling out to a package manager for every check.
 
 **Cons:**
 
-- {Drawback 1}
-- {Drawback 2}
+- Introduces the CLI's first routine network lookup.
+- Requires cache, timeout, and silent-failure behavior.
 
-**Chosen:** {A/B/Neither}
+**Chosen:** Provisionally A, subject to discovery.
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Summary:** A direct, time-bounded registry request with a durable TTL cache is
+the likely mechanism. Network failure must never block or fail the user's
+command.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Distribution source:** Stable update availability is defined by the npm
+   `latest` dist-tag for `@open-agent-toolkit/cli`, not by the numerically
+   greatest published version.
+2. **Command safety:** Update checking must be best-effort and must not alter
+   the invoked command's exit status.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- OAT supports global npm installs, ephemeral `npx` use, and local development;
+  the UX must not assume every invocation owns a mutable global installation.
+- JSON output, CI, non-interactive runs, tests, and ephemeral invocations must
+  remain automation-safe.
+- Checks must be cached and time-bounded so normal commands do not incur a
+  registry round trip on every run.
+- Registry and cache failures must be silent outside optional diagnostic output.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A user running an interactive command receives a concise notice when a newer
+  stable CLI version is known.
+- Users on the current version, automation, and unsupported install contexts
+  are not interrupted.
+- Repeated commands respect check and notification rate limits.
+- Offline or malformed registry responses do not fail or materially delay the
+  requested command.
+- Version-channel and pre-release behavior is covered by tests.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Replacing package-manager-owned files directly.
+- Automatically switching users to prerelease channels.
+- Updating the other lockstep OAT packages independently of the CLI release.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Channel selection (`next`, `beta`) - defer until OAT exposes a supported
+  release-channel workflow.
+- A standalone-distribution autoupdater - OAT is currently distributed as an
+  npm package, so package-manager handoff is the safer model.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Interaction:** Should the first release only notify, or prompt to execute an
+  update in supported interactive install contexts?
+- **Suppression:** Should opt-out use only established environment conventions
+  such as `NO_UPDATE_NOTIFIER`, or also add persisted OAT configuration?
+- **Rate limits:** What check interval and repeat-notice interval balance
+  freshness with noise?
+- **Install ownership:** Which package managers can be detected confidently
+  enough to display or execute a manager-specific command?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The npm `latest` dist-tag is the canonical stable release signal.
+- Update UX should be absent from machine-readable JSON output rather than
+  extending every command's JSON schema.
+- A daily availability check is fresh enough for this CLI.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Command latency:** A synchronous registry request can slow every uncached
+  command.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Cache successful checks, use a short timeout, and
+    ensure failure backoff.
+- **Wrong updater:** Invoking the wrong package manager can update a different
+  installation or fail unexpectedly.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Prefer notice-only behavior; execute updates only
+    when install ownership is known with high confidence.
+- **Automation disruption:** Prompting in a pseudo-terminal can block agents.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Gate prompts on explicit interactive conditions and
+    provide suppression controls.
 
 ## Next Steps
 
