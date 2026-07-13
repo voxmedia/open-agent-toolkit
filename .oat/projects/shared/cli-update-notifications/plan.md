@@ -262,7 +262,7 @@ git commit -m "docs(p02-t02): document CLI update notifications"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
-- Modify: `pnpm-lock.yaml`
+- Modify: `packages/cli/assets/public-package-versions.json`
 
 **Step 1: Run release validation (RED)**
 
@@ -274,16 +274,16 @@ Expected: Validation identifies the missing lockstep public package bumps.
 
 **Step 2: Implement (GREEN)**
 
-Bump all five lockstep public packages from `0.1.60` to `0.1.61` and regenerate
-the lockfile without changing dependency ranges.
+Bump all five lockstep public packages from `0.1.60` to `0.1.61` and run the
+CLI asset bundler to regenerate `public-package-versions.json`.
 
 Run: `pnpm release:validate`
 Expected: Public package version and shipped-functionality validation pass.
 
 **Step 3: Refactor**
 
-Confirm only the five required public package versions and corresponding
-lockfile importer metadata changed.
+Confirm only the five required public package versions and the generated public
+package version manifest changed.
 
 **Step 4: Verify**
 
@@ -294,7 +294,7 @@ validation pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
 git commit -m "chore(p02-t03): bump lockstep public packages"
 ```
 
