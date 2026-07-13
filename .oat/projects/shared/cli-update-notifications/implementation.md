@@ -249,7 +249,7 @@ oat_generated: false
 ### Revision Review: p-rev1
 
 **Artifact:** `reviews/p-rev1-review-2026-07-13T182301Z.md`
-**Status:** blocking fixes in progress
+**Status:** fixes completed; awaiting re-review
 
 **Findings:**
 
@@ -259,8 +259,14 @@ oat_generated: false
 - On Windows, resolve npm's JavaScript CLI entrypoint and invoke it with
   `process.execPath`; do not attempt to spawn `npm.cmd` with `shell: false`.
 
-**Next:** Continue the original p-rev1 implementer in bounded fix mode, then
-re-review.
+**Next:** Re-review the bounded p-rev1 fixes.
+
+**Fix commit:** `cfa6d7c3f127b4282ebefb78e99f4d5fcf93ea28`
+
+- Rerun guidance now preserves and display-quotes the full normalized command
+  arguments and options.
+- Windows resolves `npm-cli.js` and invokes it through `process.execPath`;
+  missing resolution fails before mutation with manual remediation.
 
 ---
 
