@@ -432,7 +432,7 @@ Expected: both on PATH with expected versions. Until a rebuild happens, record e
 **Files:**
 
 - Modify: `cloud-agent-env-node:.cursor/install-repos.sh`
-- Create: `cloud-agent-env-node:.cursor/oat-user-config.json` (versioned seed source)
+- Create: `cloud-agent-env-node:.cursor/oat-user-config.json` (versioned seed source — authored draft lives at this project's `references/oat-user-config.cloud.json`, user-reviewed 2026-07-13; copy and adjust only for changes that land between now and Phase 4)
 
 **Steps:**
 

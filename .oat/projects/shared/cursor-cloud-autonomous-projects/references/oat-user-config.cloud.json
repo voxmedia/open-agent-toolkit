@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "workflow": {
+    "hillCheckpointDefault": "final",
+    "reviewExecutionModel": "subagent",
+    "autoNarrowReReviewScope": true,
+    "designMode": "selective",
+    "dispatchCeiling": {
+      "recommendationVersion": "2026-07-11.1",
+      "providers": {
+        "codex": {
+          "economy": {
+            "candidates": [
+              { "harness": "codex", "model": "gpt-5.6-luna", "effort": "high" },
+              { "harness": "codex", "model": "gpt-5.6-luna", "effort": "xhigh" }
+            ]
+          },
+          "balanced": {
+            "candidates": [
+              { "harness": "codex", "model": "gpt-5.6-terra", "effort": "high" }
+            ]
+          },
+          "high": {
+            "candidates": [
+              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "medium" },
+              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "high" }
+            ]
+          },
+          "frontier": {
+            "candidates": [
+              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "xhigh" },
+              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "max" }
+            ]
+          }
+        },
+        "claude": {
+          "economy": { "candidates": ["haiku", "sonnet"] },
+          "balanced": { "candidates": ["sonnet"] },
+          "high": { "candidates": ["opus"] },
+          "frontier": { "candidates": ["fable"] }
+        },
+        "cursor": {
+          "economy": {
+            "candidates": ["gpt-5.6-luna-high", "gpt-5.6-luna-xhigh"]
+          },
+          "balanced": { "candidates": ["gpt-5.6-terra-high"] },
+          "high": {
+            "candidates": ["gpt-5.6-sol-medium", "gpt-5.6-sol-high"]
+          },
+          "frontier": {
+            "candidates": ["gpt-5.6-sol-xhigh", "gpt-5.6-sol-max"]
+          }
+        }
+      }
+    },
+    "gates": {
+      "execTargets": {
+        "cursor-gpt-5-6-sol-max": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "gpt-5.6-sol-max"
+          ],
+          "invocation": {
+            "model": "gpt-5.6-sol-max",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 140,
+          "availabilityCommand": ["cursor-agent", "--version"]
+        },
+        "cursor-gpt-5-6-sol-xhigh": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "gpt-5.6-sol-xhigh"
+          ],
+          "invocation": {
+            "model": "gpt-5.6-sol-xhigh",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 135,
+          "availabilityCommand": ["cursor-agent", "--version"]
+        },
+        "cursor-fable-5-xhigh": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "claude-fable-5-xhigh"
+          ],
+          "invocation": {
+            "model": "claude-fable-5-xhigh",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 130,
+          "availabilityCommand": ["cursor-agent", "--version"]
+        },
+        "cursor-fable-5-thinking-high": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "claude-fable-5-thinking-high"
+          ],
+          "invocation": {
+            "model": "claude-fable-5-thinking-high",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 125,
+          "availabilityCommand": ["cursor-agent", "--version"]
+        },
+        "cursor-grok-4-5-high": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "cursor-grok-4.5-high"
+          ],
+          "invocation": {
+            "model": "cursor-grok-4.5-high",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 110,
+          "availabilityCommand": ["cursor-agent", "--version"]
+        },
+        "codex-5-6-sol-max": {
+          "runtime": "codex",
+          "baseCommand": [
+            "codex",
+            "exec",
+            "--model",
+            "gpt-5.6-sol",
+            "-c",
+            "model_reasoning_effort=\"max\"",
+            "--dangerously-bypass-approvals-and-sandbox"
+          ],
+          "invocation": {
+            "model": "gpt-5.6-sol",
+            "reasoningEffort": "max"
+          },
+          "priority": 100,
+          "availabilityCommand": ["codex", "--version"]
+        },
+        "claude-fable-skip-permissions": {
+          "runtime": "claude",
+          "baseCommand": [
+            "claude",
+            "-p",
+            "--model",
+            "fable",
+            "--dangerously-skip-permissions"
+          ],
+          "invocation": {
+            "model": "fable",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 95,
+          "availabilityCommand": ["claude", "--version"]
+        }
+      },
+      "skills": {
+        "oat-project-implement": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type code --review-scope final --exit-nonzero-on important \"Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime final implementation review before oat-project-implement exits."
+        },
+        "oat-project-plan": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope plan --exit-nonzero-on important \"Use oat-project-review-provide artifact plan to review the current project plan. Use project state to determine the most appropriate review scope. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime plan artifact review before oat-project-plan exits."
+        },
+        "oat-project-quick-start": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope plan --exit-nonzero-on important \"Use oat-project-review-provide artifact plan to review the current project plan and its upstream artifact bundle (discovery and lightweight design when present). Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime artifact-bundle review before oat-project-quick-start exits."
+        },
+        "oat-project-import-plan": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope plan --exit-nonzero-on important \"Use oat-project-review-provide artifact plan to review the current project plan. Use project state to determine the most appropriate review scope. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime plan artifact review before oat-project-import-plan exits."
+        },
+        "oat-project-discover": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope discovery --exit-nonzero-on important \"Use oat-project-review-provide artifact discovery to review the current project discovery. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime discovery artifact review before oat-project-discover exits (requires FR4 gate hook)."
+        },
+        "oat-project-design": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope design --exit-nonzero-on important \"Use oat-project-review-provide artifact design to review the current project design. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime design artifact review before oat-project-design exits (requires FR4 gate hook)."
+        }
+      }
+    }
+  }
+}
