@@ -293,7 +293,7 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 | ----- | ---------------------------------------------------------- | -------- | -------------------------------------------------------------- | ------------------------------------------ |
 | FR1   | Autonomy policy: every gate has a non-interactive behavior | P0       | manual: gate-inventory walkthrough + autonomous dry run         | p01-t01, p01-t02, p01-t03, p01-t04, p01-t05 |
 | FR2   | State-detecting autonomous orchestrator skill              | P0       | e2e: goal-to-PR and resume-and-run cloud runs                   | p02-t02, p06-t03, p06-t04                   |
-| FR3   | Layered cross-family review contract                       | P0       | integration: dispatch resolution per tier; manual: provenance   | p02-t02, p02-t03, p06-t05                   |
+| FR3   | Layered cross-family review contract                       | P0       | integration: dispatch resolution per tier; manual: provenance   | p02-t02, p02-t03, p02-t08, p06-t05          |
 | FR4   | Gate hooks for discover/design skills                      | P1       | manual: configured-gate exercise at skill exit                  | p01-t03, p06-t06                            |
 | FR5   | Quick-start gate covers artifact bundle                    | P1       | manual: gate prompt scope inspection on quick project           | p01-t04, p06-t06                            |
 | FR6   | Non-interactive HiLL resolution (final + auto-review)      | P0       | manual: autonomous run writes explicit value; interactive pause | p01-t02, p01-t06, p06-t05                   |

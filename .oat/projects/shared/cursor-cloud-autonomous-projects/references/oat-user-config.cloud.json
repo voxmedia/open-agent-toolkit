@@ -11,33 +11,78 @@
         "codex": {
           "economy": {
             "candidates": [
-              { "harness": "codex", "model": "gpt-5.6-luna", "effort": "high" },
-              { "harness": "codex", "model": "gpt-5.6-luna", "effort": "xhigh" }
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-luna",
+                "effort": "high"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-luna",
+                "effort": "xhigh"
+              }
             ]
           },
           "balanced": {
             "candidates": [
-              { "harness": "codex", "model": "gpt-5.6-terra", "effort": "high" }
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-terra",
+                "effort": "high"
+              }
             ]
           },
           "high": {
             "candidates": [
-              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "medium" },
-              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "high" }
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "medium"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "high"
+              }
             ]
           },
           "frontier": {
             "candidates": [
-              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "xhigh" },
-              { "harness": "codex", "model": "gpt-5.6-sol", "effort": "max" }
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "xhigh"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "max"
+              }
             ]
           }
         },
         "claude": {
-          "economy": { "candidates": ["haiku", "sonnet"] },
-          "balanced": { "candidates": ["sonnet"] },
-          "high": { "candidates": ["opus"] },
-          "frontier": { "candidates": ["fable"] }
+          "economy": {
+            "candidates": [
+              "haiku",
+              "sonnet"
+            ]
+          },
+          "balanced": {
+            "candidates": [
+              "sonnet"
+            ]
+          },
+          "high": {
+            "candidates": [
+              "opus"
+            ]
+          },
+          "frontier": {
+            "candidates": [
+              "fable"
+            ]
+          }
         },
         "cursor": {
           "economy": {
@@ -49,10 +94,16 @@
             ]
           },
           "balanced": {
-            "candidates": ["gpt-5.6-terra-high", "cursor-grok-4.5-high"]
+            "candidates": [
+              "gpt-5.6-terra-high",
+              "cursor-grok-4.5-high"
+            ]
           },
           "high": {
-            "candidates": ["gpt-5.6-sol-medium", "gpt-5.6-sol-high"]
+            "candidates": [
+              "gpt-5.6-sol-medium",
+              "gpt-5.6-sol-high"
+            ]
           },
           "frontier": {
             "candidates": [
@@ -81,7 +132,11 @@
             "reasoningEffort": "provider-default"
           },
           "priority": 140,
-          "availabilityCommand": ["cursor-agent", "--version"]
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-max'"
+          ]
         },
         "cursor-gpt-5-6-sol-xhigh": {
           "runtime": "cursor",
@@ -97,7 +152,11 @@
             "reasoningEffort": "provider-default"
           },
           "priority": 135,
-          "availabilityCommand": ["cursor-agent", "--version"]
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-xhigh'"
+          ]
         },
         "cursor-gpt-5-6-sol-high": {
           "runtime": "cursor",
@@ -113,7 +172,11 @@
             "reasoningEffort": "provider-default"
           },
           "priority": 132,
-          "availabilityCommand": ["cursor-agent", "--version"]
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-high'"
+          ]
         },
         "cursor-fable-5-xhigh": {
           "runtime": "cursor",
@@ -129,7 +192,11 @@
             "reasoningEffort": "provider-default"
           },
           "priority": 130,
-          "availabilityCommand": ["cursor-agent", "--version"]
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'claude-fable-5-xhigh'"
+          ]
         },
         "cursor-fable-5-thinking-high": {
           "runtime": "cursor",
@@ -145,7 +212,11 @@
             "reasoningEffort": "provider-default"
           },
           "priority": 125,
-          "availabilityCommand": ["cursor-agent", "--version"]
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'claude-fable-5-thinking-high'"
+          ]
         },
         "cursor-grok-4-5-high": {
           "runtime": "cursor",
@@ -161,7 +232,11 @@
             "reasoningEffort": "provider-default"
           },
           "priority": 110,
-          "availabilityCommand": ["cursor-agent", "--version"]
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'cursor-grok-4.5-high'"
+          ]
         }
       },
       "skills": {

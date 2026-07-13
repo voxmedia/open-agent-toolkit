@@ -18,7 +18,7 @@ This project adds an autonomy capability to the OAT lifecycle without forking it
 
 ### System Context
 
-Four systems change: the OAT skill set (new skills + amendments to lifecycle skills), the OAT CLI (bundle manifest, workflow docs; no engine changes), the shared cloud base environment (`cloud-agent-env-node`), and the pntr repo's plugin directory (org layer). The existing lifecycle skills remain the sole owners of their phases and gates; nothing re-implements their logic.
+Four systems change: the OAT skill set (new skills + amendments to lifecycle skills), the OAT CLI (bundle manifest, workflow docs, and three bounded existing-code amendments — user-scope workflows install, user-first template resolution, Grok/xAI family classification; no new commands or engine subsystems), the shared cloud base environment (`cloud-agent-env-node`), and the pntr repo's plugin directory (org layer). The existing lifecycle skills remain the sole owners of their phases and gates; nothing re-implements their logic.
 
 **Three-layer skill architecture** — layers bind at runtime via skill discovery and degrade independently:
 
@@ -26,7 +26,7 @@ Four systems change: the OAT skill set (new skills + amendments to lifecycle ski
 - **Harness layer (OAT repo, Cursor-specific, org-agnostic):** `oat-cursor-cloud-projects` — cloud detection, multi-repo project-home resolution, skill precedence, CLI availability, and the Cursor-specific review-dispatch mechanics (run-metadata identity, pinned-slug subagents).
 - **Org layer (team-distributed, may name infrastructure):** `internal-docs-mcp` in pntr — vox-docs usage. Absent in non-Vox contexts; its absence is logged, never fatal.
 
-**Boundaries of this change:** no new CLI commands or engine subsystems. Two existing-code CLI amendments: (1) the workflows pack becomes installable at user scope with the **full asset set at user paths** — skills/agents to `~/.agents/`, templates to `~/.oat/templates/`, scripts to `~/.oat/scripts/` — because skills, templates, and scripts version together in one package release and user-canonical skills must not pair with stale repo companions; only the projects-root scaffolding stays project-only (today the pack rejects `--scope user` entirely); (2) `oat project new` gains **user-first template resolution** (user → repo → bundled assets; repo copies are never customized in this fleet, so a differing repo copy is only stale and the freshest tier wins) so scaffolding works in repos that never adopted OAT project-scope and never pairs new skills with stale templates, with artifacts still repo-rooted. The autonomy policy is a prose-level contract plus existing config/env plumbing (`OAT_NON_INTERACTIVE`, `workflow.hillCheckpointDefault`), not a new runtime. Environment provisioning is additive setup-script/Dockerfile work in the env repo. Existing interactive behavior is unchanged when autonomy is inactive.
+**Boundaries of this change:** no new CLI commands or engine subsystems. Three existing-code CLI amendments: (1) the workflows pack becomes installable at user scope with the **full asset set at user paths** — skills/agents to `~/.agents/`, templates to `~/.oat/templates/`, scripts to `~/.oat/scripts/` — because skills, templates, and scripts version together in one package release and user-canonical skills must not pair with stale repo companions; only the projects-root scaffolding stays project-only (today the pack rejects `--scope user` entirely); (2) `oat project new` gains **user-first template resolution** (user → repo → bundled assets; repo copies are never customized in this fleet, so a differing repo copy is only stale and the freshest tier wins) so scaffolding works in repos that never adopted OAT project-scope and never pairs new skills with stale templates, with artifacts still repo-rooted; (3) the provider-identity family classifier gains **Grok/xAI classification** so the seeded third-family gate target can participate in cross-family selection (today grok slugs classify `unknown` and same-family avoidance filters them out). The autonomy policy is a prose-level contract plus existing config/env plumbing (`OAT_NON_INTERACTIVE`, `workflow.hillCheckpointDefault`), not a new runtime. Environment provisioning is additive setup-script/Dockerfile work in the env repo. Existing interactive behavior is unchanged when autonomy is inactive.
 
 ### Component Diagram
 
@@ -41,8 +41,9 @@ oat-project-autonomous (OAT layer, orchestrator)
 existing lifecycle skills ──consult──▶ autonomy policy (gate inventory)
   discover / design / plan /              │
   quick-start / implement /               ▼
-  document / summary / pr-final    review contract ladder:
-        │                          oat gate CLI → cross-family subagent → degraded (logged)
+  document / summary / pr-final    review contract (pre-launch route selection, one route per review):
+        │                          gate CLI route | cross-family subagent route | recorded degraded route
+        │                          (accepted launch = terminal; no fall-through between routes)
         │                                 ▲
         ▼                                 │ Cursor mechanics (run-info identity, pinned slugs)
 project artifacts (repo-rooted)    oat-cursor-cloud-projects (harness layer)
@@ -54,7 +55,7 @@ summary.md ◀── learnings synthesis
 
 ### Data Flow
 
-Autonomous run: (1) user invokes `oat-project-autonomous` with a goal or existing project → (2) orchestrator activates session autonomy policy, resolves project state via CLI/`state.md` → (3) enters lifecycle at the correct phase, invoking existing skills, which consult the policy at each gate → (4) artifact phases exit through the review contract (gate CLI → cross-family subagent → logged degraded) → (5) implementation proceeds under existing implement-skill orchestration with explicit HiLL resolution → (6) lifecycle tail chains document → summary (learnings synthesis) → final PR → (7) learnings log travels with the project; summary export makes recommendations durable.
+Autonomous run: (1) user invokes `oat-project-autonomous` with a goal or existing project → (2) orchestrator activates session autonomy policy, resolves project state via CLI/`state.md` → (3) enters lifecycle at the correct phase, invoking existing skills, which consult the policy at each gate → (4) artifact phases exit through the review contract (one route selected pre-launch from catalog evidence: gate CLI, cross-family subagent, or recorded degraded; accepted launches terminal) → (5) implementation proceeds under existing implement-skill orchestration with explicit HiLL resolution → (6) lifecycle tail chains document → summary (learnings synthesis) → final PR → (7) learnings log travels with the project; summary export makes recommendations durable.
 
 **Key interaction:** the orchestrator never bypasses a skill's own gate logic — it supplies the policy that the gate consults. That single principle keeps interactive and autonomous behavior from diverging over time.
 

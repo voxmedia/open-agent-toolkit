@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-11
+oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
@@ -19,7 +19,7 @@ oat_generated: false
 
 **Goal:** Enable OAT projects to run end-to-end in Cursor Cloud environments — resume-and-run and goal-to-PR autonomous — via an autonomy policy layer, two new OAT skills, lifecycle skill amendments, environment provisioning, and an org-layer docs-research plugin.
 
-**Architecture:** Three-layer skill architecture (OAT / harness / org) bound at runtime via skill discovery; session-scoped autonomy signal (`OAT_AUTONOMOUS=1` implies `OAT_NON_INTERACTIVE=1`); thin orchestrator that chains existing lifecycle skills without bypassing their gates. Two bounded existing-code CLI amendments (no new commands or engine subsystems): user-scope workflows-pack installability (full asset set, incl. update/removal paths — p02-t04) and user-first template resolution in project scaffolding (p02-t07).
+**Architecture:** Three-layer skill architecture (OAT / harness / org) bound at runtime via skill discovery; session-scoped autonomy signal (`OAT_AUTONOMOUS=1` implies `OAT_NON_INTERACTIVE=1`); thin orchestrator that chains existing lifecycle skills without bypassing their gates. Three bounded existing-code CLI amendments (no new commands or engine subsystems): user-scope workflows-pack installability (full asset set, incl. update/removal paths — p02-t04), user-first template resolution in project scaffolding (p02-t07), and Grok/xAI family classification for cross-family gate selection (p02-t08).
 
 **Tech Stack:** OAT skill prose (Markdown, Agent Skills standard), OAT CLI monorepo (TypeScript ESM, vitest, oxlint/oxfmt), Docker + bash (env repo), Cursor plugin layout (pntr).
 
@@ -77,7 +77,7 @@ Per-phase code reviews during implementation route through the dispatch substrat
 
 **Verify (row-by-row, not counts):**
 
-For each listed skill, extract prompt sites (`rg -n "AskUserQuestion|Ask the user|ask:|confirm" .agents/skills/<skill>/SKILL.md`) and check off each hit against an inventory row in a scratch comparison table appended to the task's commit message body or implementation notes. Zero unmapped prompt sites across all thirteen skills.
+For each of the **fifteen** named skill roots (thirteen lifecycle skills + two dispatch-substrate skills), scan **recursively across all Markdown files in the root** (SKILL.md *and* `references/` — implement's four reference files and the dispatch provider references are explicitly in scope) with a broadened phrase set (`rg -n -i "AskUserQuestion|ask (the user|once)|approval|confirm|prompt|choose|wait for" .agents/skills/<root>/ --glob '*.md'`), and record each discovered site as `file:line → inventory row` in a comparison table committed with the task. Zero unmapped prompt sites across all fifteen roots is the pass condition.
 
 **Commit:** `git add .agents/docs/autonomy-contract.md && git commit -m "feat(p01-t01): add autonomy contract and gate inventory"`
 
@@ -286,8 +286,8 @@ Expected: validation passes; org-identifier scan returns zero hits (NFR1).
 
 **Step 4: Verify:**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
-Expected: green; direct and aggregate fresh-home tests prove the full asset set at user paths with zero projects-root artifacts in the home directory.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/workflows/install-workflows.test.ts src/commands/init/tools/index.test.ts src/commands/tools/update/ && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
+Expected: green; direct and aggregate fresh-home tests prove the full asset set at user paths with zero projects-root artifacts in the home directory; user-scope update suites prove all-four-asset refresh.
 
 **Commit:** `feat(p02-t04): full-asset user-scope installability for workflows pack (direct + aggregate)`
 
@@ -355,6 +355,31 @@ Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project
 Expected: green; all four scenarios covered; release validation passes with this task's changes included.
 
 **Commit:** `feat(p02-t07): user-first template resolution for project scaffolding`
+
+---
+
+### Task p02-t08: CLI — Grok/xAI family classification (TDD)
+
+**Rationale (review finding, 2026-07-13):** the family classifier (`packages/cli/src/providers/identity/family.ts`) recognizes only `claude | openai | composer | glm | unknown`, and gate review's same-family avoidance filters out `unknown`-family candidates — so the seeded `cursor-grok-4.5-high` gate target can never participate in cross-family selection. Adding Grok/xAI classification makes the third-family tertiary real.
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/identity/family.ts` (add Grok/xAI family + slug patterns, e.g. `cursor-grok-*`, `grok-*`)
+- Modify: `packages/cli/src/providers/identity/family.test.ts` (classification cases)
+- Modify: gate selection tests (locate with `rg -l "same-family|avoid" packages/cli/src/commands/gate --glob '*.test.ts'`)
+
+**Step 1: Write tests (RED)** — (a) grok slugs classify to the new family (not `unknown`); (b) gate selection: with an OpenAI-family producer and higher-priority same-family targets unavailable, the grok target is selected; same against a Claude-family producer; (c) existing family classifications unchanged.
+
+**Step 2: Implement (GREEN)** — add the family and its slug patterns.
+
+**Step 3: Refactor** — none expected.
+
+**Step 4: Verify:**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/identity/family.test.ts && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint && pnpm release:validate`
+Expected: green; grok participates in cross-family selection; release validation passes post-bump.
+
+**Commit:** `feat(p02-t08): grok family classification for cross-family gate selection`
 
 ---
 
@@ -480,7 +505,8 @@ Expected: documented, minimal.
 **Steps:**
 
 - Probes: `oat` on PATH + version; user-scope packs present (incl. both new skills); `oat config dump` resolves seeded ladder; `cursor-agent --version`; authenticated `cursor-agent` probe.
-- Two modes: default boot mode tolerates missing-secret auth probe (warn, exit 0, named degradation); `--strict` requires every probe green (FR8 acceptance; exit non-zero naming the failing probe).
+- Gate-route assertions: `oat gate target list --json` shows model-aware availability values matching the current `cursor-agent --list-models` catalog (each seeded target's probe checks its exact slug, not just binary presence); exercise gate selection against both an OpenAI-family and a Claude-family producer to prove cross-family routing resolves.
+- Two modes: default boot mode tolerates missing-secret auth probe (warn, exit 0, named degradation); `--strict` requires every probe green incl. the gate-route assertions (FR8 acceptance; exit non-zero naming the failing probe).
 
 **Verify:**
 
@@ -670,7 +696,7 @@ Expected: all green; worktree validation passes post-commit.
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
-| plan   | artifact | fixes_completed | 2026-07-11 | reviews/archived/artifact-plan-review-2026-07-11T111711Z.md (reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; 0C/2I/3M/1m — all dispositioned resolve_in_artifact and applied; supersedes the earlier 3-round in-memory structured pass) |
+| plan   | artifact | fixes_completed | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T154822Z.md (reviewer: cursor `gpt-5.6-sol-xhigh`, cross-family; 0C/3I/2M/1m — all dispositioned resolve_in_artifact and applied, incl. new p02-t08; prior cycle 2026-07-11 also archived) |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -681,13 +707,13 @@ Expected: all green; worktree validation passes post-commit.
 **Summary:**
 
 - Phase 1: 6 tasks — autonomy contract + lifecycle amendments (OAT repo)
-- Phase 2: 7 tasks — risk retirement, new skills, split-scope installability, template fallback, bundle, versions (OAT repo)
+- Phase 2: 8 tasks — risk retirement, new skills, user-scope installability, template resolution, grok family classification, bundle, versions (OAT repo)
 - Phase 3: 2 tasks — release readiness + publish boundary
 - Phase 4: 4 tasks — environment provisioning (env repo)
 - Phase 5: 2 tasks — org-layer plugin (pntr repo)
 - Phase 6: 7 tasks — scenario matrix, e2e validation, audits, closure
 
-**Total: 28 tasks**
+**Total: 29 tasks**
 
 Ready for implementation after plan review.
 
