@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t23
-oat_last_commit: d2422e99950e945aaa1184f353b604c8b26d061d
+oat_current_task: p06-t04
+oat_last_commit: 4c5b4ef3e1d109af0b28302293233a6e9e8b1d4b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,19 +45,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T01:34:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T01:39:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Implementation in progress; Phase 5 review fixes queued
+**Status:** Phase 5 review fixes complete; independent re-review pending
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — Phase 5 review fixes
+Implementation — Phase 5 fix-range re-review
 
 ## Artifacts
 
@@ -65,7 +65,7 @@ Implementation — Phase 5 review fixes
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
 - **Plan:** `plan.md` (complete — 6 phases / 41 tasks)
-- **Implementation:** `implementation.md` (in progress — review fixes)
+- **Implementation:** `implementation.md` (in progress — fix-range re-review)
 
 ## Progress
 
@@ -129,9 +129,9 @@ Implementation — Phase 5 review fixes
 - ✓ p05-t07 reduced the implementation entry skill to a 168-line router while
   preserving its contract in four phase-loaded references
 - ✓ Live fixture reduced to five tasks with one final external code gate while
-  preserving root → coordinator → worker nesting evidence
-- ⚠ The prior Codex plan-review evidence passed against the superseded
-  nine-task fixture; the current five-task baseline still needs a fresh run
+  preserving root → phase implementer and root → reviewer evidence
+- ✓ The five-task Codex plan-review evidence is formatter-stable and its report
+  remains cryptographically bound to the canonical bundle
 - ✓ Dependency-policy revert confirmed complete: no schema-v3 marker,
   dependency source/materialization fields, dependency-tree clone, or pnpm
   smoke shim remains
@@ -146,6 +146,12 @@ Implementation — Phase 5 review fixes
 - ✓ p05-t17 made terminal dispatch outcomes mandatory
 - ✓ p05-t18 bound smoke-safe init to the registered child worktree cwd
 - ✓ p05-t19 isolated disposable fixture commits from unavailable child hooks
+- ✓ p05-t20 made canonical report publication formatter-stable
+- ✓ p05-t21 added schema-v2 launcher-parent evidence while preserving the
+  retained schema-v1 live packet without overstating ownership proof
+- ✓ p05-t22 bound normative cardinality/topology language to executable
+  constants
+- ✓ p05-t23 enrolled all 116 smoke tests and smoke formatting in root commands
 - ✓ p05-t13 published the final Codex implement report: 9/9 assertions in
   26m21s, with three phase implementers, three root-owned reviewers, five task
   commits, parallel isolation, fan-in, and one passing final gate
@@ -153,8 +159,9 @@ Implementation — Phase 5 review fixes
 - ✓ p06-t02 Vault capture committed externally
 - ✓ p06-t03 initial release validation completed at `7caa963e`
 - ⚠ Independent Phase 5 review failed 1C/2I/0M/1m
-- → p05-t20–p05-t23 fix report binding, reviewer-parent evidence, assertion
-  contract drift, and smoke formatting
+- ✓ p05-t20–p05-t23 fixed report binding, reviewer-parent evidence, assertion
+  contract drift, and smoke validation enrollment
+- → Independent Phase 5 fix-range re-review
 - ○ p06-t04 revalidates the post-review-fix release image
 
 ## Blockers
@@ -163,4 +170,4 @@ None
 
 ## Next Milestone
 
-Complete p05-t20–p05-t23, pass independent Phase 5 re-review, then run p06-t04.
+Pass independent Phase 5 fix-range re-review, then run p06-t04.

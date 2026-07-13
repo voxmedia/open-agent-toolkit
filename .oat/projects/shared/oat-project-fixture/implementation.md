@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p05-t20
+oat_current_task_id: p06-t04
 oat_generated: false
 ---
 
@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 23    | 15/23     |
+| Phase 5 | complete    | 23    | 19/23     |
 | Phase 6 | in_progress | 4     | 3/4       |
 
-**Total:** 32/41 tasks completed (4 deferred, 1 in progress, 4 pending)
+**Total:** 36/41 tasks completed (4 explicitly deferred, 1 pending)
 
 ---
 
@@ -1153,8 +1153,9 @@ provider synchronization, package versions, and PR #135/#137 regressions.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-12
+**Completed:** 2026-07-13
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -1535,8 +1536,12 @@ counts and task IDs to the executable constants and fixture plan.
 
 ### Task p05-t23: Format and enroll smoke coverage
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `4c5b4ef3`
+
+The root formatting commands now cover the smoke surface, and the root test
+command runs all 116 smoke tests, including nested preset and canonical packet
+coverage. `pnpm format`, `pnpm test:smoke`, and `pnpm test` passed.
 
 ---
 
