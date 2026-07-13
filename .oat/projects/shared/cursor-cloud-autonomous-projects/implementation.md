@@ -196,7 +196,8 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 
 ### Task p03-t02: Publish boundary verification
 
-**Status:** pending — operator merge → pipeline publish; this task polls for completion and does not publish.
+**Status:** awaiting operator — merge of PR #133 → pipeline publish; this task polls for completion and does not publish.
+**Poll evidence (2026-07-13):** `npm view @open-agent-toolkit/cli version` → `0.1.60` (target 0.1.61; not yet published). PR #133 title/body updated with the release description and publish-boundary note. Per the plan's blocking rule, p04 code tasks proceed now; p04-t04 strict end-state validation and p06 e2e remain blocked until the three publish checks pass.
 
 ## Phase 4: Environment provisioning (cloud-agent-env-node repo)
 
