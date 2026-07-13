@@ -444,19 +444,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                           |
-| p02    | code     | pending         | -          | -                                                           |
-| p03    | code     | pending         | -          | -                                                           |
-| p04    | code     | pending         | -          | -                                                           |
-| p05    | code     | pending         | -          | -                                                           |
-| p06    | code     | pending         | -          | -                                                           |
-| p07    | code     | pending         | -          | -                                                           |
-| final  | code     | pending         | -          | -                                                           |
-| spec   | artifact | pending         | -          | -                                                           |
-| design | artifact | pending         | -          | -                                                           |
-| plan   | artifact | fixes_completed | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T231038Z.md |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| p04    | code     | pending  | -          | -                                                  |
+| p05    | code     | pending  | -          | -                                                  |
+| p06    | code     | pending  | -          | -                                                  |
+| p07    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | pending  | -          | -                                                  |
+| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-13T233754Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
