@@ -32,7 +32,14 @@ reviewer independently from the root. Observe nested catalogs only when
 optional nested work has a concrete benefit. Select any Cursor CLI route
 deliberately before launch and record why the native catalog was unsatisfying.
 Before every child launch, retain launcher-owned selection and acceptance
-facts. Do not publish an accepted dispatch record while its handle is running;
+facts. Assign the child a launcher-owned `requestId`. For each phase
+implementer and reviewer, record `launcherRole: "project-root"`,
+`parentScope: "project"`, and the manifest `runIdentity` as `parentRequestId`.
+For optional nested work, record `launcherRole: "phase-agent"`, its phase as
+`parentScope`, and the parent phase implementer's `requestId` as
+`parentRequestId`. Never infer ownership from child self-report. Write these
+records with `schemaVersion: 2`. Do not publish
+an accepted dispatch record while its handle is running;
 after termination, write exactly one immutable record with its terminal
 `completed` or `failed` outcome. Record pre-start rejection immediately. Keep
 runtime identity separate, and write dispatch and state-transition records only

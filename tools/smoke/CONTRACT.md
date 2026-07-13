@@ -364,7 +364,7 @@ Later sequences compare their direct parent. Evidence exposes this boundary as
 `fromCommitSha`; sequence 1 must bind to `manifest.baselineCommitSha`, and
 sequence 2 must bind directly to sequence 1's commit.
 
-Dispatch records use schema version 1 and contain:
+New dispatch records use schema version 2 and contain:
 
 This is the smoke evidence projection, not a second dispatch policy. The
 project adapter preserves the provider-neutral engine record unchanged, then
@@ -375,11 +375,17 @@ file names, provider-reference paths, or frontmatter versions.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "scope": "p01",
   "attempt": 1,
   "action": "implementation",
   "role": "phase-implementer",
+  "requestId": "launcher-assigned child request identifier",
+  "ownership": {
+    "launcherRole": "project-root | phase-agent",
+    "parentRequestId": "manifest runIdentity or parent phase requestId",
+    "parentScope": "project | p01"
+  },
   "configuredInvocation": {
     "candidateTier": "high",
     "ceiling": "configured ceiling",
@@ -413,6 +419,21 @@ Human workflow notes and machine records share these semantic fields:
 
 The names and mapping are normative. Evidence adapters must not introduce a
 second synonym or infer either value from child output.
+
+`requestId` and `ownership` are immutable launcher-owned evidence. Direct
+phase implementers and phase reviewers use `launcherRole: "project-root"`,
+`parentScope: "project"`, and the manifest `runIdentity` as
+`parentRequestId`. Optional nested launches use
+`launcherRole: "phase-agent"`, their phase ID as `parentScope`, and the
+accepted parent phase implementer's `requestId` as `parentRequestId`. The
+writer rejects missing or role/scope-conflicting ownership. Producers and
+collectors must never infer ownership from child self-report.
+
+Schema-v1 records remain readable so retained evidence packets can still be
+verified, but they have no machine-verifiable launcher parentage. Reports for
+those packets must say that direct-root ownership is unavailable rather than
+retroactively inferring or attesting it. New producers must write schema
+version 2.
 
 `candidates_considered` is ordered decision evidence and must never be sorted
 during writing or collection. `gate-target` is intentionally outside this

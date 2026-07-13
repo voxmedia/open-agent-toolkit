@@ -1499,14 +1499,18 @@ passed, and managed Codex phase-agent roles were synchronized.
 
 ### Task p05-t20: Make canonical report binding formatter-stable
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `0523fef3`
+
+Bundles are formatted in staging before report generation and atomic
+publication. The stale plan-review packet was rebound, and a tracked-packet
+guard now verifies all active canonical reports after normal formatting.
 
 ---
 
 ### Task p05-t21: Prove direct-root phase reviewer ownership
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---

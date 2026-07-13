@@ -105,6 +105,15 @@ test('deterministic tier exercises production evidence paths without providers',
         .sort(),
       ['p01', 'p02', 'p03'],
     );
+    assert.equal(
+      bundle.dispatches.every(
+        (dispatch) =>
+          dispatch.ownership.launcherRole === 'project-root' &&
+          dispatch.ownership.parentRequestId === bundle.manifest.runIdentity &&
+          dispatch.ownership.parentScope === 'project',
+      ),
+      true,
+    );
     assert.deepEqual(
       bundle.gates.map((gate) => gate.scope),
       ['final'],

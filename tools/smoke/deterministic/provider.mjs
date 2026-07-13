@@ -70,6 +70,12 @@ async function recordDispatch({
           outcome,
           status: 'accepted',
         },
+        ownership: {
+          launcherRole: 'project-root',
+          parentRequestId: manifest.runIdentity,
+          parentScope: 'project',
+        },
+        requestId: `${manifest.runIdentity}:${scope}:${action}:${role}:1`,
         role,
         runtimeIdentity: {
           confidence: 'high',
@@ -78,7 +84,7 @@ async function recordDispatch({
           producer: 'deterministic-fake-provider',
           provenance: 'runtime-observed',
         },
-        schemaVersion: 1,
+        schemaVersion: 2,
         scope,
         selection: {
           atOrBelowCeiling: true,

@@ -33,7 +33,14 @@ Use the repository's normal OAT workflow skills. Prefer the provider-native
 root-owned phase-agent topology: one phase implementer directly executes the
 phase, then the root dispatches its independent reviewer. Optional nested work
 must have a concrete benefit and bounded scope. Before every child launch,
-retain launcher-owned selection and acceptance facts. Do not publish an
+retain launcher-owned selection and acceptance facts.
+Assign the child a launcher-owned `requestId`. For each phase implementer and
+reviewer, record `launcherRole: "project-root"`, `parentScope: "project"`, and
+the manifest `runIdentity` as `parentRequestId`. For optional nested work,
+record `launcherRole: "phase-agent"`, its phase as `parentScope`, and the
+parent phase implementer's `requestId` as `parentRequestId`. Never infer
+ownership from child self-report. Write these records with `schemaVersion: 2`.
+Do not publish an
 accepted dispatch record while its handle is running; after termination, write
 exactly one immutable record with its terminal `completed` or `failed` outcome.
 Record pre-start rejection immediately. Keep runtime identity separate, and

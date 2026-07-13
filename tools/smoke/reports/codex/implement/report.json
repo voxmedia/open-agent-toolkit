@@ -14,9 +14,11 @@
       "status": "passed"
     },
     {
-      "description": "Every phase has one accepted completed phase implementer and one root-owned reviewer launch.",
+      "description": "Every phase has one accepted completed phase implementer and reviewer launch; retained schema-v1 evidence does not prove direct-root ownership.",
       "evidence": {
         "failingDispatches": [],
+        "ownershipEvidence": "unavailable-schema-v1",
+        "ownershipFailures": [],
         "phaseIds": ["p01", "p02", "p03"],
         "taskIds": ["p01-t01", "p01-t02", "p02-t01", "p02-t02", "p03-t01"]
       },

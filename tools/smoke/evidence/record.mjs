@@ -52,10 +52,58 @@ function optionalString(value) {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
-export function normalizeDispatchRecord(record) {
-  if (!isPlainObject(record) || record.schemaVersion !== 1) {
+function normalizeOwnership(record, role, scope) {
+  const requestId = requiredString(record.requestId, 'requestId');
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._:-]*$/u.test(requestId)) {
     throw new DispatchRecordError(
-      'Dispatch record must be a schemaVersion 1 object.',
+      'requestId must be a stable launcher-assigned identifier.',
+    );
+  }
+  if (!isPlainObject(record.ownership)) {
+    throw new DispatchRecordError('ownership must be an object.');
+  }
+  const launcherRole = requiredString(
+    record.ownership.launcherRole,
+    'ownership.launcherRole',
+  );
+  const parentRequestId = requiredString(
+    record.ownership.parentRequestId,
+    'ownership.parentRequestId',
+  );
+  const parentScope = requiredString(
+    record.ownership.parentScope,
+    'ownership.parentScope',
+  );
+  const directRootChild = role === 'phase-implementer' || role === 'reviewer';
+  if (
+    directRootChild &&
+    (launcherRole !== 'project-root' || parentScope !== 'project')
+  ) {
+    throw new DispatchRecordError(
+      `${role} ownership must identify the direct project root parent.`,
+    );
+  }
+  if (
+    !directRootChild &&
+    (launcherRole !== 'phase-agent' || parentScope !== scope.slice(0, 3))
+  ) {
+    throw new DispatchRecordError(
+      `${role} ownership must identify its phase-agent parent.`,
+    );
+  }
+  return {
+    ownership: { launcherRole, parentRequestId, parentScope },
+    requestId,
+  };
+}
+
+export function normalizeDispatchRecord(
+  record,
+  { allowLegacyRead = false } = {},
+) {
+  if (!isPlainObject(record) || ![1, 2].includes(record.schemaVersion)) {
+    throw new DispatchRecordError(
+      'Dispatch record must be a schemaVersion 1 or 2 object.',
     );
   }
   const action = requiredString(record.action, 'action');
@@ -105,6 +153,11 @@ export function normalizeDispatchRecord(record) {
       'launch status and outcome are inconsistent.',
     );
   }
+  if (record.schemaVersion === 1 && !allowLegacyRead) {
+    throw new DispatchRecordError(
+      'Dispatch schemaVersion 1 is read-only; new records must use schemaVersion 2.',
+    );
+  }
   if (
     typeof record.selection.atOrBelowCeiling !== 'boolean' ||
     !Array.isArray(record.selection.candidatesConsidered)
@@ -120,6 +173,10 @@ export function normalizeDispatchRecord(record) {
       'role must be a lowercase kebab-case identifier.',
     );
   }
+  const ownership =
+    record.schemaVersion === 2
+      ? normalizeOwnership(record, role, scope)
+      : { ownership: null, requestId: null };
 
   return {
     action,
@@ -164,6 +221,7 @@ export function normalizeDispatchRecord(record) {
       outcome,
       status: launchStatus,
     },
+    ...ownership,
     role,
     runtimeIdentity: isPlainObject(record.runtimeIdentity)
       ? {
@@ -174,7 +232,7 @@ export function normalizeDispatchRecord(record) {
           provenance: optionalString(record.runtimeIdentity.provenance),
         }
       : null,
-    schemaVersion: 1,
+    schemaVersion: record.schemaVersion,
     scope,
     selection: {
       atOrBelowCeiling: record.selection.atOrBelowCeiling,

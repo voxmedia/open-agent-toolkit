@@ -39,7 +39,12 @@ test is permitted.
 
 Publish each accepted dispatch record only after the fake handle has a terminal
 `completed` or `failed` outcome; `running` is not a valid immutable evidence
-outcome.
+outcome. Assign every phase implementer and reviewer a stable `requestId`,
+`launcherRole: "project-root"`, `parentScope: "project"`, and the manifest
+`runIdentity` as `parentRequestId`. Optional nested records, when injected,
+identify `launcherRole: "phase-agent"`, the phase `parentScope`, and the parent
+phase implementer's `requestId`; ownership never comes from child self-report.
+Write every new dispatch record with `schemaVersion: 2`.
 
 Gate target: {{GATE_TARGET}}.
 Gate count is fixed: the implement scenario runs exactly one external final

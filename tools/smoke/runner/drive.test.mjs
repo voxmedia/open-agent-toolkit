@@ -75,6 +75,11 @@ test('selects one protocol and invocation shape for every harness', async () => 
       protocol.prompt,
       /accepted dispatch record[\s\S]{0,200}(?:terminal|termination)/,
     );
+    assert.match(protocol.prompt, /requestId/);
+    assert.match(protocol.prompt, /parentRequestId/);
+    assert.match(protocol.prompt, /launcherRole/);
+    assert.match(protocol.prompt, /schemaVersion: 2/);
+    assert.match(protocol.prompt, /child self-report/);
     if (harness === 'codex') {
       assert.match(
         protocol.prompt,

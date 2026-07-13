@@ -999,7 +999,8 @@ _Review finding I1. Depends on p05-t20._
 - Modify: `tools/smoke/CONTRACT.md`
 - Modify: dispatch record writer, collector, deterministic/live producers, and
   focused evidence tests
-- Refresh: canonical Codex implement evidence after the schema is executable
+- Rebind: retained canonical Codex implement evidence with an explicit
+  schema-v1 ownership limitation
 
 **Step 1: Extend evidence** — preserve launcher/parent ownership in the
 launcher-owned dispatch projection. Root-launched phase implementers and phase
@@ -1014,8 +1015,10 @@ with scope. Add a negative test for phase-agent-owned review.
 new immutable ownership field from the launcher, never infer it from child
 self-report.
 
-**Step 4: Verify** — deterministic happy/failure paths pass, then run one fresh
-Codex implement scenario and validate the published packet.
+**Step 4: Verify** — deterministic happy/failure paths pass and the retained
+schema-v1 packet remains valid without claiming direct-root proof. Per the
+user's 2026-07-12 direction, defer a fresh schema-v2 live refresh to a post-ship
+operator run rather than launching another 25-minute scenario in this fix loop.
 
 **Step 5: Commit** — `fix(p05-t21): prove root-owned phase reviews`
 

@@ -86,6 +86,7 @@ function reviewEvidence(scope) {
 
 function productionShape(bundle) {
   const scenario = bundle.scenario;
+  const rootRequestId = 'smoke-root-request';
   const reviewScopes = [
     ...(scenario === 'plan-review' || scenario === 'full' ? ['plan'] : []),
     ...(scenario === 'implement' || scenario === 'full' ? ['final'] : []),
@@ -192,8 +193,15 @@ function productionShape(bundle) {
                 outcome: 'completed',
                 status: 'accepted',
               },
+              ownership: {
+                launcherRole: 'project-root',
+                parentRequestId: rootRequestId,
+                parentScope: 'project',
+              },
+              requestId: `${phase}-${role}-request`,
               role,
               runtimeIdentity: { status: 'not-reported' },
+              schemaVersion: 2,
               scope: phase,
               selection: {
                 atOrBelowCeiling: true,
@@ -270,6 +278,7 @@ function productionShape(bundle) {
       ownershipJournal: {
         resources: [{ branch: 'smoke-p01' }, { branch: 'smoke-p02' }],
       },
+      runIdentity: rootRequestId,
     },
     orchestrationEvents:
       scenario === 'plan-review' || scenario === 'full'
@@ -499,6 +508,12 @@ test('optional nested dispatch is validated when present but not required', asyn
   const optional = structuredClone(bundle.dispatches[0]);
   optional.role = 'task-worker';
   optional.scope = 'p01-t01';
+  optional.ownership = {
+    launcherRole: 'phase-agent',
+    parentRequestId: 'p01-phase-implementer-request',
+    parentScope: 'p01',
+  };
+  optional.requestId = 'p01-t01-task-worker-request';
   optional.configuredInvocation = {
     ...optional.configuredInvocation,
     candidateTier: 'balanced',
@@ -517,6 +532,54 @@ test('optional nested dispatch is validated when present but not required', asyn
       (assertion) => assertion.id === 'implement-exact-target-within-ceiling',
     ).status,
     'failed',
+  );
+});
+
+test('implement profile rejects phase-agent-owned or missing reviewer ownership', async () => {
+  const phaseOwned = await readGolden('implement');
+  const reviewer = phaseOwned.dispatches.find(
+    (dispatch) => dispatch.scope === 'p01' && dispatch.role === 'reviewer',
+  );
+  reviewer.ownership = {
+    launcherRole: 'phase-agent',
+    parentRequestId: 'p01-phase-implementer-request',
+    parentScope: 'p01',
+  };
+  assert.equal(
+    evaluateEvidence(phaseOwned).assertions.find(
+      (assertion) => assertion.id === 'implement-dispatch-completeness',
+    ).status,
+    'failed',
+  );
+
+  const missing = await readGolden('implement');
+  delete missing.dispatches[0].ownership;
+  assert.equal(
+    evaluateEvidence(missing).assertions.find(
+      (assertion) => assertion.id === 'implement-dispatch-completeness',
+    ).status,
+    'failed',
+  );
+});
+
+test('retained schema-v1 implement evidence stays valid without claiming root ownership', async () => {
+  const legacy = await readGolden('implement');
+  for (const dispatch of legacy.dispatches) {
+    delete dispatch.ownership;
+    delete dispatch.requestId;
+    delete dispatch.schemaVersion;
+  }
+  const completeness = evaluateEvidence(legacy).assertions.find(
+    (assertion) => assertion.id === 'implement-dispatch-completeness',
+  );
+  assert.equal(completeness.status, 'passed');
+  assert.equal(
+    completeness.evidence.ownershipEvidence,
+    'unavailable-schema-v1',
+  );
+  assert.match(
+    completeness.description,
+    /does not prove direct-root ownership/,
   );
 });
 

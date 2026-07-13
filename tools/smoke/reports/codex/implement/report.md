@@ -6,17 +6,17 @@
 **Bundle SHA-256:** 96e5b76d40d82370a4c207d67e9ae6a50b669de76bfdb69d12b9ead4dca0e78b
 **Authority:** `report.json` is authoritative; this Markdown is a derived view.
 
-| Assertion                                 | Severity  | Status | Description                                                                                                          |
-| ----------------------------------------- | --------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
-| manifest-ready                            | important | passed | Provisioning manifest is ready for the selected scenario.                                                            |
-| implement-dispatch-completeness           | important | passed | Every phase has one accepted completed phase implementer and one root-owned reviewer launch.                         |
-| implement-exact-target-within-ceiling     | important | passed | Every phase implementer, reviewer, and optional nested launch records an exact target at or below the named ceiling. |
-| implement-fixture-markers-and-commits     | important | passed | Every task has exactly one fixture marker and one exact task commit.                                                 |
-| implement-parallel-isolation              | important | passed | Parallel phases used disjoint writes, separate worktrees, and flat branch names.                                     |
-| implement-fan-in-reconciliation           | important | passed | Fan-in completed after all declared dependencies.                                                                    |
-| review-gate-corroborated-implementation   | important | passed | Every required gate review exactly matches gate-owned invocation and corroboration evidence.                         |
-| review-disposition-durable-implementation | important | passed | Every required review has a durable artifact commit and terminal plan row.                                           |
-| implement-runtime-identity-status         | important | passed | Runtime identity is recorded or explicitly marked not-reported.                                                      |
+| Assertion                                 | Severity  | Status | Description                                                                                                                                     |
+| ----------------------------------------- | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| manifest-ready                            | important | passed | Provisioning manifest is ready for the selected scenario.                                                                                       |
+| implement-dispatch-completeness           | important | passed | Every phase has one accepted completed phase implementer and reviewer launch; retained schema-v1 evidence does not prove direct-root ownership. |
+| implement-exact-target-within-ceiling     | important | passed | Every phase implementer, reviewer, and optional nested launch records an exact target at or below the named ceiling.                            |
+| implement-fixture-markers-and-commits     | important | passed | Every task has exactly one fixture marker and one exact task commit.                                                                            |
+| implement-parallel-isolation              | important | passed | Parallel phases used disjoint writes, separate worktrees, and flat branch names.                                                                |
+| implement-fan-in-reconciliation           | important | passed | Fan-in completed after all declared dependencies.                                                                                               |
+| review-gate-corroborated-implementation   | important | passed | Every required gate review exactly matches gate-owned invocation and corroboration evidence.                                                    |
+| review-disposition-durable-implementation | important | passed | Every required review has a durable artifact commit and terminal plan row.                                                                      |
+| implement-runtime-identity-status         | important | passed | Runtime identity is recorded or explicitly marked not-reported.                                                                                 |
 
 ## Evidence
 
@@ -37,6 +37,8 @@
 ```json
 {
   "failingDispatches": [],
+  "ownershipEvidence": "unavailable-schema-v1",
+  "ownershipFailures": [],
   "phaseIds": ["p01", "p02", "p03"],
   "taskIds": ["p01-t01", "p01-t02", "p02-t01", "p02-t02", "p03-t01"]
 }

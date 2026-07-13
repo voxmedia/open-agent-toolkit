@@ -41,6 +41,12 @@ then dispatch the independent phase reviewer from the root. Optional nested
 work is allowed only when it provides a concrete benefit and is not required
 for ordinary fixture tasks. Before every child launch, apply the configured
 dispatch contract and retain launcher-owned selection and acceptance facts.
+Assign the child a launcher-owned `requestId`. For each phase implementer and
+reviewer, record `launcherRole: "project-root"`, `parentScope: "project"`, and
+the manifest `runIdentity` as `parentRequestId`. For optional nested work,
+record `launcherRole: "phase-agent"`, its phase as `parentScope`, and the
+parent phase implementer's `requestId` as `parentRequestId`. Never infer
+ownership from child self-report. Write these records with `schemaVersion: 2`.
 Do not publish an accepted dispatch record while its handle is running; after
 termination, write exactly one immutable record with its terminal `completed`
 or `failed` outcome. Record pre-start rejection immediately. Keep runtime

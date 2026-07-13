@@ -223,6 +223,7 @@ function normalizeDispatch(record, index) {
     : record;
   const selection = isPlainObject(record.selection) ? record.selection : {};
   const launch = isPlainObject(record.launch) ? record.launch : {};
+  const ownership = isPlainObject(record.ownership) ? record.ownership : {};
 
   return {
     acceptance: optionalString(launch.acceptance ?? record.acceptance),
@@ -249,8 +250,17 @@ function normalizeDispatch(record, index) {
       outcome: optionalString(launch.outcome ?? record.outcome),
       status: optionalString(launch.status),
     },
+    ownership: isPlainObject(record.ownership)
+      ? {
+          launcherRole: optionalString(ownership.launcherRole),
+          parentRequestId: optionalString(ownership.parentRequestId),
+          parentScope: optionalString(ownership.parentScope),
+        }
+      : null,
+    requestId: optionalString(record.requestId),
     role: requireString(record.role, `dispatch[${index}].role`),
     runtimeIdentity: normalizeRuntimeIdentity(record.runtimeIdentity),
+    schemaVersion: record.schemaVersion === 2 ? 2 : 1,
     scope: requireString(record.scope, `dispatch[${index}].scope`),
     selection: {
       atOrBelowCeiling:

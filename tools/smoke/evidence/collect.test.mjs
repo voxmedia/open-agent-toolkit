@@ -282,10 +282,7 @@ test('runtime identity requires independently observed provenance', () => {
 
 test('normalizes an absolute fixture project path in review frontmatter', () => {
   const worktreePath = resolve('/tmp/oat-smoke-review-worktree');
-  const fixtureProjectPath = join(
-    worktreePath,
-    '.oat/projects/smoke-fixture',
-  );
+  const fixtureProjectPath = join(worktreePath, '.oat/projects/smoke-fixture');
 
   assert.deepEqual(
     normalizeReviewFrontmatter(
@@ -412,6 +409,13 @@ test('collects a deterministic normalized evidence bundle', async () => {
       ['p01-t01', 'p01-t02'],
     );
     assert.equal(bundle.dispatches[0].selection.atOrBelowCeiling, true);
+    assert.equal(bundle.dispatches[0].schemaVersion, 2);
+    assert.deepEqual(bundle.dispatches[0].ownership, {
+      launcherRole: 'phase-agent',
+      parentRequestId: 'p01-phase-request',
+      parentScope: 'p01',
+    });
+    assert.equal(bundle.dispatches[0].requestId, 'p01-t01-worker-request');
     assert.deepEqual(bundle.dispatches[0].runtimeIdentity, {
       confidence: 'high',
       effort: 'xhigh',
@@ -682,9 +686,15 @@ test('collector output drives five-task assertions and a bound report', async ()
               outcome: 'completed',
               status: 'accepted',
             },
+            ownership: {
+              launcherRole: 'project-root',
+              parentRequestId: run.manifest.runIdentity,
+              parentScope: 'project',
+            },
+            requestId: `${phase}-${role}-request`,
             role,
             runtimeIdentity: null,
-            schemaVersion: 1,
+            schemaVersion: 2,
             scope: phase,
             selection: {
               atOrBelowCeiling: true,

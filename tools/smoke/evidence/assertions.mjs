@@ -256,6 +256,7 @@ function implementAssertions(bundle) {
   );
   const dispatchPolicy = bundle.fixture?.dispatchPolicy;
   const launchFailures = [];
+  const ownershipFailures = [];
   const targetSelectionFailures = [];
   const validateScope = (scope, role, dispatches) => {
     const attempts = dispatches
@@ -283,6 +284,15 @@ function implementAssertions(bundle) {
     }
     const selected = accepted[0];
     if (
+      selected?.schemaVersion === 2 &&
+      (!selected.requestId ||
+        selected.ownership?.launcherRole !== 'project-root' ||
+        selected.ownership?.parentScope !== 'project' ||
+        selected.ownership?.parentRequestId !== bundle.manifest?.runIdentity)
+    ) {
+      ownershipFailures.push(`${scope}:${role}`);
+    }
+    if (
       !selected ||
       bundle.fixture?.headStateHash !== bundle.fixture?.stateHash ||
       !dispatchMatchesCommittedPolicy(selected, dispatchPolicy) ||
@@ -297,6 +307,13 @@ function implementAssertions(bundle) {
     validateScope(phase, 'reviewer', phaseReviewDispatches);
   }
   for (const dispatch of optionalNestedDispatches) {
+    const parentPhase = dispatch.scope.slice(0, 3);
+    const parent = implementationDispatches.find(
+      (candidate) =>
+        candidate.scope === parentPhase &&
+        candidate.launch?.accepted === true &&
+        candidate.launch?.outcome === 'completed',
+    );
     if (
       dispatch.launch?.accepted !== true ||
       dispatch.launch?.outcome !== 'completed'
@@ -306,12 +323,33 @@ function implementAssertions(bundle) {
     if (!dispatchMatchesCommittedPolicy(dispatch, dispatchPolicy)) {
       targetSelectionFailures.push(`${dispatch.scope}:${dispatch.role}`);
     }
+    if (
+      dispatch.schemaVersion === 2 &&
+      (!dispatch.requestId ||
+        dispatch.ownership?.launcherRole !== 'phase-agent' ||
+        dispatch.ownership?.parentScope !== parentPhase ||
+        !parent?.requestId ||
+        dispatch.ownership?.parentRequestId !== parent.requestId)
+    ) {
+      ownershipFailures.push(`${dispatch.scope}:${dispatch.role}`);
+    }
   }
   const requiredDispatches = [
     ...implementationDispatches,
     ...phaseReviewDispatches,
     ...optionalNestedDispatches,
   ];
+  const dispatchSchemaVersions = new Set(
+    requiredDispatches.map((dispatch) => dispatch.schemaVersion ?? 1),
+  );
+  const legacyOwnershipEvidence =
+    dispatchSchemaVersions.size === 1 && dispatchSchemaVersions.has(1);
+  if (
+    !legacyOwnershipEvidence &&
+    requiredDispatches.some((dispatch) => (dispatch.schemaVersion ?? 1) !== 2)
+  ) {
+    ownershipFailures.push('mixed-or-unsupported-dispatch-schema');
+  }
   const invalidRuntimeIdentity = requiredDispatches
     .filter(
       (dispatch) =>
@@ -435,11 +473,18 @@ function implementAssertions(bundle) {
   return [
     assertion(
       'implement-dispatch-completeness',
-      'Every phase has one accepted completed phase implementer and one root-owned reviewer launch.',
+      legacyOwnershipEvidence
+        ? 'Every phase has one accepted completed phase implementer and reviewer launch; retained schema-v1 evidence does not prove direct-root ownership.'
+        : 'Every phase has one accepted completed phase implementer and one direct-root reviewer launch with launcher-owned parent evidence.',
       JSON.stringify(taskIds) === JSON.stringify(EXPECTED_TASK_IDS) &&
-        launchFailures.length === 0,
+        launchFailures.length === 0 &&
+        ownershipFailures.length === 0,
       {
         failingDispatches: launchFailures,
+        ownershipEvidence: legacyOwnershipEvidence
+          ? 'unavailable-schema-v1'
+          : 'required-schema-v2',
+        ownershipFailures,
         phaseIds: EXPECTED_PHASE_IDS,
         taskIds,
       },

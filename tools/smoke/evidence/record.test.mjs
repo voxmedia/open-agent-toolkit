@@ -38,10 +38,16 @@ function validRecord(overrides = {}) {
       outcome: 'completed',
       status: 'accepted',
     },
-    role: 'implementer',
+    ownership: {
+      launcherRole: 'project-root',
+      parentRequestId: 'smoke-run-001',
+      parentScope: 'project',
+    },
+    requestId: 'p01-implementation-001',
+    role: 'phase-implementer',
     runtimeIdentity: null,
-    schemaVersion: 1,
-    scope: 'p01-t01',
+    schemaVersion: 2,
+    scope: 'p01',
     selection: {
       atOrBelowCeiling: true,
       candidatesConsidered: ['gpt-5.6-terra-medium', 'gpt-5.6-sol-xhigh'],
@@ -53,6 +59,7 @@ function validRecord(overrides = {}) {
 
 test('normalizes a launcher-owned dispatch record', () => {
   const record = normalizeDispatchRecord(validRecord());
+  assert.equal(record.schemaVersion, 2);
   assert.equal(record.launch.accepted, true);
   assert.equal(record.launch.status, 'accepted');
   assert.equal(record.attempt, 1);
@@ -60,6 +67,22 @@ test('normalizes a launcher-owned dispatch record', () => {
     'gpt-5.6-terra-medium',
     'gpt-5.6-sol-xhigh',
   ]);
+});
+
+test('allows explicit schema-v1 reads but rejects new schema-v1 records', () => {
+  const legacy = validRecord({
+    ownership: undefined,
+    requestId: undefined,
+    schemaVersion: 1,
+  });
+  assert.throws(
+    () => normalizeDispatchRecord(legacy),
+    /schemaVersion 1 is read-only/,
+  );
+  const record = normalizeDispatchRecord(legacy, { allowLegacyRead: true });
+  assert.equal(record.schemaVersion, 1);
+  assert.equal(record.ownership, null);
+  assert.equal(record.requestId, null);
 });
 
 test('writes immutable attempt files and rejects duplicate attempts', async () => {
@@ -78,7 +101,7 @@ test('writes immutable attempt files and rejects duplicate attempts', async () =
       targetPath,
       join(
         await realpath(worktreePath),
-        'workspace/evidence/dispatch/p01-t01-implementation-implementer-001.json',
+        'workspace/evidence/dispatch/p01-implementation-phase-implementer-001.json',
       ),
     );
     assert.equal(
@@ -120,6 +143,29 @@ test('rejects inconsistent, unsupported, or incomplete records', () => {
         }),
       ),
     /inconsistent/,
+  );
+  assert.throws(
+    () =>
+      normalizeDispatchRecord(
+        validRecord({
+          ownership: undefined,
+        }),
+      ),
+    /ownership must be an object/,
+  );
+  assert.throws(
+    () =>
+      normalizeDispatchRecord(
+        validRecord({
+          ownership: {
+            launcherRole: 'phase-agent',
+            parentRequestId: 'p01-implementation-001',
+            parentScope: 'p01',
+          },
+          role: 'reviewer',
+        }),
+      ),
+    /reviewer ownership must identify the direct project root parent/,
   );
   assert.throws(
     () => normalizeDispatchRecord(validRecord({ scope: '../escape' })),
