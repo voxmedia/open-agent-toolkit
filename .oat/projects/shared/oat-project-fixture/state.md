@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 1626bd34a6c3819e71eced32d5272c9c71e1cba8
+oat_current_task: p05-t20
+oat_last_commit: 7caa963e0b7fd908b0c2eef840629f299863875c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 5 # override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -41,31 +41,31 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T00:59:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T01:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** Implementation complete; ready for final PR
+**Status:** Implementation in progress; Phase 5 review fixes queued
 **Started:** 2026-07-11
-**Last Updated:** 2026-07-12
+**Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation complete — release validated and PR-ready
+Implementation — Phase 5 review fixes
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 36 tasks)
-- **Implementation:** `implementation.md` (complete)
+- **Plan:** `plan.md` (complete — 6 phases / 41 tasks)
+- **Implementation:** `implementation.md` (in progress — review fixes)
 
 ## Progress
 
@@ -151,7 +151,11 @@ Implementation complete — release validated and PR-ready
   commits, parallel isolation, fan-in, and one passing final gate
 - ✓ p06-t01 OAT docs and smoke runbook complete
 - ✓ p06-t02 Vault capture committed externally
-- ✓ p06-t03 release validation and project bookkeeping complete
+- ✓ p06-t03 initial release validation completed at `7caa963e`
+- ⚠ Independent Phase 5 review failed 1C/2I/0M/1m
+- → p05-t20–p05-t23 fix report binding, reviewer-parent evidence, assertion
+  contract drift, and smoke formatting
+- ○ p06-t04 revalidates the post-review-fix release image
 
 ## Blockers
 
@@ -159,4 +163,4 @@ None
 
 ## Next Milestone
 
-Open the final PR when requested.
+Complete p05-t20–p05-t23, pass independent Phase 5 re-review, then run p06-t04.

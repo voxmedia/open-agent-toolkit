@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-12
+oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p06'] # final phase only, from workflow.hillCheckpointDefault
@@ -960,6 +960,107 @@ phase-agent and Codex drive contracts; run focused skill and drive tests.
 
 ---
 
+### Task p05-t20: (review) Make canonical report binding formatter-stable
+
+_Review finding C1. Depends on p05-t13._
+
+**Files:**
+
+- Modify: smoke collection/report publication code and focused tests
+- Modify: tracked canonical `codex/{implement,plan-review}` report packets
+- Modify: root verification enrollment when needed to check every canonical
+  packet after formatting
+
+**Step 1: Reproduce** — prove a formatter pass can change tracked
+`bundle.json` bytes after `report.json` records its SHA-256. Keep the report
+binding byte-exact; do not weaken it to semantic JSON equality.
+
+**Step 2: Fix** — make staged publication format the bundle before report
+generation, or otherwise guarantee the report hashes the exact bytes that are
+published and committed. Rebind both positive canonical Codex packets.
+
+**Step 3: Guard** — add a repository test that discovers every tracked
+canonical packet and runs its exact `report.mjs --check` profile after normal
+formatting.
+
+**Step 4: Verify** — both Codex positive packet checks and the unavailable-target
+control pass from the staged image.
+
+**Step 5: Commit** — `fix(p05-t20): stabilize canonical smoke report binding`
+
+---
+
+### Task p05-t21: (review) Prove direct-root phase reviewer ownership
+
+_Review finding I1. Depends on p05-t20._
+
+**Files:**
+
+- Modify: `tools/smoke/CONTRACT.md`
+- Modify: dispatch record writer, collector, deterministic/live producers, and
+  focused evidence tests
+- Refresh: canonical Codex implement evidence after the schema is executable
+
+**Step 1: Extend evidence** — preserve launcher/parent ownership in the
+launcher-owned dispatch projection. Root-launched phase implementers and phase
+reviewers must carry direct project-root parentage; optional nested launches
+must identify their phase-agent parent.
+
+**Step 2: Assert** — fail the implement profile when a phase reviewer is owned
+by a phase agent, when ownership is missing, or when parent linkage conflicts
+with scope. Add a negative test for phase-agent-owned review.
+
+**Step 3: Produce** — update deterministic and live protocols to publish the
+new immutable ownership field from the launcher, never infer it from child
+self-report.
+
+**Step 4: Verify** — deterministic happy/failure paths pass, then run one fresh
+Codex implement scenario and validate the published packet.
+
+**Step 5: Commit** — `fix(p05-t21): prove root-owned phase reviews`
+
+---
+
+### Task p05-t22: (review) Align the normative smoke assertion contract
+
+_Review finding I2. Depends on p05-t21._
+
+**Files:**
+
+- Modify: `tools/smoke/CONTRACT.md`
+- Modify or create: focused static cross-contract test
+
+**Step 1: Correct the contract** — replace the superseded nine-task,
+task-worker assertion language with the five-task fixture, one phase
+implementer and one direct-root reviewer per phase, and optional validated
+nested launches.
+
+**Step 2: Prevent recurrence** — statically bind task counts and topology
+language to `EXPECTED_TASK_IDS` and executable assertion descriptions.
+
+**Step 3: Verify** — focused contract tests and the complete smoke suite pass.
+
+**Step 4: Commit** — `fix(p05-t22): align smoke assertion contract`
+
+---
+
+### Task p05-t23: (review) Format the collector test
+
+_Review finding m1. Depends on p05-t22._
+
+**Files:**
+
+- Modify: `tools/smoke/evidence/collect.test.mjs`
+
+**Step 1: Format** — apply the repository formatter without changing behavior.
+
+**Step 2: Verify** —
+`pnpm exec oxfmt --check 'tools/smoke/**/*.{mjs,md,json}'`.
+
+**Step 3: Commit** — `style(p05-t23): format smoke collector coverage`
+
+---
+
 ## Phase 6: Documentation, Vault Capture & Release
 
 _Sequential; depends on p05._
@@ -1046,6 +1147,30 @@ Expected: all green.
 
 ---
 
+### Task p06-t04: Revalidate release after Phase 5 review fixes
+
+_Depends on p05-t20 through p05-t23._
+
+**Files:**
+
+- Modify: project tracking and canonical evidence references
+- Conditional: lockstep public package versions and generated provider views
+  when shipped sources changed after `0.1.58`
+
+**Step 1: Reconcile** — update affected docs/evidence references and apply any
+required lockstep public-package or skill version bumps for the review fixes.
+
+**Step 2: Verify** — run canonical report checks, direct smoke
+lint/format/tests, `pnpm build`, `pnpm build:docs`, `pnpm lint`, `pnpm format`,
+`pnpm type-check`, `pnpm test`, and `pnpm release:validate`.
+
+**Step 3: Record** — mark the Phase 5 re-review, Phase 6, and final review rows
+passed only after independent re-review confirms no unresolved findings.
+
+**Step 4: Commit** — `chore(p06-t04): revalidate release after review fixes`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -1054,9 +1179,9 @@ Expected: all green.
 | p02    | code     | passed          | 2026-07-11 | External gate passed 0C/0I/0M/2m (`reviews/archived/p02-review-2026-07-12T000418Z.md`); waived fix `c8aebc68` independently verified. Sweep: parent-relative standalone-tool imports rejected as a pragmatic convention exception; entrypoint normalization addressed in `9ba2ab03`.                                                                                                                                                         |
 | p03    | code     | passed          | 2026-07-11 | Final self-review passed with 0C/0I/0M/0m (`reviews/p03-review-2026-07-12T124433Z.md`). The native Task catalog rejected the exact High-ceiling `gpt-5.6-sol-xhigh` target before launch; deliberate pre-start Cursor CLI selection preserved that exact target and the review artifact records the launcher-observed invocation. Verification: 85/85 smoke/bootstrap tests plus targeted lint/format, diff, and plan validation.            |
 | p04    | code     | passed          | 2026-07-12 | Final configured re-review passed 0C/0I/0M/0m (`reviews/p04-review-2026-07-12T140718Z.md`). All four prior review rounds are resolved. The reviewer verified immutable reviewer-envelope capture/comparison, coordinator-owned route selection, planning inheritance, native-first and accepted-handle constraints, ordered evidence and gate separation, provider sync/version policy, and PR #135/#137 regressions.                        |
-| p05    | code     | passed          | 2026-07-13 | Fable reported the topology restoration ship-ready with no blockers (`references/fable-review-topology-restoration.md`); the final Codex packet passed 9/9 (`tools/smoke/reports/codex/implement/report.json`).                                                                                                                                                                                                                              |
-| p06    | code     | passed          | 2026-07-13 | Fable verified docs and release alignment with no blockers; both clarifications were incorporated, all five packages are `0.1.58`, and full build/test/lint/format/type/release validation passed.                                                                                                                                                                                                                                           |
-| final  | code     | passed          | 2026-07-13 | Ship-ready Fable review, canonical 9/9 live evidence, complete workspace validation, and zero unresolved Critical/Important/Medium/Minor findings.                                                                                                                                                                                                                                                                                           |
+| p05    | code     | fixes_added     | 2026-07-13 | Independent review failed 1C/2I/0M/1m (`reviews/archived/p05-review-2026-07-13T010419Z.md`). Fixes p05-t20–p05-t23 cover formatter-stable report binding, direct-root reviewer ownership evidence, normative contract alignment, and smoke test formatting. The earlier Fable topology review remains supplemental context in `references/fable-review-topology-restoration.md`.                                                             |
+| p06    | code     | pending         | 2026-07-13 | Prior release validation passed at `7caa963e`; p06-t04 must revalidate the post-review-fix image.                                                                                                                                                                                                                                                                                                                                            |
+| final  | code     | pending         | 2026-07-13 | Re-run after Phase 5 fixes, Phase 5 re-review, and p06-t04 release validation.                                                                                                                                                                                                                                                                                                                                                               |
 | spec   | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | plan   | artifact | fixes_completed | 2026-07-11 | Round 1: reviews/artifact-plan-review-2026-07-11T165003Z.md (2I+2M, fixed; verified clean in round 2). Round 2: reviews/artifact-plan-review-2026-07-11T170953Z.md (3I+1M, all fixed: auth-readiness preflight, Codex report checks, explicit doc-authoring task w/ runbook + AGENTS.md nuance, p06-t03 conditional evidence scope). Gate maxAttempts exhausted; user decision 2026-07-11: accept with fixes recorded, no further gate runs. |
@@ -1081,14 +1206,15 @@ Expected: all green.
   isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
-- Phase 5: 19 tasks — Harness protocols, deterministic/fail-fast recovery,
+- Phase 5: 23 tasks — Harness protocols, deterministic/fail-fast recovery,
   report publication, phase-agent restoration, terminal evidence hardening, and
-  bounded live smoke evidence
-- Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
+  bounded live smoke evidence plus independent-review fixes
+- Phase 6: 4 tasks — OAT docs + diagrams, Vault closing pass, release validation,
+  and post-review revalidation
 
-**Total: 36 tasks**
+**Total: 41 tasks**
 
-Ready for code review and merge.
+Review fixes queued; resume at p05-t20.
 
 ---
 

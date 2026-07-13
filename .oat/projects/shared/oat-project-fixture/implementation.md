@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: null
+oat_current_task_id: p05-t20
 oat_generated: false
 ---
 
@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 5     | 5/5       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 3     | 3/3       |
-| Phase 5 | complete | 19    | 15/19     |
-| Phase 6 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 5     | 5/5       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 3     | 3/3       |
+| Phase 5 | in_progress | 23    | 15/23     |
+| Phase 6 | in_progress | 4     | 3/4       |
 
-**Total:** 32/36 tasks completed (4 explicitly deferred)
+**Total:** 32/41 tasks completed (4 deferred, 1 in progress, 4 pending)
 
 ---
 
@@ -1153,9 +1153,8 @@ provider synchronization, package versions, and PR #135/#137 regressions.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-12
-**Completed:** 2026-07-13
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -1470,6 +1469,62 @@ passed, and managed Codex phase-agent roles were synchronized.
 
 ---
 
+### Review Received: p05
+
+**Date:** 2026-07-13
+**Review artifact:**
+`reviews/archived/p05-review-2026-07-13T010419Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 2
+- Medium: 0
+- Minor: 1
+
+**Finding analysis and dispositions:**
+
+- C1 — agree, Moderate: formatter-normalized bundle bytes invalidated the
+  report digest after generation. Convert to p05-t20.
+- I1 — agree, Large: role/scope proves reviewer existence but not direct-root
+  parentage. Convert to p05-t21.
+- I2 — agree, Minor: the normative assertion section still describes the
+  superseded task-worker fixture. Convert to p05-t22.
+- m1 — agree, Negligible: direct smoke formatting found one dirty collector
+  test. Convert to p05-t23.
+
+**New tasks added:** p05-t20, p05-t21, p05-t22, p05-t23
+
+**Next:** execute the review-fix tasks, then independently re-review Phase 5.
+
+### Task p05-t20: Make canonical report binding formatter-stable
+
+**Status:** in_progress
+**Commit:** -
+
+---
+
+### Task p05-t21: Prove direct-root phase reviewer ownership
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t22: Align the normative smoke assertion contract
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p05-t23: Format the collector test
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Phase 6: Documentation, Vault Capture & Release
 
 **Status:** in_progress
@@ -1498,6 +1553,13 @@ All five public packages are aligned at `0.1.58`. `pnpm build`, `pnpm
 build:docs`, `pnpm lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and
 `pnpm release:validate` pass. The canonical live Codex report independently
 passes its nine-assertion implement profile.
+
+---
+
+### Task p06-t04: Revalidate release after Phase 5 review fixes
+
+**Status:** pending
+**Commit:** -
 
 ---
 
