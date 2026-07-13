@@ -31,6 +31,8 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 
 **`oat backlog archive` — confirmed.** `packages/cli/src/commands/backlog/archive.ts`: `TODO_SUMMARY = 'TODO: summarize outcome'`; the default (closed) archive path always writes a completed.md entry and falls back to the literal TODO string when `--summary` is absent.
 
+**`oat decision new` TODO sections (wave-1 follow-up item, added 2026-07-13) — confirmed.** The decision template has `{title}`/`{context}`/`{decision}`/`{consequences}` slots, but the command accepts only `--context` (verified via `--help`); `packages/cli/src/commands/decision/new.ts` hardcodes `decision: 'TODO'`, `consequences: 'TODO'`, and `context: options.context ?? 'TODO'`. The `oat-project-summary` Step 6 promotion flow calls exactly this, so every promoted decision record lands with literal `TODO` under `## Decision` and `## Consequences` — the operator's two runs produced 8 such records before anyone noticed. Same placeholder-ledger pathology as `backlog archive`.
+
 **`--scope` global flag — confirmed, and intentional.** `createProgram()` registers only `--json`/`--verbose`/`--cwd` globally; `--scope` is deliberately per-command (`packages/cli/src/commands/shared/scope-option.ts` has an explicit design comment) with a regression test pinning the removal (`create-program.test.ts`: "does not register --scope as a global option"). No alias or deprecation shim exists anywhere in the arg pipeline.
 
 ## Requirements
@@ -39,6 +41,7 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 - **Plan template guidance:** add explicit language that the TDD task-body shape is a default, not a requirement — the invariants are stable task IDs, per-task verification, and atomic commits. Either a note in the template or a minimal non-TDD variant (decide at planning; a note is the smaller change and `validate-plan` already accepts non-TDD shapes).
 - **`oat tools update` ergonomics:** improve the no-args path — either default to `--all` with a confirmation line, or make the error show the exact suggested command. (Operator suggested either.)
 - **`oat backlog archive` summary:** stop writing TODO placeholders — either require `--summary` on the closed path, or derive a fallback summary from the item's title/description.
+- **`oat decision new` section flags (wave-1 item):** add `--decision <text>` / `--consequences <text>` (or `--body-file <path>`) so all template slots can be filled at creation, and update `oat-project-summary`'s Step 6 promotion step to derive and pass all three sections from the Key Decision content. Operator prefers this over post-creation edits because it keeps index regeneration atomic. (Note: the promotion-step half touches a canonical skill → version bump for `oat-project-summary` in the same PR.)
 - **Breaking-change hygiene (operator answer, 2026-07-13):** no shim — "shims linger." Implement (b) + (c): a prominent release-note callout convention for CLI grammar breaks, and a doctor-style check that flags known-stale invocation forms in repo scripts/docs after upgrades. The operator called the doctor check "the actually valuable half": the realistic failure mode is an agent installing `@latest` mid-run, with repo scripts written against the old grammar breaking at a distance from the upgrade — a post-upgrade grep-style check would have caught it before the first bootstrap.
 
 ## Key Decisions
@@ -58,6 +61,7 @@ From a downstream operator's feedback packet (Stoa repo, full orchestrated OAT l
 - The plan template states that non-TDD task shapes are permitted and names the actual invariants.
 - `oat tools update` with no args either acts usefully or errors with a copy-pasteable suggestion.
 - `oat backlog archive` never writes `TODO: summarize outcome` into completed.md.
+- Decision records promoted via `oat-project-summary` land with real `## Decision` and `## Consequences` content, never literal `TODO`.
 - A decided, implemented policy response for CLI grammar breaking changes.
 
 ## Out of Scope
