@@ -27,6 +27,11 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- The CLI passively reports newer stable npm releases during eligible
+  interactive commands. Daily best-effort checks and three-day same-version
+  notice cadence are cached under `~/.oat`; JSON, CI, non-interactive, test,
+  source-development, ephemeral-runner, and opted-out invocations remain
+  silent.
 - Gate reviews now declare and corroborate their project, bind an immutable
   configured invocation record to the review artifact, and fail closed on
   correlation or provenance mismatch.
