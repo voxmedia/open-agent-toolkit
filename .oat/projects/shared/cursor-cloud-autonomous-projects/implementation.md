@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p02-t06
+oat_current_task_id: p02-t07
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
-| Phase 2 (p02): New OAT skills + user-scope installability      | in_progress | 8     | 5/8       |
+| Phase 2 (p02): New OAT skills + user-scope installability      | in_progress | 8     | 6/8       |
 | Phase 3 (p03): OAT release (publish boundary)                  | pending     | 2     | 0/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | pending     | 4     | 0/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 11/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 12/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -148,6 +148,13 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 **Outcome:** Verified both new skills remained registered in the bash bundle and TypeScript workflows manifest, regenerated the project provider views, and committed the Claude/Cursor links plus sync manifest.
 **Verification:** Passed — provider sync created all four expected links; the located bundle-consistency suite passed 23/23 tests.
 
+### Task p02-t06: Lockstep version bumps + release validation
+
+**Status:** completed
+**Commit:** `6898ebba`
+**Outcome:** Bumped all five public packages from 0.1.60 to 0.1.61 and refreshed the bundled public-package version inventory.
+**Verification:** Passed — `pnpm release:validate` packed and validated all five public packages at 0.1.61.
+
 ## Phase 3: OAT release (publish boundary)
 
 **Status:** pending — tasks p03-t01 … p03-t02 per plan.md (p03-t02 is an operator boundary: merge → pipeline publish)
@@ -198,6 +205,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02-t03: Cursor Cloud orientation skill, mechanics reference, and authoring-time workflows registration committed (`fca78a0b`); skill validation and all 161 amended CLI contracts passed, with zero org-identifier hits.
 - [x] p02-t04: full-asset direct/aggregate user-scope install, update, and removal lifecycle committed (`a8bf2e5a`); 114 focused tests plus CLI type-check/lint and formatting passed.
 - [x] p02-t05: provider views and sync manifest committed (`88cdb61f`); both registrations verified and bundle consistency passed 23/23 tests.
+- [x] p02-t06: five-package lockstep 0.1.61 bump committed (`6898ebba`); all public package tarballs passed release validation.
 
 **Decisions:**
 
@@ -221,7 +229,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
-| 2     | Probe; skill contracts; org audit; workflows asset lifecycle; bundle/provider sync (p02-t01..t05) | 460 | 0 | Prior gates remain green; provider views regenerated; bundle-consistency passed 23/23 tests |
+| 2     | Probe; skill/contracts; workflows lifecycle; provider sync; release validation (p02-t01..t06) | 460 | 0 | Prior gates remain green; five public 0.1.61 tarballs passed lockstep release validation |
 
 ## Final Summary (for PR/docs)
 
