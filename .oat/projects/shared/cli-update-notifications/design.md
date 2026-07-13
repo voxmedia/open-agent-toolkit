@@ -196,7 +196,8 @@ install contexts.
 
 - Require an interactive, non-JSON command context.
 - Skip `CI`, test runners, source `.ts` entrypoints, npm/pnpm ephemeral exec
-  contexts, and `NO_UPDATE_NOTIFIER=1`.
+  contexts, and invocations with a truthy `NO_UPDATE_NOTIFIER` value such as
+  `1`, `true`, `yes`, or `on`.
 - Respect `updateNotifications: false` in user config.
 
 **Interfaces:**
@@ -290,9 +291,11 @@ oat config get updateNotifications
 oat config set updateNotifications false --user
 ```
 
-The default is enabled. `NO_UPDATE_NOTIFIER=1` suppresses checks for a single
-process regardless of the persisted preference. Update notices are human
-output only and do not alter JSON response schemas.
+The default is enabled. A truthy `NO_UPDATE_NOTIFIER` value, such as `1`,
+`true`, `yes`, or `on`, suppresses checks for a single process regardless of
+the persisted preference. Empty and false-like values such as `0` and `false`
+do not suppress checks. Update notices are human output only and do not alter
+JSON response schemas.
 
 Interactive `init`, `tools install`, and `tools update` actions can additionally
 offer an exact stable CLI upgrade before mutation. No new CLI flag or command

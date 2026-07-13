@@ -10,17 +10,23 @@ legacy_id: null
 
 ## Context
 
-NO_UPDATE_NOTIFIER supports temporary suppression while updateNotifications false provides a durable user preference.
+OAT needs both process-scoped suppression for automation and one-off commands
+and a durable user preference that applies across repositories. The shipped
+eligibility policy already normalizes common truthy environment values.
 
 ## Decision
 
-Support `NO_UPDATE_NOTIFIER=1` for process-scoped suppression and the
-user-level `updateNotifications: false` preference for durable suppression.
-Both controls suppress passive notices and guarded CLI update offers.
+Accept truthy `NO_UPDATE_NOTIFIER` values such as `1`, `true`, `yes`, and `on`
+for process-scoped suppression. Keep the user-level
+`updateNotifications: false` preference for durable suppression. Both controls
+suppress passive notices and guarded CLI update offers.
 
 ## Consequences
 
-- CI and one-off commands can opt out without modifying files.
+- CI and one-off commands can opt out without modifying files and can use the
+  truthy forms already recognized by OAT environment normalization.
+- Empty and false-like values such as `0` and `false` do not suppress update
+  awareness.
 - Users can disable update awareness across repositories through
   `~/.oat/config.json`.
 - A user who opts out also bypasses the stale-bundle warning on guarded

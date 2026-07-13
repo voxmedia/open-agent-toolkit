@@ -5,9 +5,9 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_generated: true
 oat_template: false
-oat_summary_last_task: prev1-t03
-oat_summary_revision_count: 1
-oat_summary_includes_revisions: [p-rev1]
+oat_summary_last_task: prev3-t01
+oat_summary_revision_count: 3
+oat_summary_includes_revisions: [p-rev1, p-rev2, p-rev3]
 ---
 
 # Summary: cli-update-notifications
@@ -39,10 +39,12 @@ bundle.
 
 The notifier suppresses JSON, non-interactive, CI, test, source-development,
 and ephemeral-runner contexts. Users can suppress one process with
-`NO_UPDATE_NOTIFIER=1` or persist a user-level preference with
-`oat config set updateNotifications false --user`. The cache normally limits
-registry checks to once every 24 hours and same-version notices to once every
-72 hours.
+a truthy `NO_UPDATE_NOTIFIER` value such as `1`, `true`, `yes`, or `on`, or
+persist a user-level preference with
+`oat config set updateNotifications false --user`. Empty and false-like
+environment values such as `0` and `false` leave notifications enabled. The
+cache normally limits registry checks to once every 24 hours and same-version
+notices to once every 72 hours.
 
 The feature includes focused config, cache, registry, eligibility, bootstrap,
 and failure-containment tests; CLI and docs guidance; and lockstep `0.1.62`
@@ -62,9 +64,9 @@ versions for all five public packages plus regenerated shipped version assets.
   runtime timestamps separately from user-authored configuration.
 - **Automation-safe eligibility:** Update output is limited to eligible human
   command runs and is absent from machine-readable JSON behavior.
-- **Dual suppression controls:** `NO_UPDATE_NOTIFIER=1` supports temporary and
-  CI suppression, while `updateNotifications: false` provides a durable
-  user-level preference.
+- **Dual suppression controls:** Truthy `NO_UPDATE_NOTIFIER` values support
+  temporary and CI suppression, while `updateNotifications: false` provides a
+  durable user-level preference.
 - **Best-effort cross-process cadence:** The TTLs are exact for serial
   invocations. Overlapping processes can duplicate a check or notice; adding
   cross-process locking and stale-lock recovery was disproportionate for
@@ -81,6 +83,11 @@ The original design was notification-only. Inline feedback added a guarded
 exception for commands that install bundled tools. This revision preserves
 passive notices elsewhere while preventing users from unknowingly installing
 older tool versions from an outdated CLI bundle.
+
+The p-rev2 review expanded process suppression from the exact value `1` to
+common truthy `NO_UPDATE_NOTIFIER` values for both passive notices and guarded
+offers. It also made prompt infrastructure errors warn and continue with the
+current bundle while preserving blocking installer failures before mutation.
 
 ## Notable Challenges
 
@@ -99,6 +106,11 @@ append-only task history and producing a clean final format gate.
   every command.
 - No live-registry end-to-end test was added; injected adapters keep tests
   deterministic and prevent writes to the real user home.
+- The p-rev2 `m2` finding was explicitly deferred: display-only PowerShell
+  rerun guidance may not round-trip literal embedded double quotes when
+  PowerShell 5.1 invokes native executables. PowerShell 7 behaves correctly;
+  revisit only after a reported PowerShell 5.1 rerun failure or an explicit
+  compatibility requirement.
 
 ## Follow-up Items
 
