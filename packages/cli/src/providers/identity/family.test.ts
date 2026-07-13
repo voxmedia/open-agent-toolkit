@@ -12,6 +12,8 @@ describe('classifyModelFamily', () => {
     ['composer-2.5-fast', 'composer'],
     ['Composer 2.5 Fast', 'composer'],
     ['glm-5.2', 'glm'],
+    ['cursor-grok-4.5-high', 'xai'],
+    ['grok-4-fast', 'xai'],
   ] as const)('classifies %s as %s', (value, expected) => {
     expect(classifyModelFamily({ value })).toBe(expected);
   });
@@ -38,6 +40,15 @@ describe('classifyModelFamily', () => {
         providerId: 'cursor',
       }),
     ).toBe('openai');
+  });
+
+  it('recognizes structured xAI provider ids', () => {
+    expect(
+      classifyModelFamily({
+        value: 'unrecognized-model-slug',
+        providerId: 'xai',
+      }),
+    ).toBe('xai');
   });
 
   it('falls back to unknown for unrecognized values', () => {
