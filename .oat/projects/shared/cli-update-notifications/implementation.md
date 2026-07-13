@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -28,9 +28,10 @@ oat_generated: false
 | ------------ | ----------- | ----- | --------- |
 | Phase 1      | complete    | 2     | 2/2       |
 | Phase 2      | complete    | 3     | 3/3       |
-| Phase p-rev1 | in_progress | 3     | 3/3       |
+| Phase p-rev1 | complete    | 3     | 3/3       |
+| Phase p-rev2 | in_progress | 2     | 0/2       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/10 tasks completed
 
 ---
 
@@ -290,6 +291,57 @@ oat_generated: false
 
 **Re-review artifact:**
 `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md`
+
+---
+
+## Phase p-rev2: Fable Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-07-13
+
+### Review Received: Supplemental Fable Final Review
+
+**Date:** 2026-07-13
+**Review artifact:**
+`reviews/archived/final-review-2026-07-13T205409Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 3
+
+**User disposition:**
+
+- `m1` convert: accept truthy `NO_UPDATE_NOTIFIER` values.
+- `m2` defer: PowerShell 5.1 embedded-double-quote behavior is a rare,
+  display-only edge; revisit if Windows PowerShell 5.1 copy/paste failures are
+  reported.
+- `m3` convert: degrade prompt infrastructure errors to the decline/continue
+  path.
+
+**New tasks added:** `prev2-t01`, `prev2-t02`
+
+### Task prev2-t01: Honor truthy update-notifier opt-outs
+
+**Status:** in_progress
+**Commit:** -
+
+---
+
+### Task prev2-t02: Continue after prompt infrastructure errors
+
+**Status:** pending
+**Commit:** -
+
+### Deferred Findings (Minor)
+
+- `m2` PowerShell 5.1 may not round-trip literal embedded double quotes when
+  invoking native executables. Deferred because guidance is display-only,
+  explicitly labeled PowerShell, PowerShell 7 behaves correctly, and affected
+  OAT arguments are exceptionally rare. Follow-up trigger: a reported
+  PowerShell 5.1 rerun failure or an explicit compatibility requirement.
 
 ---
 

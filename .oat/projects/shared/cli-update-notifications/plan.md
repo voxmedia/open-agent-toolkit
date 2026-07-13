@@ -312,15 +312,16 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                                 |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------------- |
-| p01    | code     | passed   | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`              |
-| p02    | code     | passed   | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`              |
-| p-rev1 | code     | passed   | 2026-07-13 | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md` |
-| final  | code     | received | 2026-07-13 | `reviews/final-review-2026-07-13T205409Z.md`             |
-| spec   | artifact | pending  | -          | -                                                        |
-| design | artifact | pending  | -          | -                                                        |
-| plan   | artifact | passed   | 2026-07-13 | structured auto-review                                   |
+| Scope  | Type     | Status      | Date       | Artifact                                                 |
+| ------ | -------- | ----------- | ---------- | -------------------------------------------------------- |
+| p01    | code     | passed      | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`              |
+| p02    | code     | passed      | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`              |
+| p-rev1 | code     | passed      | 2026-07-13 | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md` |
+| p-rev2 | code     | pending     | -          | -                                                        |
+| final  | code     | fixes_added | 2026-07-13 | `reviews/archived/final-review-2026-07-13T205409Z.md`    |
+| spec   | artifact | pending     | -          | -                                                        |
+| design | artifact | pending     | -          | -                                                        |
+| plan   | artifact | passed      | 2026-07-13 | structured auto-review                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -485,15 +486,86 @@ git commit -m "chore(prev1-t03): bump lockstep public packages"
 
 ---
 
+## Phase p-rev2: Fable Review Fixes
+
+Source: supplemental Fable final review (2026-07-13)
+
+### Task prev2-t01: (review) Honor truthy update-notifier opt-outs
+
+**Files:**
+
+- Modify: `packages/cli/src/app/update-notifier.ts`
+- Modify: `packages/cli/src/app/update-notifier.test.ts`
+- Modify: `packages/cli/README.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+
+**Step 1: Implement fix**
+
+Use the existing truthy-environment-value normalization for
+`NO_UPDATE_NOTIFIER` instead of accepting only the exact string `1`. Cover
+common truthy forms such as `1`, `true`, `yes`, and `on`, while preserving
+non-suppression for empty, `0`, and `false`. Apply the same behavior to passive
+notices and guarded update offers through the shared eligibility path.
+
+Update all user-facing docs to describe truthy opt-out values rather than
+claiming that only `NO_UPDATE_NOTIFIER=1` works.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts src/app/tool-bundle-update-guard.test.ts && pnpm --filter oat-docs check && pnpm format`
+Expected: Opt-out, guard, docs, and formatting checks pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/app/update-notifier.ts packages/cli/src/app/update-notifier.test.ts packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md apps/oat-docs/docs/cli-utilities/tool-packs.md
+git commit -m "fix(prev2-t01): honor truthy update notifier opt-outs"
+```
+
+---
+
+### Task prev2-t02: (review) Continue after prompt infrastructure errors
+
+**Files:**
+
+- Modify: `packages/cli/src/app/tool-bundle-update-guard.ts`
+- Modify: `packages/cli/src/app/tool-bundle-update-guard.test.ts`
+
+**Step 1: Implement fix**
+
+Contain non-abort errors from `confirmAction`. Log an actionable warning and
+treat the failure as a decline so the requested guarded command continues with
+the current bundle. Preserve explicit installer failures as blocking exit-2
+errors before mutation.
+
+Add focused tests proving prompt infrastructure failure does not invoke the
+installer, returns control to the guarded action, and emits the warning.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/tool-bundle-update-guard.test.ts src/index.test.ts && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Guard tests, integration tests, lint, and type-check pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/app/tool-bundle-update-guard.ts packages/cli/src/app/tool-bundle-update-guard.test.ts
+git commit -m "fix(prev2-t02): continue after update prompt errors"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
 
 - Phase 1: 2 tasks - User preference and cached notifier service
 - Phase 2: 3 tasks - Command integration, documentation, and release readiness
-- Phase p-rev1: 3 tasks - Interactive tools-update offer and revision release
+- Phase p-rev1: 3 tasks - Interactive bundled-tool guard and revision release
+- Phase p-rev2: 2 tasks - Supplemental Fable review fixes
 
-**Total: 8 tasks**
+**Total: 10 tasks**
 
 Ready for code review and merge.
 
