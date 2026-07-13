@@ -1015,10 +1015,9 @@ with scope. Add a negative test for phase-agent-owned review.
 new immutable ownership field from the launcher, never infer it from child
 self-report.
 
-**Step 4: Verify** — deterministic happy/failure paths pass and the retained
-schema-v1 packet remains valid without claiming direct-root proof. Per the
-user's 2026-07-12 direction, defer a fresh schema-v2 live refresh to a post-ship
-operator run rather than launching another 25-minute scenario in this fix loop.
+**Step 4: Verify** — deterministic happy/failure paths pass. The retained
+schema-v1 packet may remain historical evidence, but it does not satisfy the
+new direct-root ownership acceptance criterion; p05-t24 closes that live gap.
 
 **Step 5: Commit** — `fix(p05-t21): prove root-owned phase reviews`
 
@@ -1065,6 +1064,36 @@ including the nested preset test and canonical packet guard.
 `pnpm test` path all include the smoke surface.
 
 **Step 4: Commit** — `test(p05-t23): enroll formatted smoke coverage`
+
+---
+
+### Task p05-t24: (review recovery) Publish schema-v2 live ownership evidence
+
+_Closes the unfulfilled live portion of review finding I1._
+
+**Files:**
+
+- Modify: review-path normalization and focused collector tests
+- Modify: canonical Codex implement packet and live-validation reference
+
+**Step 1: Fix live collection** — accept absolute `oat_project` paths only when
+they resolve to the fixture project in the canonical worktree or a
+manifest-registered child worktree. Normalize either to the canonical
+repo-relative project path and continue rejecting external paths.
+
+**Step 2: Guard acceptance** — require the active canonical Codex implement
+packet to use schema-v2 dispatches and report direct-root ownership as proven.
+Historical schema-v1 packets remain readable but cannot satisfy this active
+acceptance guard.
+
+**Step 3: Execute** — run one fresh Codex implement scenario from a clean local
+build with the repository smoke shim first on `PATH`.
+
+**Step 4: Verify and publish** — require 9/9 assertions, six schema-v2 direct
+root child records, five task commits, parallel isolation, fan-in, and one
+passing final gate. Clean retained run resources after publication.
+
+**Step 5: Commit** — `fix(p05-t24): publish schema-v2 ownership evidence`
 
 ---
 
@@ -1178,6 +1207,23 @@ passed only after independent re-review confirms no unresolved findings.
 
 ---
 
+### Task p06-t05: Final validation after schema-v2 evidence
+
+_Depends on p05-t24._
+
+**Step 1: Verify** — run canonical packet checks, smoke tests/format/lint,
+workspace build/test/type checks, docs build, and `pnpm release:validate`.
+
+**Step 2: Review** — independently review the p05-t24 fix range, then run the
+final project review.
+
+**Step 3: Record** — mark p05, p06, and final passed only after both reviews and
+all validation succeed.
+
+**Step 4: Commit** — `chore(p06-t05): finalize schema-v2 release evidence`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -1186,9 +1232,9 @@ passed only after independent re-review confirms no unresolved findings.
 | p02    | code     | passed          | 2026-07-11 | External gate passed 0C/0I/0M/2m (`reviews/archived/p02-review-2026-07-12T000418Z.md`); waived fix `c8aebc68` independently verified. Sweep: parent-relative standalone-tool imports rejected as a pragmatic convention exception; entrypoint normalization addressed in `9ba2ab03`.                                                                                                                                                         |
 | p03    | code     | passed          | 2026-07-11 | Final self-review passed with 0C/0I/0M/0m (`reviews/p03-review-2026-07-12T124433Z.md`). The native Task catalog rejected the exact High-ceiling `gpt-5.6-sol-xhigh` target before launch; deliberate pre-start Cursor CLI selection preserved that exact target and the review artifact records the launcher-observed invocation. Verification: 85/85 smoke/bootstrap tests plus targeted lint/format, diff, and plan validation.            |
 | p04    | code     | passed          | 2026-07-12 | Final configured re-review passed 0C/0I/0M/0m (`reviews/p04-review-2026-07-12T140718Z.md`). All four prior review rounds are resolved. The reviewer verified immutable reviewer-envelope capture/comparison, coordinator-owned route selection, planning inheritance, native-first and accepted-handle constraints, ordered evidence and gate separation, provider sync/version policy, and PR #135/#137 regressions.                        |
-| p05    | code     | passed          | 2026-07-13 | Fix-range re-review passed 0C/0I/0M/0m (`reviews/archived/p05-review-2026-07-13T014202Z.md`) across p05-t20–p05-t23. The reviewer verified formatter-stable report binding, schema-v2 direct-root ownership evidence with honest schema-v1 limitation, five-task/three-phase contract alignment, and root smoke formatting/test enrollment.                                                                                                  |
-| p06    | code     | pending         | 2026-07-13 | Post-review release revalidation passed: all canonical checks, 116 smoke tests, full workspace verification, and all five public-package release validations are green. Awaiting final-scope independent review.                                                                                                                                                                                                                             |
-| final  | code     | pending         | 2026-07-13 | Re-run after Phase 5 fixes, Phase 5 re-review, and p06-t04 release validation.                                                                                                                                                                                                                                                                                                                                                               |
+| p05    | code     | fixes_added     | 2026-07-13 | The p05-t20–p05-t23 fix-range review passed, but its accepted schema-v1 limitation does not satisfy I1's requested live direct-root proof. p05-t24 adds registered-child review-path normalization and a fresh schema-v2 canonical packet.                                                                                                                                                                                                   |
+| p06    | code     | pending         | 2026-07-13 | p06-t04 passed against the schema-v1 packet; p06-t05 revalidates the final schema-v2 image.                                                                                                                                                                                                                                                                                                                                                  |
+| final  | code     | pending         | 2026-07-13 | Run after p05-t24 fix-range review and p06-t05 validation.                                                                                                                                                                                                                                                                                                                                                                                   |
 | spec   | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | plan   | artifact | fixes_completed | 2026-07-11 | Round 1: reviews/artifact-plan-review-2026-07-11T165003Z.md (2I+2M, fixed; verified clean in round 2). Round 2: reviews/artifact-plan-review-2026-07-11T170953Z.md (3I+1M, all fixed: auth-readiness preflight, Codex report checks, explicit doc-authoring task w/ runbook + AGENTS.md nuance, p06-t03 conditional evidence scope). Gate maxAttempts exhausted; user decision 2026-07-11: accept with fixes recorded, no further gate runs. |
@@ -1213,16 +1259,15 @@ passed only after independent re-review confirms no unresolved findings.
   isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
-- Phase 5: 23 tasks — Harness protocols, deterministic/fail-fast recovery,
+- Phase 5: 24 tasks — Harness protocols, deterministic/fail-fast recovery,
   report publication, phase-agent restoration, terminal evidence hardening, and
-  bounded live smoke evidence plus independent-review fixes
-- Phase 6: 4 tasks — OAT docs + diagrams, Vault closing pass, release validation,
-  and post-review revalidation
+  bounded live smoke evidence plus independent-review recovery
+- Phase 6: 5 tasks — OAT docs + diagrams, Vault closing pass, release validation,
+  and schema-v2 final revalidation
 
-**Total: 41 tasks**
+**Total: 43 tasks**
 
-All implementation tasks and release validation are complete; run the final
-independent project review.
+Schema-v2 live evidence and final validation remain.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 9f43dc28a8c36ed9e3795fad9ca60c8f2633e640
+oat_current_task: p05-t24
+oat_last_commit: 13708e75
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,27 +45,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T02:03:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T02:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: oat-project-fixture
 
-**Status:** All implementation tasks complete; final review pending
+**Status:** Implementation in progress; schema-v2 live evidence pending
 **Started:** 2026-07-11
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — Final project review
+Implementation — schema-v2 live ownership evidence
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 41 tasks)
-- **Implementation:** `implementation.md` (all tasks complete — final review pending)
+- **Plan:** `plan.md` (complete — 6 phases / 43 tasks)
+- **Implementation:** `implementation.md` (in progress — p05-t24)
 
 ## Progress
 
@@ -167,7 +167,10 @@ Implementation — Final project review
 - ✓ Independent Phase 5 fix-range re-review passed 0C/0I/0M/0m
 - ✓ p06-t04 post-review release revalidation passed all canonical, smoke,
   workspace, docs, and public-package checks
-- → Final independent project review
+- ⚠ The retained canonical implement packet is schema v1 and does not prove
+  direct-root ownership; no user-approved deferral exists
+- → p05-t24 publishes fresh schema-v2 evidence
+- ○ p06-t05 performs final validation and review
 
 ## Blockers
 
@@ -175,4 +178,4 @@ None
 
 ## Next Milestone
 
-Run the final independent project review and receive any findings.
+Publish and review the schema-v2 packet, then complete p06-t05.
