@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: final_review
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p06-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 5     | 5/5       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | complete    | 23    | 19/23     |
-| Phase 6 | in_progress | 4     | 3/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 5     | 5/5       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | complete | 23    | 19/23     |
+| Phase 6 | complete | 4     | 4/4       |
 
-**Total:** 36/41 tasks completed (4 explicitly deferred, 1 pending)
+**Total:** 37/41 tasks completed (4 explicitly deferred)
 
 ---
 
@@ -1573,8 +1573,9 @@ with schema-v2 refresh deferred to the post-ship operator matrix.
 
 ## Phase 6: Documentation, Vault Capture & Release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-12
+**Completed:** 2026-07-13
 
 ### Task p06-t01: OAT docs and smoke runbook
 
@@ -1604,8 +1605,14 @@ passes its nine-assertion implement profile.
 
 ### Task p06-t04: Revalidate release after Phase 5 review fixes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** pending bookkeeping commit
+
+All three canonical report checks passed. Direct smoke lint and formatting
+passed, as did all 116 smoke tests. `pnpm build`, `pnpm build:docs`, `pnpm
+lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and `pnpm
+release:validate` passed; the release validator rebuilt and accepted all five
+public packages at `0.1.58`.
 
 ---
 
@@ -1695,6 +1702,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                             | Passed | Failed | Coverage                                                |
 | ----- | ----------------------------------------------------- | ------ | ------ | ------------------------------------------------------- |
 | Final | Workspace verification + live Codex implement profile | All    | 0      | 9/9 live assertions; 2700 CLI tests plus package suites |
+| p06   | Post-review release image                             | All    | 0      | 116 smoke tests; 5 public package release validations   |
 
 ## Final Summary (for PR/docs)
 
@@ -1736,6 +1744,8 @@ Track test execution during implementation.
 - `pnpm type-check`
 - `pnpm test`
 - `pnpm release:validate`
+- `pnpm test:smoke`
+- direct smoke lint/format and all three canonical report checks
 - `node tools/smoke/evidence/report.mjs --check
 tools/smoke/reports/codex/implement/report.json --expect-profile implement`
 
