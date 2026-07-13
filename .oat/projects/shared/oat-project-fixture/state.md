@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t11
-oat_last_commit: f44b68baa8beac4f13b276e45a4dc8ee12d60d5f
+oat_current_task: p05-t13
+oat_last_commit: e6fbc717b26c635ebfd0fada2945a93b99260ecb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-11T14:11:09.997Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-12T22:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T00:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,16 +57,16 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 5 root-owned phase-agent restoration
+Implementation — final live Codex confirmation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete; recon in `references/`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — lightweight collaborative)
-- **Plan:** `plan.md` (complete — 6 phases / 30 tasks)
-- **Implementation:** `implementation.md` (in progress — Phase 1 complete;
-  Phase 2 complete; Phase 3 complete; Phase 4 complete)
+- **Plan:** `plan.md` (complete — 6 phases / 34 tasks)
+- **Implementation:** `implementation.md` (in progress — final live smoke and
+  release bookkeeping)
 
 ## Progress
 
@@ -139,7 +139,15 @@ Implementation — Phase 5 root-owned phase-agent restoration
 - ✓ p05-t08 deterministic orchestration contract tier complete
 - ✓ p05-t09 fail-fast child execution and observable gate telemetry complete
 - ✓ p05-t10 single-owner metadata and atomic report publication complete
-- → Resume autonomous live-provider runs from the stable hardened baseline
+- ✓ p05-t11 restored direct phase implementation and root-owned review
+- ✓ p05-t12 realigned deterministic producers and assertions
+- ✓ p05-t14 hardened local CLI build readiness
+- ✓ p05-t15 normalized absolute live review project paths
+- ✓ p05-t16 refreshed direct builds and removed stale coordinator wording
+- ✓ p05-t17 made terminal dispatch outcomes mandatory
+- ✓ p06-t01 OAT docs and smoke runbook complete
+- ✓ p06-t02 Vault capture committed externally
+- → p05-t13 final fresh Codex confirmation running
 
 ## Blockers
 
@@ -147,5 +155,5 @@ None
 
 ## Next Milestone
 
-Run the autonomous live-provider and unavailable-target scenarios. Prepare the
-operator batch only after those reports stabilize one source HEAD.
+Publish and check the final Codex implement report, then complete release and
+project bookkeeping.

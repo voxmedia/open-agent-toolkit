@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-12
-oat_current_task_id: p05-t02
+oat_current_task_id: p05-t13
 oat_generated: false
 ---
 
@@ -76,10 +76,10 @@ oat_generated: false
 | Phase 2 | complete    | 5     | 5/5       |
 | Phase 3 | complete    | 3     | 3/3       |
 | Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 13    | 6/13      |
-| Phase 6 | pending     | 3     | 0/3       |
+| Phase 5 | in_progress | 17    | 12/17     |
+| Phase 6 | in_progress | 3     | 2/3       |
 
-**Total:** 20/30 tasks completed
+**Total:** 28/34 tasks completed (4 deferred, 1 in progress, 1 pending)
 
 ---
 
@@ -1348,8 +1348,8 @@ deterministic no-residue cases. Workspace lint, format, and type-check passed;
 
 ### Task p05-t11: Restore root-owned phase-agent orchestration
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commits:** `f44b68ba`, `5a51644d`, `dfb0e090`
 
 **Baseline:** `oat-phase-implementer` v1.0.3 at `3c244937`.
 
@@ -1362,37 +1362,90 @@ fully recorded.
 
 ### Task p05-t12: Realign deterministic smoke producers and assertions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `0b22e019`
 
 ---
 
 ### Task p05-t13: Validate restored topology with one live Codex run
 
-**Status:** pending
+**Status:** in_progress — final fresh confirmation running
 **Commit:** -
 
 **Comparison baseline:** 38m22s, nine passing assertions, mandatory three-tier
 topology.
 
+**Live recovery history:**
+
+- The first restored-topology workflow completed all phase implementers,
+  root-owned reviews, and its Cursor final gate, then exposed absolute review
+  project-path normalization during publication.
+- The next fresh run correctly terminated at its one accepted final gate because
+  p01/p02 dispatch records had been immutably published as `running`. That
+  evidence was rejected and never promoted.
+- A final fresh run is executing after p05-t17 made terminal outcomes mandatory.
+
+---
+
+### Task p05-t14: Harden local smoke build readiness
+
+**Status:** completed
+**Commit:** `ae1d71f5`
+
+Removed stale incremental state during clean, made `dist/index.js` executable,
+and exposed local probe errors. Focused preflight tests and a clean CLI build
+passed.
+
+---
+
+### Task p05-t15: Normalize live review project paths
+
+**Status:** completed
+**Commit:** `3e2874e6`
+
+Normalized in-fixture absolute review frontmatter to canonical worktree-relative
+paths and rejected external paths. Collector coverage passed.
+
+---
+
+### Task p05-t16: Close live smoke follow-up gaps
+
+**Status:** completed
+**Commit:** `378c6d02`
+
+Successful direct CLI builds now refresh the executable mtime, and generated
+scenario prompts use root-owned phase-review terminology. The mtime/executable
+probe and drive tests passed.
+
+---
+
+### Task p05-t17: Require terminal dispatch evidence
+
+**Status:** completed
+**Commit:** `e6fbc717`
+
+Removed `running` from immutable dispatch outcomes and aligned every producer
+prompt to publish accepted launches only after terminal completion or failure.
+Focused record/drive tests and all 111 smoke tests passed.
+
 ---
 
 ## Phase 6: Documentation, Vault Capture & Release
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-12
 
 ### Task p06-t01: OAT docs and smoke runbook
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commits:** `e3a06d9a`, `dc3d6082`
 
 ---
 
 ### Task p06-t02: Vault closing capture pass
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**External commit:** `66053ce7` (`/Users/Shared/Vault`)
 
 ---
 

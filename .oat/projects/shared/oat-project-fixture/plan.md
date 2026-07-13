@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-11
+oat_last_updated: 2026-07-12
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p06'] # final phase only, from workflow.hillCheckpointDefault
@@ -817,6 +817,100 @@ gate. Record elapsed time and launch-count comparison against 38m22s.
 
 ---
 
+### Task p05-t14: Harden local smoke build readiness
+
+_Recovery task discovered when the first live retry could not execute the local
+CLI build._
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `tools/smoke/runner/{preflight.mjs,preflight.test.mjs}`
+
+**Step 1: Reproduce** — prove that a removed `dist/` plus a retained incremental
+build cache can leave `dist/index.js` absent, and that a non-executable local
+entrypoint fails smoke preflight.
+
+**Step 2: Fix** — remove `tsconfig.tsbuildinfo` during clean, make the built
+entrypoint executable, and surface the underlying local probe error in the
+readiness report.
+
+**Step 3: Verify** — run focused preflight tests and clean-build the CLI.
+
+**Step 4: Commit** — `fix(p05-t14): harden local smoke build readiness`
+
+---
+
+### Task p05-t15: Normalize live review project paths
+
+_Recovery task discovered after the first restored-topology provider workflow
+completed but report collection rejected absolute review frontmatter._
+
+**Files:**
+
+- Modify: `tools/smoke/evidence/{collect.mjs,collect.test.mjs}`
+
+**Step 1: Contract test** — accept an absolute `oat_project` only when it
+resolves to the provisioned fixture project, normalize it relative to the
+canonical worktree, and reject external absolute paths.
+
+**Step 2: Implement and verify** — normalize every collected review before
+gate corroboration; run focused collector tests.
+
+**Step 3: Commit** — `fix(p05-t15): normalize live review project paths`
+
+---
+
+### Task p05-t16: Close live smoke follow-up gaps
+
+_Recovery task discovered while starting the confirmation run._
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `tools/smoke/runner/{drive.mjs,drive.test.mjs}`
+
+**Step 1: Keep builds fresh** — touch the executable entrypoint after every
+successful direct CLI build so a non-CLI source commit can still be marked by a
+fresh local build.
+
+**Step 2: Remove stale topology wording** — generated scenario instructions
+must say `root-owned phase review`, never `coordinator-owned self-review`.
+
+**Step 3: Verify** — prove the entrypoint mtime advances, remains executable,
+and the drive suite rejects stale wording.
+
+**Step 4: Commit** — `fix(p05-t16): close live smoke follow-up gaps`
+
+---
+
+### Task p05-t17: Require terminal dispatch evidence
+
+_Recovery task discovered when a confirmation gate correctly blocked immutable
+p01/p02 records that had been published with `outcome: running`._
+
+**Files:**
+
+- Modify: `tools/smoke/CONTRACT.md`
+- Modify: `tools/smoke/evidence/{record.mjs,record.test.mjs}`
+- Modify: `tools/smoke/protocols/*.md`
+- Modify: `tools/smoke/runner/drive.test.mjs`
+
+**Step 1: Fail closed** — reject `running` as an immutable dispatch outcome.
+Pre-start rejection is terminal; an accepted launch is published exactly once,
+after its handle returns `completed` or `failed`.
+
+**Step 2: Align every producer prompt** — retain launcher-owned selection and
+acceptance facts before launch, but defer immutable publication until terminal
+outcome is known.
+
+**Step 3: Verify** — focused record/drive tests and the complete smoke suite
+pass.
+
+**Step 4: Commit** — `fix(p05-t17): require terminal dispatch evidence`
+
+---
+
 ## Phase 6: Documentation, Vault Capture & Release
 
 _Sequential; depends on p05._
@@ -938,11 +1032,12 @@ Expected: all green.
   isolated closeout policy
 - Phase 3: 3 tasks — Evidence collection, assertions/report, negative controls
 - Phase 4: 3 tasks — Cross-harness coordinator selection contract in workflow skills
-- Phase 5: 13 tasks — Harness protocols, deterministic/fail-fast recovery,
-  report publication, phase-agent restoration, and bounded live smoke evidence
+- Phase 5: 17 tasks — Harness protocols, deterministic/fail-fast recovery,
+  report publication, phase-agent restoration, terminal evidence hardening, and
+  bounded live smoke evidence
 - Phase 6: 3 tasks — OAT docs + diagrams, Vault closing pass, release validation
 
-**Total: 30 tasks**
+**Total: 34 tasks**
 
 Ready for code review and merge.
 
