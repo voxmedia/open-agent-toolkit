@@ -5,156 +5,252 @@ oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: cli-update-notifications
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Notify eligible CLI users when a newer stable OAT release is
+available without prompting, disrupting automation, or changing command
+results.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** A root Commander hook delegates to an injected update
+notification service that applies eligibility policy, reads a user-level
+preference and TTL cache, performs a short npm registry check when stale, and
+emits a rate-limited warning through the existing logger.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript, Node.js built-in fetch/filesystem APIs, Commander,
+Vitest, and the existing OAT config/logger primitives.
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- [x] HiLL selection deferred to implementation preflight
+- [x] Evaluated phases for parallelism opportunities
+- [x] Set `oat_plan_parallel_groups` in frontmatter
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+The plan is sequential. Phase 2 imports and integrates the service and config
+surface created in Phase 1, so its tests cannot pass independently. The final
+documentation and lockstep package-version work also depends on the implemented
+behavior and resulting file set. No adjacent phases have both disjoint write
+sets and independent verification, so no parallel group is declared.
 
 ---
 
-## Dispatch Profile
+## Phase 1: Notification Policy and Service
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add the user update-notification preference
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
 
 **Step 1: Write test (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Add focused tests proving that user config normalizes, reads, and writes the
+optional `updateNotifications` boolean; missing values remain enabled by
+default; and config get/set/list/describe expose the user-scoped setting.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
 Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+Extend `UserConfig` normalization and the config command catalog/set/get paths
+with a user-level `updateNotifications` boolean. Missing means enabled; explicit
+`false` is preserved. The owning command is
+`oat config set updateNotifications false --user`.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
 Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
 
 **Step 3: Refactor**
 
-{Any cleanup or improvements while tests stay green}
+Keep the new key aligned with existing config metadata, key ordering, boolean
+parsing, and scope validation rather than adding a separate mutation path.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Focused tests and CLI type-check pass.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
+git commit -m "feat(p01-t01): add update notification preference"
 ```
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Implement the cached update notification service
 
 **Files:**
 
-- {File list}
+- Create: `packages/cli/src/app/update-notifier.ts`
+- Create: `packages/cli/src/app/update-notifier.test.ts`
 
 **Step 1: Write test (RED)**
 
-{Test code}
+Cover stable-version comparison, malformed/prerelease suppression, all
+eligibility gates, fresh and stale cache behavior, 24-hour check and 72-hour
+notice TTLs, successful registry metadata, timeouts/errors, atomic cache
+updates, exact notice content, and the never-throw contract using injected
+dependencies.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts`
+Expected: Test fails (RED)
 
 **Step 2: Implement (GREEN)**
 
-{Implementation code or signatures}
+Create a bootstrap-owned service that:
+
+- skips non-interactive, JSON, CI, test, source-development, ephemeral-runner,
+  environment-opted-out, and user-opted-out invocations;
+- reads `~/.oat/update-check.json`;
+- fetches the encoded npm package `latest` endpoint only when the check TTL is
+  stale, using a short abort timeout;
+- accepts only strict stable `major.minor.patch` versions and compares numeric
+  tuples;
+- warns at most once per version every 72 hours with the documented npm global
+  install command; and
+- contains every operational error without changing command state.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts`
+Expected: Test passes (GREEN)
 
 **Step 3: Refactor**
 
-{Optional cleanup}
+Keep policy, version parsing, cache validation, and registry access as small
+internal functions. Use existing user-config and atomic JSON primitives, with
+dependencies injectable at the orchestration boundary.
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/app/update-notifier.test.ts && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: Focused tests and CLI type-check pass.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+git add packages/cli/src/app/update-notifier.ts packages/cli/src/app/update-notifier.test.ts
+git commit -m "feat(p01-t02): add cached CLI update notifier"
 ```
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: CLI Integration and Release Readiness
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Wire notifications into command dispatch
 
-{Continue TDD pattern...}
+**Files:**
+
+- Modify: `packages/cli/src/index.ts`
+- Modify: `packages/cli/src/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+Add bootstrap tests proving actionable commands invoke the notifier hook once,
+while help/version paths do not; notifier rejection is contained; normalized
+argv remains unchanged; and command parsing still completes with the original
+exit behavior.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/index.test.ts`
+Expected: Test fails (RED)
+
+**Step 2: Implement (GREEN)**
+
+Install a root Commander `preAction` hook after command registration. Build the
+existing global command context for the action command and call the notifier
+with `OAT_VERSION`, process argv/environment, home, interaction/JSON flags, and
+logger. Keep the hook thin and best-effort.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/index.test.ts`
+Expected: Test passes (GREEN)
+
+**Step 3: Refactor**
+
+Preserve `main()` readability and avoid command-handler changes. Keep all
+notification behavior in the app service.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/index.test.ts src/app/update-notifier.test.ts`
+Expected: Bootstrap and notifier tests pass together.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/index.ts packages/cli/src/index.test.ts
+git commit -m "feat(p02-t01): notify CLI users about stable updates"
+```
+
+---
+
+### Task p02-t02: Document behavior and prepare the public release
+
+**Files:**
+
+- Modify: `packages/cli/README.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Write validation expectation (RED)**
+
+Confirm the docs do not yet describe the passive notice, TTL behavior, JSON/CI
+suppression, `NO_UPDATE_NOTIFIER`, or the user config opt-out. Confirm release
+validation reports the shipped CLI change without the required lockstep public
+package bump.
+
+Run: `pnpm release:validate`
+Expected: Release validation identifies missing lockstep version updates.
+
+**Step 2: Implement (GREEN)**
+
+Document update-notification behavior and both suppression mechanisms in the
+CLI README and existing config/local-state page. Bump the five lockstep public
+packages by one patch version and update the lockfile.
+
+Run: `pnpm release:validate`
+Expected: Public package versions and shipped functionality validation pass.
+
+**Step 3: Refactor**
+
+Keep documentation concise, ensure the configuration command is copyable, and
+avoid promising interactive or package-manager-executed updates.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check && pnpm format && pnpm release:validate`
+Expected: CLI tests, lint, type-check, formatting, and release validation pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/README.md apps/oat-docs/docs/cli-utilities/config-and-local-state.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git commit -m "docs(p02-t02): document CLI update notifications"
+```
 
 ---
 
@@ -164,13 +260,14 @@ git commit -m "feat(p01-t02): {description}"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact |
+| ------ | -------- | ------- | ---------- | -------- |
+| p01    | code     | pending | -          | -        |
+| p02    | code     | pending | -          | -        |
+| final  | code     | pending | -          | -        |
+| spec   | artifact | pending | -          | -        |
+| design | artifact | pending | -          | -        |
+| plan   | artifact | pending | 2026-07-13 | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -187,10 +284,10 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 2 tasks - User preference and cached notifier service
+- Phase 2: 2 tasks - Command integration, documentation, and release readiness
 
-**Total: {N} tasks**
+**Total: 4 tasks**
 
 Ready for code review and merge.
 
@@ -198,7 +295,5 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
+- Design: `design.md`
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
