@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev3-t01
 oat_last_commit: 9edf62a4de410bfe13a06cd373faeb191ced8b96
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -31,24 +31,24 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/143' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T16:00:20.521Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T21:59:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-13T23:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cli-update-notifications
 
-**Status:** Final re-review pending
+**Status:** Artifact alignment in progress
 **Started:** 2026-07-13
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — p-rev2 fixes passed phase review; awaiting final Fable re-review.
+Implementation — p-rev3 artifact alignment queued; re-review explicitly skipped.
 
 ## Artifacts
 
@@ -56,7 +56,7 @@ Implementation — p-rev2 fixes passed phase review; awaiting final Fable re-rev
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
 - **Plan:** `plan.md` (complete — artifact review passed)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (artifact alignment in progress)
 
 ## Progress
 
@@ -82,7 +82,8 @@ Implementation — p-rev2 fixes passed phase review; awaiting final Fable re-rev
 - ✓ Revised summary, documentation, and PR handoff refreshed
 - ✓ Supplemental Fable review received
 - ✓ p-rev2 review fixes implemented and reviewed
-- ⧗ Final Fable re-review pending
+- ✓ Final Fable re-review received
+- ⧗ p-rev3 artifact alignment queued
 
 ## Blockers
 
@@ -90,4 +91,5 @@ None
 
 ## Next Milestone
 
-Run final Fable re-review and close out the revised handoff.
+Execute `prev3-t01`, run deterministic verification, and refresh documentation
+handoff without another code review.

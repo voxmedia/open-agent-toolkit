@@ -312,16 +312,17 @@ git commit -m "chore(p02-t03): bump lockstep public packages"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                                 |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------------- |
-| p01    | code     | passed   | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`              |
-| p02    | code     | passed   | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`              |
-| p-rev1 | code     | passed   | 2026-07-13 | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md` |
-| p-rev2 | code     | passed   | 2026-07-13 | `reviews/p-rev2-review-2026-07-13T215721Z.md`            |
-| final  | code     | received | 2026-07-13 | `reviews/final-review-2026-07-13T220207Z.md`             |
-| spec   | artifact | pending  | -          | -                                                        |
-| design | artifact | pending  | -          | -                                                        |
-| plan   | artifact | passed   | 2026-07-13 | structured auto-review                                   |
+| Scope  | Type     | Status      | Date       | Artifact                                                 |
+| ------ | -------- | ----------- | ---------- | -------------------------------------------------------- |
+| p01    | code     | passed      | 2026-07-13 | `reviews/archived/p01-review-2026-07-13.md`              |
+| p02    | code     | passed      | 2026-07-13 | `reviews/archived/p02-review-2026-07-13.md`              |
+| p-rev1 | code     | passed      | 2026-07-13 | `reviews/archived/p-rev1-rereview-2026-07-13T183541Z.md` |
+| p-rev2 | code     | passed      | 2026-07-13 | `reviews/p-rev2-review-2026-07-13T215721Z.md`            |
+| p-rev3 | code     | pending     | -          | re-review skipped by explicit user instruction           |
+| final  | code     | fixes_added | 2026-07-13 | `reviews/archived/final-review-2026-07-13T220207Z.md`    |
+| spec   | artifact | pending     | -          | -                                                        |
+| design | artifact | pending     | -          | -                                                        |
+| plan   | artifact | passed      | 2026-07-13 | structured auto-review                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -556,6 +557,40 @@ git commit -m "fix(prev2-t02): continue after update prompt errors"
 
 ---
 
+## Phase p-rev3: Truthy Opt-Out Artifact Alignment
+
+Source: final Fable re-review Minor (2026-07-13)
+
+### Task prev3-t01: (review) Align truthy opt-out lifecycle artifacts
+
+**Files:**
+
+- Modify: `.oat/projects/shared/cli-update-notifications/design.md`
+- Modify: `.oat/projects/shared/cli-update-notifications/summary.md`
+- Modify: `.oat/repo/reference/decisions/DR-260713-dual-update-suppression.md`
+
+**Step 1: Implement fix**
+
+Replace strict-`NO_UPDATE_NOTIFIER=1` lifecycle wording with the shipped truthy
+contract. Preserve discovery.md as historical context. Refresh summary
+frontmatter to include p-rev2 and this p-rev3 artifact-alignment task, and note
+the explicit p-rev2 fixes and m2 deferral.
+
+**Step 2: Verify**
+
+Run: `pnpm exec oxfmt --check .oat/projects/shared/cli-update-notifications/design.md .oat/projects/shared/cli-update-notifications/summary.md .oat/repo/reference/decisions/DR-260713-dual-update-suppression.md && git diff --check`
+Expected: Lifecycle artifacts are formatted and no stale strict-only wording
+remains outside historical discovery context.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/cli-update-notifications/design.md .oat/projects/shared/cli-update-notifications/summary.md .oat/repo/reference/decisions/DR-260713-dual-update-suppression.md
+git commit -m "docs(prev3-t01): align truthy opt-out lifecycle artifacts"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -564,8 +599,9 @@ git commit -m "fix(prev2-t02): continue after update prompt errors"
 - Phase 2: 3 tasks - Command integration, documentation, and release readiness
 - Phase p-rev1: 3 tasks - Interactive bundled-tool guard and revision release
 - Phase p-rev2: 2 tasks - Supplemental Fable review fixes
+- Phase p-rev3: 1 task - Truthy opt-out lifecycle alignment
 
-**Total: 10 tasks**
+**Total: 11 tasks**
 
 Ready for code review and merge.
 

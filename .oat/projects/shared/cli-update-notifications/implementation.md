@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: null
+oat_current_task_id: prev3-t01
 oat_generated: false
 ---
 
@@ -24,14 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 2     | 2/2       |
-| Phase 2      | complete | 3     | 3/3       |
-| Phase p-rev1 | complete | 3     | 3/3       |
-| Phase p-rev2 | complete | 2     | 2/2       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 2     | 2/2       |
+| Phase 2      | complete    | 3     | 3/3       |
+| Phase p-rev1 | complete    | 3     | 3/3       |
+| Phase p-rev2 | complete    | 2     | 2/2       |
+| Phase p-rev3 | in_progress | 1     | 0/1       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -353,6 +354,37 @@ oat_generated: false
   independent p-rev2 review returned no findings.
 
 **Review artifact:** `reviews/p-rev2-review-2026-07-13T215721Z.md`
+
+---
+
+## Phase p-rev3: Truthy Opt-Out Artifact Alignment
+
+**Status:** in_progress
+**Started:** 2026-07-13
+
+### Review Received: Final Fable Re-review
+
+**Review artifact:**
+`reviews/archived/final-review-2026-07-13T220207Z.md`
+
+**Finding:**
+
+- Minor: lifecycle design, summary, and dual-suppression decision still
+  described only `NO_UPDATE_NOTIFIER=1` after the shipped contract expanded to
+  truthy values.
+
+**User disposition:** Convert, fix, and explicitly skip re-review because this
+is deterministic artifact-only alignment.
+
+**New task added:** `prev3-t01`
+
+### Task prev3-t01: Align truthy opt-out lifecycle artifacts
+
+**Status:** in_progress
+**Commit:** -
+
+**Re-review:** skipped by explicit user instruction; deterministic verification
+will be recorded in phase bookkeeping.
 
 ---
 
