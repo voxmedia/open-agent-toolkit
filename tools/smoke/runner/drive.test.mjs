@@ -357,6 +357,9 @@ test('stages then publishes a passing report while preserving concurrent metadat
           await writeFile(manifest.manifestPath, `${JSON.stringify(latest)}\n`);
           return { outputPath: join(received.outDirectory, 'bundle.json') };
         },
+        formatBundle: async (bundlePath) => {
+          calls.push({ bundlePath, operation: 'format' });
+        },
         emitReport: async (received) => {
           calls.push(received);
           return {
@@ -374,8 +377,13 @@ test('stages then publishes a passing report while preserving concurrent metadat
     const persisted = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
 
     assert.match(calls[0].outDirectory, /report-staging-/);
-    assert.equal(calls[2].stagingDirectory, calls[0].outDirectory);
-    assert.equal(calls[2].destination, reportRoot);
+    assert.deepEqual(calls[1], {
+      bundlePath: join(calls[0].outDirectory, 'bundle.json'),
+      operation: 'format',
+    });
+    assert.equal(calls[2].bundlePath, calls[1].bundlePath);
+    assert.equal(calls[3].stagingDirectory, calls[0].outDirectory);
+    assert.equal(calls[3].destination, reportRoot);
     assert.equal(result.report.jsonPath, join(reportRoot, 'report.json'));
     assert.equal(persisted.drive.status, 'operator-returned');
     assert.equal(persisted.collection.status, 'completed');
@@ -409,6 +417,7 @@ test('persists and rejects a failed evidence report', async () => {
             collect: async (received) => ({
               outputPath: join(received.outDirectory, 'bundle.json'),
             }),
+            formatBundle: async () => {},
             emitReport: async (received) => ({
               jsonPath: join(received.outDirectory, 'report.json'),
               report: { status: 'failed', summary: { failed: 2 } },

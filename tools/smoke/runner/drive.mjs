@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   mkdir,
@@ -10,6 +10,7 @@ import {
 } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 import { collectEvidence } from '../evidence/collect.mjs';
 import { emitEvidenceReport } from '../evidence/report.mjs';
@@ -31,6 +32,7 @@ const deterministicProvider = join(
 );
 const PROMPT_START = '<!-- OAT_SMOKE_PROMPT_START -->';
 const PROMPT_END = '<!-- OAT_SMOKE_PROMPT_END -->';
+const execFileAsync = promisify(execFile);
 
 const PROTOCOL_FILES = Object.freeze({
   deterministic: 'deterministic.md',
@@ -72,6 +74,20 @@ async function atomicWriteJson(path, value) {
   } finally {
     await rm(temporaryPath, { force: true }).catch(() => {});
   }
+}
+
+export async function formatBundleForPublication(bundlePath) {
+  await execFileAsync(
+    'pnpm',
+    ['exec', 'oxfmt', '--write', resolve(bundlePath)],
+    {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        PATH: `${join(repositoryRoot, 'tools/smoke/bin')}:${process.env.PATH ?? ''}`,
+      },
+    },
+  );
 }
 
 export async function publishReportDirectory(
@@ -523,6 +539,7 @@ export async function collectSmoke(
   {
     collect = collectEvidence,
     emitReport = emitEvidenceReport,
+    formatBundle = formatBundleForPublication,
     publish = publishReportDirectory,
     repository = repositoryRoot,
     runsDirectory = runRoot,
@@ -568,6 +585,7 @@ export async function collectSmoke(
       outDirectory: stagingDirectory,
       worktreePath: manifest.worktreePath,
     });
+    await formatBundle(collected.outputPath);
     const report = await emitReport({
       bundlePath: collected.outputPath,
       outDirectory: stagingDirectory,

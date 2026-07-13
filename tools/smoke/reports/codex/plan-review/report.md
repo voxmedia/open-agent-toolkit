@@ -3,7 +3,7 @@
 **Scenario:** plan-review
 **Status:** passed
 **Assertions:** 5 passed / 0 failed
-**Bundle SHA-256:** e07f72c8f148a8de6c502f9eb86fca71f4f0bc153879c48163f57551cff907eb
+**Bundle SHA-256:** 3719a28893bacc73ed06c8c3f42f8ea8ba48015f0b30f4a1f1d305d945c021d2
 **Authority:** `report.json` is authoritative; this Markdown is a derived view.
 
 | Assertion                           | Severity  | Status | Description                                                                                  |
