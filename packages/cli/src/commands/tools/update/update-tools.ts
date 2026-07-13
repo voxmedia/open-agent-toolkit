@@ -313,7 +313,8 @@ function getBundledPackMembers(
   scope: ConcreteScope,
 ): BundledPackMember[] {
   return BUNDLED_PACK_MEMBERS[pack].filter(
-    (member) => scope === 'project' || member.type === 'skill',
+    (member) =>
+      scope === 'project' || member.type === 'skill' || pack === 'workflows',
   );
 }
 

@@ -14,13 +14,14 @@ import {
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
 import { resolveAssetsRoot } from '@fs/assets';
-import { resolveProjectRoot } from '@fs/paths';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
   installWorkflows as defaultInstallWorkflows,
   type InstallWorkflowsOptions,
   type InstallWorkflowsResult,
+  type InstallWorkflowsScope,
 } from './install-workflows';
 
 interface InitToolsWorkflowsOptions {
@@ -30,6 +31,11 @@ interface InitToolsWorkflowsOptions {
 interface InitToolsWorkflowsDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  resolveScopeRoot: (
+    scope: InstallWorkflowsScope,
+    cwd: string,
+    home: string,
+  ) => string;
   resolveAssetsRoot: () => Promise<string>;
   installWorkflows: (
     options: InstallWorkflowsOptions,
@@ -37,12 +43,10 @@ interface InitToolsWorkflowsDependencies {
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
 }
 
-const PROJECT_SCOPE_ONLY_MESSAGE =
-  'oat init tools workflows currently supports only --scope project.';
-
 const DEFAULT_DEPENDENCIES: InitToolsWorkflowsDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  resolveScopeRoot,
   resolveAssetsRoot,
   installWorkflows: defaultInstallWorkflows,
   confirmAction,
@@ -50,6 +54,7 @@ const DEFAULT_DEPENDENCIES: InitToolsWorkflowsDependencies = {
 
 function reportSuccess(
   context: CommandContext,
+  scope: InstallWorkflowsScope,
   targetRoot: string,
   assetsRoot: string,
   result: InstallWorkflowsResult,
@@ -57,7 +62,7 @@ function reportSuccess(
   if (context.json) {
     context.logger.json({
       status: 'ok',
-      scope: 'project',
+      scope,
       targetRoot,
       assetsRoot,
       result,
@@ -66,6 +71,7 @@ function reportSuccess(
   }
 
   context.logger.info('Installed workflows tool pack.');
+  context.logger.info(`Scope: ${scope}`);
   context.logger.info(`Target root: ${targetRoot}`);
   context.logger.info(
     `Skills: copied=${result.copiedSkills.length}, updated=${result.updatedSkills.length}, skipped=${result.skippedSkills.length}`,
@@ -82,7 +88,7 @@ function reportSuccess(
   context.logger.info(
     `Projects root initialized: ${result.projectsRootInitialized ? 'yes' : 'no'}`,
   );
-  context.logger.info('Run: oat sync --scope project');
+  context.logger.info(`Run: oat sync --scope ${scope}`);
 }
 
 async function runInitToolsWorkflows(
@@ -91,15 +97,16 @@ async function runInitToolsWorkflows(
   dependencies: InitToolsWorkflowsDependencies,
 ): Promise<boolean> {
   try {
-    if (context.scope === 'user') {
-      throw new Error(PROJECT_SCOPE_ONLY_MESSAGE);
-    }
-
-    const targetRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const scope: InstallWorkflowsScope =
+      context.scope === 'user' ? 'user' : 'project';
+    const targetRoot =
+      scope === 'user'
+        ? dependencies.resolveScopeRoot('user', context.cwd, context.home)
+        : await dependencies.resolveProjectRoot(context.cwd);
 
     if (options.force && context.interactive) {
       const confirmed = await dependencies.confirmAction(
-        'Force overwrite existing workflows assets in project scope?',
+        `Force overwrite existing workflows assets in ${scope} scope?`,
         { interactive: context.interactive },
       );
       if (!confirmed) {
@@ -115,10 +122,11 @@ async function runInitToolsWorkflows(
     const result = await dependencies.installWorkflows({
       assetsRoot,
       targetRoot,
+      scope,
       force: options.force,
     });
 
-    reportSuccess(context, targetRoot, assetsRoot, result);
+    reportSuccess(context, scope, targetRoot, assetsRoot, result);
     process.exitCode = 0;
     return true;
   } catch (error) {

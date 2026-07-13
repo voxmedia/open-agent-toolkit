@@ -442,6 +442,53 @@ describe('updateTools', () => {
     ).toBe(true);
   });
 
+  it('refreshes all four workflows asset classes at user scope', async () => {
+    const staleSkill = createTool({
+      name: WORKFLOW_SKILLS[0],
+      scope: 'user',
+      pack: 'workflows',
+      status: 'outdated',
+      version: '0.9.0',
+      bundledVersion: '1.0.0',
+    });
+    const deps = createDeps({ user: [staleSkill] });
+
+    const result = await updateTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.updated).toContainEqual(staleSkill);
+    for (const skill of WORKFLOW_SKILLS) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/skills/${skill}`,
+        dest: `/home/user/.agents/skills/${skill}`,
+      });
+    }
+    for (const agent of WORKFLOW_AGENTS) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/agents/${agent}`,
+        dest: `/home/user/.agents/agents/${agent}`,
+      });
+    }
+    for (const template of WORKFLOW_TEMPLATES) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/templates/${template}`,
+        dest: `/home/user/.oat/templates/${template}`,
+      });
+    }
+    for (const script of WORKFLOW_SCRIPTS) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/scripts/${script}`,
+        dest: `/home/user/.oat/scripts/${script}`,
+      });
+    }
+  });
+
   it('reconciles docs scripts during pack updates', async () => {
     const tool = createTool({
       name: 'oat-docs-analyze',

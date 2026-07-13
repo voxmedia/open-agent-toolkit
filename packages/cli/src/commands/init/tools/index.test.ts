@@ -169,6 +169,8 @@ function createHarness(options: HarnessOptions = {}) {
     updatedScripts: [],
     skippedScripts: [],
     projectsRootInitialized: false,
+    projectsRootConfigInitialized: false,
+    projectsDirsScaffolded: false,
     resolvedProjectsRoot: '.oat/projects/shared',
   }));
   const installUtility = vi.fn(async () => ({
@@ -622,8 +624,8 @@ describe('createInitToolsCommand', () => {
     const { command, selectWithAbort } = createHarness({
       interactive: true,
       contextScopeSelection: 'gate',
-      // Only project-only packs — no user-eligible packs in the selection.
-      packSelection: [['workflows', 'project-management']],
+      // Only the project-only pack — no user-eligible packs in the selection.
+      packSelection: [['project-management']],
       scopeSelection: [],
       toolsByScope: {
         project: [],
@@ -726,7 +728,31 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('handles scope conflicts for mixed project-only and user-eligible packs', async () => {
+  it('routes a fresh workflows aggregate install to user scope without touching projectRoot', async () => {
+    const { command, installWorkflows } = createHarness({
+      interactive: true,
+      packSelection: [['workflows']],
+      scopeSelection: ['user'],
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(installWorkflows).toHaveBeenCalledTimes(1);
+    expect(installWorkflows).toHaveBeenCalledWith({
+      assetsRoot: '/tmp/assets',
+      targetRoot: '/tmp/home',
+      scope: 'user',
+    });
+    expect(installWorkflows).not.toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+  });
+
+  it('supports user scope for workflows alongside other user-eligible packs', async () => {
     const {
       command,
       selectManyWithAbort,
@@ -741,9 +767,8 @@ describe('createInitToolsCommand', () => {
         project: [],
         user: [],
       },
-      // Per-pack selectors for ideas/utility/research, then workflows
-      // local-paths prompt.
-      scopeSelection: ['user', 'user', 'user', 'local'],
+      // Per-pack selectors for ideas/workflows/utility/research.
+      scopeSelection: ['user', 'user', 'user', 'user'],
     });
 
     await runCommand(command, [], ['--scope', 'all']);
@@ -751,7 +776,10 @@ describe('createInitToolsCommand', () => {
     // Pack selection is the only multiselect.
     expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
     expect(installWorkflows).toHaveBeenCalledWith(
-      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+      expect.objectContaining({
+        targetRoot: '/tmp/home',
+        scope: 'user',
+      }),
     );
     expect(installIdeas).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
@@ -898,6 +926,31 @@ describe('createInitToolsCommand', () => {
     expect(capture.info.join('\n')).toContain('oat sync --scope user');
   });
 
+  it('removes every user-scope workflows asset class when a narrower end-state is confirmed', async () => {
+    const { command, removeDirectory, removeFile } = createHarness({
+      interactive: true,
+      packSelection: [['workflows']],
+      scopeSelection: ['project', 'yes'],
+      toolsByScope: {
+        project: [createScannedTool('oat-project-new', 'workflows', 'project')],
+        user: [createScannedTool('oat-project-new', 'workflows', 'user')],
+      },
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(removeDirectory).toHaveBeenCalledWith(
+      '/tmp/home/.agents/skills/oat-project-new',
+    );
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/home/.agents/agents/oat-reviewer.md',
+    );
+    expect(removeFile).toHaveBeenCalledWith('/tmp/home/.oat/templates/plan.md');
+    expect(removeFile).toHaveBeenCalledWith(
+      '/tmp/home/.oat/scripts/generate-oat-state.sh',
+    );
+  });
+
   it('batch-confirm gate: declining applies no installs and no removals', async () => {
     const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
@@ -1010,6 +1063,8 @@ describe('createInitToolsCommand', () => {
       updatedScripts: [],
       skippedScripts: [],
       projectsRootInitialized: false,
+      projectsRootConfigInitialized: false,
+      projectsDirsScaffolded: false,
       resolvedProjectsRoot: '.oat/projects/shared',
     });
 
@@ -1048,6 +1103,8 @@ describe('createInitToolsCommand', () => {
       updatedScripts: [],
       skippedScripts: [],
       projectsRootInitialized: false,
+      projectsRootConfigInitialized: false,
+      projectsDirsScaffolded: false,
       resolvedProjectsRoot: '.oat/projects/shared',
     });
 
@@ -1082,6 +1139,8 @@ describe('createInitToolsCommand', () => {
       updatedScripts: [],
       skippedScripts: [],
       projectsRootInitialized: false,
+      projectsRootConfigInitialized: false,
+      projectsDirsScaffolded: false,
       resolvedProjectsRoot: '.oat/projects/shared',
     });
 

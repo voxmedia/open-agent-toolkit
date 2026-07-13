@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { rm, unlink } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 
 import { buildCommandContext } from '@app/command-context';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -35,7 +35,7 @@ const defaultDependencies: RemoveToolsDependencies = {
     await rm(path, { recursive: true, force: true });
   },
   removeFile: async (path) => {
-    await unlink(path);
+    await rm(path, { force: true });
   },
 };
 

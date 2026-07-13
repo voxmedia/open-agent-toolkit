@@ -1,3 +1,8 @@
+import {
+  WORKFLOW_AGENTS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_TEMPLATES,
+} from '@commands/init/tools/shared/skill-manifest';
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { describe, expect, it } from 'vitest';
 
@@ -134,6 +139,38 @@ describe('removeTools', () => {
     ]);
   });
 
+  it('removes workflow agents, templates, and scripts with a user-scope pack', async () => {
+    const tools = [
+      createTool({
+        name: 'oat-project-new',
+        scope: 'user',
+        pack: 'workflows',
+      }),
+    ];
+    const deps = createDeps({ user: tools });
+
+    await removeTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    for (const agent of WORKFLOW_AGENTS) {
+      expect(deps.removedFiles).toContain(`/home/user/.agents/agents/${agent}`);
+    }
+    for (const template of WORKFLOW_TEMPLATES) {
+      expect(deps.removedFiles).toContain(
+        `/home/user/.oat/templates/${template}`,
+      );
+    }
+    for (const script of WORKFLOW_SCRIPTS) {
+      expect(deps.removedFiles).toContain(`/home/user/.oat/scripts/${script}`);
+    }
+  });
+
   it('removes all tools with --all', async () => {
     const tools = [
       createTool({ name: 'oat-idea-new', pack: 'ideas' }),
@@ -157,7 +194,9 @@ describe('removeTools', () => {
 
     expect(result.removed).toHaveLength(3);
     expect(deps.removedDirs).toHaveLength(2); // two skills
-    expect(deps.removedFiles).toHaveLength(1); // one agent
+    expect(deps.removedFiles).toHaveLength(
+      1 + WORKFLOW_TEMPLATES.length + WORKFLOW_SCRIPTS.length,
+    );
   });
 
   it('dry-run previews removal without deleting', async () => {

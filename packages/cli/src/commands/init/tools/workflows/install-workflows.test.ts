@@ -94,6 +94,50 @@ describe('installWorkflows', () => {
     expect(result.projectsRootInitialized).toBe(true);
   });
 
+  it('installs all four asset classes at user scope without project scaffolding', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'home');
+    await seedAssets(assetsRoot);
+
+    const result = await installWorkflows({
+      assetsRoot,
+      targetRoot,
+      scope: 'user',
+    });
+
+    expect(result.copiedSkills).toHaveLength(WORKFLOW_SKILLS.length);
+    expect(result.copiedAgents).toHaveLength(WORKFLOW_AGENTS.length);
+    expect(result.copiedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
+    expect(result.copiedScripts).toHaveLength(WORKFLOW_SCRIPTS.length);
+    await expect(
+      stat(
+        join(targetRoot, '.agents', 'skills', WORKFLOW_SKILLS[0], 'SKILL.md'),
+      ),
+    ).resolves.toBeDefined();
+    await expect(
+      stat(join(targetRoot, '.agents', 'agents', WORKFLOW_AGENTS[0])),
+    ).resolves.toBeDefined();
+    await expect(
+      stat(join(targetRoot, '.oat', 'templates', WORKFLOW_TEMPLATES[0])),
+    ).resolves.toBeDefined();
+    const scriptPath = join(targetRoot, '.oat', 'scripts', WORKFLOW_SCRIPTS[0]);
+    await expect(stat(scriptPath)).resolves.toBeDefined();
+    expect((await stat(scriptPath)).mode & 0o111).not.toBe(0);
+
+    expect(result.projectsRootInitialized).toBe(false);
+    expect(result.projectsRootConfigInitialized).toBe(false);
+    expect(result.projectsDirsScaffolded).toBe(false);
+    expect(result.resolvedProjectsRoot).toBe('');
+    await expect(
+      stat(join(targetRoot, '.oat', 'projects-root')),
+    ).rejects.toThrow();
+    await expect(
+      stat(join(targetRoot, '.oat', 'config.json')),
+    ).rejects.toThrow();
+    await expect(stat(join(targetRoot, '.oat', 'projects'))).rejects.toThrow();
+  });
+
   it('preserves script chmod 0o755', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
