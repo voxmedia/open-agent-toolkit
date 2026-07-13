@@ -20,7 +20,32 @@ The canonical plan-writing contract makes the plan producer the primary and norm
 
 ## Architecture
 
-_Pending collaborative review._
+### System Context
+
+The change is a distributed prose contract across ten canonical surfaces: two dispatched agent roles, seven plan/lifecycle skills, and one CLI prompt constant. Canonical `.agents/` content remains the only authored source for roles and skills; `oat sync --scope all` regenerates provider views after implementation. The CLI context note independently carries the same contract because gate reviewers can be launched across runtimes without loading canonical skills.
+
+**Key Components:**
+
+- **Planning-time resolver (`oat-project-plan-writing`):** Reads applicable repository instructions and relevant manifests once, distinguishes fix/write commands from check-only commands, and writes the concrete command into each artifact-writing task.
+- **Runtime hygiene contract:** A verbatim, greppable `Artifact hygiene contract:` block in the phase implementer, reviewer, and six direct artifact-writing lifecycle skills. It executes a supplied command first and performs repository discovery only as a fallback.
+- **Gate-review prompt injection:** `REVIEW_GATE_CONTEXT_NOTE` carries the same runtime contract into CLI-dispatched gate reviews.
+- **Release and provider projection:** Canonical edits are projected by `oat sync --scope all`; bundled-asset delivery is represented by lockstep version bumps across the five public packages.
+
+### Data Flow
+
+For planned implementation work:
+
+1. The plan writer reads applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests.
+2. It selects the documented write/fix command, not a check-only variant, and records a file-scoped invocation when supported.
+3. Each artifact-writing task carries that concrete command and the relevant verification step.
+4. The dispatched implementer executes the supplied command over its edited files, then runs applicable task/DoD verification. It does not repeat discovery unless the supplied instruction is absent or unusable.
+
+For direct lifecycle or review writes:
+
+1. The writing role or skill checks for a command supplied by its governing task or brief.
+2. If none is usable, it applies the same ordered fallback discovery.
+3. It formats only created or edited files when supported, avoiding unrelated whole-tree rewrites.
+4. If no command is discoverable, it emits `no format command discovered in repo instructions; skipping` once and continues.
 
 ## Component Design
 
