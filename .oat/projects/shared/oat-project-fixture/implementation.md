@@ -1524,14 +1524,18 @@ deferred to the post-ship operator matrix by user direction.
 
 ### Task p05-t22: Align the normative smoke assertion contract
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `d2422e99`
+
+The normative profile now names the five-task, three-phase fixture and its
+phase-level implementer/reviewer launches. A static contract test binds those
+counts and task IDs to the executable constants and fixture plan.
 
 ---
 
-### Task p05-t23: Format the collector test
+### Task p05-t23: Format and enroll smoke coverage
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---

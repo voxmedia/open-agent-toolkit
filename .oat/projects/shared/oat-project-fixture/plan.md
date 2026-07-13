@@ -1047,20 +1047,24 @@ language to `EXPECTED_TASK_IDS` and executable assertion descriptions.
 
 ---
 
-### Task p05-t23: (review) Format the collector test
+### Task p05-t23: (review) Format and enroll smoke coverage
 
 _Review finding m1. Depends on p05-t22._
 
 **Files:**
 
 - Modify: `tools/smoke/evidence/collect.test.mjs`
+- Modify: `package.json`
 
 **Step 1: Format** — apply the repository formatter without changing behavior.
 
-**Step 2: Verify** —
-`pnpm exec oxfmt --check 'tools/smoke/**/*.{mjs,md,json}'`.
+**Step 2: Enroll** — make the root `pnpm test` path run every smoke test,
+including the nested preset test and canonical packet guard.
 
-**Step 3: Commit** — `style(p05-t23): format smoke collector coverage`
+**Step 3: Verify** — `pnpm test:smoke`, `pnpm format`, and the root
+`pnpm test` path all include the smoke surface.
+
+**Step 4: Commit** — `test(p05-t23): enroll formatted smoke coverage`
 
 ---
 
