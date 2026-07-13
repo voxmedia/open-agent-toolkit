@@ -162,6 +162,28 @@ echo "$FINAL_ROW"
 
 - Tell user: "All tasks complete. Final review required before PR."
 
+**Autonomous final-review path (before prompting):**
+
+If `OAT_AUTONOMOUS=1`, do not present a review-execution choice. Resolve the
+exact reviewer target through the project dispatch substrate, select the
+highest target-preserving route before launch, and run
+`oat-project-review-provide code final` followed immediately by
+`oat-project-review-receive`.
+
+- If receive creates fix tasks, return through the normal bounded implement and
+  re-review loop.
+- Continue to Step 15 only when the final Reviews row is `passed`.
+- A failed blocking review, unresolved Critical finding, exhausted route, or
+  missing credential with no adequate fallback is an autonomy boundary. Persist
+  the review state and report the exact resume action instead of falling
+  through to the prompt.
+- Record gate `IMPLEMENT-11`, the selected route, achieved independence, and
+  dispatch-record reference in `implementation.md`.
+
+After this autonomous branch succeeds, skip the workflow preference,
+fresh-session guidance, and standard prompt below. When `OAT_AUTONOMOUS` is not
+exactly `1`, this branch is inert.
+
 **Workflow preference check (before prompting):**
 
 First resolve the final reviewer target with the same target-first contract as
@@ -273,19 +295,39 @@ legacy or structured preference, normalize legacy values before snapshotting:
 ["summary", "pr"], postApproval: [] }`, and `docs-pr` → `{ preApproval:
 ["summary", "document", "pr"], postApproval: [] }`.
 
+If `OAT_AUTONOMOUS=1` and the preference is unset, use the inventory's
+autonomous lifecycle-tail default:
+
+```yaml
+preApproval: [summary, document, pr]
+postApproval: []
+```
+
+Treat this as an in-memory effective preference and create the same immutable
+sequence snapshot as a configured structured value. Add
+`source: autonomous-default` to that snapshot. A configured legacy or
+structured preference remains authoritative and uses `source: configured`;
+preserve its normalized arrays and stored order exactly.
+
 Persist this immutable state before dispatching a child:
 
 ```yaml
 oat_post_implement_sequence:
   status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # configured | autonomous-default
   final_phase: pNN
   pre_approval: [summary, document, pr]
   pre_approval_completed: []
   approval: pending # pending | approved | not_required
+  approval_source: null # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
 ```
+
+`source` and `approval_source` are additive provenance fields. A resumable
+snapshot created by an older skill version remains valid when either field is
+absent; do not rewrite its stored pre/post arrays merely to backfill provenance.
 
 The snapshot is immutable for this closeout: never re-resolve
 `workflow.postImplementSequence` while it is incomplete. Iterate
@@ -325,14 +367,37 @@ awaiting_approval` with `approval: pending` before asking for final HiLL
    implementation state, append the configured final HiLL completion, and
    continue to the existing next-step behavior.
 
-If the preference is unset, do not create a sequence snapshot. When the
-preference is unset, retain the existing next-step prompt only after final
-approval when a final checkpoint is configured.
+**Autonomous final HiLL approval:**
+
+When `OAT_AUTONOMOUS=1`, gate `IMPLEMENT-16` replaces only the approval question
+in steps 2-4:
+
+1. Require the final review row to be `passed` and verify its review artifact
+   and dispatch record. A failed blocking review or unresolved Critical finding
+   stops before approval.
+2. After all `pre_approval` steps succeed, commit `status: awaiting_approval`
+   with `approval: pending` exactly as above.
+3. Without waiting for input, commit `approval: approved`,
+   `approval_source: oat-autonomous`, and `status: post_approval`, referencing
+   the passing final review and dispatch record in `implementation.md`.
+4. Dispatch incomplete `post_approval` steps in stored order, then finish the
+   snapshot normally.
+
+The policy approval occurs after pre-approval work and before any post-approval
+work. It does not waive a failed review, child failure, repository-policy
+approval, destructive-change risk, or missing-credential boundary. When
+autonomy is inactive, the explicit user approval/decline/defer behavior above
+is unchanged.
+
+If the preference is unset and autonomy is inactive, do not create a sequence
+snapshot. Retain the existing next-step prompt only after final approval when a
+final checkpoint is configured. Under autonomy, the default snapshot above
+always resolves the unset case.
 
 ### Step 16: Prompt for Next Steps
 
-Run the standard next-step prompt only when
-`workflow.postImplementSequence` was unset and no sequence snapshot was
+Run the standard next-step prompt only when `OAT_AUTONOMOUS` is not `1`,
+`workflow.postImplementSequence` was unset, and no sequence snapshot was
 created. It occurs after final approval when a final checkpoint is configured.
 A configured legacy or structured preference has already completed through
 **Final HiLL Closeout Sequence**; do not re-dispatch its steps here. When the

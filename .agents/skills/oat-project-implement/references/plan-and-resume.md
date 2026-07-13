@@ -118,6 +118,35 @@ Determine whether this is a first implementation run:
 - If `"$PROJECT_PATH/implementation.md"` does not exist, treat as first run.
 - If it exists but still has template placeholders and no completed task evidence, treat as first run.
 
+#### Autonomous checkpoint resolution
+
+If `OAT_AUTONOMOUS=1`, resolve checkpoint state before the workflow preference
+or standard prompt paths below:
+
+1. Validate any existing `oat_plan_hill_phases` value using the normal rules.
+   A valid `[]` still means every phase; a valid explicit phase array still
+   means exactly those phases. Preserve either value unchanged and treat it as
+   confirmed for this run.
+2. On a first implementation run where the field is absent, determine the
+   final phase ID and write
+   `oat_plan_hill_phases: ["<final_phase_id>"]`. This is the existing
+   `hillCheckpointDefault: final` resolution, made explicit without prompting.
+3. Write `oat_auto_review_at_hill_checkpoints: true`. Autonomous checkpoints
+   always review and receive before continuing, even if an earlier interactive
+   setup had disabled automatic checkpoint review.
+4. Record gate `IMPLEMENT-03` and the selected final phase (or preserved
+   explicit value) in `implementation.md`. Do not persist either autonomy
+   environment signal.
+
+An invalid value remains a validation boundary; do not replace it
+autonomously. A missing value on a resumed implementation is bookkeeping drift,
+not a first-run default, and is also a boundary until the durable artifacts can
+be reconciled from authoritative evidence.
+
+After this branch succeeds, skip the workflow preference, standard checkpoint
+prompt, and auto-review preference prompt below and continue to Step 2.6.
+When `OAT_AUTONOMOUS` is not exactly `1`, this branch is inert.
+
 #### Workflow preference check (before prompting)
 
 Before presenting the checkpoint prompt to the user, check if a workflow preference has been configured:
@@ -183,6 +212,33 @@ review at HiLL checkpoints. It does not control the standard root-owned phase
 review; Tier 1 always runs `oat-reviewer` after each phase.
 
 **On resume:** If `oat_auto_review_at_hill_checkpoints` is already present in plan.md frontmatter, skip Touchpoint A entirely — do not re-ask, do not re-read config, do not print the auto-review note. The stored value is authoritative. If only legacy `oat_auto_review_at_checkpoints` is present, treat it as authoritative for this run and write the new `oat_auto_review_at_hill_checkpoints` key on the next plan frontmatter update.
+
+#### Autonomous checkpoint review and receive
+
+When `OAT_AUTONOMOUS=1`, a configured checkpoint never waits for a user:
+
+1. Use the scope calculation in `phase-execution.md` and dispatch
+   `oat-project-review-provide` with `oat_review_invocation: auto` through the
+   project dispatch substrate.
+2. Validate the returned artifact and invoke `oat-project-review-receive`
+   immediately. Its auto-review disposition path must run without user
+   prompts.
+3. If receive creates fix tasks, execute them through the normal implement
+   route and repeat the same bounded review/receive cycle. Do not mark the
+   checkpoint complete while blocking findings remain.
+4. After a passing disposition, commit the review and HiLL bookkeeping. For a
+   non-final checkpoint, continue directly to the next schedule entry. The
+   final checkpoint routes to the Final HiLL Closeout Sequence instead of
+   waiting here.
+
+An unresolved Critical finding, failed blocking review, invalid receive
+artifact, or exhausted review route is a reported autonomy boundary. Every
+launch and receive must reference its structured dispatch record; record gate
+`IMPLEMENT-10`, the review scope, selected route, and achieved independence in
+`implementation.md`.
+
+This block replaces only the checkpoint wait while autonomy is active. The
+interactive pause and manual receive paths remain unchanged otherwise.
 
 ### Step 2.6: Validate Optional Phase Review Gate
 
