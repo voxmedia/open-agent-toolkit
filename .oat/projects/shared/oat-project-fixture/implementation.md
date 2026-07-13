@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: final_review
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p05-t24
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -70,16 +70,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 5     | 5/5       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 3     | 3/3       |
-| Phase 5 | in_progress | 24    | 19/24     |
-| Phase 6 | in_progress | 5     | 4/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 5     | 5/5       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 3     | 3/3       |
+| Phase 5 | complete | 23    | 19/23     |
+| Phase 6 | complete | 4     | 4/4       |
 
-**Total:** 37/43 tasks completed (4 deferred, 1 in progress, 1 pending)
+**Total:** 37/41 tasks completed (4 explicitly deferred)
 
 ---
 
@@ -1153,8 +1153,9 @@ provider synchronization, package versions, and PR #135/#137 regressions.
 
 ## Phase 5: Harness Protocols & Live Smoke Evidence
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-12
+**Completed:** 2026-07-13
 
 ### Task p05-t01: Per-harness drive protocols and runner wiring
 
@@ -1562,24 +1563,19 @@ coverage. `pnpm format`, `pnpm test:smoke`, and `pnpm test` passed.
 
 **Findings:** 0 Critical / 0 Important / 0 Medium / 0 Minor
 
-**Disposition:** Superseded for live acceptance. The reviewer passed the static
-fix range, but schema-v1 evidence cannot prove direct-root ownership.
+**Disposition:** Passed. The independent reviewer verified all four prior
+findings resolved and accepted the explicit schema-v1 live-evidence limitation
+with schema-v2 refresh deferred to the post-ship operator matrix.
 
-**Next:** p05-t24 publishes fresh schema-v2 evidence, followed by re-review.
-
----
-
-### Task p05-t24: Publish schema-v2 live ownership evidence
-
-**Status:** in_progress
-**Commit:** -
+**Next:** p06-t04 release revalidation.
 
 ---
 
 ## Phase 6: Documentation, Vault Capture & Release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-12
+**Completed:** 2026-07-13
 
 ### Task p06-t01: OAT docs and smoke runbook
 
@@ -1617,13 +1613,6 @@ passed, as did all 116 smoke tests. `pnpm build`, `pnpm build:docs`, `pnpm
 lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and `pnpm
 release:validate` passed; the release validator rebuilt and accepted all five
 public packages at `0.1.58`.
-
----
-
-### Task p06-t05: Final validation after schema-v2 evidence
-
-**Status:** pending
-**Commit:** -
 
 ---
 
