@@ -1,9 +1,11 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - "p03-t02: @open-agent-toolkit/cli 0.1.61 is not yet published"
+  - "p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending"
 oat_last_updated: 2026-07-13
-oat_current_task_id: p04-t04
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -226,6 +228,13 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 **Outcome:** Audited every shared key in `gizmo-slack-app`, `open-agent-toolkit`, and `pntr`; classified all three configs cloud-safe; retained S3 archive sync as operator-backed policy; and documented the result plus the two new `.cursor/` files in the environment inventory. No environment-seeded local override is required or created. The pre-existing OAT active-project local pointer remains untouched session state.
 **Verification:** Verified here — all three JSON configs parsed, retained `archive.s3SyncOnComplete: true` and an S3 URI, the README table enumerates every top-level shared key, `git diff --check` passed, and the env-repo diff contains no `.oat/config.local.json`.
 
+### Task p04-t04: Readiness check (degraded + strict modes)
+
+**Status:** implemented; strict acceptance blocked on p03-t02, environment rebuild, and live operator secret
+**Commit:** `b1b225e` (`cloud-agent-env-node`)
+**Outcome:** Added an executable readiness check with hard provisioning probes and acceptance-only auth/routing probes; default boot names auth-dependent degradations while `--strict` fails them. It requires OAT >=0.1.61, all seven user packs and both cloud skills, all twelve dispatch cells, six exact model-aware gate targets, Cursor version/status/catalog, catalog-to-registry availability agreement, and priority-ordered different-family routes for OpenAI and Claude producers without launching a terminal gate as a probe. The installer runs it at the end in default mode. Pack installation now uses a disposable project context because the direct brainstorm installer persists ambient `tools.*`; this prevents mounted-repo or seeded-config mutation.
+**Verification:** Verified here — `bash -n` and `git diff --check` passed (shellcheck/shfmt unavailable). With the OAT 0.1.61 source CLI and a stub Cursor Agent, a temp-HOME harness ran the full installer twice with an empty recursive diff and no env-repo mutation; missing-key boot mode exited 0 with named degradation; strict mode passed all probes against a six-model catalog; strict mode without the key exited nonzero naming `cursor-auth`; route exercises selected Claude Fable for an OpenAI producer and OpenAI Sol Max for a Claude producer. Environment-limited — this is harness evidence, not live FR8 acceptance: direct execution in the current unrebuilt VM correctly failed on global OAT 0.1.48, missing user packs/seed, and absent `cursor-agent`; npm still serves 0.1.60, Docker is unavailable, and no live `CURSOR_API_KEY` probe was possible.
+
 ## Phase 5: Org layer
 
 **Status:** descoped — see Deviations table; not executed by this project
@@ -278,6 +287,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p04-t01: image provisioning for OAT and Cursor Agent committed in `cloud-agent-env-node` (`8180572`); official installer path and legacy `cursor-agent` symlink verified from current Cursor docs/script, while Docker build and fresh-VM version probes remain environment-limited pending daemon access, OAT 0.1.61 publish, and environment rebuild.
 - [x] p04-t02: user-scope pack refresh, exact reviewed config seed with monotonic marker, and runtime-only Cursor auth wiring committed in `cloud-agent-env-node` (`dd85638`); syntax/reference/config-source checks and two-run temp-HOME harness passed, while live published-package and authenticated-agent checks remain environment-limited.
 - [x] p04-t03: all shared OAT configs classified cloud-safe and documented in `cloud-agent-env-node` (`1221f3f`); S3 sync remains enabled and no local override was seeded.
+- [x] p04-t04 code: degraded/strict readiness and boot invocation committed in `cloud-agent-env-node` (`b1b225e`); full 0.1.61 source/stub harness passed, but live strict acceptance remains blocked on publish, rebuild, and operator secret and is not marked complete.
 
 **Decisions:**
 
@@ -285,7 +295,8 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 **Blockers:**
 
-- None.
+- p03-t02 operator boundary: npm still publishes `@open-agent-toolkit/cli` 0.1.60, not target 0.1.61.
+- p04-t04 FR8 acceptance: rebuild this environment from the env-repo branch and rerun `bash .cursor/oat-readiness.sh --strict` with a live `CURSOR_API_KEY`. The Docker daemon and Cursor Agent are unavailable in this current pre-change VM.
 
 ---
 
@@ -304,7 +315,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
 | 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t08 + fix round) | 653 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
 | 3     | Full local gate: lint, type-check, package tests + smoke, build, release validation (p03-t01) | 2,804 package + 123 smoke tests; 10 lint; 10 type-check; 5 build; 5 release packages | 0 | Round-2 review passed; source CLI manifest stamp corrected to 0.1.61; branch pushed through p02 and PR creation delegated to root |
-| 4     | Dockerfile static verification; installer syntax/reference/config checks; two-run temp-HOME idempotency harness; OAT 0.1.61 source-CLI workflows/config exercise; three-repo shared-config audit (p04-t01..t03) | All available checks passed; recursive second-run diff was empty; both new skills and all six resolved target configs found; all audited configs cloud-safe | 0 | shellcheck unavailable; Docker build, published/global 0.1.61, real Cursor Agent, and authenticated probes environment-limited pending publish/rebuild/secret |
+| 4     | Dockerfile static verification; shell syntax/reference/config checks; two-run temp-HOME source-0.1.61 idempotency harness; degraded/strict readiness modes; three-repo shared-config audit (p04-t01..t04 code) | All available checks passed; recursive second-run diff empty; no repo mutation; 12 dispatch cells, 6 target/catalog matches, and OpenAI/Claude cross-family routes passed under stub Cursor | 0 harness failures after fix | shellcheck/shfmt unavailable; current-VM probe honestly failed on OAT 0.1.48/missing packs/missing Cursor Agent; Docker build and live strict acceptance environment-limited pending 0.1.61 publish, rebuild, and secret |
 
 ## Final Summary (for PR/docs)
 
