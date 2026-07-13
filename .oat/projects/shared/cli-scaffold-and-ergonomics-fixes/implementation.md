@@ -180,6 +180,28 @@ Chronological log of implementation progress.
 
 **Next:** Re-run the plan artifact gate; implementation still starts at p01-t01.
 
+### Plan Artifact Re-review Received
+
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-13T231038Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 2
+
+**Artifact resolutions:**
+
+- M1: Added the operator-approved noninteractive gate requirement and success criterion to discovery.
+- M2: Added semantic release-guidance contract coverage to p06-t01.
+- m1: Narrowed the discovery skill-prose exclusion to preserve the required `oat-project-summary` exception.
+- m2: Corrected scaffold acceptance language to distinguish array/scalar field types.
+
+**Disposition:** All findings resolved in the reviewed artifacts; no new plan tasks created.
+
+**Next:** Begin implementation at p01-t01.
+
 **Execution shape:**
 
 - Run p01 first.

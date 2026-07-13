@@ -264,6 +264,7 @@ git commit -m "feat(p05-t01): fill decision record sections at creation"
 
 - Create: `packages/cli/src/commands/doctor/stale-invocations.ts`
 - Create: `packages/cli/src/commands/doctor/stale-invocations.test.ts`
+- Create: `packages/cli/src/validation/release-guidance.test.ts`
 - Modify: `packages/cli/src/commands/doctor/index.ts`
 - Modify: `packages/cli/src/commands/doctor/index.test.ts`
 - Modify: `.github/PULL_REQUEST_TEMPLATE.md`
@@ -271,17 +272,17 @@ git commit -m "feat(p05-t01): fill decision record sections at creation"
 
 **Step 1: Write test (RED)**
 
-Add focused scanner tests with clean content and the known-stale form `oat --scope all sync`, plus doctor integration coverage that reports a warning with file/line evidence and the corrected `oat sync --scope all` form. Assert the check is project-scoped and leaves the intentional per-command `--scope` design unchanged.
+Add focused scanner tests with clean content and the known-stale form `oat --scope all sync`, plus doctor integration coverage that reports a warning with file/line evidence and the corrected `oat sync --scope all` form. Assert the check is project-scoped and leaves the intentional per-command `--scope` design unchanged. Add a repository-contract test that requires both release-guidance surfaces to include the `Breaking CLI grammar changes` callout plus before/after commands and a migration action.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts`
-Expected: Tests fail because doctor has no stale-grammar scanner.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts src/validation/release-guidance.test.ts`
+Expected: Tests fail because doctor has no stale-grammar scanner and the release-guidance contract is not implemented.
 
 **Step 2: Implement (GREEN)**
 
 Add a small data-driven known-stale-forms list and scan bounded repository script/documentation surfaces, excluding dependencies, build output, archived/project artifacts, and generated provider views. Emit a passing check when clean and a warning with exact migration guidance when matches exist. Add a contributor/PR convention requiring a prominent `Breaking CLI grammar changes` callout with before/after commands and migration action; generated release notes must receive a visibly breaking PR title/callout.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts`
-Expected: Doctor flags known stale forms without adding a global `--scope` alias.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts src/validation/release-guidance.test.ts`
+Expected: Doctor flags known stale forms without adding a global `--scope` alias, and both release-guidance surfaces satisfy the callout content contract.
 
 **Step 3: Refactor**
 
@@ -289,13 +290,13 @@ Keep pattern definitions and filesystem scanning outside the command registratio
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts src/commands/create-program.test.ts && pnpm exec oxfmt --check .github/PULL_REQUEST_TEMPLATE.md apps/oat-docs/docs/contributing/code.md`
-Expected: Doctor coverage passes, the no-global-scope regression remains green, and release guidance is formatted.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/doctor/stale-invocations.test.ts src/commands/doctor/index.test.ts src/commands/create-program.test.ts src/validation/release-guidance.test.ts && pnpm exec oxfmt --check .github/PULL_REQUEST_TEMPLATE.md apps/oat-docs/docs/contributing/code.md`
+Expected: Doctor coverage passes, the no-global-scope regression remains green, and release guidance is semantically complete and formatted.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/doctor/stale-invocations.ts packages/cli/src/commands/doctor/stale-invocations.test.ts packages/cli/src/commands/doctor/index.ts packages/cli/src/commands/doctor/index.test.ts .github/PULL_REQUEST_TEMPLATE.md apps/oat-docs/docs/contributing/code.md
+git add packages/cli/src/commands/doctor/stale-invocations.ts packages/cli/src/commands/doctor/stale-invocations.test.ts packages/cli/src/commands/doctor/index.ts packages/cli/src/commands/doctor/index.test.ts packages/cli/src/validation/release-guidance.test.ts .github/PULL_REQUEST_TEMPLATE.md apps/oat-docs/docs/contributing/code.md
 git commit -m "feat(p06-t01): detect stale CLI invocation grammar"
 ```
 
@@ -383,19 +384,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| p06    | code     | pending  | -          | -                                                  |
-| p07    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-13T231038Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| p04    | code     | pending | -          | -                                                           |
+| p05    | code     | pending | -          | -                                                           |
+| p06    | code     | pending | -          | -                                                           |
+| p07    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-13T231038Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
