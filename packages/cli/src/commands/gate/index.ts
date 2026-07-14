@@ -153,6 +153,8 @@ interface ProcessRunOptions {
 
 interface ProcessRunResult {
   exitCode: number;
+  stderrBytes: number;
+  stdoutBytes: number;
   timedOut?: boolean;
 }
 
@@ -505,6 +507,8 @@ async function runChildProcess(
   return new Promise((resolve, reject) => {
     let timedOut = false;
     let killTimeout: NodeJS.Timeout | null = null;
+    let stderrBytes = 0;
+    let stdoutBytes = 0;
     const startedAt = Date.now();
     let lastActivityAt = startedAt;
     const child = spawn(command, args, {
@@ -519,10 +523,12 @@ async function runChildProcess(
       lastActivityAt = Date.now();
     };
     child.stdout?.on('data', (chunk: Buffer) => {
+      stdoutBytes += chunk.byteLength;
       recordActivity();
       process.stdout.write(chunk);
     });
     child.stderr?.on('data', (chunk: Buffer) => {
+      stderrBytes += chunk.byteLength;
       recordActivity();
       process.stderr.write(chunk);
     });
@@ -568,6 +574,8 @@ async function runChildProcess(
       }
       resolve({
         exitCode: timedOut ? 124 : (code ?? 1),
+        stderrBytes,
+        stdoutBytes,
         ...(timedOut ? { timedOut: true } : {}),
       });
     });
@@ -2156,6 +2164,7 @@ function writeReviewGateResult(
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     corroboration: GateInvocationCorroboration;
+    lateCompletion?: true;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -2208,6 +2217,7 @@ function writeReviewGateExecutionFailure(
     exitCode: number;
     timedOut?: boolean;
     timeoutMs?: number;
+    noOutputProduced?: boolean;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
@@ -2233,6 +2243,9 @@ function writeReviewGateExecutionFailure(
       timedOut: payload.timedOut ?? false,
       ...(payload.timeoutMs !== undefined
         ? { timeoutMs: payload.timeoutMs }
+        : {}),
+      ...(payload.noOutputProduced !== undefined
+        ? { noOutputProduced: payload.noOutputProduced }
         : {}),
       message,
     });
@@ -2674,7 +2687,7 @@ async function runReviewGate(
     );
     const childExitCode = childResult.exitCode;
 
-    if (childExitCode !== 0) {
+    if (childExitCode !== 0 && !childResult.timedOut) {
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
@@ -2700,6 +2713,23 @@ async function runReviewGate(
       before,
       after,
     });
+    if (childResult.timedOut && !artifactResolution.artifact) {
+      writeReviewGateExecutionFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        projectResolutionSource: reviewProject.source,
+        exitCode: childExitCode,
+        timedOut: true,
+        timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
+        noOutputProduced:
+          childResult.stdoutBytes + childResult.stderrBytes === 0,
+        gateInvocation,
+        dispatchReport,
+      });
+      process.exitCode = childExitCode;
+      return;
+    }
     const initialTargetCorroboration = corroborateReviewTarget({
       repoRoot,
       reviewProject,
@@ -2896,6 +2926,7 @@ async function runReviewGate(
       gateInvocation,
       dispatchReport,
       corroboration,
+      ...(childResult.timedOut ? { lateCompletion: true } : {}),
     });
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
