@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-13
+oat_last_updated: 2026-07-14
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: review-bookkeeping-and-dispatch-doc-contracts
 
 **Started:** 2026-07-13
-**Last Updated:** 2026-07-13
+**Last Updated:** 2026-07-14
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,82 +26,64 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 4     | 0/4       |
+| Phase 2 | in_progress | 2     | 0/2       |
+| Phase 3 | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/7 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Lifecycle Contracts and Review Routing
 
 **Status:** in_progress
-**Started:** 2026-07-13
+**Started:** 2026-07-14
 
-### Phase Summary (fill when phase is complete)
+### Task p01-t01: Make Reviews rows event-distinct and monotonic
 
-**Outcome (what changed):**
+**Status:** in_progress
+**Commit:** -
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Make resolver selection paths mutually exclusive
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t03: Mandate unambiguous cross-runtime phase-gate prompts
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Name both supported PR completion orderings
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Gate Timeout Recovery and Telemetry
+
+**Status:** in_progress
+**Started:** 2026-07-14
+
+### Task p02-t01: Recover run-correlated artifacts after timeout
+
+**Status:** in_progress
+**Commit:** -
+
+### Task p02-t02: Document timeout controls and recovery fields
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Sync and Release Validation
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p03-t01: Synchronize and validate the lockstep release
 
 **Status:** pending
 **Commit:** -
@@ -118,7 +100,20 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-07-14T22:19:13Z
+
+- Branch: `review-bookkeeping-and-dispatch-doc-contracts`
+- Tier: 1 (subagents)
+- Dispatch policy: managed `high` from project state
+- Parallel group: `p01`, `p02`
+
+| Phase | Status      | Tasks |
+| ----- | ----------- | ----- |
+| p01   | in_progress | 0/4   |
+| p02   | in_progress | 0/2   |
+| p03   | pending     | 0/1   |
+
+**Outstanding:** p01 and p02 implementation, reviews, configured phase gates, then p03.
 
 <!-- orchestration-runs-end -->
 
@@ -128,38 +123,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-07-13
+### 2026-07-14
 
-**Session Start:** {time}
+**Session Start:** 22:19:13Z
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
+- [ ] p01-t01: Make Reviews rows event-distinct and monotonic — in progress
+- [ ] p02-t01: Recover run-correlated artifacts after timeout — in progress
 
 **Decisions:**
 
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-13
-
-**Session Start:** {time}
-
-{Continue log...}
+- Tier 1 uses the resolver-selected Cursor target `gpt-5.6-sol-high`.
+- p01 and p02 execute in isolated worktrees; p03 waits for fan-in.
+- HiLL checkpoint is the final phase only; automatic HiLL review is enabled.
 
 ---
 
@@ -179,6 +154,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
